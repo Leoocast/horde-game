@@ -1,0 +1,734 @@
+{
+  "id": "horde_zombies_limited_edition_2_1",
+  "name": "Zombie Horde",
+  "source": "Horde Magic - Limited Edition 2.1",
+  "side": "horde",
+  "deckSize": 50,
+  "implementationTarget": "typescript-react-prototype",
+  "rulesProfile": {
+    "hordeHasNoLifeTotal": true,
+    "hordeHasNoHand": true,
+    "hordeCastsRevealedCardsForFree": true,
+    "hordeCreaturesHaveHaste": true,
+    "hordeTokensPersistAcrossZones": true,
+    "damageToHordeRule": {
+      "type": "MILL_PER_DAMAGE_CHUNK",
+      "damagePerCard": 3,
+      "rounding": "floor"
+    },
+    "assaultRevealRule": {
+      "stopWhenCardsPlayedEquals": 3,
+      "stopWhenNonTokenCardPlayed": true
+    },
+    "surgeRule": {
+      "condition": {
+        "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
+      },
+      "additionalCardsAfterNormalReveal": 2
+    },
+    "hordeManaRule": {
+      "enabled": true,
+      "description": "Horde creatures may tap for mana only when a directive or effect requires payment.",
+      "creatureManaAbility": {
+        "tap": true,
+        "produces": "ANY_COLOR",
+        "amount": "MANA_VALUE"
+      }
+    }
+  },
+  "cards": [
+    {
+      "id": "zombie_token",
+      "name": "Zombie Token",
+      "displayNameEs": "Ficha de Zombie",
+      "quantity": 21,
+      "isToken": true,
+      "manaValue": 2,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [],
+      "effects": []
+    },
+    {
+      "id": "zombie_giant_token",
+      "name": "Zombie Giant Token",
+      "displayNameEs": "Ficha de Zombie Gigante",
+      "quantity": 4,
+      "isToken": true,
+      "manaValue": 5,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Giant"
+      ],
+      "power": 5,
+      "toughness": 5,
+      "keywords": [],
+      "effects": []
+    },
+    {
+      "id": "graf_harvest",
+      "name": "Graf Harvest",
+      "displayNameEs": "Cosecha del cementerio",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{B}",
+      "manaValue": 1,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Enchantment"
+      ],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "STATIC_GRANT_KEYWORD",
+          "controller": "HORDE",
+          "filter": {
+            "cardTypes": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ]
+          },
+          "keyword": "MENACE"
+        },
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "BEGIN_UPKEEP",
+          "controller": "HORDE",
+          "condition": {
+            "type": "NOT",
+            "value": {
+              "type": "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
+              "controller": "HORDE"
+            }
+          },
+          "effect": {
+            "type": "SACRIFICE_SELF"
+          }
+        },
+        {
+          "type": "ACTIVATED_ABILITY",
+          "activationMode": "HORDE_DIRECTIVE_ONLY",
+          "cost": {
+            "type": "TAP_HORDE_CREATURES_FOR_MANA",
+            "requiredMana": 4,
+            "sourceFilter": {
+              "controller": "HORDE",
+              "cardTypes": [
+                "Creature"
+              ],
+              "isToken": false
+            },
+            "selectionRule": "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY"
+          },
+          "additionalCost": {
+            "type": "EXILE_CARD_FROM_GRAVEYARD",
+            "controller": "HORDE",
+            "filter": {
+              "cardTypes": [
+                "Creature"
+              ]
+            },
+            "selectionRule": "LOWEST_MANA_VALUE_THEN_RANDOM"
+          },
+          "effect": {
+            "type": "CREATE_TOKEN",
+            "controller": "HORDE",
+            "tokenId": "zombie_token",
+            "amount": 1
+          }
+        }
+      ],
+      "hordeDirective": {
+        "type": "REPEAT_ACTIVATION_WHILE_POSSIBLE",
+        "description": "If Graf Harvest is on battlefield and Horde controls non-token creatures with combined mana value at least 4, activate Graf Harvest. Repeat while enough non-token creatures and valid graveyard targets exist."
+      }
+    },
+    {
+      "id": "noosegraf_mob",
+      "name": "Noosegraf Mob",
+      "displayNameEs": "Turba de Noosegraf",
+      "quantity": 1,
+      "isToken": false,
+      "manaCost": "{4}{B}{B}",
+      "manaValue": 6,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "power": 0,
+      "toughness": 0,
+      "entersWithCounters": [
+        {
+          "counterType": "+1/+1",
+          "amount": 5
+        }
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "CARD_CAST",
+          "condition": {
+            "type": "CAST_CARD_IS_NON_TOKEN"
+          },
+          "effect": {
+            "type": "SEQUENCE",
+            "effects": [
+              {
+                "type": "REMOVE_COUNTER",
+                "counterType": "+1/+1",
+                "amount": 1,
+                "from": "SELF",
+                "required": true
+              },
+              {
+                "type": "CREATE_TOKEN",
+                "controller": "HORDE",
+                "tokenId": "zombie_token",
+                "amount": 1
+              }
+            ]
+          }
+        }
+      ],
+      "hordeErrata": {
+        "triggerRestriction": "Only triggers from non-token spells."
+      }
+    },
+    {
+      "id": "rottenheart_ghoul",
+      "name": "Rottenheart Ghoul",
+      "displayNameEs": "Ghoul de corazón podrido",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{3}{B}",
+      "manaValue": 4,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "power": 2,
+      "toughness": 4,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "THIS_DIES",
+          "effect": {
+            "type": "EACH_OPPONENT_DISCARDS",
+            "amount": 1
+          }
+        }
+      ],
+      "hordeErrata": {
+        "originalStyle": "target player discards",
+        "hordeVersion": "each opponent discards"
+      }
+    },
+    {
+      "id": "miasmic_mummy",
+      "name": "Miasmic Mummy",
+      "displayNameEs": "Momia miasmática",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{1}{B}",
+      "manaValue": 2,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Jackal"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "ENTERS_BATTLEFIELD",
+          "effect": {
+            "type": "EACH_OPPONENT_DISCARDS",
+            "amount": 1
+          }
+        }
+      ],
+      "hordeErrata": {
+        "originalStyle": "each player discards",
+        "hordeVersion": "each opponent discards"
+      }
+    },
+    {
+      "id": "smallpox",
+      "name": "Smallpox",
+      "displayNameEs": "Viruela pequeña",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{B}{B}",
+      "manaValue": 2,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "effects": [
+        {
+          "type": "EACH_OPPONENT_LOSES_LIFE",
+          "amount": 1
+        },
+        {
+          "type": "EACH_OPPONENT_DISCARDS",
+          "amount": 1
+        },
+        {
+          "type": "EACH_OPPONENT_SACRIFICES",
+          "permanentType": "Creature",
+          "amount": 1,
+          "selection": "PLAYER_CHOOSES"
+        },
+        {
+          "type": "EACH_OPPONENT_SACRIFICES",
+          "permanentType": "Land",
+          "amount": 1,
+          "selection": "PLAYER_CHOOSES"
+        }
+      ],
+      "hordeErrata": {
+        "originalStyle": "each player",
+        "hordeVersion": "each opponent"
+      }
+    },
+    {
+      "id": "blighted_bat",
+      "name": "Blighted Bat",
+      "displayNameEs": "Murciélago infectado",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{2}{B}",
+      "manaValue": 3,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Bat"
+      ],
+      "power": 2,
+      "toughness": 1,
+      "keywords": [
+        "FLYING"
+      ],
+      "effects": [
+        {
+          "type": "ACTIVATED_ABILITY",
+          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "effect": {
+            "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+            "target": "SELF",
+            "keyword": "HASTE"
+          }
+        }
+      ],
+      "implementationNote": "Horde creatures already have haste, so this activated ability can be ignored."
+    },
+    {
+      "id": "stitchwing_skaab",
+      "name": "Stitchwing Skaab",
+      "displayNameEs": "Skaab ala cosida",
+      "quantity": 1,
+      "isToken": false,
+      "manaCost": "{3}{U}",
+      "manaValue": 4,
+      "colors": [
+        "U"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Horror"
+      ],
+      "power": 3,
+      "toughness": 1,
+      "keywords": [
+        "FLYING"
+      ],
+      "effects": [
+        {
+          "type": "ACTIVATED_ABILITY",
+          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "zone": "GRAVEYARD",
+          "cost": {
+            "mana": "{1}{U}",
+            "discard": 2
+          },
+          "effect": {
+            "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
+            "tapped": true
+          }
+        }
+      ],
+      "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
+    },
+    {
+      "id": "advanced_stitchwing",
+      "name": "Advanced Stitchwing",
+      "displayNameEs": "Ala cosida avanzada",
+      "quantity": 1,
+      "isToken": false,
+      "manaCost": "{3}{U}{U}",
+      "manaValue": 5,
+      "colors": [
+        "U"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Horror"
+      ],
+      "power": 3,
+      "toughness": 4,
+      "keywords": [
+        "FLYING"
+      ],
+      "effects": [
+        {
+          "type": "ACTIVATED_ABILITY",
+          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "zone": "GRAVEYARD",
+          "cost": {
+            "mana": "{2}{U}",
+            "discard": 2
+          },
+          "effect": {
+            "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
+            "tapped": true
+          }
+        }
+      ],
+      "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
+    },
+    {
+      "id": "crow_of_dark_tidings",
+      "name": "Crow of Dark Tidings",
+      "displayNameEs": "Cuervo de malos augurios",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{2}{B}",
+      "manaValue": 3,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Bird"
+      ],
+      "power": 2,
+      "toughness": 1,
+      "keywords": [
+        "FLYING"
+      ],
+      "effects": [
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "ENTERS_BATTLEFIELD",
+          "effect": {
+            "type": "MILL_SELF",
+            "controller": "HORDE",
+            "amount": 2
+          }
+        },
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "THIS_DIES",
+          "effect": {
+            "type": "MILL_SELF",
+            "controller": "HORDE",
+            "amount": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cursed_minotaur",
+      "name": "Cursed Minotaur",
+      "displayNameEs": "Minotauro maldito",
+      "quantity": 1,
+      "isToken": false,
+      "manaCost": "{2}{B}",
+      "manaValue": 3,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Minotaur"
+      ],
+      "power": 3,
+      "toughness": 2,
+      "keywords": [
+        "MENACE"
+      ],
+      "effects": []
+    },
+    {
+      "id": "thraben_foulbloods",
+      "name": "Thraben Foulbloods",
+      "displayNameEs": "Sangremalas de Thraben",
+      "quantity": 1,
+      "isToken": false,
+      "manaCost": "{2}{B}",
+      "manaValue": 3,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Dog"
+      ],
+      "power": 3,
+      "toughness": 2,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "STATIC_CONDITIONAL_BUFF",
+          "condition": {
+            "type": "GRAVEYARD_COUNT_AT_LEAST",
+            "controller": "HORDE",
+            "amount": 7
+          },
+          "target": "SELF",
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "type": "STATIC_CONDITIONAL_GRANT_KEYWORD",
+          "condition": {
+            "type": "GRAVEYARD_COUNT_AT_LEAST",
+            "controller": "HORDE",
+            "amount": 7
+          },
+          "target": "SELF",
+          "keyword": "MENACE"
+        }
+      ],
+      "hordeErrata": {
+        "keyword": "Threshold",
+        "condition": "Seven or more cards in Horde graveyard."
+      }
+    },
+    {
+      "id": "hound_of_the_farbogs",
+      "name": "Hound of the Farbogs",
+      "displayNameEs": "Sabueso de Farbog",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{4}{B}",
+      "manaValue": 5,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Dog"
+      ],
+      "power": 5,
+      "toughness": 3,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "STATIC_CONDITIONAL_GRANT_KEYWORD",
+          "condition": {
+            "type": "GRAVEYARD_COUNT_AT_LEAST",
+            "controller": "HORDE",
+            "amount": 7
+          },
+          "target": "SELF",
+          "keyword": "MENACE"
+        }
+      ],
+      "hordeErrata": {
+        "keyword": "Threshold",
+        "condition": "Seven or more cards in Horde graveyard."
+      }
+    },
+    {
+      "id": "rancid_rats",
+      "name": "Rancid Rats",
+      "displayNameEs": "Ratas rancias",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{1}{B}",
+      "manaValue": 2,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Rat"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "DEATHTOUCH",
+        "SKULK"
+      ],
+      "effects": [],
+      "implementationNote": "Skulk: cannot be blocked by creatures with greater power."
+    },
+    {
+      "id": "gavony_unhallowed",
+      "name": "Gavony Unhallowed",
+      "displayNameEs": "Profano de Gavony",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{3}{B}",
+      "manaValue": 4,
+      "colors": [
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "power": 2,
+      "toughness": 4,
+      "keywords": [],
+      "effects": [
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "CREATURE_DIED",
+          "condition": {
+            "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+            "controller": "HORDE"
+          },
+          "effect": {
+            "type": "PUT_COUNTER",
+            "target": "SELF",
+            "counterType": "+1/+1",
+            "amount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "diregraf_captain",
+      "name": "Diregraf Captain",
+      "displayNameEs": "Capitán de Diregraf",
+      "quantity": 2,
+      "isToken": false,
+      "manaCost": "{1}{U}{B}",
+      "manaValue": 3,
+      "colors": [
+        "U",
+        "B"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie",
+        "Soldier"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "DEATHTOUCH"
+      ],
+      "effects": [
+        {
+          "type": "STATIC_BUFF",
+          "controller": "HORDE",
+          "filter": {
+            "cardTypes": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "excludeSelf": true
+          },
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "type": "TRIGGERED_ABILITY",
+          "trigger": "CREATURE_DIED",
+          "condition": {
+            "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+            "controller": "HORDE",
+            "filter": {
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          },
+          "effect": {
+            "type": "EACH_OPPONENT_LOSES_LIFE",
+            "amount": 1
+          }
+        }
+      ]
+    }
+  ]
+}

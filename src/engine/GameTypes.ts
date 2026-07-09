@@ -1,0 +1,188 @@
+export type Side = "player" | "horde";
+export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
+export type Phase = "untap" | "draw" | "main" | "combat" | "secondMain" | "end" | "horde";
+export type Color = "G" | "R" | "U" | "W" | "B" | "C";
+export type Keyword =
+  | "FLYING"
+  | "REACH"
+  | "VIGILANCE"
+  | "MENACE"
+  | "DEATHTOUCH"
+  | "TRAMPLE"
+  | "HEXPROOF"
+  | "HASTE"
+  | "SKULK"
+  | string;
+
+export type ManaPool = {
+  green: number;
+  red: number;
+  blue: number;
+  white: number;
+  black: number;
+  colorless: number;
+};
+
+export type EffectDefinition = {
+  type: string;
+  [key: string]: unknown;
+};
+
+export type ActivatedAbility = {
+  id: string;
+  cost?: Record<string, unknown>;
+  requiresTargets?: TargetRequirement[];
+  effect: EffectDefinition;
+};
+
+export type TargetRequirement = {
+  id: string;
+  type: string;
+  controller?: "SELF" | "OPPONENT" | "ANY";
+  minTargets?: number;
+  maxTargets?: number;
+  targetRequired?: boolean;
+  filterAny?: CardFilter[];
+  [key: string]: unknown;
+};
+
+export type CardFilter = {
+  cardTypes?: string[];
+  subtypes?: string[];
+  keywords?: Keyword[];
+  excludeSelf?: boolean;
+  isToken?: boolean;
+};
+
+export type CardDefinition = {
+  id: string;
+  name: string;
+  displayNameEs?: string;
+  quantity?: number;
+  isToken?: boolean;
+  manaCost?: string;
+  manaValue?: number;
+  colors?: Color[];
+  cardTypes?: string[];
+  subtypes?: string[];
+  power?: number | null;
+  toughness?: number | null;
+  keywords?: Keyword[];
+  entersTapped?: boolean;
+  entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
+  activatedAbilities?: ActivatedAbility[];
+  effects?: EffectDefinition[];
+  requiresTargets?: TargetRequirement[];
+  requiresDistribution?: {
+    counterType: string;
+    totalAmount: number;
+    eachTargetMinimum?: number;
+  };
+  variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
+  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
+  attachTo?: { targetRef: string };
+  flags?: Record<string, boolean>;
+};
+
+export type DeckList = {
+  id: string;
+  name: string;
+  side: Side;
+  deckSize: number;
+  cards: CardDefinition[];
+  tokens?: CardDefinition[];
+};
+
+export type CardInstance = {
+  instanceId: string;
+  definitionId: string;
+  name: string;
+  displayName: string;
+  owner: Side;
+  controller: Side;
+  zone: ZoneName;
+  isToken: boolean;
+  manaCost: string;
+  manaValue: number;
+  colors: Color[];
+  cardTypes: string[];
+  subtypes: string[];
+  basePower: number;
+  baseToughness: number;
+  keywords: Keyword[];
+  effects: EffectDefinition[];
+  activatedAbilities: ActivatedAbility[];
+  requiresTargets: TargetRequirement[];
+  tapped: boolean;
+  entersTapped: boolean;
+  summoningSickness: boolean;
+  damageMarked: number;
+  deathtouchDamage: boolean;
+  counters: Record<string, number>;
+  temporaryPower: number;
+  temporaryToughness: number;
+  temporaryKeywords: Keyword[];
+  chosenColor?: Color;
+  xValuePaid?: number;
+  attachedTo?: string;
+  flags: Record<string, boolean>;
+  variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
+};
+
+export type PlayerState = {
+  life: number;
+  library: CardInstance[];
+  hand: CardInstance[];
+  battlefield: CardInstance[];
+  graveyard: CardInstance[];
+  exile: CardInstance[];
+  manaPool: ManaPool;
+  landPlayedThisTurn: boolean;
+};
+
+export type HordeState = {
+  library: CardInstance[];
+  battlefield: CardInstance[];
+  graveyard: CardInstance[];
+  exile: CardInstance[];
+};
+
+export type CombatState = {
+  playerAttackers: string[];
+  hordeAttackers: string[];
+  blockers: Record<string, string[]>;
+};
+
+export type EventItem = {
+  id: string;
+  type: string;
+  sourceId?: string;
+  payload?: Record<string, unknown>;
+};
+
+export type GameState = {
+  seed: string;
+  currentRandomState: number;
+  hordeDeckOrderHash?: string;
+  activeSide: Side;
+  phase: Phase;
+  turnNumber: number;
+  setupTurnsRemaining: number;
+  setupCompletePendingHorde: boolean;
+  player: PlayerState;
+  horde: HordeState;
+  combat: CombatState;
+  eventQueue: EventItem[];
+  log: string[];
+  winner?: Side;
+};
+
+export type CastOptions = {
+  xValue?: number;
+  targets?: Record<string, string | string[]>;
+  distribution?: Record<string, number>;
+};
+
+export type AbilityOptions = {
+  targets?: Record<string, string | string[]>;
+};

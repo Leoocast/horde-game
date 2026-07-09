@@ -1,0 +1,1104 @@
+{
+    "id": "player_elves_primal_foundations_beginner_box",
+    "name": "Elves + Primal",
+    "displayNameEs": "Elfos + Primigenios",
+    "source": "Magic: The Gathering Foundations Beginner Box",
+    "side": "player",
+    "deckSize": 40,
+    "formatProfile": "casual_horde_test_deck",
+    "implementationTarget": "typescript-react-prototype",
+    "notes": [
+        "Este deck combina los paquetes Jumpstart oficiales 'Elves' y 'Primal' de Foundations Beginner Box.",
+        "El motor no debe intentar implementar todo Magic; solo debe soportar estas cartas y sus efectos declarados.",
+        "Los efectos tipo 'strike' no son fight: la criatura del jugador hace daño, pero la criatura enemiga no devuelve daño.",
+        "Los efectos estáticos como Elvish Archdruid y Aggressive Mammoth deben recalcularse cuando cambia el battlefield.",
+        "Los contadores +1/+1 son permanentes; los buffs 'until end of turn' se limpian en End Step."
+    ],
+    "tokens": [
+        {
+            "id": "elf_warrior_token",
+            "name": "Elf Warrior Token",
+            "displayNameEs": "Ficha de Guerrero Elfo",
+            "isToken": true,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Warrior"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [],
+            "effects": []
+        }
+    ],
+    "cards": [
+        {
+            "id": "forest",
+            "name": "Forest",
+            "displayNameEs": "Bosque",
+            "quantity": 15,
+            "isToken": false,
+            "manaCost": "",
+            "manaValue": 0,
+            "colors": [],
+            "cardTypes": [
+                "Land"
+            ],
+            "subtypes": [
+                "Forest",
+                "Basic"
+            ],
+            "power": null,
+            "toughness": null,
+            "keywords": [],
+            "entersTapped": false,
+            "activatedAbilities": [
+                {
+                    "id": "forest_tap_green",
+                    "cost": {
+                        "tap": true
+                    },
+                    "effect": {
+                        "type": "ADD_MANA",
+                        "controller": "SELF",
+                        "mana": {
+                            "G": 1
+                        }
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "uncharted_haven",
+            "name": "Uncharted Haven",
+            "displayNameEs": "Refugio inexplorado",
+            "quantity": 2,
+            "isToken": false,
+            "manaCost": "",
+            "manaValue": 0,
+            "colors": [],
+            "cardTypes": [
+                "Land"
+            ],
+            "subtypes": [],
+            "power": null,
+            "toughness": null,
+            "keywords": [],
+            "entersTapped": true,
+            "asEnters": [
+                {
+                    "type": "CHOOSE_COLOR",
+                    "storeAs": "chosenColor",
+                    "defaultForThisDeck": "G"
+                }
+            ],
+            "activatedAbilities": [
+                {
+                    "id": "uncharted_haven_tap_chosen",
+                    "cost": {
+                        "tap": true
+                    },
+                    "effect": {
+                        "type": "ADD_MANA",
+                        "controller": "SELF",
+                        "mana": {
+                            "chosenColor": 1
+                        }
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "llanowar_elves",
+            "name": "Llanowar Elves",
+            "displayNameEs": "Elfos de Llanowar",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{G}",
+            "manaValue": 1,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Druid"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [],
+            "activatedAbilities": [
+                {
+                    "id": "llanowar_tap_green",
+                    "cost": {
+                        "tap": true
+                    },
+                    "effect": {
+                        "type": "ADD_MANA",
+                        "controller": "SELF",
+                        "mana": {
+                            "G": 1
+                        }
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "druid_of_the_cowl",
+            "name": "Druid of the Cowl",
+            "displayNameEs": "Druida de Cogulla",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}",
+            "manaValue": 2,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Druid"
+            ],
+            "power": 1,
+            "toughness": 3,
+            "keywords": [],
+            "activatedAbilities": [
+                {
+                    "id": "druid_of_the_cowl_tap_green",
+                    "cost": {
+                        "tap": true
+                    },
+                    "effect": {
+                        "type": "ADD_MANA",
+                        "controller": "SELF",
+                        "mana": {
+                            "G": 1
+                        }
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "elvish_archdruid",
+            "name": "Elvish Archdruid",
+            "displayNameEs": "Archidruida élfico",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Druid"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [],
+            "activatedAbilities": [
+                {
+                    "id": "elvish_archdruid_tap_for_elves",
+                    "cost": {
+                        "tap": true
+                    },
+                    "effect": {
+                        "type": "ADD_MANA_DYNAMIC",
+                        "controller": "SELF",
+                        "manaColor": "G",
+                        "amountFormula": {
+                            "type": "COUNT_CONTROLLED_PERMANENTS",
+                            "controller": "SELF",
+                            "filter": {
+                                "cardTypes": [
+                                    "Creature"
+                                ],
+                                "subtypes": [
+                                    "Elf"
+                                ]
+                            }
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "STATIC_BUFF",
+                    "controller": "SELF",
+                    "filter": {
+                        "cardTypes": [
+                            "Creature"
+                        ],
+                        "subtypes": [
+                            "Elf"
+                        ],
+                        "excludeSelf": true
+                    },
+                    "power": 1,
+                    "toughness": 1
+                }
+            ]
+        },
+        {
+            "id": "beast_kin_ranger",
+            "name": "Beast-Kin Ranger",
+            "displayNameEs": "Guardabosque bestial",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Ranger"
+            ],
+            "power": 3,
+            "toughness": 3,
+            "keywords": [
+                "TRAMPLE"
+            ],
+            "effects": [
+                {
+                    "type": "TRIGGERED_ABILITY",
+                    "trigger": "CREATURE_ENTERS_BATTLEFIELD",
+                    "condition": {
+                        "type": "ANOTHER_CREATURE_YOU_CONTROL_ENTERED",
+                        "controller": "SELF"
+                    },
+                    "effect": {
+                        "type": "PUMP_UNTIL_END_OF_TURN",
+                        "target": "SELF",
+                        "power": 1,
+                        "toughness": 0
+                    }
+                }
+            ]
+        },
+        {
+            "id": "elvish_regrower",
+            "name": "Elvish Regrower",
+            "displayNameEs": "Reverdecedor élfico",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}{G}",
+            "manaValue": 4,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Druid"
+            ],
+            "power": 4,
+            "toughness": 3,
+            "keywords": [],
+            "effects": [
+                {
+                    "type": "TRIGGERED_ABILITY",
+                    "trigger": "ENTERS_BATTLEFIELD",
+                    "effect": {
+                        "type": "RETURN_CARD_FROM_GRAVEYARD_TO_HAND",
+                        "controller": "SELF",
+                        "targetFilter": {
+                            "cardTypes": [
+                                "Artifact",
+                                "Creature",
+                                "Enchantment",
+                                "Land",
+                                "Planeswalker",
+                                "Battle"
+                            ]
+                        },
+                        "targetRequired": false
+                    }
+                }
+            ]
+        },
+        {
+            "id": "dwynens_elite",
+            "name": "Dwynen's Elite",
+            "displayNameEs": "Élite de Dwynen",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}",
+            "manaValue": 2,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Warrior"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [],
+            "effects": [
+                {
+                    "type": "TRIGGERED_ABILITY",
+                    "trigger": "ENTERS_BATTLEFIELD",
+                    "condition": {
+                        "type": "CONTROL_ANOTHER_PERMANENT_MATCHING",
+                        "controller": "SELF",
+                        "filter": {
+                            "cardTypes": [
+                                "Creature"
+                            ],
+                            "subtypes": [
+                                "Elf"
+                            ],
+                            "excludeSelf": true
+                        }
+                    },
+                    "effect": {
+                        "type": "CREATE_TOKEN",
+                        "controller": "SELF",
+                        "tokenId": "elf_warrior_token",
+                        "amount": 1
+                    }
+                }
+            ]
+        },
+        {
+            "id": "thornweald_archer",
+            "name": "Thornweald Archer",
+            "displayNameEs": "Arquero de arboleda espinosa",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}",
+            "manaValue": 2,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Archer"
+            ],
+            "power": 2,
+            "toughness": 1,
+            "keywords": [
+                "REACH",
+                "DEATHTOUCH"
+            ],
+            "effects": []
+        },
+        {
+            "id": "wildheart_invoker",
+            "name": "Wildheart Invoker",
+            "displayNameEs": "Invocadora del corazón salvaje",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}{G}",
+            "manaValue": 4,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Shaman"
+            ],
+            "power": 4,
+            "toughness": 3,
+            "keywords": [],
+            "activatedAbilities": [
+                {
+                    "id": "wildheart_invoker_overrun_target",
+                    "cost": {
+                        "genericMana": 8
+                    },
+                    "effect": {
+                        "type": "SEQUENCE",
+                        "effects": [
+                            {
+                                "type": "PUMP_UNTIL_END_OF_TURN",
+                                "target": {
+                                    "type": "TARGET_CREATURE"
+                                },
+                                "power": 5,
+                                "toughness": 5
+                            },
+                            {
+                                "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+                                "target": {
+                                    "type": "TARGET_CREATURE"
+                                },
+                                "keyword": "TRAMPLE"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "tajuru_pathwarden",
+            "name": "Tajuru Pathwarden",
+            "displayNameEs": "Protegesendas de Tajuru",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{4}{G}",
+            "manaValue": 5,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elf",
+                "Warrior",
+                "Ally"
+            ],
+            "power": 5,
+            "toughness": 4,
+            "keywords": [
+                "VIGILANCE",
+                "TRAMPLE"
+            ],
+            "effects": []
+        },
+        {
+            "id": "felling_blow",
+            "name": "Felling Blow",
+            "displayNameEs": "Golpe abatidor",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Sorcery"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "friendlyCreature",
+                    "type": "TARGET_CREATURE",
+                    "controller": "SELF"
+                },
+                {
+                    "id": "enemyCreature",
+                    "type": "TARGET_CREATURE",
+                    "controller": "OPPONENT"
+                }
+            ],
+            "effects": [
+                {
+                    "type": "PUT_COUNTER",
+                    "targetRef": "friendlyCreature",
+                    "counterType": "+1/+1",
+                    "amount": 1
+                },
+                {
+                    "type": "DEAL_DAMAGE_FROM_SOURCE_POWER",
+                    "sourceRef": "friendlyCreature",
+                    "targetRef": "enemyCreature",
+                    "damageIsCombatDamage": false,
+                    "targetDoesNotDealDamageBack": true
+                }
+            ]
+        },
+        {
+            "id": "bite_down",
+            "name": "Bite Down",
+            "displayNameEs": "Dentellada",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}",
+            "manaValue": 2,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Instant"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "friendlyCreature",
+                    "type": "TARGET_CREATURE",
+                    "controller": "SELF"
+                },
+                {
+                    "id": "enemyPermanent",
+                    "type": "TARGET_CREATURE_OR_PLANESWALKER",
+                    "controller": "OPPONENT"
+                }
+            ],
+            "effects": [
+                {
+                    "type": "DEAL_DAMAGE_FROM_SOURCE_POWER",
+                    "sourceRef": "friendlyCreature",
+                    "targetRef": "enemyPermanent",
+                    "damageIsCombatDamage": false,
+                    "targetDoesNotDealDamageBack": true
+                }
+            ]
+        },
+        {
+            "id": "broken_wings",
+            "name": "Broken Wings",
+            "displayNameEs": "Alas rotas",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Instant"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "target",
+                    "type": "TARGET_PERMANENT",
+                    "controller": "OPPONENT",
+                    "filterAny": [
+                        {
+                            "cardTypes": [
+                                "Artifact"
+                            ]
+                        },
+                        {
+                            "cardTypes": [
+                                "Enchantment"
+                            ]
+                        },
+                        {
+                            "cardTypes": [
+                                "Creature"
+                            ],
+                            "keywords": [
+                                "FLYING"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "effects": [
+                {
+                    "type": "DESTROY_TARGET",
+                    "targetRef": "target"
+                }
+            ]
+        },
+        {
+            "id": "snakeskin_veil",
+            "name": "Snakeskin Veil",
+            "displayNameEs": "Velo de piel de serpiente",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{G}",
+            "manaValue": 1,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Instant"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "friendlyCreature",
+                    "type": "TARGET_CREATURE",
+                    "controller": "SELF"
+                }
+            ],
+            "effects": [
+                {
+                    "type": "PUT_COUNTER",
+                    "targetRef": "friendlyCreature",
+                    "counterType": "+1/+1",
+                    "amount": 1
+                },
+                {
+                    "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+                    "targetRef": "friendlyCreature",
+                    "keyword": "HEXPROOF"
+                }
+            ]
+        },
+        {
+            "id": "giant_growth",
+            "name": "Giant Growth",
+            "displayNameEs": "Crecimiento gigante",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{G}",
+            "manaValue": 1,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Instant"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "targetCreature",
+                    "type": "TARGET_CREATURE"
+                }
+            ],
+            "effects": [
+                {
+                    "type": "PUMP_UNTIL_END_OF_TURN",
+                    "targetRef": "targetCreature",
+                    "power": 3,
+                    "toughness": 3
+                }
+            ]
+        },
+        {
+            "id": "joraga_invocation",
+            "name": "Joraga Invocation",
+            "displayNameEs": "Invocación joraga",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{4}{G}{G}",
+            "manaValue": 6,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Sorcery"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "effects": [
+                {
+                    "type": "PUMP_UNTIL_END_OF_TURN",
+                    "target": {
+                        "type": "ALL_CREATURES",
+                        "controller": "SELF"
+                    },
+                    "power": 3,
+                    "toughness": 3
+                },
+                {
+                    "type": "GRANT_MUST_BE_BLOCKED_UNTIL_END_OF_TURN",
+                    "target": {
+                        "type": "ALL_CREATURES",
+                        "controller": "SELF"
+                    },
+                    "ifAble": true
+                }
+            ],
+            "implementationNote": "Contra la Horda MVP, si la Horda normalmente no bloquea, este efecto puede ser tratado solo como +3/+3 hasta que implementes bloqueos de la Horda."
+        },
+        {
+            "id": "aggressive_mammoth",
+            "name": "Aggressive Mammoth",
+            "displayNameEs": "Mamut agresivo",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{3}{G}{G}{G}",
+            "manaValue": 6,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Elephant"
+            ],
+            "power": 8,
+            "toughness": 8,
+            "keywords": [
+                "TRAMPLE"
+            ],
+            "effects": [
+                {
+                    "type": "STATIC_GRANT_KEYWORD",
+                    "controller": "SELF",
+                    "filter": {
+                        "cardTypes": [
+                            "Creature"
+                        ],
+                        "excludeSelf": true
+                    },
+                    "keyword": "TRAMPLE"
+                }
+            ]
+        },
+        {
+            "id": "mild_mannered_librarian",
+            "name": "Mild-Mannered Librarian",
+            "displayNameEs": "Bibliotecaria respetable",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{G}",
+            "manaValue": 1,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Human"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [],
+            "flags": {
+                "hasActivatedTransformUsed": false
+            },
+            "activatedAbilities": [
+                {
+                    "id": "mild_mannered_librarian_transform",
+                    "cost": {
+                        "genericMana": 3,
+                        "coloredMana": {
+                            "G": 1
+                        }
+                    },
+                    "activationLimit": {
+                        "type": "ONCE_PER_GAME_PER_OBJECT",
+                        "flag": "hasActivatedTransformUsed"
+                    },
+                    "effect": {
+                        "type": "SEQUENCE",
+                        "effects": [
+                            {
+                                "type": "BECOME_SUBTYPE_SET",
+                                "target": "SELF",
+                                "subtypes": [
+                                    "Werewolf"
+                                ],
+                                "removeOtherCreatureTypes": true
+                            },
+                            {
+                                "type": "PUT_COUNTER",
+                                "target": "SELF",
+                                "counterType": "+1/+1",
+                                "amount": 2
+                            },
+                            {
+                                "type": "DRAW_CARD",
+                                "controller": "SELF",
+                                "amount": 1
+                            }
+                        ]
+                    }
+                }
+            ],
+            "effects": []
+        },
+        {
+            "id": "wildwood_scourge",
+            "name": "Wildwood Scourge",
+            "displayNameEs": "Azote del bosque salvaje",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{X}{G}",
+            "manaValue": 1,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Hydra"
+            ],
+            "power": 0,
+            "toughness": 0,
+            "keywords": [],
+            "variableCost": {
+                "hasX": true,
+                "xChosenOnCast": true
+            },
+            "entersWithCounters": [
+                {
+                    "counterType": "+1/+1",
+                    "amountFormula": {
+                        "type": "X_VALUE_PAID"
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "TRIGGERED_ABILITY",
+                    "trigger": "COUNTERS_PUT_ON_PERMANENT",
+                    "condition": {
+                        "type": "ONE_OR_MORE_PLUS_ONE_COUNTERS_PUT_ON_ANOTHER_NON_HYDRA_CREATURE_YOU_CONTROL"
+                    },
+                    "effect": {
+                        "type": "PUT_COUNTER",
+                        "target": "SELF",
+                        "counterType": "+1/+1",
+                        "amount": 1
+                    }
+                }
+            ]
+        },
+        {
+            "id": "bear_cub",
+            "name": "Bear Cub",
+            "displayNameEs": "Osezno",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}",
+            "manaValue": 2,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Bear"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [],
+            "effects": []
+        },
+        {
+            "id": "biogenic_upgrade",
+            "name": "Biogenic Upgrade",
+            "displayNameEs": "Mejora biogénica",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{4}{G}{G}",
+            "manaValue": 6,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Sorcery"
+            ],
+            "subtypes": [],
+            "keywords": [],
+            "requiresTargets": [
+                {
+                    "id": "targetCreatures",
+                    "type": "TARGET_CREATURES",
+                    "controller": "ANY",
+                    "minTargets": 1,
+                    "maxTargets": 3
+                }
+            ],
+            "requiresDistribution": {
+                "counterType": "+1/+1",
+                "totalAmount": 3,
+                "eachTargetMinimum": 1
+            },
+            "effects": [
+                {
+                    "type": "DISTRIBUTE_COUNTERS",
+                    "targetRef": "targetCreatures",
+                    "counterType": "+1/+1",
+                    "totalAmount": 3,
+                    "distributionChosenBy": "PLAYER"
+                },
+                {
+                    "type": "DOUBLE_COUNTERS_ON_TARGETS",
+                    "targetRef": "targetCreatures",
+                    "counterType": "+1/+1"
+                }
+            ]
+        },
+        {
+            "id": "magnigoth_sentry",
+            "name": "Magnigoth Sentry",
+            "displayNameEs": "Centinela magnigoth",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{3}{G}",
+            "manaValue": 4,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Treefolk"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+                "REACH"
+            ],
+            "effects": []
+        },
+        {
+            "id": "new_horizons",
+            "name": "New Horizons",
+            "displayNameEs": "Nuevos horizontes",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{2}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Enchantment"
+            ],
+            "subtypes": [
+                "Aura"
+            ],
+            "keywords": [
+                "ENCHANT_LAND"
+            ],
+            "requiresTargets": [
+                {
+                    "id": "targetLand",
+                    "type": "TARGET_LAND",
+                    "controller": "SELF"
+                }
+            ],
+            "attachTo": {
+                "targetRef": "targetLand"
+            },
+            "effects": [
+                {
+                    "type": "TRIGGERED_ABILITY",
+                    "trigger": "ENTERS_BATTLEFIELD",
+                    "effect": {
+                        "type": "PUT_COUNTER",
+                        "target": {
+                            "type": "TARGET_CREATURE",
+                            "controller": "SELF",
+                            "targetRequired": false
+                        },
+                        "counterType": "+1/+1",
+                        "amount": 1
+                    }
+                },
+                {
+                    "type": "GRANT_ACTIVATED_ABILITY_TO_ENCHANTED_PERMANENT",
+                    "ability": {
+                        "id": "new_horizons_land_tap_two",
+                        "cost": {
+                            "tap": true
+                        },
+                        "effect": {
+                            "type": "ADD_MANA",
+                            "controller": "SELF",
+                            "chooseOneColor": true,
+                            "amount": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "id": "thrashing_brontodon",
+            "name": "Thrashing Brontodon",
+            "displayNameEs": "Brontodón aplastador",
+            "quantity": 1,
+            "isToken": false,
+            "manaCost": "{1}{G}{G}",
+            "manaValue": 3,
+            "colors": [
+                "G"
+            ],
+            "cardTypes": [
+                "Creature"
+            ],
+            "subtypes": [
+                "Dinosaur"
+            ],
+            "power": 3,
+            "toughness": 4,
+            "keywords": [],
+            "activatedAbilities": [
+                {
+                    "id": "thrashing_brontodon_destroy_artifact_or_enchantment",
+                    "cost": {
+                        "genericMana": 1,
+                        "sacrificeSelf": true
+                    },
+                    "requiresTargets": [
+                        {
+                            "id": "target",
+                            "type": "TARGET_PERMANENT",
+                            "controller": "OPPONENT",
+                            "filterAny": [
+                                {
+                                    "cardTypes": [
+                                        "Artifact"
+                                    ]
+                                },
+                                {
+                                    "cardTypes": [
+                                        "Enchantment"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "effect": {
+                        "type": "DESTROY_TARGET",
+                        "targetRef": "target"
+                    }
+                }
+            ],
+            "effects": []
+        }
+    ],
+    "engineSupportNeeded": [
+        "Basic lands and mana pool",
+        "Tapped / untapped permanents",
+        "Summoning sickness",
+        "Creature combat",
+        "Static buffs",
+        "Counters",
+        "Variable X costs",
+        "Triggered abilities on ETB",
+        "Triggered abilities on counters placed",
+        "Activated abilities with tap",
+        "Activated abilities with mana only",
+        "Activated abilities with sacrificeSelf",
+        "Enchant land Aura attachment",
+        "Temporary buffs until end of turn",
+        "Keyword support: TRAMPLE, VIGILANCE, REACH, DEATHTOUCH, HEXPROOF",
+        "Targeting: friendly creature, enemy creature, artifact, enchantment, creature with flying, land",
+        "Token creation"
+    ]
+}

@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .duel-table {
+    background:
+      radial-gradient(circle at 50% 38%, rgb(187 247 208 / 0.38), transparent 26rem),
+      linear-gradient(90deg, rgb(68 64 60 / 0.12) 1px, transparent 1px),
+      linear-gradient(0deg, rgb(68 64 60 / 0.12) 1px, transparent 1px),
+      linear-gradient(135deg, #7c8f68, #c5c1a3 48%, #8b9d74);
+    background-size:
+      auto,
+      96px 96px,
+      96px 96px,
+      auto;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+@layer components {
+  .control-button,
+  .control-button-active,
+  .control-button-danger,
+  .wide-button,
+  .icon-button {
+    @apply inline-flex items-center justify-center gap-1 border border-stone-300 bg-white text-sm font-semibold text-stone-800 transition hover:border-stone-500 hover:bg-stone-50;
+  }
+
+  .control-button,
+  .control-button-active,
+  .control-button-danger {
+    @apply h-9 px-2;
+  }
+
+  .control-button-active {
+    @apply border-emerald-600 bg-emerald-50 text-emerald-900;
+  }
+
+  .control-button-danger {
+    @apply border-rose-300 bg-rose-50 text-rose-900;
+  }
+
+  .wide-button {
+    @apply h-10 w-full px-3;
+  }
+
+  .icon-button {
+    @apply h-7 w-7;
+  }
+
+  .zone-stack {
+    @apply flex min-h-16 items-center justify-center border border-dashed border-stone-300 bg-white p-2 text-sm font-semibold text-stone-500;
+  }
+
+  .battlefield-card-slot {
+    width: clamp(118px, 9vw, 152px);
+    height: calc(clamp(118px, 9vw, 152px) * 1.393);
+    flex: 0 0 auto;
+  }
+
+  .battlefield-card-slot-compact {
+    width: clamp(92px, 7vw, 118px);
+    height: calc(clamp(92px, 7vw, 118px) * 1.393);
+    flex: 0 0 auto;
+  }
+
+  .battlefield-empty,
+  .battlefield-empty-compact {
+    @apply flex items-center justify-center rounded-lg border border-dashed border-white/15 bg-stone-950/20 text-sm text-stone-100/55;
+  }
+
+  .battlefield-empty {
+    min-height: calc(clamp(118px, 9vw, 152px) * 1.393);
+  }
+
+  .battlefield-empty-compact {
+    min-height: calc(clamp(92px, 7vw, 118px) * 1.393);
+  }
+
+  .hand-card {
+    position: relative;
+    flex: 0 0 auto;
+    width: clamp(88px, calc((100vw - 96px) / var(--hand-count)), 156px);
+    height: calc(clamp(88px, calc((100vw - 96px) / var(--hand-count)), 156px) * 1.393);
+    z-index: var(--hand-z);
+    transform: translateY(48px);
+    transform-origin: 50% 100%;
+    transition:
+      transform 160ms ease,
+      z-index 0ms linear 160ms,
+      filter 160ms ease;
+  }
+
+  .hand-card:hover,
+  .hand-card:focus-within {
+    z-index: 80;
+    transform: translateY(-24px) scale(1.08);
+    filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.22));
+    transition:
+      transform 160ms ease,
+      z-index 0ms,
+      filter 160ms ease;
+  }
+}
