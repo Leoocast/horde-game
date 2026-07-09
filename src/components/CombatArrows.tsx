@@ -28,8 +28,8 @@ export function CombatArrows({ game }: { game: GameState }) {
           const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
           if (!blocker) continue;
           const blockerRect = blocker.getBoundingClientRect();
-          const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.82 };
-          const end = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
+          const start = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
+          const end = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.82 };
           next.push(makeArrow(`${attackerId}-${blockerId}`, start, end, color));
         }
       }

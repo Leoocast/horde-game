@@ -84,23 +84,32 @@ export function Battlefield({ game, side, cards }: Props) {
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
-    const selectedAttacker = selectedHordeCreatureId ? game.horde.battlefield.find((item) => item.instanceId === selectedHordeCreatureId) : undefined;
+    const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const isLand = card.cardTypes.includes("Land");
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
-    const legalBlocker = Boolean(hordeCombat && side === "player" && selectedAttacker && canBlockAttacker(game, card, selectedAttacker));
+    const legalBlocker = Boolean(
+      hordeCombat &&
+        side === "player" &&
+        card.cardTypes.includes("Creature") &&
+        game.combat.hordeAttackers.some((attackerId) => {
+          const attacker = game.horde.battlefield.find((item) => item.instanceId === attackerId);
+          return attacker ? canBlockAttacker(game, card, attacker) : false;
+        }),
+    );
+    const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
     const selectionDisabled =
       isLand ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
       (hordeCombat && side === "player" && !legalBlocker) ||
-      (hordeCombat && side === "horde" && !game.combat.hordeAttackers.includes(card.instanceId));
+      (hordeCombat && side === "horde" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde") ||
       (hordeCombat && side === "player" && !legalBlocker && !blocking && !isLand) ||
-      (hordeCombat && side === "horde" && !game.combat.hordeAttackers.includes(card.instanceId));
+      (hordeCombat && side === "horde" && !legalBlockTarget);
 
     return (
       <div key={`${keyPrefix}-${card.instanceId}`} className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}>
@@ -123,8 +132,12 @@ export function Battlefield({ game, side, cards }: Props) {
               return;
             }
             selectPlayerCreature(card.instanceId);
-            if (selectedHordeCreatureId && game.combat.hordeAttackers.includes(selectedHordeCreatureId)) declareBlocker(card.instanceId, selectedHordeCreatureId);
           } else {
+            if (hordeCombat && selectedPlayerCreatureId && game.combat.hordeAttackers.includes(card.instanceId)) {
+              declareBlocker(selectedPlayerCreatureId, card.instanceId);
+              selectPlayerCreature(undefined);
+              return;
+            }
             selectHordeCreature(card.instanceId);
           }
         }}
