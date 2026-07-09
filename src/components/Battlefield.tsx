@@ -107,9 +107,7 @@ export function Battlefield({ game, side, cards }: Props) {
       (hordeCombat && side === "horde" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
-      (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && !legalBlocker && !blocking && !isLand) ||
-      (hordeCombat && side === "horde" && !legalBlockTarget);
+      (playerCombat && side === "horde");
 
     return (
       <div key={`${keyPrefix}-${card.instanceId}`} className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}>

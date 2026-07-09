@@ -49,14 +49,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         setHoveredCardId(undefined);
         onLeave?.();
       }}
-      onClick={
-        selectionDisabled
-          ? undefined
-          : () => {
-              setFocusedCardId(card.instanceId);
-              onSelect?.();
-            }
-      }
+      onClick={() => {
+        setFocusedCardId(card.instanceId);
+        if (!selectionDisabled) onSelect?.();
+      }}
       style={style}
       className={[
         "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition",
