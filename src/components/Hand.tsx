@@ -82,7 +82,7 @@ function NewHorizonsTargetModal({
     <div className="fixed inset-0 z-[135] flex items-center justify-center bg-stone-950/70 p-6 text-white backdrop-blur-sm">
       <section className="w-full max-w-md rounded-3xl border border-emerald-200/20 bg-stone-950/90 p-5 shadow-2xl shadow-black/45">
         <h2 className="text-lg font-black">{card.displayName}</h2>
-        <p className="mt-1 text-sm text-stone-300">Elige la tierra encantada y la criatura que recibe el contador +1/+1.</p>
+        <p className="mt-1 text-sm text-stone-300">Choose the enchanted land and the creature that gets the +1/+1 counter.</p>
 
         <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-stone-300">Land</label>
         <select value={targetLand} onChange={(event) => setTargetLand(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-white/15 bg-stone-900 px-3 text-white outline-none focus:border-emerald-300/70">

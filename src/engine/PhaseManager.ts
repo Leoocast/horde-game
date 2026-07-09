@@ -28,9 +28,10 @@ export function endPlayerTurn(game: GameState): GameState {
   }
   if (next.setupTurnsRemaining === 1) {
     next.setupTurnsRemaining = 0;
-    next.setupCompletePendingHorde = true;
-    startPlayerTurnReady(next);
-    next.log.unshift("Setup complete. Finish your preparation to start the Horde.");
+    next.setupCompletePendingHorde = false;
+    next.activeSide = "horde";
+    next.phase = "horde";
+    next.log.unshift("Setup complete. Horde turn is ready.");
     return next;
   }
   next.setupCompletePendingHorde = false;

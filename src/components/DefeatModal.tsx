@@ -26,7 +26,7 @@ export function DefeatModal({ game, setupTurns }: Props) {
           <Skull size={32} />
         </div>
         <h2 className="mt-4 text-3xl font-black uppercase tracking-wide">You Lost</h2>
-        <p className="mt-2 text-sm leading-relaxed text-stone-300">Tus puntos de vida han sido reducidos a 0. Has perdido.</p>
+        <p className="mt-2 text-sm leading-relaxed text-stone-300">Your life total has been reduced to 0. You lost.</p>
 
         <label className="mt-6 block text-left text-xs font-bold uppercase tracking-wide text-stone-300" htmlFor="defeat-seed">
           Seed

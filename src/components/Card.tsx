@@ -47,7 +47,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       onMouseEnter={() => setHoveredCardId(card.instanceId)}
       onMouseLeave={() => {
         setHoveredCardId(undefined);
-        if (focusedCardId === card.instanceId) setFocusedCardId(undefined);
         onLeave?.();
       }}
       onClick={

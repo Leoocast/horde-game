@@ -49,7 +49,7 @@ export function CardPreview() {
           {keywords && <p className="text-sm font-semibold text-emerald-300">{keywords}</p>}
           {stats && <span className="ml-auto rounded border border-white/20 bg-white/10 px-2 py-1 text-sm font-bold">{stats}</span>}
         </div>
-        <p className="whitespace-pre-line text-sm leading-relaxed text-stone-100">{renderCardText(text)}</p>
+        <p className="whitespace-pre-line text-base leading-relaxed text-stone-100">{renderCardText(text)}</p>
       </div>
     </aside>
   );

@@ -45,7 +45,7 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCards.length === 0 ? (
           <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
         ) : (
-          <div className="flex flex-wrap gap-2">{rowCards.map((card) => renderCard(card, compact))}</div>
+          <div className="flex flex-wrap justify-center gap-2">{rowCards.map((card) => renderCard(card, compact))}</div>
         )}
       </div>
     );
@@ -69,7 +69,7 @@ export function Battlefield({ game, side, cards }: Props) {
               <h3 className="text-[11px] font-bold uppercase tracking-wide text-stone-100/90">Other permanents</h3>
               <span className="text-[11px] font-semibold text-stone-100/65">{others.length}</span>
             </div>
-            {others.length === 0 ? <div className="battlefield-empty-compact">Empty</div> : <div className="flex flex-wrap gap-2">{others.map((card) => renderCard(card, true, "other"))}</div>}
+            {others.length === 0 ? <div className="battlefield-empty-compact">Empty</div> : <div className="flex flex-wrap justify-center gap-2">{others.map((card) => renderCard(card, true, "other"))}</div>}
           </div>
         </div>
       </div>

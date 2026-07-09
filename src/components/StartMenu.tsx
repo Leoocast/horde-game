@@ -8,9 +8,9 @@ type Props = {
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Facil", setupTurns: 4, description: "4 turnos extra al inicio" },
-  { id: "normal", label: "Normal", setupTurns: 3, description: "3 turnos extra al inicio" },
-  { id: "hard", label: "Dificil", setupTurns: 2, description: "2 turnos extra al inicio" },
+  { id: "easy", label: "Easy", setupTurns: 4, description: "4 extra setup turns" },
+  { id: "normal", label: "Normal", setupTurns: 3, description: "3 extra setup turns" },
+  { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
 ];
 
 export function StartMenu({ onStart }: Props) {
@@ -23,22 +23,22 @@ export function StartMenu({ onStart }: Props) {
       <section className="w-full max-w-lg rounded-3xl border border-white/15 bg-stone-950/75 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-200">Horde Magic PvE</p>
-          <h1 className="mt-2 text-3xl font-black leading-tight">Nueva partida</h1>
+          <h1 className="mt-2 text-3xl font-black leading-tight">New Game</h1>
         </div>
 
         <label className="block text-xs font-bold uppercase tracking-wide text-stone-300" htmlFor="player-name">
-          Nombre
+          Name
         </label>
         <input
           id="player-name"
           value={playerName}
           onChange={(event) => setPlayerName(event.target.value)}
           className="mt-2 h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3 text-white outline-none transition placeholder:text-stone-500 focus:border-emerald-300/70"
-          placeholder="Jugador"
+          placeholder="Player"
         />
 
         <div className="mt-5">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-300">Modo</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-300">Mode</div>
           <div className="grid grid-cols-3 gap-2">
             {modes.map((item) => {
               const selected = item.id === mode;
