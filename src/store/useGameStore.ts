@@ -38,6 +38,7 @@ type GameStore = {
   runHordeMain: () => void;
   prepareHordeAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
+  cancelBlocks: () => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
 };
@@ -115,6 +116,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx(blockerWillDie(next, blockerId, attackerId) ? "defend" : "playLand");
       return { game: next };
+    }),
+  cancelBlocks: () =>
+    set(({ game }) => {
+      const next = structuredClone(game) as GameState;
+      next.combat.blockers = {};
+      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
     }),
   resolveHordeCombat: () => set(({ game }) => ({ game: resolveHordeCombat(game) })),
   finishHordeTurn: () =>
