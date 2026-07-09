@@ -93,6 +93,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     temporaryToughness: 0,
     temporaryKeywords: [],
     chosenColor,
+    attachTo: definition.attachTo,
     flags: { ...(definition.flags ?? {}) },
     variableCost: definition.variableCost,
   };

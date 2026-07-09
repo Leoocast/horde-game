@@ -124,6 +124,7 @@ export type CardInstance = {
   temporaryKeywords: Keyword[];
   chosenColor?: Color;
   xValuePaid?: number;
+  attachTo?: { targetRef: string };
   attachedTo?: string;
   flags: Record<string, boolean>;
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };

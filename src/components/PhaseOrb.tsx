@@ -1,8 +1,10 @@
 import { Check, FastForward, Sparkles, Swords } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
+import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 
 export function PhaseOrb({ game }: { game: GameState }) {
+  const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
   const runHordeMain = useGameStore((state) => state.runHordeMain);
@@ -21,7 +23,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <button
-      onClick={state.action}
+      data-audio-click="off"
+      onClick={() => {
+        playSfx("skipNextBattle");
+        state.action();
+      }}
       disabled={Boolean(game.winner)}
       className={[
         "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center rounded-full border-4 text-white transition hover:scale-105 xl:right-8",

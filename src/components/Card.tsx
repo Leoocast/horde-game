@@ -41,6 +41,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   return (
     <article
       data-card-id={card.instanceId}
+      data-audio-click={selectionDisabled ? undefined : "valid"}
+      role={selectionDisabled ? undefined : "button"}
+      aria-disabled={selectionDisabled ? "true" : undefined}
       onMouseEnter={() => setHoveredCardId(card.instanceId)}
       onMouseLeave={() => {
         setHoveredCardId(undefined);

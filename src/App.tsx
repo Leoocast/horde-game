@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { StartMenu, type DifficultyMode } from "./components/StartMenu";
 import { useGameStore } from "./store/useGameStore";
@@ -13,17 +14,25 @@ export default function App() {
 
   if (!started) {
     return (
-      <StartMenu
-        onStart={(options) => {
-          setPlayerName(options.playerName);
-          setMode(options.mode);
-          setSetupTurns(options.setupTurns);
-          reset(seed, options.setupTurns);
-          setStarted(true);
-        }}
-      />
+      <>
+        <AudioClickListener />
+        <StartMenu
+          onStart={(options) => {
+            setPlayerName(options.playerName);
+            setMode(options.mode);
+            setSetupTurns(options.setupTurns);
+            reset(seed, options.setupTurns);
+            setStarted(true);
+          }}
+        />
+      </>
     );
   }
 
-  return <Board playerName={playerName} mode={mode} setupTurns={setupTurns} />;
+  return (
+    <>
+      <AudioClickListener />
+      <Board playerName={playerName} mode={mode} setupTurns={setupTurns} />
+    </>
+  );
 }

@@ -1,11 +1,12 @@
 import { Menu, RefreshCcw } from "lucide-react";
 import { useState } from "react";
-import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
+import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
 import { ZoneDrawer } from "./ZoneDrawer";
 
-export function InfoMenu({ game }: { game: GameState }) {
+export function InfoMenu() {
+  const game = useGameStore((state) => state.game);
   const [open, setOpen] = useState(false);
   const seed = useGameStore((state) => state.seed);
   const setSeed = useGameStore((state) => state.setSeed);
@@ -27,29 +28,13 @@ export function InfoMenu({ game }: { game: GameState }) {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-6 gap-1 text-center text-xs">
-              <Mana label="G" value={game.player.manaPool.green} />
-              <Mana label="R" value={game.player.manaPool.red} />
-              <Mana label="U" value={game.player.manaPool.blue} />
-              <Mana label="W" value={game.player.manaPool.white} />
-              <Mana label="B" value={game.player.manaPool.black} />
-              <Mana label="C" value={game.player.manaPool.colorless} />
-            </div>
+            <AudioControls />
             <div className="text-xs text-stone-300">RNG: {game.currentRandomState.toString(16)}</div>
             <ZoneDrawer game={game} />
             <GameLog game={game} className="h-60" />
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function Mana({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded border border-emerald-300/20 bg-emerald-300/10 p-1">
-      <div className="font-bold text-emerald-200">{label}</div>
-      <div className="text-white">{value}</div>
     </div>
   );
 }

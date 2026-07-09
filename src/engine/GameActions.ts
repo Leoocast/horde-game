@@ -42,9 +42,10 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     card.zone = "battlefield";
     card.tapped = card.entersTapped;
     card.summoningSickness = card.cardTypes.includes("Creature");
+    if (card.attachTo?.targetRef) card.attachedTo = String(options.targets?.[card.attachTo.targetRef] ?? "");
     applyVariableCounters(card);
     next.player.battlefield.push(card);
-    runEnterBattlefieldTriggers(next, card);
+    runEnterBattlefieldTriggers(next, card, options.targets);
   }
   enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   drainEventQueue(next);

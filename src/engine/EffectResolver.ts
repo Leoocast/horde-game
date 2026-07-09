@@ -121,10 +121,10 @@ export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
   }
 }
 
-export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance): void {
+export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance, targets?: Record<string, string | string[]>): void {
   for (const wrapper of card.effects) {
     if (wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD") {
-      resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller });
+      resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
     }
   }
   enqueue(game, { type: "CREATURE_ENTERS_BATTLEFIELD", sourceId: card.instanceId, payload: { controller: card.controller } });
@@ -196,6 +196,11 @@ function resolveTargetCards(game: GameState, effect: EffectDefinition, context: 
     return ids.map((id) => findPermanent(game, id)).filter(Boolean) as CardInstance[];
   }
   const target = effect.target as Record<string, unknown> | undefined;
+  if (target?.type === "TARGET_CREATURE") {
+    const explicit = context.targets?.targetCreature ?? context.targets?.target;
+    const ids = Array.isArray(explicit) ? explicit : explicit ? [explicit] : [];
+    return ids.map((id) => findPermanent(game, id)).filter(Boolean) as CardInstance[];
+  }
   if (target?.type === "ALL_CREATURES") {
     const controller = target.controller === "SELF" ? context.side : context.side === "player" ? "horde" : "player";
     return game[controller].battlefield.filter((card) => card.cardTypes.includes("Creature"));
