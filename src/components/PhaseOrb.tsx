@@ -12,7 +12,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const resolveHordeCombat = useGameStore((state) => state.resolveHordeCombat);
   const finishHordeTurn = useGameStore((state) => state.finishHordeTurn);
   const cancelBlocks = useGameStore((state) => state.cancelBlocks);
-  const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0;
+  const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
+  const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
 
   const state = getOrbState(game, {
     startPlayerCombat: () => advancePhase("combat"),
@@ -52,10 +53,10 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner)}
-          className="fixed right-5 top-[calc(50%+3.25rem)] z-[80] flex h-10 w-20 items-center justify-center gap-1 rounded-full border border-white/20 bg-stone-950/80 text-[11px] font-black uppercase tracking-wide text-stone-100 shadow-xl shadow-black/35 backdrop-blur-md transition hover:bg-rose-950/80 xl:right-10"
+          className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-rose-200/45 bg-rose-950/90 text-[9px] font-black uppercase tracking-wide text-rose-50 shadow-xl shadow-rose-950/35 backdrop-blur-md transition hover:scale-105 hover:bg-rose-800/95 xl:right-12"
           title="Cancel blocks"
         >
-          <X size={14} />
+          <X size={18} />
           Cancel
         </button>
       )}
