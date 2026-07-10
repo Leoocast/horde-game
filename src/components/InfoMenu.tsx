@@ -5,7 +5,7 @@ import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
 import { ZoneDrawer } from "./ZoneDrawer";
 
-export function InfoMenu() {
+export function InfoMenu({ setupTurns }: { setupTurns: number }) {
   const game = useGameStore((state) => state.game);
   const [open, setOpen] = useState(false);
   const seed = useGameStore((state) => state.seed);
@@ -23,7 +23,7 @@ export function InfoMenu() {
               <label className="old-title text-xs font-bold uppercase tracking-wide">Seed</label>
               <div className="mt-1 flex gap-2">
                 <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input min-w-0 flex-1 px-2 py-1 text-sm outline-none focus:border-[#f4cc74]" />
-                <button className="icon-button" onClick={() => reset(seed)} title="Reset">
+                <button className="icon-button" onClick={() => reset(seed, setupTurns)} title="Reset">
                   <RefreshCcw size={16} />
                 </button>
               </div>

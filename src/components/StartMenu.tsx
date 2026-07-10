@@ -4,7 +4,8 @@ import { useState } from "react";
 export type DifficultyMode = "easy" | "normal" | "hard";
 
 type Props = {
-  onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number }) => void;
+  initialSeed: string;
+  onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
@@ -13,9 +14,10 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
   { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
 ];
 
-export function StartMenu({ onStart }: Props) {
+export function StartMenu({ initialSeed, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
+  const [seed, setSeed] = useState(initialSeed);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
 
   return (
@@ -35,6 +37,17 @@ export function StartMenu({ onStart }: Props) {
           onChange={(event) => setPlayerName(event.target.value)}
           className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
           placeholder="Player"
+        />
+
+        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="game-seed">
+          Seed
+        </label>
+        <input
+          id="game-seed"
+          value={seed}
+          onChange={(event) => setSeed(event.target.value)}
+          className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
+          placeholder="horde-mvp-001"
         />
 
         <div className="mt-5">
@@ -61,7 +74,7 @@ export function StartMenu({ onStart }: Props) {
 
         <button
           className="old-button-green mt-6 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-          onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns })}
+          onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: seed.trim() || initialSeed })}
         >
           <Play size={18} />
           Start

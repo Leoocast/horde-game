@@ -25,7 +25,7 @@ export function Board({ playerName, mode, setupTurns }: Props) {
         <GameStatusBadge game={game} />
         <TurnPhaseHud game={game} />
         <div className="pr-3 justify-self-end">
-          <InfoMenu />
+          <InfoMenu setupTurns={setupTurns} />
         </div>
       </header>
       <DuelHud game={game} />

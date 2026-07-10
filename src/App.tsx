@@ -17,11 +17,12 @@ export default function App() {
       <>
         <AudioClickListener />
         <StartMenu
+          initialSeed={seed}
           onStart={(options) => {
             setPlayerName(options.playerName);
             setMode(options.mode);
             setSetupTurns(options.setupTurns);
-            reset(seed, options.setupTurns);
+            reset(options.seed, options.setupTurns);
             setStarted(true);
           }}
         />

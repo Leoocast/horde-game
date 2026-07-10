@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAudioStore } from "../store/useAudioStore";
+import { useGameStore } from "../store/useGameStore";
 
 export function AudioClickListener() {
   useEffect(() => {
@@ -7,7 +8,10 @@ export function AudioClickListener() {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest("[data-audio-click='off']")) return;
-      if (!isValidClickTarget(target)) return;
+      if (!isValidClickTarget(target)) {
+        clearCardSelection();
+        return;
+      }
       const audio = useAudioStore.getState();
       audio.startBattleMusic();
       audio.playSfx("click", { volume: 0.65 });
@@ -18,6 +22,14 @@ export function AudioClickListener() {
   }, []);
 
   return null;
+}
+
+function clearCardSelection() {
+  const game = useGameStore.getState();
+  game.selectHand(undefined);
+  game.selectPlayerCreature(undefined);
+  game.selectHordeCreature(undefined);
+  game.setFocusedCardId(undefined);
 }
 
 function isValidClickTarget(target: Element) {
