@@ -22,7 +22,7 @@ export function Hand({ game }: { game: GameState }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 border-t-2 border-[#b88945]/70 bg-[#17100a]" />
         <div className="pointer-events-auto absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8">
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="popLayout">
             {game.player.hand.map((card, index) => {
             return (
               <motion.div

@@ -13,6 +13,7 @@ type Props = {
 };
 
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
+const hordeCommittedBattlefieldIds = new Set<string>();
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set());
@@ -32,12 +33,77 @@ export function Battlefield({ game, side, cards }: Props) {
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
 
   useEffect(() => {
-    for (const card of cards) seenCardIds.current.add(card.instanceId);
+    const frame = window.requestAnimationFrame(() => {
+      for (const card of cards) seenCardIds.current.add(card.instanceId);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [cards]);
 
   useLayoutEffect(() => {
     const root = boardRef.current;
     if (!root) return;
+
+    if (side === "horde") {
+      for (const card of cards) {
+        if (hordeCommittedBattlefieldIds.has(card.instanceId)) continue;
+        const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
+        if (!visual) continue;
+        visual.style.opacity = "0";
+        visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
+        visual.style.filter = "brightness(1.8) saturate(1.25)";
+        const animation = visual.animate(
+          [
+            {
+              opacity: 0,
+              transform: "translateY(-46px) scale(1.55) rotate(-3deg)",
+              filter: "brightness(1.8) saturate(1.25)",
+            },
+            {
+              opacity: 1,
+              transform: "translateY(0) scale(1) rotate(0)",
+              filter: "brightness(1) saturate(1)",
+            },
+          ],
+          {
+            duration: 360,
+            delay: hordeEntryDelay(card) * 1000,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            fill: "both",
+          },
+        );
+        animation.onfinish = () => {
+          visual.style.opacity = "";
+          visual.style.transform = "";
+          visual.style.filter = "";
+        };
+      }
+    }
+
+    const summoningElements = Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']"));
+    for (const visual of summoningElements) {
+      const id = visual.dataset.cardSlotId;
+      if (id) seenCardIds.current.add(id);
+      visual.animate(
+        [
+          {
+            opacity: 0,
+            transform: `translateY(${side === "horde" ? "-46px" : "46px"}) scale(1.55) rotate(${side === "horde" ? "-3deg" : "3deg"})`,
+            filter: "brightness(1.8) saturate(1.25)",
+          },
+          {
+            opacity: 1,
+            transform: "translateY(0) scale(1) rotate(0)",
+            filter: "brightness(1) saturate(1)",
+          },
+        ],
+        {
+          duration: 360,
+          delay: Number(visual.dataset.entryDelay ?? 0) * 1000,
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        },
+      );
+      visual.removeAttribute("data-summoning");
+    }
 
     const nextRects = new Map<string, DOMRect>();
     const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-card-layout-id]"));
@@ -67,6 +133,11 @@ export function Battlefield({ game, side, cards }: Props) {
     }
 
     previousRects.current = nextRects;
+
+    if (side === "horde") {
+      hordeCommittedBattlefieldIds.clear();
+      for (const card of cards) hordeCommittedBattlefieldIds.add(card.instanceId);
+    }
   });
 
   return (
@@ -140,7 +211,8 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function renderCard(card: CardInstance, compact = false, keyPrefix = "card") {
-    const firstTimeOnThisBattlefield = !seenCardIds.current.has(card.instanceId);
+    const useNewSummoning = side !== "horde";
+    const firstTimeOnThisBattlefield = useNewSummoning && !seenCardIds.current.has(card.instanceId);
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
@@ -179,30 +251,25 @@ export function Battlefield({ game, side, cards }: Props) {
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
         data-card-layout-id={card.instanceId}
-        initial={
-          firstTimeOnThisBattlefield
-            ? {
-                opacity: 0,
-                y: side === "horde" ? -46 : 46,
-                scale: 1.55,
-                rotate: side === "horde" ? -3 : 3,
-                filter: "brightness(1.8) saturate(1.25)",
-              }
-            : false
-        }
-        animate={{ opacity: 1, y: 0, scale: 1, rotate: 0, filter: "brightness(1) saturate(1)" }}
+        initial={false}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
         transition={{
           layout: { type: "spring", stiffness: 760, damping: 54, mass: 0.38 },
-          opacity: { duration: 0.18, ease: "easeOut", delay: entryDelay(card) },
-          scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1], delay: entryDelay(card) },
-          y: { duration: 0.34, ease: [0.16, 1, 0.3, 1], delay: entryDelay(card) },
-          rotate: { duration: 0.28, ease: "easeOut", delay: entryDelay(card) },
-          filter: { duration: 0.36, ease: "easeOut", delay: entryDelay(card) },
+          opacity: { duration: 0.18, ease: "easeOut" },
+          scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
+          y: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
+          rotate: { duration: 0.28, ease: "easeOut" },
+          filter: { duration: 0.36, ease: "easeOut" },
         }}
         className="battlefield-layout-slot"
       >
-      <div data-card-slot-id={card.instanceId} className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}>
+      <div
+        data-card-slot-id={card.instanceId}
+        data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
+        data-entry-delay={0}
+        className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}
+      >
       <Card
         game={game}
         card={card}
@@ -248,8 +315,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return blockColors[index % blockColors.length];
   }
 
-  function entryDelay(card: CardInstance): number {
-    if (side !== "horde" || seenCardIds.current.has(card.instanceId)) return 0;
+  function hordeEntryDelay(card: CardInstance): number {
     const index = cards.findIndex((item) => item.instanceId === card.instanceId);
     return Math.max(index, 0) * 0.04;
   }
