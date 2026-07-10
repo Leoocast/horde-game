@@ -3,7 +3,7 @@ import { canAttack, canBlockAttacker } from "../engine/Keywords";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 type Props = {
@@ -52,13 +52,11 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCards.length === 0 ? (
           <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
         ) : (
-          <LayoutGroup>
-            <motion.div layout className="flex flex-wrap justify-center gap-2">
-              <AnimatePresence mode="popLayout">
-                {rowCards.map((card) => renderCard(card, compact))}
-              </AnimatePresence>
-            </motion.div>
-          </LayoutGroup>
+          <div className="flex flex-wrap justify-center gap-2">
+            <AnimatePresence initial={false}>
+              {rowCards.map((card) => renderCard(card, compact))}
+            </AnimatePresence>
+          </div>
         )}
       </div>
     );
@@ -77,13 +75,11 @@ export function Battlefield({ game, side, cards }: Props) {
               {lands.length === 0 ? (
                 <div className="battlefield-empty-compact">Empty</div>
               ) : (
-                <LayoutGroup>
-                  <motion.div layout className="flex flex-wrap gap-2">
-                    <AnimatePresence mode="popLayout">
-                      {lands.map((card) => renderCard(card, true, "land"))}
-                    </AnimatePresence>
-                  </motion.div>
-                </LayoutGroup>
+                <div className="flex flex-wrap gap-2">
+                  <AnimatePresence initial={false}>
+                    {lands.map((card) => renderCard(card, true, "land"))}
+                  </AnimatePresence>
+                </div>
               )}
             </div>
           )}
@@ -95,13 +91,11 @@ export function Battlefield({ game, side, cards }: Props) {
             {others.length === 0 ? (
               <div className="battlefield-empty-compact">Empty</div>
             ) : (
-              <LayoutGroup>
-                <motion.div layout className="flex flex-wrap justify-center gap-2">
-                  <AnimatePresence mode="popLayout">
-                    {others.map((card) => renderCard(card, true, "other"))}
-                  </AnimatePresence>
-                </motion.div>
-              </LayoutGroup>
+              <div className="flex flex-wrap justify-center gap-2">
+                <AnimatePresence initial={false}>
+                  {others.map((card) => renderCard(card, true, "other"))}
+                </AnimatePresence>
+              </div>
             )}
           </div>
         </div>
@@ -148,7 +142,6 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
-        data-card-slot-id={card.instanceId}
         layout
         initial={
           firstTimeOnThisBattlefield
@@ -171,8 +164,9 @@ export function Battlefield({ game, side, cards }: Props) {
           rotate: { duration: 0.28, ease: "easeOut", delay: entryDelay(card) },
           filter: { duration: 0.36, ease: "easeOut", delay: entryDelay(card) },
         }}
-        className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}
+        className="battlefield-layout-slot"
       >
+      <div data-card-slot-id={card.instanceId} className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}>
       <Card
         game={game}
         card={card}
@@ -203,6 +197,7 @@ export function Battlefield({ game, side, cards }: Props) {
         }}
         onMana={side === "player" ? () => tapForMana(card.instanceId) : undefined}
       />
+      </div>
       </motion.div>
     );
   }

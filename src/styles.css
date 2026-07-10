@@ -205,6 +205,10 @@
     @apply flex min-h-16 items-center justify-center border border-dashed border-stone-300 bg-white p-2 text-sm font-semibold text-stone-500;
   }
 
+  .battlefield-layout-slot {
+    flex: 0 0 auto;
+  }
+
   .battlefield-card-slot {
     position: relative;
     width: clamp(118px, 9vw, 152px);
