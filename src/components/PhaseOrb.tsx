@@ -23,10 +23,15 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
+  const finishSetupAndRunHorde = () => {
+    endPlayerTurn();
+    useGameStore.getState().runHordeMain();
+  };
 
   const state = getOrbState(game, {
     startPlayerCombat: () => advancePhase("combat"),
     endPlayerTurn,
+    finishSetupAndRunHorde,
     runHordeMain,
     finishPlayerCombat,
     resolveHordeCombat,
@@ -76,7 +81,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
         <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
         <span className="relative z-10 flex flex-col items-center justify-center">
           <state.Icon size={26} />
-          <span className="mt-1 text-xs font-black uppercase leading-tight">{hordeAttackAnimating ? "Attack" : state.label}</span>
+          <span className="mt-1 text-xs font-black uppercase leading-tight">{state.label}</span>
         </span>
       </button>
       {showCancelDefense && (
@@ -136,6 +141,7 @@ function getOrbState(
   actions: {
     startPlayerCombat: () => void;
     endPlayerTurn: () => void;
+    finishSetupAndRunHorde: () => void;
     runHordeMain: () => void;
     finishPlayerCombat: () => void;
     resolveHordeCombat: () => void;
@@ -152,7 +158,10 @@ function getOrbState(
     return { label: "My Turn", Icon: Check, action: actions.finishHordeTurn, tone: "horde" as const };
   }
   if (game.setupTurnsRemaining > 0) {
-    return { label: game.setupTurnsRemaining === 1 ? "End Turn" : "Next Turn", Icon: game.setupTurnsRemaining === 1 ? Check : FastForward, action: actions.endPlayerTurn, tone: "skip" as const, warnIfActionsAvailable: true };
+    if (game.setupTurnsRemaining === 1) {
+      return { label: "End Turn", Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
+    }
+    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "skip" as const, warnIfActionsAvailable: true };
   }
   if (game.setupCompletePendingHorde) {
     return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };
