@@ -4,7 +4,7 @@ import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 type Props = {
   game: GameState;
@@ -16,6 +16,8 @@ const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set());
+  const boardRef = useRef<HTMLDivElement>(null);
+  const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
@@ -33,9 +35,43 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const card of cards) seenCardIds.current.add(card.instanceId);
   }, [cards]);
 
+  useLayoutEffect(() => {
+    const root = boardRef.current;
+    if (!root) return;
+
+    const nextRects = new Map<string, DOMRect>();
+    const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-card-layout-id]"));
+    for (const element of elements) {
+      const id = element.dataset.cardLayoutId;
+      if (!id) continue;
+      nextRects.set(id, element.getBoundingClientRect());
+    }
+
+    for (const element of elements) {
+      const id = element.dataset.cardLayoutId;
+      if (!id) continue;
+      const previous = previousRects.current.get(id);
+      const current = nextRects.get(id);
+      if (!previous || !current) continue;
+
+      const deltaX = previous.left - current.left;
+      const deltaY = previous.top - current.top;
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
+
+      const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
+      if (!visual || visual.style.visibility === "hidden") continue;
+      visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
+        duration: 360,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      });
+    }
+
+    previousRects.current = nextRects;
+  });
+
   return (
     <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={cards.length}>
-      <div className="space-y-3">
+      <div ref={boardRef} className="space-y-3">
         <BattlefieldRow title="Creatures" cards={creatures} />
         {(side === "player" || others.length > 0) && <ResourceRow lands={side === "player" ? lands : []} others={others} showLands={side === "player"} />}
       </div>
@@ -53,7 +89,7 @@ export function Battlefield({ game, side, cards }: Props) {
           <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
         ) : (
           <div className="flex flex-wrap justify-center gap-2">
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="popLayout">
               {rowCards.map((card) => renderCard(card, compact))}
             </AnimatePresence>
           </div>
@@ -76,7 +112,7 @@ export function Battlefield({ game, side, cards }: Props) {
                 <div className="battlefield-empty-compact">Empty</div>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  <AnimatePresence initial={false}>
+                  <AnimatePresence initial={false} mode="popLayout">
                     {lands.map((card) => renderCard(card, true, "land"))}
                   </AnimatePresence>
                 </div>
@@ -92,7 +128,7 @@ export function Battlefield({ game, side, cards }: Props) {
               <div className="battlefield-empty-compact">Empty</div>
             ) : (
               <div className="flex flex-wrap justify-center gap-2">
-                <AnimatePresence initial={false}>
+                <AnimatePresence initial={false} mode="popLayout">
                   {others.map((card) => renderCard(card, true, "other"))}
                 </AnimatePresence>
               </div>
@@ -142,7 +178,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
-        layout
+        data-card-layout-id={card.instanceId}
         initial={
           firstTimeOnThisBattlefield
             ? {
