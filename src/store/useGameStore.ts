@@ -155,9 +155,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ hordeAttackAnimation: { attackerId: event.attackerId, eventId: index } });
       }, startAt);
 
-      window.setTimeout(() => {
-        set({ hordeAttackAnimation: undefined });
-      }, startAt + HORDE_ATTACK_ANIMATION_MS);
     });
 
     window.setTimeout(() => {

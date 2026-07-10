@@ -5,6 +5,7 @@ import { CombatArrows } from "./CombatArrows";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
+import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { TurnPhaseHud } from "./TurnPhaseHud";
@@ -31,6 +32,7 @@ export function Board({ playerName, mode, setupTurns }: Props) {
       <DuelHud game={game} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
+      <HordeAttackAnimator />
       <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden p-3 pb-56 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="space-y-3">
           <CardPreview />
