@@ -8,6 +8,7 @@ import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseOrb } from "./PhaseOrb";
+import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import type { DifficultyMode } from "./StartMenu";
 import { DefeatModal } from "./DefeatModal";
@@ -33,6 +34,7 @@ export function Board({ playerName, mode, setupTurns }: Props) {
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <HordeAttackAnimator />
+      <PlayerAttackAnimator />
       <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden p-3 pb-56 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="space-y-3">
           <CardPreview />

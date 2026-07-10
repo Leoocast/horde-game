@@ -19,6 +19,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
+  const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
@@ -42,6 +43,21 @@ export function Battlefield({ game, side, cards }: Props) {
   useLayoutEffect(() => {
     const root = boardRef.current;
     if (!root) return;
+
+    if (side === "player") {
+      const currentAttackers = new Set(game.combat.playerAttackers);
+      for (const attackerId of currentAttackers) {
+        if (previousPlayerAttackers.current.has(attackerId)) continue;
+        const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${attackerId}"]`);
+        if (visual) animateReadiedShift(visual, true);
+      }
+      for (const attackerId of previousPlayerAttackers.current) {
+        if (currentAttackers.has(attackerId)) continue;
+        const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${attackerId}"]`);
+        if (visual) animateReadiedShift(visual, false);
+      }
+      previousPlayerAttackers.current = currentAttackers;
+    }
 
     if (side === "horde") {
       for (const card of cards) {
@@ -268,7 +284,10 @@ export function Battlefield({ game, side, cards }: Props) {
         data-card-slot-id={card.instanceId}
         data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
         data-entry-delay={0}
-        className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}
+        className={[
+          compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
+          side === "player" && attacking ? "player-attacker-readied" : "",
+        ].join(" ")}
       >
       <Card
         game={game}
@@ -319,4 +338,11 @@ export function Battlefield({ game, side, cards }: Props) {
     const index = cards.findIndex((item) => item.instanceId === card.instanceId);
     return Math.max(index, 0) * 0.04;
   }
+}
+
+function animateReadiedShift(element: HTMLElement, forward: boolean): void {
+  element.animate([{ top: forward ? "0px" : "-18px" }, { top: forward ? "-18px" : "0px" }], {
+    duration: 220,
+    easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  });
 }

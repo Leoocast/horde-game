@@ -13,6 +13,7 @@ import { useAudioStore } from "./useAudioStore";
 type GameStore = {
   game: GameState;
   hordeAttackAnimation?: HordeAttackAnimation;
+  playerAttackAnimation?: PlayerAttackAnimation;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -46,6 +47,7 @@ type GameStore = {
 
 const defaultSeed = "horde-mvp-001";
 const HORDE_ATTACK_ANIMATION_MS = 500;
+const PLAYER_ATTACK_ANIMATION_MS = 500;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -64,9 +66,15 @@ type HordeAttackEvent = {
   playerDamage: number;
 };
 
+type PlayerAttackAnimation = {
+  attackerId: string;
+  eventId: number;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 3),
   hordeAttackAnimation: undefined,
+  playerAttackAnimation: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 3) =>
     set(() => {
@@ -80,6 +88,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hoveredCardId: undefined,
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
+        playerAttackAnimation: undefined,
       };
     }),
   setSeed: (seed) => set({ seed }),
@@ -123,11 +132,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);
       const next = togglePlayerAttacker(game, id);
-      if (!wasAttacking && next.combat.playerAttackers.includes(id)) useAudioStore.getState().playSfx("attack");
+      const changed = wasAttacking !== next.combat.playerAttackers.includes(id);
+      if (changed) useAudioStore.getState().playSfx("playLand");
       return { game: next };
     }),
   resolvePlayerCombat: () => set(({ game }) => ({ game: resolvePlayerCombat(game) })),
-  finishPlayerCombat: () => set(({ game }) => ({ game: endPlayerTurn(resolvePlayerCombat(game)), selectedPlayerCreatureId: undefined })),
+  finishPlayerCombat: () => {
+    const { game, playerAttackAnimation } = get();
+    if (playerAttackAnimation) return;
+
+    const attackers = [...game.combat.playerAttackers];
+    if (attackers.length === 0) {
+      set({ game: endPlayerTurn(resolvePlayerCombat(game)), selectedPlayerCreatureId: undefined });
+      return;
+    }
+
+    attackers.forEach((attackerId, index) => {
+      const startAt = index * PLAYER_ATTACK_ANIMATION_MS;
+      window.setTimeout(() => {
+        useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+        set({ playerAttackAnimation: { attackerId, eventId: index } });
+      }, startAt);
+    });
+
+    window.setTimeout(() => {
+      const latest = get().game;
+      set({ game: endPlayerTurn(resolvePlayerCombat(latest)), playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined });
+    }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
+  },
   runHordeMain: () => set(({ game }) => ({ game: runFullHordeTurn(game), selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined })),
   prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
   declareBlocker: (blockerId, attackerId) =>
@@ -145,8 +177,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
     }),
   resolveHordeCombat: () => {
-    const { game, hordeAttackAnimation } = get();
-    if (hordeAttackAnimation) return;
+    const { game, hordeAttackAnimation, playerAttackAnimation } = get();
+    if (hordeAttackAnimation || playerAttackAnimation) return;
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {

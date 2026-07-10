@@ -21,6 +21,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const finishHordeTurn = useGameStore((state) => state.finishHordeTurn);
   const cancelBlocks = useGameStore((state) => state.cancelBlocks);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
+  const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const finishSetupAndRunHorde = () => {
@@ -62,7 +64,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <button
         data-audio-click="off"
         onClick={runOrbAction}
-        disabled={Boolean(game.winner) || hordeAttackAnimating}
+        disabled={Boolean(game.winner) || attackAnimating}
         className={[
           "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-8",
           state.tone === "confirm"
@@ -88,7 +90,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
         <button
           data-audio-click="valid"
           onClick={cancelBlocks}
-          disabled={Boolean(game.winner) || hordeAttackAnimating}
+          disabled={Boolean(game.winner) || attackAnimating}
           className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-12"
           title="Cancel blocks"
         >
