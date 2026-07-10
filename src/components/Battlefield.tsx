@@ -253,11 +253,12 @@ export function Battlefield({ game, side, cards }: Props) {
         }),
     );
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
+    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       isLand ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && !legalBlocker) ||
+      (hordeCombat && side === "player" && !selectableBlocker) ||
       (hordeCombat && side === "horde" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
@@ -298,13 +299,22 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         actionable={actionable}
-        accentColor={side === "player" ? assignedColor ?? attackerColor : undefined}
+        accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
         onSelect={() => {
           if (side === "player") {
             if (isLand) return;
+            if (hordeCombat) {
+              if (assignedAttackerId) {
+                declareBlocker(card.instanceId, assignedAttackerId);
+                selectPlayerCreature(card.instanceId);
+                return;
+              }
+              selectPlayerCreature(selected ? undefined : card.instanceId);
+              return;
+            }
             if (playerCombat) {
               toggleAttacker(card.instanceId);
               return;
