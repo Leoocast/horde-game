@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 
@@ -7,9 +8,12 @@ type Arrow = {
   id: string;
   color: string;
   body: string;
+  tip: string;
+  gradientId: string;
+  startX: number;
+  startY: number;
   tipX: number;
   tipY: number;
-  angle: number;
 };
 
 export function CombatArrows({ game }: { game: GameState }) {
@@ -49,25 +53,50 @@ export function CombatArrows({ game }: { game: GameState }) {
     };
   }, [game.combat.blockers, game.combat.hordeAttackers]);
 
-  if (arrows.length === 0) return null;
-
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">
       <defs>
-        <filter id="combat-arrow-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
+        <filter id="combat-arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />
         </filter>
+        {arrows.map((arrow) => (
+          <linearGradient key={arrow.gradientId} id={arrow.gradientId} gradientUnits="userSpaceOnUse" x1={arrow.startX} y1={arrow.startY} x2={arrow.tipX} y2={arrow.tipY}>
+            <stop offset="0%" stopColor="#080402" />
+            <stop offset="42%" stopColor="#140b05" />
+            <stop offset="100%" stopColor={arrow.color} />
+          </linearGradient>
+        ))}
       </defs>
-      {arrows.map((arrow) => (
-        <g key={arrow.id} filter="url(#combat-arrow-glow)">
-          <polygon points={arrow.body} fill={arrow.color} opacity="0.88" stroke="rgba(255,255,255,0.88)" strokeWidth="1" />
-          <polygon points={arrowTip(arrow.tipX, arrow.tipY, arrow.angle)} fill={arrow.color} stroke="rgba(255,255,255,0.92)" strokeWidth="1" />
-        </g>
-      ))}
+      <AnimatePresence>
+        {arrows.map((arrow) => (
+          <motion.g
+            key={arrow.id}
+            filter="url(#combat-arrow-shadow)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+          >
+            <motion.g
+              initial={{ clipPath: "inset(100% 0 0 0)" }}
+              animate={{ clipPath: "inset(0 0 0% 0)" }}
+              exit={{ clipPath: "inset(100% 0 0 0)" }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <polygon points={arrow.body} fill="rgba(15,8,3,0.94)" />
+              <polygon points={arrow.tip} fill="rgba(15,8,3,0.94)" />
+              <motion.g
+                initial={{ opacity: 0.85 }}
+                animate={{ opacity: [0.82, 0.96, 0.88] }}
+                transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <polygon points={arrow.body} fill={`url(#${arrow.gradientId})`} opacity="0.9" stroke="rgba(255,236,184,0.74)" strokeWidth="1" />
+                <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.98" stroke="rgba(255,236,184,0.9)" strokeWidth="1.25" />
+              </motion.g>
+            </motion.g>
+          </motion.g>
+        ))}
+      </AnimatePresence>
     </svg>
   );
 }
@@ -80,27 +109,19 @@ function makeArrow(id: string, start: { x: number; y: number }, end: { x: number
   const uy = dy / length;
   const px = -uy;
   const py = ux;
-  const base = 10;
-  const neck = 3;
-  const neckAt = { x: end.x - ux * 15, y: end.y - uy * 15 };
+  const base = 12;
+  const neck = 5;
+  const headLength = 24;
+  const headWing = 13;
+  const neckAt = { x: end.x - ux * headLength, y: end.y - uy * headLength };
   const body = [
     `${start.x + px * base},${start.y + py * base}`,
     `${neckAt.x + px * neck},${neckAt.y + py * neck}`,
     `${neckAt.x - px * neck},${neckAt.y - py * neck}`,
     `${start.x - px * base},${start.y - py * base}`,
   ].join(" ");
-  return { id, color, body, tipX: end.x, tipY: end.y, angle: Math.atan2(dy, dx) };
-}
-
-function arrowTip(x: number, y: number, angle: number): string {
-  const size = 19;
-  const wing = 8;
-  const ux = Math.cos(angle);
-  const uy = Math.sin(angle);
-  const px = -uy;
-  const py = ux;
-  const back = { x: x - ux * size, y: y - uy * size };
-  return [`${x},${y}`, `${back.x + px * wing},${back.y + py * wing}`, `${back.x - px * wing},${back.y - py * wing}`].join(" ");
+  const tip = [`${end.x},${end.y}`, `${neckAt.x + px * headWing},${neckAt.y + py * headWing}`, `${neckAt.x - px * headWing},${neckAt.y - py * headWing}`].join(" ");
+  return { id, color, body, tip, gradientId: `combat-arrow-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`, startX: start.x, startY: start.y, tipX: end.x, tipY: end.y };
 }
 
 function getAttackerColor(game: GameState, attackerId: string): string {

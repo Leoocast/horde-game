@@ -4,6 +4,7 @@ import { canPay, parseManaCost } from "../engine/ManaSystem";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function Hand({ game }: { game: GameState }) {
   const selectedHandId = useGameStore((state) => state.selectedHandId);
@@ -21,30 +22,40 @@ export function Hand({ game }: { game: GameState }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 border-t-2 border-[#b88945]/70 bg-[#17100a]" />
         <div className="pointer-events-auto absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8">
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
+            <AnimatePresence initial={false}>
             {game.player.hand.map((card, index) => {
             return (
-              <div
+              <motion.div
                 key={card.instanceId}
-                className="hand-card"
-                style={{ "--hand-z": index + 1 } as React.CSSProperties}
+                layout
+                initial={{ opacity: 0, y: 56, rotate: -2, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -80, rotate: 5, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 520, damping: 38, mass: 0.62 }}
               >
-                <Card
-                  game={game}
-                  card={card}
-                  selected={selectedHandId === card.instanceId}
-                  onSelect={() => selectHand(card.instanceId)}
-                  onLeave={() => {
-                    if (selectedHandId === card.instanceId) selectHand(undefined);
-                  }}
-                  playDisabled={!isPlayableFromHand(game, card)}
-                  onPlay={() => {
-                    if (card.definitionId === "new_horizons") setNewHorizonsCard(card);
-                    else playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);
-                  }}
-                />
-              </div>
+                <div
+                  className="hand-card"
+                  style={{ "--hand-z": index + 1 } as React.CSSProperties}
+                >
+                  <Card
+                    game={game}
+                    card={card}
+                    selected={selectedHandId === card.instanceId}
+                    onSelect={() => selectHand(card.instanceId)}
+                    onLeave={() => {
+                      if (selectedHandId === card.instanceId) selectHand(undefined);
+                    }}
+                    playDisabled={!isPlayableFromHand(game, card)}
+                    onPlay={() => {
+                      if (card.definitionId === "new_horizons") setNewHorizonsCard(card);
+                      else playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);
+                    }}
+                  />
+                </div>
+              </motion.div>
             );
           })}
+            </AnimatePresence>
             </div>
         </div>
       </section>

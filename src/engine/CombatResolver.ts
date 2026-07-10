@@ -31,10 +31,10 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
     next.combat.blockers[attackerId] = current.filter((id) => id !== blockerId);
     return log(next, `${blocker.name} stops blocking ${attacker.name}.`);
   }
-  for (const [otherAttackerId, blockerIds] of Object.entries(next.combat.blockers)) {
-    if (otherAttackerId !== attackerId) {
-      next.combat.blockers[otherAttackerId] = blockerIds.filter((id) => id !== blockerId);
-    }
+  const alreadyBlocking = Object.entries(next.combat.blockers).find(([otherAttackerId, blockerIds]) => otherAttackerId !== attackerId && blockerIds.includes(blockerId));
+  if (alreadyBlocking) {
+    const blockedAttacker = next.horde.battlefield.find((card) => card.instanceId === alreadyBlocking[0]);
+    return log(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
   }
   next.combat.blockers[attackerId] = [...current, blockerId];
   return log(next, `${blocker.name} blocks ${attacker.name}.`);
