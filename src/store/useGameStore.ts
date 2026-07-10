@@ -49,6 +49,7 @@ const HORDE_ATTACK_ANIMATION_MS = 500;
 
 type HordeAttackAnimation = {
   attackerId: string;
+  attackerDies: boolean;
   blockerId?: string;
   blockerDies: boolean;
   eventId: number;
@@ -56,6 +57,7 @@ type HordeAttackAnimation = {
 
 type HordeAttackEvent = {
   attackerId: string;
+  attackerDies: boolean;
   blockerId?: string;
   blockerDies: boolean;
 };
@@ -154,7 +156,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const startAt = index * HORDE_ATTACK_ANIMATION_MS;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
-        set({ hordeAttackAnimation: { attackerId: event.attackerId, blockerId: event.blockerId, blockerDies: event.blockerDies, eventId: index } });
+        set({ hordeAttackAnimation: { attackerId: event.attackerId, attackerDies: event.attackerDies, blockerId: event.blockerId, blockerDies: event.blockerDies, eventId: index } });
       }, startAt);
     });
 
@@ -212,16 +214,28 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
   for (const attackerId of game.combat.hordeAttackers) {
     const blockerIds = game.combat.blockers[attackerId] ?? [];
     if (blockerIds.length === 0) {
-      events.push({ attackerId, blockerDies: false });
+      events.push({ attackerId, attackerDies: false, blockerDies: false });
       continue;
     }
 
+    const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
+    if (!attacker) continue;
+    const attackerStats = getPowerToughness(game, attacker);
+    let attackerDamage = attacker.damageMarked;
+
     for (const blockerId of blockerIds) {
+      const blocker = game.player.battlefield.find((card) => card.instanceId === blockerId);
+      if (!blocker) continue;
+      const blockerStats = getPowerToughness(game, blocker);
+      const attackerDies = blockerStats.power > 0 && (hasKeyword(game, blocker, "DEATHTOUCH") || attackerDamage + blockerStats.power >= attackerStats.toughness);
       events.push({
         attackerId,
+        attackerDies,
         blockerId,
         blockerDies: blockerWillDie(game, blockerId, attackerId),
       });
+      attackerDamage += blockerStats.power;
+      if (attackerDies) break;
     }
   }
   return events;
