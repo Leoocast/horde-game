@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
+import { useGameStore } from "../store/useGameStore";
 
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
 
@@ -18,6 +19,25 @@ type Arrow = {
 
 export function CombatArrows({ game }: { game: GameState }) {
   const [arrows, setArrows] = useState<Arrow[]>([]);
+  const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
+  const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+
+  useEffect(() => {
+    if (Object.keys(game.combat.blockers).length === 0) {
+      setHiddenArrowIds(new Set());
+    }
+  }, [game.combat.blockers]);
+
+  useEffect(() => {
+    if (!hordeAttackAnimation?.blockerDies || !hordeAttackAnimation.blockerId) return;
+    const arrowId = `${hordeAttackAnimation.attackerId}-${hordeAttackAnimation.blockerId}`;
+    setHiddenArrowIds((current) => {
+      if (current.has(arrowId)) return current;
+      const next = new Set(current);
+      next.add(arrowId);
+      return next;
+    });
+  }, [hordeAttackAnimation]);
 
   useEffect(() => {
     let frame = 0;
@@ -29,12 +49,14 @@ export function CombatArrows({ game }: { game: GameState }) {
         const attackerRect = attacker.getBoundingClientRect();
         const color = getAttackerColor(game, attackerId);
         for (const blockerId of blockerIds) {
+          const arrowId = `${attackerId}-${blockerId}`;
+          if (hiddenArrowIds.has(arrowId)) continue;
           const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
           if (!blocker) continue;
           const blockerRect = blocker.getBoundingClientRect();
           const start = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
           const end = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.82 };
-          next.push(makeArrow(`${attackerId}-${blockerId}`, start, end, color));
+          next.push(makeArrow(arrowId, start, end, color));
         }
       }
       setArrows(next);
@@ -51,7 +73,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule, true);
     };
-  }, [game.combat.blockers, game.combat.hordeAttackers]);
+  }, [game.combat.blockers, game.combat.hordeAttackers, hiddenArrowIds]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">

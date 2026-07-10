@@ -49,6 +49,8 @@ const HORDE_ATTACK_ANIMATION_MS = 500;
 
 type HordeAttackAnimation = {
   attackerId: string;
+  blockerId?: string;
+  blockerDies: boolean;
   eventId: number;
 };
 
@@ -152,9 +154,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const startAt = index * HORDE_ATTACK_ANIMATION_MS;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
-        set({ hordeAttackAnimation: { attackerId: event.attackerId, eventId: index } });
+        set({ hordeAttackAnimation: { attackerId: event.attackerId, blockerId: event.blockerId, blockerDies: event.blockerDies, eventId: index } });
       }, startAt);
-
     });
 
     window.setTimeout(() => {
