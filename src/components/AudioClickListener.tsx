@@ -8,7 +8,9 @@ export function AudioClickListener() {
       if (!(target instanceof Element)) return;
       if (target.closest("[data-audio-click='off']")) return;
       if (!isValidClickTarget(target)) return;
-      useAudioStore.getState().playSfx("click", { volume: 0.65 });
+      const audio = useAudioStore.getState();
+      audio.startBattleMusic();
+      audio.playSfx("click", { volume: 0.65 });
     }
 
     document.addEventListener("click", handleClick, true);

@@ -6,9 +6,15 @@ import type { SfxId } from "../audio/soundManifest";
 type AudioStore = {
   enabled: boolean;
   sfxVolume: number;
+  musicEnabled: boolean;
+  musicVolume: number;
   setEnabled: (enabled: boolean) => void;
   setSfxVolume: (volume: number) => void;
+  setMusicEnabled: (enabled: boolean) => void;
+  setMusicVolume: (volume: number) => void;
   playSfx: (id: SfxId, options?: { volume?: number; rate?: number }) => void;
+  startBattleMusic: () => void;
+  stopMusic: () => void;
   preload: () => void;
   stopAllSfx: () => void;
 };
@@ -18,6 +24,8 @@ export const useAudioStore = create<AudioStore>()(
     (set, get) => ({
       enabled: true,
       sfxVolume: 0.8,
+      musicEnabled: true,
+      musicVolume: 0.45,
       setEnabled: (enabled) => {
         set({ enabled });
         syncEngine();
@@ -26,10 +34,24 @@ export const useAudioStore = create<AudioStore>()(
         set({ sfxVolume: clamp01(volume) });
         syncEngine();
       },
+      setMusicEnabled: (musicEnabled) => {
+        set({ musicEnabled });
+        syncEngine();
+        if (musicEnabled) audioEngine.startRandomBattleTheme();
+      },
+      setMusicVolume: (volume) => {
+        set({ musicVolume: clamp01(volume) });
+        syncEngine();
+      },
       playSfx: (id, options) => {
         syncEngine();
         audioEngine.playSfx(id, options);
       },
+      startBattleMusic: () => {
+        syncEngine();
+        audioEngine.startRandomBattleTheme();
+      },
+      stopMusic: () => audioEngine.stopMusic(),
       preload: () => {
         syncEngine();
         audioEngine.preloadSfx();
@@ -38,15 +60,15 @@ export const useAudioStore = create<AudioStore>()(
     }),
     {
       name: "horde-audio-settings",
-      partialize: (state) => ({ enabled: state.enabled, sfxVolume: state.sfxVolume }),
+      partialize: (state) => ({ enabled: state.enabled, sfxVolume: state.sfxVolume, musicEnabled: state.musicEnabled, musicVolume: state.musicVolume }),
       onRehydrateStorage: () => () => syncEngine(),
     },
   ),
 );
 
 function syncEngine() {
-  const { enabled, sfxVolume } = useAudioStore.getState();
-  audioEngine.configure({ enabled, sfxVolume });
+  const { enabled, sfxVolume, musicEnabled, musicVolume } = useAudioStore.getState();
+  audioEngine.configure({ enabled, sfxVolume, musicEnabled, musicVolume });
 }
 
 function clamp01(value: number) {

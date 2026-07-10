@@ -1,11 +1,15 @@
-import { Volume2, VolumeX } from "lucide-react";
+import { Music, Volume2, VolumeX } from "lucide-react";
 import { useAudioStore } from "../store/useAudioStore";
 
 export function AudioControls() {
   const enabled = useAudioStore((state) => state.enabled);
   const sfxVolume = useAudioStore((state) => state.sfxVolume);
+  const musicEnabled = useAudioStore((state) => state.musicEnabled);
+  const musicVolume = useAudioStore((state) => state.musicVolume);
   const setEnabled = useAudioStore((state) => state.setEnabled);
   const setSfxVolume = useAudioStore((state) => state.setSfxVolume);
+  const setMusicEnabled = useAudioStore((state) => state.setMusicEnabled);
+  const setMusicVolume = useAudioStore((state) => state.setMusicVolume);
   const playSfx = useAudioStore((state) => state.playSfx);
 
   return (
@@ -40,6 +44,30 @@ export function AudioControls() {
       >
         Test
       </button>
+      <div className="mt-4 border-t border-white/10 pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs font-bold uppercase tracking-wide text-stone-300">Music</div>
+          <button
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-cyan-100 transition hover:border-cyan-200/60"
+            onClick={() => setMusicEnabled(!musicEnabled)}
+            title={musicEnabled ? "Mute music" : "Enable music"}
+          >
+            {musicEnabled ? <Music size={16} /> : <VolumeX size={16} />}
+          </button>
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={musicVolume}
+            onChange={(event) => setMusicVolume(Number(event.target.value))}
+            className="min-w-0 flex-1 accent-cyan-300"
+          />
+          <span className="w-9 text-right text-xs font-bold text-stone-300">{Math.round(musicVolume * 100)}</span>
+        </div>
+      </div>
     </section>
   );
 }
