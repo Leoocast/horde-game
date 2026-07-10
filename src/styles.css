@@ -17,20 +17,24 @@
   body {
     margin: 0;
     font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    background: #100b07;
   }
 
   .duel-table {
     background:
-      radial-gradient(circle at 50% 38%, rgb(187 247 208 / 0.38), transparent 26rem),
-      linear-gradient(90deg, rgb(68 64 60 / 0.12) 1px, transparent 1px),
-      linear-gradient(0deg, rgb(68 64 60 / 0.12) 1px, transparent 1px),
-      linear-gradient(135deg, #7c8f68, #c5c1a3 48%, #8b9d74);
+      radial-gradient(circle at 50% 34%, rgb(172 119 37 / 0.24), transparent 30rem),
+      radial-gradient(circle at 72% 10%, rgb(255 104 26 / 0.18), transparent 16rem),
+      linear-gradient(90deg, rgb(50 36 19 / 0.28) 1px, transparent 1px),
+      linear-gradient(0deg, rgb(50 36 19 / 0.28) 1px, transparent 1px),
+      linear-gradient(135deg, #192018, #5b6545 48%, #21160e);
     background-size:
+      auto,
       auto,
       96px 96px,
       96px 96px,
       auto;
+    color: #f6e6b8;
   }
 
   button:disabled {
@@ -40,12 +44,133 @@
 }
 
 @layer components {
+  .old-panel {
+    border: 2px solid rgb(191 145 66 / 0.65);
+    border-radius: 10px;
+    background:
+      linear-gradient(180deg, rgb(66 54 36 / 0.92), rgb(22 17 12 / 0.94)),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.04) 0 1px, transparent 1px 8px);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 238 190 / 0.18),
+      inset 0 14px 24px rgb(255 226 149 / 0.06),
+      0 18px 36px rgb(0 0 0 / 0.45);
+  }
+
+  .old-panel-soft {
+    border: 1px solid rgb(163 119 54 / 0.55);
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at 50% 0%, rgb(255 216 129 / 0.1), transparent 60%),
+      linear-gradient(180deg, rgb(74 65 45 / 0.74), rgb(25 22 16 / 0.74));
+    box-shadow:
+      inset 0 0 0 1px rgb(255 238 190 / 0.12),
+      inset 0 -18px 24px rgb(0 0 0 / 0.2);
+  }
+
+  .old-title {
+    color: #ffd98a;
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    text-shadow:
+      0 1px 0 #2a1007,
+      0 0 10px rgb(255 100 24 / 0.5);
+  }
+
+  .old-button {
+    border: 2px solid rgb(214 164 76 / 0.8);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, #8f2e16, #5b160e 48%, #2b0c07),
+      linear-gradient(90deg, transparent, rgb(255 224 137 / 0.16), transparent);
+    color: #ffdf99;
+    text-shadow: 0 1px 0 #1a0604;
+    box-shadow:
+      inset 0 1px 0 rgb(255 238 190 / 0.5),
+      inset 0 -7px 12px rgb(0 0 0 / 0.34),
+      0 4px 0 #1b0d08,
+      0 8px 18px rgb(0 0 0 / 0.35);
+  }
+
+  .old-button:hover {
+    background:
+      linear-gradient(180deg, #b44019, #6f1e10 48%, #330d07),
+      linear-gradient(90deg, transparent, rgb(255 224 137 / 0.18), transparent);
+    color: #fff1bd;
+  }
+
+  .old-button-green {
+    border: 2px solid rgb(226 190 91 / 0.9);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, #4d7f1d, #2f5516 50%, #18300c),
+      linear-gradient(90deg, transparent, rgb(255 239 160 / 0.2), transparent);
+    color: #fff0a8;
+    text-shadow: 0 1px 0 #102008;
+    box-shadow:
+      inset 0 1px 0 rgb(255 246 180 / 0.55),
+      inset 0 -7px 12px rgb(0 0 0 / 0.35),
+      0 4px 0 #101b0a,
+      0 8px 18px rgb(0 0 0 / 0.35);
+  }
+
+  .old-button-green:hover {
+    background:
+      linear-gradient(180deg, #6aa42b, #3c6b1b 50%, #1d3a0e),
+      linear-gradient(90deg, transparent, rgb(255 239 160 / 0.22), transparent);
+  }
+
+  .old-input {
+    border: 1px solid rgb(189 139 67 / 0.75);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #140d08, #26160d);
+    color: #ffe6aa;
+    box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.55);
+  }
+
+  .old-frame-top {
+    border-radius: 0 0 8px 8px;
+    background:
+      linear-gradient(180deg, rgb(33 22 13 / 0.98), rgb(16 10 7 / 0.96)),
+      repeating-linear-gradient(90deg, rgb(255 209 115 / 0.12) 0 1px, transparent 1px 18px);
+    border-bottom: 3px ridge rgb(183 135 62 / 0.9);
+    box-shadow:
+      inset 0 -1px 0 rgb(255 226 152 / 0.22),
+      0 10px 28px rgb(0 0 0 / 0.45);
+  }
+
+  .old-frame-top::before,
+  .old-frame-top::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    width: 120px;
+    height: 30px;
+    opacity: 0.75;
+    background:
+      radial-gradient(circle at 15% 50%, rgb(226 176 77 / 0.5) 0 5px, transparent 6px),
+      linear-gradient(90deg, transparent, rgb(193 137 57 / 0.45), transparent);
+    pointer-events: none;
+  }
+
+  .old-frame-top::before {
+    left: 25%;
+  }
+
+  .old-frame-top::after {
+    right: 25%;
+    transform: scaleX(-1);
+  }
+
   .control-button,
   .control-button-active,
   .control-button-danger,
   .wide-button,
   .icon-button {
-    @apply inline-flex items-center justify-center gap-1 border border-stone-300 bg-white text-sm font-semibold text-stone-800 transition hover:border-stone-500 hover:bg-stone-50;
+    @apply inline-flex items-center justify-center gap-1 text-sm font-semibold transition;
+    border: 1px solid rgb(179 128 59 / 0.8);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #51311b, #21130b);
+    color: #f7d996;
+    box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
   }
 
   .control-button,
@@ -55,11 +180,13 @@
   }
 
   .control-button-active {
-    @apply border-emerald-600 bg-emerald-50 text-emerald-900;
+    background: linear-gradient(180deg, #5f7f25, #263d13);
+    color: #fff0a8;
   }
 
   .control-button-danger {
-    @apply border-rose-300 bg-rose-50 text-rose-900;
+    background: linear-gradient(180deg, #8a2f17, #3a110a);
+    color: #ffd7a0;
   }
 
   .wide-button {
@@ -88,7 +215,13 @@
 
   .battlefield-empty,
   .battlefield-empty-compact {
-    @apply flex items-center justify-center rounded-lg border border-dashed border-white/15 bg-stone-950/20 text-sm text-stone-100/55;
+    @apply flex items-center justify-center border border-dashed text-sm;
+    border-color: rgb(181 134 66 / 0.35);
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgb(10 8 6 / 0.18), rgb(255 220 139 / 0.04)),
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 8px);
+    color: rgb(255 235 184 / 0.48);
   }
 
   .battlefield-empty {

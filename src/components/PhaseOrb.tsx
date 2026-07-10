@@ -34,14 +34,16 @@ export function PhaseOrb({ game }: { game: GameState }) {
         }}
         disabled={Boolean(game.winner)}
         className={[
-          "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center rounded-full border-4 text-white transition hover:scale-105 xl:right-8",
+          "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-8",
           state.tone === "confirm"
-            ? "border-emerald-200 bg-emerald-600/95 shadow-[0_0_28px_rgba(52,211,153,0.55)] hover:bg-emerald-500"
+            ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
             : state.tone === "horde"
-              ? "border-orange-200 bg-orange-600/95 shadow-[0_0_28px_rgba(251,146,60,0.55)] hover:bg-orange-500"
+              ? "border-[#f3bf63] bg-[#9b3b13] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(214,112,26,0.5)] hover:bg-[#b74b18]"
+            : state.tone === "defend"
+              ? "border-[#b9d8ff] bg-[#174c85] shadow-[inset_0_2px_0_rgba(221,239,255,0.45),0_0_28px_rgba(59,130,246,0.5)] hover:bg-[#1f66a8]"
             : state.tone === "skip"
-              ? "border-stone-200 bg-stone-800/95 shadow-[0_0_24px_rgba(231,229,228,0.22)] hover:bg-stone-700"
-              : "border-cyan-200 bg-cyan-700/90 shadow-[0_0_28px_rgba(34,211,238,0.55)] hover:bg-cyan-600",
+              ? "border-[#b88945] bg-[#2c2115] shadow-[inset_0_2px_0_rgba(255,231,173,0.22),0_0_24px_rgba(0,0,0,0.45)] hover:bg-[#3d2b18]"
+            : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
         ].join(" ")}
         title={state.label}
       >
@@ -53,7 +55,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner)}
-          className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-rose-200/45 bg-rose-950/90 text-[9px] font-black uppercase tracking-wide text-rose-50 shadow-xl shadow-rose-950/35 backdrop-blur-md transition hover:scale-105 hover:bg-rose-800/95 xl:right-12"
+          className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-12"
           title="Cancel blocks"
         >
           <X size={18} />
@@ -76,7 +78,7 @@ function getOrbState(
   },
 ) {
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
-    return { label: "Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "default" as const };
+    return { label: "Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "defend" as const };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
     return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };

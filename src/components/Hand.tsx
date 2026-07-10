@@ -17,7 +17,8 @@ export function Hand({ game }: { game: GameState }) {
   return (
     <>
       <section className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-56 overflow-visible">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-stone-950/25 via-stone-500/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 border-t-2 border-[#b88945]/70 bg-[#17100a]" />
         <div className="pointer-events-auto absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8">
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
             {game.player.hand.map((card, index) => {
@@ -79,13 +80,13 @@ function NewHorizonsTargetModal({
   const [targetCreature, setTargetCreature] = useState(creatures[0]?.instanceId ?? "");
 
   return (
-    <div className="fixed inset-0 z-[135] flex items-center justify-center bg-stone-950/70 p-6 text-white backdrop-blur-sm">
-      <section className="w-full max-w-md rounded-3xl border border-emerald-200/20 bg-stone-950/90 p-5 shadow-2xl shadow-black/45">
-        <h2 className="text-lg font-black">{card.displayName}</h2>
-        <p className="mt-1 text-sm text-stone-300">Choose the enchanted land and the creature that gets the +1/+1 counter.</p>
+    <div className="fixed inset-0 z-[135] flex items-center justify-center bg-[#090604]/80 p-6 text-[#f6e6b8]">
+      <section className="old-panel w-full max-w-md p-5">
+        <h2 className="old-title text-lg font-black">{card.displayName}</h2>
+        <p className="mt-1 text-sm text-[#d6b879]">Choose the enchanted land and the creature that gets the +1/+1 counter.</p>
 
-        <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-stone-300">Land</label>
-        <select value={targetLand} onChange={(event) => setTargetLand(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-white/15 bg-stone-900 px-3 text-white outline-none focus:border-emerald-300/70">
+        <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-[#d6b879]">Land</label>
+        <select value={targetLand} onChange={(event) => setTargetLand(event.target.value)} className="old-input mt-2 h-11 w-full px-3 outline-none focus:border-[#f4cc74]">
           {lands.map((land) => (
             <option key={land.instanceId} value={land.instanceId}>
               {land.displayName}
@@ -93,8 +94,8 @@ function NewHorizonsTargetModal({
           ))}
         </select>
 
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-stone-300">+1/+1 counter</label>
-        <select value={targetCreature} onChange={(event) => setTargetCreature(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-white/15 bg-stone-900 px-3 text-white outline-none focus:border-emerald-300/70">
+        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]">+1/+1 counter</label>
+        <select value={targetCreature} onChange={(event) => setTargetCreature(event.target.value)} className="old-input mt-2 h-11 w-full px-3 outline-none focus:border-[#f4cc74]">
           <option value="">No counter</option>
           {creatures.map((creature) => (
             <option key={creature.instanceId} value={creature.instanceId}>
@@ -104,11 +105,11 @@ function NewHorizonsTargetModal({
         </select>
 
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <button className="h-11 rounded-xl border border-white/15 bg-white/10 text-sm font-bold uppercase tracking-wide text-stone-200 hover:bg-white/15" onClick={onCancel}>
+          <button className="old-button h-11 text-sm font-bold uppercase tracking-wide" onClick={onCancel}>
             Cancel
           </button>
           <button
-            className="h-11 rounded-xl border border-emerald-200/35 bg-emerald-500/90 text-sm font-black uppercase tracking-wide text-stone-950 hover:bg-emerald-300 disabled:opacity-40"
+            className="old-button-green h-11 text-sm font-black uppercase tracking-wide disabled:opacity-40"
             disabled={!targetLand}
             onClick={() => onConfirm({ targetLand, ...(targetCreature ? { targetCreature } : {}) })}
           >

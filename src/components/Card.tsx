@@ -56,10 +56,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       style={style}
       className={[
         "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition",
-        selected && !accentColor ? "border-emerald-400 ring-2 ring-emerald-300/50" : "border-transparent",
+        selected && !accentColor ? "border-[#f6d77d] ring-2 ring-[#f6d77d]/55" : "border-transparent",
         card.tapped ? "rotate-2 opacity-80" : "",
-        attacking ? "border-rose-500" : "",
-        blocking ? "border-sky-500" : "",
+        attacking ? "border-[#ff7a3d]" : "",
+        blocking ? "border-[#f6d77d]" : "",
         compact ? "min-h-24" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
@@ -72,16 +72,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       )}
       <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />
       <div className="absolute left-1 top-1 flex flex-wrap gap-1">
-        {card.tapped && <span className="rounded-sm bg-stone-900/75 px-1 py-0.5 text-[10px] font-bold uppercase text-white">Tapped</span>}
-        {attacking && <span className="rounded-sm bg-rose-700/85 px-1 py-0.5 text-[10px] font-bold uppercase text-white">Atk</span>}
-        {blocking && <span className="rounded-sm bg-sky-700/85 px-1 py-0.5 text-[10px] font-bold uppercase text-white">Blk</span>}
+        {card.tapped && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
+        {attacking && <span className="rounded-sm bg-[#7b2513]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Atk</span>}
+        {blocking && <span className="rounded-sm bg-[#5b421f]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Blk</span>}
         {linkLabel && (
           <span className="rounded-sm px-1.5 py-0.5 text-[12px] font-black text-white shadow" style={{ backgroundColor: accentColor ?? "#2563eb" }}>
             {linkLabel}
           </span>
         )}
       </div>
-      {stats && <span className="absolute bottom-1 right-1 border border-stone-700 bg-white/90 px-1.5 py-0.5 text-xs font-bold text-stone-950">{stats}</span>}
+      {stats && <span className="absolute bottom-1 right-1 border border-[#6b441f] bg-[#f2d793]/95 px-1.5 py-0.5 text-xs font-bold text-[#241106]">{stats}</span>}
       <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
         {onMana && canMana && (
           <button
@@ -95,8 +95,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )}
       </div>
       {showPlayMenu && (
-        <div className="absolute left-1/2 top-1/2 z-20 w-28 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/20 bg-stone-950/90 p-1 shadow-2xl shadow-black/45">
-          <button disabled={playDisabled} className="w-full rounded-lg px-3 py-2 text-sm font-black uppercase tracking-wide text-white hover:bg-emerald-400/20 disabled:text-stone-500 disabled:hover:bg-transparent" onClick={(event) => buttonClick(event, onPlay!)}>
+        <div className="old-panel absolute left-1/2 top-1/2 z-20 w-28 -translate-x-1/2 -translate-y-1/2 p-1">
+          <button disabled={playDisabled} className="old-button-green w-full px-3 py-2 text-sm font-black uppercase tracking-wide disabled:text-[#7a6242] disabled:brightness-50" onClick={(event) => buttonClick(event, onPlay!)}>
             Play
           </button>
         </div>

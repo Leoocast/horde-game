@@ -20,8 +20,8 @@ type Props = {
 export function Board({ playerName, mode, setupTurns }: Props) {
   const game = useGameStore((state) => state.game);
   return (
-    <main className="duel-table h-screen overflow-hidden text-stone-950">
-      <header className="relative z-[90] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 border-b border-white/10 bg-stone-950/55 px-0 py-0 text-white shadow-2xl shadow-black/20 backdrop-blur-md">
+    <main className="duel-table h-screen overflow-hidden">
+      <header className="old-frame-top relative z-[90] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
         <GameStatusBadge game={game} />
         <TurnPhaseHud game={game} />
         <div className="pr-3 justify-self-end">
@@ -36,7 +36,7 @@ export function Board({ playerName, mode, setupTurns }: Props) {
           <CardPreview />
           <PlayerLifePanel game={game} playerName={playerName} mode={mode} />
         </aside>
-        <section className="space-y-3 rounded-2xl border border-white/15 bg-stone-950/25 p-3 shadow-2xl shadow-black/20 backdrop-blur-md">
+        <section className="old-panel space-y-3 p-3">
           <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
           <Battlefield game={game} side="player" cards={game.player.battlefield} />
         </section>

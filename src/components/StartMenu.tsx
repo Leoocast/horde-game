@@ -19,26 +19,26 @@ export function StartMenu({ onStart }: Props) {
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
 
   return (
-    <main className="duel-table flex h-screen items-center justify-center overflow-hidden p-6 text-white">
-      <section className="w-full max-w-lg rounded-3xl border border-white/15 bg-stone-950/75 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
+    <main className="duel-table flex h-screen items-center justify-center overflow-hidden p-6 text-[#f6e6b8]">
+      <section className="old-panel w-full max-w-lg p-6">
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-200">Horde Magic PvE</p>
-          <h1 className="mt-2 text-3xl font-black leading-tight">New Game</h1>
+          <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Horde Magic PvE</p>
+          <h1 className="old-title mt-2 text-4xl font-black leading-tight">New Game</h1>
         </div>
 
-        <label className="block text-xs font-bold uppercase tracking-wide text-stone-300" htmlFor="player-name">
+        <label className="block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-name">
           Name
         </label>
         <input
           id="player-name"
           value={playerName}
           onChange={(event) => setPlayerName(event.target.value)}
-          className="mt-2 h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3 text-white outline-none transition placeholder:text-stone-500 focus:border-emerald-300/70"
+          className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
           placeholder="Player"
         />
 
         <div className="mt-5">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-300">Mode</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">Mode</div>
           <div className="grid grid-cols-3 gap-2">
             {modes.map((item) => {
               const selected = item.id === mode;
@@ -47,12 +47,12 @@ export function StartMenu({ onStart }: Props) {
                   key={item.id}
                   onClick={() => setMode(item.id)}
                   className={[
-                    "rounded-2xl border px-3 py-3 text-left transition",
-                    selected ? "border-emerald-300 bg-emerald-300/15 text-white shadow-lg shadow-emerald-950/30" : "border-white/10 bg-white/5 text-stone-300 hover:border-white/25 hover:bg-white/10",
+                    "old-panel-soft px-3 py-3 text-left transition hover:brightness-125",
+                    selected ? "outline outline-2 outline-[#e6c36f] text-[#fff0b8]" : "text-[#d2bc83]",
                   ].join(" ")}
                 >
                   <div className="text-sm font-black uppercase tracking-wide">{item.label}</div>
-                  <div className="mt-1 text-[11px] leading-snug text-stone-300">{item.description}</div>
+                  <div className="mt-1 text-[11px] leading-snug text-[#bda574]">{item.description}</div>
                 </button>
               );
             })}
@@ -60,7 +60,7 @@ export function StartMenu({ onStart }: Props) {
         </div>
 
         <button
-          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200/35 bg-emerald-500/90 text-sm font-black uppercase tracking-wide text-stone-950 shadow-xl shadow-emerald-950/30 transition hover:bg-emerald-300"
+          className="old-button-green mt-6 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
           onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns })}
         >
           <Play size={18} />

@@ -13,11 +13,11 @@ export function AudioControls() {
   const playSfx = useAudioStore((state) => state.playSfx);
 
   return (
-    <section className="rounded-2xl border border-white/15 bg-white/5 p-3">
+    <section className="old-panel-soft p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-bold uppercase tracking-wide text-stone-300">SFX</div>
+        <div className="old-title text-xs font-bold uppercase tracking-wide">SFX</div>
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-cyan-100 transition hover:border-cyan-200/60"
+          className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
           onClick={() => setEnabled(!enabled)}
           title={enabled ? "Mute SFX" : "Enable SFX"}
         >
@@ -32,23 +32,23 @@ export function AudioControls() {
           step={0.05}
           value={sfxVolume}
           onChange={(event) => setSfxVolume(Number(event.target.value))}
-          className="min-w-0 flex-1 accent-cyan-300"
+          className="min-w-0 flex-1 accent-[#d8a154]"
         />
-        <span className="w-9 text-right text-xs font-bold text-stone-300">{Math.round(sfxVolume * 100)}</span>
+        <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(sfxVolume * 100)}</span>
       </div>
       <button
         data-audio-click="off"
-        className="mt-3 h-8 w-full rounded-xl border border-cyan-200/25 bg-cyan-500/15 text-xs font-black uppercase tracking-wide text-cyan-100 transition hover:bg-cyan-500/25 disabled:opacity-40"
+        className="old-button mt-3 h-8 w-full text-xs font-black uppercase tracking-wide transition disabled:opacity-40"
         disabled={!enabled}
         onClick={() => playSfx("click")}
       >
         Test
       </button>
-      <div className="mt-4 border-t border-white/10 pt-3">
+      <div className="mt-4 border-t border-[#8f6a36]/60 pt-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-wide text-stone-300">Music</div>
+          <div className="old-title text-xs font-bold uppercase tracking-wide">Music</div>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-cyan-100 transition hover:border-cyan-200/60"
+            className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
             onClick={() => setMusicEnabled(!musicEnabled)}
             title={musicEnabled ? "Mute music" : "Enable music"}
           >
@@ -63,9 +63,9 @@ export function AudioControls() {
             step={0.05}
             value={musicVolume}
             onChange={(event) => setMusicVolume(Number(event.target.value))}
-            className="min-w-0 flex-1 accent-cyan-300"
+            className="min-w-0 flex-1 accent-[#d8a154]"
           />
-          <span className="w-9 text-right text-xs font-bold text-stone-300">{Math.round(musicVolume * 100)}</span>
+          <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
         </div>
       </div>
     </section>

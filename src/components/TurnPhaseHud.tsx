@@ -10,15 +10,15 @@ export function TurnPhaseHud({ game }: { game: GameState }) {
   return (
     <div
       className={[
-        "flex h-10 items-center gap-3 rounded-full border px-4 text-center text-white shadow-xl shadow-black/20",
-        hordeTurn ? "border-rose-300/35 bg-rose-950/75" : "border-white/15 bg-stone-950/65",
+        "old-panel-soft flex h-10 items-center gap-3 px-4 text-center text-[#f6e6b8]",
+        hordeTurn ? "outline outline-1 outline-[#c14f2a]" : "",
       ].join(" ")}
     >
-      <div className={["whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em]", hordeTurn ? "text-rose-200" : "text-cyan-200"].join(" ")}>{owner}</div>
-      <div className="h-4 w-px bg-white/20" />
-      <div className="whitespace-nowrap text-sm font-black capitalize leading-none">{phase}</div>
-      <div className="h-4 w-px bg-white/20" />
-      <div className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-stone-300">{footer}</div>
+      <div className={["old-title whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em]", hordeTurn ? "text-[#ffb36b]" : ""].join(" ")}>{owner}</div>
+      <div className="h-4 w-px bg-[#b88945]/45" />
+      <div className="whitespace-nowrap text-sm font-black capitalize leading-none text-[#fff0b2]">{phase}</div>
+      <div className="h-4 w-px bg-[#b88945]/45" />
+      <div className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{footer}</div>
     </div>
   );
 }

@@ -37,10 +37,10 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function BattlefieldRow({ title, cards: rowCards, compact = false }: { title: string; cards: CardInstance[]; compact?: boolean }) {
     return (
-      <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow-inner backdrop-blur-sm">
+      <div className="old-panel-soft p-2">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-[11px] font-bold uppercase tracking-wide text-stone-100/90">{title}</h3>
-          <span className="text-[11px] font-semibold text-stone-100/65">{rowCards.length}</span>
+          <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">{title}</h3>
+          <span className="text-[11px] font-semibold text-[#d6b879]">{rowCards.length}</span>
         </div>
         {rowCards.length === 0 ? (
           <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
@@ -53,21 +53,21 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function ResourceRow({ lands, others, showLands }: { lands: CardInstance[]; others: CardInstance[]; showLands: boolean }) {
     return (
-      <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow-inner backdrop-blur-sm">
+      <div className="old-panel-soft p-2">
         <div className={showLands ? "grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]" : ""}>
           {showLands && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[11px] font-bold uppercase tracking-wide text-stone-100/90">Lands</h3>
-                <span className="text-[11px] font-semibold text-stone-100/65">{lands.length}</span>
+                <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">Lands</h3>
+                <span className="text-[11px] font-semibold text-[#d6b879]">{lands.length}</span>
               </div>
               {lands.length === 0 ? <div className="battlefield-empty-compact">Empty</div> : <div className="flex flex-wrap gap-2">{lands.map((card) => renderCard(card, true, "land"))}</div>}
             </div>
           )}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-[11px] font-bold uppercase tracking-wide text-stone-100/90">Other permanents</h3>
-              <span className="text-[11px] font-semibold text-stone-100/65">{others.length}</span>
+              <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">Other permanents</h3>
+              <span className="text-[11px] font-semibold text-[#d6b879]">{others.length}</span>
             </div>
             {others.length === 0 ? <div className="battlefield-empty-compact">Empty</div> : <div className="flex flex-wrap justify-center gap-2">{others.map((card) => renderCard(card, true, "other"))}</div>}
           </div>
