@@ -262,6 +262,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde");
+    const actionable = legalAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId);
 
     return (
       <motion.div
@@ -296,7 +297,8 @@ export function Battlefield({ game, side, cards }: Props) {
         selected={selected}
         attacking={attacking}
         blocking={blocking}
-        accentColor={assignedColor ?? attackerColor}
+        actionable={actionable}
+        accentColor={side === "player" ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}

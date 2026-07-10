@@ -24,6 +24,7 @@ export function Hand({ game }: { game: GameState }) {
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
             <AnimatePresence initial={false} mode="popLayout">
             {game.player.hand.map((card, index) => {
+            const playable = isPlayableFromHand(game, card);
             return (
               <motion.div
                 key={card.instanceId}
@@ -41,11 +42,12 @@ export function Hand({ game }: { game: GameState }) {
                     game={game}
                     card={card}
                     selected={selectedHandId === card.instanceId}
+                    actionable={playable}
                     onSelect={() => selectHand(card.instanceId)}
                     onLeave={() => {
                       if (selectedHandId === card.instanceId) selectHand(undefined);
                     }}
-                    playDisabled={!isPlayableFromHand(game, card)}
+                    playDisabled={!playable}
                     onPlay={() => {
                       if (card.definitionId === "new_horizons") setNewHorizonsCard(card);
                       else playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);

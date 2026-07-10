@@ -83,9 +83,10 @@ export function CombatArrows({ game }: { game: GameState }) {
         </filter>
         {arrows.map((arrow) => (
           <linearGradient key={arrow.gradientId} id={arrow.gradientId} gradientUnits="userSpaceOnUse" x1={arrow.startX} y1={arrow.startY} x2={arrow.tipX} y2={arrow.tipY}>
-            <stop offset="0%" stopColor="#080402" />
-            <stop offset="42%" stopColor="#140b05" />
-            <stop offset="100%" stopColor={arrow.color} />
+            <stop offset="0%" stopColor={arrow.color} stopOpacity="0" />
+            <stop offset="20%" stopColor={arrow.color} stopOpacity="0.22" />
+            <stop offset="80%" stopColor={arrow.color} stopOpacity="0.74" />
+            <stop offset="100%" stopColor={arrow.color} stopOpacity="0.9" />
           </linearGradient>
         ))}
       </defs>
@@ -105,15 +106,15 @@ export function CombatArrows({ game }: { game: GameState }) {
               exit={{ clipPath: "inset(0 0 100% 0)" }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <polygon points={arrow.body} fill="rgba(15,8,3,0.94)" />
-              <polygon points={arrow.tip} fill="rgba(15,8,3,0.94)" />
+              <polygon points={arrow.body} fill={arrow.color} opacity="0.12" />
+              <polygon points={arrow.tip} fill={arrow.color} opacity="0.14" />
               <motion.g
                 initial={{ opacity: 0.85 }}
                 animate={{ opacity: [0.82, 0.96, 0.88] }}
                 transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
               >
-                <polygon points={arrow.body} fill={`url(#${arrow.gradientId})`} opacity="0.9" stroke="rgba(255,236,184,0.74)" strokeWidth="1" />
-                <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.98" stroke="rgba(255,236,184,0.9)" strokeWidth="1.25" />
+                <polygon points={arrow.body} fill={`url(#${arrow.gradientId})`} opacity="0.82" />
+                <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
               </motion.g>
             </motion.g>
           </motion.g>

@@ -15,6 +15,7 @@ type Props = {
   accentColor?: string;
   selectionDisabled?: boolean;
   muted?: boolean;
+  actionable?: boolean;
   linkLabel?: string;
   onSelect?: () => void;
   onMana?: () => void;
@@ -23,7 +24,7 @@ type Props = {
   playDisabled?: boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, linkLabel, onSelect, onMana, onPlay, onLeave, playDisabled }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, linkLabel, onSelect, onMana, onPlay, onLeave, playDisabled }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const focusedCardId = useGameStore((state) => state.focusedCardId);
@@ -32,10 +33,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const canMana = card.activatedAbilities.some((ability) => ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC");
   const manaDisabled = card.tapped || (card.cardTypes.includes("Creature") && card.summoningSickness);
   const showPlayMenu = focusedCardId === card.instanceId && Boolean(onPlay);
-  const style = accentColor
+  const selectedGlow = selected
+    ? "inset 0 0 0 1px rgba(255,236,184,0.82), 0 0 8px rgba(246,215,125,0.82), 0 0 18px rgba(246,177,59,0.48)"
+    : "";
+  const actionGlow = actionable
+    ? "inset 0 0 0 1px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
+    : "";
+  const style = accentColor || actionable || selected
     ? ({
-        borderColor: accentColor,
-        boxShadow: selected ? `0 0 0 2px ${accentColor}55` : `inset 0 0 0 1px ${accentColor}55`,
+        borderColor: selected ? "#f6d77d" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        boxShadow: [selectedGlow, !selected && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "", !selected ? actionGlow : ""].filter(Boolean).join(", "),
       } satisfies CSSProperties)
     : undefined;
   return (
@@ -56,11 +63,11 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       style={style}
       className={[
         "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition",
-        selected && !accentColor ? "border-[#f6d77d] ring-2 ring-[#f6d77d]/55" : "border-transparent",
+        selected && !accentColor && !actionable ? "border-[#f6d77d]" : "border-transparent",
         card.tapped ? "rotate-2 opacity-80" : "",
         attacking ? "border-[#ff7a3d]" : "",
-        blocking ? "border-[#f6d77d]" : "",
         compact ? "min-h-24" : "",
+        actionable ? "card-actionable" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
