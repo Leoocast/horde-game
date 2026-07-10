@@ -160,7 +160,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ game: endPlayerTurn(resolvePlayerCombat(latest)), playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined });
     }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
   },
-  runHordeMain: () => set(({ game }) => ({ game: runFullHordeTurn(game), selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined })),
+  runHordeMain: () =>
+    set(({ game }) => {
+      const next = runFullHordeTurn(game);
+      if (next.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
+      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
+    }),
   prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
