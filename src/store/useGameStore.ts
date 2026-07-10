@@ -12,6 +12,7 @@ import { useAudioStore } from "./useAudioStore";
 
 type GameStore = {
   game: GameState;
+  hordeAttackAnimation?: HordeAttackAnimation;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -44,9 +45,22 @@ type GameStore = {
 };
 
 const defaultSeed = "horde-mvp-001";
+const HORDE_ATTACK_ANIMATION_MS = 500;
+
+type HordeAttackAnimation = {
+  attackerId: string;
+  eventId: number;
+};
+
+type HordeAttackEvent = {
+  attackerId: string;
+  blockerId?: string;
+  blockerDies: boolean;
+};
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 3),
+  hordeAttackAnimation: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 3) =>
     set(() => {
@@ -59,6 +73,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedHordeCreatureId: undefined,
         hoveredCardId: undefined,
         focusedCardId: undefined,
+        hordeAttackAnimation: undefined,
       };
     }),
   setSeed: (seed) => set({ seed }),
@@ -114,7 +129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const wasBlocking = Object.values(game.combat.blockers).some((ids) => ids.includes(blockerId));
       const next = declareBlocker(game, blockerId, attackerId);
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
-      if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx(blockerWillDie(next, blockerId, attackerId) ? "defend" : "playLand");
+      if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
       return { game: next };
     }),
   cancelBlocks: () =>
@@ -123,7 +138,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
       next.combat.blockers = {};
       return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
     }),
-  resolveHordeCombat: () => set(({ game }) => ({ game: resolveHordeCombat(game) })),
+  resolveHordeCombat: () => {
+    const { game, hordeAttackAnimation } = get();
+    if (hordeAttackAnimation) return;
+
+    const attackEvents = buildHordeAttackEvents(game);
+    if (attackEvents.length === 0) {
+      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined });
+      return;
+    }
+
+    attackEvents.forEach((event, index) => {
+      const startAt = index * HORDE_ATTACK_ANIMATION_MS;
+      window.setTimeout(() => {
+        useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
+        set({ hordeAttackAnimation: { attackerId: event.attackerId, eventId: index } });
+      }, startAt);
+
+      window.setTimeout(() => {
+        set({ hordeAttackAnimation: undefined });
+      }, startAt + HORDE_ATTACK_ANIMATION_MS);
+    });
+
+    window.setTimeout(() => {
+      const latest = get().game;
+      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+    }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
+  },
   finishHordeTurn: () =>
     set(({ game }) => {
       const next = finishHordeTurn(game);
@@ -166,4 +207,24 @@ function blockerWillDie(game: GameState, blockerId: string, attackerId: string) 
   }
 
   return false;
+}
+
+function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
+  const events: HordeAttackEvent[] = [];
+  for (const attackerId of game.combat.hordeAttackers) {
+    const blockerIds = game.combat.blockers[attackerId] ?? [];
+    if (blockerIds.length === 0) {
+      events.push({ attackerId, blockerDies: false });
+      continue;
+    }
+
+    for (const blockerId of blockerIds) {
+      events.push({
+        attackerId,
+        blockerId,
+        blockerDies: blockerWillDie(game, blockerId, attackerId),
+      });
+    }
+  }
+  return events;
 }

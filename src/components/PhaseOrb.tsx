@@ -12,6 +12,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const resolveHordeCombat = useGameStore((state) => state.resolveHordeCombat);
   const finishHordeTurn = useGameStore((state) => state.finishHordeTurn);
   const cancelBlocks = useGameStore((state) => state.cancelBlocks);
+  const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
 
@@ -32,7 +33,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           playSfx("skipNextBattle");
           state.action();
         }}
-        disabled={Boolean(game.winner)}
+        disabled={Boolean(game.winner) || hordeAttackAnimating}
         className={[
           "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-8",
           state.tone === "confirm"
@@ -51,14 +52,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
         <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
         <span className="relative z-10 flex flex-col items-center justify-center">
           <state.Icon size={26} />
-          <span className="mt-1 text-xs font-black uppercase leading-tight">{state.label}</span>
+          <span className="mt-1 text-xs font-black uppercase leading-tight">{hordeAttackAnimating ? "Attack" : state.label}</span>
         </span>
       </button>
       {showCancelDefense && (
         <button
           data-audio-click="valid"
           onClick={cancelBlocks}
-          disabled={Boolean(game.winner)}
+          disabled={Boolean(game.winner) || hordeAttackAnimating}
           className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-12"
           title="Cancel blocks"
         >

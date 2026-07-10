@@ -74,14 +74,14 @@ export function CombatArrows({ game }: { game: GameState }) {
             filter="url(#combat-arrow-shadow)"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.14, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <motion.g
               initial={{ clipPath: "inset(100% 0 0 0)" }}
               animate={{ clipPath: "inset(0 0 0% 0)" }}
-              exit={{ clipPath: "inset(100% 0 0 0)" }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ clipPath: "inset(0 0 100% 0)" }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <polygon points={arrow.body} fill="rgba(15,8,3,0.94)" />
               <polygon points={arrow.tip} fill="rgba(15,8,3,0.94)" />

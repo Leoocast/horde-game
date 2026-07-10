@@ -16,6 +16,7 @@ const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set());
+  const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
@@ -138,10 +139,11 @@ export function Battlefield({ game, side, cards }: Props) {
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde");
+    const hordeAttackAnimating = side === "horde" && hordeAttackAnimation?.attackerId === card.instanceId;
 
     return (
       <motion.div
-        key={`${keyPrefix}-${card.instanceId}`}
+        key={`${keyPrefix}-${card.instanceId}${hordeAttackAnimating ? `-${hordeAttackAnimation.eventId}` : ""}`}
         layout
         initial={
           firstTimeOnThisBattlefield
@@ -164,7 +166,7 @@ export function Battlefield({ game, side, cards }: Props) {
           rotate: { duration: 0.28, ease: "easeOut", delay: entryDelay(card) },
           filter: { duration: 0.36, ease: "easeOut", delay: entryDelay(card) },
         }}
-        className={compact ? "battlefield-card-slot-compact" : "battlefield-card-slot"}
+        className={[compact ? "battlefield-card-slot-compact" : "battlefield-card-slot", hordeAttackAnimating ? "horde-attack-lunge" : ""].join(" ")}
       >
       <Card
         game={game}

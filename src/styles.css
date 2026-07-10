@@ -202,15 +202,22 @@
   }
 
   .battlefield-card-slot {
+    position: relative;
     width: clamp(118px, 9vw, 152px);
     height: calc(clamp(118px, 9vw, 152px) * 1.393);
     flex: 0 0 auto;
   }
 
   .battlefield-card-slot-compact {
+    position: relative;
     width: clamp(92px, 7vw, 118px);
     height: calc(clamp(92px, 7vw, 118px) * 1.393);
     flex: 0 0 auto;
+  }
+
+  .horde-attack-lunge {
+    z-index: 25;
+    animation: horde-attack-lunge 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   .battlefield-empty,
@@ -255,5 +262,26 @@
       transform 160ms ease,
       z-index 0ms,
       filter 160ms ease;
+  }
+}
+
+@keyframes horde-attack-lunge {
+  0% {
+    top: 0;
+    filter: brightness(1);
+  }
+
+  55% {
+    top: 30px;
+    filter: brightness(1.18) saturate(1.08);
+  }
+
+  72% {
+    top: 22px;
+  }
+
+  100% {
+    top: 0;
+    filter: brightness(1);
   }
 }
