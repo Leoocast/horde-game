@@ -52,6 +52,7 @@ type HordeAttackAnimation = {
   attackerDies: boolean;
   blockerId?: string;
   blockerDies: boolean;
+  playerDamage: number;
   eventId: number;
 };
 
@@ -60,6 +61,7 @@ type HordeAttackEvent = {
   attackerDies: boolean;
   blockerId?: string;
   blockerDies: boolean;
+  playerDamage: number;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -156,7 +158,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const startAt = index * HORDE_ATTACK_ANIMATION_MS;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
-        set({ hordeAttackAnimation: { attackerId: event.attackerId, attackerDies: event.attackerDies, blockerId: event.blockerId, blockerDies: event.blockerDies, eventId: index } });
+        set({
+          hordeAttackAnimation: {
+            attackerId: event.attackerId,
+            attackerDies: event.attackerDies,
+            blockerId: event.blockerId,
+            blockerDies: event.blockerDies,
+            playerDamage: event.playerDamage,
+            eventId: index,
+          },
+        });
       }, startAt);
     });
 
@@ -213,14 +224,15 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
   const events: HordeAttackEvent[] = [];
   for (const attackerId of game.combat.hordeAttackers) {
     const blockerIds = game.combat.blockers[attackerId] ?? [];
-    if (blockerIds.length === 0) {
-      events.push({ attackerId, attackerDies: false, blockerDies: false });
-      continue;
-    }
-
     const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
     if (!attacker) continue;
     const attackerStats = getPowerToughness(game, attacker);
+
+    if (blockerIds.length === 0) {
+      events.push({ attackerId, attackerDies: false, blockerDies: false, playerDamage: attackerStats.power });
+      continue;
+    }
+
     let attackerDamage = attacker.damageMarked;
 
     for (const blockerId of blockerIds) {
@@ -233,6 +245,7 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
         attackerDies,
         blockerId,
         blockerDies: blockerWillDie(game, blockerId, attackerId),
+        playerDamage: 0,
       });
       attackerDamage += blockerStats.power;
       if (attackerDies) break;

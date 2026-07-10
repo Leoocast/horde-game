@@ -160,6 +160,10 @@
     transform: scaleX(-1);
   }
 
+  .player-life-damage {
+    animation: player-life-damage 430ms ease-out both;
+  }
+
   .control-button,
   .control-button-active,
   .control-button-danger,
@@ -257,5 +261,33 @@
       transform 160ms ease,
       z-index 0ms,
       filter 160ms ease;
+  }
+}
+
+@keyframes player-life-damage {
+  0% {
+    filter: brightness(1);
+  }
+
+  24% {
+    filter: brightness(1.55) saturate(1.25);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 238 190 / 0.18),
+      inset 0 14px 24px rgb(255 226 149 / 0.06),
+      0 0 28px rgb(180 38 22 / 0.58),
+      0 18px 36px rgb(0 0 0 / 0.45);
+  }
+
+  48% {
+    transform: translateX(-2px);
+  }
+
+  72% {
+    transform: translateX(2px);
+  }
+
+  100% {
+    filter: brightness(1);
+    transform: translateX(0);
   }
 }
