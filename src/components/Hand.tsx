@@ -3,10 +3,40 @@ import type { CardInstance } from "../engine/GameTypes";
 import { canPay, parseManaCost } from "../engine/ManaSystem";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
-import { useState } from "react";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
+const HAND_ENTRY_STAGGER = 0.07;
+const handCardMotion: Variants = {
+  initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
+  animate: (custom: { index: number; stagger: boolean }) => ({
+    opacity: 1,
+    x: 0,
+    y: 0,
+    rotate: 0,
+    scale: 1,
+    transition: {
+      opacity: { duration: 0.16, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0, ease: "easeOut" },
+      x: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
+      y: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
+      rotate: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
+      scale: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
+    },
+  }),
+  exit: {
+    opacity: 0,
+    y: -80,
+    rotate: 5,
+    scale: 0.9,
+    transition: {
+      opacity: { duration: 0.12, ease: "easeOut" },
+      y: { duration: 0.18, ease: "easeOut" },
+      rotate: { duration: 0.16, ease: "easeOut" },
+      scale: { duration: 0.16, ease: "easeOut" },
+    },
+  },
+};
 
 export function Hand({ game }: { game: GameState }) {
   const selectedHandId = useGameStore((state) => state.selectedHandId);
@@ -18,6 +48,7 @@ export function Hand({ game }: { game: GameState }) {
   const playLand = useGameStore((state) => state.playLand);
   const [newHorizonsCard, setNewHorizonsCard] = useState<CardInstance | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
+  const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
 
   function playCard(card: CardInstance) {
@@ -48,17 +79,21 @@ export function Hand({ game }: { game: GameState }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 border-t-2 border-[#b88945]/70 bg-[#17100a]" />
         <div className="pointer-events-auto absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8">
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
-            <AnimatePresence initial={false} mode="popLayout">
+            <AnimatePresence mode="popLayout">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card);
             return (
               <motion.div
                 key={card.instanceId}
                 layout
-                initial={{ opacity: 0, y: 56, rotate: -2, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -80, rotate: 5, scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 520, damping: 38, mass: 0.62 }}
+                custom={{ index, stagger: initialHandIds.current.has(card.instanceId) }}
+                variants={handCardMotion}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{
+                  layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
+                }}
                 drag
                 dragElastic={0.08}
                 dragMomentum={false}

@@ -8,6 +8,7 @@ export function AudioClickListener() {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest("[data-audio-click='off']")) return;
+      if (isPreviewReadTarget(target)) return;
       if (!isValidClickTarget(target)) {
         clearCardSelection();
         return;
@@ -46,4 +47,9 @@ function isValidClickTarget(target: Element) {
   if (roleButton) return roleButton.getAttribute("aria-disabled") !== "true";
 
   return false;
+}
+
+function isPreviewReadTarget(target: Element) {
+  if (!target.closest("[data-preserve-card-focus='true']")) return false;
+  return !target.closest("button, input, select, textarea, [role='button'], [data-audio-click='valid']");
 }

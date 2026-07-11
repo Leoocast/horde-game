@@ -17,7 +17,7 @@ export function CardPreview() {
   const details = useCardDetails(card?.definitionId ?? "");
   if (!card) {
     return (
-      <aside className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
+      <aside data-preserve-card-focus="true" className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
         <div className="border-b border-[#8f6a36]/60 p-3">
           <h2 className="old-title text-sm font-bold uppercase tracking-wide">Card Info</h2>
         </div>
@@ -31,7 +31,7 @@ export function CardPreview() {
   const text = cleanReminderText(details.oracleText ?? effectSummary(card));
 
   return (
-    <aside className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
+    <aside data-preserve-card-focus="true" className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
       <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
         <div>
           <h2 className="old-title text-base font-bold leading-tight">{card.displayName}</h2>
