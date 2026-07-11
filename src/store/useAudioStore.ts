@@ -25,7 +25,7 @@ export const useAudioStore = create<AudioStore>()(
       enabled: true,
       sfxVolume: 0.8,
       musicEnabled: true,
-      musicVolume: 0.45,
+      musicVolume: 0.4,
       setEnabled: (enabled) => {
         set({ enabled });
         syncEngine();

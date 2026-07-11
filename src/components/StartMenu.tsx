@@ -1,5 +1,7 @@
-import { Play } from "lucide-react";
+import { Play, Settings } from "lucide-react";
 import { useState } from "react";
+import { useAudioStore } from "../store/useAudioStore";
+import { AudioControls } from "./AudioControls";
 
 export type DifficultyMode = "easy" | "normal" | "hard";
 
@@ -18,12 +20,26 @@ export function StartMenu({ initialSeed, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(initialSeed);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
 
   return (
-    <main className="duel-table flex h-screen items-center justify-center overflow-hidden p-6 text-[#f6e6b8]">
-      <section className="old-panel w-full max-w-lg p-6">
-        <div className="mb-6">
+    <main className="duel-table flex h-screen items-center justify-center overflow-hidden p-6 text-[#f6e6b8]" onPointerDownCapture={startBattleMusic}>
+      <section className="old-panel relative w-full max-w-lg p-6">
+        <button
+          className="old-button absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition"
+          onClick={() => setSettingsOpen((value) => !value)}
+          title="Settings"
+        >
+          <Settings size={18} />
+        </button>
+        {settingsOpen && (
+          <div className="absolute right-4 top-16 z-20 w-72">
+            <AudioControls />
+          </div>
+        )}
+        <div className="mb-6 pr-12">
           <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Horde Magic PvE</p>
           <h1 className="old-title mt-2 text-4xl font-black leading-tight">New Game</h1>
         </div>
