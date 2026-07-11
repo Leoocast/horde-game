@@ -10,16 +10,14 @@ import { InfoMenu } from "./InfoMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { TurnPhaseHud } from "./TurnPhaseHud";
-import type { DifficultyMode } from "./StartMenu";
 import { DefeatModal } from "./DefeatModal";
 
 type Props = {
   playerName: string;
-  mode: DifficultyMode;
   setupTurns: number;
 };
 
-export function Board({ playerName, mode, setupTurns }: Props) {
+export function Board({ playerName, setupTurns }: Props) {
   const game = useGameStore((state) => state.game);
   return (
     <main className="duel-table h-screen overflow-hidden">
@@ -35,11 +33,9 @@ export function Board({ playerName, mode, setupTurns }: Props) {
       <CombatArrows game={game} />
       <HordeAttackAnimator />
       <PlayerAttackAnimator />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden p-3 pb-56 xl:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="space-y-3">
-          <CardPreview />
-          <PlayerLifePanel game={game} playerName={playerName} mode={mode} />
-        </aside>
+      <CardPreview />
+      <PlayerLifePanel game={game} playerName={playerName} />
+      <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden px-3 pb-56 pt-3">
         <section className="old-panel space-y-3 p-3">
           <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
           <Battlefield game={game} side="player" cards={game.player.battlefield} />

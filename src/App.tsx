@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
-import { StartMenu, type DifficultyMode } from "./components/StartMenu";
+import { StartMenu } from "./components/StartMenu";
 import { useGameStore } from "./store/useGameStore";
 
 export default function App() {
@@ -9,7 +9,6 @@ export default function App() {
   const seed = useGameStore((state) => state.seed);
   const [started, setStarted] = useState(false);
   const [playerName, setPlayerName] = useState("Player");
-  const [mode, setMode] = useState<DifficultyMode>("normal");
   const [setupTurns, setSetupTurns] = useState(3);
 
   if (!started) {
@@ -20,7 +19,6 @@ export default function App() {
           initialSeed={seed}
           onStart={(options) => {
             setPlayerName(options.playerName);
-            setMode(options.mode);
             setSetupTurns(options.setupTurns);
             reset(options.seed, options.setupTurns);
             setStarted(true);
@@ -33,7 +31,7 @@ export default function App() {
   return (
     <>
       <AudioClickListener />
-      <Board playerName={playerName} mode={mode} setupTurns={setupTurns} />
+      <Board playerName={playerName} setupTurns={setupTurns} />
     </>
   );
 }

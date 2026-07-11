@@ -19,14 +19,7 @@ export function CardPreview() {
   const card = activeId ? findCard(game, activeId) : undefined;
   const details = useCardDetails(card?.definitionId ?? "");
   if (!card) {
-    return (
-      <aside data-preserve-card-focus="true" className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
-        <div className="border-b border-[#8f6a36]/60 p-3">
-          <h2 className="old-title text-sm font-bold uppercase tracking-wide">Card Info</h2>
-        </div>
-        <div className="flex min-h-72 flex-1 items-center justify-center p-6 text-center text-sm text-[#c9ad72]">Hover a card to inspect it.</div>
-      </aside>
-    );
+    return null;
   }
 
   const stats = cardStats(game, card);
@@ -35,21 +28,23 @@ export function CardPreview() {
 
   return (
     <>
-      <aside data-preserve-card-focus="true" className="old-panel flex h-[calc(100vh-288px)] min-h-[420px] flex-col overflow-hidden text-[#f6e6b8]">
+      <aside data-preserve-card-focus="true" className="old-panel fixed left-4 top-[4.5rem] z-[75] flex max-h-[calc(100vh-18rem)] w-[300px] flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55">
         <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
           <div>
             <h2 className="old-title text-base font-bold leading-tight">{card.displayName}</h2>
             <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <button className="control-button h-7 px-2 text-[11px] uppercase tracking-wide" title="Open card details" onClick={() => setDetailsOpen(true)}>
-              <Maximize2 size={13} />
-              Details
-            </button>
             {focusedCardId && (
-              <button className="icon-button" title="Close preview" onClick={() => setFocusedCardId(undefined)}>
-                <X size={15} />
-              </button>
+              <>
+                <button className="control-button h-7 px-2 text-[11px] uppercase tracking-wide" title="Open card details" onClick={() => setDetailsOpen(true)}>
+                  <Maximize2 size={13} />
+                  Details
+                </button>
+                <button className="icon-button" title="Close preview" onClick={() => setFocusedCardId(undefined)}>
+                  <X size={15} />
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -121,7 +116,9 @@ function CardDetailsModal({
             {keywords && <p className="rounded border border-[#4f7d2d] bg-[#15230e]/80 px-3 py-2 text-sm font-bold text-[#aee77b]">{keywords}</p>}
             {stats && <span className="border border-[#b88945] bg-[#1a1009]/85 px-3 py-2 text-lg font-black text-[#ffe0a0]">{stats}</span>}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-              Font
+              <span className="old-title text-base normal-case tracking-normal" title="Font size">
+                aA
+              </span>
               <button className="icon-button h-7 w-7 text-sm" disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))} title="Decrease font size">
                 -
               </button>

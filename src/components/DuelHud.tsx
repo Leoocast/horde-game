@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
-import type { DifficultyMode } from "./StartMenu";
 
 export function DuelHud({ game }: { game: GameState }) {
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
@@ -38,7 +37,7 @@ export function DuelHud({ game }: { game: GameState }) {
   );
 }
 
-export function PlayerLifePanel({ game, playerName, mode }: { game: GameState; playerName: string; mode: DifficultyMode }) {
+export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
@@ -63,14 +62,13 @@ export function PlayerLifePanel({ game, playerName, mode }: { game: GameState; p
   }, [hordeAttackAnimation]);
 
   return (
-    <div className={["old-panel flex items-center gap-3 px-4 py-3 text-[#f6e6b8]", takingDamage ? "player-life-damage" : ""].join(" ")}>
-      <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d0a050] bg-[#16340e] text-[#caff9f]">
-        <Heart size={22} />
+    <div className={["old-panel fixed bottom-3 left-3 z-[75] flex min-w-44 items-center justify-start gap-3 px-3 py-2 text-[#f6e6b8]", takingDamage ? "player-life-damage" : ""].join(" ")}>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#16340e] text-[#caff9f]">
+        <Heart size={20} />
       </div>
-      <div>
+      <div className="text-left">
         <div className="old-title text-xs font-bold uppercase tracking-wide">{playerName}</div>
-        <div className="text-4xl font-black leading-none text-[#fff0b2]">{visualLife}</div>
-        <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#bda574]">{mode}</div>
+        <div className="text-3xl font-black leading-none text-[#fff0b2]">{visualLife}</div>
       </div>
     </div>
   );
