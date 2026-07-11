@@ -28,7 +28,7 @@ export function CardPreview() {
 
   return (
     <>
-      <aside data-preserve-card-focus="true" className="old-panel fixed left-4 top-[4.5rem] z-[75] flex max-h-[calc(100vh-18rem)] w-[300px] flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55">
+      <aside data-preserve-card-focus="true" className="old-panel fixed left-4 top-[7rem] z-[75] flex max-h-[calc(100vh-18rem)] w-[300px] flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55">
         <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
           <div>
             <h2 className="old-title text-base font-bold leading-tight">{card.displayName}</h2>

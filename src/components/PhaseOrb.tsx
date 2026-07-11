@@ -66,7 +66,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
         onClick={runOrbAction}
         disabled={Boolean(game.winner) || attackAnimating}
         className={[
-          "fixed right-4 top-1/2 z-[80] flex h-24 w-24 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-8",
+          "fixed right-6 top-[35.5%] z-[80] flex h-28 w-28 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-10",
           state.tone === "confirm"
             ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
             : state.tone === "horde"
@@ -91,7 +91,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-6 top-[calc(50%+4.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-12"
+          className="fixed right-12 top-[calc(35.5%+5rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-16"
           title="Cancel blocks"
         >
           <X size={18} />
