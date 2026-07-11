@@ -13,10 +13,10 @@ type Props = {
 };
 
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
-const hordeCommittedBattlefieldIds = new Set<string>();
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set());
+  const animatedHordeIds = useRef<Set<string>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
@@ -61,9 +61,10 @@ export function Battlefield({ game, side, cards }: Props) {
 
     if (side === "horde") {
       for (const card of cards) {
-        if (hordeCommittedBattlefieldIds.has(card.instanceId)) continue;
+        if (animatedHordeIds.current.has(card.instanceId)) continue;
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
+        animatedHordeIds.current.add(card.instanceId);
         visual.style.opacity = "0";
         visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
         visual.style.filter = "brightness(1.8) saturate(1.25)";
@@ -149,11 +150,6 @@ export function Battlefield({ game, side, cards }: Props) {
     }
 
     previousRects.current = nextRects;
-
-    if (side === "horde") {
-      hordeCommittedBattlefieldIds.clear();
-      for (const card of cards) hordeCommittedBattlefieldIds.add(card.instanceId);
-    }
   });
 
   return (

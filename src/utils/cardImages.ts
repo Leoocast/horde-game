@@ -35,7 +35,7 @@ const memoryCache = new Map<string, CardRemoteDetails | null>();
 const pending = new Map<string, Promise<CardRemoteDetails | null>>();
 
 export function useCardDetails(definitionId: string): CardRemoteDetails {
-  const [details, setDetails] = useState<CardRemoteDetails>(() => readCachedDetails(definitionId) ?? {});
+  const [details, setDetails] = useState<CardRemoteDetails>(() => readDirectDetails(definitionId) ?? readCachedDetails(definitionId) ?? {});
 
   useEffect(() => {
     let active = true;
@@ -55,7 +55,7 @@ export function useCardImage(definitionId: string): string | undefined {
 }
 
 async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails | null> {
-  const directDetails = directDetailsById.get(definitionId);
+  const directDetails = readDirectDetails(definitionId);
   if (directDetails) return directDetails;
 
   const cached = readCachedDetails(definitionId);
@@ -103,6 +103,12 @@ async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails 
 
   pending.set(definitionId, request);
   return request;
+}
+
+function readDirectDetails(definitionId: string): CardRemoteDetails | undefined {
+  const directDetails = directDetailsById.get(definitionId);
+  if (directDetails) memoryCache.set(definitionId, directDetails);
+  return directDetails;
 }
 
 function readOracleText(payload: unknown): string | undefined {

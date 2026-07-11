@@ -19,20 +19,16 @@ type Props = {
   linkLabel?: string;
   onSelect?: () => void;
   onMana?: () => void;
-  onPlay?: () => void;
   onLeave?: () => void;
-  playDisabled?: boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, linkLabel, onSelect, onMana, onPlay, onLeave, playDisabled }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, linkLabel, onSelect, onMana, onLeave }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
-  const focusedCardId = useGameStore((state) => state.focusedCardId);
   const stats = cardStats(game, card);
   const { imageUrl } = useCardDetails(card.definitionId);
   const canMana = card.activatedAbilities.some((ability) => ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC");
   const manaDisabled = card.tapped || (card.cardTypes.includes("Creature") && card.summoningSickness);
-  const showPlayMenu = focusedCardId === card.instanceId && Boolean(onPlay);
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(255,236,184,0.82), 0 0 8px rgba(246,215,125,0.82), 0 0 18px rgba(246,177,59,0.48)"
     : "";
@@ -49,6 +45,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     <article
       data-card-id={card.instanceId}
       data-audio-click={selectionDisabled ? undefined : "valid"}
+      draggable={false}
       role={selectionDisabled ? undefined : "button"}
       aria-disabled={selectionDisabled ? "true" : undefined}
       onMouseEnter={() => setHoveredCardId(card.instanceId)}
@@ -73,7 +70,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       ].join(" ")}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={card.name} className="h-full w-full object-cover" loading="lazy" />
+        <img src={imageUrl} alt={card.name} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{card.displayName}</div>
       )}
@@ -101,13 +98,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           </button>
         )}
       </div>
-      {showPlayMenu && (
-        <div className="old-panel absolute left-1/2 top-1/2 z-20 w-28 -translate-x-1/2 -translate-y-1/2 p-1">
-          <button disabled={playDisabled} className="old-button-green w-full px-3 py-2 text-sm font-black uppercase tracking-wide disabled:text-[#7a6242] disabled:brightness-50" onClick={(event) => buttonClick(event, onPlay!)}>
-            Play
-          </button>
-        </div>
-      )}
     </article>
   );
 }
