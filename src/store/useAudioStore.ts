@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { audioEngine } from "../audio/AudioEngine";
+import { audioEngine, type MusicStatus } from "../audio/AudioEngine";
+import { musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "../audio/musicManifest";
 import type { SfxId } from "../audio/soundManifest";
 
 type AudioStore = {
@@ -8,10 +9,19 @@ type AudioStore = {
   sfxVolume: number;
   musicEnabled: boolean;
   musicVolume: number;
+  musicStatus: MusicStatus;
+  selectedCollectionId?: MusicCollectionId;
+  playlist: Array<{ id: MusicCollectionId; label: string }>;
   setEnabled: (enabled: boolean) => void;
   setSfxVolume: (volume: number) => void;
   setMusicEnabled: (enabled: boolean) => void;
   setMusicVolume: (volume: number) => void;
+  selectCollection: (id: MusicCollectionId) => void;
+  playCollection: (id: MusicCollectionId) => void;
+  playNext: () => void;
+  playPrevious: () => void;
+  toggleMusicPause: () => void;
+  setMusicVariant: (variant: MusicVariant) => void;
   playSfx: (id: SfxId, options?: { volume?: number; rate?: number }) => void;
   startBattleMusic: () => void;
   stopMusic: () => void;
@@ -26,6 +36,9 @@ export const useAudioStore = create<AudioStore>()(
       sfxVolume: 0.8,
       musicEnabled: true,
       musicVolume: 0.4,
+      musicStatus: audioEngine.getStatus(),
+      selectedCollectionId: undefined,
+      playlist: musicCollectionIds.map((id) => ({ id, label: musicCollections[id].label })),
       setEnabled: (enabled) => {
         set({ enabled });
         syncEngine();
@@ -38,10 +51,38 @@ export const useAudioStore = create<AudioStore>()(
         set({ musicEnabled });
         syncEngine();
         if (musicEnabled) audioEngine.startRandomBattleTheme();
+        syncMusicStatus();
       },
       setMusicVolume: (volume) => {
         set({ musicVolume: clamp01(volume) });
         syncEngine();
+      },
+      selectCollection: (id) => set({ selectedCollectionId: id }),
+      playCollection: (id) => {
+        syncEngine();
+        const variant = get().musicStatus.variant;
+        const status = audioEngine.playCollection(id, variant);
+        set({ musicStatus: status, selectedCollectionId: id });
+      },
+      playNext: () => {
+        syncEngine();
+        const status = audioEngine.playNext();
+        set({ musicStatus: status, selectedCollectionId: status.collectionId });
+      },
+      playPrevious: () => {
+        syncEngine();
+        const status = audioEngine.playPrevious();
+        set({ musicStatus: status, selectedCollectionId: status.collectionId });
+      },
+      toggleMusicPause: () => {
+        syncEngine();
+        const status = audioEngine.togglePause();
+        set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
+      },
+      setMusicVariant: (variant) => {
+        syncEngine();
+        const status = audioEngine.setVariant(variant);
+        set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
       },
       playSfx: (id, options) => {
         syncEngine();
@@ -49,9 +90,13 @@ export const useAudioStore = create<AudioStore>()(
       },
       startBattleMusic: () => {
         syncEngine();
-        audioEngine.startRandomBattleTheme();
+        const status = audioEngine.startRandomBattleTheme();
+        set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
       },
-      stopMusic: () => audioEngine.stopMusic(),
+      stopMusic: () => {
+        audioEngine.stopMusic();
+        syncMusicStatus();
+      },
       preload: () => {
         syncEngine();
         audioEngine.preloadSfx();
@@ -69,6 +114,11 @@ export const useAudioStore = create<AudioStore>()(
 function syncEngine() {
   const { enabled, sfxVolume, musicEnabled, musicVolume } = useAudioStore.getState();
   audioEngine.configure({ enabled, sfxVolume, musicEnabled, musicVolume });
+  syncMusicStatus();
+}
+
+function syncMusicStatus() {
+  useAudioStore.setState({ musicStatus: audioEngine.getStatus() });
 }
 
 function clamp01(value: number) {

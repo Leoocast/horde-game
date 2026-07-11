@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
+import { useAudioStore } from "../store/useAudioStore";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
@@ -7,6 +9,7 @@ import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
+import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { TurnPhaseHud } from "./TurnPhaseHud";
@@ -19,12 +22,19 @@ type Props = {
 
 export function Board({ playerName, setupTurns }: Props) {
   const game = useGameStore((state) => state.game);
+  const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
+
+  useEffect(() => {
+    setMusicVariant(game.player.life <= 10 ? "climax" : "battle");
+  }, [game.player.life, setMusicVariant]);
+
   return (
     <main className="duel-table h-screen overflow-hidden">
       <header className="old-frame-top relative z-[90] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
         <GameStatusBadge game={game} />
         <TurnPhaseHud game={game} />
-        <div className="pr-3 justify-self-end">
+        <div className="flex items-center gap-2 pr-3 justify-self-end">
+          <MusicPlayerMenu />
           <InfoMenu setupTurns={setupTurns} />
         </div>
       </header>

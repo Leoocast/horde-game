@@ -1,20 +1,38 @@
-export const battleThemeManifest = {
-  battleTheme1: new URL("../../assets/music/battle_theme_1.mp3", import.meta.url).href,
-  battleTheme2: new URL("../../assets/music/battle_theme_2.mp3", import.meta.url).href,
-  battleTheme3: new URL("../../assets/music/battle_theme_3.mp3", import.meta.url).href,
-  battleTheme4: new URL("../../assets/music/battle_theme_4.mp3", import.meta.url).href,
-  battleTheme5: new URL("../../assets/music/battle_theme_5.mp3", import.meta.url).href,
-  battleTheme6: new URL("../../assets/music/battle_theme_6.mp3", import.meta.url).href,
-  battleTheme7: new URL("../../assets/music/battle_theme_7.mp3", import.meta.url).href,
-  battleTheme8: new URL("../../assets/music/battle_theme_8.mp3", import.meta.url).href,
-  battleTheme9: new URL("../../assets/music/battle_theme_9.mp3", import.meta.url).href,
-  battleTheme10: new URL("../../assets/music/battle_theme_10.mp3", import.meta.url).href,
-  battleTheme11: new URL("../../assets/music/battle_theme_11.mp3", import.meta.url).href,
-  battleTheme12: new URL("../../assets/music/battle_theme_12.mp3", import.meta.url).href,
-  battleTheme13: new URL("../../assets/music/battle_theme_13.mp3", import.meta.url).href,
-  battleTheme14: new URL("../../assets/music/battle_theme_14.mp3", import.meta.url).href,
-  battleTheme15: new URL("../../assets/music/battle_theme_15.mp3", import.meta.url).href,
-  battleTheme16: new URL("../../assets/music/battle_theme_16.mp3", import.meta.url).href,
+export type MusicVariant = "battle" | "climax";
+
+type MusicCollection = {
+  label: string;
+  battle: string;
+  climax: string;
+};
+
+export const musicCollections = {
+  battleTheme1: makeCollection(1),
+  battleTheme2: makeCollection(2),
+  battleTheme3: makeCollection(3),
+  battleTheme4: makeCollection(4),
+  battleTheme5: makeCollection(5),
+  battleTheme6: makeCollection(6),
+  battleTheme7: makeCollection(7),
+  battleTheme8: makeCollection(8),
+  battleTheme9: makeCollection(9),
+  battleTheme10: makeCollection(10),
+  battleTheme11: makeCollection(11),
+  battleTheme12: makeCollection(12),
+  battleTheme13: makeCollection(13),
+  battleTheme14: makeCollection(14),
+  battleTheme15: makeCollection(15),
+  battleTheme16: makeCollection(16),
 } as const;
 
-export type BattleThemeId = keyof typeof battleThemeManifest;
+export type MusicCollectionId = keyof typeof musicCollections;
+
+export const musicCollectionIds = Object.keys(musicCollections) as MusicCollectionId[];
+
+function makeCollection(index: number): MusicCollection {
+  return {
+    label: `Battle Theme #${index}`,
+    battle: new URL(`../../assets/music/battle_theme_${index}.mp3`, import.meta.url).href,
+    climax: new URL(`../../assets/music/climax_theme_${index}.mp3`, import.meta.url).href,
+  };
+}

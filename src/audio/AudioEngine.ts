@@ -1,5 +1,5 @@
 import { sfxManifest, type SfxId } from "./soundManifest";
-import { battleThemeManifest, type BattleThemeId } from "./musicManifest";
+import { musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
 
 type AudioSettings = {
   enabled: boolean;
@@ -11,6 +11,15 @@ type AudioSettings = {
 type PlayOptions = {
   volume?: number;
   rate?: number;
+};
+
+export type MusicStatus = {
+  collectionId?: MusicCollectionId;
+  variant: MusicVariant;
+  label: string;
+  playing: boolean;
+  muted: boolean;
+  paused: boolean;
 };
 
 const DEFAULT_SETTINGS: AudioSettings = {
@@ -25,7 +34,10 @@ class AudioEngine {
   private sfxCache = new Map<SfxId, HTMLAudioElement>();
   private activeSfx = new Set<HTMLAudioElement>();
   private music?: HTMLAudioElement;
-  private currentThemeId?: BattleThemeId;
+  private currentCollectionId?: MusicCollectionId;
+  private currentVariant: MusicVariant = "battle";
+  private pausedByUser = false;
+  private pausedByMute = false;
 
   configure(settings: Partial<AudioSettings>) {
     this.settings = {
@@ -73,25 +85,71 @@ class AudioEngine {
   }
 
   startRandomBattleTheme() {
-    if (!this.settings.musicEnabled) return;
-    if (this.music && !this.music.paused) return;
+    if (this.music && this.currentCollectionId) {
+      this.resumeMusic();
+      return this.getStatus();
+    }
 
-    const themeIds = Object.keys(battleThemeManifest) as BattleThemeId[];
-    const id = themeIds[Math.floor(Math.random() * themeIds.length)];
-    this.currentThemeId = id;
+    const id = musicCollectionIds[Math.floor(Math.random() * musicCollectionIds.length)];
+    return this.playCollection(id, "battle");
+  }
 
-    const music = new Audio(battleThemeManifest[id]);
-    music.loop = true;
-    music.preload = "auto";
-    music.volume = this.settings.musicVolume;
-    this.music = music;
+  playCollection(id: MusicCollectionId, variant: MusicVariant = this.currentVariant) {
+    if (this.currentCollectionId === id && this.currentVariant === variant && this.music) {
+      this.pausedByUser = false;
+      this.resumeMusic();
+      return this.getStatus();
+    }
 
-    void music.play().catch(() => {
-      if (this.music === music) {
-        this.music.pause();
-        this.music = undefined;
-      }
-    });
+    const currentTime = this.currentCollectionId === id && this.music ? this.music.currentTime : 0;
+    this.replaceMusic(id, variant, currentTime);
+    this.pausedByUser = false;
+    this.resumeMusic();
+    return this.getStatus();
+  }
+
+  setVariant(variant: MusicVariant) {
+    if (!this.currentCollectionId) return this.getStatus();
+    if (this.currentVariant === variant) return this.getStatus();
+    this.replaceMusic(this.currentCollectionId, variant, 0);
+    this.resumeMusic();
+    return this.getStatus();
+  }
+
+  playNext() {
+    const currentIndex = this.currentCollectionId ? musicCollectionIds.indexOf(this.currentCollectionId) : -1;
+    const next = musicCollectionIds[(currentIndex + 1 + musicCollectionIds.length) % musicCollectionIds.length];
+    return this.playCollection(next, this.currentVariant);
+  }
+
+  playPrevious() {
+    const currentIndex = this.currentCollectionId ? musicCollectionIds.indexOf(this.currentCollectionId) : 0;
+    const previous = musicCollectionIds[(currentIndex - 1 + musicCollectionIds.length) % musicCollectionIds.length];
+    return this.playCollection(previous, this.currentVariant);
+  }
+
+  pauseMusic() {
+    if (!this.music) return this.getStatus();
+    this.pausedByUser = true;
+    this.music.pause();
+    return this.getStatus();
+  }
+
+  resumeMusic() {
+    if (!this.music) return this.getStatus();
+    if (!this.settings.musicEnabled || this.pausedByUser) return this.getStatus();
+    this.pausedByMute = false;
+    void this.music.play().catch(() => undefined);
+    return this.getStatus();
+  }
+
+  togglePause() {
+    if (!this.music) return this.startRandomBattleTheme();
+    if (this.pausedByUser || this.music.paused) {
+      this.pausedByUser = false;
+      return this.resumeMusic();
+    }
+    return this.pauseMusic();
   }
 
   stopMusic() {
@@ -99,13 +157,51 @@ class AudioEngine {
     this.music.pause();
     this.music.currentTime = 0;
     this.music = undefined;
-    this.currentThemeId = undefined;
+    this.currentCollectionId = undefined;
+    this.currentVariant = "battle";
+    this.pausedByUser = false;
+    this.pausedByMute = false;
+  }
+
+  getStatus(): MusicStatus {
+    return {
+      collectionId: this.currentCollectionId,
+      variant: this.currentVariant,
+      label: this.currentCollectionId ? musicCollections[this.currentCollectionId].label : "No track",
+      playing: Boolean(this.music && !this.music.paused && !this.pausedByUser && this.settings.musicEnabled),
+      muted: !this.settings.musicEnabled,
+      paused: Boolean(this.music && (this.pausedByUser || this.music.paused)),
+    };
   }
 
   private syncMusicSettings() {
     if (!this.music) return;
     this.music.volume = this.settings.musicVolume;
-    if (!this.settings.musicEnabled) this.stopMusic();
+    if (!this.settings.musicEnabled) {
+      this.pausedByMute = true;
+      this.music.pause();
+      return;
+    }
+    if (this.pausedByMute && !this.pausedByUser) this.resumeMusic();
+  }
+
+  private replaceMusic(id: MusicCollectionId, variant: MusicVariant, startAt = 0) {
+    if (this.music) this.music.pause();
+    this.currentCollectionId = id;
+    this.currentVariant = variant;
+
+    const music = new Audio(musicCollections[id][variant]);
+    music.loop = true;
+    music.preload = "auto";
+    music.volume = this.settings.musicVolume;
+    try {
+      music.currentTime = Math.max(0, startAt);
+    } catch {
+      music.addEventListener("loadedmetadata", () => {
+        music.currentTime = Math.max(0, startAt);
+      }, { once: true });
+    }
+    this.music = music;
   }
 
   private getBaseSfx(id: SfxId) {
