@@ -163,15 +163,15 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function BattlefieldRow({ title, cards: rowCards, compact = false }: { title: string; cards: CardInstance[]; compact?: boolean }) {
     return (
-      <div className="old-panel-soft p-2">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">{title}</h3>
-          <span className="text-[11px] font-semibold text-[#d6b879]">{rowCards.length}</span>
+      <div className="old-panel-soft relative p-1.5">
+        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
+          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">{title}</h3>
+          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCards.length}</span>
         </div>
         {rowCards.length === 0 ? (
           <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className={["flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
             <AnimatePresence initial={false} mode="popLayout">
               {rowCards.map((card) => renderCard(card, compact))}
             </AnimatePresence>
@@ -183,13 +183,13 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function ResourceRow({ lands, others, showLands }: { lands: CardInstance[]; others: CardInstance[]; showLands: boolean }) {
     return (
-      <div className="old-panel-soft p-2">
+      <div className="old-panel-soft p-1.5">
         <div className={showLands ? "grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]" : ""}>
           {showLands && (
             <div>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">Lands</h3>
-                <span className="text-[11px] font-semibold text-[#d6b879]">{lands.length}</span>
+              <div className="mb-1 flex h-4 items-center justify-between leading-none">
+                <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
+                <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
               </div>
               {lands.length === 0 ? (
                 <div className="battlefield-empty-compact">Empty</div>
@@ -203,9 +203,9 @@ export function Battlefield({ game, side, cards }: Props) {
             </div>
           )}
           <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="old-title text-[11px] font-bold uppercase tracking-wide">Other permanents</h3>
-              <span className="text-[11px] font-semibold text-[#d6b879]">{others.length}</span>
+            <div className="mb-1 flex h-4 items-center justify-between leading-none">
+              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
+              <span className="text-[10px] font-semibold text-[#d6b879]">{others.length}</span>
             </div>
             {others.length === 0 ? (
               <div className="battlefield-empty-compact">Empty</div>

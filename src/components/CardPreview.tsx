@@ -7,6 +7,11 @@ import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary, typeLine } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
 
+const PREVIEW_WIDTH_CLASS = "w-[340px]";
+const PREVIEW_IMAGE_MAX_CLASS = "max-w-72";
+const PREVIOUS_PREVIEW_WIDTH_CLASS = "w-[300px]";
+const PREVIOUS_PREVIEW_IMAGE_MAX_CLASS = "max-w-64";
+
 export function CardPreview() {
   const game = useGameStore((state) => state.game);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
@@ -25,10 +30,13 @@ export function CardPreview() {
   const stats = cardStats(game, card);
   const keywords = cardKeywords(game, card);
   const text = cleanReminderText(details.oracleText ?? effectSummary(card));
+  const hasText = text.length > 0;
+  void PREVIOUS_PREVIEW_WIDTH_CLASS;
+  void PREVIOUS_PREVIEW_IMAGE_MAX_CLASS;
 
   return (
     <>
-      <aside data-preserve-card-focus="true" className="old-panel fixed left-4 top-[7rem] z-[75] flex max-h-[calc(100vh-18rem)] w-[300px] flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55">
+      <aside data-preserve-card-focus="true" className={`old-panel fixed left-4 top-[6rem] z-[75] flex max-h-[calc(100vh-14rem)] ${PREVIEW_WIDTH_CLASS} flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55`}>
         <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
           <div>
             <h2 className="old-title text-base font-bold leading-tight">{card.displayName}</h2>
@@ -48,13 +56,17 @@ export function CardPreview() {
             )}
           </div>
         </div>
-        <div className="min-h-0 space-y-3 overflow-auto p-3">
-          {details.imageUrl && <img src={details.imageUrl} alt={card.name} className="mx-auto w-full max-w-64 border-2 border-[#9c7238] shadow-lg shadow-black/45" />}
+        <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden p-3">
+          {details.imageUrl && <img src={details.imageUrl} alt={card.name} className={`mx-auto w-full ${PREVIEW_IMAGE_MAX_CLASS} border-2 border-[#9c7238] shadow-lg shadow-black/45`} />}
           <div className="flex items-center justify-between gap-2">
             {keywords && <p className="text-sm font-semibold text-[#9fda72]">{keywords}</p>}
             {stats && <span className="ml-auto border border-[#b88945] bg-[#1a1009]/80 px-2 py-1 text-sm font-bold text-[#ffe0a0]">{stats}</span>}
           </div>
-          <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
+          {hasText && (
+            <div className="old-panel-soft min-h-0 flex-1 overflow-auto p-2">
+              <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
+            </div>
+          )}
         </div>
       </aside>
       {detailsOpen && (

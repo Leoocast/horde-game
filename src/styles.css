@@ -270,6 +270,14 @@
     min-height: calc(clamp(92px, 7vw, 118px) * 1.393);
   }
 
+  .battlefield-row-body {
+    min-height: calc(clamp(118px, 9vw, 152px) * 1.393);
+  }
+
+  .battlefield-row-body-compact {
+    min-height: calc(clamp(92px, 7vw, 118px) * 1.393);
+  }
+
   .hand-card {
     position: relative;
     flex: 0 0 auto;
