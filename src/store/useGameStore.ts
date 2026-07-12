@@ -15,6 +15,7 @@ type GameStore = {
   game: GameState;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
+  autoPaidLandIds: string[];
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -49,6 +50,8 @@ type GameStore = {
 const defaultSeed = "horde-mvp-001";
 const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
+const AUTO_PAID_LAND_FLASH_MS = 900;
+let autoPaidLandFlashTimer: number | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -76,6 +79,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
+  autoPaidLandIds: [],
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
@@ -90,6 +94,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
+        autoPaidLandIds: [],
       };
     }),
   setSeed: (seed) => set({ seed }),
@@ -125,11 +130,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const card = game.player.hand.find((item) => item.instanceId === id);
       const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
       const previousLog = game.log[0];
+      const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
       const next = castCard(game, id, options);
       const castSucceeded = Boolean(card && !next.player.hand.some((item) => item.instanceId === id));
       if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
       else if (card && !castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined };
+      const autoPaidLandIds = castSucceeded
+        ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+        : [];
+      if (autoPaidLandIds.length > 0) {
+        if (autoPaidLandFlashTimer) window.clearTimeout(autoPaidLandFlashTimer);
+        autoPaidLandFlashTimer = window.setTimeout(() => {
+          useGameStore.setState({ autoPaidLandIds: [] });
+          autoPaidLandFlashTimer = undefined;
+        }, AUTO_PAID_LAND_FLASH_MS);
+      }
+      return { game: next, selectedHandId: undefined, focusedCardId: undefined, autoPaidLandIds };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
   toggleTap: (id) => set(({ game }) => ({ game: toggleTap(game, id) })),

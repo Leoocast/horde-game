@@ -22,6 +22,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const autoPaidLandIds = useGameStore((state) => state.autoPaidLandIds);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const tapForMana = useGameStore((state) => state.tapForMana);
@@ -235,6 +236,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.cardTypes.includes("Land");
+    const autoPaid = autoPaidLandIds.includes(card.instanceId);
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -299,6 +301,7 @@ export function Battlefield({ game, side, cards }: Props) {
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
+        autoPaid={autoPaid}
         onSelect={() => {
           if (side === "player") {
             if (isLand) return;

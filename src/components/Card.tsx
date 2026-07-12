@@ -16,13 +16,14 @@ type Props = {
   selectionDisabled?: boolean;
   muted?: boolean;
   actionable?: boolean;
+  autoPaid?: boolean;
   linkLabel?: string;
   onSelect?: () => void;
   onMana?: () => void;
   onLeave?: () => void;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, linkLabel, onSelect, onMana, onLeave }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, autoPaid, linkLabel, onSelect, onMana, onLeave }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStats(game, card);
@@ -65,6 +66,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         actionable ? "card-actionable" : "",
+        autoPaid ? "card-auto-paid" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
