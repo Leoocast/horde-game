@@ -27,7 +27,6 @@ export function Battlefield({ game, side, cards }: Props) {
   const autoPaidLandIds = useGameStore((state) => state.autoPaidLandIds);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
-  const tapForMana = useGameStore((state) => state.tapForMana);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -343,7 +342,6 @@ export function Battlefield({ game, side, cards }: Props) {
             selectHordeCreature(card.instanceId);
           }
         }}
-        onMana={side === "player" ? () => tapForMana(card.instanceId) : undefined}
       />
       </div>
       </motion.div>

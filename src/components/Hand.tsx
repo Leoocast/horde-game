@@ -48,16 +48,11 @@ export function Hand({ game }: { game: GameState }) {
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
   const pushToast = useToastStore((state) => state.pushToast);
-  const [newHorizonsCard, setNewHorizonsCard] = useState<CardInstance | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
 
   function playCard(card: CardInstance) {
-    if (card.definitionId === "new_horizons") {
-      setNewHorizonsCard(card);
-      return;
-    }
     playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);
   }
 
@@ -146,76 +141,7 @@ export function Hand({ game }: { game: GameState }) {
             </div>
         </div>
       </section>
-      {newHorizonsCard && (
-        <NewHorizonsTargetModal
-          game={game}
-          card={newHorizonsCard}
-          onCancel={() => setNewHorizonsCard(undefined)}
-          onConfirm={(targets) => {
-            castCard(newHorizonsCard.instanceId, { targets });
-            setNewHorizonsCard(undefined);
-          }}
-        />
-      )}
     </>
-  );
-}
-
-function NewHorizonsTargetModal({
-  game,
-  card,
-  onCancel,
-  onConfirm,
-}: {
-  game: GameState;
-  card: CardInstance;
-  onCancel: () => void;
-  onConfirm: (targets: Record<string, string>) => void;
-}) {
-  const lands = game.player.battlefield.filter((item) => item.cardTypes.includes("Land"));
-  const creatures = game.player.battlefield.filter((item) => item.cardTypes.includes("Creature"));
-  const [targetLand, setTargetLand] = useState(lands[0]?.instanceId ?? "");
-  const [targetCreature, setTargetCreature] = useState(creatures[0]?.instanceId ?? "");
-
-  return (
-    <div className="fixed inset-0 z-[135] flex items-center justify-center bg-[#090604]/80 p-6 text-[#f6e6b8]">
-      <section className="old-panel w-full max-w-md p-5">
-        <h2 className="old-title text-lg font-black">{card.displayName}</h2>
-        <p className="mt-1 text-sm text-[#d6b879]">Choose the enchanted land and the creature that gets the +1/+1 counter.</p>
-
-        <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-[#d6b879]">Land</label>
-        <select value={targetLand} onChange={(event) => setTargetLand(event.target.value)} className="old-input mt-2 h-11 w-full px-3 outline-none focus:border-[#f4cc74]">
-          {lands.map((land) => (
-            <option key={land.instanceId} value={land.instanceId}>
-              {land.displayName}
-            </option>
-          ))}
-        </select>
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]">+1/+1 counter</label>
-        <select value={targetCreature} onChange={(event) => setTargetCreature(event.target.value)} className="old-input mt-2 h-11 w-full px-3 outline-none focus:border-[#f4cc74]">
-          <option value="">No counter</option>
-          {creatures.map((creature) => (
-            <option key={creature.instanceId} value={creature.instanceId}>
-              {creature.displayName}
-            </option>
-          ))}
-        </select>
-
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button className="old-button h-11 text-sm font-bold uppercase tracking-wide" onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            className="old-button-green h-11 text-sm font-black uppercase tracking-wide disabled:opacity-40"
-            disabled={!targetLand}
-            onClick={() => onConfirm({ targetLand, ...(targetCreature ? { targetCreature } : {}) })}
-          >
-            Play
-          </button>
-        </div>
-      </section>
-    </div>
   );
 }
 
@@ -248,7 +174,7 @@ function getUnplayableReason(game: GameState, card: CardInstance): string {
     if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
     return "This land cannot be played right now.";
   }
-  return `Not enough available land mana to cast ${card.displayName}. Tap creature mana manually if needed.`;
+  return `Not enough available land mana to cast ${card.displayName}.`;
 }
 
 function playFromHand(

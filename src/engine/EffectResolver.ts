@@ -42,6 +42,7 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     return;
   }
   if (effect.type === "PUT_COUNTER") {
+    if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + Number(effect.amount ?? 1);
@@ -80,6 +81,7 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     return;
   }
   if (effect.type === "DISTRIBUTE_COUNTERS") {
+    if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       const amount = context.distribution?.[target.instanceId] ?? 1;
@@ -88,6 +90,7 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     return;
   }
   if (effect.type === "DOUBLE_COUNTERS_ON_TARGETS") {
+    if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       const key = String(effect.counterType ?? "+1/+1");

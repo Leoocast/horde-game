@@ -1,5 +1,4 @@
-import { Droplets } from "lucide-react";
-import type { CSSProperties, MouseEvent, PointerEvent } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
 import { cardStats } from "../utils/selectors";
@@ -30,8 +29,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStats(game, card);
   const { imageUrl } = useCardDetails(card.definitionId);
-  const canMana = card.activatedAbilities.some((ability) => ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC");
-  const manaDisabled = card.tapped || (card.cardTypes.includes("Creature") && card.summoningSickness);
+  void onMana;
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(255,236,184,0.82), 0 0 8px rgba(246,215,125,0.82), 0 0 18px rgba(246,177,59,0.48)"
     : "";
@@ -92,23 +90,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )}
       </div>
       {stats && <span className="absolute bottom-1 right-1 border border-[#6b441f] bg-[#f2d793]/95 px-1.5 py-0.5 text-xs font-bold text-[#241106]">{stats}</span>}
-      <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
-        {onMana && canMana && (
-          <button
-            title={manaDisabled ? "Cannot tap for mana" : "Tap for mana"}
-            disabled={manaDisabled}
-            onClick={(event) => buttonClick(event, onMana)}
-            className="icon-button bg-white/95"
-          >
-            <Droplets size={14} />
-          </button>
-        )}
-      </div>
     </article>
   );
-}
-
-function buttonClick(event: MouseEvent, action: () => void): void {
-  event.stopPropagation();
-  action();
 }
