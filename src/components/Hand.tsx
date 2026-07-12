@@ -2,6 +2,7 @@ import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
 import { canPay, parseManaCost } from "../engine/ManaSystem";
 import { useGameStore } from "../store/useGameStore";
+import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
@@ -46,6 +47,7 @@ export function Hand({ game }: { game: GameState }) {
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
+  const pushToast = useToastStore((state) => state.pushToast);
   const [newHorizonsCard, setNewHorizonsCard] = useState<CardInstance | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
@@ -63,10 +65,18 @@ export function Hand({ game }: { game: GameState }) {
     setSuppressedClickId(card.instanceId);
     window.setTimeout(() => setSuppressedClickId((current) => (current === card.instanceId ? undefined : current)), 240);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
-    const shouldPlay = info.point.y <= playZoneY && playable;
+    const releasedInPlayZone = info.point.y <= playZoneY;
+    const shouldPlay = releasedInPlayZone && playable;
     if (shouldPlay) {
       playCard(card);
       return;
+    }
+    if (releasedInPlayZone && !playable) {
+      pushToast({
+        title: "Cannot play card",
+        message: getUnplayableReason(game, card),
+        tone: "warning",
+      });
     }
     setFocusedCardId(undefined);
     selectHand(undefined);
@@ -229,6 +239,16 @@ function isPlayableFromHand(game: GameState, card: CardInstance): boolean {
     else pool.colorless += amount;
   }
   return canPay(pool, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0));
+}
+
+function getUnplayableReason(game: GameState, card: CardInstance): string {
+  if (game.winner) return "The game is already over.";
+  if (game.activeSide !== "player") return "Wait until your turn.";
+  if (card.cardTypes.includes("Land")) {
+    if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
+    return "This land cannot be played right now.";
+  }
+  return `Not enough available land mana to cast ${card.displayName}. Tap creature mana manually if needed.`;
 }
 
 function playFromHand(

@@ -9,7 +9,7 @@ export default function App() {
   const seed = useGameStore((state) => state.seed);
   const [started, setStarted] = useState(false);
   const [playerName, setPlayerName] = useState("Player");
-  const [setupTurns, setSetupTurns] = useState(3);
+  const [setupTurns, setSetupTurns] = useState(4);
 
   if (!started) {
     return (

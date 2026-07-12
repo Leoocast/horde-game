@@ -9,6 +9,7 @@ import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useAudioStore } from "./useAudioStore";
+import { useToastStore } from "./useToastStore";
 
 type GameStore = {
   game: GameState;
@@ -72,11 +73,11 @@ type PlayerAttackAnimation = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 3),
+  game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   seed: defaultSeed,
-  reset: (seed = get().seed, setupTurns = 3) =>
+  reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
       const next = createInitialGame(playerDeck, hordeDeck, seed, setupTurns);
       useAudioStore.getState().playSfx("draw");
@@ -112,17 +113,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playLand: (id) =>
     set(({ game }) => {
       const card = game.player.hand.find((item) => item.instanceId === id);
+      const previousLog = game.log[0];
       const next = playLand(game, id);
-      if (card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id)) useAudioStore.getState().playSfx("playLand");
+      const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
+      if (playSucceeded) useAudioStore.getState().playSfx("playLand");
+      else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
       return { game: next, selectedHandId: undefined, focusedCardId: undefined };
     }),
   castCard: (id, options) =>
     set(({ game }) => {
       const card = game.player.hand.find((item) => item.instanceId === id);
       const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
+      const previousLog = game.log[0];
       const next = castCard(game, id, options);
       const castSucceeded = Boolean(card && !next.player.hand.some((item) => item.instanceId === id));
       if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
+      else if (card && !castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
       return { game: next, selectedHandId: undefined, focusedCardId: undefined };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
@@ -255,6 +261,15 @@ function blockerWillDie(game: GameState, blockerId: string, attackerId: string) 
   }
 
   return false;
+}
+
+function showActionToast(message?: string) {
+  if (!message) return;
+  useToastStore.getState().pushToast({
+    title: "Action unavailable",
+    message,
+    tone: "warning",
+  });
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

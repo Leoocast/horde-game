@@ -11,9 +11,9 @@ type Props = {
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Easy", setupTurns: 4, description: "4 extra setup turns" },
-  { id: "normal", label: "Normal", setupTurns: 3, description: "3 extra setup turns" },
-  { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
+  { id: "easy", label: "Easy", setupTurns: 5, description: "5 extra setup turns" },
+  { id: "normal", label: "Normal", setupTurns: 4, description: "4 extra setup turns" },
+  { id: "hard", label: "Hard", setupTurns: 3, description: "3 extra setup turns" },
 ];
 
 export function StartMenu({ initialSeed, onStart }: Props) {

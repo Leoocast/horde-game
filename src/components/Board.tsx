@@ -12,6 +12,7 @@ import { InfoMenu } from "./InfoMenu";
 import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
+import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
 
@@ -45,6 +46,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <PlayerAttackAnimator />
       <CardPreview />
       <PlayerLifePanel game={game} playerName={playerName} />
+      <ToastStack />
       <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden px-3 pb-56 pt-3">
         <section className="old-panel space-y-3 p-3">
           <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
