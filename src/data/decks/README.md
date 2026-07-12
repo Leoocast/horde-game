@@ -126,8 +126,9 @@ Still supported:
 
 - Loading and inspecting new deck folders.
 - Scryfall image lookup through `deck_id_images.json`.
+- Normalizing the Alpha deck into the current runtime deck shape.
 - Basic land auto-payment for casting.
 - Creature combat.
 - Horde turn flow.
 
-When the new engine is implemented, new deck JSON should be normalized before entering game state instead of being interpreted directly by React components.
+The current normalizer is intentionally minimal. It keeps the Alpha deck stable in the existing runtime while the full ability/effect engine is redesigned.

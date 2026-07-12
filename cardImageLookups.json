@@ -1,289 +1,130 @@
 {
-    "provider": "scryfall",
-    "usage": {
-        "normalCards": {
-            "fetch": "lookup_url",
-            "imagePath": "image_uris.normal",
-            "fallbackImagePath": "image_uris.large"
-        },
-        "doubleFacedCards": {
-            "fetch": "lookup_url",
-            "frontImagePath": "card_faces[0].image_uris.normal",
-            "backImagePath": "card_faces[1].image_uris.normal"
-        },
-        "tokens": {
-            "fetch": "lookup_url",
-            "imagePath": "data[0].image_uris.normal",
-            "note": "Token searches may return multiple printings. For MVP, use the first result or let the user choose."
-        },
-        "recommendedHeaders": {
-            "Accept": "application/json",
-            "User-Agent": "your-app-name/0.1 your-email-or-url"
-        }
+  "provider": "scryfall",
+  "usage": {
+    "normalCards": {
+      "fetch": "lookup_url",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
     },
-    "hordeZombieDeck": [
-        {
-            "id": "zombie_token",
-            "name": "Zombie Token",
-            "type": "token",
-            "lookup_url": "https://api.scryfall.com/cards/search?q=%21%22Zombie%22+t%3Atoken+pow%3D2+tou%3D2+-is%3Adfc",
-            "image_path": "data[0].image_uris.normal"
-        },
-        {
-            "id": "zombie_giant_token",
-            "name": "Zombie Giant Token",
-            "type": "token",
-            "lookup_url": "https://api.scryfall.com/cards/search?q=%21%22Zombie+Giant%22+t%3Atoken+pow%3D5+tou%3D5+-is%3Adfc",
-            "image_path": "data[0].image_uris.normal"
-        },
-        {
-            "id": "graf_harvest",
-            "name": "Graf Harvest",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Graf%20Harvest",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "noosegraf_mob",
-            "name": "Noosegraf Mob",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Noosegraf%20Mob",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "rottenheart_ghoul",
-            "name": "Rottenheart Ghoul",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Rottenheart%20Ghoul",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "miasmic_mummy",
-            "name": "Miasmic Mummy",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Miasmic%20Mummy",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "smallpox",
-            "name": "Smallpox",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Smallpox",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "blighted_bat",
-            "name": "Blighted Bat",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Blighted%20Bat",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "stitchwing_skaab",
-            "name": "Stitchwing Skaab",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Stitchwing%20Skaab",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "advanced_stitchwing",
-            "name": "Advanced Stitchwing",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Advanced%20Stitchwing",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "crow_of_dark_tidings",
-            "name": "Crow of Dark Tidings",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Crow%20of%20Dark%20Tidings",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "cursed_minotaur",
-            "name": "Cursed Minotaur",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Cursed%20Minotaur",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "thraben_foulbloods",
-            "name": "Thraben Foulbloods",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Thraben%20Foulbloods",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "hound_of_the_farbogs",
-            "name": "Hound of the Farbogs",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Hound%20of%20the%20Farbogs",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "rancid_rats",
-            "name": "Rancid Rats",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Rancid%20Rats",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "gavony_unhallowed",
-            "name": "Gavony Unhallowed",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Gavony%20Unhallowed",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "diregraf_captain",
-            "name": "Diregraf Captain",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Diregraf%20Captain",
-            "image_path": "image_uris.normal"
-        }
-    ],
-    "playerElvesPrimalDeck": [
-        {
-            "id": "forest",
-            "name": "Forest",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Forest&set=fdn",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "uncharted_haven",
-            "name": "Uncharted Haven",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Uncharted%20Haven",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "llanowar_elves",
-            "name": "Llanowar Elves",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Llanowar%20Elves",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "druid_of_the_cowl",
-            "name": "Druid of the Cowl",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Druid%20of%20the%20Cowl",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "elvish_archdruid",
-            "name": "Elvish Archdruid",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Elvish%20Archdruid",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "beast_kin_ranger",
-            "name": "Beast-Kin Ranger",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Beast-Kin%20Ranger",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "elvish_regrower",
-            "name": "Elvish Regrower",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Elvish%20Regrower",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "dwynens_elite",
-            "name": "Dwynen's Elite",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Dwynen%27s%20Elite",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "thornweald_archer",
-            "name": "Thornweald Archer",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Thornweald%20Archer",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "wildheart_invoker",
-            "name": "Wildheart Invoker",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Wildheart%20Invoker",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "tajuru_pathwarden",
-            "name": "Tajuru Pathwarden",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Tajuru%20Pathwarden",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "felling_blow",
-            "name": "Felling Blow",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Felling%20Blow",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "bite_down",
-            "name": "Bite Down",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Bite%20Down",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "broken_wings",
-            "name": "Broken Wings",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Broken%20Wings",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "snakeskin_veil",
-            "name": "Snakeskin Veil",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Snakeskin%20Veil",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "giant_growth",
-            "name": "Giant Growth",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Giant%20Growth",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "joraga_invocation",
-            "name": "Joraga Invocation",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Joraga%20Invocation",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "aggressive_mammoth",
-            "name": "Aggressive Mammoth",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Aggressive%20Mammoth",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "mild_mannered_librarian",
-            "name": "Mild-Mannered Librarian",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Mild-Mannered%20Librarian",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "wildwood_scourge",
-            "name": "Wildwood Scourge",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Wildwood%20Scourge",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "bear_cub",
-            "name": "Bear Cub",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Bear%20Cub",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "biogenic_upgrade",
-            "name": "Biogenic Upgrade",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Biogenic%20Upgrade",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "magnigoth_sentry",
-            "name": "Magnigoth Sentry",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Magnigoth%20Sentry",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "new_horizons",
-            "name": "New Horizons",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=New%20Horizons",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "thrashing_brontodon",
-            "name": "Thrashing Brontodon",
-            "lookup_url": "https://api.scryfall.com/cards/named?exact=Thrashing%20Brontodon",
-            "image_path": "image_uris.normal"
-        },
-        {
-            "id": "elf_warrior_token",
-            "name": "Elf Warrior Token",
-            "type": "token",
-            "lookup_url": "https://api.scryfall.com/cards/search?q=%21%22Elf%20Warrior%22+t%3Atoken+pow%3D1+tou%3D1",
-            "image_path": "data[0].image_uris.normal"
-        }
-    ]
+    "doubleFacedCards": {
+      "fetch": "lookup_url",
+      "frontImagePath": "card_faces[0].image_uris.normal",
+      "backImagePath": "card_faces[1].image_uris.normal"
+    },
+    "tokens": {
+      "fetch": "lookup_url",
+      "imagePath": "data[0].image_uris.normal",
+      "note": "Token searches may return multiple printings. For MVP, use the first result or let the user choose."
+    },
+    "recommendedHeaders": {
+      "Accept": "application/json",
+      "User-Agent": "your-app-name/0.1 your-email-or-url"
+    }
+  },
+  "hordeZombieDeck": [
+    {
+      "id": "zombie_token",
+      "name": "Zombie Token",
+      "type": "token",
+      "lookup_url": "https://api.scryfall.com/cards/search?q=%21%22Zombie%22+t%3Atoken+pow%3D2+tou%3D2+-is%3Adfc",
+      "image_path": "data[0].image_uris.normal"
+    },
+    {
+      "id": "zombie_giant_token",
+      "name": "Zombie Giant Token",
+      "type": "token",
+      "lookup_url": "https://api.scryfall.com/cards/search?q=%21%22Zombie+Giant%22+t%3Atoken+pow%3D5+tou%3D5+-is%3Adfc",
+      "image_path": "data[0].image_uris.normal"
+    },
+    {
+      "id": "graf_harvest",
+      "name": "Graf Harvest",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Graf%20Harvest",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "noosegraf_mob",
+      "name": "Noosegraf Mob",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Noosegraf%20Mob",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "rottenheart_ghoul",
+      "name": "Rottenheart Ghoul",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Rottenheart%20Ghoul",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "miasmic_mummy",
+      "name": "Miasmic Mummy",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Miasmic%20Mummy",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "smallpox",
+      "name": "Smallpox",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Smallpox",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "blighted_bat",
+      "name": "Blighted Bat",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Blighted%20Bat",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "stitchwing_skaab",
+      "name": "Stitchwing Skaab",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Stitchwing%20Skaab",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "advanced_stitchwing",
+      "name": "Advanced Stitchwing",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Advanced%20Stitchwing",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "crow_of_dark_tidings",
+      "name": "Crow of Dark Tidings",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Crow%20of%20Dark%20Tidings",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "cursed_minotaur",
+      "name": "Cursed Minotaur",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Cursed%20Minotaur",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "thraben_foulbloods",
+      "name": "Thraben Foulbloods",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Thraben%20Foulbloods",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "hound_of_the_farbogs",
+      "name": "Hound of the Farbogs",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Hound%20of%20the%20Farbogs",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "rancid_rats",
+      "name": "Rancid Rats",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Rancid%20Rats",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "gavony_unhallowed",
+      "name": "Gavony Unhallowed",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Gavony%20Unhallowed",
+      "image_path": "image_uris.normal"
+    },
+    {
+      "id": "diregraf_captain",
+      "name": "Diregraf Captain",
+      "lookup_url": "https://api.scryfall.com/cards/named?exact=Diregraf%20Captain",
+      "image_path": "image_uris.normal"
+    }
+  ]
 }

@@ -1,8 +1,10 @@
 import hordeDeckRaw from "./horde-zombies.json";
-import playerDeckRaw from "./player-elves-primordials.json";
+import monoGreenRampRaw from "./decks/mono_green_ramp/mono_green_ramp.json";
+import type { NewDeckList } from "./deckCatalog";
+import { normalizeDeck } from "./normalizeDeck";
 import type { CardDefinition, DeckList } from "../engine/GameTypes";
 
-export const playerDeck = playerDeckRaw as DeckList;
+export const playerDeck = normalizeDeck(monoGreenRampRaw as NewDeckList);
 export const hordeDeck = hordeDeckRaw as DeckList;
 
 export const cardDefinitions: CardDefinition[] = [

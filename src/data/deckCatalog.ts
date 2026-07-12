@@ -1,3 +1,4 @@
+import type { Color } from "../engine/GameTypes";
 import monoGreenRampRaw from "./decks/mono_green_ramp/mono_green_ramp.json";
 import monoGreenRampImagesRaw from "./decks/mono_green_ramp/mono_green_ramp_images.json";
 
@@ -8,6 +9,7 @@ export type NewDeckCard = {
   quantity?: number;
   manaCost?: string;
   manaValue?: number;
+  colors?: Color[];
   cardTypes?: string[];
   subtypes?: string[];
   power?: number | null;
