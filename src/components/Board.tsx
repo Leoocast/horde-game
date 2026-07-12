@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
+import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
@@ -9,7 +10,6 @@ import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
-import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { ToastStack } from "./ToastStack";
@@ -31,14 +31,7 @@ export function Board({ playerName, setupTurns }: Props) {
 
   return (
     <main className="duel-table h-screen overflow-hidden">
-      <header className="old-frame-top relative z-[90] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
-        <GameStatusBadge game={game} />
-        <TurnPhaseHud game={game} />
-        <div className="flex items-center gap-2 pr-3 justify-self-end">
-          <MusicPlayerMenu />
-          <InfoMenu setupTurns={setupTurns} />
-        </div>
-      </header>
+      <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} showSettings={false} />
       <DuelHud game={game} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
