@@ -4,7 +4,7 @@ import type { AbilityOptions, CastOptions, GameState, Phase } from "../engine/Ga
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
-import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, togglePlayerAttacker } from "../engine/CombatResolver";
+import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -16,6 +16,7 @@ type GameStore = {
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
   autoPaidLandIds: string[];
+  blockDrag?: BlockDragState;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -43,6 +44,9 @@ type GameStore = {
   prepareHordeAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
+  startBlockDrag: (blockerId: string, x: number, y: number) => void;
+  updateBlockDrag: (x: number, y: number) => void;
+  cancelBlockDrag: () => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
 };
@@ -75,11 +79,20 @@ type PlayerAttackAnimation = {
   eventId: number;
 };
 
+export type BlockDragState = {
+  blockerId: string;
+  startX: number;
+  startY: number;
+  x: number;
+  y: number;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   autoPaidLandIds: [],
+  blockDrag: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
@@ -95,6 +108,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
         autoPaidLandIds: [],
+        blockDrag: undefined,
       };
     }),
   setSeed: (seed) => set({ seed }),
@@ -195,14 +209,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = declareBlocker(game, blockerId, attackerId);
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
-      return { game: next };
+      return { game: next, blockDrag: undefined };
     }),
   cancelBlocks: () =>
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       next.combat.blockers = {};
-      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
+      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined, blockDrag: undefined };
     }),
+  startBlockDrag: (blockerId, x, y) => set({ blockDrag: { blockerId, startX: x, startY: y, x, y } }),
+  updateBlockDrag: (x, y) =>
+    set(({ blockDrag }) => ({
+      blockDrag: blockDrag ? { ...blockDrag, x, y } : undefined,
+    })),
+  cancelBlockDrag: () => set({ blockDrag: undefined }),
   resolveHordeCombat: () => {
     const { game, hordeAttackAnimation, playerAttackAnimation } = get();
     if (hordeAttackAnimation || playerAttackAnimation) return;
@@ -255,30 +275,6 @@ function playDrawOneIfPlayerDrew(previous: GameState, next: GameState) {
   }
 }
 
-function blockerWillDie(game: GameState, blockerId: string, attackerId: string) {
-  const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
-  if (!attacker) return false;
-
-  const blockers = (game.combat.blockers[attackerId] ?? [])
-    .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
-    .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card));
-
-  const attackerStats = getPowerToughness(game, attacker);
-  let remaining = attackerStats.power;
-  for (const blocker of blockers) {
-    const blockerStats = getPowerToughness(game, blocker);
-    const lethal = hasKeyword(game, attacker, "DEATHTOUCH") ? 1 : Math.max(1, blockerStats.toughness - blocker.damageMarked);
-    const assigned = hasKeyword(game, attacker, "TRAMPLE") ? Math.min(remaining, lethal) : remaining;
-    if (blocker.instanceId === blockerId) {
-      return assigned > 0 && (hasKeyword(game, attacker, "DEATHTOUCH") || blocker.damageMarked + assigned >= blockerStats.toughness);
-    }
-    remaining -= assigned;
-    if (remaining <= 0) return false;
-  }
-
-  return false;
-}
-
 function showActionToast(message?: string) {
   if (!message) return;
   useToastStore.getState().pushToast({
@@ -301,18 +297,28 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       continue;
     }
 
-    let attackerDamage = attacker.damageMarked;
+    if (hasKeyword(game, attacker, "MENACE") && blockerIds.length < 2) {
+      events.push({ attackerId, attackerDies: false, blockerDies: false, playerDamage: attackerStats.power });
+      continue;
+    }
 
-    for (const blockerId of blockerIds) {
-      const blocker = game.player.battlefield.find((card) => card.instanceId === blockerId);
-      if (!blocker) continue;
+    let attackerDamage = attacker.damageMarked;
+    const blockers = sortBlockersLeftToRight(
+      game,
+      blockerIds
+        .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
+        .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card)),
+    );
+
+    for (const blocker of blockers) {
       const blockerStats = getPowerToughness(game, blocker);
+      const blockerDies = attackerStats.power > 0 && (hasKeyword(game, attacker, "DEATHTOUCH") || blocker.damageMarked + attackerStats.power >= blockerStats.toughness);
       const attackerDies = blockerStats.power > 0 && (hasKeyword(game, blocker, "DEATHTOUCH") || attackerDamage + blockerStats.power >= attackerStats.toughness);
       events.push({
         attackerId,
         attackerDies,
-        blockerId,
-        blockerDies: blockerWillDie(game, blockerId, attackerId),
+        blockerId: blocker.instanceId,
+        blockerDies,
         playerDamage: 0,
       });
       attackerDamage += blockerStats.power;

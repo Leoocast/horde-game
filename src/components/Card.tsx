@@ -1,5 +1,5 @@
 import { Droplets } from "lucide-react";
-import type { CSSProperties, MouseEvent } from "react";
+import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
 import { cardStats } from "../utils/selectors";
@@ -21,9 +21,11 @@ type Props = {
   onSelect?: () => void;
   onMana?: () => void;
   onLeave?: () => void;
+  onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
+  shouldSuppressClick?: () => boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, autoPaid, linkLabel, onSelect, onMana, onLeave }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, shouldSuppressClick }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStats(game, card);
@@ -54,13 +56,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         setHoveredCardId(undefined);
         onLeave?.();
       }}
+      onPointerDown={onPointerDown}
       onClick={() => {
+        if (shouldSuppressClick?.()) return;
         setFocusedCardId(card.instanceId);
         if (!selectionDisabled) onSelect?.();
       }}
       style={style}
       className={[
-        "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition",
+        "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
         selected && !accentColor && !actionable ? "border-[#f6d77d]" : "border-transparent",
         card.tapped ? "rotate-2 opacity-80" : "",
         attacking ? "border-[#ff7a3d]" : "",

@@ -61,7 +61,9 @@ export function prepareHordeAttackers(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   next.activeSide = "horde";
   next.phase = "combat";
-  next.combat.hordeAttackers = next.horde.battlefield.filter((card) => canAttack(next, card)).map((card) => card.instanceId);
+  const attackers = next.horde.battlefield.filter((card) => canAttack(next, card));
+  next.combat.hordeAttackers = attackers.map((card) => card.instanceId);
+  for (const attacker of attackers) attacker.tapped = true;
   log(next, `Horde attacks with ${next.combat.hordeAttackers.length} creature(s).`);
   return next;
 }
@@ -87,17 +89,14 @@ export function resolveHordeCombat(game: GameState): GameState {
       continue;
     }
     const attackerStats = getPowerToughness(next, attacker);
-    let remaining = attackerStats.power;
-    for (const blocker of blockers) {
+    let attackerDamage = attacker.damageMarked;
+    for (const blocker of sortBlockersLeftToRight(next, blockers)) {
       const blockerStats = getPowerToughness(next, blocker);
-      const lethal = hasKeyword(next, attacker, "DEATHTOUCH") ? 1 : Math.max(1, blockerStats.toughness - blocker.damageMarked);
-      const assigned = hasKeyword(next, attacker, "TRAMPLE") ? Math.min(remaining, lethal) : remaining;
-      dealDamageToCreature(next, blocker, assigned, hasKeyword(next, attacker, "DEATHTOUCH"));
-      remaining -= assigned;
+      dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
       dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
-      if (remaining <= 0) break;
+      attackerDamage += blockerStats.power;
+      if (hasKeyword(next, blocker, "DEATHTOUCH") || attackerDamage >= attackerStats.toughness) break;
     }
-    if (remaining > 0 && hasKeyword(next, attacker, "TRAMPLE")) playerDamage += remaining;
   }
   if (playerDamage > 0) {
     next.player.life -= playerDamage;
@@ -120,4 +119,8 @@ export function checkWinLoss(game: GameState): void {
 function log(game: GameState, message: string): GameState {
   game.log.unshift(message);
   return game;
+}
+
+export function sortBlockersLeftToRight(game: GameState, blockers: CardInstance[]): CardInstance[] {
+  return [...blockers].sort((left, right) => game.player.battlefield.findIndex((card) => card.instanceId === left.instanceId) - game.player.battlefield.findIndex((card) => card.instanceId === right.instanceId));
 }

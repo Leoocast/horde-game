@@ -251,6 +251,37 @@
       filter 220ms ease;
   }
 
+  .battlefield-card-slot::before {
+    content: "";
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    bottom: -15px;
+    height: 18px;
+    z-index: -1;
+    border-radius: 999px;
+    opacity: 0;
+    background:
+      radial-gradient(ellipse at center, rgb(255 230 142 / 0.72), rgb(236 84 31 / 0.42) 48%, transparent 72%);
+    filter: blur(2px);
+    transition: opacity 320ms ease-out, transform 320ms ease-out;
+  }
+
+  .battlefield-card-slot::after {
+    content: "";
+    position: absolute;
+    left: 21%;
+    right: 21%;
+    bottom: -13px;
+    height: 16px;
+    z-index: -1;
+    opacity: 0;
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    background: linear-gradient(180deg, rgb(255 231 165 / 0.92), rgb(220 61 25 / 0.78));
+    box-shadow: 0 0 14px rgb(255 104 26 / 0.68);
+    transition: opacity 320ms ease-out, transform 320ms ease-out;
+  }
+
   .battlefield-card-slot-compact {
     position: relative;
     top: 0;
@@ -265,6 +296,19 @@
   .player-attacker-readied {
     top: -18px;
     filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.32)) brightness(1.08);
+  }
+
+  .horde-attacker-readied {
+    filter: drop-shadow(0 16px 20px rgb(0 0 0 / 0.42)) brightness(1.08);
+  }
+
+  .horde-attacker-readied::before {
+    opacity: 1;
+    animation: horde-attack-marker-pulse 1.2s ease-in-out infinite;
+  }
+
+  .horde-attacker-readied::after {
+    opacity: 1;
   }
 
   .battlefield-empty,
@@ -362,6 +406,19 @@
       inset 0 0 0 1px rgb(238 253 255 / 0.85),
       0 0 12px rgb(86 220 255 / 0.92),
       0 0 26px rgb(86 220 255 / 0.58);
+  }
+}
+
+@keyframes horde-attack-marker-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scaleX(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleX(1.08);
   }
 }
 

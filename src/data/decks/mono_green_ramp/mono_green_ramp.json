@@ -1,0 +1,888 @@
+{
+  "schemaVersion": "0.2.0",
+  "id": "mono_green_ramp_40",
+  "name": "Mono-Green Ramp 40",
+  "format": "casual",
+  "side": "PLAYER",
+  "standardCheckedAt": null,
+  "deckSize": 40,
+  "colors": [
+    "G"
+  ],
+  "archetype": "ramp",
+  "gamePlan": "Acelerar maná con criaturas, desarrollar amenazas verdes con alcance y arrollar, y usar trucos de combate o remoción basada en criaturas para controlar la mesa.",
+  "tokens": [],
+  "cards": [
+    {
+      "id": "llanowar_elves",
+      "name": "Llanowar Elves",
+      "displayNameEs": "Elfos de Llanowar",
+      "quantity": 2,
+      "setCode": "FDN",
+      "collectorNumber": "227",
+      "manaCost": "{G}",
+      "manaValue": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "llanowar_elves_add_green",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "tap": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "G": 1
+              }
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Llanowar Elves",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "sunshower_druid",
+      "name": "Sunshower Druid",
+      "displayNameEs": "Druida de la lluvia solar",
+      "quantity": 3,
+      "setCode": "BLB",
+      "collectorNumber": "195",
+      "manaCost": "{G}",
+      "manaValue": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Frog",
+        "Druid"
+      ],
+      "power": 0,
+      "toughness": 2,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "sunshower_druid_enter_counter_and_life",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD"
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "ANY",
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_COUNTERS",
+              "target": "targetCreature",
+              "counter": "+1/+1",
+              "amount": 1
+            },
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Sunshower Druid",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "rootrider_faun",
+      "name": "Rootrider Faun",
+      "displayNameEs": "Fauna trotarraíces",
+      "quantity": 2,
+      "setCode": "WOE",
+      "collectorNumber": "182",
+      "manaCost": "{1}{G}",
+      "manaValue": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Satyr",
+        "Scout"
+      ],
+      "power": 1,
+      "toughness": 3,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "rootrider_faun_add_green",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "tap": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "G": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "rootrider_faun_add_any_color",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{1}",
+            "tap": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "CHOOSE",
+              "player": "SELF",
+              "choiceId": "chosenManaColor",
+              "options": [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            },
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "type": "CHOICE_REFERENCE",
+                "choiceId": "chosenManaColor",
+                "amount": 1
+              }
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Rootrider Faun",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "ichorspit_basilisk",
+      "name": "Ichorspit Basilisk",
+      "displayNameEs": "Basilisco escupeicor",
+      "quantity": 2,
+      "setCode": "ONE",
+      "collectorNumber": "170",
+      "manaCost": "{2}{G}",
+      "manaValue": 3,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Basilisk"
+      ],
+      "power": 1,
+      "toughness": 3,
+      "keywords": [
+        "DEATHTOUCH"
+      ],
+      "abilities": [
+        {
+          "id": "ichorspit_basilisk_toxic_1",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "toxic_1",
+          "implementationNote": "Cuando esta criatura hace daño de combate a un jugador, ese jugador obtiene un contador de veneno. Toxic 1 no depende de la cantidad de daño."
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Ichorspit Basilisk",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "beast_kin_ranger",
+      "name": "Beast-Kin Ranger",
+      "displayNameEs": "Guardabosque bestial",
+      "quantity": 3,
+      "setCode": "FDN",
+      "collectorNumber": "100",
+      "manaCost": "{2}{G}",
+      "manaValue": 3,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Ranger"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "keywords": [
+        "TRAMPLE"
+      ],
+      "abilities": [
+        {
+          "id": "beast_kin_ranger_other_creature_enters",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "permanent",
+              "controller": "SELF",
+              "excludeSource": true,
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "SELF",
+              "power": 1,
+              "toughness": 0,
+              "duration": "END_OF_TURN"
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Beast-Kin Ranger",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "magnigoth_sentry",
+      "name": "Magnigoth Sentry",
+      "displayNameEs": "Centinela mágnigoth",
+      "quantity": 2,
+      "setCode": "FDN",
+      "collectorNumber": "556",
+      "manaCost": "{4}{G}",
+      "manaValue": 5,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Treefolk"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "keywords": [
+        "REACH"
+      ],
+      "abilities": [],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Magnigoth Sentry",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "colossadactyl",
+      "name": "Colossadactyl",
+      "displayNameEs": "Colosadáctilo",
+      "quantity": 2,
+      "setCode": "LCI",
+      "collectorNumber": "180",
+      "manaCost": "{2}{G}{G}",
+      "manaValue": 4,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dinosaur"
+      ],
+      "power": 4,
+      "toughness": 5,
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ],
+      "abilities": [],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Colossadactyl",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "timberland_ancient",
+      "name": "Timberland Ancient",
+      "displayNameEs": "Anciano forestal",
+      "quantity": 1,
+      "setCode": "MOM",
+      "collectorNumber": "210",
+      "manaCost": "{4}{G}{G}",
+      "manaValue": 6,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Treefolk"
+      ],
+      "power": 6,
+      "toughness": 5,
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ],
+      "abilities": [
+        {
+          "id": "timberland_ancient_forestcycling",
+          "kind": "ACTIVATED",
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{2}",
+            "discardSelf": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "SEARCH_LIBRARY",
+              "player": "SELF",
+              "filters": {
+                "cardTypes": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Forest"
+                ]
+              },
+              "amount": 1,
+              "reveal": true,
+              "destination": "HAND"
+            },
+            {
+              "type": "SHUFFLE",
+              "player": "SELF"
+            }
+          ],
+          "implementationNote": "Forestcycling {2}. La búsqueda permite cualquier carta con subtipo Forest, no solo tierras básicas."
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Timberland Ancient",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "cosmic_hunger",
+      "name": "Cosmic Hunger",
+      "displayNameEs": "Hambre cósmica",
+      "quantity": 2,
+      "setCode": "MOM",
+      "collectorNumber": "182",
+      "manaCost": "{1}{G}",
+      "manaValue": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "cosmic_hunger_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{1}{G}"
+          },
+          "targets": [
+            {
+              "id": "sourceCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "SELF",
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "id": "damageTarget",
+              "zone": "BATTLEFIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "cardTypes": [
+                      "Creature"
+                    ]
+                  },
+                  {
+                    "cardTypes": [
+                      "Planeswalker"
+                    ]
+                  },
+                  {
+                    "cardTypes": [
+                      "Battle"
+                    ]
+                  }
+                ],
+                "excludeTargetIds": [
+                  "sourceCreature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE",
+              "source": "sourceCreature",
+              "target": "damageTarget",
+              "amount": {
+                "type": "STAT",
+                "object": "sourceCreature",
+                "stat": "POWER"
+              },
+              "damageKind": "NON_COMBAT"
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Cosmic Hunger",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "ruthless_predation",
+      "name": "Ruthless Predation",
+      "displayNameEs": "Depredación despiadada",
+      "quantity": 1,
+      "setCode": "ONE",
+      "collectorNumber": "182",
+      "manaCost": "{1}{G}",
+      "manaValue": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "ruthless_predation_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "SORCERY",
+          "cost": {
+            "mana": "{1}{G}"
+          },
+          "targets": [
+            {
+              "id": "yourCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "SELF",
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "id": "opponentCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "OPPONENT",
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "yourCreature",
+              "power": 1,
+              "toughness": 2,
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "SEQUENCE",
+              "simultaneous": true,
+              "customHandler": "fight_simultaneously",
+              "steps": [
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "yourCreature",
+                  "target": "opponentCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "yourCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                },
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "opponentCreature",
+                  "target": "yourCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "opponentCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                }
+              ],
+              "implementationNote": "Las dos criaturas se hacen daño simultáneamente después de aplicar el +1/+2."
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Ruthless Predation",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "broken_wings",
+      "name": "Broken Wings",
+      "displayNameEs": "Alas rotas",
+      "quantity": 2,
+      "setCode": "FDN",
+      "collectorNumber": "214",
+      "manaCost": "{2}{G}",
+      "manaValue": 3,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "broken_wings_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{2}{G}"
+          },
+          "targets": [
+            {
+              "id": "targetPermanent",
+              "zone": "BATTLEFIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "cardTypes": [
+                      "Artifact"
+                    ]
+                  },
+                  {
+                    "cardTypes": [
+                      "Enchantment"
+                    ]
+                  },
+                  {
+                    "cardTypes": [
+                      "Creature"
+                    ],
+                    "keywords": [
+                      "FLYING"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY",
+              "target": "targetPermanent"
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Broken Wings",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "giant_growth",
+      "name": "Giant Growth",
+      "displayNameEs": "Crecimiento gigante",
+      "quantity": 1,
+      "setCode": "FDN",
+      "collectorNumber": "223",
+      "manaCost": "{G}",
+      "manaValue": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "giant_growth_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{G}"
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "ANY",
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 3,
+              "toughness": 3,
+              "duration": "END_OF_TURN"
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Giant Growth",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "forest",
+      "name": "Forest",
+      "displayNameEs": "Bosque",
+      "quantity": 17,
+      "setCode": "FDN",
+      "collectorNumber": null,
+      "needsVerification": true,
+      "verificationNote": "La lista no especifica el número de coleccionista o arte exacto entre las múltiples versiones de Forest en Foundations.",
+      "manaCost": null,
+      "manaValue": 0,
+      "colors": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "cardTypes": [
+        "Land"
+      ],
+      "subtypes": [
+        "Forest"
+      ],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "forest_add_green",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "tap": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "G": 1
+              }
+            }
+          ]
+        }
+      ],
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Forest",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    }
+  ],
+  "engineSupportNeeded": [
+    {
+      "id": "choice_reference_for_mana",
+      "description": "Permitir que CHOOSE guarde un color y que ADD_MANA consuma ese resultado mediante CHOICE_REFERENCE."
+    },
+    {
+      "id": "toxic_and_poison_counters",
+      "description": "Implementar el customHandler toxic_1 y contadores de veneno sobre jugadores."
+    },
+    {
+      "id": "simultaneous_fight_damage",
+      "description": "Implementar fight_simultaneously para resolver ambos DEAL_DAMAGE como un único evento simultáneo."
+    },
+    {
+      "id": "compound_target_filters",
+      "description": "Soportar filters.anyOf y excludeTargetIds para objetivos con alternativas y restricciones de 'otro objetivo'."
+    },
+    {
+      "id": "discard_self_from_hand_cost",
+      "description": "Soportar discardSelf en costes activados desde HAND para Forestcycling."
+    }
+  ]
+}

@@ -30,6 +30,7 @@ export function runFullHordeTurn(game: GameState): GameState {
 export function finishHordeTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
+  untapSide(next, "horde");
   startPlayerTurnReady(next);
   next.log.unshift("Horde turn ends.");
   return next;

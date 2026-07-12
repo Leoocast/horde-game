@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "0.2.0",
+  "provider": "scryfall",
+  "defaults": {
+    "imageSize": "normal",
+    "face": "front",
+    "cacheKey": "deck-card-images:v1"
+  },
+  "cards": {
+    "llanowar_elves": {
+      "source": "scryfallNamed",
+      "exact": "Llanowar Elves",
+      "set": "fdn"
+    },
+    "sunshower_druid": {
+      "source": "scryfallNamed",
+      "exact": "Sunshower Druid",
+      "set": "blb"
+    },
+    "rootrider_faun": {
+      "source": "scryfallNamed",
+      "exact": "Rootrider Faun",
+      "set": "woe"
+    },
+    "ichorspit_basilisk": {
+      "source": "scryfallNamed",
+      "exact": "Ichorspit Basilisk",
+      "set": "one"
+    },
+    "beast_kin_ranger": {
+      "source": "scryfallNamed",
+      "exact": "Beast-Kin Ranger",
+      "set": "fdn"
+    },
+    "magnigoth_sentry": {
+      "source": "scryfallNamed",
+      "exact": "Magnigoth Sentry",
+      "set": "fdn"
+    },
+    "colossadactyl": {
+      "source": "scryfallNamed",
+      "exact": "Colossadactyl",
+      "set": "lci"
+    },
+    "timberland_ancient": {
+      "source": "scryfallNamed",
+      "exact": "Timberland Ancient",
+      "set": "mom"
+    },
+    "cosmic_hunger": {
+      "source": "scryfallNamed",
+      "exact": "Cosmic Hunger",
+      "set": "mom"
+    },
+    "ruthless_predation": {
+      "source": "scryfallNamed",
+      "exact": "Ruthless Predation",
+      "set": "one"
+    },
+    "broken_wings": {
+      "source": "scryfallNamed",
+      "exact": "Broken Wings",
+      "set": "fdn"
+    },
+    "giant_growth": {
+      "source": "scryfallNamed",
+      "exact": "Giant Growth",
+      "set": "fdn"
+    },
+    "forest": {
+      "source": "scryfallNamed",
+      "exact": "Forest",
+      "set": "fdn"
+    }
+  }
+}
