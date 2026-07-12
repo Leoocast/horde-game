@@ -31,7 +31,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   if (!card) return next;
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
-  if (!payManaWithAvailableLands(next, cost)) return log(next, `Not enough land mana to cast ${card.name}. Tap creature mana manually if needed.`);
+  if (!payManaWithAvailableLands(next, cost)) return log(next, `Not enough available land mana to cast ${card.name}.`);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {
