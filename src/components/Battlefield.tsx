@@ -266,6 +266,7 @@ export function Battlefield({ game, side, cards }: Props) {
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde");
     const actionable = legalAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId);
+    const effectAvailable = canUseTapActivatedAbility(card);
 
     return (
       <motion.div
@@ -302,6 +303,7 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         actionable={actionable}
+        effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
@@ -361,6 +363,14 @@ export function Battlefield({ game, side, cards }: Props) {
   function hordeEntryDelay(card: CardInstance): number {
     const index = cards.findIndex((item) => item.instanceId === card.instanceId);
     return Math.max(index, 0) * 0.04;
+  }
+
+  function canUseTapActivatedAbility(card: CardInstance): boolean {
+    if (side !== "player") return false;
+    if (card.zone !== "battlefield") return false;
+    if (card.tapped) return false;
+    if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
+    return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
   }
 
   function beginBlockDrag(blockerId: string, event: PointerEvent<HTMLElement>): void {

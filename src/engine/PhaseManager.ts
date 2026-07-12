@@ -1,5 +1,5 @@
 import type { GameState, Phase } from "./GameTypes";
-import { cleanupEndStep, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
+import { cleanupEndStep, clearPlayerSummoningSickness, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
 
 const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "secondMain", "end"];
 
@@ -20,6 +20,7 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
 export function endPlayerTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
+  clearPlayerSummoningSickness(next);
   if (next.setupTurnsRemaining > 1) {
     next.setupTurnsRemaining -= 1;
     startPlayerTurnReady(next);

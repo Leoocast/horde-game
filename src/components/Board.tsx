@@ -3,6 +3,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
+import { CardContextMenu } from "./CardContextMenu";
 import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
@@ -38,6 +39,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <HordeAttackAnimator />
       <PlayerAttackAnimator />
       <CardPreview />
+      <CardContextMenu />
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
       <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden px-3 pb-56 pt-3">

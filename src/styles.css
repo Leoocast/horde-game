@@ -274,6 +274,46 @@
     animation: auto-paid-land-pulse 900ms ease-out both;
   }
 
+  .card-effect-available {
+    border-color: rgb(255 211 112 / 0.95);
+    animation: effect-available-card-glow 1.7s ease-in-out infinite;
+  }
+
+  .context-menu-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.55rem;
+    border-radius: 0.55rem;
+    border: 1px solid transparent;
+    padding: 0.62rem 0.7rem;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #f6e6b8;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      filter 150ms ease;
+  }
+
+  .context-menu-item:hover:not(:disabled) {
+    border-color: rgb(214 163 76 / 0.72);
+    background:
+      linear-gradient(180deg, rgb(133 68 24 / 0.78), rgb(48 25 13 / 0.92));
+    color: #fff0bd;
+    filter: brightness(1.08);
+  }
+
+  .context-menu-item:disabled {
+    cursor: not-allowed;
+    color: rgb(180 155 113 / 0.5);
+    filter: saturate(0.6);
+  }
+
   .summoning-sick-card {
     filter: saturate(0.95) brightness(1.02) contrast(1.02);
   }
@@ -512,6 +552,23 @@
       inset 0 0 0 1px rgb(238 253 255 / 0.85),
       0 0 12px rgb(86 220 255 / 0.92),
       0 0 26px rgb(86 220 255 / 0.58);
+  }
+}
+
+@keyframes effect-available-card-glow {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 221 134 / 0.64),
+      0 0 8px rgb(255 184 64 / 0.64),
+      0 0 18px rgb(255 144 32 / 0.36);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 239 178 / 0.92),
+      0 0 13px rgb(255 202 91 / 0.92),
+      0 0 30px rgb(255 144 32 / 0.58);
   }
 }
 

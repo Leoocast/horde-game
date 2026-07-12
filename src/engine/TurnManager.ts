@@ -21,6 +21,12 @@ export function cleanupEndStep(game: GameState): void {
   game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {} };
 }
 
+export function clearPlayerSummoningSickness(game: GameState): void {
+  for (const card of game.player.battlefield) {
+    if (card.cardTypes.includes("Creature")) card.summoningSickness = false;
+  }
+}
+
 export function startPlayerTurn(game: GameState): void {
   game.activeSide = "player";
   game.phase = "untap";

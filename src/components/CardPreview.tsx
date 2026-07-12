@@ -94,7 +94,7 @@ export function CardPreview() {
   );
 }
 
-function CardDetailsModal({
+export function CardDetailsModal({
   card,
   imageUrl,
   keywords,

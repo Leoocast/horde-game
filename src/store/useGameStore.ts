@@ -17,6 +17,7 @@ type GameStore = {
   playerAttackAnimation?: PlayerAttackAnimation;
   autoPaidLandIds: string[];
   blockDrag?: BlockDragState;
+  cardContextMenu?: CardContextMenuState;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -47,6 +48,8 @@ type GameStore = {
   startBlockDrag: (blockerId: string, x: number, y: number) => void;
   updateBlockDrag: (x: number, y: number) => void;
   cancelBlockDrag: () => void;
+  openCardContextMenu: (cardId: string, x: number, y: number) => void;
+  closeCardContextMenu: () => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
 };
@@ -87,12 +90,19 @@ export type BlockDragState = {
   y: number;
 };
 
+export type CardContextMenuState = {
+  cardId: string;
+  x: number;
+  y: number;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   autoPaidLandIds: [],
   blockDrag: undefined,
+  cardContextMenu: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
@@ -109,6 +119,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAttackAnimation: undefined,
         autoPaidLandIds: [],
         blockDrag: undefined,
+        cardContextMenu: undefined,
       };
     }),
   setSeed: (seed) => set({ seed }),
@@ -223,6 +234,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       blockDrag: blockDrag ? { ...blockDrag, x, y } : undefined,
     })),
   cancelBlockDrag: () => set({ blockDrag: undefined }),
+  openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
+  closeCardContextMenu: () => set({ cardContextMenu: undefined }),
   resolveHordeCombat: () => {
     const { game, hordeAttackAnimation, playerAttackAnimation } = get();
     if (hordeAttackAnimation || playerAttackAnimation) return;

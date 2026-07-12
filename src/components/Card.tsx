@@ -1,4 +1,4 @@
-import type { CSSProperties, PointerEvent } from "react";
+import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
 import { cardStats } from "../utils/selectors";
@@ -15,21 +15,24 @@ type Props = {
   selectionDisabled?: boolean;
   muted?: boolean;
   actionable?: boolean;
+  effectAvailable?: boolean;
   autoPaid?: boolean;
   linkLabel?: string;
   onSelect?: () => void;
   onMana?: () => void;
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
+  onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
   shouldSuppressClick?: () => boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, shouldSuppressClick }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, onContextMenu, shouldSuppressClick }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
-  const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
+  const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStats(game, card);
   const { imageUrl } = useCardDetails(card.definitionId);
   const summoningSick = card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
+  const showEffectAvailable = Boolean(effectAvailable && !actionable);
   void onMana;
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
@@ -37,10 +40,13 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const actionGlow = actionable
     ? "inset 0 0 0 1px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
     : "";
-  const style = accentColor || actionable || selected
+  const effectGlow = showEffectAvailable
+    ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
+    : "";
+  const style = accentColor || actionable || selected || showEffectAvailable
     ? ({
-        borderColor: selected ? "#e8e2cd" : accentColor ?? "rgb(102 216 255 / 0.9)",
-        boxShadow: [selectedGlow, !selected && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "", !selected ? actionGlow : ""].filter(Boolean).join(", "),
+        borderColor: selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        boxShadow: [selectedGlow, !selected && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "", !selected ? actionGlow : "", !selected ? effectGlow : ""].filter(Boolean).join(", "),
       } satisfies CSSProperties)
     : undefined;
   return (
@@ -56,9 +62,13 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         onLeave?.();
       }}
       onPointerDown={onPointerDown}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onContextMenu?.(event);
+        openCardContextMenu(card.instanceId, event.clientX, event.clientY);
+      }}
       onClick={() => {
         if (shouldSuppressClick?.()) return;
-        setFocusedCardId(card.instanceId);
         if (!selectionDisabled) onSelect?.();
       }}
       style={style}
@@ -69,6 +79,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         actionable ? "card-actionable" : "",
+        showEffectAvailable ? "card-effect-available" : "",
         autoPaid ? "card-auto-paid" : "",
         summoningSick ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
