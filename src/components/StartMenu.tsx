@@ -1,5 +1,6 @@
 import { Play } from "lucide-react";
 import { useState } from "react";
+import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { AppHeader } from "./AppHeader";
 
@@ -7,6 +8,10 @@ export type DifficultyMode = "easy" | "normal" | "hard";
 
 type Props = {
   initialSeed: string;
+  decks: InspectableDeck[];
+  selectedDeckId: string;
+  onSelectDeck: (deckId: string) => void;
+  onViewDeck: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -16,7 +21,7 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
   { id: "hard", label: "Hard", setupTurns: 3, description: "3 extra setup turns" },
 ];
 
-export function StartMenu({ initialSeed, onStart }: Props) {
+export function StartMenu({ initialSeed, decks, selectedDeckId, onSelectDeck, onViewDeck, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(initialSeed);
@@ -57,6 +62,22 @@ export function StartMenu({ initialSeed, onStart }: Props) {
           className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
           placeholder="horde-mvp-001"
         />
+
+        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
+          Deck
+        </label>
+        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+          <select id="player-deck" value={selectedDeckId} onChange={(event) => onSelectDeck(event.target.value)} className="old-input h-11 min-w-0 px-3 outline-none transition focus:border-[#f4cc74]">
+            {decks.map((deck) => (
+              <option key={deck.id} value={deck.id} className="bg-[#140d08] text-[#ffe6aa]">
+                {deck.label}
+              </option>
+            ))}
+          </select>
+          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewDeck}>
+            View
+          </button>
+        </div>
 
         <div className="mt-5">
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">Mode</div>
