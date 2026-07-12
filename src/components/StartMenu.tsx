@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 import { useState } from "react";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
@@ -25,8 +25,10 @@ export function StartMenu({ initialSeed, decks, selectedDeckId, onSelectDeck, on
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(initialSeed);
+  const [deckOpen, setDeckOpen] = useState(false);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
+  const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
 
   return (
     <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]" onPointerDownCapture={startBattleMusic}>
@@ -67,13 +69,46 @@ export function StartMenu({ initialSeed, decks, selectedDeckId, onSelectDeck, on
           Deck
         </label>
         <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-          <select id="player-deck" value={selectedDeckId} onChange={(event) => onSelectDeck(event.target.value)} className="old-input h-11 min-w-0 px-3 outline-none transition focus:border-[#f4cc74]">
-            {decks.map((deck) => (
-              <option key={deck.id} value={deck.id} className="bg-[#140d08] text-[#ffe6aa]">
-                {deck.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative min-w-0">
+            {deckOpen && <button aria-label="Close deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setDeckOpen(false)} />}
+            <button
+              id="player-deck"
+              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
+              onClick={() => setDeckOpen((value) => !value)}
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={deckOpen}
+            >
+              <span className="truncate">{selectedDeck?.label ?? "Select deck"}</span>
+              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${deckOpen ? "rotate-180" : ""}`} size={18} />
+            </button>
+            {deckOpen && (
+              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="player-deck">
+                {decks.map((deck) => {
+                  const selected = deck.id === selectedDeckId;
+                  return (
+                    <button
+                      key={deck.id}
+                      className={[
+                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
+                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
+                      ].join(" ")}
+                      onClick={() => {
+                        onSelectDeck(deck.id);
+                        setDeckOpen(false);
+                      }}
+                      role="option"
+                      aria-selected={selected}
+                      type="button"
+                    >
+                      <span className="block truncate">{deck.label}</span>
+                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewDeck}>
             View
           </button>

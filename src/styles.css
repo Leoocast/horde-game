@@ -126,6 +126,54 @@
     box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.55);
   }
 
+  .old-select {
+    appearance: none;
+    border: 1px solid rgb(189 139 67 / 0.78);
+    border-radius: 6px;
+    background:
+      linear-gradient(180deg, #160d08, #2f1c0f 54%, #140d08);
+    color: #ffe6aa;
+    box-shadow:
+      inset 0 1px 0 rgb(255 238 190 / 0.14),
+      inset 0 -10px 16px rgb(0 0 0 / 0.34),
+      0 3px 0 #120904;
+  }
+
+  .old-select:focus {
+    border-color: #f4cc74;
+    box-shadow:
+      inset 0 1px 0 rgb(255 238 190 / 0.18),
+      inset 0 -10px 16px rgb(0 0 0 / 0.34),
+      0 0 0 2px rgb(244 204 116 / 0.18),
+      0 3px 0 #120904;
+  }
+
+  .old-scrollbar {
+    scrollbar-color: rgb(187 134 61 / 0.85) rgb(22 14 8 / 0.72);
+    scrollbar-width: thin;
+  }
+
+  .old-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .old-scrollbar::-webkit-scrollbar-track {
+    border: 1px solid rgb(122 85 39 / 0.42);
+    border-radius: 999px;
+    background: rgb(17 11 7 / 0.68);
+  }
+
+  .old-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid rgb(17 11 7 / 0.68);
+    border-radius: 999px;
+    background: linear-gradient(180deg, #d7a34e, #7d4c22);
+  }
+
+  .old-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #f0c46f, #9b6128);
+  }
+
   .old-toast {
     background-image:
       linear-gradient(180deg, rgb(255 239 190 / 0.08), transparent 42%),

@@ -1,4 +1,4 @@
-import { ArrowLeft, Maximize2, X } from "lucide-react";
+import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
@@ -16,12 +16,25 @@ type CardCopy = {
   copyNumber: number;
 };
 
+const MIN_CARD_ZOOM = 120;
+const MAX_CARD_ZOOM = 272;
+const DEFAULT_CARD_ZOOM = 168;
+
 export function DeckInspector({ deck, onBack }: Props) {
   const cards = useMemo(() => expandCards(deck.deck.cards), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
   const activeCard = cards.find((copy) => copy.card.id === (focusedCardId ?? hoveredCardId))?.card ?? cards[0]?.card;
   const [detailsCard, setDetailsCard] = useState<NewDeckCard | undefined>();
+  const [cardZoom, setCardZoomState] = useState(readStoredCardZoom);
+  const gridMin = Math.max(96, cardZoom - 34);
+  const setCardZoom = (value: number | ((current: number) => number)) => {
+    setCardZoomState((current) => {
+      const next = clampCardZoom(typeof value === "function" ? value(current) : value);
+      writeStoredCardZoom(next);
+      return next;
+    });
+  };
 
   return (
     <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
@@ -41,18 +54,31 @@ export function DeckInspector({ deck, onBack }: Props) {
               <p className="old-title text-xs font-bold uppercase tracking-[0.24em]">Deck Inspector</p>
               <h1 className="old-title mt-1 text-2xl font-black">{deck.deck.name}</h1>
             </div>
-            <div className="text-right text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-              <div>{cards.length} cards</div>
-              <div>{deck.deck.cards.length} unique</div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right text-xs font-bold uppercase tracking-wide text-[#d6b879]">
+                <div>{cards.length} cards</div>
+                <div>{deck.deck.cards.length} unique</div>
+              </div>
+              <div className="old-panel-soft flex items-center gap-2 px-2 py-1">
+                <Search className="text-[#ffd98a] drop-shadow-[0_0_8px_rgba(255,100,24,0.45)]" size={15} aria-label="Card zoom" />
+                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">
+                  -
+                </button>
+                <input type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} className="w-28 accent-[#d6a34c]" />
+                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">
+                  +
+                </button>
+              </div>
             </div>
           </div>
-          <div className="h-[calc(100%-74px)] overflow-auto pr-2">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-4 pb-8">
+          <div className="old-scrollbar h-[calc(100%-86px)] overflow-y-auto overflow-x-hidden pr-3">
+            <div className="grid gap-4 pb-8" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
               {cards.map((copy) => (
                 <DeckCardTile
                   key={copy.key}
                   deck={deck}
                   card={copy.card}
+                  cardWidth={cardZoom}
                   selected={copy.card.id === focusedCardId}
                   onHover={() => setHoveredCardId(copy.card.id)}
                   onClick={() => {
@@ -74,12 +100,14 @@ export function DeckInspector({ deck, onBack }: Props) {
 function DeckCardTile({
   deck,
   card,
+  cardWidth,
   selected,
   onHover,
   onClick,
 }: {
   deck: InspectableDeck;
   card: NewDeckCard;
+  cardWidth: number;
   selected: boolean;
   onHover: () => void;
   onClick: () => void;
@@ -97,11 +125,11 @@ function DeckCardTile({
       onClick={onClick}
       title={card.name}
     >
-      <div className="relative mx-auto aspect-[488/680] w-full max-w-[168px] overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]">
+      <div className="relative mx-auto aspect-[488/680] w-full overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]" style={{ maxWidth: cardWidth }}>
         {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
         {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
       </div>
-      <div className="mx-auto mt-2 max-w-[168px] truncate text-center text-xs font-bold text-[#f4dfb0]">{card.name}</div>
+      <div className="mx-auto mt-2 truncate text-center text-xs font-bold text-[#f4dfb0]" style={{ maxWidth: cardWidth }}>{card.name}</div>
     </button>
   );
 }
@@ -145,7 +173,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           {stats(card) && <span className="ml-auto border border-[#b88945] bg-[#1a1009]/80 px-2 py-1 text-sm font-bold text-[#ffe0a0]">{stats(card)}</span>}
         </div>
         {hasText && (
-          <div className="old-panel-soft min-h-0 flex-1 overflow-auto p-2">
+          <div className="old-panel-soft old-scrollbar min-h-0 flex-1 overflow-auto p-2">
             <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
           </div>
         )}
@@ -164,8 +192,8 @@ function DeckCardDetailsModal({ deck, card, onClose }: { deck: InspectableDeck; 
   const text = cleanReminderText(details.oracleText ?? describeCardFromJson(card));
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
-      <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-48px))] overflow-hidden p-5 shadow-2xl shadow-black/70">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md" onMouseDown={onClose}>
+      <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-48px))] overflow-hidden p-5 shadow-2xl shadow-black/70" onMouseDown={(event) => event.stopPropagation()}>
         <div className="min-h-0">
           {details.imageUrl ? (
             <img src={details.imageUrl} alt={card.name} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
@@ -200,7 +228,7 @@ function DeckCardDetailsModal({ deck, card, onClose }: { deck: InspectableDeck; 
               <span className="w-8 text-right text-[#ffe0a0]">{fontSize}</span>
             </label>
           </div>
-          <div className="old-panel-soft mt-4 min-h-0 flex-1 overflow-auto p-4">
+          <div className="old-panel-soft old-scrollbar mt-4 min-h-0 flex-1 overflow-auto p-4">
             <p className="whitespace-pre-line leading-relaxed text-[#f8e8bd]" style={{ fontSize }}>{renderCardText(text)}</p>
           </div>
         </div>
@@ -258,4 +286,20 @@ function MissingCardArt({ card }: { card: NewDeckCard }) {
       {card.name}
     </div>
   );
+}
+
+function readStoredCardZoom(): number {
+  if (typeof window === "undefined") return DEFAULT_CARD_ZOOM;
+  const stored = window.localStorage.getItem("horde-deck-inspector-card-zoom");
+  const parsed = stored ? Number(stored) : DEFAULT_CARD_ZOOM;
+  return clampCardZoom(Number.isFinite(parsed) ? parsed : DEFAULT_CARD_ZOOM);
+}
+
+function writeStoredCardZoom(value: number): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("horde-deck-inspector-card-zoom", String(value));
+}
+
+function clampCardZoom(value: number): number {
+  return Math.min(MAX_CARD_ZOOM, Math.max(MIN_CARD_ZOOM, value));
 }
