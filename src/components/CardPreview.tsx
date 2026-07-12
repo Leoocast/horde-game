@@ -17,6 +17,9 @@ export function CardPreview() {
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
   const focusedCardId = useGameStore((state) => state.focusedCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
+  const selectHand = useGameStore((state) => state.selectHand);
+  const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
+  const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
 
@@ -33,6 +36,12 @@ export function CardPreview() {
   const hasText = text.length > 0;
   void PREVIOUS_PREVIEW_WIDTH_CLASS;
   void PREVIOUS_PREVIEW_IMAGE_MAX_CLASS;
+  const closePreview = () => {
+    setFocusedCardId(undefined);
+    selectHand(undefined);
+    selectPlayerCreature(undefined);
+    selectHordeCreature(undefined);
+  };
 
   return (
     <>
@@ -49,7 +58,7 @@ export function CardPreview() {
                   <Maximize2 size={13} />
                   Details
                 </button>
-                <button className="icon-button" title="Close preview" onClick={() => setFocusedCardId(undefined)}>
+                <button className="icon-button" title="Close preview" onClick={closePreview}>
                   <X size={15} />
                 </button>
               </>

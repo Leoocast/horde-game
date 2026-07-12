@@ -2,12 +2,16 @@ import type { CardDefinition, CardInstance, DeckList, GameState, Side } from "./
 import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 
+const DEVELOPER_SEED = "developer";
+const DEVELOPER_OPENING_HAND = ["llanowar_elves", "sunshower_druid", "rootrider_faun", "ichorspit_basilisk", "forest", "forest"];
+
 export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "horde-seed", setupTurns = 5): GameState {
   const playerCards = expandDeck(playerDeck, "player");
   const hordeCards = expandDeck(hordeDeck, "horde");
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
+  const playerLibrary = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
   const shuffledHorde = shuffleWithState(hordeCards, randomState);
   randomState = shuffledHorde.randomState;
 
@@ -22,7 +26,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
     setupCompletePendingHorde: false,
     player: {
       life: 20,
-      library: shuffledPlayer.items,
+      library: playerLibrary,
       hand: [],
       battlefield: [],
       graveyard: [],
@@ -44,6 +48,20 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
   drawCards(game, "player", 7);
   game.log.unshift(`Game started with seed "${seed}". Player draws 7. Setup turns: ${setupTurns}.`);
   return game;
+}
+
+function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
+
+  const remaining = [...library];
+  const opening: CardInstance[] = [];
+  for (const definitionId of DEVELOPER_OPENING_HAND) {
+    const index = remaining.findIndex((card) => card.definitionId === definitionId);
+    if (index < 0) continue;
+    const [card] = remaining.splice(index, 1);
+    opening.push(card);
+  }
+  return [...opening, ...remaining];
 }
 
 export function expandDeck(deck: DeckList, side: Side): CardInstance[] {

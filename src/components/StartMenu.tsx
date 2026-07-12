@@ -64,6 +64,9 @@ export function StartMenu({ initialSeed, decks, selectedDeckId, onSelectDeck, on
           className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
           placeholder="horde-mvp-001"
         />
+        <button className="old-button mt-2 h-8 px-3 text-xs font-black uppercase tracking-wide" type="button" onClick={() => setSeed("developer")}>
+          Developer Seed
+        </button>
 
         <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
           Deck
