@@ -1,9 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 
 const DEFENSE_ARROW_COLOR = "#60a5fa";
+const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
+const ARROW_FADE_OUT_MS = 280;
 
 type Arrow = {
   id: string;
@@ -19,9 +21,22 @@ type Arrow = {
 
 export function CombatArrows({ game }: { game: GameState }) {
   const [arrows, setArrows] = useState<Arrow[]>([]);
+  const [exitingArrows, setExitingArrows] = useState<Arrow[]>([]);
+  const exitTimers = useRef<Map<string, number>>(new Map());
   const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const blockDrag = useGameStore((state) => state.blockDrag);
+  const renderedArrows = useMemo(() => {
+    const activeIds = new Set(arrows.map((arrow) => arrow.id));
+    return [...arrows, ...exitingArrows.filter((arrow) => !activeIds.has(arrow.id))];
+  }, [arrows, exitingArrows]);
+
+  useEffect(() => {
+    return () => {
+      for (const timeout of exitTimers.current.values()) window.clearTimeout(timeout);
+      exitTimers.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (Object.keys(game.combat.blockers).length === 0) {
@@ -41,13 +56,18 @@ export function CombatArrows({ game }: { game: GameState }) {
       }
     }
     if (arrowIds.size === 0) return;
-    setHiddenArrowIds((current) => {
-      if ([...arrowIds].every((arrowId) => current.has(arrowId))) return current;
-      const next = new Set(current);
-      for (const arrowId of arrowIds) next.add(arrowId);
-      return next;
-    });
+    hideArrowIds(arrowIds, setHiddenArrowIds);
   }, [game.combat.blockers, hordeAttackAnimation]);
+
+  useEffect(() => {
+    if (!hordeAttackAnimation?.blockerId) return;
+    const arrowId = `${hordeAttackAnimation.attackerId}-${hordeAttackAnimation.blockerId}`;
+    if (hordeAttackAnimation.attackerDies || hordeAttackAnimation.blockerDies) return;
+    const timeout = window.setTimeout(() => {
+      hideArrowIds(new Set([arrowId]), setHiddenArrowIds);
+    }, HORDE_ATTACK_ARROW_CLEAR_MS);
+    return () => window.clearTimeout(timeout);
+  }, [hordeAttackAnimation]);
 
   useEffect(() => {
     let frame = 0;
@@ -77,7 +97,12 @@ export function CombatArrows({ game }: { game: GameState }) {
           next.push(makeArrow(`drag-${blockDrag.blockerId}`, start, end, DEFENSE_ARROW_COLOR));
         }
       }
-      setArrows(next);
+      setArrows((current) => {
+        const nextIds = new Set(next.map((arrow) => arrow.id));
+        const removed = current.filter((arrow) => !nextIds.has(arrow.id));
+        if (removed.length > 0) queueExitingArrows(removed, setExitingArrows, exitTimers.current);
+        return next;
+      });
     };
     const schedule = () => {
       window.cancelAnimationFrame(frame);
@@ -107,7 +132,7 @@ export function CombatArrows({ game }: { game: GameState }) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        {arrows.map((arrow) => (
+        {renderedArrows.map((arrow) => (
           <linearGradient key={arrow.gradientId} id={arrow.gradientId} gradientUnits="userSpaceOnUse" x1={arrow.startX} y1={arrow.startY} x2={arrow.tipX} y2={arrow.tipY}>
             <stop offset="0%" stopColor={arrow.color} stopOpacity="0" />
             <stop offset="12%" stopColor={arrow.color} stopOpacity="0.24" />
@@ -118,12 +143,14 @@ export function CombatArrows({ game }: { game: GameState }) {
         ))}
       </defs>
       <AnimatePresence>
-        {arrows.map((arrow) => (
+        {renderedArrows.map((arrow) => {
+          const exiting = exitingArrows.some((item) => item.id === arrow.id) && !arrows.some((item) => item.id === arrow.id);
+          return (
           <motion.g
             key={arrow.id}
             filter="url(#combat-arrow-shadow)"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: exiting ? 0 : 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
@@ -146,10 +173,37 @@ export function CombatArrows({ game }: { game: GameState }) {
               </motion.g>
             </motion.g>
           </motion.g>
-        ))}
+          );
+        })}
       </AnimatePresence>
     </svg>
   );
+}
+
+function queueExitingArrows(removed: Arrow[], setExitingArrows: (updater: (current: Arrow[]) => Arrow[]) => void, timers: Map<string, number>): void {
+  setExitingArrows((current) => {
+    const removedIds = new Set(removed.map((arrow) => arrow.id));
+    return [...current.filter((arrow) => !removedIds.has(arrow.id)), ...removed];
+  });
+
+  for (const arrow of removed) {
+    const existing = timers.get(arrow.id);
+    if (existing) window.clearTimeout(existing);
+    const timeout = window.setTimeout(() => {
+      setExitingArrows((current) => current.filter((item) => item.id !== arrow.id));
+      timers.delete(arrow.id);
+    }, ARROW_FADE_OUT_MS + 40);
+    timers.set(arrow.id, timeout);
+  }
+}
+
+function hideArrowIds(arrowIds: Set<string>, setHiddenArrowIds: (updater: (current: Set<string>) => Set<string>) => void): void {
+  setHiddenArrowIds((current) => {
+    if ([...arrowIds].every((arrowId) => current.has(arrowId))) return current;
+    const next = new Set(current);
+    for (const arrowId of arrowIds) next.add(arrowId);
+    return next;
+  });
 }
 
 function makeArrow(id: string, start: { x: number; y: number }, end: { x: number; y: number }, color: string): Arrow {
