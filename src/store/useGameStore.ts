@@ -406,6 +406,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   playLand: (id) =>
     set((state) => {
+      if (state.pendingTriggeredEffectCount > 0) {
+        showActionToast("Resolve the triggered effect before playing another card.");
+        return {};
+      }
       const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
       const previousLog = game.log[0];
@@ -417,6 +421,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   castCard: (id, options) =>
     set((state) => {
+      if (state.pendingTriggeredEffectCount > 0) {
+        showActionToast("Resolve the triggered effect before playing another card.");
+        return {};
+      }
       const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
       const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
@@ -446,19 +454,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
           autoPaidLandFlashTimer = undefined;
         }, AUTO_PAID_LAND_FLASH_MS);
       }
-      if (card?.definitionId === "sunshower_druid" && castSucceeded) {
+      const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
+      if (manualTriggeredCard) {
         window.setTimeout(() => {
           const latest = useGameStore.getState().game;
-          if (!findBattlefieldCard(latest, card.instanceId)) {
+          if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
             useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
             return;
           }
           useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-          useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
+          useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
           window.setTimeout(() => {
             useGameStore.setState({
               counterTargeting: {
-                sourceId: card.instanceId,
+                sourceId: manualTriggeredCard.instanceId,
                 x: window.innerWidth * 0.62,
                 y: window.innerHeight * 0.48,
               },
@@ -475,7 +484,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
         buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
         summoningAnimationCount: castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery") ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
-        pendingTriggeredEffectCount: card?.definitionId === "sunshower_druid" && castSucceeded ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
+        pendingTriggeredEffectCount: hasManualEnterTargetTrigger(card) && castSucceeded ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
       };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
@@ -525,7 +534,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
     if (attackers.length === 0) {
-      set({ game: endPlayerTurn(resolvePlayerCombat(game)), selectedPlayerCreatureId: undefined });
+      set({ game: advancePhase(resolvePlayerCombat(game), "end"), selectedPlayerCreatureId: undefined });
       return;
     }
 
@@ -539,7 +548,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: endPlayerTurn(resolvePlayerCombat(latest)), playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined });
+      set({ game: advancePhase(resolvePlayerCombat(latest), "end"), playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined });
     }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
   },
   runHordeMain: () =>
@@ -694,6 +703,25 @@ function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): s
       return card.temporaryPower > before.power || card.temporaryToughness > before.toughness;
     })
     .map((card) => card.instanceId);
+}
+
+function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
+  return Boolean(
+    card?.effects.some(
+      (effect) =>
+        effect.type === "TRIGGERED_ABILITY" &&
+        effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
+        effectNeedsManualTarget(effect.effect),
+    ),
+  );
+}
+
+function effectNeedsManualTarget(effect: unknown): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (typeof data.targetRef === "string") return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(effectNeedsManualTarget);
+  return false;
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

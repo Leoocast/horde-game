@@ -36,6 +36,13 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
+  const finishPlayerTurnAndRunHorde = () => {
+    endPlayerTurn();
+    const latest = useGameStore.getState().game;
+    if (latest.activeSide === "horde" && latest.phase === "horde") {
+      useGameStore.getState().runHordeMain();
+    }
+  };
   const finishSetupAndRunHorde = () => {
     endPlayerTurn();
     useGameStore.getState().runHordeMain();
@@ -43,7 +50,9 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   const state = getOrbState(game, {
     startPlayerCombat: () => advancePhase("combat"),
+    goToEndStep: () => advancePhase("end"),
     endPlayerTurn,
+    finishPlayerTurnAndRunHorde,
     finishSetupAndRunHorde,
     runHordeMain,
     finishPlayerCombat,
@@ -180,7 +189,9 @@ function getOrbState(
   game: GameState,
   actions: {
     startPlayerCombat: () => void;
+    goToEndStep: () => void;
     endPlayerTurn: () => void;
+    finishPlayerTurnAndRunHorde: () => void;
     finishSetupAndRunHorde: () => void;
     runHordeMain: () => void;
     finishPlayerCombat: () => void;
@@ -193,7 +204,7 @@ function getOrbState(
     return { label: hasBlocks ? "Defend" : "No Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "defend" as const };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
-    return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };
+    return { label: "Horde Turn", Icon: FastForward, action: actions.runHordeMain, tone: "horde" as const };
   }
   if (game.activeSide === "horde") {
     return { label: "My Turn", Icon: Check, action: actions.finishHordeTurn, tone: "horde" as const };
@@ -211,7 +222,10 @@ function getOrbState(
     return { label: "Confirm", Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: "Skip", Icon: FastForward, action: actions.endPlayerTurn, tone: "skip" as const, warnIfActionsAvailable: true };
+    return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
+  }
+  if (game.phase === "end") {
+    return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };
   }
   return { label: "Battle", Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
 }
