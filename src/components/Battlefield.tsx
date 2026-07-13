@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
-import { targetCandidates } from "../engine/Targeting";
+import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -337,8 +337,9 @@ export function Battlefield({ game, side, cards }: Props) {
     const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
     const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
-    const spellCandidates = spellReq ? targetCandidates(game, "player", spellReq) : [];
-    const spellTargetable = Boolean(spellTargeting && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
+    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
+    const spellTargetable = Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
     const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);

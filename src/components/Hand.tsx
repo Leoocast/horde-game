@@ -1,7 +1,7 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
 import { canPay, parseManaCost } from "../engine/ManaSystem";
-import { targetCandidates } from "../engine/Targeting";
+import { hasValidTargetSequence } from "../engine/Targeting";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
@@ -157,8 +157,7 @@ export function Hand({ game }: { game: GameState }) {
 
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
-  if (game.activeSide !== "player") return false;
-  if (game.phase !== "main") return false;
+  if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn;
   const pool = { ...game.player.manaPool };
   for (const land of game.player.battlefield) {
@@ -177,20 +176,30 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
     else pool.colorless += amount;
   }
   if (!canPay(pool, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
-  return card.requiresTargets.every((req) => targetCandidates(game, "player", req).length > 0);
+  return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
 function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): string {
   if (game.winner) return "The game is already over.";
   if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before playing another card.";
-  if (game.activeSide !== "player") return "Wait until your turn.";
-  if (game.phase !== "main") return "Cards can only be played during your main phase.";
+  if (!canPlayCardAtCurrentTiming(game, card)) {
+    if (card.cardTypes.includes("Instant")) return "Instants can be played during your main phase, battle phase, or defense.";
+    return "Cards can only be played during your main phase.";
+  }
   if (card.cardTypes.includes("Land")) {
     if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
     return "This land cannot be played right now.";
   }
-  if (card.requiresTargets.some((req) => targetCandidates(game, "player", req).length === 0)) return `No valid targets for ${card.displayName}.`;
+  if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return `No valid target sequence for ${card.displayName}.`;
   return `Not enough available land mana to cast ${card.displayName}.`;
+}
+
+function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {
+  if (card.cardTypes.includes("Instant")) {
+    if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
+    return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+  }
+  return game.activeSide === "player" && game.phase === "main";
 }
 
 function playFromHand(

@@ -1,7 +1,7 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState, TargetRequirement } from "../engine/GameTypes";
-import { targetCandidates } from "../engine/Targeting";
+import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 
@@ -42,7 +42,8 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
       if (!req) return;
       const cardId = findCardIdAtPoint(event.clientX, event.clientY);
       if (!cardId) return;
-      const valid = targetCandidates(useGameStore.getState().game, "player", req).some((candidate) => candidate.instanceId === cardId);
+      const state = useGameStore.getState();
+      const valid = targetCandidatesWithSelectedTargets(state.game, "player", req, state.spellTargeting?.targets ?? {}).some((candidate) => candidate.instanceId === cardId);
       if (valid) {
         event.preventDefault();
         event.stopPropagation();

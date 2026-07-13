@@ -716,7 +716,7 @@
       "id": "giant_growth",
       "name": "Giant Growth",
       "displayNameEs": "Crecimiento gigante",
-      "quantity": 1,
+      "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "223",
       "manaCost": "{G}",

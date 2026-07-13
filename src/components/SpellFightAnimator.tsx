@@ -11,7 +11,7 @@ export function SpellFightAnimator() {
     const friendly = document.querySelector<HTMLElement>(`[data-card-slot-id="${spellFightAnimation.friendlyId}"]`);
     const enemy = document.querySelector<HTMLElement>(`[data-card-slot-id="${spellFightAnimation.enemyId}"]`);
     const friendlyCleanup = friendly ? animatePlayerForward(friendly) : undefined;
-    const enemyCleanup = enemy ? animateEnemyForward(enemy) : undefined;
+    const enemyCleanup = spellFightAnimation.enemyMoves !== false && enemy ? animateEnemyForward(enemy) : undefined;
     return () => {
       friendlyCleanup?.();
       enemyCleanup?.();

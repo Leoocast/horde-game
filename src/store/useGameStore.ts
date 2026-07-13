@@ -8,6 +8,7 @@ import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlaye
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { destroyMarkedCreatures } from "../engine/EffectResolver";
 import { targetCandidates } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -175,6 +176,7 @@ export type SpellTargetingState = {
 export type SpellFightAnimationState = {
   friendlyId: string;
   enemyId: string;
+  enemyMoves?: boolean;
   eventId: number;
 };
 
@@ -364,14 +366,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const enemyId = String(spellTargeting.targets.opponentCreature ?? spellTargeting.targets.damageTarget ?? "");
       const targets = { ...spellTargeting.targets };
       const handId = spellTargeting.handId;
-      if (friendlyId && enemyId) useAudioStore.getState().playSfx("attack", { volume: 0.76 });
-      window.setTimeout(() => {
-        const latest = useGameStore.getState().game;
+      const isFightSpell = Boolean(friendlyId && enemyId && card.effects.some(isFightEffect));
+      const isSourceDamageSpell = Boolean(friendlyId && enemyId && card.effects.some(isSourceDamageEffect));
+      const resolveSpell = (latest: GameState) => {
         const previousLog = latest.log[0];
         const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
         const next = castCard(latest, handId, { targets });
         const castSucceeded = !next.player.hand.some((item) => item.instanceId === handId);
         if (!castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
+        const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(latest, next);
+        if (triggeredBuffCardIds.length > 0) {
+          useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+          if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
+          buffAnimationTimer = window.setTimeout(() => {
+            useGameStore.setState({ buffAnimationCardIds: [] });
+            buffAnimationTimer = undefined;
+          }, BUFF_ANIMATION_MS);
+        }
         const autoPaidLandIds = castSucceeded
           ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
           : [];
@@ -383,13 +394,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
             autoPaidLandFlashTimer = undefined;
           }, AUTO_PAID_LAND_FLASH_MS);
         }
-        useGameStore.setState({ game: next, spellFightAnimation: undefined, autoPaidLandAnimation });
+        return {
+          game: next,
+          spellFightAnimation: undefined,
+          autoPaidLandAnimation,
+          buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : useGameStore.getState().buffAnimationCardIds,
+          buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : useGameStore.getState().buffAnimationEventId,
+        };
+      };
+      if (!isFightSpell) {
+        if (isSourceDamageSpell) {
+          useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+          window.setTimeout(() => {
+            useGameStore.setState(({ game }) => {
+              const deadCardIds = findMarkedCreatureIds(game);
+              if (deadCardIds.length === 0) return { spellFightAnimation: undefined };
+              return { hordeCombatDeadCardIds: deadCardIds, spellFightAnimation: undefined };
+            });
+            window.setTimeout(() => {
+              useGameStore.setState(({ game }) => {
+                const next = structuredClone(game) as GameState;
+                destroyMarkedCreatures(next);
+                return { game: next, hordeCombatDeadCardIds: [] };
+              });
+            }, 260);
+          }, 520);
+        }
+        return {
+          ...resolveSpell(game),
+          spellTargeting: undefined,
+          selectedHandId: undefined,
+          focusedCardId: undefined,
+          spellFightAnimation: isSourceDamageSpell ? { friendlyId, enemyId, enemyMoves: false, eventId: Date.now() } : undefined,
+        };
+      }
+      useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+      window.setTimeout(() => {
+        useGameStore.setState(resolveSpell(useGameStore.getState().game));
       }, 520);
       return {
         spellTargeting: undefined,
         selectedHandId: undefined,
         focusedCardId: undefined,
-        spellFightAnimation: friendlyId && enemyId ? { friendlyId, enemyId, eventId: Date.now() } : undefined,
+        spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
       };
     }),
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
@@ -716,6 +763,32 @@ function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): s
       return card.temporaryPower > before.power || card.temporaryToughness > before.toughness;
     })
     .map((card) => card.instanceId);
+}
+
+function findMarkedCreatureIds(game: GameState): string[] {
+  return [...game.player.battlefield, ...game.horde.battlefield]
+    .filter((card) => {
+      if (!card.cardTypes.includes("Creature")) return false;
+      const { toughness } = getPowerToughness(game, card);
+      return card.damageMarked >= toughness || card.deathtouchDamage;
+    })
+    .map((card) => card.instanceId);
+}
+
+function isFightEffect(effect: unknown): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (data.type === "FIGHT_SIMULTANEOUS") return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isFightEffect);
+  return false;
+}
+
+function isSourceDamageEffect(effect: unknown): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (data.type === "DEAL_DAMAGE" || data.type === "DEAL_DAMAGE_FROM_SOURCE_POWER") return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isSourceDamageEffect);
+  return false;
 }
 
 function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {

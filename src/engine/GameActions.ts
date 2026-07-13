@@ -28,9 +28,9 @@ export function playLand(game: GameState, handId: string): GameState {
 
 export function castCard(game: GameState, handId: string, options: CastOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Cards can only be cast during your main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card) return next;
+  if (!canCastAtCurrentTiming(next, card)) return log(next, `${card.name} cannot be cast right now.`);
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
   if (!payManaWithAvailableLands(next, cost)) return log(next, `Not enough available land mana to cast ${card.name}.`);
@@ -52,6 +52,15 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   drainEventQueue(next);
   return log(next, `Player casts ${card.name}.`);
+}
+
+function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").CardInstance): boolean {
+  if (game.winner) return false;
+  if (card.cardTypes.includes("Instant")) {
+    if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
+    return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+  }
+  return game.activeSide === "player" && game.phase === "main";
 }
 
 export function activateAbility(game: GameState, permanentId: string, abilityId: string, options: AbilityOptions = {}): GameState {

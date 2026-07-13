@@ -77,6 +77,16 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     }
     return;
   }
+  if (effect.type === "DEAL_DAMAGE") {
+    const source = findPermanent(game, String(context.targets?.[String(effect.source)] ?? ""));
+    const target = findPermanent(game, String(context.targets?.[String(effect.target)] ?? ""));
+    if (source && target) {
+      const amount = resolveDamageAmount(game, effect.amount, context);
+      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
+      game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
+    }
+    return;
+  }
   if (effect.type === "FIGHT_SIMULTANEOUS") {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
@@ -126,6 +136,21 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     game.log.unshift(`Player loses ${Number(effect.amount ?? 1)} life.`);
     return;
   }
+}
+
+function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveContext): number {
+  if (typeof amount === "number") return amount;
+  if (!amount || typeof amount !== "object") return 0;
+  const data = amount as Record<string, unknown>;
+  if (data.type === "STAT") {
+    const objectRef = String(data.object ?? "");
+    const source = findPermanent(game, String(context.targets?.[objectRef] ?? ""));
+    if (!source) return 0;
+    const stat = String(data.stat ?? "").toUpperCase();
+    const stats = getPowerToughness(game, source);
+    return stat === "TOUGHNESS" ? stats.toughness : stats.power;
+  }
+  return Number(amount) || 0;
 }
 
 export function resolveTriggeredEvent(game: GameState, event: EventItem): void {

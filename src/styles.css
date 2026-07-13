@@ -845,8 +845,26 @@
   }
 
   .combat-card-visually-dead {
-    opacity: 0 !important;
-    visibility: hidden !important;
+    pointer-events: none !important;
+    animation: combat-card-death-fade 260ms ease-out both;
+  }
+
+  @keyframes combat-card-death-fade {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+      filter: brightness(1) saturate(1);
+    }
+    36% {
+      opacity: 0.92;
+      transform: scale(1.08);
+      filter: brightness(1.42) saturate(1.18);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.84);
+      filter: brightness(0.62) saturate(0.72);
+    }
   }
 
   .game-tooltip-host {
