@@ -323,7 +323,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const targets = { ...spellTargeting.targets, [req.id]: targetId };
       const nextStep = spellTargeting.stepIndex + 1;
       useAudioStore.getState().playSfx(nextStep >= card.requiresTargets.length ? "playLand" : "buff", { volume: 0.68 });
-      return { spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets } };
+      if (req.controller === "SELF") {
+        if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
+        buffAnimationTimer = window.setTimeout(() => {
+          useGameStore.setState({ buffAnimationCardIds: [] });
+          buffAnimationTimer = undefined;
+        }, BUFF_ANIMATION_MS);
+      }
+      return {
+        spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets },
+        buffAnimationCardIds: req.controller === "SELF" ? [targetId] : get().buffAnimationCardIds,
+        buffAnimationEventId: req.controller === "SELF" ? Date.now() : get().buffAnimationEventId,
+      };
     }),
   deselectSpellTarget: () =>
     set(({ game, spellTargeting }) => {
@@ -334,9 +345,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const req = card.requiresTargets[stepIndex];
       const targets = { ...spellTargeting.targets };
       if (req) delete targets[req.id];
-      return { spellTargeting: { ...spellTargeting, targets } };
+      return { spellTargeting: { ...spellTargeting, targets }, buffAnimationCardIds: req?.controller === "SELF" ? [] : get().buffAnimationCardIds };
     }),
-  cancelSpellTargeting: () => set({ spellTargeting: undefined, selectedHandId: undefined, focusedCardId: undefined }),
+  cancelSpellTargeting: () => set({ spellTargeting: undefined, selectedHandId: undefined, focusedCardId: undefined, buffAnimationCardIds: [] }),
   confirmSpellTargeting: () =>
     set(({ game, spellTargeting }) => {
       if (!spellTargeting) return {};

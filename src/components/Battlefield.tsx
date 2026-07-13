@@ -340,7 +340,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellCandidates = spellReq ? targetCandidates(game, "player", spellReq) : [];
     const spellTargetable = Boolean(spellTargeting && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
     const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
-    const spellTargetTone = spellReq?.controller === "SELF" ? "friendly" : "enemy";
+    const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
 
     return (
@@ -374,7 +374,7 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActivating ? "effect-card-activating" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
-          spellTargetable ? `spell-targetable-card spell-targetable-${spellTargetTone}` : "",
+          spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
         ].join(" ")}
       >
@@ -392,6 +392,7 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting)}
+        suppressHoverOverlay={Boolean(spellTargeting)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
@@ -466,7 +467,7 @@ export function Battlefield({ game, side, cards }: Props) {
           {renderCardText(abilityButtonText(primaryAbility))}
         </button>
       )}
-      {counterTargetLocked && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
+      {(counterTargetLocked || spellLockedFriendly) && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
       </div>
       </motion.div>
     );
