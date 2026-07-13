@@ -845,11 +845,16 @@
   }
 
   .combat-card-visually-dead {
-    pointer-events: none !important;
-    animation: combat-card-death-fade 260ms ease-out both;
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 
-  @keyframes combat-card-death-fade {
+  .special-card-visually-dead {
+    pointer-events: none !important;
+    animation: special-card-death-fade 260ms ease-out both;
+  }
+
+  @keyframes special-card-death-fade {
     0% {
       opacity: 1;
       transform: scale(1);
