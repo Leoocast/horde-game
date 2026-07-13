@@ -951,7 +951,8 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
           buffAnimationTimer = undefined;
         }, BUFF_ANIMATION_MS);
       }
-      if (next.horde.battlefield.length > previous.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
+      const newHordeCreatures = next.horde.battlefield.filter((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
+      if (newHordeCreatures.length > 0) useAudioStore.getState().playSfx(monsterSfx(newHordeCreatures[0]));
       notifyDiscardEffects(previous, next);
       return {
         game: next,
