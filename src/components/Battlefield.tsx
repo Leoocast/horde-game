@@ -17,6 +17,7 @@ type Props = {
 
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
 const BLOCK_DRAG_THRESHOLD_PX = 9;
+const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
@@ -46,6 +47,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
   const updateBlockDrag = useGameStore((state) => state.updateBlockDrag);
   const cancelBlockDrag = useGameStore((state) => state.cancelBlockDrag);
+  const startPlayerAttackDrag = useGameStore((state) => state.startPlayerAttackDrag);
+  const updatePlayerAttackDrag = useGameStore((state) => state.updatePlayerAttackDrag);
+  const cancelPlayerAttackDrag = useGameStore((state) => state.cancelPlayerAttackDrag);
 
   const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
   const lands = cards.filter((card) => card.cardTypes.includes("Land"));
@@ -189,15 +193,15 @@ export function Battlefield({ game, side, cards }: Props) {
   return (
     <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={cards.length}>
       <div ref={boardRef} className="space-y-3">
-        <BattlefieldRow title="Creatures" cards={creatures} />
+        <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
         {(side === "player" || others.length > 0) && <ResourceRow lands={side === "player" ? lands : []} others={others} showLands={side === "player"} />}
       </div>
     </Zone>
   );
 
-  function BattlefieldRow({ title, cards: rowCards, compact = false }: { title: string; cards: CardInstance[]; compact?: boolean }) {
+  function BattlefieldRow({ title, cards: rowCards, compact = false, dropTarget }: { title: string; cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
     return (
-      <div className="old-panel-soft relative p-1.5">
+      <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
         <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
           <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">{title}</h3>
           <span className="text-[10px] font-semibold text-[#d6b879]">{rowCards.length}</span>
@@ -350,6 +354,10 @@ export function Battlefield({ game, side, cards }: Props) {
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting)}
         onPointerDown={(event) => {
+          if (legalAttacker && side === "player" && event.button === 0) {
+            beginPlayerAttackDrag(card.instanceId, event);
+            return;
+          }
           if (!selectableBlocker || event.button !== 0) return;
           beginBlockDrag(card.instanceId, event);
         }}
@@ -491,6 +499,47 @@ export function Battlefield({ game, side, cards }: Props) {
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
   }
+
+  function beginPlayerAttackDrag(attackerId: string, event: PointerEvent<HTMLElement>): void {
+    const startX = event.clientX;
+    const startY = event.clientY;
+    let dragStarted = false;
+
+    function suppressNextClickSelection() {
+      suppressNextSelectIds.current.add(attackerId);
+      window.setTimeout(() => suppressNextSelectIds.current.delete(attackerId), 80);
+    }
+
+    function handlePointerMove(moveEvent: PointerEventEvent) {
+      const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
+      if (!dragStarted && distance < PLAYER_ATTACK_DRAG_THRESHOLD_PX) return;
+      if (!dragStarted) {
+        dragStarted = true;
+        startPlayerAttackDrag(attackerId, startX, startY);
+      }
+      updatePlayerAttackDrag(moveEvent.clientX, moveEvent.clientY);
+    }
+
+    function handlePointerUp(upEvent: PointerEventEvent) {
+      if (dragStarted) {
+        suppressNextClickSelection();
+        if (isPlayerAttackDropTarget(upEvent.clientX, upEvent.clientY)) {
+          const latest = useGameStore.getState().game;
+          const alreadyAttacking = latest.combat.playerAttackers.includes(attackerId);
+          useGameStore.getState().cancelPlayerAttackDrag();
+          if (!alreadyAttacking) useGameStore.getState().toggleAttacker(attackerId);
+          else useGameStore.getState().cancelPlayerAttackDrag();
+        } else {
+          cancelPlayerAttackDrag();
+        }
+      }
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+  }
 }
 
 function buffedStats(game: GameState, card: CardInstance): string {
@@ -523,6 +572,10 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): string | 
     if (attacker && canBlockAttacker(latest, blocker, attacker)) return candidateId;
   }
   return undefined;
+}
+
+function isPlayerAttackDropTarget(x: number, y: number): boolean {
+  return document.elementsFromPoint(x, y).some((element) => Boolean(element.closest<HTMLElement>("[data-battlefield-drop-target='player-attack']")));
 }
 
 function animateReadiedShift(element: HTMLElement, forward: boolean): void {

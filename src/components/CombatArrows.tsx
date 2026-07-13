@@ -4,6 +4,7 @@ import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 
 const DEFENSE_ARROW_COLOR = "#60a5fa";
+const PLAYER_ATTACK_ARROW_COLOR = "#f59e0b";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 
@@ -26,6 +27,7 @@ export function CombatArrows({ game }: { game: GameState }) {
   const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const blockDrag = useGameStore((state) => state.blockDrag);
+  const playerAttackDrag = useGameStore((state) => state.playerAttackDrag);
   const renderedArrows = useMemo(() => {
     const activeIds = new Set(arrows.map((arrow) => arrow.id));
     return [...arrows, ...exitingArrows.filter((arrow) => !activeIds.has(arrow.id))];
@@ -97,10 +99,30 @@ export function CombatArrows({ game }: { game: GameState }) {
           next.push(makeArrow(`drag-${blockDrag.blockerId}`, start, end, DEFENSE_ARROW_COLOR));
         }
       }
+      const playerAttackTarget = getPlayerAttackTargetPoint();
+      if (playerAttackTarget) {
+        for (const attackerId of game.combat.playerAttackers) {
+          const attacker = document.querySelector<HTMLElement>(`[data-card-id="${attackerId}"]`);
+          if (!attacker) continue;
+          const attackerRect = attacker.getBoundingClientRect();
+          const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.18 };
+          next.push(makeArrow(`player-attack-${attackerId}`, start, playerAttackTarget, PLAYER_ATTACK_ARROW_COLOR));
+        }
+      }
+      if (playerAttackDrag) {
+        const attacker = document.querySelector<HTMLElement>(`[data-card-id="${playerAttackDrag.attackerId}"]`);
+        if (attacker) {
+          const attackerRect = attacker.getBoundingClientRect();
+          const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.18 };
+          const end = { x: playerAttackDrag.x, y: playerAttackDrag.y };
+          next.push(makeArrow(`player-attack-drag-${playerAttackDrag.attackerId}`, start, end, PLAYER_ATTACK_ARROW_COLOR));
+        }
+      }
       setArrows((current) => {
         const nextIds = new Set(next.map((arrow) => arrow.id));
         const removed = current.filter((arrow) => !nextIds.has(arrow.id));
-        if (removed.length > 0) queueExitingArrows(removed, setExitingArrows, exitTimers.current);
+        const removedWithFade = removed.filter((arrow) => !arrow.id.startsWith("player-attack-drag-"));
+        if (removedWithFade.length > 0) queueExitingArrows(removedWithFade, setExitingArrows, exitTimers.current);
         return next;
       });
     };
@@ -116,7 +138,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule, true);
     };
-  }, [game.combat.blockers, game.combat.hordeAttackers, hiddenArrowIds, blockDrag]);
+  }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, blockDrag, playerAttackDrag]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">
@@ -127,6 +149,14 @@ export function CombatArrows({ game }: { game: GameState }) {
         <filter id="combat-arrow-blue-glow" x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.2 0 0 0 0 0.66 0 0 0 0 1 0 0 0 0.7 0" result="glow" />
+          <feMerge>
+            <feMergeNode in="glow" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="combat-arrow-orange-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feColorMatrix in="blur" type="matrix" values="0 0 0 0 1 0 0 0 0 0.48 0 0 0 0 0.02 0 0 0 0.7 0" result="glow" />
           <feMerge>
             <feMergeNode in="glow" />
             <feMergeNode in="SourceGraphic" />
@@ -166,7 +196,7 @@ export function CombatArrows({ game }: { game: GameState }) {
                 initial={{ opacity: 0.85 }}
                 animate={{ opacity: [0.82, 0.96, 0.88] }}
                 transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
-                filter="url(#combat-arrow-blue-glow)"
+                filter={arrow.color === PLAYER_ATTACK_ARROW_COLOR ? "url(#combat-arrow-orange-glow)" : "url(#combat-arrow-blue-glow)"}
               >
                 <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={7} strokeLinecap="round" opacity="0.86" />
                 <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
@@ -178,6 +208,13 @@ export function CombatArrows({ game }: { game: GameState }) {
       </AnimatePresence>
     </svg>
   );
+}
+
+function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
+  const target = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']") ?? document.querySelector<HTMLElement>("[data-battlefield-drop-target='player-attack']");
+  const rect = target?.getBoundingClientRect();
+  if (!rect) return undefined;
+  return { x: rect.left + 18, y: rect.top + rect.height * 0.5 };
 }
 
 function queueExitingArrows(removed: Arrow[], setExitingArrows: (updater: (current: Arrow[]) => Arrow[]) => void, timers: Map<string, number>): void {

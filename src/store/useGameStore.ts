@@ -17,6 +17,7 @@ type GameStore = {
   playerAttackAnimation?: PlayerAttackAnimation;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
+  playerAttackDrag?: PlayerAttackDragState;
   cardContextMenu?: CardContextMenuState;
   counterTargeting?: CounterTargetingState;
   buffAnimationCardId?: string;
@@ -61,6 +62,9 @@ type GameStore = {
   startBlockDrag: (blockerId: string, x: number, y: number) => void;
   updateBlockDrag: (x: number, y: number) => void;
   cancelBlockDrag: () => void;
+  startPlayerAttackDrag: (attackerId: string, x: number, y: number) => void;
+  updatePlayerAttackDrag: (x: number, y: number) => void;
+  cancelPlayerAttackDrag: () => void;
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   resolveHordeCombat: () => void;
@@ -114,6 +118,14 @@ export type BlockDragState = {
   y: number;
 };
 
+export type PlayerAttackDragState = {
+  attackerId: string;
+  startX: number;
+  startY: number;
+  x: number;
+  y: number;
+};
+
 export type CardContextMenuState = {
   cardId: string;
   x: number;
@@ -133,6 +145,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAttackAnimation: undefined,
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
+  playerAttackDrag: undefined,
   cardContextMenu: undefined,
   counterTargeting: undefined,
   buffAnimationCardId: undefined,
@@ -158,6 +171,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAttackAnimation: undefined,
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
+        playerAttackDrag: undefined,
         cardContextMenu: undefined,
         counterTargeting: undefined,
         buffAnimationCardId: undefined,
@@ -244,7 +258,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next };
+      return { game: next, playerAttackDrag: undefined };
     }),
   endPlayerTurn: () =>
     set(({ game }) => {
@@ -370,6 +384,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       blockDrag: blockDrag ? { ...blockDrag, x, y } : undefined,
     })),
   cancelBlockDrag: () => set({ blockDrag: undefined }),
+  startPlayerAttackDrag: (attackerId, x, y) => set({ playerAttackDrag: { attackerId, startX: x, startY: y, x, y } }),
+  updatePlayerAttackDrag: (x, y) =>
+    set(({ playerAttackDrag }) => ({
+      playerAttackDrag: playerAttackDrag ? { ...playerAttackDrag, x, y } : undefined,
+    })),
+  cancelPlayerAttackDrag: () => set({ playerAttackDrag: undefined }),
   openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
   closeCardContextMenu: () => set({ cardContextMenu: undefined }),
   resolveHordeCombat: () => {

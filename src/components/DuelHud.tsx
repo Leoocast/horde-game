@@ -13,7 +13,7 @@ export function DuelHud({ game }: { game: GameState }) {
 
   return (
     <div className="fixed right-4 top-[4.5rem] z-50 space-y-2 text-[#f6e6b8]">
-      <div className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
+      <div data-player-attack-target="horde-deck" className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
         <div className="text-right">
           <div className="old-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
           <div className="text-3xl font-black leading-none text-[#fff0b2]">{game.horde.library.length}</div>
