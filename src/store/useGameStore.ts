@@ -342,10 +342,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
       if (!card) return { spellTargeting: undefined };
       const stepIndex = Math.max(0, Math.min(spellTargeting.stepIndex, card.requiresTargets.length - 1));
-      const req = card.requiresTargets[stepIndex];
+      const activeReq = card.requiresTargets[stepIndex];
+      const targetReqIndex = activeReq && spellTargeting.targets[activeReq.id] ? stepIndex : Math.max(0, stepIndex - 1);
+      const req = card.requiresTargets[targetReqIndex];
       const targets = { ...spellTargeting.targets };
       if (req) delete targets[req.id];
-      return { spellTargeting: { ...spellTargeting, targets }, buffAnimationCardIds: req?.controller === "SELF" ? [] : get().buffAnimationCardIds };
+      return {
+        spellTargeting: { ...spellTargeting, stepIndex: targetReqIndex, targets },
+        buffAnimationCardIds: req?.controller === "SELF" ? [] : get().buffAnimationCardIds,
+      };
     }),
   cancelSpellTargeting: () => set({ spellTargeting: undefined, selectedHandId: undefined, focusedCardId: undefined, buffAnimationCardIds: [] }),
   confirmSpellTargeting: () =>

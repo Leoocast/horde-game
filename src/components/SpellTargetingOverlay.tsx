@@ -22,6 +22,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const spell = spellTargeting ? game.player.hand.find((card) => card.instanceId === spellTargeting.handId) : undefined;
   const requirements = spell?.requiresTargets ?? [];
   const complete = Boolean(spellTargeting && spell && requirements.every((req) => Boolean(spellTargeting.targets[req.id])));
+  const hasAnyTarget = Boolean(spellTargeting && Object.keys(spellTargeting.targets).length > 0);
   const activeReq = spellTargeting && spell ? requirements[Math.min(spellTargeting.stepIndex, Math.max(requirements.length - 1, 0))] : undefined;
   const activeTargetId = activeReq && spellTargeting ? String(spellTargeting.targets[activeReq.id] ?? "") : "";
   const activeTarget = activeTargetId ? findBattlefieldCard(game, activeTargetId) : undefined;
@@ -51,7 +52,8 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
 
     function contextMenu(event: MouseEvent) {
       event.preventDefault();
-      if (complete) deselectTarget();
+      if (hasAnyTarget) deselectTarget();
+      else cancelTargeting();
     }
 
     window.addEventListener("mousemove", move);
@@ -62,7 +64,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
       window.removeEventListener("click", click, true);
       window.removeEventListener("contextmenu", contextMenu);
     };
-  }, [complete, deselectTarget, lockTarget, spell, spellTargeting, updatePointer]);
+  }, [cancelTargeting, deselectTarget, hasAnyTarget, lockTarget, spell, spellTargeting, updatePointer]);
 
   useLayoutEffect(() => {
     if (!spellTargeting) return;
