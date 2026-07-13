@@ -527,6 +527,31 @@
     animation: effect-available-card-glow 1.7s ease-in-out infinite;
   }
 
+  .card-keyword-stack {
+    display: flex;
+    max-width: 4.8rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.16rem;
+  }
+
+  .card-keyword-badge {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.125rem;
+    background: rgb(29 83 36 / 0.9);
+    padding: 0.125rem 0.25rem;
+    color: #eaffcf;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.72);
+    white-space: nowrap;
+  }
+
   .context-menu-item {
     display: flex;
     width: 100%;
