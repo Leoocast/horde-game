@@ -23,6 +23,7 @@ type GameStore = {
   selectedHordeCreatureId?: string;
   activeEffectCardId?: string;
   closingEffectCardId?: string;
+  activatingEffectCardId?: string;
   hoveredCardId?: string;
   focusedCardId?: string;
   seed: string;
@@ -32,6 +33,7 @@ type GameStore = {
   selectPlayerCreature: (id?: string) => void;
   selectHordeCreature: (id?: string) => void;
   selectActiveEffectCard: (id?: string) => void;
+  triggerEffectActivationPulse: (id: string) => void;
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
@@ -63,6 +65,7 @@ const PLAYER_ATTACK_ANIMATION_MS = 500;
 const AUTO_PAID_LAND_FLASH_MS = 900;
 let autoPaidLandFlashTimer: number | undefined;
 let activeEffectCloseTimer: number | undefined;
+let effectActivationPulseTimer: number | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -114,11 +117,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       useAudioStore.getState().playSfx("draw");
       return {
         game: next,
+        seed,
         selectedHandId: undefined,
         selectedPlayerCreatureId: undefined,
         selectedHordeCreatureId: undefined,
         activeEffectCardId: undefined,
         closingEffectCardId: undefined,
+        activatingEffectCardId: undefined,
         hoveredCardId: undefined,
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
@@ -143,9 +148,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       activeEffectCloseTimer = window.setTimeout(() => {
         useGameStore.setState({ closingEffectCardId: undefined });
         activeEffectCloseTimer = undefined;
-      }, 280);
+      }, 190);
       return { activeEffectCardId: undefined, closingEffectCardId: activeEffectCardId };
     }),
+  triggerEffectActivationPulse: (id) => {
+    if (effectActivationPulseTimer) {
+      window.clearTimeout(effectActivationPulseTimer);
+      effectActivationPulseTimer = undefined;
+    }
+    set({ activatingEffectCardId: id });
+    effectActivationPulseTimer = window.setTimeout(() => {
+      useGameStore.setState({ activatingEffectCardId: undefined });
+      effectActivationPulseTimer = undefined;
+    }, 460);
+  },
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>

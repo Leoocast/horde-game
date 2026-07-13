@@ -1,6 +1,7 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { canAttack, canBlockAttacker } from "../engine/Keywords";
 import { useGameStore } from "../store/useGameStore";
+import { useAudioStore } from "../store/useAudioStore";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
@@ -27,10 +28,12 @@ export function Battlefield({ game, side, cards }: Props) {
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
+  const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const autoPaidLandIds = useGameStore((state) => state.autoPaidLandIds);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
+  const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
@@ -274,6 +277,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const effectAvailable = canUseTapActivatedAbility(card);
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
+    const effectActivating = activatingEffectCardId === card.instanceId;
     const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
 
     return (
@@ -303,6 +307,7 @@ export function Battlefield({ game, side, cards }: Props) {
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
+          effectActivating ? "effect-card-activating" : "",
         ].join(" ")}
       >
       <Card
@@ -371,7 +376,15 @@ export function Battlefield({ game, side, cards }: Props) {
           className="effect-action-button"
           onClick={(event) => {
             event.stopPropagation();
-            activateAbility(card.instanceId, primaryAbility.id);
+            selectActiveEffectCard(undefined);
+            window.setTimeout(() => {
+              useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+              triggerEffectActivationPulse(card.instanceId);
+            }, 180);
+            window.setTimeout(() => {
+              useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+              activateAbility(card.instanceId, primaryAbility.id);
+            }, 620);
           }}
         >
           {renderCardText(abilityButtonText(primaryAbility))}

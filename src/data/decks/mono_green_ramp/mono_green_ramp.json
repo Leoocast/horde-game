@@ -344,8 +344,8 @@
       "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "556",
-      "manaCost": "{4}{G}",
-      "manaValue": 5,
+      "manaCost": "{3}{G}",
+      "manaValue": 4,
       "colors": [
         "G"
       ],

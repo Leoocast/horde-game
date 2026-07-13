@@ -453,6 +453,11 @@
     animation: effect-card-lift-out 170ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
+  .effect-card-activating {
+    z-index: 48;
+    animation: effect-card-activate-pulse 440ms ease-out both;
+  }
+
   .effect-focus-backdrop {
     position: fixed;
     inset: 0;
@@ -666,6 +671,27 @@
 
   to {
     transform: translate(0, 0) scale(1);
+    filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.22)) brightness(1);
+  }
+}
+
+@keyframes effect-card-activate-pulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.22)) brightness(1);
+  }
+
+  38% {
+    transform: scale(1.1);
+    filter:
+      drop-shadow(0 0 12px rgb(255 232 147 / 0.85))
+      drop-shadow(0 0 28px rgb(255 166 45 / 0.66))
+      brightness(1.22)
+      saturate(1.16);
+  }
+
+  100% {
+    transform: scale(1);
     filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.22)) brightness(1);
   }
 }
