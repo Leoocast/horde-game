@@ -15,9 +15,12 @@ type GameStore = {
   game: GameState;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
-  autoPaidLandIds: string[];
+  autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   cardContextMenu?: CardContextMenuState;
+  counterTargeting?: CounterTargetingState;
+  buffAnimationCardId?: string;
+  lifeBuffAnimationId?: number;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
@@ -34,6 +37,11 @@ type GameStore = {
   selectHordeCreature: (id?: string) => void;
   selectActiveEffectCard: (id?: string) => void;
   triggerEffectActivationPulse: (id: string) => void;
+  updateCounterTargetPointer: (x: number, y: number) => void;
+  lockCounterTarget: (targetId: string) => void;
+  deselectCounterTarget: () => void;
+  cancelCounterTargeting: () => void;
+  confirmCounterTargeting: () => void;
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
@@ -59,13 +67,17 @@ type GameStore = {
   finishHordeTurn: () => void;
 };
 
-const defaultSeed = "horde-mvp-001";
+const SEED_STORAGE_KEY = "horde-game-seed";
+const defaultSeed = readStoredSeed();
 const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
 const AUTO_PAID_LAND_FLASH_MS = 900;
+const BUFF_ANIMATION_MS = 1120;
 let autoPaidLandFlashTimer: number | undefined;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
+let buffAnimationTimer: number | undefined;
+let lifeBuffAnimationTimer: number | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -89,6 +101,11 @@ type PlayerAttackAnimation = {
   eventId: number;
 };
 
+type AutoPaidLandAnimation = {
+  ids: string[];
+  eventId: number;
+};
+
 export type BlockDragState = {
   blockerId: string;
   startX: number;
@@ -103,16 +120,27 @@ export type CardContextMenuState = {
   y: number;
 };
 
+export type CounterTargetingState = {
+  sourceId: string;
+  targetId?: string;
+  x: number;
+  y: number;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
-  autoPaidLandIds: [],
+  autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   cardContextMenu: undefined,
+  counterTargeting: undefined,
+  buffAnimationCardId: undefined,
+  lifeBuffAnimationId: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
+      persistSeed(seed);
       const next = createInitialGame(playerDeck, hordeDeck, seed, setupTurns);
       useAudioStore.getState().playSfx("draw");
       return {
@@ -128,12 +156,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
-        autoPaidLandIds: [],
+        autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         cardContextMenu: undefined,
+        counterTargeting: undefined,
+        buffAnimationCardId: undefined,
+        lifeBuffAnimationId: undefined,
       };
     }),
-  setSeed: (seed) => set({ seed }),
+  setSeed: (seed) => {
+    persistSeed(seed);
+    set({ seed });
+  },
   selectHand: (id) => set({ selectedHandId: id }),
   selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
   selectHordeCreature: (id) => set({ selectedHordeCreatureId: id }),
@@ -162,6 +196,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
       effectActivationPulseTimer = undefined;
     }, 460);
   },
+  updateCounterTargetPointer: (x, y) =>
+    set(({ counterTargeting }) => ({
+      counterTargeting: counterTargeting && !counterTargeting.targetId ? { ...counterTargeting, x, y } : counterTargeting,
+    })),
+  lockCounterTarget: (targetId) =>
+    set(({ counterTargeting }) => {
+      if (!counterTargeting) return {};
+      useAudioStore.getState().playSfx("playMonster", { volume: 0.72 });
+      return { counterTargeting: { ...counterTargeting, targetId } };
+    }),
+  deselectCounterTarget: () =>
+    set(({ counterTargeting }) => ({
+      counterTargeting: counterTargeting ? { ...counterTargeting, targetId: undefined } : undefined,
+    })),
+  cancelCounterTargeting: () => set({ counterTargeting: undefined }),
+  confirmCounterTargeting: () =>
+    set(({ game, counterTargeting }) => {
+      if (!counterTargeting?.targetId) return {};
+      const next = structuredClone(game) as GameState;
+      const target = findBattlefieldCard(next, counterTargeting.targetId);
+      if (!target) return { counterTargeting: undefined };
+      target.counters["+1/+1"] = (target.counters["+1/+1"] ?? 0) + 1;
+      next.player.life += 1;
+      next.log.unshift(`${target.name} gets a +1/+1 counter. Player gains 1 life.`);
+      if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
+      if (lifeBuffAnimationTimer) window.clearTimeout(lifeBuffAnimationTimer);
+      buffAnimationTimer = window.setTimeout(() => {
+        useGameStore.setState({ buffAnimationCardId: undefined });
+        buffAnimationTimer = undefined;
+      }, BUFF_ANIMATION_MS);
+      lifeBuffAnimationTimer = window.setTimeout(() => {
+        useGameStore.setState({ lifeBuffAnimationId: undefined });
+        lifeBuffAnimationTimer = undefined;
+      }, BUFF_ANIMATION_MS);
+      return {
+        game: next,
+        counterTargeting: undefined,
+        buffAnimationCardId: target.instanceId,
+        lifeBuffAnimationId: Date.now(),
+      };
+    }),
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
@@ -199,14 +274,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const autoPaidLandIds = castSucceeded
         ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
         : [];
-      if (autoPaidLandIds.length > 0) {
+      const autoPaidLandAnimation = autoPaidLandIds.length > 0 ? { ids: autoPaidLandIds, eventId: Date.now() } : undefined;
+      if (autoPaidLandAnimation) {
         if (autoPaidLandFlashTimer) window.clearTimeout(autoPaidLandFlashTimer);
         autoPaidLandFlashTimer = window.setTimeout(() => {
-          useGameStore.setState({ autoPaidLandIds: [] });
+          useGameStore.setState({ autoPaidLandAnimation: undefined });
           autoPaidLandFlashTimer = undefined;
         }, AUTO_PAID_LAND_FLASH_MS);
       }
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, autoPaidLandIds };
+      if (card?.definitionId === "sunshower_druid" && castSucceeded) {
+        window.setTimeout(() => {
+          const latest = useGameStore.getState().game;
+          if (!findBattlefieldCard(latest, card.instanceId)) return;
+          useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+          useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
+          window.setTimeout(() => {
+            useGameStore.setState({
+              counterTargeting: {
+                sourceId: card.instanceId,
+                x: window.innerWidth * 0.62,
+                y: window.innerHeight * 0.48,
+              },
+            });
+          }, 520);
+        }, 420);
+      }
+      return {
+        game: next,
+        selectedHandId: undefined,
+        focusedCardId: undefined,
+        activeEffectCardId: undefined,
+        autoPaidLandAnimation,
+      };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
   toggleTap: (id) => set(({ game }) => ({ game: toggleTap(game, id) })),
@@ -312,6 +411,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
 }));
 
+function readStoredSeed(): string {
+  if (typeof window === "undefined") return "developer";
+  return window.localStorage.getItem(SEED_STORAGE_KEY) ?? "developer";
+}
+
+function persistSeed(seed: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SEED_STORAGE_KEY, seed);
+}
+
 function monsterSfx(card: GameState["player"]["hand"][number]) {
   if (card.basePower > 4 || card.baseToughness > 4) return "playMonsterHeavy" as const;
   if (card.effects.length > 0 || card.activatedAbilities.length > 0 || card.requiresTargets.length > 0) return "playMonsterEffect" as const;
@@ -331,6 +440,10 @@ function showActionToast(message?: string) {
     message,
     tone: "warning",
   });
+}
+
+function findBattlefieldCard(game: GameState, id: string) {
+  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

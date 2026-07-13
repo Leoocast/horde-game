@@ -1,12 +1,13 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { canAttack, canBlockAttacker } from "../engine/Keywords";
+import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useLayoutEffect, useRef, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, type PointerEvent } from "react";
 
 type Props = {
   game: GameState;
@@ -18,10 +19,12 @@ const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22
 const BLOCK_DRAG_THRESHOLD_PX = 9;
 
 export function Battlefield({ game, side, cards }: Props) {
-  const seenCardIds = useRef<Set<string>>(new Set());
+  const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
+  const seenAutoPaidEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
+  const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
@@ -29,12 +32,15 @@ export function Battlefield({ game, side, cards }: Props) {
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
-  const autoPaidLandIds = useGameStore((state) => state.autoPaidLandIds);
+  const counterTargeting = useGameStore((state) => state.counterTargeting);
+  const buffAnimationCardId = useGameStore((state) => state.buffAnimationCardId);
+  const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
+  const lockCounterTarget = useGameStore((state) => state.lockCounterTarget);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -46,12 +52,22 @@ export function Battlefield({ game, side, cards }: Props) {
   const others = cards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      for (const card of cards) seenCardIds.current.add(card.instanceId);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [cards]);
+  useLayoutEffect(() => {
+    if (!autoPaidLandAnimation || seenAutoPaidEvents.current.has(autoPaidLandAnimation.eventId)) return;
+    const root = boardRef.current;
+    if (!root) return;
+
+    seenAutoPaidEvents.current.add(autoPaidLandAnimation.eventId);
+    for (const id of autoPaidLandAnimation.ids) {
+      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
+      if (!slot) continue;
+      const layer = document.createElement("span");
+      layer.className = "auto-paid-animation-layer";
+      layer.setAttribute("aria-hidden", "true");
+      slot.appendChild(layer);
+      layer.addEventListener("animationend", () => layer.remove(), { once: true });
+    }
+  }, [autoPaidLandAnimation]);
 
   useLayoutEffect(() => {
     const root = boardRef.current;
@@ -135,6 +151,8 @@ export function Battlefield({ game, side, cards }: Props) {
       visual.removeAttribute("data-summoning");
     }
 
+    const layoutSignature = cards.map((card) => card.instanceId).join("|");
+    const shouldAnimateLayout = previousLayoutSignature.current !== layoutSignature;
     const nextRects = new Map<string, DOMRect>();
     const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-card-layout-id]"));
     for (const element of elements) {
@@ -143,26 +161,29 @@ export function Battlefield({ game, side, cards }: Props) {
       nextRects.set(id, element.getBoundingClientRect());
     }
 
-    for (const element of elements) {
-      const id = element.dataset.cardLayoutId;
-      if (!id) continue;
-      const previous = previousRects.current.get(id);
-      const current = nextRects.get(id);
-      if (!previous || !current) continue;
+    if (shouldAnimateLayout) {
+      for (const element of elements) {
+        const id = element.dataset.cardLayoutId;
+        if (!id) continue;
+        const previous = previousRects.current.get(id);
+        const current = nextRects.get(id);
+        if (!previous || !current) continue;
 
-      const deltaX = previous.left - current.left;
-      const deltaY = previous.top - current.top;
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
+        const deltaX = previous.left - current.left;
+        const deltaY = previous.top - current.top;
+        if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
 
-      const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
-      if (!visual || visual.style.visibility === "hidden") continue;
-      visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
-        duration: 360,
-        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
-      });
+        const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
+        if (!visual || visual.style.visibility === "hidden") continue;
+        visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
+          duration: 360,
+          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        });
+      }
     }
 
     previousRects.current = nextRects;
+    previousLayoutSignature.current = layoutSignature;
   });
 
   return (
@@ -248,7 +269,6 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.cardTypes.includes("Land");
-    const autoPaid = autoPaidLandIds.includes(card.instanceId);
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -279,6 +299,9 @@ export function Battlefield({ game, side, cards }: Props) {
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
     const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
+    const counterTargetable = Boolean(counterTargeting && !counterTargeting.targetId && card.cardTypes.includes("Creature"));
+    const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
+    const buffAnimating = buffAnimationCardId === card.instanceId;
 
     return (
       <motion.div
@@ -308,6 +331,8 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
           effectActivating ? "effect-card-activating" : "",
+          counterTargetable ? "counter-targetable-card" : "",
+          counterTargetLocked ? "counter-target-locked-card" : "",
         ].join(" ")}
       >
       <Card
@@ -317,14 +342,13 @@ export function Battlefield({ game, side, cards }: Props) {
         selected={selected}
         attacking={attacking}
         blocking={blocking}
-        actionable={actionable}
+        actionable={actionable || counterTargetable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        autoPaid={autoPaid}
-        suppressContextMenu={effectActive}
+        suppressContextMenu={effectActive || Boolean(counterTargeting)}
         onPointerDown={(event) => {
           if (!selectableBlocker || event.button !== 0) return;
           beginBlockDrag(card.instanceId, event);
@@ -339,6 +363,10 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
+          if (counterTargeting) {
+            if (counterTargetable) lockCounterTarget(card.instanceId);
+            return;
+          }
           if (side === "player") {
             if (isLand) return;
             if (!hordeCombat && !playerCombat && effectAvailable) {
@@ -390,6 +418,8 @@ export function Battlefield({ game, side, cards }: Props) {
           {renderCardText(abilityButtonText(primaryAbility))}
         </button>
       )}
+      {buffAnimating && <span className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
+      {counterTargetLocked && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
       </div>
       </motion.div>
     );
@@ -461,6 +491,11 @@ export function Battlefield({ game, side, cards }: Props) {
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
   }
+}
+
+function buffedStats(game: GameState, card: CardInstance): string {
+  const stats = getPowerToughness(game, card);
+  return `${stats.power + 1}/${stats.toughness + 1}`;
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {

@@ -6,6 +6,7 @@ import { Battlefield } from "./Battlefield";
 import { CardContextMenu } from "./CardContextMenu";
 import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
+import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
@@ -39,6 +40,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <DuelHud game={game} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
+      <CounterTargetingOverlay game={game} />
       <HordeAttackAnimator />
       <PlayerAttackAnimator />
       {(activeEffectCardId || closingEffectCardId) && (

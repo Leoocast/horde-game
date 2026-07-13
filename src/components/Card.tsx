@@ -16,8 +16,10 @@ type Props = {
   muted?: boolean;
   actionable?: boolean;
   effectAvailable?: boolean;
-  autoPaid?: boolean;
   linkLabel?: string;
+  hideStats?: boolean;
+  suppressSummoningSickness?: boolean;
+  suppressCardId?: boolean;
   onSelect?: () => void;
   onMana?: () => void;
   onLeave?: () => void;
@@ -27,12 +29,12 @@ type Props = {
   shouldSuppressClick?: () => boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStats(game, card);
   const { imageUrl } = useCardDetails(card.definitionId);
-  const summoningSick = card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
+  const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   void onMana;
   const selectedGlow = selected
@@ -52,7 +54,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : undefined;
   return (
     <article
-      data-card-id={card.instanceId}
+      data-card-id={suppressCardId ? undefined : card.instanceId}
       data-audio-click={selectionDisabled ? undefined : "valid"}
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
@@ -82,7 +84,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         compact ? "min-h-24" : "",
         actionable ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
-        autoPaid ? "card-auto-paid" : "",
         summoningSick ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
@@ -105,7 +106,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           </span>
         )}
       </div>
-      {stats && <span className="absolute bottom-1 right-1 border border-[#6b441f] bg-[#f2d793]/95 px-1.5 py-0.5 text-xs font-bold text-[#241106]">{stats}</span>}
+      {!hideStats && stats && <span className="absolute bottom-1 right-1 border border-[#6b441f] bg-[#f2d793]/95 px-1.5 py-0.5 text-xs font-bold text-[#241106]">{stats}</span>}
     </article>
   );
 }
