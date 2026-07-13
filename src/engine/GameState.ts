@@ -125,6 +125,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     tapped: false,
     entersTapped: Boolean(definition.entersTapped),
     summoningSickness: (definition.cardTypes ?? []).includes("Creature"),
+    activatedThisTurn: false,
     damageMarked: 0,
     deathtouchDamage: false,
     counters,

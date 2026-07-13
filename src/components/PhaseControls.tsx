@@ -7,7 +7,6 @@ const phases: Array<{ phase: Phase; label: string; icon: typeof Sun }> = [
   { phase: "draw", label: "Draw", icon: Scroll },
   { phase: "main", label: "Main", icon: Sun },
   { phase: "combat", label: "Combat", icon: Swords },
-  { phase: "secondMain", label: "Second", icon: Shield },
   { phase: "end", label: "End", icon: Moon },
 ];
 

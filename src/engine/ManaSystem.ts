@@ -90,12 +90,15 @@ export function payManaWithAvailableLands(game: GameState, cost: ManaPool): bool
 
 export function tapForMana(game: GameState, permanentId: string): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Mana abilities can only be activated during your main phase.");
   const card = next.player.battlefield.find((item) => item.instanceId === permanentId);
   if (!card || card.tapped) return log(next, "That permanent cannot be tapped for mana.");
+  if (card.activatedThisTurn) return log(next, `${card.name} has already activated an ability this turn.`);
   const ability = card.activatedAbilities.find((item) => item.effect.type === "ADD_MANA" || item.effect.type === "ADD_MANA_DYNAMIC");
   if (!ability) return log(next, `${card.name} has no mana ability.`);
   if (ability.cost?.tap && card.summoningSickness && card.cardTypes.includes("Creature")) return log(next, `${card.name} has summoning sickness.`);
   card.tapped = true;
+  card.activatedThisTurn = true;
   if (ability.effect.type === "ADD_MANA_DYNAMIC") {
     const amount = dynamicManaAmount(next, card);
     next.player.manaPool = addMana(next.player.manaPool, String(ability.effect.manaColor ?? "G"), amount);

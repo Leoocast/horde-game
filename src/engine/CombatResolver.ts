@@ -1,6 +1,6 @@
 import type { GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
-import { canAttack, canBlockAttacker, getToxicAmount, hasKeyword } from "./Keywords";
+import { blockRestrictionReason, canAttack, canBlockAttacker, getToxicAmount, hasKeyword } from "./Keywords";
 import { dealDamageToCreature, destroyMarkedCreatures, millHorde } from "./EffectResolver";
 import { getPowerToughness } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
@@ -25,7 +25,9 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
   const next = structuredClone(game) as GameState;
   const blocker = next.player.battlefield.find((card) => card.instanceId === blockerId);
   const attacker = next.horde.battlefield.find((card) => card.instanceId === attackerId);
-  if (!blocker || !attacker || !canBlockAttacker(next, blocker, attacker)) return log(next, "Illegal block.");
+  if (!blocker || !attacker) return log(next, "Illegal block.");
+  const restriction = blockRestrictionReason(next, blocker, attacker);
+  if (restriction) return log(next, restriction);
   const current = next.combat.blockers[attackerId] ?? [];
   if (current.includes(blockerId)) {
     next.combat.blockers[attackerId] = current.filter((id) => id !== blockerId);

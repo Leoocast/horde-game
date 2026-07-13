@@ -15,6 +15,7 @@ type GameStore = {
   game: GameState;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
+  hordeCombatVisualDamage?: Record<string, number>;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -90,6 +91,8 @@ type HordeAttackAnimation = {
   blockerId?: string;
   blockerDies: boolean;
   playerDamage: number;
+  attackerDamageMarked?: number;
+  blockerDamageMarked?: number;
   eventId: number;
 };
 
@@ -99,6 +102,8 @@ type HordeAttackEvent = {
   blockerId?: string;
   blockerDies: boolean;
   playerDamage: number;
+  attackerDamageMarked?: number;
+  blockerDamageMarked?: number;
 };
 
 type PlayerAttackAnimation = {
@@ -144,6 +149,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
+  hordeCombatVisualDamage: undefined,
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -170,6 +176,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
+        hordeCombatVisualDamage: undefined,
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -378,10 +385,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
+      const previousLog = game.log[0];
       const wasBlocking = Object.values(game.combat.blockers).some((ids) => ids.includes(blockerId));
       const next = declareBlocker(game, blockerId, attackerId);
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
+      else if (!isBlockingTarget && next.log[0] !== previousLog && !next.log[0]?.includes("stops blocking")) showActionToast(next.log[0]);
       return { game: next, blockDrag: undefined };
     }),
   cancelBlocks: () =>
@@ -410,7 +419,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined });
+      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined });
       return;
     }
 
@@ -419,12 +428,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       window.setTimeout(() => {
         useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
         set({
+          hordeCombatVisualDamage: nextVisualDamage(event),
           hordeAttackAnimation: {
             attackerId: event.attackerId,
             attackerDies: event.attackerDies,
             blockerId: event.blockerId,
             blockerDies: event.blockerDies,
             playerDamage: event.playerDamage,
+            attackerDamageMarked: event.attackerDamageMarked,
+            blockerDamageMarked: event.blockerDamageMarked,
             eventId: index,
           },
         });
@@ -433,7 +445,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
@@ -515,10 +527,20 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
         blockerId: blocker.instanceId,
         blockerDies,
         playerDamage: 0,
+        attackerDamageMarked: attackerDamage + blockerStats.power,
+        blockerDamageMarked: blocker.damageMarked + attackerStats.power,
       });
       attackerDamage += blockerStats.power;
       if (attackerDies) break;
     }
   }
   return events;
+}
+
+function nextVisualDamage(event: HordeAttackEvent): Record<string, number> {
+  const current = useGameStore.getState().hordeCombatVisualDamage ?? {};
+  const next = { ...current };
+  if (event.attackerDamageMarked !== undefined) next[event.attackerId] = event.attackerDamageMarked;
+  if (event.blockerId && event.blockerDamageMarked !== undefined) next[event.blockerId] = event.blockerDamageMarked;
+  return next;
 }

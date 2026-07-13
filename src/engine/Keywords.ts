@@ -43,10 +43,14 @@ export function canBlock(_game: GameState, card: CardInstance): boolean {
 }
 
 export function canBlockAttacker(game: GameState, blocker: CardInstance, attacker: CardInstance): boolean {
-  if (!canBlock(game, blocker)) return false;
+  return !blockRestrictionReason(game, blocker, attacker);
+}
+
+export function blockRestrictionReason(game: GameState, blocker: CardInstance, attacker: CardInstance): string | undefined {
+  if (!canBlock(game, blocker)) return "That creature cannot block.";
   const attackerKeywords = getKeywords(game, attacker);
   const blockerKeywords = getKeywords(game, blocker);
-  if (attackerKeywords.includes("FLYING") && !blockerKeywords.includes("FLYING") && !blockerKeywords.includes("REACH")) return false;
-  if (attackerKeywords.includes("SKULK") && blocker.basePower + (blocker.counters["+1/+1"] ?? 0) > attacker.basePower + (attacker.counters["+1/+1"] ?? 0)) return false;
-  return true;
+  if (attackerKeywords.includes("FLYING") && !blockerKeywords.includes("FLYING") && !blockerKeywords.includes("REACH")) return "Flying attackers need flying or reach to block.";
+  if (attackerKeywords.includes("SKULK") && blocker.basePower + (blocker.counters["+1/+1"] ?? 0) > attacker.basePower + (attacker.counters["+1/+1"] ?? 0)) return "Skulk can only be blocked by lower-power creatures.";
+  return undefined;
 }

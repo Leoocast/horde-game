@@ -3,7 +3,7 @@ import { checkWinLoss } from "./CombatResolver";
 import { millHorde } from "./EffectResolver";
 import { cleanupEndStep, clearPlayerSummoningSickness, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
 
-const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "secondMain", "end"];
+const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "end"];
 
 export function advancePhase(game: GameState, target?: Phase): GameState {
   const next = structuredClone(game) as GameState;

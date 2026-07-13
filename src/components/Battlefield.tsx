@@ -1,8 +1,9 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
-import { canAttack, canBlockAttacker } from "../engine/Keywords";
+import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
+import { useToastStore } from "../store/useToastStore";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
@@ -35,6 +36,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
   const buffAnimationCardId = useGameStore((state) => state.buffAnimationCardId);
+  const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
@@ -354,6 +356,7 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting)}
+        visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
@@ -450,9 +453,11 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function canUseTapActivatedAbility(card: CardInstance): boolean {
+    if (game.activeSide !== "player" || game.phase !== "main") return false;
     if (side !== "player") return false;
     if (card.zone !== "battlefield") return false;
     if (card.tapped) return false;
+    if (card.activatedThisTurn) return false;
     if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
     return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
   }
@@ -480,16 +485,17 @@ export function Battlefield({ game, side, cards }: Props) {
     function handlePointerUp(upEvent: PointerEventEvent) {
       if (dragStarted) {
         suppressNextClickSelection();
-        const targetAttackerId = findDropBlockTarget(upEvent.clientX, upEvent.clientY, blockerId);
-        if (targetAttackerId) {
+        const dropResult = findDropBlockTarget(upEvent.clientX, upEvent.clientY, blockerId);
+        if (dropResult.attackerId) {
           const latest = useGameStore.getState().game;
           const currentAttackerId = Object.entries(latest.combat.blockers).find(([, blockerIds]) => blockerIds.includes(blockerId))?.[0];
-          if (currentAttackerId && currentAttackerId !== targetAttackerId) {
+          if (currentAttackerId && currentAttackerId !== dropResult.attackerId) {
             useGameStore.getState().declareBlocker(blockerId, currentAttackerId);
           }
-          useGameStore.getState().declareBlocker(blockerId, targetAttackerId);
+          useGameStore.getState().declareBlocker(blockerId, dropResult.attackerId);
           useGameStore.getState().selectPlayerCreature(undefined);
         } else {
+          if (dropResult.reason) showBlockToast(dropResult.reason);
           cancelBlockDrag();
         }
       }
@@ -561,18 +567,28 @@ function abilityButtonText(ability: CardInstance["activatedAbilities"][number]):
 
 type PointerEventEvent = globalThis.PointerEvent;
 
-function findDropBlockTarget(x: number, y: number, blockerId: string): string | undefined {
+function findDropBlockTarget(x: number, y: number, blockerId: string): { attackerId?: string; reason?: string } {
   const latest = useGameStore.getState().game;
   const blocker = latest.player.battlefield.find((card) => card.instanceId === blockerId);
-  if (!blocker) return undefined;
+  if (!blocker) return {};
   for (const element of document.elementsFromPoint(x, y)) {
     const cardElement = element.closest<HTMLElement>("[data-card-id]");
     const candidateId = cardElement?.dataset.cardId;
     if (!candidateId || !latest.combat.hordeAttackers.includes(candidateId)) continue;
     const attacker = latest.horde.battlefield.find((card) => card.instanceId === candidateId);
-    if (attacker && canBlockAttacker(latest, blocker, attacker)) return candidateId;
+    if (!attacker) continue;
+    const reason = blockRestrictionReason(latest, blocker, attacker);
+    return reason ? { reason } : { attackerId: candidateId };
   }
-  return undefined;
+  return {};
+}
+
+function showBlockToast(message: string): void {
+  useToastStore.getState().pushToast({
+    title: "Cannot block",
+    message,
+    tone: "warning",
+  });
 }
 
 function isPlayerAttackDropTarget(x: number, y: number): boolean {

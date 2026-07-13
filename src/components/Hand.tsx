@@ -148,6 +148,7 @@ export function Hand({ game }: { game: GameState }) {
 
 function isPlayableFromHand(game: GameState, card: CardInstance): boolean {
   if (game.activeSide !== "player") return false;
+  if (game.phase !== "main") return false;
   if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn;
   const pool = { ...game.player.manaPool };
   for (const land of game.player.battlefield) {
@@ -171,6 +172,7 @@ function isPlayableFromHand(game: GameState, card: CardInstance): boolean {
 function getUnplayableReason(game: GameState, card: CardInstance): string {
   if (game.winner) return "The game is already over.";
   if (game.activeSide !== "player") return "Wait until your turn.";
+  if (game.phase !== "main") return "Cards can only be played during your main phase.";
   if (card.cardTypes.includes("Land")) {
     if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
     return "This land cannot be played right now.";

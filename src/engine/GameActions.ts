@@ -17,6 +17,7 @@ export function toggleTap(game: GameState, id: string): GameState {
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Lands can only be played during your main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card || !card.cardTypes.includes("Land")) return log(next, "Choose a land to play.");
   if (next.player.landPlayedThisTurn) return log(next, "Player already played a land this turn.");
@@ -27,6 +28,7 @@ export function playLand(game: GameState, handId: string): GameState {
 
 export function castCard(game: GameState, handId: string, options: CastOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Cards can only be cast during your main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card) return next;
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
@@ -54,13 +56,14 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
 
 export function activateAbility(game: GameState, permanentId: string, abilityId: string, options: AbilityOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Abilities can only be activated during your main phase.");
   const card = next.player.battlefield.find((item) => item.instanceId === permanentId);
   const ability = card?.activatedAbilities.find((item) => item.id === abilityId);
   if (!card || !ability) return next;
+  if (card.activatedThisTurn) return log(next, `${card.name} has already activated an ability this turn.`);
   if (ability.cost?.tap) {
     if (card.tapped) return log(next, `${card.name} is already tapped.`);
     if (card.summoningSickness && card.cardTypes.includes("Creature")) return log(next, `${card.name} has summoning sickness.`);
-    card.tapped = true;
   }
   const generic = Number(ability.cost?.genericMana ?? 0);
   const colored = ability.cost?.coloredMana as Record<string, number> | undefined;
@@ -68,6 +71,8 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   if (colored?.G) cost.green = colored.G;
   if (!canPay(next.player.manaPool, cost)) return log(next, `Not enough mana to activate ${card.name}.`);
   next.player.manaPool = payMana(next.player.manaPool, cost);
+  if (ability.cost?.tap) card.tapped = true;
+  card.activatedThisTurn = true;
   if (ability.cost?.sacrificeSelf) destroyPermanent(next, card);
   resolveEffect(next, ability.effect, { source: card, side: "player", targets: options.targets });
   drainEventQueue(next);

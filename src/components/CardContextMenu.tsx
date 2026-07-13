@@ -126,9 +126,11 @@ export function CardContextMenu() {
 function canActivateNow(game: GameState, card: CardInstance): boolean {
   if (game.winner) return false;
   if (game.activeSide !== "player") return false;
+  if (game.phase !== "main") return false;
   if (card.controller !== "player") return false;
   if (card.zone !== "battlefield") return false;
   if (card.tapped) return false;
+  if (card.activatedThisTurn) return false;
   if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
   return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
 }

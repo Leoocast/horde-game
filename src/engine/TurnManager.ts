@@ -5,6 +5,7 @@ import { drawCards } from "./GameState";
 export function untapSide(game: GameState, side: "player" | "horde"): void {
   for (const card of game[side].battlefield) {
     card.tapped = false;
+    card.activatedThisTurn = false;
     if (side === "player") card.summoningSickness = false;
   }
 }

@@ -1,7 +1,7 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
-import { cardStats } from "../utils/selectors";
+import { cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 
 type Props = {
@@ -27,12 +27,13 @@ type Props = {
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
   suppressContextMenu?: boolean;
   shouldSuppressClick?: () => boolean;
+  visualDamageMarked?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
-  const stats = cardStats(game, card);
+  const stats = cardStatState(game, card, visualDamageMarked);
   const { imageUrl } = useCardDetails(card.definitionId);
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
@@ -106,7 +107,20 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           </span>
         )}
       </div>
-      {!hideStats && stats && <span className="absolute bottom-1 right-1 border border-[#6b441f] bg-[#f2d793]/95 px-1.5 py-0.5 text-xs font-bold text-[#241106]">{stats}</span>}
+      {!hideStats && stats.text && (
+        <span
+          className={[
+            "absolute bottom-1 right-1 flex h-[18px] min-w-[34px] items-center justify-center rounded-[999px] border px-1.5 text-[12px] font-black leading-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),inset_0_-1px_1px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.55)]",
+            stats.damaged
+              ? "border-[#4b0f0a] bg-gradient-to-b from-[#f3a59b] via-[#b93327] to-[#6d150f] text-[#fff0e8]"
+              : stats.buffed
+                ? "border-[#275d21] bg-gradient-to-b from-[#edffe6] via-[#a7d694] to-[#5c8750] text-[#123910]"
+                : "border-[#485356] bg-gradient-to-b from-[#edf4ed] via-[#b9c5bf] to-[#7f8b87] text-[#18201f]",
+          ].join(" ")}
+        >
+          {stats.text}
+        </span>
+      )}
     </article>
   );
 }

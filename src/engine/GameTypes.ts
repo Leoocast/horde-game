@@ -1,6 +1,6 @@
 export type Side = "player" | "horde";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
-export type Phase = "untap" | "draw" | "main" | "combat" | "secondMain" | "end" | "horde";
+export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
 export type Color = "G" | "R" | "U" | "W" | "B" | "C";
 export type Keyword =
   | "FLYING"
@@ -116,6 +116,7 @@ export type CardInstance = {
   tapped: boolean;
   entersTapped: boolean;
   summoningSickness: boolean;
+  activatedThisTurn: boolean;
   damageMarked: number;
   deathtouchDamage: boolean;
   counters: Record<string, number>;

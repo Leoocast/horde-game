@@ -3,9 +3,20 @@ import { getKeywords } from "../engine/Keywords";
 import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
 
 export function cardStats(game: GameState, card: CardInstance): string {
-  if (!card.cardTypes.includes("Creature")) return "";
+  return cardStatState(game, card).text;
+}
+
+export function cardStatState(game: GameState, card: CardInstance, visualDamageMarked = 0): { text: string; damaged: boolean; buffed: boolean } {
+  if (!card.cardTypes.includes("Creature")) return { text: "", damaged: false, buffed: false };
   const { power, toughness } = getPowerToughness(game, card);
-  return `${power}/${toughness}`;
+  const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
+  const visibleToughness = Math.max(0, toughness - damageMarked);
+  const buffed = power > card.basePower || toughness > card.baseToughness;
+  return {
+    text: damageMarked > 0 ? `${power}/${visibleToughness}` : `${power}/${toughness}`,
+    damaged: damageMarked > 0,
+    buffed,
+  };
 }
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
