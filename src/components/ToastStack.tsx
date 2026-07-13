@@ -19,6 +19,10 @@ const toneStyles: Record<ToastTone, { icon: typeof Info; className: string }> = 
     icon: XCircle,
     className: "border-[#e06b52]/80 bg-[#3b1612]/95 text-[#ffd7cb]",
   },
+  horde: {
+    icon: AlertTriangle,
+    className: "border-[#8b8172]/75 bg-[#12100d]/95 text-[#d8d0c2]",
+  },
 };
 
 export function ToastStack() {
@@ -26,7 +30,7 @@ export function ToastStack() {
   const dismissToast = useToastStore((state) => state.dismissToast);
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-[160] flex w-[min(360px,calc(100vw-32px))] flex-col items-end gap-2">
+    <div className="pointer-events-none fixed bottom-[6.75rem] right-4 z-[160] flex w-[min(360px,calc(100vw-32px))] flex-col items-end gap-2">
       <AnimatePresence initial={false}>
         {toasts.map((toast) => {
           const tone = toneStyles[toast.tone];

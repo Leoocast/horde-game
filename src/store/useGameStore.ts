@@ -27,6 +27,7 @@ type GameStore = {
   specialDeadCardIds: string[];
   hordeMillAnimationQueue: HordeMillAnimationItem[];
   hordeMillPreviewCards: CardInstance[];
+  playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -94,6 +95,7 @@ type GameStore = {
   queueHordeMillPreview: (card: CardInstance) => void;
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
+  completePlayerDiscardAnimation: (id: string) => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
   completeHordeMillAnimation: (id: string) => void;
@@ -154,6 +156,11 @@ export type HordeMillAnimationItem = {
   preview?: boolean;
 };
 
+export type PlayerDiscardAnimationItem = {
+  id: string;
+  card: CardInstance;
+};
+
 export type BlockDragState = {
   blockerId: string;
   startX: number;
@@ -211,6 +218,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   specialDeadCardIds: [],
   hordeMillAnimationQueue: [],
   hordeMillPreviewCards: [],
+  playerDiscardAnimationQueue: [],
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -251,6 +259,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         specialDeadCardIds: [],
         hordeMillAnimationQueue: [],
         hordeMillPreviewCards: [],
+        playerDiscardAnimationQueue: [],
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -757,6 +766,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
   openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
   closeCardContextMenu: () => set({ cardContextMenu: undefined }),
+  completePlayerDiscardAnimation: (id) =>
+    set((state) => ({
+      playerDiscardAnimationQueue: state.playerDiscardAnimationQueue.filter((item) => item.id !== id),
+    })),
   completeHordeMillAnimation: (id) =>
     set((state) => ({
       hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
@@ -856,7 +869,7 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
       useToastStore.getState().pushToast({
         title: "Horde effect",
         message: hordeEnterTriggerMessage(card),
-        tone: "info",
+        tone: "horde",
       });
     }, triggerAt);
     window.setTimeout(() => {
@@ -870,6 +883,7 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
           drainEventQueue(next);
         }
         const remainingTriggers = Math.max(0, state.hordeAutoTriggerCount - 1);
+        notifyDiscardEffects(previous, next);
         return {
           game: next,
           hordeAutoTriggerCount: remainingTriggers,
@@ -891,12 +905,25 @@ function scheduleSummoningAnimationSafetyClear(): void {
 function notifyDiscardEffects(previous: GameState, next: GameState): void {
   const newLogCount = Math.max(0, next.log.length - previous.log.length);
   const discardLogs = next.log.slice(0, newLogCount).filter((message) => message.startsWith("Player discards "));
+  const previousPlayerGraveyardIds = new Set(previous.player.graveyard.map((card) => card.instanceId));
+  const discardedCards = next.player.graveyard.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
+  if (discardedCards.length > 0) {
+    useGameStore.setState((state) => ({
+      playerDiscardAnimationQueue: [
+        ...state.playerDiscardAnimationQueue,
+        ...discardedCards.map((card) => ({
+          id: `player-discard-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          card,
+        })),
+      ],
+    }));
+  }
   for (const message of discardLogs) {
     useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
     useToastStore.getState().pushToast({
-      title: "Card discarded",
+      title: "Horde effect",
       message,
-      tone: "warning",
+      tone: "horde",
     });
   }
 }

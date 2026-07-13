@@ -27,10 +27,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
+  const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
-  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating;
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount);
   const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);

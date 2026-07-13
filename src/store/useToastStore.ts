@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ToastTone = "info" | "warning" | "success" | "danger";
+export type ToastTone = "info" | "warning" | "success" | "danger" | "horde";
 
 export type ToastMessage = {
   id: string;

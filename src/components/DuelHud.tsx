@@ -88,7 +88,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   }, [hordeAttackAnimation]);
 
   return (
-    <div className={["old-panel fixed bottom-3 left-3 z-[75] flex min-w-44 items-center justify-start gap-3 overflow-hidden px-3 py-2 text-[#f6e6b8]", takingDamage ? "player-life-damage" : "", lifeBuffAnimationId ? "player-life-buff" : ""].join(" ")}>
+    <div data-player-life-panel="true" className={["old-panel fixed bottom-4 right-4 z-[75] flex min-w-44 items-center justify-start gap-3 overflow-hidden px-3 py-2 text-[#f6e6b8]", takingDamage ? "player-life-damage" : "", lifeBuffAnimationId ? "player-life-buff" : ""].join(" ")}>
       {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
       <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#16340e] text-[#caff9f]">
         <Heart size={20} />

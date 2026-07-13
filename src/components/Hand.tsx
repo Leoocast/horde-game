@@ -49,6 +49,7 @@ export function Hand({ game }: { game: GameState }) {
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
+  const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const selectHand = useGameStore((state) => state.selectHand);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
@@ -93,7 +94,7 @@ export function Hand({ game }: { game: GameState }) {
     <>
       <section className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-56 overflow-visible">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
-        <div className={[counterTargeting || spellTargeting || spellFightAnimation || pendingSpellHandId || hordeMillAnimating || pendingTriggeredEffectCount > 0 ? "pointer-events-none" : "pointer-events-auto", "absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8"].join(" ")}>
+        <div className={[counterTargeting || spellTargeting || spellFightAnimation || pendingSpellHandId || hordeMillAnimating || playerDiscardAnimating || pendingTriggeredEffectCount > 0 ? "pointer-events-none" : "pointer-events-auto", "absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8"].join(" ")}>
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
             <AnimatePresence mode="popLayout">
             {game.player.hand.map((card, index) => {

@@ -15,6 +15,7 @@ import { HordeMillAnimator } from "./HordeMillAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
+import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
@@ -50,6 +51,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <SpellTargetingOverlay game={game} />
       <HordeAttackAnimator />
       <HordeMillAnimator />
+      <PlayerDiscardAnimator />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       {hordeAutoTriggerCount > 0 && <div data-audio-click="off" className="fixed inset-0 z-[79]" />}
