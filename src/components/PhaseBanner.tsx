@@ -41,7 +41,11 @@ export function PhaseBanner({ game }: { game: GameState }) {
 
 function getBannerState(game: GameState): BannerState | undefined {
   if (game.winner) return undefined;
-  if (game.setupTurnsRemaining > 0) return undefined;
+  if (game.activeSide === "player" && game.phase === "main" && game.setupTurnsRemaining > 0) {
+    if (game.turnNumber === 1) return { key: `setup-main-${game.turnNumber}`, label: "Main Phase", tone: "main" };
+    if (game.setupTurnsRemaining === 1) return { key: `setup-last-extra-${game.turnNumber}`, label: "Last Extra Turn", tone: "main" };
+    return { key: `setup-extra-${game.turnNumber}`, label: "Extra Turn", tone: "main" };
+  }
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
     return { key: `horde-defend-${game.turnNumber}-${game.combat.hordeAttackers.length}`, label: "Defend Phase", tone: "defend" };
   }
