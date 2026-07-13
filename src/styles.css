@@ -647,17 +647,32 @@
 
   .counter-target-stat-preview {
     position: absolute;
-    bottom: -0.85rem;
-    right: -0.5rem;
+    bottom: -0.72rem;
+    right: -0.38rem;
     z-index: 112;
-    border: 1px solid rgb(128 239 119 / 0.82);
-    background: rgb(11 39 16 / 0.92);
-    padding: 0.2rem 0.45rem;
-    color: #91f58f;
-    font-size: 0.78rem;
+    display: flex;
+    min-width: 2.3rem;
+    height: 1.22rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #275d21;
+    border-radius: 999px;
+    background: linear-gradient(to bottom, #edffe6, #a7d694 52%, #5c8750);
+    padding: 0 0.45rem;
+    color: #123910;
+    font-size: 0.76rem;
     font-weight: 950;
     line-height: 1;
-    box-shadow: 0 0 12px rgb(55 255 83 / 0.42);
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.65),
+      inset 0 -1px 1px rgb(0 0 0 / 0.35),
+      0 0 12px rgb(55 255 83 / 0.42),
+      0 1px 2px rgb(0 0 0 / 0.55);
+  }
+
+  .combat-card-visually-dead {
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 
   .counter-target-source-panel {

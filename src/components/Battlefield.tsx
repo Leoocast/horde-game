@@ -37,6 +37,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const counterTargeting = useGameStore((state) => state.counterTargeting);
   const buffAnimationCardId = useGameStore((state) => state.buffAnimationCardId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
+  const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
@@ -309,6 +310,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const counterTargetable = Boolean(counterTargeting && !counterTargeting.targetId && card.cardTypes.includes("Creature"));
     const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
     const buffAnimating = buffAnimationCardId === card.instanceId;
+    const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
 
     return (
       <motion.div
@@ -335,6 +337,7 @@ export function Battlefield({ game, side, cards }: Props) {
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
+          visuallyDead ? "combat-card-visually-dead" : "",
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
           effectActivating ? "effect-card-activating" : "",

@@ -53,20 +53,13 @@ function animateAttacker(element: HTMLElement, dies: boolean): () => void {
   animation.onfinish = () => {
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
-    if (dies) {
-      element.style.opacity = "0";
-      element.style.visibility = "hidden";
-    }
   };
 
   return () => {
     animation.cancel();
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
-    if (dies) {
-      element.style.opacity = "0";
-      element.style.visibility = "hidden";
-    }
+    void dies;
   };
 }
 
@@ -98,19 +91,12 @@ function animateBlocker(element: HTMLElement, dies: boolean): () => void {
   animation.onfinish = () => {
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
-    if (dies) {
-      element.style.opacity = "0";
-      element.style.visibility = "hidden";
-    }
   };
 
   return () => {
     animation.cancel();
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
-    if (dies) {
-      element.style.opacity = "0";
-      element.style.visibility = "hidden";
-    }
+    void dies;
   };
 }

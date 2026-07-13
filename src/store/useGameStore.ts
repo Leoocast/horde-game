@@ -16,6 +16,7 @@ type GameStore = {
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
   hordeCombatVisualDamage?: Record<string, number>;
+  hordeCombatDeadCardIds: string[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -150,6 +151,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   hordeCombatVisualDamage: undefined,
+  hordeCombatDeadCardIds: [],
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -177,6 +179,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
         hordeCombatVisualDamage: undefined,
+        hordeCombatDeadCardIds: [],
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -419,7 +422,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined });
+      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [] });
       return;
     }
 
@@ -441,11 +444,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
           },
         });
       }, startAt);
+      if (event.attackerDies || event.blockerDies) {
+        window.setTimeout(() => {
+          set({ hordeCombatDeadCardIds: nextDeadCardIds(event) });
+        }, startAt + HORDE_ATTACK_ANIMATION_MS - 35);
+      }
     });
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
@@ -493,11 +501,15 @@ function findBattlefieldCard(game: GameState, id: string) {
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
   const events: HordeAttackEvent[] = [];
+  const damageById = new Map<string, number>();
+  const deathtouchById = new Set<string>();
+
   for (const attackerId of game.combat.hordeAttackers) {
     const blockerIds = game.combat.blockers[attackerId] ?? [];
     const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
     if (!attacker) continue;
     const attackerStats = getPowerToughness(game, attacker);
+    if (isVisuallyDead(attacker, attackerStats.toughness, damageById, deathtouchById)) continue;
 
     if (blockerIds.length === 0) {
       events.push({ attackerId, attackerDies: false, blockerDies: false, playerDamage: attackerStats.power });
@@ -509,7 +521,6 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       continue;
     }
 
-    let attackerDamage = attacker.damageMarked;
     const blockers = sortBlockersLeftToRight(
       game,
       blockerIds
@@ -519,22 +530,38 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
 
     for (const blocker of blockers) {
       const blockerStats = getPowerToughness(game, blocker);
-      const blockerDies = attackerStats.power > 0 && (hasKeyword(game, attacker, "DEATHTOUCH") || blocker.damageMarked + attackerStats.power >= blockerStats.toughness);
-      const attackerDies = blockerStats.power > 0 && (hasKeyword(game, blocker, "DEATHTOUCH") || attackerDamage + blockerStats.power >= attackerStats.toughness);
+      if (isVisuallyDead(blocker, blockerStats.toughness, damageById, deathtouchById)) continue;
+
+      const attackerDamageMarked = visualDamage(attacker, damageById) + blockerStats.power;
+      const blockerDamageMarked = visualDamage(blocker, damageById) + attackerStats.power;
+      if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
+      if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
+      damageById.set(attacker.instanceId, attackerDamageMarked);
+      damageById.set(blocker.instanceId, blockerDamageMarked);
+
+      const blockerDies = isVisuallyDead(blocker, blockerStats.toughness, damageById, deathtouchById);
+      const attackerDies = isVisuallyDead(attacker, attackerStats.toughness, damageById, deathtouchById);
       events.push({
         attackerId,
         attackerDies,
         blockerId: blocker.instanceId,
         blockerDies,
         playerDamage: 0,
-        attackerDamageMarked: attackerDamage + blockerStats.power,
-        blockerDamageMarked: blocker.damageMarked + attackerStats.power,
+        attackerDamageMarked,
+        blockerDamageMarked,
       });
-      attackerDamage += blockerStats.power;
       if (attackerDies) break;
     }
   }
   return events;
+}
+
+function visualDamage(card: GameState["player"]["battlefield"][number], damageById: Map<string, number>): number {
+  return damageById.get(card.instanceId) ?? card.damageMarked;
+}
+
+function isVisuallyDead(card: GameState["player"]["battlefield"][number], toughness: number, damageById: Map<string, number>, deathtouchById: Set<string>): boolean {
+  return visualDamage(card, damageById) >= toughness || deathtouchById.has(card.instanceId);
 }
 
 function nextVisualDamage(event: HordeAttackEvent): Record<string, number> {
@@ -543,4 +570,11 @@ function nextVisualDamage(event: HordeAttackEvent): Record<string, number> {
   if (event.attackerDamageMarked !== undefined) next[event.attackerId] = event.attackerDamageMarked;
   if (event.blockerId && event.blockerDamageMarked !== undefined) next[event.blockerId] = event.blockerDamageMarked;
   return next;
+}
+
+function nextDeadCardIds(event: HordeAttackEvent): string[] {
+  const next = new Set(useGameStore.getState().hordeCombatDeadCardIds);
+  if (event.attackerDies) next.add(event.attackerId);
+  if (event.blockerDies && event.blockerId) next.add(event.blockerId);
+  return [...next];
 }
