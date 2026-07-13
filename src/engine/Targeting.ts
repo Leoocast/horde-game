@@ -16,6 +16,10 @@ export function targetCandidates(game: GameState, sourceSide: Side, req: TargetR
     if (wanted && card.controller !== wanted) return false;
     if (req.type.includes("CREATURE") && !card.cardTypes.includes("Creature")) return false;
     if (req.type.includes("LAND") && !card.cardTypes.includes("Land")) return false;
+    const filters = req.filters as { cardTypes?: string[]; subtypes?: string[]; anyOf?: Array<{ cardTypes?: string[]; subtypes?: string[] }> } | undefined;
+    if (filters?.cardTypes?.length && !filters.cardTypes.every((type) => card.cardTypes.includes(type))) return false;
+    if (filters?.subtypes?.length && !filters.subtypes.every((type) => card.subtypes.includes(type))) return false;
+    if (filters?.anyOf?.length && !filters.anyOf.some((filter) => matchesFilter(card, filter))) return false;
     if (req.filterAny?.length && !req.filterAny.some((filter) => matchesFilter(card, filter))) return false;
     return true;
   });

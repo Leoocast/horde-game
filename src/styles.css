@@ -645,6 +645,31 @@
       0 0 28px rgb(42 212 76 / 0.56) !important;
   }
 
+  .spell-targetable-card,
+  .spell-target-locked-card {
+    z-index: 95;
+  }
+
+  .spell-targetable-friendly > article,
+  .spell-target-locked-friendly > article {
+    border-color: rgb(120 255 151 / 0.98) !important;
+    box-shadow:
+      inset 0 0 0 1px rgb(214 255 214 / 0.7),
+      0 0 10px rgb(79 255 112 / 0.82),
+      0 0 22px rgb(42 212 76 / 0.5) !important;
+    animation: actionable-card-glow 1.5s ease-in-out infinite;
+  }
+
+  .spell-targetable-enemy > article,
+  .spell-target-locked-enemy > article {
+    border-color: rgb(255 178 76 / 0.98) !important;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 226 177 / 0.72),
+      0 0 10px rgb(255 151 42 / 0.82),
+      0 0 22px rgb(255 106 28 / 0.52) !important;
+    animation: actionable-card-glow 1.5s ease-in-out infinite;
+  }
+
   .counter-target-stat-preview {
     position: absolute;
     bottom: -0.72rem;

@@ -3,6 +3,7 @@ import { createToken } from "./GameState";
 import { drawCards } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
+import { hasKeyword } from "./Keywords";
 import { addMana } from "./ManaSystem";
 import { getPowerToughness } from "./StaticEffects";
 import { findPermanent } from "./Targeting";
@@ -70,8 +71,21 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
       const amount = getPowerToughness(game, source).power;
-      dealDamageToCreature(game, target, amount, source.keywords.includes("DEATHTOUCH"));
+      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
+      destroyMarkedCreatures(game);
+    }
+    return;
+  }
+  if (effect.type === "FIGHT_SIMULTANEOUS") {
+    const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
+    const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
+    if (source && target) {
+      const sourcePower = getPowerToughness(game, source).power;
+      const targetPower = getPowerToughness(game, target).power;
+      dealDamageToCreature(game, target, sourcePower, hasKeyword(game, source, "DEATHTOUCH"));
+      dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "DEATHTOUCH"));
+      game.log.unshift(`${source.name} and ${target.name} fight.`);
       destroyMarkedCreatures(game);
     }
     return;

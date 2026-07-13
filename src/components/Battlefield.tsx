@@ -1,5 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
+import { targetCandidates } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -37,6 +38,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
+  const spellTargeting = useGameStore((state) => state.spellTargeting);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
@@ -333,6 +335,12 @@ export function Battlefield({ game, side, cards }: Props) {
     const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
     const counterTargetable = Boolean(counterTargeting && !counterTargeting.targetId && card.cardTypes.includes("Creature"));
     const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
+    const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
+    const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
+    const spellCandidates = spellReq ? targetCandidates(game, "player", spellReq) : [];
+    const spellTargetable = Boolean(spellTargeting && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellTargetTone = spellReq?.controller === "SELF" ? "friendly" : "enemy";
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
 
     return (
@@ -366,6 +374,8 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActivating ? "effect-card-activating" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
+          spellTargetable ? `spell-targetable-card spell-targetable-${spellTargetTone}` : "",
+          spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
         ].join(" ")}
       >
       <Card
@@ -381,7 +391,7 @@ export function Battlefield({ game, side, cards }: Props) {
         linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        suppressContextMenu={effectActive || Boolean(counterTargeting)}
+        suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
@@ -478,6 +488,7 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function canUseTapActivatedAbility(card: CardInstance): boolean {
+    if (spellTargeting) return false;
     if (game.activeSide !== "player" || game.phase !== "main") return false;
     if (side !== "player") return false;
     if (card.zone !== "battlefield") return false;

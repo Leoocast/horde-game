@@ -14,6 +14,8 @@ import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
+import { SpellFightAnimator } from "./SpellFightAnimator";
+import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
@@ -41,8 +43,10 @@ export function Board({ playerName, setupTurns }: Props) {
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
+      <SpellTargetingOverlay game={game} />
       <HordeAttackAnimator />
       <PlayerAttackAnimator />
+      <SpellFightAnimator />
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

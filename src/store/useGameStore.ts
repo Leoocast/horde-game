@@ -8,6 +8,7 @@ import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlaye
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { targetCandidates } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 
@@ -25,6 +26,8 @@ type GameStore = {
   playerAttackDrag?: PlayerAttackDragState;
   cardContextMenu?: CardContextMenuState;
   counterTargeting?: CounterTargetingState;
+  spellTargeting?: SpellTargetingState;
+  spellFightAnimation?: SpellFightAnimationState;
   buffAnimationCardIds: string[];
   buffAnimationEventId?: number;
   lifeBuffAnimationId?: number;
@@ -49,6 +52,12 @@ type GameStore = {
   deselectCounterTarget: () => void;
   cancelCounterTargeting: () => void;
   confirmCounterTargeting: () => void;
+  startSpellTargeting: (handId: string, x: number, y: number) => void;
+  updateSpellTargetPointer: (x: number, y: number) => void;
+  lockSpellTarget: (targetId: string) => void;
+  deselectSpellTarget: () => void;
+  cancelSpellTargeting: () => void;
+  confirmSpellTargeting: () => void;
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
@@ -153,6 +162,20 @@ export type CounterTargetingState = {
   y: number;
 };
 
+export type SpellTargetingState = {
+  handId: string;
+  stepIndex: number;
+  targets: Record<string, string | string[]>;
+  x: number;
+  y: number;
+};
+
+export type SpellFightAnimationState = {
+  friendlyId: string;
+  enemyId: string;
+  eventId: number;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
@@ -167,6 +190,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAttackDrag: undefined,
   cardContextMenu: undefined,
   counterTargeting: undefined,
+  spellTargeting: undefined,
+  spellFightAnimation: undefined,
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
   lifeBuffAnimationId: undefined,
@@ -199,6 +224,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAttackDrag: undefined,
         cardContextMenu: undefined,
         counterTargeting: undefined,
+        spellTargeting: undefined,
+        spellFightAnimation: undefined,
         buffAnimationCardIds: [],
         buffAnimationEventId: undefined,
         lifeBuffAnimationId: undefined,
@@ -278,6 +305,73 @@ export const useGameStore = create<GameStore>((set, get) => ({
         buffAnimationCardIds: [target.instanceId],
         buffAnimationEventId: Date.now(),
         lifeBuffAnimationId: Date.now(),
+      };
+    }),
+  startSpellTargeting: (handId, x, y) => set({ spellTargeting: { handId, stepIndex: 0, targets: {}, x, y }, selectedHandId: handId, focusedCardId: handId, activeEffectCardId: undefined, cardContextMenu: undefined }),
+  updateSpellTargetPointer: (x, y) =>
+    set(({ spellTargeting }) => ({
+      spellTargeting: spellTargeting ? { ...spellTargeting, x, y } : undefined,
+    })),
+  lockSpellTarget: (targetId) =>
+    set(({ game, spellTargeting }) => {
+      if (!spellTargeting) return {};
+      const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
+      const req = card?.requiresTargets[spellTargeting.stepIndex];
+      if (!card || !req) return {};
+      const valid = targetCandidates(game, "player", req).some((candidate) => candidate.instanceId === targetId);
+      if (!valid) return {};
+      const targets = { ...spellTargeting.targets, [req.id]: targetId };
+      const nextStep = spellTargeting.stepIndex + 1;
+      useAudioStore.getState().playSfx(nextStep >= card.requiresTargets.length ? "playLand" : "buff", { volume: 0.68 });
+      return { spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets } };
+    }),
+  deselectSpellTarget: () =>
+    set(({ game, spellTargeting }) => {
+      if (!spellTargeting) return {};
+      const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
+      if (!card) return { spellTargeting: undefined };
+      const stepIndex = Math.max(0, Math.min(spellTargeting.stepIndex, card.requiresTargets.length - 1));
+      const req = card.requiresTargets[stepIndex];
+      const targets = { ...spellTargeting.targets };
+      if (req) delete targets[req.id];
+      return { spellTargeting: { ...spellTargeting, targets } };
+    }),
+  cancelSpellTargeting: () => set({ spellTargeting: undefined, selectedHandId: undefined, focusedCardId: undefined }),
+  confirmSpellTargeting: () =>
+    set(({ game, spellTargeting }) => {
+      if (!spellTargeting) return {};
+      const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
+      if (!card || !card.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id]))) return {};
+      const friendlyId = String(spellTargeting.targets.yourCreature ?? spellTargeting.targets.sourceCreature ?? "");
+      const enemyId = String(spellTargeting.targets.opponentCreature ?? spellTargeting.targets.damageTarget ?? "");
+      const targets = { ...spellTargeting.targets };
+      const handId = spellTargeting.handId;
+      if (friendlyId && enemyId) useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+      window.setTimeout(() => {
+        const latest = useGameStore.getState().game;
+        const previousLog = latest.log[0];
+        const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
+        const next = castCard(latest, handId, { targets });
+        const castSucceeded = !next.player.hand.some((item) => item.instanceId === handId);
+        if (!castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
+        const autoPaidLandIds = castSucceeded
+          ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+          : [];
+        const autoPaidLandAnimation = autoPaidLandIds.length > 0 ? { ids: autoPaidLandIds, eventId: Date.now() } : undefined;
+        if (autoPaidLandAnimation) {
+          if (autoPaidLandFlashTimer) window.clearTimeout(autoPaidLandFlashTimer);
+          autoPaidLandFlashTimer = window.setTimeout(() => {
+            useGameStore.setState({ autoPaidLandAnimation: undefined });
+            autoPaidLandFlashTimer = undefined;
+          }, AUTO_PAID_LAND_FLASH_MS);
+        }
+        useGameStore.setState({ game: next, spellFightAnimation: undefined, autoPaidLandAnimation });
+      }, 520);
+      return {
+        spellTargeting: undefined,
+        selectedHandId: undefined,
+        focusedCardId: undefined,
+        spellFightAnimation: friendlyId && enemyId ? { friendlyId, enemyId, eventId: Date.now() } : undefined,
       };
     }),
   setHoveredCardId: (id) => set({ hoveredCardId: id }),

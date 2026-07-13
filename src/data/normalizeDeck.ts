@@ -28,7 +28,8 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     toughness: card.toughness,
     keywords: normalizeKeywords(card),
     activatedAbilities: normalizeActivatedAbilities(card.abilities ?? []),
-    effects: normalizeTriggeredAbilities(card.abilities ?? []),
+    effects: normalizeEffects(card.abilities ?? []),
+    requiresTargets: normalizeTargets(card.abilities ?? []),
   };
 }
 
@@ -60,11 +61,29 @@ function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbil
     });
 }
 
-function normalizeTriggeredAbilities(abilities: NewDeckAbility[]): EffectDefinition[] {
-  return abilities
-    .filter((ability) => ability.kind === "TRIGGERED")
-    .map(normalizeTriggeredAbility)
-    .filter(Boolean) as EffectDefinition[];
+function normalizeEffects(abilities: NewDeckAbility[]): EffectDefinition[] {
+  return [
+    ...abilities
+      .filter((ability) => ability.kind === "TRIGGERED")
+      .map(normalizeTriggeredAbility)
+      .filter(Boolean),
+    ...abilities
+      .filter((ability) => ability.kind === "SPELL")
+      .flatMap((ability) => (ability.effects ?? []).map((effect) => normalizeEffect(effect as EffectDefinition)).filter(Boolean)),
+  ] as EffectDefinition[];
+}
+
+function normalizeTargets(abilities: NewDeckAbility[]) {
+  const spell = abilities.find((ability) => ability.kind === "SPELL");
+  return (spell?.targets ?? []).map((target) => {
+    const req = target as Record<string, unknown>;
+    return {
+      id: String(req.id ?? "target"),
+      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("Creature") ? "TARGET_CREATURE" : "TARGET_PERMANENT"),
+      controller: req.controller as "SELF" | "OPPONENT" | "ANY" | undefined,
+      filters: req.filters,
+    };
+  });
 }
 
 function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition | undefined {
@@ -105,7 +124,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
   if (effect.type === "MODIFY_STATS") {
     return {
       type: effect.duration === "END_OF_TURN" ? "PUMP_UNTIL_END_OF_TURN" : "PUMP",
-      target: normalizeTarget(effect.target),
+      ...normalizeEffectTarget(effect.target),
       power: effect.power ?? 0,
       toughness: effect.toughness ?? 0,
     };
@@ -113,17 +132,28 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
   if (effect.type === "ADD_COUNTERS") {
     return {
       type: "PUT_COUNTER",
-      target: normalizeTarget(effect.target),
+      ...normalizeEffectTarget(effect.target),
       counterType: effect.counter ?? effect.counterType ?? "+1/+1",
       amount: effect.amount ?? 1,
+    };
+  }
+  if (effect.type === "SEQUENCE" && effect.customHandler === "fight_simultaneously") {
+    const steps = Array.isArray(effect.steps) ? (effect.steps as EffectDefinition[]) : [];
+    const first = steps[0];
+    const second = steps[1];
+    return {
+      type: "FIGHT_SIMULTANEOUS",
+      sourceRef: first?.source ?? second?.target,
+      targetRef: first?.target ?? second?.source,
     };
   }
   return effect;
 }
 
-function normalizeTarget(target: unknown): unknown {
-  if (target === "SELF") return "SELF";
-  return target;
+function normalizeEffectTarget(target: unknown): Record<string, unknown> {
+  if (target === "SELF") return { target: "SELF" };
+  if (typeof target === "string") return { targetRef: target };
+  return { target };
 }
 
 function normalizeSide(side?: string): Side {

@@ -3,7 +3,7 @@ import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 
 const DEVELOPER_SEED = "developer";
-const DEVELOPER_OPENING_HAND = ["llanowar_elves", "sunshower_druid", "druid_of_the_cowl", "beast_kin_ranger", "beast_kin_ranger"];
+const DEVELOPER_OPENING_HAND = ["llanowar_elves", "sunshower_druid", "druid_of_the_cowl", "beast_kin_ranger", "beast_kin_ranger", "ruthless_predation"];
 const DEVELOPER_STARTING_BATTLEFIELD = [
   { definitionId: "forest", amount: 5 },
 ] as const;
