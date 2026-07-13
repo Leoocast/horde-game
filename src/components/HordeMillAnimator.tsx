@@ -4,8 +4,8 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
 
-const CARD_WIDTH = 78;
-const CARD_HEIGHT = 108;
+const CARD_WIDTH = 234;
+const CARD_HEIGHT = 324;
 
 export function HordeMillAnimator() {
   const queue = useGameStore((state) => state.hordeMillAnimationQueue);
@@ -41,16 +41,16 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
       }}
-      initial={{ x: 0, y: 0, opacity: 0, scale: 0.45, rotate: 5, filter: "brightness(1.65) saturate(1.18)" }}
+      initial={{ x: 0, y: 0, opacity: 0, scale: 0.72, rotate: -2, filter: "brightness(1.55) saturate(1.15)" }}
       animate={{
-        x: [0, -44, -178, -246],
-        y: [0, 18, 34, -38],
+        x: [0, 42, 188, 360],
+        y: [0, -18, -44, -86],
         opacity: [0, 1, 1, 0],
-        scale: [0.45, 1.16, 0.96, 0.78],
-        rotate: [5, -3, -14, -34],
+        scale: [0.72, 1.04, 0.96, 0.78],
+        rotate: [-2, 6, 20, 38],
         filter: ["brightness(1.65) saturate(1.18)", "brightness(1.25) saturate(1.08)", "brightness(1)", "brightness(0.55) saturate(0.75)"],
       }}
-      transition={{ duration: 0.72, times: [0, 0.2, 0.66, 1], ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.78, times: [0, 0.22, 0.68, 1], ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={onComplete}
     >
       {imageUrl ? (
@@ -66,5 +66,5 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
 function readHordeDeckOrigin(): { x: number; y: number } {
   const rect = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']")?.getBoundingClientRect();
   if (!rect) return { x: window.innerWidth - 96, y: 104 };
-  return { x: rect.left + rect.width * 0.78, y: rect.top + rect.height * 0.5 };
+  return { x: rect.left + rect.width * 0.42, y: rect.top + rect.height * 0.52 };
 }

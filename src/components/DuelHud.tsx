@@ -5,6 +5,14 @@ import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 
 export function DuelHud({ game }: { game: GameState }) {
+  const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
+  const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
+  const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
+  const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
+  const previewMillPendingInLibrary = hordeMillPreviewCards.filter((card) => hordeLibraryIds.has(card.instanceId)).length;
+  const pendingMilledAfterActive = Math.max(0, normalMillQueueLength - 1);
+  const visualHordeLibraryCount = game.horde.library.length + pendingMilledAfterActive - previewMillPendingInLibrary;
+  const visualHordeGraveyardCount = Math.max(0, game.horde.graveyard.length - pendingMilledAfterActive + previewMillPendingInLibrary);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
     const attacker = game.player.battlefield.find((card) => card.instanceId === id);
     return attacker ? total + getPowerToughness(game, attacker).power : total;
@@ -19,9 +27,9 @@ export function DuelHud({ game }: { game: GameState }) {
           <div className="flex items-end justify-end gap-2 leading-none">
             <div className="mb-0.5 flex items-center gap-1.5 rounded-full border border-[#0d0906]/80 bg-[#130d09]/80 px-2 py-0.5 text-[13px] font-black text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.45)]">
               <Archive size={14} strokeWidth={2.6} />
-              <span>{game.horde.graveyard.length}</span>
+              <span>{visualHordeGraveyardCount}</span>
             </div>
-            <div className="text-3xl font-black text-[#fff0b2]">{game.horde.library.length}</div>
+            <div className="text-3xl font-black text-[#fff0b2]">{visualHordeLibraryCount}</div>
           </div>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#41100b] text-[#ffd59b]">

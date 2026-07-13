@@ -24,6 +24,7 @@ type GameStore = {
   hordeCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
   hordeMillAnimationQueue: HordeMillAnimationItem[];
+  hordeMillPreviewCards: CardInstance[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -88,6 +89,7 @@ type GameStore = {
   startPlayerAttackDrag: (attackerId: string, x: number, y: number) => void;
   updatePlayerAttackDrag: (x: number, y: number) => void;
   cancelPlayerAttackDrag: () => void;
+  queueHordeMillPreview: (card: CardInstance) => void;
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   resolveHordeCombat: () => void;
@@ -143,6 +145,7 @@ type AutoPaidLandAnimation = {
 export type HordeMillAnimationItem = {
   id: string;
   card: CardInstance;
+  preview?: boolean;
 };
 
 export type BlockDragState = {
@@ -200,6 +203,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeCombatDeadCardIds: [],
   specialDeadCardIds: [],
   hordeMillAnimationQueue: [],
+  hordeMillPreviewCards: [],
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -237,6 +241,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeCombatDeadCardIds: [],
         specialDeadCardIds: [],
         hordeMillAnimationQueue: [],
+        hordeMillPreviewCards: [],
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -653,19 +658,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    const previewMillCards = previewPlayerCombatMillCards(game, attackers);
     attackers.forEach((attackerId, index) => {
       const startAt = index * PLAYER_ATTACK_ANIMATION_MS;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx("attack", { volume: 0.75 });
         set({ playerAttackAnimation: { attackerId, eventId: index } });
       }, startAt);
+      for (const preview of previewMillCards.filter((item) => item.attackerIndex === index)) {
+        window.setTimeout(() => {
+          useGameStore.getState().queueHordeMillPreview(preview.card);
+        }, startAt + PLAYER_ATTACK_ANIMATION_MS * 0.55 + preview.cardIndexInHit * 90);
+      }
     });
 
     window.setTimeout(() => {
       const latest = get().game;
       const resolved = resolvePlayerCombat(latest);
       const next = advancePhase(resolved, "end");
-      set((state) => ({ game: next, playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, latest, next) }));
+      set((state) => ({
+        game: next,
+        playerAttackAnimation: undefined,
+        selectedPlayerCreatureId: undefined,
+        hordeMillPreviewCards: [],
+        hordeMillAnimationQueue: previewMillCards.length > 0 ? state.hordeMillAnimationQueue : appendHordeMillAnimations(state, latest, next),
+      }));
     }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
   },
   runHordeMain: () =>
@@ -704,6 +721,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerAttackDrag: playerAttackDrag ? { ...playerAttackDrag, x, y } : undefined,
     })),
   cancelPlayerAttackDrag: () => set({ playerAttackDrag: undefined }),
+  queueHordeMillPreview: (card) =>
+    set((state) => ({
+      hordeMillAnimationQueue: [
+        ...state.hordeMillAnimationQueue,
+        {
+          id: `horde-mill-preview-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          card,
+          preview: true,
+        },
+      ],
+      hordeMillPreviewCards: state.hordeMillPreviewCards.some((item) => item.instanceId === card.instanceId)
+        ? state.hordeMillPreviewCards
+        : [...state.hordeMillPreviewCards, card],
+    })),
   openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
   closeCardContextMenu: () => set({ cardContextMenu: undefined }),
   completeHordeMillAnimation: (id) =>
@@ -822,12 +853,34 @@ function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMil
     .map((card) => ({
       id: `horde-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       card,
+      preview: false,
     }));
 }
 
 function appendHordeMillAnimations(state: GameStore, previous: GameState, next: GameState): HordeMillAnimationItem[] {
   const milled = hordeMillAnimationsFrom(previous, next);
   return milled.length > 0 ? [...state.hordeMillAnimationQueue, ...milled] : state.hordeMillAnimationQueue;
+}
+
+function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> {
+  const previews: Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> = [];
+  let totalDamage = 0;
+  let previousMill = 0;
+
+  attackers.forEach((attackerId, attackerIndex) => {
+    const attacker = game.player.battlefield.find((card) => card.instanceId === attackerId);
+    if (!attacker) return;
+    totalDamage += getPowerToughness(game, attacker).power;
+    const nextMill = Math.floor(totalDamage / 3);
+    const newMill = nextMill - previousMill;
+    previousMill = nextMill;
+    for (let index = 0; index < newMill; index += 1) {
+      const card = game.horde.library[previews.length];
+      if (card) previews.push({ attackerIndex, cardIndexInHit: index, card });
+    }
+  });
+
+  return previews;
 }
 
 function findBattlefieldCard(game: GameState, id: string) {

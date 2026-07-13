@@ -29,6 +29,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
@@ -119,7 +120,8 @@ export function Battlefield({ game, side, cards }: Props) {
       previousPlayerAttackers.current = currentAttackers;
     }
 
-    if (side === "horde") {
+    const currentHordeEntrySignature = cards.map((card) => card.instanceId).join("|");
+    if (side === "horde" && currentHordeEntrySignature !== previousHordeEntrySignature.current) {
       for (const card of cards) {
         if (animatedHordeIds.current.has(card.instanceId)) continue;
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
@@ -155,6 +157,7 @@ export function Battlefield({ game, side, cards }: Props) {
         };
       }
     }
+    if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
 
     const summoningElements = Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']"));
     for (const visual of summoningElements) {
