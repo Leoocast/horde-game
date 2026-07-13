@@ -53,7 +53,7 @@ export function DeckInspector({ deck, onBack }: Props) {
         center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">{deck.label}</div>}
       />
       <div className="grid h-[calc(100vh-56px)] grid-cols-[minmax(0,1fr)_360px] gap-3 overflow-hidden p-3">
-        <section className="old-panel min-h-0 overflow-hidden p-4">
+        <section className="old-panel relative z-0 min-h-0 overflow-hidden p-4">
           <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#8f6a36]/60 pb-3">
             <div>
               <p className="old-title text-xs font-bold uppercase tracking-[0.24em]">Deck Inspector</p>
@@ -77,7 +77,7 @@ export function DeckInspector({ deck, onBack }: Props) {
             </div>
           </div>
           <div className="old-scrollbar h-[calc(100%-86px)] overflow-y-auto overflow-x-hidden pr-3">
-            <div className="grid gap-4 pb-8" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
+            <div className="grid gap-4 px-3 pb-8 pt-4" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
               {cards.map((copy) => (
                 <DeckCardTile
                   key={copy.key}
@@ -104,7 +104,10 @@ export function DeckInspector({ deck, onBack }: Props) {
           card={detailsCard}
           fontSize={detailsFontSize}
           setFontSize={setDetailsFontSize}
-          onClose={() => setDetailsCardId(undefined)}
+          onClose={() => {
+            setDetailsCardId(undefined);
+            setFocusedCardId(undefined);
+          }}
           onPrevious={() => setDetailsCardId(cards[(detailsIndex - 1 + cards.length) % cards.length]?.card.id)}
           onNext={() => setDetailsCardId(cards[(detailsIndex + 1) % cards.length]?.card.id)}
         />
@@ -145,7 +148,7 @@ function DeckCardTile({
     >
       <div className="relative mx-auto w-full" style={{ maxWidth: cardWidth }}>
         {quantity > 1 && (
-          <span className="old-title pointer-events-none absolute -right-3 -top-3 z-20 rounded-full border-2 border-[#ffe2a0] bg-[#4a210b] px-2.5 py-1 text-sm font-black text-[#fff0b2] shadow-[0_0_14px_rgba(255,181,72,0.55),0_8px_16px_rgba(0,0,0,0.65)]">
+          <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
             x{quantity}
           </span>
         )}
@@ -173,7 +176,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const hasText = text.length > 0;
 
   return (
-    <aside className="old-panel flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
+    <aside className="old-panel relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
       <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
         <div>
           <h2 className="old-title text-lg font-bold leading-tight">{card.name}</h2>
@@ -193,7 +196,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         ) : (
           <MissingCardArt card={card} />
         )}
-        <div className="flex items-center justify-between gap-2">
+        <div className="relative z-[120] flex items-center justify-between gap-2 overflow-visible">
           {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
           {stats(card) && <span className="preview-stat-pill ml-auto">{stats(card)}</span>}
         </div>

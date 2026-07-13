@@ -755,6 +755,29 @@
     color: #18201f;
   }
 
+  .deck-quantity-badge {
+    display: inline-flex;
+    min-width: 2.6rem;
+    height: 1.35rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #6b4222;
+    border-radius: 999px;
+    background: linear-gradient(to bottom, #f1d5a2, #b8844c 52%, #6f4322);
+    padding: 0 0.55rem;
+    color: #211207;
+    font-size: 0.82rem;
+    font-weight: 950;
+    line-height: 1;
+    text-shadow: 0 1px 0 rgb(255 239 199 / 0.45);
+    user-select: none;
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.55),
+      inset 0 -1px 1px rgb(0 0 0 / 0.35),
+      0 1px 2px rgb(0 0 0 / 0.65),
+      0 0 10px rgb(184 137 69 / 0.35);
+  }
+
   .toxic-keyword-badge {
     display: inline-flex;
     width: 1rem;
