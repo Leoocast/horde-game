@@ -82,6 +82,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
 }
 
 function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewDeckCard): string {
+  if (lookup.lookupUrl) return lookup.lookupUrl;
   const exact = lookup.exact ?? card.scryfall?.lookupQuery ?? card.name;
   if (lookup.set) {
     return `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${exact}" set:${lookup.set}`)}`;

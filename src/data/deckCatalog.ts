@@ -1,6 +1,9 @@
 import type { Color } from "../engine/GameTypes";
+import type { DeckList } from "../engine/GameTypes";
+import hordeDeckRaw from "./horde-zombies.json";
 import monoGreenRampRaw from "./decks/mono_green_ramp/mono_green_ramp.json";
 import monoGreenRampImagesRaw from "./decks/mono_green_ramp/mono_green_ramp_images.json";
+import cardImageLookupsRaw from "../../cardImageLookups.json";
 
 export type NewDeckCard = {
   id: string;
@@ -62,6 +65,7 @@ export type DeckImageManifest = {
       set?: string;
       collectorNumber?: string;
       imageUrl?: string;
+      lookupUrl?: string;
       imagePath?: string;
       fallbackImagePath?: string;
     }
@@ -75,7 +79,7 @@ export type InspectableDeck = {
   images: DeckImageManifest;
 };
 
-export const inspectableDecks: InspectableDeck[] = [
+export const playerInspectableDecks: InspectableDeck[] = [
   {
     id: "mono_green_ramp",
     label: "Mono-Green Ramp 40",
@@ -84,6 +88,63 @@ export const inspectableDecks: InspectableDeck[] = [
   },
 ];
 
+export const hordeInspectableDecks: InspectableDeck[] = [
+  {
+    id: "horde_zombies",
+    label: "Zombie Horde 50",
+    deck: hordeDeckToInspectable(hordeDeckRaw as DeckList),
+    images: hordeImageManifest(),
+  },
+];
+
+export const inspectableDecks: InspectableDeck[] = [
+  ...playerInspectableDecks,
+  ...hordeInspectableDecks,
+];
+
 export function findInspectableDeck(id: string): InspectableDeck {
   return inspectableDecks.find((deck) => deck.id === id) ?? inspectableDecks[0];
+}
+
+function hordeDeckToInspectable(deck: DeckList): NewDeckList {
+  return {
+    schemaVersion: "legacy-horde-adapter",
+    id: deck.id,
+    name: deck.name,
+    side: "horde",
+    deckSize: deck.deckSize,
+    cards: deck.cards.map((card) => ({
+      ...card,
+      power: typeof card.power === "number" ? card.power : null,
+      toughness: typeof card.toughness === "number" ? card.toughness : null,
+      abilities: [],
+    })),
+  };
+}
+
+function hordeImageManifest(): DeckImageManifest {
+  const raw = cardImageLookupsRaw as {
+    hordeZombieDeck?: Array<{
+      id: string;
+      name: string;
+      lookup_url: string;
+      image_path: string;
+    }>;
+  };
+  return {
+    schemaVersion: "legacy-horde-image-adapter",
+    provider: "scryfall",
+    cards: Object.fromEntries(
+      (raw.hordeZombieDeck ?? []).map((entry) => [
+        entry.id,
+        {
+          source: "legacyLookupUrl",
+          exact: entry.name,
+          lookupUrl: entry.lookup_url,
+          imagePath: entry.image_path,
+          fallbackImagePath: "image_uris.large",
+        },
+      ]),
+    ),
+  };
 }

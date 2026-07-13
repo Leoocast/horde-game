@@ -13,6 +13,10 @@ type Props = {
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
   onViewDeck: () => void;
+  hordeDecks: InspectableDeck[];
+  selectedHordeDeckId: string;
+  onSelectHordeDeck: (deckId: string) => void;
+  onViewHordeDeck: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -22,16 +26,18 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
   { id: "hard", label: "Hard", setupTurns: 3, description: "3 extra setup turns" },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(false);
   const [deckOpen, setDeckOpen] = useState(false);
+  const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
+  const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
 
   async function copySeed() {
@@ -108,7 +114,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, onS
         </label>
 
         <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
-          Deck
+          Player Deck
         </label>
         <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
           <div className="relative min-w-0">
@@ -152,6 +158,55 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, onS
             )}
           </div>
           <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewDeck}>
+            View
+          </button>
+        </div>
+
+        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="horde-deck">
+          Horde Deck
+        </label>
+        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+          <div className="relative min-w-0">
+            {hordeDeckOpen && <button aria-label="Close horde deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setHordeDeckOpen(false)} />}
+            <button
+              id="horde-deck"
+              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
+              onClick={() => setHordeDeckOpen((value) => !value)}
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={hordeDeckOpen}
+            >
+              <span className="truncate">{selectedHordeDeck?.label ?? "Select horde deck"}</span>
+              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${hordeDeckOpen ? "rotate-180" : ""}`} size={18} />
+            </button>
+            {hordeDeckOpen && (
+              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="horde-deck">
+                {hordeDecks.map((deck) => {
+                  const selected = deck.id === selectedHordeDeckId;
+                  return (
+                    <button
+                      key={deck.id}
+                      className={[
+                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
+                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
+                      ].join(" ")}
+                      onClick={() => {
+                        onSelectHordeDeck(deck.id);
+                        setHordeDeckOpen(false);
+                      }}
+                      role="option"
+                      aria-selected={selected}
+                      type="button"
+                    >
+                      <span className="block truncate">{deck.label}</span>
+                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewHordeDeck}>
             View
           </button>
         </div>
