@@ -112,14 +112,15 @@ function GraveyardDetailsModal({
   onPrevious?: () => void;
   onNext?: () => void;
 }) {
-  const details = useCardDetails(card.definitionId);
-  const keywords = cardKeywords(game, card);
-  const stats = cardStats(game, card);
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
+  const displayCard = graveyardDisplayCard(card);
+  const details = useCardDetails(displayCard.definitionId);
+  const keywords = cardKeywords(game, displayCard);
+  const stats = cardStats(game, displayCard);
+  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(displayCard));
 
   return (
     <CardDetailsModal
-      card={card}
+      card={displayCard}
       imageUrl={details.imageUrl}
       keywords={keywords}
       stats={stats}
@@ -133,4 +134,19 @@ function GraveyardDetailsModal({
       nextLabel="Next graveyard card"
     />
   );
+}
+
+function graveyardDisplayCard(card: CardInstance): CardInstance {
+  return {
+    ...card,
+    tapped: false,
+    summoningSickness: false,
+    activatedThisTurn: false,
+    damageMarked: 0,
+    deathtouchDamage: false,
+    counters: {},
+    temporaryPower: 0,
+    temporaryToughness: 0,
+    temporaryKeywords: [],
+  };
 }

@@ -33,17 +33,11 @@ export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined
 
 async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest): Promise<DeckCardDetails | null> {
   const cacheId = `${deckId}:${card.id}`;
-  const cached = readCachedDetails(cacheId);
-  if (cached !== undefined) return cached;
-
   const lookup = manifest.cards[card.id];
   if (!lookup) {
     writeCachedDetails(cacheId, null);
     return null;
   }
-
-  const existing = pending.get(cacheId);
-  if (existing) return existing;
 
   if (lookup.imageUrl) {
     const direct = { imageUrl: lookup.imageUrl };
@@ -51,12 +45,19 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
     return direct;
   }
 
+  const cached = readCachedDetails(cacheId);
+  if (cached !== undefined) return cached;
+
+  const existing = pending.get(cacheId);
+  if (existing) return existing;
+
   const request = fetch(buildScryfallUrl(lookup, card), { headers: { Accept: "application/json" } })
     .then((response) => (response.ok ? response.json() : undefined))
     .then((payload) => {
       const cardPayload = readSearchResult(payload) ?? payload;
       const details: DeckCardDetails = {
         imageUrl:
+          readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.fallbackImagePath ?? card.scryfall?.fallbackImagePath ?? "image_uris.large") ??
           readPath(cardPayload, "image_uris.normal") ??
@@ -130,7 +131,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v2:${cacheId}`;
+  return `horde-deck-card-details:v3:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

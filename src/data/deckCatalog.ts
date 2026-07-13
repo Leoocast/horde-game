@@ -135,16 +135,23 @@ function hordeImageManifest(): DeckImageManifest {
     schemaVersion: "legacy-horde-image-adapter",
     provider: "scryfall",
     cards: Object.fromEntries(
-      (raw.hordeZombieDeck ?? []).map((entry) => [
-        entry.id,
-        {
+      (raw.hordeZombieDeck ?? []).map((entry) => {
+        const directImageUrl =
+          entry.id === "zombie_token"
+            ? "https://cards.scryfall.io/normal/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525"
+            : undefined;
+        return [
+          entry.id,
+          {
           source: "legacyLookupUrl",
           exact: entry.name,
+          imageUrl: directImageUrl,
           lookupUrl: entry.lookup_url,
           imagePath: entry.image_path,
           fallbackImagePath: "image_uris.large",
-        },
-      ]),
+          },
+        ];
+      }),
     ),
   };
 }
