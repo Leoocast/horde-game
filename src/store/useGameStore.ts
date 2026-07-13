@@ -96,11 +96,13 @@ const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
 const AUTO_PAID_LAND_FLASH_MS = 900;
 const BUFF_ANIMATION_MS = 1120;
+const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 let autoPaidLandFlashTimer: number | undefined;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
+let summoningAnimationSafetyTimer: number | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -417,6 +419,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
+      if (playSucceeded) scheduleSummoningAnimationSafetyClear();
       return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
     }),
   castCard: (id, options) =>
@@ -455,6 +458,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }, AUTO_PAID_LAND_FLASH_MS);
       }
       const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
+      const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery"));
+      if (startsSummoningAnimation) scheduleSummoningAnimationSafetyClear();
       if (manualTriggeredCard) {
         window.setTimeout(() => {
           const latest = useGameStore.getState().game;
@@ -483,7 +488,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         autoPaidLandAnimation,
         buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
         buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
-        summoningAnimationCount: castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery") ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
+        summoningAnimationCount: startsSummoningAnimation ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
         pendingTriggeredEffectCount: hasManualEnterTargetTrigger(card) && castSucceeded ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
       };
     }),
@@ -670,6 +675,14 @@ function showActionToast(message?: string) {
     message,
     tone: "warning",
   });
+}
+
+function scheduleSummoningAnimationSafetyClear(): void {
+  if (summoningAnimationSafetyTimer) window.clearTimeout(summoningAnimationSafetyTimer);
+  summoningAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.setState({ summoningAnimationCount: 0 });
+    summoningAnimationSafetyTimer = undefined;
+  }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 
 function notifyDiscardEffects(previous: GameState, next: GameState): void {
