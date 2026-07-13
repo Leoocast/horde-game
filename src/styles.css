@@ -234,7 +234,7 @@
     border: 1px solid var(--phase-border);
     border-radius: 7px;
     background:
-      linear-gradient(180deg, transparent 0 22%, rgb(226 176 77 / 0.72) 22% 24%, transparent 24% 31%, var(--phase-carpet) 31% 69%, transparent 69% 76%, rgb(226 176 77 / 0.72) 76% 78%, transparent 78% 100%),
+      linear-gradient(180deg, transparent 0 20%, rgb(255 211 112 / 0.8) 20% 23%, transparent 23% 30%, var(--phase-carpet) 30% 70%, transparent 70% 77%, rgb(255 211 112 / 0.8) 77% 80%, transparent 80% 100%),
       linear-gradient(90deg, transparent 0%, var(--phase-wing) 16%, var(--phase-core) 48%, var(--phase-core) 52%, var(--phase-wing) 84%, transparent 100%),
       repeating-linear-gradient(0deg, rgb(255 255 255 / 0.09) 0 1px, transparent 1px 7px),
       linear-gradient(180deg, rgb(255 255 255 / 0.15), rgb(0 0 0 / 0.42) 46%, rgb(0 0 0 / 0.68));
@@ -256,10 +256,10 @@
     opacity: 0.9;
     background:
       linear-gradient(90deg, transparent, rgb(255 224 137 / 0.16) 20%, transparent 33%, transparent 67%, rgb(255 224 137 / 0.16) 80%, transparent),
-      linear-gradient(180deg, transparent 0 29%, rgb(255 238 177 / 0.15) 29% 31%, transparent 31% 69%, rgb(0 0 0 / 0.24) 69% 71%, transparent 71%);
+      linear-gradient(180deg, transparent 0 29%, rgb(255 238 177 / 0.16) 29% 31%, transparent 31% 100%);
     box-shadow:
       0 -5px 10px rgb(255 210 100 / 0.1),
-      0 5px 10px rgb(0 0 0 / 0.32);
+      0 5px 10px rgb(255 210 100 / 0.08);
   }
 
   .phase-banner::after {
@@ -318,7 +318,7 @@
     --phase-core: rgb(67 91 43 / 0.78);
     --phase-wing: rgb(48 35 19 / 0.62);
     --phase-line: rgb(235 214 126 / 0.85);
-    --phase-carpet: rgb(71 148 54 / 0.42);
+    --phase-carpet: rgb(60 181 59 / 0.78);
     --phase-text: #fff1a6;
     --phase-glow: rgb(190 255 111 / 0.84);
     --phase-glow-soft: rgb(233 184 70 / 0.42);
@@ -329,7 +329,7 @@
     --phase-core: rgb(113 30 17 / 0.82);
     --phase-wing: rgb(52 21 12 / 0.66);
     --phase-line: rgb(255 188 93 / 0.9);
-    --phase-carpet: rgb(188 42 27 / 0.44);
+    --phase-carpet: rgb(219 45 31 / 0.8);
     --phase-text: #ffe0a3;
     --phase-glow: rgb(255 91 40 / 0.9);
     --phase-glow-soft: rgb(255 120 38 / 0.52);
@@ -340,7 +340,7 @@
     --phase-core: rgb(22 72 122 / 0.82);
     --phase-wing: rgb(16 29 48 / 0.66);
     --phase-line: rgb(185 226 255 / 0.9);
-    --phase-carpet: rgb(45 126 221 / 0.42);
+    --phase-carpet: rgb(50 146 255 / 0.8);
     --phase-text: #ddecff;
     --phase-glow: rgb(87 181 255 / 0.92);
     --phase-glow-soft: rgb(45 135 255 / 0.5);
@@ -351,7 +351,7 @@
     --phase-core: rgb(106 49 19 / 0.84);
     --phase-wing: rgb(40 19 10 / 0.7);
     --phase-line: rgb(255 184 89 / 0.9);
-    --phase-carpet: rgb(193 79 25 / 0.42);
+    --phase-carpet: rgb(219 96 25 / 0.78);
     --phase-text: #ffd89a;
     --phase-glow: rgb(255 132 43 / 0.88);
     --phase-glow-soft: rgb(215 79 24 / 0.5);
