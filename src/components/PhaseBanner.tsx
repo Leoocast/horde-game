@@ -9,7 +9,7 @@ type BannerState = {
   tone: BannerTone;
 };
 
-const BANNER_DURATION_MS = 1250;
+const BANNER_DURATION_MS = 1050;
 
 export function PhaseBanner({ game }: { game: GameState }) {
   const phase = useMemo(() => getBannerState(game), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner]);
@@ -30,6 +30,7 @@ export function PhaseBanner({ game }: { game: GameState }) {
   return (
     <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[78] flex items-center justify-center">
       <div className={["phase-banner", `phase-banner-${visiblePhase.tone}`].join(" ")} key={visiblePhase.key}>
+        <span className="phase-banner-edge-frame" />
         <span className="phase-banner-edge phase-banner-edge-left" />
         <span className="phase-banner-text">{visiblePhase.label}</span>
         <span className="phase-banner-edge phase-banner-edge-right" />
