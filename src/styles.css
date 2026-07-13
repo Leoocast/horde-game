@@ -694,9 +694,9 @@
     background:
       linear-gradient(180deg, rgb(46 28 13 / 0.98), rgb(18 11 7 / 0.98)),
       radial-gradient(circle at 50% 0%, rgb(255 207 116 / 0.16), transparent 58%);
-    padding: 0.5rem 0.65rem;
+    padding: 0.58rem 0.72rem;
     color: #f6e6b8;
-    font-size: 0.72rem;
+    font-size: 0.84rem;
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1.25;
@@ -726,13 +726,13 @@
   .keyword-pill,
   .preview-stat-pill {
     display: inline-flex;
-    min-width: 2.3rem;
-    height: 1.22rem;
+    min-width: 2.6rem;
+    height: 1.42rem;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    padding: 0 0.48rem;
-    font-size: 0.76rem;
+    padding: 0 0.58rem;
+    font-size: 0.88rem;
     font-weight: 950;
     line-height: 1;
     user-select: none;

@@ -56,6 +56,7 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
       target.temporaryToughness += Number(effect.toughness ?? 0);
+      game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until end of turn.`);
     }
     return;
   }
@@ -130,7 +131,16 @@ export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance,
       resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
     }
   }
-  enqueue(game, { type: "CREATURE_ENTERS_BATTLEFIELD", sourceId: card.instanceId, payload: { controller: card.controller } });
+  enqueue(game, {
+    type: "CREATURE_ENTERS_BATTLEFIELD",
+    sourceId: card.instanceId,
+    payload: {
+      controller: card.controller,
+      definitionId: card.definitionId,
+      cardTypes: card.cardTypes,
+      subtypes: card.subtypes,
+    },
+  });
 }
 
 export function dealDamageToCreature(_game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
@@ -229,8 +239,25 @@ function triggerConditionMet(game: GameState, condition: Record<string, unknown>
   if (condition.type === "ANOTHER_CREATURE_YOU_CONTROL_ENTERED") {
     return event.sourceId !== source.instanceId && event.payload?.controller === source.controller;
   }
+  if (condition.type === "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED") {
+    return event.sourceId !== source.instanceId && event.payload?.controller === source.controller && eventObjectMatchesFilters(event, condition.filters as Record<string, unknown> | undefined);
+  }
+  if (condition.type === "EVENT_OBJECT_MATCHES") {
+    const controllerMatches = condition.controller !== "SELF" || event.payload?.controller === source.controller;
+    const sourceMatches = !condition.excludeSource || event.sourceId !== source.instanceId;
+    return controllerMatches && sourceMatches && eventObjectMatchesFilters(event, condition.filters as Record<string, unknown> | undefined);
+  }
   if (condition.type === "CONTROL_ANOTHER_PERMANENT_MATCHING") {
     return game[source.controller].battlefield.some((card) => card.instanceId !== source.instanceId && card.subtypes.includes("Elf"));
   }
   return true;
+}
+
+function eventObjectMatchesFilters(event: EventItem, filters?: Record<string, unknown>): boolean {
+  if (!filters) return true;
+  const cardTypes = Array.isArray(filters.cardTypes) ? filters.cardTypes.map(String) : [];
+  const subtypes = Array.isArray(filters.subtypes) ? filters.subtypes.map(String) : [];
+  const eventCardTypes = Array.isArray(event.payload?.cardTypes) ? event.payload.cardTypes.map(String) : [];
+  const eventSubtypes = Array.isArray(event.payload?.subtypes) ? event.payload.subtypes.map(String) : [];
+  return cardTypes.every((type) => eventCardTypes.includes(type)) && subtypes.every((subtype) => eventSubtypes.includes(subtype));
 }
