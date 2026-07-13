@@ -203,7 +203,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lockCounterTarget: (targetId) =>
     set(({ counterTargeting }) => {
       if (!counterTargeting) return {};
-      useAudioStore.getState().playSfx("playMonster", { volume: 0.72 });
+      useAudioStore.getState().playSfx("playLand", { volume: 0.72 });
       return { counterTargeting: { ...counterTargeting, targetId } };
     }),
   deselectCounterTarget: () =>
@@ -220,6 +220,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       target.counters["+1/+1"] = (target.counters["+1/+1"] ?? 0) + 1;
       next.player.life += 1;
       next.log.unshift(`${target.name} gets a +1/+1 counter. Player gains 1 life.`);
+      useAudioStore.getState().playSfx("buff", { volume: 0.82 });
       if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
       if (lifeBuffAnimationTimer) window.clearTimeout(lifeBuffAnimationTimer);
       buffAnimationTimer = window.setTimeout(() => {
