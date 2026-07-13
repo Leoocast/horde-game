@@ -131,3 +131,12 @@ function log(game: GameState, message: string): GameState {
 export function sortBlockersLeftToRight(game: GameState, blockers: CardInstance[]): CardInstance[] {
   return [...blockers].sort((left, right) => game.player.battlefield.findIndex((card) => card.instanceId === left.instanceId) - game.player.battlefield.findIndex((card) => card.instanceId === right.instanceId));
 }
+
+export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: string[]): string[] {
+  return [...attackerIds].sort((left, right) => battlefieldIndex(game, left) - battlefieldIndex(game, right));
+}
+
+function battlefieldIndex(game: GameState, id: string): number {
+  const index = game.player.battlefield.findIndex((card) => card.instanceId === id);
+  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+}

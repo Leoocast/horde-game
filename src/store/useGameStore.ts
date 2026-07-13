@@ -4,7 +4,7 @@ import type { AbilityOptions, CastOptions, GameState, Phase } from "../engine/Ga
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
-import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
+import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersLeftToRight, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -350,7 +350,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { game, playerAttackAnimation } = get();
     if (playerAttackAnimation) return;
 
-    const attackers = [...game.combat.playerAttackers];
+    const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
     if (attackers.length === 0) {
       set({ game: endPlayerTurn(resolvePlayerCombat(game)), selectedPlayerCreatureId: undefined });
       return;
