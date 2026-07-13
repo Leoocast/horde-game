@@ -25,7 +25,9 @@ export function CombatArrows({ game }: { game: GameState }) {
   const [exitingArrows, setExitingArrows] = useState<Arrow[]>([]);
   const exitTimers = useRef<Map<string, number>>(new Map());
   const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
+  const [hiddenPlayerAttackArrowIds, setHiddenPlayerAttackArrowIds] = useState<Set<string>>(() => new Set());
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+  const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const blockDrag = useGameStore((state) => state.blockDrag);
   const playerAttackDrag = useGameStore((state) => state.playerAttackDrag);
   const renderedArrows = useMemo(() => {
@@ -45,6 +47,17 @@ export function CombatArrows({ game }: { game: GameState }) {
       setHiddenArrowIds(new Set());
     }
   }, [game.combat.blockers]);
+
+  useEffect(() => {
+    if (game.combat.playerAttackers.length === 0) {
+      setHiddenPlayerAttackArrowIds(new Set());
+    }
+  }, [game.combat.playerAttackers]);
+
+  useEffect(() => {
+    if (!playerAttackAnimation) return;
+    hideArrowIds(new Set([`player-attack-${playerAttackAnimation.attackerId}`]), setHiddenPlayerAttackArrowIds);
+  }, [playerAttackAnimation]);
 
   useEffect(() => {
     if (!hordeAttackAnimation) return;
@@ -102,11 +115,13 @@ export function CombatArrows({ game }: { game: GameState }) {
       const playerAttackTarget = getPlayerAttackTargetPoint();
       if (playerAttackTarget) {
         for (const attackerId of game.combat.playerAttackers) {
+          const arrowId = `player-attack-${attackerId}`;
+          if (hiddenPlayerAttackArrowIds.has(arrowId)) continue;
           const attacker = document.querySelector<HTMLElement>(`[data-card-id="${attackerId}"]`);
           if (!attacker) continue;
           const attackerRect = attacker.getBoundingClientRect();
           const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.18 };
-          next.push(makeArrow(`player-attack-${attackerId}`, start, playerAttackTarget, PLAYER_ATTACK_ARROW_COLOR));
+          next.push(makeArrow(arrowId, start, playerAttackTarget, PLAYER_ATTACK_ARROW_COLOR));
         }
       }
       if (playerAttackDrag) {
@@ -138,7 +153,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule, true);
     };
-  }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, blockDrag, playerAttackDrag]);
+  }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">

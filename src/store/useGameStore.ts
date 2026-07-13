@@ -53,6 +53,7 @@ type GameStore = {
   toggleTap: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
+  cancelPlayerAttackers: () => void;
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
@@ -332,6 +333,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const changed = wasAttacking !== next.combat.playerAttackers.includes(id);
       if (changed) useAudioStore.getState().playSfx("playLand");
       return { game: next };
+    }),
+  cancelPlayerAttackers: () =>
+    set(({ game }) => {
+      const next = structuredClone(game) as GameState;
+      const attackers = new Set(next.combat.playerAttackers);
+      for (const card of next.player.battlefield) {
+        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "VIGILANCE")) card.tapped = false;
+      }
+      next.combat.playerAttackers = [];
+      next.log.unshift("Player cancels attackers.");
+      return { game: next, selectedPlayerCreatureId: undefined, playerAttackDrag: undefined };
     }),
   resolvePlayerCombat: () => set(({ game }) => ({ game: resolvePlayerCombat(game) })),
   finishPlayerCombat: () => {

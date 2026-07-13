@@ -20,11 +20,13 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const resolveHordeCombat = useGameStore((state) => state.resolveHordeCombat);
   const finishHordeTurn = useGameStore((state) => state.finishHordeTurn);
   const cancelBlocks = useGameStore((state) => state.cancelBlocks);
+  const cancelPlayerAttackers = useGameStore((state) => state.cancelPlayerAttackers);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
+  const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const finishSetupAndRunHorde = () => {
     endPlayerTurn();
     useGameStore.getState().runHordeMain();
@@ -93,6 +95,18 @@ export function PhaseOrb({ game }: { game: GameState }) {
           disabled={Boolean(game.winner) || attackAnimating}
           className="fixed right-12 top-[calc(35.5%+5rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-16"
           title="Cancel blocks"
+        >
+          <X size={18} />
+          Cancel
+        </button>
+      )}
+      {showCancelAttack && (
+        <button
+          data-audio-click="valid"
+          onClick={cancelPlayerAttackers}
+          disabled={Boolean(game.winner) || attackAnimating}
+          className="fixed right-12 top-[calc(35.5%+5rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[9px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12] xl:right-16"
+          title="Cancel attackers"
         >
           <X size={18} />
           Cancel
