@@ -17,10 +17,10 @@
       "exact": "Sunshower Druid",
       "set": "blb"
     },
-    "rootrider_faun": {
+    "druid_of_the_cowl": {
       "source": "scryfallNamed",
-      "exact": "Rootrider Faun",
-      "set": "woe"
+      "exact": "Druid of the Cowl",
+      "set": "m19"
     },
     "ichorspit_basilisk": {
       "source": "scryfallNamed",

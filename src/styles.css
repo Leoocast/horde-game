@@ -547,14 +547,14 @@
   }
 
   .effect-card-lifted {
-    z-index: 55;
+    z-index: 96;
     transform: translate(-76px, -36px) scale(1.42);
     filter: drop-shadow(22px 26px 26px rgb(0 0 0 / 0.64)) brightness(1.12);
     animation: effect-card-lift-in 170ms ease-out both;
   }
 
   .effect-card-closing {
-    z-index: 55;
+    z-index: 96;
     animation: effect-card-lift-out 170ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
@@ -566,7 +566,7 @@
   .effect-focus-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 42;
+    z-index: 84;
     background:
       radial-gradient(circle at 50% 48%, rgb(0 0 0 / 0.22), rgb(0 0 0 / 0.64) 72%),
       rgb(0 0 0 / 0.34);
@@ -582,7 +582,7 @@
     position: absolute;
     left: calc(100% + 0.5rem);
     top: 42%;
-    z-index: 50;
+    z-index: 98;
     min-width: 6.5rem;
     transform: translateY(-50%);
     border-radius: 0.65rem;

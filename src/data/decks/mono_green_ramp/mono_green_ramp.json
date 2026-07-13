@@ -136,12 +136,12 @@
       }
     },
     {
-      "id": "rootrider_faun",
-      "name": "Rootrider Faun",
-      "displayNameEs": "Fauna trotarraíces",
+      "id": "druid_of_the_cowl",
+      "name": "Druid of the Cowl",
+      "displayNameEs": "Druid of the Cowl",
       "quantity": 2,
-      "setCode": "WOE",
-      "collectorNumber": "182",
+      "setCode": "M19",
+      "collectorNumber": "177",
       "manaCost": "{1}{G}",
       "manaValue": 2,
       "colors": [
@@ -154,15 +154,15 @@
         "Creature"
       ],
       "subtypes": [
-        "Satyr",
-        "Scout"
+        "Elf",
+        "Druid"
       ],
       "power": 1,
       "toughness": 3,
       "keywords": [],
       "abilities": [
         {
-          "id": "rootrider_faun_add_green",
+          "id": "druid_of_the_cowl_add_green",
           "kind": "ACTIVATED",
           "zone": "BATTLEFIELD",
           "speed": "INSTANT",
@@ -180,46 +180,11 @@
               }
             }
           ]
-        },
-        {
-          "id": "rootrider_faun_add_any_color",
-          "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{1}",
-            "tap": true
-          },
-          "targets": [],
-          "conditions": [],
-          "effects": [
-            {
-              "type": "CHOOSE",
-              "player": "SELF",
-              "choiceId": "chosenManaColor",
-              "options": [
-                "W",
-                "U",
-                "B",
-                "R",
-                "G"
-              ]
-            },
-            {
-              "type": "ADD_MANA",
-              "player": "SELF",
-              "mana": {
-                "type": "CHOICE_REFERENCE",
-                "choiceId": "chosenManaColor",
-                "amount": 1
-              }
-            }
-          ]
         }
       ],
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Rootrider Faun",
+        "lookupQuery": "Druid of the Cowl",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }

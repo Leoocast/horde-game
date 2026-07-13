@@ -3,7 +3,7 @@ import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 
 const DEVELOPER_SEED = "developer";
-const DEVELOPER_OPENING_HAND = ["llanowar_elves", "sunshower_druid", "rootrider_faun", "ichorspit_basilisk", "forest", "forest"];
+const DEVELOPER_OPENING_HAND = ["llanowar_elves", "sunshower_druid", "druid_of_the_cowl", "ichorspit_basilisk", "forest", "forest"];
 
 export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "horde-seed", setupTurns = 5): GameState {
   const playerCards = expandDeck(playerDeck, "player");
