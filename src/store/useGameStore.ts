@@ -363,7 +363,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lifeBuffAnimationId: next.player.life > previousLife ? Date.now() : get().lifeBuffAnimationId,
       };
     }),
-  startSpellTargeting: (handId, x, y) => set({ spellTargeting: { handId, stepIndex: 0, targets: {}, x, y }, selectedHandId: handId, focusedCardId: handId, activeEffectCardId: undefined, cardContextMenu: undefined }),
+  startSpellTargeting: (handId, x, y) =>
+    set({
+      spellTargeting: { handId, stepIndex: 0, targets: {}, x, y },
+      selectedHandId: handId,
+      focusedCardId: undefined,
+      hoveredCardId: undefined,
+      activeEffectCardId: undefined,
+      cardContextMenu: undefined,
+    }),
   updateSpellTargetPointer: (x, y) =>
     set(({ spellTargeting }) => ({
       spellTargeting: spellTargeting ? { ...spellTargeting, x, y } : undefined,
