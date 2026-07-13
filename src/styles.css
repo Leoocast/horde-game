@@ -257,7 +257,7 @@
 
   .buff-rise-lines::after {
     inset: 0 3% -24%;
-    opacity: 0.74;
+    opacity: 0.82;
     background:
       linear-gradient(180deg, transparent, var(--buff-line-color-soft), transparent) 15% 22% / 2px 18px no-repeat,
       linear-gradient(180deg, transparent, var(--buff-line-color), transparent) 31% 84% / 2px 24px no-repeat,
@@ -269,9 +269,9 @@
   }
 
   .buff-rise-lines-blue {
-    --buff-line-color: rgb(117 226 255 / 0.92);
-    --buff-line-color-soft: rgb(102 216 255 / 0.58);
-    --buff-glow-color: rgb(62 199 255 / 0.88);
+    --buff-line-color: rgb(117 226 255 / 1);
+    --buff-line-color-soft: rgb(102 216 255 / 0.68);
+    --buff-glow-color: rgb(62 199 255 / 0.95);
   }
 
   .buff-rise-lines-green {
