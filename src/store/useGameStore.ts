@@ -25,7 +25,8 @@ type GameStore = {
   playerAttackDrag?: PlayerAttackDragState;
   cardContextMenu?: CardContextMenuState;
   counterTargeting?: CounterTargetingState;
-  buffAnimationCardId?: string;
+  buffAnimationCardIds: string[];
+  buffAnimationEventId?: number;
   lifeBuffAnimationId?: number;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
@@ -166,7 +167,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAttackDrag: undefined,
   cardContextMenu: undefined,
   counterTargeting: undefined,
-  buffAnimationCardId: undefined,
+  buffAnimationCardIds: [],
+  buffAnimationEventId: undefined,
   lifeBuffAnimationId: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
@@ -197,7 +199,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAttackDrag: undefined,
         cardContextMenu: undefined,
         counterTargeting: undefined,
-        buffAnimationCardId: undefined,
+        buffAnimationCardIds: [],
+        buffAnimationEventId: undefined,
         lifeBuffAnimationId: undefined,
       };
     }),
@@ -261,7 +264,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
       if (lifeBuffAnimationTimer) window.clearTimeout(lifeBuffAnimationTimer);
       buffAnimationTimer = window.setTimeout(() => {
-        useGameStore.setState({ buffAnimationCardId: undefined });
+        useGameStore.setState({ buffAnimationCardIds: [] });
         buffAnimationTimer = undefined;
       }, BUFF_ANIMATION_MS);
       lifeBuffAnimationTimer = window.setTimeout(() => {
@@ -272,7 +275,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game: next,
         counterTargeting: undefined,
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
-        buffAnimationCardId: target.instanceId,
+        buffAnimationCardIds: [target.instanceId],
+        buffAnimationEventId: Date.now(),
         lifeBuffAnimationId: Date.now(),
       };
     }),
@@ -310,8 +314,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
       const next = castCard(game, id, options);
       const castSucceeded = Boolean(card && !next.player.hand.some((item) => item.instanceId === id));
+      const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(game, next);
       if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
       else if (card && !castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
+      if (triggeredBuffCardIds.length > 0) {
+        useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+        if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
+        buffAnimationTimer = window.setTimeout(() => {
+          useGameStore.setState({ buffAnimationCardIds: [] });
+          buffAnimationTimer = undefined;
+        }, BUFF_ANIMATION_MS);
+      }
       const autoPaidLandIds = castSucceeded
         ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
         : [];
@@ -349,6 +362,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         activeEffectCardId: undefined,
         autoPaidLandAnimation,
+        buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
+        buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
         summoningAnimationCount: castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery") ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
         pendingTriggeredEffectCount: card?.definitionId === "sunshower_druid" && castSucceeded ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
       };
@@ -553,6 +568,22 @@ function notifyDiscardEffects(previous: GameState, next: GameState): void {
 
 function findBattlefieldCard(game: GameState, id: string) {
   return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+}
+
+function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): string[] {
+  const previousStats = new Map(
+    [...previous.player.battlefield, ...previous.horde.battlefield].map((card) => [
+      card.instanceId,
+      { power: card.temporaryPower, toughness: card.temporaryToughness },
+    ]),
+  );
+  return [...next.player.battlefield, ...next.horde.battlefield]
+    .filter((card) => {
+      const before = previousStats.get(card.instanceId);
+      if (!before) return false;
+      return card.temporaryPower > before.power || card.temporaryToughness > before.toughness;
+    })
+    .map((card) => card.instanceId);
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

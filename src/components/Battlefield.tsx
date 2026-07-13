@@ -24,6 +24,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
+  const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
@@ -36,7 +37,8 @@ export function Battlefield({ game, side, cards }: Props) {
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
-  const buffAnimationCardId = useGameStore((state) => state.buffAnimationCardId);
+  const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
+  const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
@@ -77,6 +79,23 @@ export function Battlefield({ game, side, cards }: Props) {
       layer.addEventListener("animationend", () => layer.remove(), { once: true });
     }
   }, [autoPaidLandAnimation]);
+
+  useLayoutEffect(() => {
+    if (!buffAnimationEventId || seenBuffEvents.current.has(buffAnimationEventId)) return;
+    const root = boardRef.current;
+    if (!root) return;
+
+    seenBuffEvents.current.add(buffAnimationEventId);
+    for (const id of buffAnimationCardIds) {
+      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
+      if (!slot) continue;
+      const layer = document.createElement("span");
+      layer.className = "buff-rise-lines buff-rise-lines-blue";
+      layer.setAttribute("aria-hidden", "true");
+      slot.appendChild(layer);
+      window.setTimeout(() => layer.remove(), 1040);
+    }
+  }, [buffAnimationCardIds, buffAnimationEventId]);
 
   useLayoutEffect(() => {
     const root = boardRef.current;
@@ -314,7 +333,6 @@ export function Battlefield({ game, side, cards }: Props) {
     const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
     const counterTargetable = Boolean(counterTargeting && !counterTargeting.targetId && card.cardTypes.includes("Creature"));
     const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
-    const buffAnimating = buffAnimationCardId === card.instanceId;
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
 
     return (
@@ -438,7 +456,6 @@ export function Battlefield({ game, side, cards }: Props) {
           {renderCardText(abilityButtonText(primaryAbility))}
         </button>
       )}
-      {buffAnimating && <span className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
       {counterTargetLocked && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
       </div>
       </motion.div>
