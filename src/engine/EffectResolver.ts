@@ -43,12 +43,20 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     return;
   }
   if (effect.type === "PUT_COUNTER") {
-    if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + Number(effect.amount ?? 1);
       game.log.unshift(`${target.name} gets ${Number(effect.amount ?? 1)} ${String(effect.counterType ?? "+1/+1")} counter(s).`);
       enqueue(game, { type: "COUNTERS_PUT_ON_PERMANENT", sourceId: target.instanceId, payload: { targetId: target.instanceId } });
+    }
+    return;
+  }
+  if (effect.type === "GAIN_LIFE") {
+    const side = effect.player === "OPPONENT" ? (context.side === "player" ? "horde" : "player") : context.side;
+    const amount = Number(effect.amount ?? 1);
+    if (side === "player") {
+      game.player.life += amount;
+      game.log.unshift(`Player gains ${amount} life.`);
     }
     return;
   }
@@ -158,6 +166,7 @@ export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
   for (const source of battlefield) {
     for (const wrapper of source.effects) {
       if (wrapper.type !== "TRIGGERED_ABILITY" || wrapper.trigger !== event.type) continue;
+      if (effectNeedsManualTarget(wrapper.effect)) continue;
       if (!triggerConditionMet(game, wrapper.condition as Record<string, unknown> | undefined, source, event)) continue;
       resolveEffect(game, wrapper.effect as EffectDefinition, { source, side: source.controller });
     }
@@ -263,6 +272,15 @@ function resolveTargetCards(game: GameState, effect: EffectDefinition, context: 
     return game[controller].battlefield.filter((card) => card.cardTypes.includes("Creature"));
   }
   return [];
+}
+
+function effectNeedsManualTarget(effect: unknown): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (typeof data.target === "string" && data.target !== "SELF") return true;
+  if (typeof data.targetRef === "string") return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(effectNeedsManualTarget);
+  return false;
 }
 
 function discardPlayer(game: GameState, amount: number): void {

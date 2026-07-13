@@ -88,7 +88,8 @@ function normalizeTargets(abilities: NewDeckAbility[]) {
 
 function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition | undefined {
   const trigger = normalizeTriggerEvent(String(ability.trigger?.event ?? ""));
-  const effect = normalizeEffect(ability.effects?.[0] as EffectDefinition | undefined);
+  const effects = (ability.effects ?? []).map((effect) => normalizeEffect(effect as EffectDefinition)).filter(Boolean) as EffectDefinition[];
+  const effect = effects.length > 1 ? { type: "SEQUENCE", effects } : effects[0];
   if (!trigger || !effect) return undefined;
   return {
     type: "TRIGGERED_ABILITY",

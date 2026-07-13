@@ -398,42 +398,7 @@
         "REACH",
         "TRAMPLE"
       ],
-      "abilities": [
-        {
-          "id": "timberland_ancient_forestcycling",
-          "kind": "ACTIVATED",
-          "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{2}",
-            "discardSelf": true
-          },
-          "targets": [],
-          "conditions": [],
-          "effects": [
-            {
-              "type": "SEARCH_LIBRARY",
-              "player": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Land"
-                ],
-                "subtypes": [
-                  "Forest"
-                ]
-              },
-              "amount": 1,
-              "reveal": true,
-              "destination": "HAND"
-            },
-            {
-              "type": "SHUFFLE",
-              "player": "SELF"
-            }
-          ],
-          "implementationNote": "Forestcycling {2}. La búsqueda permite cualquier carta con subtipo Forest, no solo tierras básicas."
-        }
-      ],
+      "abilities": [],
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Timberland Ancient",
@@ -828,26 +793,5 @@
       }
     }
   ],
-  "engineSupportNeeded": [
-    {
-      "id": "choice_reference_for_mana",
-      "description": "Permitir que CHOOSE guarde un color y que ADD_MANA consuma ese resultado mediante CHOICE_REFERENCE."
-    },
-    {
-      "id": "toxic_and_poison_counters",
-      "description": "Implementar el customHandler toxic_1 y contadores de veneno sobre jugadores."
-    },
-    {
-      "id": "simultaneous_fight_damage",
-      "description": "Implementar fight_simultaneously para resolver ambos DEAL_DAMAGE como un único evento simultáneo."
-    },
-    {
-      "id": "compound_target_filters",
-      "description": "Soportar filters.anyOf y excludeTargetIds para objetivos con alternativas y restricciones de 'otro objetivo'."
-    },
-    {
-      "id": "discard_self_from_hand_cost",
-      "description": "Soportar discardSelf en costes activados desde HAND para Forestcycling."
-    }
-  ]
+  "engineSupportNeeded": []
 }

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
-import type { AbilityOptions, CastOptions, GameState, Phase } from "../engine/GameTypes";
+import type { AbilityOptions, CastOptions, EffectDefinition, GameState, Phase } from "../engine/GameTypes";
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
@@ -8,7 +8,7 @@ import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlaye
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
-import { destroyMarkedCreatures } from "../engine/EffectResolver";
+import { destroyMarkedCreatures, resolveEffect } from "../engine/EffectResolver";
 import { targetCandidates } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -289,11 +289,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game, counterTargeting }) => {
       if (!counterTargeting?.targetId) return {};
       const next = structuredClone(game) as GameState;
+      const source = findBattlefieldCard(next, counterTargeting.sourceId);
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!target) return { counterTargeting: undefined, pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1) };
-      target.counters["+1/+1"] = (target.counters["+1/+1"] ?? 0) + 1;
-      next.player.life += 1;
-      next.log.unshift(`${target.name} gets a +1/+1 counter. Player gains 1 life.`);
+      if (!source || !target) return { counterTargeting: undefined, pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1) };
+      const previousLife = next.player.life;
+      const manualTrigger = findManualEnterTargetTrigger(source);
+      if (manualTrigger) {
+        resolveEffect(next, manualTrigger.effect as EffectDefinition, {
+          source,
+          side: source.controller,
+          targets: {
+            target: target.instanceId,
+            targetCreature: target.instanceId,
+          },
+        });
+      }
       useAudioStore.getState().playSfx("buff", { volume: 0.82 });
       if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
       if (lifeBuffAnimationTimer) window.clearTimeout(lifeBuffAnimationTimer);
@@ -311,7 +321,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
         buffAnimationCardIds: [target.instanceId],
         buffAnimationEventId: Date.now(),
-        lifeBuffAnimationId: Date.now(),
+        lifeBuffAnimationId: next.player.life > previousLife ? Date.now() : get().lifeBuffAnimationId,
       };
     }),
   startSpellTargeting: (handId, x, y) => set({ spellTargeting: { handId, stepIndex: 0, targets: {}, x, y }, selectedHandId: handId, focusedCardId: handId, activeEffectCardId: undefined, cardContextMenu: undefined }),
@@ -822,19 +832,22 @@ function isDestroyEffect(effect: unknown): boolean {
 }
 
 function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
-  return Boolean(
-    card?.effects.some(
-      (effect) =>
-        effect.type === "TRIGGERED_ABILITY" &&
-        effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
-        effectNeedsManualTarget(effect.effect),
-    ),
+  return Boolean(card && findManualEnterTargetTrigger(card));
+}
+
+function findManualEnterTargetTrigger(card: GameState["player"]["hand"][number] | GameState["player"]["battlefield"][number] | undefined): EffectDefinition | undefined {
+  return card?.effects.find(
+    (effect) =>
+      effect.type === "TRIGGERED_ABILITY" &&
+      effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
+      effectNeedsManualTarget(effect.effect),
   );
 }
 
 function effectNeedsManualTarget(effect: unknown): boolean {
   if (!effect || typeof effect !== "object") return false;
   const data = effect as Record<string, unknown>;
+  if (typeof data.target === "string" && data.target !== "SELF") return true;
   if (typeof data.targetRef === "string") return true;
   if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(effectNeedsManualTarget);
   return false;
