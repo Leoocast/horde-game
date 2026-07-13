@@ -3,6 +3,7 @@ import { useState } from "react";
 import { addMana, canPay, parseManaCost } from "../engine/ManaSystem";
 import type { CardInstance } from "../engine/GameTypes";
 import type { GameState } from "../engine/GameTypes";
+import { canAttack, hasKeyword } from "../engine/Keywords";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 
@@ -21,12 +22,16 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const finishHordeTurn = useGameStore((state) => state.finishHordeTurn);
   const cancelBlocks = useGameStore((state) => state.cancelBlocks);
   const cancelPlayerAttackers = useGameStore((state) => state.cancelPlayerAttackers);
+  const attackAll = useGameStore((state) => state.attackAll);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating;
+  const defendBlockedReason = getDefendBlockedReason(game);
+  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(defendBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
+  const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
   const finishSetupAndRunHorde = () => {
     endPlayerTurn();
     useGameStore.getState().runHordeMain();
@@ -66,7 +71,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <button
         data-audio-click="off"
         onClick={runOrbAction}
-        disabled={Boolean(game.winner) || attackAnimating}
+        disabled={orbDisabled}
         className={[
           "fixed right-6 top-1/2 z-[80] flex h-28 w-28 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-10",
           state.tone === "confirm"
@@ -79,7 +84,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
               ? "border-[#b88945] bg-[#2c2115] shadow-[inset_0_2px_0_rgba(255,231,173,0.22),0_0_24px_rgba(0,0,0,0.45)] hover:bg-[#3d2b18]"
             : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
         ].join(" ")}
-        title={state.label}
+        title={defendBlockedReason ?? state.label}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/55" />
         <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
@@ -98,6 +103,18 @@ export function PhaseOrb({ game }: { game: GameState }) {
         >
           <X size={18} />
           Cancel
+        </button>
+      )}
+      {showAttackAll && (
+        <button
+          data-audio-click="valid"
+          onClick={attackAll}
+          disabled={Boolean(game.winner) || attackAnimating}
+          className="fixed right-24 top-[calc(50%+4.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12] xl:right-28"
+          title="Attack with every available creature"
+        >
+          <Swords size={16} />
+          All
         </button>
       )}
       {showCancelAttack && (
@@ -227,4 +244,19 @@ function getStaticLandMana(card: CardInstance): { color: string; amount: number 
   const color = entry?.[0] === "chosenColor" ? card.chosenColor ?? "G" : entry?.[0] ?? "G";
   const amount = entry?.[1] ?? Number(ability.effect.amount ?? 1);
   return { color, amount };
+}
+
+function getDefendBlockedReason(game: GameState): string | undefined {
+  if (game.activeSide !== "horde" || game.combat.hordeAttackers.length === 0) return undefined;
+  for (const attackerId of game.combat.hordeAttackers) {
+    const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
+    if (!attacker || !hasKeyword(game, attacker, "MENACE")) continue;
+    const blockerCount = game.combat.blockers[attackerId]?.length ?? 0;
+    if (blockerCount === 1) return "Menace requires two or more blockers.";
+  }
+  return undefined;
+}
+
+function hasAvailableAttackers(game: GameState): boolean {
+  return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }

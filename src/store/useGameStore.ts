@@ -6,7 +6,7 @@ import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
 import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersLeftToRight, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
-import { hasKeyword } from "../engine/Keywords";
+import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -15,6 +15,7 @@ type GameStore = {
   game: GameState;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
+  resolvingHordeCombat: boolean;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -55,6 +56,7 @@ type GameStore = {
   toggleTap: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
+  attackAll: () => void;
   cancelPlayerAttackers: () => void;
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
@@ -150,6 +152,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
+  resolvingHordeCombat: false,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
   autoPaidLandAnimation: undefined,
@@ -178,6 +181,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
+        resolvingHordeCombat: false,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
         autoPaidLandAnimation: undefined,
@@ -344,6 +348,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (changed) useAudioStore.getState().playSfx("playLand");
       return { game: next };
     }),
+  attackAll: () =>
+    set(({ game }) => {
+      if (game.activeSide !== "player" || game.phase !== "combat") return {};
+      const next = structuredClone(game) as GameState;
+      const selected = new Set(next.combat.playerAttackers);
+      for (const card of next.player.battlefield) {
+        if (!card.cardTypes.includes("Creature") || selected.has(card.instanceId)) continue;
+        if (!canAttack(next, card)) continue;
+        selected.add(card.instanceId);
+        if (!hasKeyword(next, card, "VIGILANCE")) card.tapped = true;
+      }
+      next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
+      next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
+      if (next.combat.playerAttackers.length > game.combat.playerAttackers.length) useAudioStore.getState().playSfx("playLand");
+      return { game: next };
+    }),
   cancelPlayerAttackers: () =>
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
@@ -422,9 +442,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [] });
+      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
       return;
     }
+    set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
 
     attackEvents.forEach((event, index) => {
       const startAt = index * HORDE_ATTACK_ANIMATION_MS;
@@ -453,7 +474,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>

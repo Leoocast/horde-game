@@ -134,7 +134,7 @@ export function CardDetailsModal({
             </button>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            {keywords && <p className="rounded border border-[#4f7d2d] bg-[#15230e]/80 px-3 py-2 text-sm font-bold text-[#aee77b]">{keywords}</p>}
+            {keywords && <KeywordPills keywords={keywords} />}
             {stats && <span className="border border-[#b88945] bg-[#1a1009]/85 px-3 py-2 text-lg font-black text-[#ffe0a0]">{stats}</span>}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="old-title text-base normal-case tracking-normal" title="Font size">
@@ -157,6 +157,36 @@ export function CardDetailsModal({
       </section>
     </div>
   );
+}
+
+function KeywordPills({ keywords }: { keywords: string }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {keywords.split(",").map((keyword) => {
+        const clean = keyword.trim();
+        if (!clean) return null;
+        return (
+          <span key={clean} title={keywordTooltip(clean)} className="rounded border border-[#4f7d2d] bg-[#15230e]/80 px-3 py-2 text-sm font-bold text-[#aee77b]">
+            {clean}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function keywordTooltip(keyword: string): string {
+  const text = keyword.trim();
+  const upper = text.toUpperCase();
+  if (upper === "FLYING") return "Can only be blocked by creatures with flying or reach.";
+  if (upper === "REACH") return "Can block creatures with flying.";
+  if (upper === "VIGILANCE") return "Attacking does not tap this creature.";
+  if (upper === "MENACE") return "This creature can only be blocked by two or more creatures.";
+  if (upper === "DEATHTOUCH") return "Any damage this creature deals to another creature is lethal.";
+  if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
+  if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
+  if (upper.startsWith("TOXIC")) return "When this creature deals combat damage to the Horde, it adds poison counters.";
+  return "Keyword ability.";
 }
 
 function findCard(game: ReturnType<typeof useGameStore.getState>["game"], id: string): CardInstance | undefined {
