@@ -146,6 +146,7 @@ export type HordeState = {
   battlefield: CardInstance[];
   graveyard: CardInstance[];
   exile: CardInstance[];
+  poisonCounters: number;
 };
 
 export type CombatState = {

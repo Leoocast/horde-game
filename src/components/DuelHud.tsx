@@ -1,4 +1,4 @@
-import { Heart, Skull, Swords } from "lucide-react";
+import { Droplet, Heart, Skull, Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -20,6 +20,15 @@ export function DuelHud({ game }: { game: GameState }) {
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#41100b] text-[#ffd59b]">
           <Skull size={20} />
+        </div>
+      </div>
+      <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
+        <div className="text-right">
+          <div className="text-[10px] font-bold uppercase tracking-wide text-[#cfa7ff]">Poison</div>
+          <div className="text-sm font-black text-[#f0d7ff]">{game.horde.poisonCounters}/3</div>
+        </div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8b5cf6] bg-[#251036] text-[#d8b4fe] shadow-[0_0_16px_rgba(168,85,247,0.42)]">
+          <Droplet size={19} fill="currentColor" strokeWidth={2.2} />
         </div>
       </div>
       {game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && (
