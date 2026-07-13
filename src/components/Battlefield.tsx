@@ -226,8 +226,12 @@ export function Battlefield({ game, side, cards }: Props) {
   return (
     <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={cards.length}>
       <div ref={boardRef} className="space-y-3">
-        <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
-        {(side === "player" || others.length > 0) && <ResourceRow lands={side === "player" ? lands : []} others={others} showLands={side === "player"} />}
+        {side === "horde" && others.length > 0 ? (
+          <HordeBattlefieldRow creatures={creatures} others={others} />
+        ) : (
+          <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
+        )}
+        {side === "player" && <ResourceRow lands={lands} others={others} />}
       </div>
     </Zone>
   );
@@ -252,27 +256,58 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function ResourceRow({ lands, others, showLands }: { lands: CardInstance[]; others: CardInstance[]; showLands: boolean }) {
+  function HordeBattlefieldRow({ creatures: rowCreatures, others: rowOthers }: { creatures: CardInstance[]; others: CardInstance[] }) {
+    return (
+      <div data-battlefield-drop-target="player-attack" className="old-panel-soft relative p-1.5">
+        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
+          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Creatures</h3>
+          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
+        </div>
+        {rowCreatures.length === 0 ? (
+          <div className="battlefield-empty">Empty</div>
+        ) : (
+          <div className="battlefield-row-body flex flex-wrap items-center justify-center gap-2">
+            <AnimatePresence initial={false} mode="popLayout">
+              {rowCreatures.map((card) => renderCard(card))}
+            </AnimatePresence>
+          </div>
+        )}
+        <div className="absolute left-1.5 top-6 z-20">
+          <div className="old-panel-soft w-max p-1">
+            <div className="mb-1 flex h-4 items-center justify-between gap-4 leading-none">
+              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
+              <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <AnimatePresence initial={false} mode="popLayout">
+                {rowOthers.map((card) => renderCard(card, true, "other"))}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function ResourceRow({ lands, others }: { lands: CardInstance[]; others: CardInstance[] }) {
     return (
       <div className="old-panel-soft p-1.5">
-        <div className={showLands ? "grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]" : ""}>
-          {showLands && (
-            <div>
-              <div className="mb-1 flex h-4 items-center justify-between leading-none">
-                <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
-                <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
-              </div>
-              {lands.length === 0 ? (
-                <div className="battlefield-empty-compact">Empty</div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {lands.map((card) => renderCard(card, true, "land"))}
-                  </AnimatePresence>
-                </div>
-              )}
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]">
+          <div>
+            <div className="mb-1 flex h-4 items-center justify-between leading-none">
+              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
+              <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
             </div>
-          )}
+            {lands.length === 0 ? (
+              <div className="battlefield-empty-compact">Empty</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {lands.map((card) => renderCard(card, true, "land"))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
           <div>
             <div className="mb-1 flex h-4 items-center justify-between leading-none">
               <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
