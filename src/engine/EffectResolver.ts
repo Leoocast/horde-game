@@ -100,7 +100,7 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     }
     return;
   }
-  if (effect.type === "DESTROY_TARGET") {
+  if (effect.type === "DESTROY" || effect.type === "DESTROY_TARGET") {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) destroyPermanent(game, target);
     return;
@@ -242,6 +242,11 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
 
 function resolveTargetCards(game: GameState, effect: EffectDefinition, context: ResolveContext): CardInstance[] {
   if (effect.target === "SELF" && context.source) return [context.source];
+  if (typeof effect.target === "string") {
+    const raw = context.targets?.[effect.target];
+    const ids = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    return ids.map((id) => findPermanent(game, id)).filter(Boolean) as CardInstance[];
+  }
   if (typeof effect.targetRef === "string") {
     const raw = context.targets?.[effect.targetRef];
     const ids = Array.isArray(raw) ? raw : raw ? [raw] : [];

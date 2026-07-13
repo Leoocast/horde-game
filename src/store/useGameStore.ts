@@ -29,6 +29,7 @@ type GameStore = {
   counterTargeting?: CounterTargetingState;
   spellTargeting?: SpellTargetingState;
   spellFightAnimation?: SpellFightAnimationState;
+  pendingSpellHandId?: string;
   buffAnimationCardIds: string[];
   buffAnimationEventId?: number;
   lifeBuffAnimationId?: number;
@@ -196,6 +197,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   counterTargeting: undefined,
   spellTargeting: undefined,
   spellFightAnimation: undefined,
+  pendingSpellHandId: undefined,
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
   lifeBuffAnimationId: undefined,
@@ -230,6 +232,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         counterTargeting: undefined,
         spellTargeting: undefined,
         spellFightAnimation: undefined,
+        pendingSpellHandId: undefined,
         buffAnimationCardIds: [],
         buffAnimationEventId: undefined,
         lifeBuffAnimationId: undefined,
@@ -368,6 +371,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const handId = spellTargeting.handId;
       const isFightSpell = Boolean(friendlyId && enemyId && card.effects.some(isFightEffect));
       const isSourceDamageSpell = Boolean(friendlyId && enemyId && card.effects.some(isSourceDamageEffect));
+      const isDestroySpell = card.effects.some(isDestroyEffect);
+      const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
       const resolveSpell = (latest: GameState) => {
         const previousLog = latest.log[0];
         const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
@@ -403,6 +408,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       };
       if (!isFightSpell) {
+        if (isDestroySpell && destroyTargetIds.length > 0) {
+          useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+          window.setTimeout(() => {
+            useGameStore.setState((state) => ({
+              ...resolveSpell(state.game),
+              hordeCombatDeadCardIds: [],
+              pendingSpellHandId: undefined,
+            }));
+          }, 260);
+          return {
+            spellTargeting: undefined,
+            selectedHandId: undefined,
+            focusedCardId: undefined,
+            pendingSpellHandId: handId,
+            hordeCombatDeadCardIds: destroyTargetIds,
+          };
+        }
         if (isSourceDamageSpell) {
           useAudioStore.getState().playSfx("attack", { volume: 0.76 });
           window.setTimeout(() => {
@@ -788,6 +810,14 @@ function isSourceDamageEffect(effect: unknown): boolean {
   const data = effect as Record<string, unknown>;
   if (data.type === "DEAL_DAMAGE" || data.type === "DEAL_DAMAGE_FROM_SOURCE_POWER") return true;
   if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isSourceDamageEffect);
+  return false;
+}
+
+function isDestroyEffect(effect: unknown): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (data.type === "DESTROY" || data.type === "DESTROY_TARGET") return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isDestroyEffect);
   return false;
 }
 
