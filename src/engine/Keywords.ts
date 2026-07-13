@@ -8,6 +8,10 @@ export function hasKeyword(game: GameState, card: CardInstance, keyword: Keyword
   return getKeywords(game, card).includes(keyword);
 }
 
+export function getToxicAmount(game: GameState, card: CardInstance): number {
+  return getKeywords(game, card).reduce((total, keyword) => total + parseToxicKeyword(keyword), 0);
+}
+
 export function getKeywords(game: GameState, card: CardInstance): Keyword[] {
   const keywords = new Set<Keyword>([...card.keywords, ...card.temporaryKeywords]);
 
@@ -20,6 +24,12 @@ export function getKeywords(game: GameState, card: CardInstance): Keyword[] {
   }
 
   return [...keywords];
+}
+
+function parseToxicKeyword(keyword: Keyword): number {
+  const text = String(keyword).trim();
+  const match = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
+  return match ? Number(match[1]) : 0;
 }
 
 export function canAttack(game: GameState, card: CardInstance): boolean {

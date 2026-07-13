@@ -22,15 +22,17 @@ export function DuelHud({ game }: { game: GameState }) {
           <Skull size={20} />
         </div>
       </div>
-      <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
-        <div className="text-right">
-          <div className="text-[10px] font-bold uppercase tracking-wide text-[#cfa7ff]">Poison</div>
-          <div className="text-sm font-black text-[#f0d7ff]">{game.horde.poisonCounters}/3</div>
+      {game.horde.poisonCounters > 0 && (
+        <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
+          <div className="text-right">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-[#cfa7ff]">Poison</div>
+            <div className="text-sm font-black text-[#f0d7ff]">{game.horde.poisonCounters}/3</div>
+          </div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8b5cf6] bg-[#251036] text-[#d8b4fe] shadow-[0_0_16px_rgba(168,85,247,0.42)]">
+            <Droplet size={19} fill="currentColor" strokeWidth={2.2} />
+          </div>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8b5cf6] bg-[#251036] text-[#d8b4fe] shadow-[0_0_16px_rgba(168,85,247,0.42)]">
-          <Droplet size={19} fill="currentColor" strokeWidth={2.2} />
-        </div>
-      </div>
+      )}
       {game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && (
         <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
           <Swords size={18} className="text-[#ffbe72]" />

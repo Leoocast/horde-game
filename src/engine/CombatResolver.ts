@@ -1,6 +1,6 @@
 import type { GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
-import { canAttack, canBlockAttacker, hasKeyword } from "./Keywords";
+import { canAttack, canBlockAttacker, getToxicAmount, hasKeyword } from "./Keywords";
 import { dealDamageToCreature, destroyMarkedCreatures, millHorde } from "./EffectResolver";
 import { getPowerToughness } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
@@ -43,13 +43,20 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
 export function resolvePlayerCombat(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   let hordeDamage = 0;
+  let poisonCounters = 0;
   for (const id of next.combat.playerAttackers) {
     const attacker = next.player.battlefield.find((card) => card.instanceId === id);
     if (!attacker) continue;
-    hordeDamage += getPowerToughness(next, attacker).power;
+    const power = getPowerToughness(next, attacker).power;
+    hordeDamage += power;
+    if (power > 0) poisonCounters += getToxicAmount(next, attacker);
   }
   const cardsToMill = Math.floor(hordeDamage / 3);
   if (hordeDamage > 0) log(next, `Player deals ${hordeDamage} damage to Horde.`);
+  if (poisonCounters > 0) {
+    next.horde.poisonCounters += poisonCounters;
+    log(next, `Horde gets ${poisonCounters} poison counter(s).`);
+  }
   if (cardsToMill > 0) millHorde(next, cardsToMill);
   next.combat.playerAttackers = [];
   drainEventQueue(next);

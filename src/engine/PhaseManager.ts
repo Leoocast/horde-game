@@ -1,4 +1,6 @@
 import type { GameState, Phase } from "./GameTypes";
+import { checkWinLoss } from "./CombatResolver";
+import { millHorde } from "./EffectResolver";
 import { cleanupEndStep, clearPlayerSummoningSickness, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
 
 const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "secondMain", "end"];
@@ -20,6 +22,8 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
 export function endPlayerTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
+  resolveHordePoison(next);
+  if (next.winner) return next;
   clearPlayerSummoningSickness(next);
   if (next.setupTurnsRemaining > 1) {
     next.setupTurnsRemaining -= 1;
@@ -40,4 +44,13 @@ export function endPlayerTurn(game: GameState): GameState {
   next.activeSide = "horde";
   next.log.unshift("Player ends turn. Horde turn is ready.");
   return next;
+}
+
+function resolveHordePoison(game: GameState): void {
+  const poisonMills = Math.floor(game.horde.poisonCounters / 3);
+  if (poisonMills <= 0) return;
+  game.horde.poisonCounters -= poisonMills * 3;
+  game.log.unshift(`Horde poison triggers. Horde mills ${poisonMills} card(s).`);
+  millHorde(game, poisonMills);
+  checkWinLoss(game);
 }

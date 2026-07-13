@@ -1,4 +1,4 @@
-import type { ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Side } from "../engine/GameTypes";
+import type { ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Keyword, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {
@@ -26,10 +26,24 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     subtypes: card.subtypes,
     power: card.power,
     toughness: card.toughness,
-    keywords: card.keywords,
+    keywords: normalizeKeywords(card),
     activatedAbilities: normalizeActivatedAbilities(card.abilities ?? []),
     effects: [],
   };
+}
+
+function normalizeKeywords(card: NewDeckCard): Keyword[] {
+  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(card.abilities ?? [])];
+}
+
+function extractStaticKeywordAbilities(abilities: NewDeckAbility[]): Keyword[] {
+  const keywords: Keyword[] = [];
+  for (const ability of abilities) {
+    const customHandler = String(ability.customHandler ?? "");
+    const toxic = customHandler.match(/^toxic_(\d+)$/i);
+    if (ability.kind === "STATIC" && toxic) keywords.push(`TOXIC_${toxic[1]}`);
+  }
+  return keywords;
 }
 
 function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbility[] {
