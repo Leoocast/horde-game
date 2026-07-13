@@ -6,6 +6,7 @@ import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
+import { GameTooltip } from "./GameTooltip";
 
 const SKIP_ACTION_WARNING_KEY = "horde-skip-action-warning-disabled";
 
@@ -68,31 +69,32 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <button
-        data-audio-click="off"
-        onClick={runOrbAction}
-        disabled={orbDisabled}
-        className={[
-          "fixed right-6 top-1/2 z-[80] flex h-28 w-28 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 xl:right-10",
-          state.tone === "confirm"
-            ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
-            : state.tone === "horde"
-              ? "border-[#f3bf63] bg-[#9b3b13] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(214,112,26,0.5)] hover:bg-[#b74b18]"
-            : state.tone === "defend"
-              ? "border-[#b9d8ff] bg-[#174c85] shadow-[inset_0_2px_0_rgba(221,239,255,0.45),0_0_28px_rgba(59,130,246,0.5)] hover:bg-[#1f66a8]"
-            : state.tone === "skip"
-              ? "border-[#b88945] bg-[#2c2115] shadow-[inset_0_2px_0_rgba(255,231,173,0.22),0_0_24px_rgba(0,0,0,0.45)] hover:bg-[#3d2b18]"
-            : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
-        ].join(" ")}
-        title={defendBlockedReason ?? state.label}
-      >
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/55" />
-        <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
-        <span className="relative z-10 flex flex-col items-center justify-center">
-          <state.Icon size={26} />
-          <span className="mt-1 text-xs font-black uppercase leading-tight">{state.label}</span>
-        </span>
-      </button>
+      <GameTooltip content={defendBlockedReason ?? state.label} visible={Boolean(defendBlockedReason)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
+        <button
+          data-audio-click="off"
+          onClick={runOrbAction}
+          disabled={orbDisabled}
+          className={[
+            "relative flex h-28 w-28 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 disabled:cursor-default disabled:saturate-75",
+            state.tone === "confirm"
+              ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
+              : state.tone === "horde"
+                ? "border-[#f3bf63] bg-[#9b3b13] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(214,112,26,0.5)] hover:bg-[#b74b18]"
+              : state.tone === "defend"
+                ? "border-[#b9d8ff] bg-[#174c85] shadow-[inset_0_2px_0_rgba(221,239,255,0.45),0_0_28px_rgba(59,130,246,0.5)] hover:bg-[#1f66a8]"
+              : state.tone === "skip"
+                ? "border-[#b88945] bg-[#2c2115] shadow-[inset_0_2px_0_rgba(255,231,173,0.22),0_0_24px_rgba(0,0,0,0.45)] hover:bg-[#3d2b18]"
+              : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
+          ].join(" ")}
+        >
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/55" />
+          <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
+          <span className="relative z-10 flex flex-col items-center justify-center">
+            <state.Icon size={26} />
+            <span className="mt-1 text-xs font-black uppercase leading-tight">{state.label}</span>
+          </span>
+        </button>
+      </GameTooltip>
       {showCancelDefense && (
         <button
           data-audio-click="valid"
@@ -182,7 +184,8 @@ function getOrbState(
   },
 ) {
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
-    return { label: "Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "defend" as const };
+    const hasBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
+    return { label: hasBlocks ? "Defend" : "No Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "defend" as const };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
     return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };

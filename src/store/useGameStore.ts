@@ -442,7 +442,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      set({ game: resolveHordeCombat(game), hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      const next = resolveHordeCombat(game);
+      notifyDiscardEffects(game, next);
+      set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
       return;
     }
     set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
@@ -474,7 +476,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: resolveHordeCombat(latest), hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      const next = resolveHordeCombat(latest);
+      notifyDiscardEffects(latest, next);
+      set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
@@ -514,6 +518,19 @@ function showActionToast(message?: string) {
     message,
     tone: "warning",
   });
+}
+
+function notifyDiscardEffects(previous: GameState, next: GameState): void {
+  const newLogCount = Math.max(0, next.log.length - previous.log.length);
+  const discardLogs = next.log.slice(0, newLogCount).filter((message) => message.startsWith("Player discards "));
+  for (const message of discardLogs) {
+    useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
+    useToastStore.getState().pushToast({
+      title: "Card discarded",
+      message,
+      tone: "warning",
+    });
+  }
 }
 
 function findBattlefieldCard(game: GameState, id: string) {

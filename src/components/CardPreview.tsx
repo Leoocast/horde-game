@@ -6,6 +6,7 @@ import { useCardDetails } from "../utils/cardImages";
 import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary, typeLine } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
+import { GameTooltip } from "./GameTooltip";
 
 const PREVIEW_WIDTH_CLASS = "w-[340px]";
 const PREVIEW_IMAGE_MAX_CLASS = "max-w-72";
@@ -68,8 +69,8 @@ export function CardPreview() {
         <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden p-3">
           {details.imageUrl && <img src={details.imageUrl} alt={card.name} className={`mx-auto w-full ${PREVIEW_IMAGE_MAX_CLASS} border-2 border-[#9c7238] shadow-lg shadow-black/45`} />}
           <div className="flex items-center justify-between gap-2">
-            {keywords && <p className="text-sm font-semibold text-[#9fda72]">{keywords}</p>}
-            {stats && <span className="ml-auto border border-[#b88945] bg-[#1a1009]/80 px-2 py-1 text-sm font-bold text-[#ffe0a0]">{stats}</span>}
+            {keywords && <KeywordPills keywords={keywords} compact />}
+            {stats && <span className="preview-stat-pill ml-auto">{stats}</span>}
           </div>
           {hasText && (
             <div className="old-panel-soft min-h-0 flex-1 overflow-auto p-2">
@@ -135,7 +136,7 @@ export function CardDetailsModal({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {keywords && <KeywordPills keywords={keywords} />}
-            {stats && <span className="border border-[#b88945] bg-[#1a1009]/85 px-3 py-2 text-lg font-black text-[#ffe0a0]">{stats}</span>}
+            {stats && <span className="preview-stat-pill scale-110">{stats}</span>}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="old-title text-base normal-case tracking-normal" title="Font size">
                 aA
@@ -159,16 +160,16 @@ export function CardDetailsModal({
   );
 }
 
-function KeywordPills({ keywords }: { keywords: string }) {
+function KeywordPills({ keywords, compact = false }: { keywords: string; compact?: boolean }) {
   return (
     <div className="flex flex-wrap gap-2">
       {keywords.split(",").map((keyword) => {
         const clean = keyword.trim();
         if (!clean) return null;
         return (
-          <span key={clean} title={keywordTooltip(clean)} className="rounded border border-[#4f7d2d] bg-[#15230e]/80 px-3 py-2 text-sm font-bold text-[#aee77b]">
-            {clean}
-          </span>
+          <GameTooltip key={clean} content={keywordTooltip(clean)}>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{clean}</span>
+          </GameTooltip>
         );
       })}
     </div>
