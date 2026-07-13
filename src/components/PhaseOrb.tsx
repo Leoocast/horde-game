@@ -50,6 +50,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
     resolveHordeCombat,
     finishHordeTurn,
   });
+  const orbTooltip = actionBlockedReason;
 
   function runOrbAction() {
     if (state.warnIfActionsAvailable && hasAvailablePlayerActions(game) && !skipActionWarningDisabled()) {
@@ -72,7 +73,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <GameTooltip content={actionBlockedReason ?? state.label} visible={Boolean(actionBlockedReason)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
+      <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
         <button
           data-audio-click="off"
           onClick={runOrbAction}
@@ -111,16 +112,17 @@ export function PhaseOrb({ game }: { game: GameState }) {
         </button>
       )}
       {showAttackAll && (
-        <button
-          data-audio-click="valid"
-          onClick={attackAll}
-          disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-24 top-[calc(50%+4.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12] xl:right-28"
-          title="Attack with every available creature"
-        >
-          <Swords size={16} />
-          All
-        </button>
+        <GameTooltip content="Sends every available creature to attack." className="fixed right-24 top-[calc(50%+4.75rem)] z-[80] xl:right-28">
+          <button
+            data-audio-click="valid"
+            onClick={attackAll}
+            disabled={Boolean(game.winner) || attackAnimating}
+            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12]"
+          >
+            <Swords size={16} />
+            All
+          </button>
+        </GameTooltip>
       )}
       {showCancelAttack && (
         <button

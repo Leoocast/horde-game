@@ -124,17 +124,18 @@ export function CardDetailsModal({
 }) {
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
-      {onPrevious && (
-        <button className="old-button fixed left-6 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel}>
-          <ChevronLeft size={26} />
-        </button>
-      )}
-      {onNext && (
-        <button className="old-button fixed right-6 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel}>
-          <ChevronRight size={26} />
-        </button>
-      )}
-      <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-48px))] overflow-hidden p-5 shadow-2xl shadow-black/70">
+      <div className="relative flex w-[min(1280px,calc(100vw-48px))] items-center justify-center">
+        {onPrevious && (
+          <button className="old-button absolute left-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel}>
+            <ChevronLeft size={26} />
+          </button>
+        )}
+        {onNext && (
+          <button className="old-button absolute right-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel}>
+            <ChevronRight size={26} />
+          </button>
+        )}
+        <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-7rem))] overflow-hidden p-5 shadow-2xl shadow-black/70">
         <div className="min-h-0">
           {imageUrl ? (
             <img src={imageUrl} alt={card.name} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
@@ -173,7 +174,8 @@ export function CardDetailsModal({
             <p className="whitespace-pre-line leading-relaxed text-[#f8e8bd]" style={{ fontSize }}>{renderCardText(text)}</p>
           </div>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

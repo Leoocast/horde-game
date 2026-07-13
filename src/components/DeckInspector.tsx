@@ -143,10 +143,16 @@ function DeckCardTile({
       onClick={onClick}
       title={card.name}
     >
-      <div className="relative mx-auto aspect-[488/680] w-full overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]" style={{ maxWidth: cardWidth }}>
-        {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
-        {quantity > 1 && <span className="absolute right-1 top-1 rounded-full border border-[#f1d28a] bg-[#1b1007]/90 px-2 py-0.5 text-xs font-black text-[#ffe6aa] shadow-lg shadow-black/50">x{quantity}</span>}
-        {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
+      <div className="relative mx-auto w-full" style={{ maxWidth: cardWidth }}>
+        {quantity > 1 && (
+          <span className="old-title pointer-events-none absolute -right-3 -top-3 z-20 rounded-full border-2 border-[#ffe2a0] bg-[#4a210b] px-2.5 py-1 text-sm font-black text-[#fff0b2] shadow-[0_0_14px_rgba(255,181,72,0.55),0_8px_16px_rgba(0,0,0,0.65)]">
+            x{quantity}
+          </span>
+        )}
+        <div className="relative aspect-[488/680] overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]">
+          {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
+          {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
+        </div>
       </div>
       <div className="mx-auto mt-2 truncate text-center text-xs font-bold text-[#f4dfb0]" style={{ maxWidth: cardWidth }}>{card.name}</div>
     </button>

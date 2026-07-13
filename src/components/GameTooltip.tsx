@@ -12,9 +12,11 @@ export function GameTooltip({ content, children, side = "top", visible = false, 
   return (
     <span className={`game-tooltip-host ${className}`}>
       {children}
-      <span className={["game-tooltip", side === "bottom" ? "game-tooltip-bottom" : "game-tooltip-top", visible ? "game-tooltip-visible" : ""].join(" ")}>
-        {content}
-      </span>
+      {content ? (
+        <span className={["game-tooltip", side === "bottom" ? "game-tooltip-bottom" : "game-tooltip-top", visible ? "game-tooltip-visible" : ""].join(" ")}>
+          {content}
+        </span>
+      ) : null}
     </span>
   );
 }
