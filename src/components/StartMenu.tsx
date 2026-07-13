@@ -30,7 +30,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
-  const [developerMode, setDeveloperMode] = useState(false);
+  const [developerMode, setDeveloperMode] = useState(true);
   const [deckOpen, setDeckOpen] = useState(false);
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);

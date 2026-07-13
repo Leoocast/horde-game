@@ -184,6 +184,7 @@ export type CastOptions = {
   xValue?: number;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
+  deferReactiveTriggers?: boolean;
 };
 
 export type AbilityOptions = {
