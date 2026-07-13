@@ -99,7 +99,7 @@ export function resolveHordeCombat(game: GameState): GameState {
     }
     const attackerStats = getPowerToughness(next, attacker);
     let attackerDamage = attacker.damageMarked;
-    for (const blocker of sortBlockersLeftToRight(next, blockers)) {
+    for (const blocker of sortBlockersRightToLeft(next, blockers)) {
       const blockerStats = getPowerToughness(next, blocker);
       dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
       dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
@@ -130,8 +130,8 @@ function log(game: GameState, message: string): GameState {
   return game;
 }
 
-export function sortBlockersLeftToRight(game: GameState, blockers: CardInstance[]): CardInstance[] {
-  return [...blockers].sort((left, right) => game.player.battlefield.findIndex((card) => card.instanceId === left.instanceId) - game.player.battlefield.findIndex((card) => card.instanceId === right.instanceId));
+export function sortBlockersRightToLeft(game: GameState, blockers: CardInstance[]): CardInstance[] {
+  return [...blockers].sort((left, right) => battlefieldIndex(game, right.instanceId) - battlefieldIndex(game, left.instanceId));
 }
 
 export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: string[]): string[] {

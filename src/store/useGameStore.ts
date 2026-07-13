@@ -4,7 +4,7 @@ import type { AbilityOptions, CastOptions, EffectDefinition, GameState, Phase } 
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
-import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersLeftToRight, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
+import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersRightToLeft, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runFullHordeTurn } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -889,7 +889,7 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       continue;
     }
 
-    const blockers = sortBlockersLeftToRight(
+    const blockers = sortBlockersRightToLeft(
       game,
       blockerIds
         .map((id) => game.player.battlefield.find((card) => card.instanceId === id))

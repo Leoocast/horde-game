@@ -296,6 +296,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
+    const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
     const attacking = game.combat.playerAttackers.includes(card.instanceId) || game.combat.hordeAttackers.includes(card.instanceId);
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
@@ -392,7 +393,7 @@ export function Battlefield({ game, side, cards }: Props) {
         actionable={actionable || counterTargetable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
-        linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
+        linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting)}
@@ -479,6 +480,18 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function findAssignedAttacker(blockerId: string): string | undefined {
     return Object.entries(game.combat.blockers).find(([, blockerIds]) => blockerIds.includes(blockerId))?.[0];
+  }
+
+  function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
+    const orderedBlockers = [...(game.combat.blockers[attackerId] ?? [])].sort((left, right) => playerBattlefieldIndex(right) - playerBattlefieldIndex(left));
+    if (orderedBlockers.length < 2) return undefined;
+    const orderIndex = orderedBlockers.indexOf(blockerId);
+    return orderIndex >= 0 ? `${orderIndex + 1}` : undefined;
+  }
+
+  function playerBattlefieldIndex(cardId: string): number {
+    const index = game.player.battlefield.findIndex((card) => card.instanceId === cardId);
+    return index < 0 ? Number.MAX_SAFE_INTEGER : index;
   }
 
   function getAttackerColor(attackerId: string): string | undefined {
