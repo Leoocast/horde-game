@@ -1,4 +1,4 @@
-import { Droplet, Heart, Skull, Swords } from "lucide-react";
+import { Archive, Droplet, Heart, Skull, Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -16,7 +16,13 @@ export function DuelHud({ game }: { game: GameState }) {
       <div data-player-attack-target="horde-deck" className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
         <div className="text-right">
           <div className="old-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
-          <div className="text-3xl font-black leading-none text-[#fff0b2]">{game.horde.library.length}</div>
+          <div className="flex items-end justify-end gap-2 leading-none">
+            <div className="mb-0.5 flex items-center gap-1.5 rounded-full border border-[#0d0906]/80 bg-[#130d09]/80 px-2 py-0.5 text-[13px] font-black text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.45)]">
+              <Archive size={14} strokeWidth={2.6} />
+              <span>{game.horde.graveyard.length}</span>
+            </div>
+            <div className="text-3xl font-black text-[#fff0b2]">{game.horde.library.length}</div>
+          </div>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#41100b] text-[#ffd59b]">
           <Skull size={20} />

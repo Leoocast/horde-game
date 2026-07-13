@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
-import type { AbilityOptions, CastOptions, EffectDefinition, GameState, Phase } from "../engine/GameTypes";
+import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, GameState, Phase } from "../engine/GameTypes";
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
@@ -23,6 +23,7 @@ type GameStore = {
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
+  hordeMillAnimationQueue: HordeMillAnimationItem[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -91,6 +92,7 @@ type GameStore = {
   closeCardContextMenu: () => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
+  completeHordeMillAnimation: (id: string) => void;
 };
 
 const SEED_STORAGE_KEY = "horde-game-seed";
@@ -136,6 +138,11 @@ type PlayerAttackAnimation = {
 type AutoPaidLandAnimation = {
   ids: string[];
   eventId: number;
+};
+
+export type HordeMillAnimationItem = {
+  id: string;
+  card: CardInstance;
 };
 
 export type BlockDragState = {
@@ -192,6 +199,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
   specialDeadCardIds: [],
+  hordeMillAnimationQueue: [],
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -228,6 +236,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
         specialDeadCardIds: [],
+        hordeMillAnimationQueue: [],
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -415,6 +424,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return {
           game: next,
           spellFightAnimation: undefined,
+          hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
           autoPaidLandAnimation,
           buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : useGameStore.getState().buffAnimationCardIds,
           buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : useGameStore.getState().buffAnimationEventId,
@@ -494,10 +504,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { game: next, playerAttackDrag: undefined };
     }),
   endPlayerTurn: () =>
-    set(({ game }) => {
+    set((state) => {
+      const { game } = state;
       const next = endPlayerTurn(game);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next };
+      return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) };
     }),
   playLand: (id) =>
     set((state) => {
@@ -578,6 +589,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedHandId: undefined,
         focusedCardId: undefined,
         activeEffectCardId: undefined,
+        hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
         autoPaidLandAnimation,
         buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
         buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
@@ -625,14 +637,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   beginSummoningAnimation: () => set((state) => ({ summoningAnimationCount: state.summoningAnimationCount + 1 })),
   endSummoningAnimation: () => set((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) })),
-  resolvePlayerCombat: () => set(({ game }) => ({ game: resolvePlayerCombat(game) })),
+  resolvePlayerCombat: () => set((state) => {
+    const next = resolvePlayerCombat(state.game);
+    return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, state.game, next) };
+  }),
   finishPlayerCombat: () => {
     const { game, playerAttackAnimation } = get();
     if (playerAttackAnimation) return;
 
     const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
     if (attackers.length === 0) {
-      set({ game: advancePhase(resolvePlayerCombat(game), "end"), selectedPlayerCreatureId: undefined });
+      const resolved = resolvePlayerCombat(game);
+      const next = advancePhase(resolved, "end");
+      set((state) => ({ game: next, selectedPlayerCreatureId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) }));
       return;
     }
 
@@ -646,14 +663,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      set({ game: advancePhase(resolvePlayerCombat(latest), "end"), playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined });
+      const resolved = resolvePlayerCombat(latest);
+      const next = advancePhase(resolved, "end");
+      set((state) => ({ game: next, playerAttackAnimation: undefined, selectedPlayerCreatureId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, latest, next) }));
     }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
   },
   runHordeMain: () =>
-    set(({ game }) => {
+    set((state) => {
+      const { game } = state;
       const next = runFullHordeTurn(game);
       if (next.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
-      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined };
+      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) };
     }),
   prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
   declareBlocker: (blockerId, attackerId) =>
@@ -686,6 +706,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   cancelPlayerAttackDrag: () => set({ playerAttackDrag: undefined }),
   openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
   closeCardContextMenu: () => set({ cardContextMenu: undefined }),
+  completeHordeMillAnimation: (id) =>
+    set((state) => ({
+      hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
+    })),
   resolveHordeCombat: () => {
     const { game, hordeAttackAnimation, playerAttackAnimation } = get();
     if (hordeAttackAnimation || playerAttackAnimation) return;
@@ -789,6 +813,21 @@ function notifyDiscardEffects(previous: GameState, next: GameState): void {
       tone: "warning",
     });
   }
+}
+
+function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMillAnimationItem[] {
+  const previousLibraryIds = new Set(previous.horde.library.map((card) => card.instanceId));
+  return next.horde.graveyard
+    .filter((card) => previousLibraryIds.has(card.instanceId))
+    .map((card) => ({
+      id: `horde-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      card,
+    }));
+}
+
+function appendHordeMillAnimations(state: GameStore, previous: GameState, next: GameState): HordeMillAnimationItem[] {
+  const milled = hordeMillAnimationsFrom(previous, next);
+  return milled.length > 0 ? [...state.hordeMillAnimationQueue, ...milled] : state.hordeMillAnimationQueue;
 }
 
 function findBattlefieldCard(game: GameState, id: string) {

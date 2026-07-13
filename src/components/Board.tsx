@@ -11,6 +11,7 @@ import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
+import { HordeMillAnimator } from "./HordeMillAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
@@ -47,6 +48,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <CounterTargetingOverlay game={game} />
       <SpellTargetingOverlay game={game} />
       <HordeAttackAnimator />
+      <HordeMillAnimator />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       {(activeEffectCardId || closingEffectCardId) && (
