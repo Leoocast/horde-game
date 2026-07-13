@@ -50,7 +50,7 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
         rotate: [-2, 6, 20, 38],
         filter: ["brightness(1.65) saturate(1.18)", "brightness(1.25) saturate(1.08)", "brightness(1)", "brightness(0.55) saturate(0.75)"],
       }}
-      transition={{ duration: 0.78, times: [0, 0.22, 0.68, 1], ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.72, times: [0, 0.1, 0.64, 1], ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={onComplete}
     >
       {imageUrl ? (

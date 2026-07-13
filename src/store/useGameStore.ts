@@ -105,6 +105,9 @@ const SEED_STORAGE_KEY = "horde-game-seed";
 const defaultSeed = readStoredSeed();
 const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
+const HORDE_MILL_ANIMATION_MS = 720;
+const PLAYER_ATTACK_MILL_START_MS = 90;
+const PLAYER_ATTACK_MILL_GAP_MS = 120;
 const AUTO_PAID_LAND_FLASH_MS = 900;
 const BUFF_ANIMATION_MS = 1120;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
@@ -677,17 +680,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    let elapsed = 0;
     attackers.forEach((attackerId, index) => {
-      const startAt = index * PLAYER_ATTACK_ANIMATION_MS;
+      const attackerMillCards = previewMillCards.filter((item) => item.attackerIndex === index);
+      const startAt = elapsed;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx("attack", { volume: 0.75 });
         set({ playerAttackAnimation: { attackerId, eventId: index } });
       }, startAt);
-      for (const preview of previewMillCards.filter((item) => item.attackerIndex === index)) {
+      for (const preview of attackerMillCards) {
         window.setTimeout(() => {
           useGameStore.getState().queueHordeMillPreview(preview.card);
-        }, startAt + PLAYER_ATTACK_ANIMATION_MS * 0.55 + preview.cardIndexInHit * 90);
+        }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
+      elapsed += PLAYER_ATTACK_ANIMATION_MS + attackerMillCards.length * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS);
     });
 
     window.setTimeout(() => {
@@ -701,7 +707,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillPreviewCards: [],
         hordeMillAnimationQueue: previewMillCards.length > 0 ? state.hordeMillAnimationQueue : appendHordeMillAnimations(state, latest, next),
       }));
-    }, attackers.length * PLAYER_ATTACK_ANIMATION_MS + 40);
+    }, elapsed + 40);
   },
   runHordeMain: () =>
     set((state) => {
