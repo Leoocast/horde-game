@@ -2,7 +2,7 @@ import { Archive, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
-import { cleanReminderText } from "../utils/cardTextSymbols";
+import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
 import { CardDetailsModal } from "./CardPreview";
@@ -113,9 +113,9 @@ function GraveyardDetailsModal({
   onNext?: () => void;
 }) {
   const details = useCardDetails(card.definitionId);
-  const text = cleanReminderText(details.oracleText ?? effectSummary(card));
   const keywords = cardKeywords(game, card);
   const stats = cardStats(game, card);
+  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
 
   return (
     <CardDetailsModal

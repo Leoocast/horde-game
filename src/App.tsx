@@ -8,7 +8,6 @@ import { useGameStore } from "./store/useGameStore";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
-  const seed = useGameStore((state) => state.seed);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
   const [setupTurns, setSetupTurns] = useState(4);
@@ -28,7 +27,6 @@ export default function App() {
       <>
         <AudioClickListener />
         <StartMenu
-          initialSeed={seed}
           decks={inspectableDecks}
           selectedDeckId={selectedDeckId}
           onSelectDeck={setSelectedDeckId}

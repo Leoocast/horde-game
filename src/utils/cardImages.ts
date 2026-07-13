@@ -17,6 +17,7 @@ type ImageLookups = {
 export type CardRemoteDetails = {
   imageUrl?: string;
   oracleText?: string;
+  flavorText?: string;
 };
 
 const imageLookups = imageLookupsRaw as ImageLookups;
@@ -29,6 +30,7 @@ const directDetailsById = new Map<string, CardRemoteDetails>([
     {
       imageUrl: "https://cards.scryfall.io/normal/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525",
       oracleText: "Token Creature - Zombie\n2/2",
+      flavorText: "",
     },
   ],
 ]);
@@ -90,6 +92,7 @@ async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails 
           readPath(payload, "card_faces[0].image_uris.normal") ??
           readPath(payload, "card_faces[0].image_uris.large"),
         oracleText: readOracleText(cardPayload),
+        flavorText: readFlavorText(cardPayload),
       };
       writeCachedDetails(definitionId, details);
       return details;
@@ -114,6 +117,10 @@ function readDirectDetails(definitionId: string): CardRemoteDetails | undefined 
 
 function readOracleText(payload: unknown): string | undefined {
   return readPath(payload, "oracle_text") ?? readPath(payload, "card_faces[0].oracle_text");
+}
+
+function readFlavorText(payload: unknown): string | undefined {
+  return readPath(payload, "flavor_text") ?? readPath(payload, "card_faces[0].flavor_text");
 }
 
 function readSearchResult(payload: unknown): unknown {
@@ -145,7 +152,7 @@ function writeCachedDetails(definitionId: string, details: CardRemoteDetails | n
 }
 
 function cacheKey(definitionId: string): string {
-  return `horde-card-details:v4:${definitionId}`;
+  return `horde-card-details:v5:${definitionId}`;
 }
 
 function newDeckImageLookups(manifest: DeckImageManifest): LookupEntry[] {

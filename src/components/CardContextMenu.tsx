@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
-import { cleanReminderText } from "../utils/cardTextSymbols";
+import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
 import { CardDetailsModal } from "./CardPreview";
@@ -22,9 +22,9 @@ export function CardContextMenu() {
   const card = menu ? findCard(game, menu.cardId) : undefined;
   const detailsCard = detailsCardId ? findCard(game, detailsCardId) : undefined;
   const details = useCardDetails(detailsCard?.definitionId ?? "");
-  const detailsText = detailsCard ? cleanReminderText(details.oracleText ?? effectSummary(detailsCard)) : "";
   const keywords = detailsCard ? cardKeywords(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
+  const detailsText = detailsCard ? cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(detailsCard)) : "";
 
   const position = useMemo(() => {
     if (!menu || typeof window === "undefined") return { left: 0, top: 0 };

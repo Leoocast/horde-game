@@ -4,6 +4,7 @@ import type { DeckImageManifest, NewDeckCard } from "../data/deckCatalog";
 export type DeckCardDetails = {
   imageUrl?: string;
   oracleText?: string;
+  flavorText?: string;
 };
 
 const memoryCache = new Map<string, DeckCardDetails | null>();
@@ -63,6 +64,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
           readPath(cardPayload, "card_faces[0].image_uris.normal") ??
           readPath(cardPayload, "card_faces[0].image_uris.large"),
         oracleText: readOracleText(cardPayload),
+        flavorText: readFlavorText(cardPayload),
       };
       writeCachedDetails(cacheId, details);
       return details;
@@ -90,8 +92,11 @@ function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewD
 function readOracleText(payload: unknown): string | undefined {
   const faceText = readPath(payload, "card_faces[0].oracle_text");
   const text = readPath(payload, "oracle_text");
-  const type = readPath(payload, "type_line");
-  return [type, text ?? faceText].filter(Boolean).join("\n");
+  return text ?? faceText;
+}
+
+function readFlavorText(payload: unknown): string | undefined {
+  return readPath(payload, "flavor_text") ?? readPath(payload, "card_faces[0].flavor_text");
 }
 
 function readSearchResult(payload: unknown): unknown {
@@ -124,7 +129,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v1:${cacheId}`;
+  return `horde-deck-card-details:v2:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

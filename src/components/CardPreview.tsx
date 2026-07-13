@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
-import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
+import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary, typeLine } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
 import { GameTooltip } from "./GameTooltip";
@@ -33,7 +33,7 @@ export function CardPreview() {
 
   const stats = cardStats(game, card);
   const keywords = cardKeywords(game, card);
-  const text = cleanReminderText(details.oracleText ?? effectSummary(card));
+  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
   const hasText = text.length > 0;
   void PREVIOUS_PREVIEW_WIDTH_CLASS;
   void PREVIOUS_PREVIEW_IMAGE_MAX_CLASS;
