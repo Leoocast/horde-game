@@ -116,7 +116,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-[8.1rem] top-[calc(50%+3.15rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[9.1rem]"
+          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel blocks"
         >
           <X size={18} />
@@ -141,7 +141,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelPlayerAttackers}
           disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-[8.1rem] top-[calc(50%+3.15rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[9.1rem]"
+          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel attackers"
         >
           <X size={18} />
