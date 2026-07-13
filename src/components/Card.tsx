@@ -69,7 +69,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
       aria-disabled={selectionDisabled ? "true" : undefined}
-      onMouseEnter={() => setHoveredCardId(card.instanceId)}
+      onMouseEnter={() => {
+        if (!suppressHoverOverlay) setHoveredCardId(card.instanceId);
+      }}
       onMouseLeave={() => {
         setHoveredCardId(undefined);
         onLeave?.();

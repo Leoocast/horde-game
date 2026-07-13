@@ -257,6 +257,8 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function HordeBattlefieldRow({ creatures: rowCreatures, others: rowOthers }: { creatures: CardInstance[]; others: CardInstance[] }) {
+    const otherPermanentsTargetingActive = rowOthers.some((card) => isSpellTargetable(card) || isSpellTargetLocked(card));
+
     return (
       <div data-battlefield-drop-target="player-attack" className="old-panel-soft relative p-1.5">
         <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
@@ -272,7 +274,7 @@ export function Battlefield({ game, side, cards }: Props) {
             </AnimatePresence>
           </div>
         )}
-        <div className="absolute left-1.5 top-6 z-20">
+        <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
           <div className="old-panel-soft w-max p-1">
             <div className="mb-1 flex h-4 items-center justify-between gap-4 leading-none">
               <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
@@ -379,8 +381,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
     const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
     const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
-    const spellTargetable = Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
-    const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellTargetable = isSpellTargetable(card);
+    const spellTargetLocked = isSpellTargetLocked(card);
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
@@ -518,6 +520,18 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function findAssignedAttacker(blockerId: string): string | undefined {
     return Object.entries(game.combat.blockers).find(([, blockerIds]) => blockerIds.includes(blockerId))?.[0];
+  }
+
+  function isSpellTargetable(card: CardInstance): boolean {
+    const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
+    const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
+    const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
+    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
+    return Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
+  }
+
+  function isSpellTargetLocked(card: CardInstance): boolean {
+    return Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
   }
 
   function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
