@@ -29,9 +29,10 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
+  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
-  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount);
+  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount);
   const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
@@ -284,7 +285,8 @@ function hasAvailableAttackers(game: GameState): boolean {
   return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }
 
-function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number): string | undefined {
+function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number, hordeAutoTriggerCount: number): string | undefined {
+  if (hordeAutoTriggerCount > 0) return "Horde is resolving triggered effects.";
   if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before continuing.";
   if (summoningAnimationCount > 0) return "Wait for the summon animation to finish.";
   return undefined;

@@ -5,19 +5,23 @@ import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
 
-export function runHordeMain(game: GameState): GameState {
+type HordeMainOptions = {
+  deferEnterBattlefieldTriggers?: boolean;
+};
+
+export function runHordeMain(game: GameState, options: HordeMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
   next.activeSide = "horde";
   next.phase = "horde";
   next.setupCompletePendingHorde = false;
   untapSide(next, "horde");
   next.log.unshift("Horde untaps.");
-  revealNormal(next);
+  revealNormal(next, options);
   if (hordeInSurge(next)) {
     next.log.unshift("Horde enters Surge and reveals 2 extra cards.");
-    revealAndPlay(next, 2);
+    revealAndPlay(next, 2, options);
   }
-  drainEventQueue(next);
+  if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
   return next;
 }
 
@@ -36,10 +40,10 @@ export function finishHordeTurn(game: GameState): GameState {
   return next;
 }
 
-function revealNormal(game: GameState): void {
+function revealNormal(game: GameState, options: HordeMainOptions): void {
   let played = 0;
   while (played < 3 && game.horde.library.length > 0) {
-    const card = revealAndPlayOne(game);
+    const card = revealAndPlayOne(game, options);
     played += 1;
     if (card && !card.isToken) {
       game.log.unshift(`Horde reveals ${card.name} and stops revealing.`);
@@ -48,14 +52,14 @@ function revealNormal(game: GameState): void {
   }
 }
 
-function revealAndPlay(game: GameState, amount: number): void {
+function revealAndPlay(game: GameState, amount: number, options: HordeMainOptions): void {
   for (let i = 0; i < amount; i += 1) {
     if (game.horde.library.length === 0) break;
-    revealAndPlayOne(game);
+    revealAndPlayOne(game, options);
   }
 }
 
-function revealAndPlayOne(game: GameState): CardInstance | undefined {
+function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInstance | undefined {
   const card = game.horde.library.shift();
   if (!card) return undefined;
   game.log.unshift(`Horde reveals ${card.name}.`);
@@ -73,7 +77,7 @@ function revealAndPlayOne(game: GameState): CardInstance | undefined {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
   game.horde.battlefield.push(card);
-  runEnterBattlefieldTriggers(game, card);
+  if (!options.deferEnterBattlefieldTriggers) runEnterBattlefieldTriggers(game, card);
   enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   return card;
 }
