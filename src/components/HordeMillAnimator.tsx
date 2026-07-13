@@ -4,8 +4,8 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
 
-const CARD_WIDTH = 234;
-const CARD_HEIGHT = 324;
+const CARD_WIDTH = 172;
+const CARD_HEIGHT = 240;
 
 export function HordeMillAnimator() {
   const queue = useGameStore((state) => state.hordeMillAnimationQueue);
@@ -66,5 +66,5 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
 function readHordeDeckOrigin(): { x: number; y: number } {
   const rect = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']")?.getBoundingClientRect();
   if (!rect) return { x: window.innerWidth - 96, y: 104 };
-  return { x: rect.left + rect.width * 0.42, y: rect.top + rect.height * 0.52 };
+  return { x: rect.left + rect.width * 0.12, y: rect.top + rect.height * 1.18 };
 }
