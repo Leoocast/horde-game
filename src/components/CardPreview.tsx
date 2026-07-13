@@ -1,4 +1,4 @@
-import { Maximize2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import { useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
@@ -104,6 +104,10 @@ export function CardDetailsModal({
   fontSize,
   setFontSize,
   onClose,
+  onPrevious,
+  onNext,
+  previousLabel = "Previous card",
+  nextLabel = "Next card",
 }: {
   card: CardInstance;
   imageUrl?: string;
@@ -113,9 +117,23 @@ export function CardDetailsModal({
   fontSize: number;
   setFontSize: (value: number) => void;
   onClose: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  previousLabel?: string;
+  nextLabel?: string;
 }) {
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
+      {onPrevious && (
+        <button className="old-button fixed left-6 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel}>
+          <ChevronLeft size={26} />
+        </button>
+      )}
+      {onNext && (
+        <button className="old-button fixed right-6 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel}>
+          <ChevronRight size={26} />
+        </button>
+      )}
       <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-48px))] overflow-hidden p-5 shadow-2xl shadow-black/70">
         <div className="min-h-0">
           {imageUrl ? (
@@ -160,7 +178,7 @@ export function CardDetailsModal({
   );
 }
 
-function KeywordPills({ keywords, compact = false }: { keywords: string; compact?: boolean }) {
+export function KeywordPills({ keywords, compact = false }: { keywords: string; compact?: boolean }) {
   return (
     <div className="flex flex-wrap gap-2">
       {keywords.split(",").map((keyword) => {
@@ -177,11 +195,11 @@ function KeywordPills({ keywords, compact = false }: { keywords: string; compact
 }
 
 function renderKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^Toxic\s+\{(\d+)\}$/i);
+  const toxic = keyword.match(/^TOXIC\s+\{(\d+)\}$/i);
   if (!toxic) return keyword;
   return (
     <>
-      Toxic <span className="toxic-keyword-badge">{toxic[1]}</span>
+      TOXIC <span className="toxic-keyword-badge">{toxic[1]}</span>
     </>
   );
 }

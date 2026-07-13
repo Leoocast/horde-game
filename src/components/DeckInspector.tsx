@@ -1,9 +1,11 @@
 import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { CardInstance } from "../engine/GameTypes";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { AppHeader } from "./AppHeader";
+import { CardDetailsModal, KeywordPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -13,7 +15,7 @@ type Props = {
 type CardCopy = {
   key: string;
   card: NewDeckCard;
-  copyNumber: number;
+  quantity: number;
 };
 
 const MIN_CARD_ZOOM = 120;
@@ -21,12 +23,15 @@ const MAX_CARD_ZOOM = 272;
 const DEFAULT_CARD_ZOOM = 168;
 
 export function DeckInspector({ deck, onBack }: Props) {
-  const cards = useMemo(() => expandCards(deck.deck.cards), [deck]);
+  const cards = useMemo(() => uniqueCards(deck.deck.cards), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
   const activeCard = cards.find((copy) => copy.card.id === (focusedCardId ?? hoveredCardId))?.card ?? cards[0]?.card;
-  const [detailsCard, setDetailsCard] = useState<NewDeckCard | undefined>();
+  const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
+  const detailsIndex = Math.max(0, cards.findIndex((copy) => copy.card.id === detailsCardId));
+  const detailsCard = detailsCardId ? cards[detailsIndex]?.card : undefined;
   const [cardZoom, setCardZoomState] = useState(readStoredCardZoom);
+  const [detailsFontSize, setDetailsFontSize] = useState(20);
   const gridMin = Math.max(96, cardZoom - 34);
   const setCardZoom = (value: number | ((current: number) => number)) => {
     setCardZoomState((current) => {
@@ -56,8 +61,8 @@ export function DeckInspector({ deck, onBack }: Props) {
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="text-right text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-                <div>{cards.length} cards</div>
-                <div>{deck.deck.cards.length} unique</div>
+                <div>{cards.length} unique</div>
+                <div>{deck.deck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0)} total</div>
               </div>
               <div className="old-panel-soft flex items-center gap-2 px-2 py-1">
                 <Search className="text-[#ffd98a] drop-shadow-[0_0_8px_rgba(255,100,24,0.45)]" size={15} aria-label="Card zoom" />
@@ -78,21 +83,32 @@ export function DeckInspector({ deck, onBack }: Props) {
                   key={copy.key}
                   deck={deck}
                   card={copy.card}
+                  quantity={copy.quantity}
                   cardWidth={cardZoom}
                   selected={copy.card.id === focusedCardId}
                   onHover={() => setHoveredCardId(copy.card.id)}
                   onClick={() => {
                     setFocusedCardId(copy.card.id);
-                    setDetailsCard(copy.card);
+                    setDetailsCardId(copy.card.id);
                   }}
                 />
               ))}
             </div>
           </div>
         </section>
-        <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCard(activeCard)} />
+        <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCardId(activeCard.id)} />
       </div>
-      {detailsCard && <DeckCardDetailsModal deck={deck} card={detailsCard} onClose={() => setDetailsCard(undefined)} />}
+      {detailsCard && (
+        <DeckInspectorDetailsModal
+          deck={deck}
+          card={detailsCard}
+          fontSize={detailsFontSize}
+          setFontSize={setDetailsFontSize}
+          onClose={() => setDetailsCardId(undefined)}
+          onPrevious={() => setDetailsCardId(cards[(detailsIndex - 1 + cards.length) % cards.length]?.card.id)}
+          onNext={() => setDetailsCardId(cards[(detailsIndex + 1) % cards.length]?.card.id)}
+        />
+      )}
     </main>
   );
 }
@@ -100,6 +116,7 @@ export function DeckInspector({ deck, onBack }: Props) {
 function DeckCardTile({
   deck,
   card,
+  quantity,
   cardWidth,
   selected,
   onHover,
@@ -107,6 +124,7 @@ function DeckCardTile({
 }: {
   deck: InspectableDeck;
   card: NewDeckCard;
+  quantity: number;
   cardWidth: number;
   selected: boolean;
   onHover: () => void;
@@ -127,6 +145,7 @@ function DeckCardTile({
     >
       <div className="relative mx-auto aspect-[488/680] w-full overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]" style={{ maxWidth: cardWidth }}>
         {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
+        {quantity > 1 && <span className="absolute right-1 top-1 rounded-full border border-[#f1d28a] bg-[#1b1007]/90 px-2 py-0.5 text-xs font-black text-[#ffe6aa] shadow-lg shadow-black/50">x{quantity}</span>}
         {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
       </div>
       <div className="mx-auto mt-2 truncate text-center text-xs font-bold text-[#f4dfb0]" style={{ maxWidth: cardWidth }}>{card.name}</div>
@@ -169,8 +188,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           <MissingCardArt card={card} />
         )}
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-[#9fda72]">{card.keywords?.join(", ")}</p>
-          {stats(card) && <span className="ml-auto border border-[#b88945] bg-[#1a1009]/80 px-2 py-1 text-sm font-bold text-[#ffe0a0]">{stats(card)}</span>}
+          {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
+          {stats(card) && <span className="preview-stat-pill ml-auto">{stats(card)}</span>}
         </div>
         {hasText && (
           <div className="old-panel-soft old-scrollbar min-h-0 flex-1 overflow-auto p-2">
@@ -186,65 +205,58 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   );
 }
 
-function DeckCardDetailsModal({ deck, card, onClose }: { deck: InspectableDeck; card: NewDeckCard; onClose: () => void }) {
+function DeckInspectorDetailsModal({
+  deck,
+  card,
+  fontSize,
+  setFontSize,
+  onClose,
+  onPrevious,
+  onNext,
+}: {
+  deck: InspectableDeck;
+  card: NewDeckCard;
+  fontSize: number;
+  setFontSize: (value: number) => void;
+  onClose: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
-  const [fontSize, setFontSize] = useState(20);
   const text = cleanReminderText(details.oracleText ?? describeCardFromJson(card));
-
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md" onMouseDown={onClose}>
-      <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1180px,calc(100vw-48px))] overflow-hidden p-5 shadow-2xl shadow-black/70" onMouseDown={(event) => event.stopPropagation()}>
-        <div className="min-h-0">
-          {details.imageUrl ? (
-            <img src={details.imageUrl} alt={card.name} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
-          ) : (
-            <MissingCardArt card={card} />
-          )}
-        </div>
-        <div className="flex min-h-0 flex-col">
-          <div className="flex items-start justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
-            <div>
-              <h2 className="old-title text-3xl font-black leading-tight">{card.name}</h2>
-              <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
-            </div>
-            <button className="icon-button h-9 w-9" title="Close details" onClick={onClose}>
-              <X size={18} />
-            </button>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {card.keywords && card.keywords.length > 0 && <p className="rounded border border-[#4f7d2d] bg-[#15230e]/80 px-3 py-2 text-sm font-bold text-[#aee77b]">{card.keywords.join(", ")}</p>}
-            {stats(card) && <span className="border border-[#b88945] bg-[#1a1009]/85 px-3 py-2 text-lg font-black text-[#ffe0a0]">{stats(card)}</span>}
-            <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-              <span className="old-title text-base normal-case tracking-normal" title="Font size">
-                aA
-              </span>
-              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))} title="Decrease font size">
-                -
-              </button>
-              <input type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} className="w-32 accent-[#d6a34c]" />
-              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))} title="Increase font size">
-                +
-              </button>
-              <span className="w-8 text-right text-[#ffe0a0]">{fontSize}</span>
-            </label>
-          </div>
-          <div className="old-panel-soft old-scrollbar mt-4 min-h-0 flex-1 overflow-auto p-4">
-            <p className="whitespace-pre-line leading-relaxed text-[#f8e8bd]" style={{ fontSize }}>{renderCardText(text)}</p>
-          </div>
-        </div>
-      </section>
-    </div>
+    <CardDetailsModal
+      card={toCardInstance(card)}
+      imageUrl={details.imageUrl}
+      keywords={deckKeywords(card)}
+      stats={stats(card)}
+      text={text}
+      fontSize={fontSize}
+      setFontSize={setFontSize}
+      onClose={onClose}
+      onPrevious={onPrevious}
+      onNext={onNext}
+      previousLabel="Previous deck card"
+      nextLabel="Next deck card"
+    />
   );
 }
 
-function expandCards(cards: NewDeckCard[]): CardCopy[] {
-  return cards.flatMap((card) =>
-    Array.from({ length: card.quantity ?? 1 }, (_, index) => ({
-      key: `${card.id}-${index}`,
+function uniqueCards(cards: NewDeckCard[]): CardCopy[] {
+  const byId = new Map<string, CardCopy>();
+  for (const card of cards) {
+    const existing = byId.get(card.id);
+    if (existing) {
+      existing.quantity += card.quantity ?? 1;
+      continue;
+    }
+    byId.set(card.id, {
+      key: card.id,
       card,
-      copyNumber: index + 1,
-    })),
-  );
+      quantity: card.quantity ?? 1,
+    });
+  }
+  return [...byId.values()];
 }
 
 function typeLine(card: NewDeckCard): string {
@@ -254,6 +266,56 @@ function typeLine(card: NewDeckCard): string {
 function stats(card: NewDeckCard): string | undefined {
   if (typeof card.power !== "number" || typeof card.toughness !== "number") return undefined;
   return `${card.power}/${card.toughness}`;
+}
+
+function deckKeywords(card: NewDeckCard): string {
+  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword));
+  for (const ability of card.abilities ?? []) {
+    if (ability.customHandler === "toxic_1" || ability.id?.toLowerCase().includes("toxic_1")) keywords.add("TOXIC {1}");
+  }
+  return [...keywords].filter(Boolean).join(", ");
+}
+
+function formatDeckKeyword(keyword: string): string {
+  const text = String(keyword).trim();
+  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
+  if (toxic) return `TOXIC {${toxic[1]}}`;
+  return text.toUpperCase();
+}
+
+function toCardInstance(card: NewDeckCard): CardInstance {
+  return {
+    instanceId: `inspect-${card.id}`,
+    definitionId: card.id,
+    name: card.name,
+    displayName: card.name,
+    owner: "player",
+    controller: "player",
+    zone: "library",
+    isToken: false,
+    manaCost: card.manaCost ?? "",
+    manaValue: card.manaValue ?? 0,
+    colors: card.colors ?? [],
+    cardTypes: card.cardTypes ?? [],
+    subtypes: card.subtypes ?? [],
+    basePower: card.power ?? 0,
+    baseToughness: card.toughness ?? 0,
+    keywords: [],
+    effects: [],
+    activatedAbilities: [],
+    requiresTargets: [],
+    tapped: false,
+    entersTapped: false,
+    summoningSickness: false,
+    activatedThisTurn: false,
+    damageMarked: 0,
+    deathtouchDamage: false,
+    counters: {},
+    temporaryPower: 0,
+    temporaryToughness: 0,
+    temporaryKeywords: [],
+    flags: {},
+  };
 }
 
 function describeCardFromJson(card: NewDeckCard): string {

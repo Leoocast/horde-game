@@ -29,8 +29,8 @@ export function cardKeywords(game: GameState, card: CardInstance): string {
 function formatKeyword(keyword: string): string {
   const text = String(keyword).trim();
   const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
-  if (toxic) return `Toxic {${toxic[1]}}`;
-  return text;
+  if (toxic) return `TOXIC {${toxic[1]}}`;
+  return text.toUpperCase();
 }
 
 export function zoneCount(game: GameState, side: Side, zone: "library" | "hand" | "battlefield" | "graveyard" | "exile"): number {
