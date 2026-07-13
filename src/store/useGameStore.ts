@@ -107,7 +107,8 @@ const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
 const HORDE_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
-const PLAYER_ATTACK_MILL_GAP_MS = 120;
+const PLAYER_ATTACK_MILL_GAP_MS = 35;
+const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const AUTO_PAID_LAND_FLASH_MS = 900;
 const BUFF_ANIMATION_MS = 1120;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
@@ -693,7 +694,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           useGameStore.getState().queueHordeMillPreview(preview.card);
         }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
-      elapsed += PLAYER_ATTACK_ANIMATION_MS + attackerMillCards.length * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS);
+      elapsed +=
+        attackerMillCards.length > 0
+          ? PLAYER_ATTACK_MILL_START_MS + (attackerMillCards.length - 1) * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
+          : PLAYER_ATTACK_ANIMATION_MS;
     });
 
     window.setTimeout(() => {
