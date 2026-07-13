@@ -12,6 +12,7 @@ import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { InfoMenu } from "./InfoMenu";
+import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { SpellFightAnimator } from "./SpellFightAnimator";
@@ -40,6 +41,7 @@ export function Board({ playerName, setupTurns }: Props) {
     <main className="duel-table h-screen overflow-hidden">
       <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} showSettings={false} />
       <DuelHud game={game} />
+      <PhaseBanner game={game} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
