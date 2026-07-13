@@ -276,6 +276,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
+    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
       hordeCombat &&
         side === "player" &&
@@ -297,7 +298,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde");
-    const actionable = legalAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId);
+    const actionable = availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId);
     const effectAvailable = canUseTapActivatedAbility(card);
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
