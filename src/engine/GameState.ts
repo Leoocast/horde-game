@@ -28,7 +28,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
     setupTurnsRemaining: setupTurns,
     setupCompletePendingHorde: false,
     player: {
-      life: 20,
+      life: seed.trim().toLowerCase() === DEVELOPER_SEED ? 50 : 20,
       library: playerLibrary,
       hand: [],
       battlefield: [],

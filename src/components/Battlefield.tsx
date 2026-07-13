@@ -54,6 +54,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const startPlayerAttackDrag = useGameStore((state) => state.startPlayerAttackDrag);
   const updatePlayerAttackDrag = useGameStore((state) => state.updatePlayerAttackDrag);
   const cancelPlayerAttackDrag = useGameStore((state) => state.cancelPlayerAttackDrag);
+  const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
 
   const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
   const lands = cards.filter((card) => card.cardTypes.includes("Land"));
@@ -137,7 +138,7 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       if (id) seenCardIds.current.add(id);
-      visual.animate(
+      const animation = visual.animate(
         [
           {
             opacity: 0,
@@ -156,6 +157,9 @@ export function Battlefield({ game, side, cards }: Props) {
           easing: "cubic-bezier(0.16, 1, 0.3, 1)",
         },
       );
+      animation.onfinish = () => {
+        if (side === "player") endSummoningAnimation();
+      };
       visual.removeAttribute("data-summoning");
     }
 

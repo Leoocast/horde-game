@@ -26,9 +26,12 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const attackAll = useGameStore((state) => state.attackAll);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
+  const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
-  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(defendBlockedReason);
+  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount);
+  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
@@ -69,7 +72,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <GameTooltip content={defendBlockedReason ?? state.label} visible={Boolean(defendBlockedReason)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
+      <GameTooltip content={actionBlockedReason ?? state.label} visible={Boolean(actionBlockedReason)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
         <button
           data-audio-click="off"
           onClick={runOrbAction}
@@ -262,4 +265,10 @@ function getDefendBlockedReason(game: GameState): string | undefined {
 
 function hasAvailableAttackers(game: GameState): boolean {
   return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
+}
+
+function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number): string | undefined {
+  if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before continuing.";
+  if (summoningAnimationCount > 0) return "Wait for the summon animation to finish.";
+  return undefined;
 }

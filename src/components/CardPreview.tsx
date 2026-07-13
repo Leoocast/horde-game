@@ -168,11 +168,21 @@ function KeywordPills({ keywords, compact = false }: { keywords: string; compact
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={keywordTooltip(clean)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{clean}</span>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(clean)}</span>
           </GameTooltip>
         );
       })}
     </div>
+  );
+}
+
+function renderKeywordLabel(keyword: string) {
+  const toxic = keyword.match(/^Toxic\s+\{(\d+)\}$/i);
+  if (!toxic) return keyword;
+  return (
+    <>
+      Toxic <span className="toxic-keyword-badge">{toxic[1]}</span>
+    </>
   );
 }
 

@@ -20,7 +20,17 @@ export function cardStatState(game: GameState, card: CardInstance, visualDamageM
 }
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
-  return getKeywords(game, card).filter((keyword) => keyword !== "HASTE" || card.controller === "horde").join(", ");
+  return getKeywords(game, card)
+    .filter((keyword) => keyword !== "HASTE" || card.controller === "horde")
+    .map(formatKeyword)
+    .join(", ");
+}
+
+function formatKeyword(keyword: string): string {
+  const text = String(keyword).trim();
+  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
+  if (toxic) return `Toxic {${toxic[1]}}`;
+  return text;
 }
 
 export function zoneCount(game: GameState, side: Side, zone: "library" | "hand" | "battlefield" | "graveyard" | "exile"): number {

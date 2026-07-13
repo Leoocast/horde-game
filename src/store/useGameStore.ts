@@ -16,6 +16,8 @@ type GameStore = {
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
   resolvingHordeCombat: boolean;
+  summoningAnimationCount: number;
+  pendingTriggeredEffectCount: number;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -58,6 +60,8 @@ type GameStore = {
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
   cancelPlayerAttackers: () => void;
+  beginSummoningAnimation: () => void;
+  endSummoningAnimation: () => void;
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
@@ -153,6 +157,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   resolvingHordeCombat: false,
+  summoningAnimationCount: 0,
+  pendingTriggeredEffectCount: 0,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
   autoPaidLandAnimation: undefined,
@@ -182,6 +188,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeAttackAnimation: undefined,
         playerAttackAnimation: undefined,
         resolvingHordeCombat: false,
+        summoningAnimationCount: 0,
+        pendingTriggeredEffectCount: 0,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
         autoPaidLandAnimation: undefined,
@@ -239,13 +247,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ counterTargeting }) => ({
       counterTargeting: counterTargeting ? { ...counterTargeting, targetId: undefined } : undefined,
     })),
-  cancelCounterTargeting: () => set({ counterTargeting: undefined }),
+  cancelCounterTargeting: () => set((state) => ({ counterTargeting: undefined, pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount })),
   confirmCounterTargeting: () =>
     set(({ game, counterTargeting }) => {
       if (!counterTargeting?.targetId) return {};
       const next = structuredClone(game) as GameState;
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!target) return { counterTargeting: undefined };
+      if (!target) return { counterTargeting: undefined, pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1) };
       target.counters["+1/+1"] = (target.counters["+1/+1"] ?? 0) + 1;
       next.player.life += 1;
       next.log.unshift(`${target.name} gets a +1/+1 counter. Player gains 1 life.`);
@@ -263,6 +271,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return {
         game: next,
         counterTargeting: undefined,
+        pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
         buffAnimationCardId: target.instanceId,
         lifeBuffAnimationId: Date.now(),
       };
@@ -282,17 +291,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { game: next };
     }),
   playLand: (id) =>
-    set(({ game }) => {
+    set((state) => {
+      const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
       const previousLog = game.log[0];
       const next = playLand(game, id);
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined };
+      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
     }),
   castCard: (id, options) =>
-    set(({ game }) => {
+    set((state) => {
+      const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
       const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
       const previousLog = game.log[0];
@@ -315,7 +326,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (card?.definitionId === "sunshower_druid" && castSucceeded) {
         window.setTimeout(() => {
           const latest = useGameStore.getState().game;
-          if (!findBattlefieldCard(latest, card.instanceId)) return;
+          if (!findBattlefieldCard(latest, card.instanceId)) {
+            useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
+            return;
+          }
           useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
           useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
           window.setTimeout(() => {
@@ -335,6 +349,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         activeEffectCardId: undefined,
         autoPaidLandAnimation,
+        summoningAnimationCount: castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery") ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
+        pendingTriggeredEffectCount: card?.definitionId === "sunshower_druid" && castSucceeded ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
       };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
@@ -375,6 +391,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       next.log.unshift("Player cancels attackers.");
       return { game: next, selectedPlayerCreatureId: undefined, playerAttackDrag: undefined };
     }),
+  beginSummoningAnimation: () => set((state) => ({ summoningAnimationCount: state.summoningAnimationCount + 1 })),
+  endSummoningAnimation: () => set((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) })),
   resolvePlayerCombat: () => set(({ game }) => ({ game: resolvePlayerCombat(game) })),
   finishPlayerCombat: () => {
     const { game, playerAttackAnimation } = get();
