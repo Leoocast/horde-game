@@ -22,6 +22,7 @@ type GameStore = {
   pendingTriggeredEffectCount: number;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
+  specialDeadCardIds: string[];
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -190,6 +191,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingTriggeredEffectCount: 0,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
+  specialDeadCardIds: [],
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -225,6 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingTriggeredEffectCount: 0,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
+        specialDeadCardIds: [],
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -423,7 +426,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           window.setTimeout(() => {
             useGameStore.setState((state) => ({
               ...resolveSpell(state.game),
-              hordeCombatDeadCardIds: [],
+              specialDeadCardIds: [],
               pendingSpellHandId: undefined,
             }));
           }, 260);
@@ -432,7 +435,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             selectedHandId: undefined,
             focusedCardId: undefined,
             pendingSpellHandId: handId,
-            hordeCombatDeadCardIds: destroyTargetIds,
+            specialDeadCardIds: destroyTargetIds,
           };
         }
         if (isSourceDamageSpell) {
@@ -441,13 +444,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
             useGameStore.setState(({ game }) => {
               const deadCardIds = findMarkedCreatureIds(game);
               if (deadCardIds.length === 0) return { spellFightAnimation: undefined };
-              return { hordeCombatDeadCardIds: deadCardIds, spellFightAnimation: undefined };
+              return { specialDeadCardIds: deadCardIds, spellFightAnimation: undefined };
             });
             window.setTimeout(() => {
               useGameStore.setState(({ game }) => {
                 const next = structuredClone(game) as GameState;
                 destroyMarkedCreatures(next);
-                return { game: next, hordeCombatDeadCardIds: [] };
+                return { game: next, specialDeadCardIds: [] };
               });
             }, 260);
           }, 520);
@@ -462,7 +465,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       useAudioStore.getState().playSfx("attack", { volume: 0.76 });
       window.setTimeout(() => {
-        useGameStore.setState(resolveSpell(useGameStore.getState().game));
+        const resolved = resolveSpell(useGameStore.getState().game);
+        const deadCardIds = findMarkedCreatureIds(resolved.game);
+        useGameStore.setState({ ...resolved, specialDeadCardIds: deadCardIds });
+        if (deadCardIds.length > 0) {
+          window.setTimeout(() => {
+            useGameStore.setState(({ game }) => {
+              const next = structuredClone(game) as GameState;
+              destroyMarkedCreatures(next);
+              return { game: next, specialDeadCardIds: [] };
+            });
+          }, 260);
+        }
       }, 520);
       return {
         spellTargeting: undefined,

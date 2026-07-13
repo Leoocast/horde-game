@@ -104,7 +104,6 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       dealDamageToCreature(game, target, sourcePower, hasKeyword(game, source, "DEATHTOUCH"));
       dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "DEATHTOUCH"));
       game.log.unshift(`${source.name} and ${target.name} fight.`);
-      destroyMarkedCreatures(game);
     }
     return;
   }

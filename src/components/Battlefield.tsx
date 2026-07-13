@@ -43,6 +43,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
+  const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
@@ -343,6 +344,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
+    const speciallyDead = specialDeadCardIds.includes(card.instanceId);
 
     return (
       <motion.div
@@ -370,6 +372,7 @@ export function Battlefield({ game, side, cards }: Props) {
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
+          speciallyDead ? "special-card-visually-dead" : "",
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
           effectActivating ? "effect-card-activating" : "",
