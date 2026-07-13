@@ -23,10 +23,11 @@ type Props = {
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
+  suppressContextMenu?: boolean;
   shouldSuppressClick?: () => boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, onContextMenu, shouldSuppressClick }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, autoPaid, linkLabel, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStats(game, card);
@@ -65,6 +66,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       onContextMenu={(event) => {
         event.preventDefault();
         onContextMenu?.(event);
+        if (suppressContextMenu) return;
         openCardContextMenu(card.instanceId, event.clientX, event.clientY);
       }}
       onClick={() => {

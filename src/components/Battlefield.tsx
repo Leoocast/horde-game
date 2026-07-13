@@ -1,6 +1,7 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { canAttack, canBlockAttacker } from "../engine/Keywords";
 import { useGameStore } from "../store/useGameStore";
+import { renderCardText } from "../utils/cardTextSymbols";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
@@ -24,9 +25,13 @@ export function Battlefield({ game, side, cards }: Props) {
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
+  const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const autoPaidLandIds = useGameStore((state) => state.autoPaidLandIds);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
+  const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
+  const activateAbility = useGameStore((state) => state.activateAbility);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -267,6 +272,9 @@ export function Battlefield({ game, side, cards }: Props) {
       (playerCombat && side === "horde");
     const actionable = legalAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId);
     const effectAvailable = canUseTapActivatedAbility(card);
+    const effectActive = activeEffectCardId === card.instanceId;
+    const effectClosing = closingEffectCardId === card.instanceId;
+    const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
 
     return (
       <motion.div
@@ -293,6 +301,8 @@ export function Battlefield({ game, side, cards }: Props) {
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
+          effectActive ? "effect-card-lifted" : "",
+          effectClosing ? "effect-card-closing" : "",
         ].join(" ")}
       >
       <Card
@@ -309,9 +319,14 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         autoPaid={autoPaid}
+        suppressContextMenu={effectActive}
         onPointerDown={(event) => {
           if (!selectableBlocker || event.button !== 0) return;
           beginBlockDrag(card.instanceId, event);
+        }}
+        onContextMenu={() => {
+          if (!effectActive) return;
+          selectActiveEffectCard(undefined);
         }}
         shouldSuppressClick={() => {
           if (!suppressNextSelectIds.current.has(card.instanceId)) return false;
@@ -321,6 +336,11 @@ export function Battlefield({ game, side, cards }: Props) {
         onSelect={() => {
           if (side === "player") {
             if (isLand) return;
+            if (!hordeCombat && !playerCombat && effectAvailable) {
+              selectActiveEffectCard(effectActive ? undefined : card.instanceId);
+              selectPlayerCreature(undefined);
+              return;
+            }
             if (hordeCombat) {
               if (assignedAttackerId) {
                 declareBlocker(card.instanceId, assignedAttackerId);
@@ -345,6 +365,18 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
+      {effectActive && primaryAbility && (
+        <button
+          data-audio-click="valid"
+          className="effect-action-button"
+          onClick={(event) => {
+            event.stopPropagation();
+            activateAbility(card.instanceId, primaryAbility.id);
+          }}
+        >
+          {renderCardText(abilityButtonText(primaryAbility))}
+        </button>
+      )}
       </div>
       </motion.div>
     );
@@ -416,6 +448,17 @@ export function Battlefield({ game, side, cards }: Props) {
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
   }
+}
+
+function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
+  if (ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC") {
+    const mana = ability.effect.mana as Record<string, number> | undefined;
+    const entry = mana ? Object.entries(mana)[0] : undefined;
+    const color = entry?.[0] === "chosenColor" ? "chosen" : entry?.[0] ?? String(ability.effect.manaColor ?? "G");
+    const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
+    return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
+  }
+  return String(ability.effect.type).replaceAll("_", " ");
 }
 
 type PointerEventEvent = globalThis.PointerEvent;

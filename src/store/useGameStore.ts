@@ -21,6 +21,8 @@ type GameStore = {
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
   selectedHordeCreatureId?: string;
+  activeEffectCardId?: string;
+  closingEffectCardId?: string;
   hoveredCardId?: string;
   focusedCardId?: string;
   seed: string;
@@ -29,6 +31,7 @@ type GameStore = {
   selectHand: (id?: string) => void;
   selectPlayerCreature: (id?: string) => void;
   selectHordeCreature: (id?: string) => void;
+  selectActiveEffectCard: (id?: string) => void;
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
@@ -59,6 +62,7 @@ const HORDE_ATTACK_ANIMATION_MS = 500;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
 const AUTO_PAID_LAND_FLASH_MS = 900;
 let autoPaidLandFlashTimer: number | undefined;
+let activeEffectCloseTimer: number | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -113,6 +117,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedHandId: undefined,
         selectedPlayerCreatureId: undefined,
         selectedHordeCreatureId: undefined,
+        activeEffectCardId: undefined,
+        closingEffectCardId: undefined,
         hoveredCardId: undefined,
         focusedCardId: undefined,
         hordeAttackAnimation: undefined,
@@ -126,6 +132,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectHand: (id) => set({ selectedHandId: id }),
   selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
   selectHordeCreature: (id) => set({ selectedHordeCreatureId: id }),
+  selectActiveEffectCard: (id) =>
+    set(({ activeEffectCardId }) => {
+      if (activeEffectCloseTimer) {
+        window.clearTimeout(activeEffectCloseTimer);
+        activeEffectCloseTimer = undefined;
+      }
+      if (id) return { activeEffectCardId: id, closingEffectCardId: undefined };
+      if (!activeEffectCardId) return { activeEffectCardId: undefined, closingEffectCardId: undefined };
+      activeEffectCloseTimer = window.setTimeout(() => {
+        useGameStore.setState({ closingEffectCardId: undefined });
+        activeEffectCloseTimer = undefined;
+      }, 280);
+      return { activeEffectCardId: undefined, closingEffectCardId: activeEffectCardId };
+    }),
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
@@ -148,7 +168,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined };
+      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined };
     }),
   castCard: (id, options) =>
     set(({ game }) => {
@@ -170,11 +190,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           autoPaidLandFlashTimer = undefined;
         }, AUTO_PAID_LAND_FLASH_MS);
       }
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined, autoPaidLandIds };
+      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, autoPaidLandIds };
     }),
   tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
   toggleTap: (id) => set(({ game }) => ({ game: toggleTap(game, id) })),
-  activateAbility: (id, abilityId, options) => set(({ game }) => ({ game: activateAbility(game, id, abilityId, options) })),
+  activateAbility: (id, abilityId, options) => set(({ game }) => ({ game: activateAbility(game, id, abilityId, options), activeEffectCardId: undefined })),
   toggleAttacker: (id) =>
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);

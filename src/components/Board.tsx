@@ -24,6 +24,9 @@ type Props = {
 
 export function Board({ playerName, setupTurns }: Props) {
   const game = useGameStore((state) => state.game);
+  const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
+  const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
+  const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
 
   useEffect(() => {
@@ -38,6 +41,9 @@ export function Board({ playerName, setupTurns }: Props) {
       <CombatArrows game={game} />
       <HordeAttackAnimator />
       <PlayerAttackAnimator />
+      {(activeEffectCardId || closingEffectCardId) && (
+        <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
+      )}
       <CardPreview />
       <CardContextMenu />
       <PlayerLifePanel game={game} playerName={playerName} />

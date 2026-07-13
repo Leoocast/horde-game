@@ -30,6 +30,7 @@ function clearCardSelection() {
   game.selectHand(undefined);
   game.selectPlayerCreature(undefined);
   game.selectHordeCreature(undefined);
+  game.selectActiveEffectCard(undefined);
   game.setFocusedCardId(undefined);
 }
 
