@@ -5,6 +5,7 @@ import { hashSeed, shuffleWithState } from "./RNG";
 const DEVELOPER_SEED = "developer";
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
+const DEVELOPER_HORDE_OPENING_LIBRARY = ["graf_harvest"];
 const DEVELOPER_STARTING_BATTLEFIELD = [
   { definitionId: "forest", amount: 5 },
 ] as const;
@@ -18,11 +19,12 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
   const playerLibrary = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
   const shuffledHorde = shuffleWithState(hordeCards, randomState);
   randomState = shuffledHorde.randomState;
+  const hordeLibrary = applyDeveloperHordeOpeningLibrary(seed, shuffledHorde.items);
 
   const game: GameState = {
     seed,
     currentRandomState: randomState,
-    hordeDeckOrderHash: shuffledHorde.items.map((card) => card.definitionId).join("|"),
+    hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
@@ -39,7 +41,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
       landPlayedThisTurn: false,
     },
     horde: {
-      library: shuffledHorde.items,
+      library: hordeLibrary,
       battlefield: [],
       graveyard: [],
       exile: [],
@@ -63,6 +65,20 @@ function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardI
   const remaining = [...library];
   const opening: CardInstance[] = [];
   for (const definitionId of DEVELOPER_OPENING_HAND) {
+    const index = remaining.findIndex((card) => card.definitionId === definitionId);
+    if (index < 0) continue;
+    const [card] = remaining.splice(index, 1);
+    opening.push(card);
+  }
+  return [...opening, ...remaining];
+}
+
+function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
+
+  const remaining = [...library];
+  const opening: CardInstance[] = [];
+  for (const definitionId of DEVELOPER_HORDE_OPENING_LIBRARY) {
     const index = remaining.findIndex((card) => card.definitionId === definitionId);
     if (index < 0) continue;
     const [card] = remaining.splice(index, 1);

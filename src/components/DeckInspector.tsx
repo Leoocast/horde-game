@@ -2,7 +2,7 @@ import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
-import { cleanReminderText, renderCardText } from "../utils/cardTextSymbols";
+import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { AppHeader } from "./AppHeader";
 import { CardDetailsModal, KeywordPills } from "./CardPreview";
@@ -172,7 +172,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     );
   }
 
-  const text = cleanReminderText(details.oracleText ?? describeCardFromJson(card));
+  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
   const hasText = text.length > 0;
 
   return (
@@ -232,7 +232,7 @@ function DeckInspectorDetailsModal({
   onNext: () => void;
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
-  const text = cleanReminderText(details.oracleText ?? describeCardFromJson(card));
+  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
   return (
     <CardDetailsModal
       card={toCardInstance(card)}

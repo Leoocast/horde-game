@@ -29,6 +29,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const boardRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
@@ -119,7 +120,8 @@ export function Battlefield({ game, side, cards }: Props) {
       previousPlayerAttackers.current = currentAttackers;
     }
 
-    if (side === "horde") {
+    const currentHordeEntrySignature = cards.map((card) => card.instanceId).join("|");
+    if (side === "horde" && currentHordeEntrySignature !== previousHordeEntrySignature.current) {
       for (const card of cards) {
         if (animatedHordeIds.current.has(card.instanceId)) continue;
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
@@ -155,6 +157,7 @@ export function Battlefield({ game, side, cards }: Props) {
         };
       }
     }
+    if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
 
     const summoningElements = Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']"));
     for (const visual of summoningElements) {
@@ -223,8 +226,12 @@ export function Battlefield({ game, side, cards }: Props) {
   return (
     <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={cards.length}>
       <div ref={boardRef} className="space-y-3">
-        <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
-        {(side === "player" || others.length > 0) && <ResourceRow lands={side === "player" ? lands : []} others={others} showLands={side === "player"} />}
+        {side === "horde" && others.length > 0 ? (
+          <HordeBattlefieldRow creatures={creatures} others={others} />
+        ) : (
+          <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
+        )}
+        {side === "player" && <ResourceRow lands={lands} others={others} />}
       </div>
     </Zone>
   );
@@ -249,27 +256,60 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function ResourceRow({ lands, others, showLands }: { lands: CardInstance[]; others: CardInstance[]; showLands: boolean }) {
+  function HordeBattlefieldRow({ creatures: rowCreatures, others: rowOthers }: { creatures: CardInstance[]; others: CardInstance[] }) {
+    const otherPermanentsTargetingActive = rowOthers.some((card) => isSpellTargetable(card) || isSpellTargetLocked(card));
+
+    return (
+      <div data-battlefield-drop-target="player-attack" className="old-panel-soft relative p-1.5">
+        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
+          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Creatures</h3>
+          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
+        </div>
+        {rowCreatures.length === 0 ? (
+          <div className="battlefield-empty">Empty</div>
+        ) : (
+          <div className="battlefield-row-body flex flex-wrap items-center justify-center gap-2">
+            <AnimatePresence initial={false} mode="popLayout">
+              {rowCreatures.map((card) => renderCard(card))}
+            </AnimatePresence>
+          </div>
+        )}
+        <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
+          <div className="old-panel-soft w-max p-1">
+            <div className="mb-1 flex h-4 items-center justify-between gap-4 leading-none">
+              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
+              <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <AnimatePresence initial={false} mode="popLayout">
+                {rowOthers.map((card) => renderCard(card, true, "other"))}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function ResourceRow({ lands, others }: { lands: CardInstance[]; others: CardInstance[] }) {
     return (
       <div className="old-panel-soft p-1.5">
-        <div className={showLands ? "grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]" : ""}>
-          {showLands && (
-            <div>
-              <div className="mb-1 flex h-4 items-center justify-between leading-none">
-                <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
-                <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
-              </div>
-              {lands.length === 0 ? (
-                <div className="battlefield-empty-compact">Empty</div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {lands.map((card) => renderCard(card, true, "land"))}
-                  </AnimatePresence>
-                </div>
-              )}
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]">
+          <div>
+            <div className="mb-1 flex h-4 items-center justify-between leading-none">
+              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
+              <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
             </div>
-          )}
+            {lands.length === 0 ? (
+              <div className="battlefield-empty-compact">Empty</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {lands.map((card) => renderCard(card, true, "land"))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
           <div>
             <div className="mb-1 flex h-4 items-center justify-between leading-none">
               <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
@@ -296,6 +336,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
+    const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
     const attacking = game.combat.playerAttackers.includes(card.instanceId) || game.combat.hordeAttackers.includes(card.instanceId);
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
@@ -340,8 +381,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
     const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
     const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
-    const spellTargetable = Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
-    const spellTargetLocked = Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellTargetable = isSpellTargetable(card);
+    const spellTargetLocked = isSpellTargetLocked(card);
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
@@ -392,7 +433,7 @@ export function Battlefield({ game, side, cards }: Props) {
         actionable={actionable || counterTargetable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
-        linkLabel={side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
+        linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting)}
@@ -479,6 +520,30 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function findAssignedAttacker(blockerId: string): string | undefined {
     return Object.entries(game.combat.blockers).find(([, blockerIds]) => blockerIds.includes(blockerId))?.[0];
+  }
+
+  function isSpellTargetable(card: CardInstance): boolean {
+    const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
+    const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
+    const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
+    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
+    return Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
+  }
+
+  function isSpellTargetLocked(card: CardInstance): boolean {
+    return Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
+  }
+
+  function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
+    const orderedBlockers = [...(game.combat.blockers[attackerId] ?? [])].sort((left, right) => playerBattlefieldIndex(right) - playerBattlefieldIndex(left));
+    if (orderedBlockers.length < 2) return undefined;
+    const orderIndex = orderedBlockers.indexOf(blockerId);
+    return orderIndex >= 0 ? `${orderIndex + 1}` : undefined;
+  }
+
+  function playerBattlefieldIndex(cardId: string): number {
+    const index = game.player.battlefield.findIndex((card) => card.instanceId === cardId);
+    return index < 0 ? Number.MAX_SAFE_INTEGER : index;
   }
 
   function getAttackerColor(attackerId: string): string | undefined {

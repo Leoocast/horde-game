@@ -26,11 +26,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const attackAll = useGameStore((state) => state.attackAll);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation));
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
+  const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
-  const attackAnimating = hordeAttackAnimating || playerAttackAnimating;
+  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
-  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount);
+  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount);
   const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
@@ -113,7 +116,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-12 top-[calc(50%+5.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#b9d8ff] bg-[#0f3157] text-[9px] font-black uppercase tracking-wide text-[#ddecff] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#174c85] xl:right-16"
+          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel blocks"
         >
           <X size={18} />
@@ -121,12 +124,12 @@ export function PhaseOrb({ game }: { game: GameState }) {
         </button>
       )}
       {showAttackAll && (
-        <GameTooltip content="Sends every available creature to attack." className="fixed right-24 top-[calc(50%+4.75rem)] z-[80] xl:right-28">
+        <GameTooltip content="Sends every available creature to attack." className="fixed right-[9.3rem] top-1/2 z-[80] -translate-y-1/2 xl:right-[10.3rem]">
           <button
             data-audio-click="valid"
             onClick={attackAll}
             disabled={Boolean(game.winner) || attackAnimating}
-            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12]"
+            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffd17a] bg-[linear-gradient(180deg,#b95514,#74300d_52%,#251006)] text-[8px] font-black uppercase tracking-wide text-[#fff0b8] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#d66b1b,#8d3a10_52%,#2f1407)]"
           >
             <Swords size={16} />
             All
@@ -138,7 +141,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelPlayerAttackers}
           disabled={Boolean(game.winner) || attackAnimating}
-          className="fixed right-12 top-[calc(50%+5.25rem)] z-[80] flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-[#f3bf63] bg-[#5c210e] text-[9px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[#7b2c12] xl:right-16"
+          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel attackers"
         >
           <X size={18} />
@@ -283,7 +286,8 @@ function hasAvailableAttackers(game: GameState): boolean {
   return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }
 
-function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number): string | undefined {
+function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number, hordeAutoTriggerCount: number): string | undefined {
+  if (hordeAutoTriggerCount > 0) return "Horde is resolving triggered effects.";
   if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before continuing.";
   if (summoningAnimationCount > 0) return "Wait for the summon animation to finish.";
   return undefined;

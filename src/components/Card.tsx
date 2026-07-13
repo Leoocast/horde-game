@@ -1,7 +1,7 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
-import { cardStatState } from "../utils/selectors";
+import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 
 type Props = {
@@ -35,6 +35,14 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
+  const battlefieldKeywords =
+    card.controller === "horde" && card.zone === "battlefield" && card.cardTypes.includes("Creature")
+      ? cardKeywords(game, card)
+          .split(",")
+          .map((keyword) => keyword.trim())
+          .filter((keyword) => keyword !== "HASTE")
+          .filter(Boolean)
+      : [];
   const { imageUrl } = useCardDetails(card.definitionId);
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
@@ -61,7 +69,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
       aria-disabled={selectionDisabled ? "true" : undefined}
-      onMouseEnter={() => setHoveredCardId(card.instanceId)}
+      onMouseEnter={() => {
+        if (!suppressHoverOverlay) setHoveredCardId(card.instanceId);
+      }}
       onMouseLeave={() => {
         setHoveredCardId(undefined);
         onLeave?.();
@@ -98,14 +108,25 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       )}
       {!suppressHoverOverlay && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
-      <div className="absolute left-1 top-1 flex flex-wrap gap-1">
-        {card.tapped && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
-        {attacking && <span className="rounded-sm bg-[#7b2513]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Atk</span>}
-        {blocking && <span className="rounded-sm bg-[#5b421f]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Blk</span>}
-        {linkLabel && (
-          <span className="rounded-sm px-1.5 py-0.5 text-[12px] font-black text-white shadow" style={{ backgroundColor: accentColor ?? "#2563eb" }}>
-            {linkLabel}
-          </span>
+      <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
+        <div className="flex flex-wrap gap-1">
+          {card.tapped && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
+          {attacking && <span className="rounded-sm bg-[#7b2513]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Atk</span>}
+          {blocking && <span className="rounded-sm bg-[#5b421f]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Blk</span>}
+          {linkLabel && (
+            <span className="rounded-sm px-1.5 py-0.5 text-[12px] font-black text-white shadow" style={{ backgroundColor: accentColor ?? "#2563eb" }}>
+              {linkLabel}
+            </span>
+          )}
+        </div>
+        {battlefieldKeywords.length > 0 && (
+          <div className="card-keyword-stack">
+            {battlefieldKeywords.map((keyword) => (
+              <span key={keyword} className="card-keyword-badge">
+                {keyword}
+              </span>
+            ))}
+          </div>
         )}
       </div>
       {!hideStats && stats.text && (

@@ -17,6 +17,49 @@ export function cleanReminderText(text: string): string {
     .trim();
 }
 
+export function cleanCardDescriptionText(oracleText?: string, flavorText?: string, keywords = "", fallbackText = ""): string {
+  const cleanedOracle = stripKeywordOnlyLines(cleanReminderText(oracleText ?? ""), keywords);
+  if (cleanedOracle) return cleanedOracle;
+  const cleanedFlavor = cleanReminderText(flavorText ?? "");
+  if (cleanedFlavor) return cleanedFlavor;
+  return stripKeywordOnlyLines(cleanReminderText(fallbackText), keywords);
+}
+
+function stripKeywordOnlyLines(text: string, keywords: string): string {
+  if (!text) return "";
+  const keywordSet = new Set(
+    keywords
+      .split(",")
+      .map((keyword) => normalizeKeywordLine(keyword))
+      .filter(Boolean),
+  );
+  const baseKeywords = new Set(["FLYING", "REACH", "VIGILANCE", "MENACE", "DEATHTOUCH", "TRAMPLE", "HASTE", "HEXPROOF", "SKULK"]);
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) =>
+      block
+        .split("\n")
+        .filter((line) => {
+          const normalized = normalizeKeywordLine(line);
+          if (!normalized) return false;
+          return !baseKeywords.has(normalized) && !keywordSet.has(normalized);
+        })
+        .join("\n")
+        .trim(),
+    )
+    .filter(Boolean);
+  return blocks.join("\n\n").trim();
+}
+
+function normalizeKeywordLine(text: string): string {
+  return text
+    .replace(/\{(\d+)\}/g, "$1")
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
 function SymbolLabel({ symbol }: { symbol: string }) {
   if (symbol === "T") {
     return (

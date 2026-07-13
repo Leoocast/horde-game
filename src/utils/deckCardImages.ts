@@ -4,6 +4,7 @@ import type { DeckImageManifest, NewDeckCard } from "../data/deckCatalog";
 export type DeckCardDetails = {
   imageUrl?: string;
   oracleText?: string;
+  flavorText?: string;
 };
 
 const memoryCache = new Map<string, DeckCardDetails | null>();
@@ -32,17 +33,11 @@ export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined
 
 async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest): Promise<DeckCardDetails | null> {
   const cacheId = `${deckId}:${card.id}`;
-  const cached = readCachedDetails(cacheId);
-  if (cached !== undefined) return cached;
-
   const lookup = manifest.cards[card.id];
   if (!lookup) {
     writeCachedDetails(cacheId, null);
     return null;
   }
-
-  const existing = pending.get(cacheId);
-  if (existing) return existing;
 
   if (lookup.imageUrl) {
     const direct = { imageUrl: lookup.imageUrl };
@@ -50,12 +45,19 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
     return direct;
   }
 
+  const cached = readCachedDetails(cacheId);
+  if (cached !== undefined) return cached;
+
+  const existing = pending.get(cacheId);
+  if (existing) return existing;
+
   const request = fetch(buildScryfallUrl(lookup, card), { headers: { Accept: "application/json" } })
     .then((response) => (response.ok ? response.json() : undefined))
     .then((payload) => {
       const cardPayload = readSearchResult(payload) ?? payload;
       const details: DeckCardDetails = {
         imageUrl:
+          readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.fallbackImagePath ?? card.scryfall?.fallbackImagePath ?? "image_uris.large") ??
           readPath(cardPayload, "image_uris.normal") ??
@@ -63,6 +65,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
           readPath(cardPayload, "card_faces[0].image_uris.normal") ??
           readPath(cardPayload, "card_faces[0].image_uris.large"),
         oracleText: readOracleText(cardPayload),
+        flavorText: readFlavorText(cardPayload),
       };
       writeCachedDetails(cacheId, details);
       return details;
@@ -80,6 +83,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
 }
 
 function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewDeckCard): string {
+  if (lookup.lookupUrl) return lookup.lookupUrl;
   const exact = lookup.exact ?? card.scryfall?.lookupQuery ?? card.name;
   if (lookup.set) {
     return `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${exact}" set:${lookup.set}`)}`;
@@ -90,8 +94,11 @@ function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewD
 function readOracleText(payload: unknown): string | undefined {
   const faceText = readPath(payload, "card_faces[0].oracle_text");
   const text = readPath(payload, "oracle_text");
-  const type = readPath(payload, "type_line");
-  return [type, text ?? faceText].filter(Boolean).join("\n");
+  return text ?? faceText;
+}
+
+function readFlavorText(payload: unknown): string | undefined {
+  return readPath(payload, "flavor_text") ?? readPath(payload, "card_faces[0].flavor_text");
 }
 
 function readSearchResult(payload: unknown): unknown {
@@ -124,7 +131,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v1:${cacheId}`;
+  return `horde-deck-card-details:v3:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

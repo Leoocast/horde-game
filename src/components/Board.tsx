@@ -11,9 +11,11 @@ import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
+import { HordeMillAnimator } from "./HordeMillAnimator";
 import { InfoMenu } from "./InfoMenu";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
+import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
@@ -30,6 +32,7 @@ export function Board({ playerName, setupTurns }: Props) {
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
+  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
 
@@ -47,8 +50,11 @@ export function Board({ playerName, setupTurns }: Props) {
       <CounterTargetingOverlay game={game} />
       <SpellTargetingOverlay game={game} />
       <HordeAttackAnimator />
+      <HordeMillAnimator />
+      <PlayerDiscardAnimator />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
+      {hordeAutoTriggerCount > 0 && <div data-audio-click="off" className="fixed inset-0 z-[79]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
