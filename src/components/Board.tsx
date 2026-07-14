@@ -1,3 +1,4 @@
+import { Crown, Skull } from "lucide-react";
 import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -23,19 +24,23 @@ import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
+import { VictoryModal } from "./VictoryModal";
 
 type Props = {
   playerName: string;
   setupTurns: number;
+  onReturnToMenu: () => void;
 };
 
-export function Board({ playerName, setupTurns }: Props) {
+export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   const game = useGameStore((state) => state.game);
+  const triggerEndGame = useGameStore((state) => state.triggerEndGame);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
+  const isDeveloperMode = game.seed.trim().toLowerCase() === "developer";
 
   useEffect(() => {
     setMusicVariant(game.player.life <= 10 ? "climax" : "battle");
@@ -43,7 +48,7 @@ export function Board({ playerName, setupTurns }: Props) {
 
   return (
     <main className="duel-table h-screen overflow-hidden">
-      <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} showSettings={false} />
+      <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} />
       <DuelHud game={game} />
       <PhaseBanner game={game} />
       <PhaseOrb game={game} />
@@ -71,8 +76,20 @@ export function Board({ playerName, setupTurns }: Props) {
         </section>
       </div>
       <Hand game={game} />
-      {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} />}
-      {game.winner === "player" && <div className="fixed inset-x-0 bottom-0 z-[120] bg-emerald-700 px-4 py-3 text-center text-lg font-bold text-white">Player wins</div>}
+      
+      {isDeveloperMode && !game.winner && (
+        <div className="fixed bottom-4 left-4 z-[300] flex gap-2 rounded-lg bg-black/60 p-2 backdrop-blur-md">
+          <button className="old-button-green flex h-8 items-center gap-2 px-3 text-[10px] font-bold uppercase" onClick={() => triggerEndGame("player")} title="Force Victory">
+            <Crown size={12} /> Win
+          </button>
+          <button className="old-button flex h-8 items-center gap-2 px-3 text-[10px] font-bold uppercase" onClick={() => triggerEndGame("horde")} title="Force Defeat">
+            <Skull size={12} /> Lose
+          </button>
+        </div>
+      )}
+
+      {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
     </main>
   );
 }

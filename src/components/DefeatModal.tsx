@@ -1,4 +1,4 @@
-import { RefreshCcw, Skull } from "lucide-react";
+import { Home, RefreshCcw, Skull } from "lucide-react";
 import { useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
@@ -6,9 +6,10 @@ import { useGameStore } from "../store/useGameStore";
 type Props = {
   game: GameState;
   setupTurns: number;
+  onReturnToMenu: () => void;
 };
 
-export function DefeatModal({ game, setupTurns }: Props) {
+export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
   const reset = useGameStore((state) => state.reset);
   const setSeed = useGameStore((state) => state.setSeed);
   const [seedInput, setSeedInput] = useState(game.seed);
@@ -38,13 +39,22 @@ export function DefeatModal({ game, setupTurns }: Props) {
           className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
         />
 
-        <button
-          className="old-button mt-5 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-          onClick={restart}
-        >
-          <RefreshCcw size={18} />
-          Restart
-        </button>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            className="old-button flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            onClick={onReturnToMenu}
+          >
+            <Home size={18} />
+            Menu
+          </button>
+          <button
+            className="old-button mt-0 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            onClick={restart}
+          >
+            <RefreshCcw size={18} />
+            Restart
+          </button>
+        </div>
       </section>
     </div>
   );

@@ -57,7 +57,7 @@ export default function App() {
   return (
     <>
       <AudioClickListener />
-      <Board playerName={playerName} setupTurns={setupTurns} />
+      <Board playerName={playerName} setupTurns={setupTurns} onReturnToMenu={() => setScreen("start")} />
     </>
   );
 }

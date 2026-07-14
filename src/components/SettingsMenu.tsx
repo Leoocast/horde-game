@@ -1,8 +1,13 @@
-import { Settings } from "lucide-react";
+import { Crown, Settings, Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useGameStore } from "../store/useGameStore";
 import { AudioControls } from "./AudioControls";
 
 export function SettingsMenu() {
+  const seed = useGameStore((state) => state.game?.seed);
+  const triggerEndGame = useGameStore((state) => state.triggerEndGame);
+  const isDeveloperMode = seed?.trim().toLowerCase() === "developer";
+
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -36,6 +41,33 @@ export function SettingsMenu() {
       {open && menuPos && (
         <div className="fixed z-[400] w-72" style={{ top: menuPos.top, right: menuPos.right }}>
           <AudioControls />
+          {isDeveloperMode && (
+            <div className="old-panel mt-2 p-4">
+              <h3 className="old-title mb-3 text-center text-sm font-black uppercase tracking-widest text-[#f4cc74]">Developer Options</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  className="old-button-green flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase"
+                  onClick={() => {
+                    triggerEndGame("player");
+                    setOpen(false);
+                  }}
+                >
+                  <Crown size={14} />
+                  Win
+                </button>
+                <button
+                  className="old-button flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase"
+                  onClick={() => {
+                    triggerEndGame("horde");
+                    setOpen(false);
+                  }}
+                >
+                  <Skull size={14} />
+                  Lose
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
