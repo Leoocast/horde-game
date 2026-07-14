@@ -5,7 +5,7 @@ import { hashSeed, shuffleWithState } from "./RNG";
 const DEVELOPER_SEED = "developer";
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HORDE_OPENING_LIBRARY = ["zombie_token", "smallpox"];
+const DEVELOPER_HORDE_OPENING_LIBRARY: string[] = [];
 const DEVELOPER_STARTING_BATTLEFIELD = [
   { definitionId: "forest", amount: 5 },
 ] as const;
