@@ -105,6 +105,7 @@ type GameStore = {
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
   completeHordeMillAnimation: (id: string) => void;
+  triggerEndGame: (winner: "player" | "horde") => void;
 };
 
 const SEED_STORAGE_KEY = "horde-game-seed";
@@ -734,6 +735,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = finishHordeTurn(game);
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, hordeAutoTriggerCount: 0 };
+    }),
+  triggerEndGame: (winner) =>
+    set((state) => {
+      const next = structuredClone(state.game) as GameState;
+      next.winner = winner;
+      return { game: next };
     }),
 }));
 

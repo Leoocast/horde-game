@@ -4,10 +4,12 @@ import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
+import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
+  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
   const [setupTurns, setSetupTurns] = useState(4);
@@ -47,6 +49,7 @@ export default function App() {
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
             reset(options.seed, options.setupTurns);
+            startBattleMusic(true);
             setScreen("game");
           }}
         />
@@ -57,7 +60,7 @@ export default function App() {
   return (
     <>
       <AudioClickListener />
-      <Board playerName={playerName} setupTurns={setupTurns} />
+      <Board playerName={playerName} setupTurns={setupTurns} onReturnToMenu={() => setScreen("start")} />
     </>
   );
 }

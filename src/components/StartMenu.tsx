@@ -1,5 +1,5 @@
-import { ChevronDown, Copy, Play, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Copy, Github, Play, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
@@ -33,12 +33,16 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [developerMode, setDeveloperMode] = useState(true);
   const [deckOpen, setDeckOpen] = useState(false);
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
-  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
+  const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
   const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
+
+  useEffect(() => {
+    startMenuMusic();
+  }, [startMenuMusic]);
 
   async function copySeed() {
     try {
@@ -50,7 +54,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   }
 
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]" onPointerDownCapture={startBattleMusic}>
+    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]" onPointerDownCapture={startMenuMusic}>
       <AppHeader
         left={<div className="pl-3 old-title text-sm font-black uppercase tracking-[0.18em] text-[#f8dfa0]">Horde Magic PvE</div>}
         center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
@@ -242,6 +246,16 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
         </button>
         </section>
       </div>
+      
+      <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
+        <div className="mb-0.5">Version: Alpha 1.0.0 Stable</div>
+        <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
+          <span>Developed by</span>
+          <Github size={11} className="-mt-[1px]" />
+          <span>Leoocast</span>
+        </a>
+      </div>
+
       <ToastStack />
     </main>
   );

@@ -1,23 +1,46 @@
 import { Menu, RefreshCcw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store/useGameStore";
-import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
 import { ZoneDrawer } from "./ZoneDrawer";
 
 export function InfoMenu({ setupTurns }: { setupTurns: number }) {
   const game = useGameStore((state) => state.game);
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
   const seed = useGameStore((state) => state.seed);
   const setSeed = useGameStore((state) => state.setSeed);
   const reset = useGameStore((state) => state.reset);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
+  const toggle = () => {
+    setOpen((value) => {
+      const next = !value;
+      if (next && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+      }
+      return next;
+    });
+  };
+
   return (
-    <div className="relative">
-      <button className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={() => setOpen((value) => !value)} title="Extra info">
+    <div className="relative" ref={containerRef}>
+      <button ref={buttonRef} className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Extra info">
         <Menu size={20} />
       </button>
-      {open && (
-        <div className="old-panel absolute right-0 top-full mt-2 max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]">
+      {open && menuPos && (
+        <div className="old-panel old-scrollbar fixed z-[400] max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <label className="old-title text-xs font-bold uppercase tracking-wide">Seed</label>
@@ -28,7 +51,6 @@ export function InfoMenu({ setupTurns }: { setupTurns: number }) {
                 </button>
               </div>
             </div>
-            <AudioControls />
             <div className="text-xs text-[#d6b879]">RNG: {game.currentRandomState.toString(16)}</div>
             <ZoneDrawer game={game} />
             <GameLog game={game} className="h-60" />
