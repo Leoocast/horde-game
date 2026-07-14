@@ -1,10 +1,34 @@
 import { ListMusic, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MusicCollectionId } from "../audio/musicManifest";
 import { useAudioStore } from "../store/useAudioStore";
 
 export function MusicPlayerMenu() {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
+  const toggle = () => {
+    setOpen((value) => {
+      const next = !value;
+      if (next && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+      }
+      return next;
+    });
+  };
+
   const musicEnabled = useAudioStore((state) => state.musicEnabled);
   const musicVolume = useAudioStore((state) => state.musicVolume);
   const musicStatus = useAudioStore((state) => state.musicStatus);
@@ -21,12 +45,12 @@ export function MusicPlayerMenu() {
   const selectedId = selectedCollectionId ?? musicStatus.collectionId;
 
   return (
-    <div className="relative">
-      <button className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={() => setOpen((value) => !value)} title="Music player">
+    <div className="relative" ref={containerRef}>
+      <button ref={buttonRef} className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Music player">
         <ListMusic size={20} />
       </button>
-      {open && (
-        <div className="old-panel absolute right-0 top-full mt-2 w-80 overflow-hidden text-[#f6e6b8]">
+      {open && menuPos && (
+        <div className="old-panel fixed z-[400] w-80 overflow-hidden text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <div className="old-title text-xs font-bold uppercase tracking-wide">Now Playing</div>
