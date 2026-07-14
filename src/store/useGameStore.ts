@@ -1138,6 +1138,7 @@ function finishSmallpoxSequence(): void {
       card.zone = "graveyard";
       next.horde.graveyard.push(card);
       next.log.unshift(`${card.name} goes to the Horde graveyard.`);
+      useAudioStore.getState().playSfx("draw");
     }
     const withAttackers = prepareHordeAttackers(next);
     if (withAttackers.horde.battlefield.length > previous.horde.battlefield.length) useAudioStore.getState().playSfx("draw");

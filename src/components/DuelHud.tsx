@@ -1,4 +1,5 @@
 import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -38,8 +39,21 @@ export function DuelHud({ game }: { game: GameState }) {
   return (
     <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
+        <AnimatePresence>
         {smallpoxCard && (
-          <div className="flex flex-col items-center gap-2">
+          <motion.div
+            key={smallpoxCard.instanceId}
+            className="flex flex-col items-center gap-2"
+            initial={false}
+            exit={{
+              opacity: [1, 1, 0],
+              x: [0, -8, 50],
+              y: [0, 10, -36],
+              scale: [1, 0.97, 0.66],
+              rotate: [0, -3, -9],
+              transition: { duration: 0.3, times: [0, 0.22, 1], ease: ["easeOut", "easeIn"] },
+            }}
+          >
             <div
               data-card-id={smallpoxCard.instanceId}
               className={["horde-special-card", activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : ""].join(" ")}
@@ -68,8 +82,9 @@ export function DuelHud({ game }: { game: GameState }) {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
         <div data-player-attack-target="horde-deck" className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
           <div className="text-right">
             <div className="old-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
