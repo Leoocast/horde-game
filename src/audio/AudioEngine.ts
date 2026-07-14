@@ -1,5 +1,5 @@
 import { sfxManifest, type SfxId } from "./soundManifest";
-import { musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
+import { battleThemeIds, musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
 
 type AudioSettings = {
   enabled: boolean;
@@ -84,13 +84,14 @@ class AudioEngine {
     this.activeSfx.clear();
   }
 
-  startRandomBattleTheme() {
-    if (this.music && this.currentCollectionId) {
+  startRandomBattleTheme(forceNew = false) {
+    const isBattleTheme = this.currentCollectionId && battleThemeIds.includes(this.currentCollectionId);
+    if (!forceNew && this.music && isBattleTheme) {
       this.resumeMusic();
       return this.getStatus();
     }
 
-    const id = musicCollectionIds[Math.floor(Math.random() * musicCollectionIds.length)];
+    const id = battleThemeIds[Math.floor(Math.random() * battleThemeIds.length)];
     return this.playCollection(id, "battle");
   }
 

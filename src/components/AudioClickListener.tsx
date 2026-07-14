@@ -14,7 +14,7 @@ export function AudioClickListener() {
         return;
       }
       const audio = useAudioStore.getState();
-      audio.startBattleMusic();
+      audio.resumeMusic();
       audio.playSfx("click", { volume: 0.65 });
     }
 

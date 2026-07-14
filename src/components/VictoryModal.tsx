@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
+import { useAudioStore } from "../store/useAudioStore";
 
 type Props = {
   game: GameState;
@@ -14,12 +15,14 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
   const reset = useGameStore((state) => state.reset);
   const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
+  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const [seedInput, setSeedInput] = useState(game.seed);
 
   function restart() {
     const nextSeed = seedInput.trim() || game.seed;
     setSeed(nextSeed);
     reset(nextSeed, setupTurns);
+    startBattleMusic(true);
   }
 
   async function copySeed() {

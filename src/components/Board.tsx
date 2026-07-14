@@ -40,11 +40,17 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
+  const playCollection = useAudioStore((state) => state.playCollection);
   const isDeveloperMode = game.seed.trim().toLowerCase() === "developer";
 
   useEffect(() => {
     setMusicVariant(game.player.life <= 10 ? "climax" : "battle");
   }, [game.player.life, setMusicVariant]);
+
+  useEffect(() => {
+    if (game.winner === "player") playCollection("winTheme");
+    else if (game.winner === "horde") playCollection("lossTheme");
+  }, [game.winner, playCollection]);
 
   return (
     <main className="duel-table h-screen overflow-hidden">
@@ -76,17 +82,6 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
         </section>
       </div>
       <Hand game={game} />
-      
-      {isDeveloperMode && !game.winner && (
-        <div className="fixed bottom-4 left-4 z-[300] flex gap-2 rounded-lg bg-black/60 p-2 backdrop-blur-md">
-          <button className="old-button-green flex h-8 items-center gap-2 px-3 text-[10px] font-bold uppercase" onClick={() => triggerEndGame("player")} title="Force Victory">
-            <Crown size={12} /> Win
-          </button>
-          <button className="old-button flex h-8 items-center gap-2 px-3 text-[10px] font-bold uppercase" onClick={() => triggerEndGame("horde")} title="Force Defeat">
-            <Skull size={12} /> Lose
-          </button>
-        </div>
-      )}
 
       {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
       {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}

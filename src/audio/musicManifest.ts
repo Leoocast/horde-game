@@ -23,11 +23,38 @@ export const musicCollections = {
   battleTheme14: makeCollection(14),
   battleTheme15: makeCollection(15),
   battleTheme16: makeCollection(16),
+  bg3TwistedForced: {
+    label: "BG3 - Twisted Forced",
+    battle: new URL("../../assets/music/no_dinamic_music/BG3_Twisted_Forced.mp3", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/BG3_Twisted_Forced.mp3", import.meta.url).href,
+  },
+  bg3Raphael: {
+    label: "BG3 - Raphael's Final Act",
+    battle: new URL("../../assets/music/no_dinamic_music/BG3_Raphael_Final_Act.wav", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/BG3_Raphael_Final_Act.wav", import.meta.url).href,
+  },
+  winTheme: {
+    label: "Passionate Duelist (Win)",
+    battle: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.wav", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.wav", import.meta.url).href,
+  },
+  lossTheme: {
+    label: "The Legacy of Bhaal (Loss)",
+    battle: new URL("../../assets/music/no_dinamic_music/The_Legacy_Of_Bhaal_lost.wav", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/The_Legacy_Of_Bhaal_lost.wav", import.meta.url).href,
+  },
+  mainMenuTheme: {
+    label: "Main Menu",
+    battle: new URL("../../assets/music/no_dinamic_music/Main_menu_deck_view_song.mp3", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/Main_menu_deck_view_song.mp3", import.meta.url).href,
+  },
 } as const;
 
 export type MusicCollectionId = keyof typeof musicCollections;
 
 export const musicCollectionIds = Object.keys(musicCollections) as MusicCollectionId[];
+
+export const battleThemeIds = musicCollectionIds.filter((id) => id !== "winTheme" && id !== "lossTheme" && id !== "mainMenuTheme");
 
 function makeCollection(index: number): MusicCollection {
   return {

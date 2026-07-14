@@ -23,7 +23,9 @@ type AudioStore = {
   toggleMusicPause: () => void;
   setMusicVariant: (variant: MusicVariant) => void;
   playSfx: (id: SfxId, options?: { volume?: number; rate?: number }) => void;
-  startBattleMusic: () => void;
+  startBattleMusic: (forceNew?: boolean) => void;
+  startMenuMusic: () => void;
+  resumeMusic: () => void;
   stopMusic: () => void;
   preload: () => void;
   stopAllSfx: () => void;
@@ -88,9 +90,20 @@ export const useAudioStore = create<AudioStore>()(
         syncEngine();
         audioEngine.playSfx(id, options);
       },
-      startBattleMusic: () => {
+      startBattleMusic: (forceNew?: boolean) => {
         syncEngine();
-        const status = audioEngine.startRandomBattleTheme();
+        const force = forceNew === true; // Convert event objects to boolean
+        const status = audioEngine.startRandomBattleTheme(force);
+        set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
+      },
+      startMenuMusic: () => {
+        syncEngine();
+        const status = audioEngine.playCollection("mainMenuTheme", "battle");
+        set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
+      },
+      resumeMusic: () => {
+        syncEngine();
+        const status = audioEngine.resumeMusic();
         set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
       },
       stopMusic: () => {
