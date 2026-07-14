@@ -63,6 +63,13 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
   const card = game.horde.library.shift();
   if (!card) return undefined;
   game.log.unshift(`Horde reveals ${card.name}.`);
+  // Bridge: Smallpox needs a bespoke, player-interactive multi-step resolution (Horde sacrifices,
+  // then the player chooses life/discard/creature/land) that can't run inside this synchronous
+  // reveal. Park it unresolved; the store drives the sequence and moves it to the graveyard itself.
+  if (card.definitionId === "smallpox") {
+    game.horde.pendingCard = card;
+    return card;
+  }
   if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {
     resolveEffects(game, card.effects, { source: card, side: "horde" });
     card.zone = "graveyard";

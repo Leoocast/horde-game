@@ -50,7 +50,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     runEnterBattlefieldTriggers(next, card, options.targets);
   }
   enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
-  drainEventQueue(next);
+  if (!options.deferReactiveTriggers) drainEventQueue(next);
   return log(next, `Player casts ${card.name}.`);
 }
 

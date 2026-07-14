@@ -45,6 +45,7 @@ export function Hand({ game }: { game: GameState }) {
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
+  const smallpoxSelection = useGameStore((state) => state.smallpoxSelection);
   const spellTargeting = useGameStore((state) => state.spellTargeting);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
@@ -56,6 +57,7 @@ export function Hand({ game }: { game: GameState }) {
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
+  const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const pushToast = useToastStore((state) => state.pushToast);
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
@@ -90,15 +92,22 @@ export function Hand({ game }: { game: GameState }) {
     selectHand(undefined);
   }
 
+  const smallpoxDiscardMode = smallpoxSelection?.kind === "discard";
+  const handInteractionBlocked = Boolean(
+    counterTargeting || spellTargeting || spellFightAnimation || pendingSpellHandId || hordeMillAnimating || playerDiscardAnimating || pendingTriggeredEffectCount > 0 || (smallpoxSelection && !smallpoxDiscardMode),
+  );
+
   return (
     <>
-      <section className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-56 overflow-visible">
+      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode ? "z-[110]" : "z-[70]"].join(" ")}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
-        <div className={[counterTargeting || spellTargeting || spellFightAnimation || pendingSpellHandId || hordeMillAnimating || playerDiscardAnimating || pendingTriggeredEffectCount > 0 ? "pointer-events-none" : "pointer-events-auto", "absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8"].join(" ")}>
+        <div className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8"].join(" ")}>
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
             <AnimatePresence mode="popLayout">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
+            const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
+            const discardTargetLocked = smallpoxSelection?.kind === "discard" && smallpoxSelection.targetId === card.instanceId;
             return (
               <motion.div
                 key={card.instanceId}
@@ -111,7 +120,7 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
                 }}
-                drag
+                drag={!smallpoxSelection}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -133,15 +142,28 @@ export function Hand({ game }: { game: GameState }) {
                 }}
               >
                 <div
-                  className={["hand-card transition-opacity duration-200", spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : ""].join(" ")}
+                  className={[
+                    "hand-card transition-opacity duration-200",
+                    spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
+                    discardTargetable ? "counter-targetable-card" : "",
+                    discardTargetLocked ? "counter-target-locked-card" : "",
+                  ].join(" ")}
                   style={{ "--hand-z": index + 1 } as React.CSSProperties}
                 >
                   <Card
                     game={game}
                     card={card}
                     selected={selectedHandId === card.instanceId}
-                    actionable={playable}
-                    onSelect={() => selectHand(card.instanceId)}
+                    actionable={smallpoxSelection ? discardTargetable : playable}
+                    suppressContextMenu={Boolean(smallpoxSelection)}
+                    suppressHoverOverlay={Boolean(smallpoxSelection)}
+                    onSelect={() => {
+                      if (smallpoxSelection) {
+                        if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+                        return;
+                      }
+                      selectHand(card.instanceId);
+                    }}
                     onLeave={() => {
                       if (selectedHandId === card.instanceId) selectHand(undefined);
                     }}

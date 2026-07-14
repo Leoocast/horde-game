@@ -21,7 +21,14 @@ export function resolveEffects(game: GameState, effects: EffectDefinition[], con
 }
 
 export function resolveEffect(game: GameState, effect: EffectDefinition, context: ResolveContext): void {
-  if (effect.type === "TRIGGERED_ABILITY" || effect.type === "STATIC_BUFF" || effect.type === "STATIC_GRANT_KEYWORD") return;
+  if (
+    effect.type === "TRIGGERED_ABILITY" ||
+    effect.type === "STATIC_BUFF" ||
+    effect.type === "STATIC_GRANT_KEYWORD" ||
+    effect.type === "STATIC_CONDITIONAL_BUFF" ||
+    effect.type === "STATIC_CONDITIONAL_GRANT_KEYWORD"
+  )
+    return;
   if (effect.type === "SEQUENCE") {
     resolveEffects(game, (effect.effects as EffectDefinition[]) ?? [], context);
     return;
@@ -48,6 +55,17 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + Number(effect.amount ?? 1);
       game.log.unshift(`${target.name} gets ${Number(effect.amount ?? 1)} ${String(effect.counterType ?? "+1/+1")} counter(s).`);
       enqueue(game, { type: "COUNTERS_PUT_ON_PERMANENT", sourceId: target.instanceId, payload: { targetId: target.instanceId } });
+    }
+    return;
+  }
+  if (effect.type === "REMOVE_COUNTER") {
+    const targets = resolveTargetCards(game, { ...effect, target: effect.from ?? effect.target }, context);
+    const counterType = String(effect.counterType ?? "+1/+1");
+    const amount = Number(effect.amount ?? 1);
+    for (const target of targets) {
+      const current = target.counters[counterType] ?? 0;
+      target.counters[counterType] = Math.max(0, current - amount);
+      game.log.unshift(`${target.name} loses ${amount} ${counterType} counter(s).`);
     }
     return;
   }
@@ -219,7 +237,11 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
       resolveEffect(game, effect.effect as EffectDefinition, { source: card, side });
     }
   }
-  enqueue(game, { type: "CREATURE_DIED", sourceId: card.instanceId, payload: { controller: side, definitionId: card.definitionId } });
+  enqueue(game, {
+    type: "CREATURE_DIED",
+    sourceId: card.instanceId,
+    payload: { controller: side, definitionId: card.definitionId, cardTypes: card.cardTypes, subtypes: card.subtypes },
+  });
 }
 
 export function millHorde(game: GameState, amount: number): void {
@@ -273,7 +295,7 @@ function resolveTargetCards(game: GameState, effect: EffectDefinition, context: 
   return [];
 }
 
-function effectNeedsManualTarget(effect: unknown): boolean {
+export function effectNeedsManualTarget(effect: unknown): boolean {
   if (!effect || typeof effect !== "object") return false;
   const data = effect as Record<string, unknown>;
   if (typeof data.target === "string" && data.target !== "SELF") return true;
@@ -292,10 +314,26 @@ function discardPlayer(game: GameState, amount: number): void {
   }
 }
 
-function triggerConditionMet(game: GameState, condition: Record<string, unknown> | undefined, source: CardInstance, event: EventItem): boolean {
+export function discardChosenCard(game: GameState, instanceId: string): void {
+  const index = game.player.hand.findIndex((card) => card.instanceId === instanceId);
+  if (index < 0) return;
+  const [card] = game.player.hand.splice(index, 1);
+  card.zone = "graveyard";
+  game.player.graveyard.push(card);
+  game.log.unshift(`Player discards ${card.name}.`);
+}
+
+export function triggerConditionMet(game: GameState, condition: Record<string, unknown> | undefined, source: CardInstance, event: EventItem): boolean {
   if (!condition) return true;
+  if (condition.type === "CAST_CARD_IS_NON_TOKEN") {
+    return event.sourceId !== source.instanceId && event.payload?.nonToken === true;
+  }
   if (condition.type === "ANOTHER_CREATURE_YOU_CONTROL_DIED") {
-    return event.sourceId !== source.instanceId && event.payload?.controller === source.controller;
+    return (
+      event.sourceId !== source.instanceId &&
+      event.payload?.controller === source.controller &&
+      eventObjectMatchesFilters(event, condition.filter as Record<string, unknown> | undefined)
+    );
   }
   if (condition.type === "ANOTHER_CREATURE_YOU_CONTROL_ENTERED") {
     return event.sourceId !== source.instanceId && event.payload?.controller === source.controller;

@@ -11,6 +11,16 @@ type BannerState = {
 
 const BANNER_DURATION_MS = 1050;
 
+// Written as literal class names (not `phase-banner-${tone}`) so Tailwind's content scanner can
+// see them — a dynamically-interpolated string never appears as a full class name in the source,
+// so the @layer components rules for these tones get purged from the build otherwise.
+const TONE_CLASS: Record<BannerTone, string> = {
+  main: "phase-banner-main",
+  battle: "phase-banner-battle",
+  defend: "phase-banner-defend",
+  horde: "phase-banner-horde",
+};
+
 export function PhaseBanner({ game }: { game: GameState }) {
   const phase = useMemo(() => getBannerState(game), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner]);
   const [visiblePhase, setVisiblePhase] = useState<BannerState | undefined>();
@@ -29,11 +39,9 @@ export function PhaseBanner({ game }: { game: GameState }) {
 
   return (
     <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[78] flex items-center justify-center">
-      <div className={["phase-banner", `phase-banner-${visiblePhase.tone}`].join(" ")} key={visiblePhase.key}>
+      <div className={["phase-banner", TONE_CLASS[visiblePhase.tone]].join(" ")} key={visiblePhase.key}>
         <span className="phase-banner-edge-frame" />
-        <span className="phase-banner-edge phase-banner-edge-left" />
         <span className="phase-banner-text">{visiblePhase.label}</span>
-        <span className="phase-banner-edge phase-banner-edge-right" />
       </div>
     </div>
   );

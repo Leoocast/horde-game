@@ -232,16 +232,15 @@
     justify-content: center;
     overflow: hidden;
     border: 1px solid var(--phase-border);
-    border-radius: 7px;
+    border-radius: 3px;
     background:
-      linear-gradient(90deg, transparent 0%, var(--phase-wing) 16%, var(--phase-core) 48%, var(--phase-core) 52%, var(--phase-wing) 84%, transparent 100%),
-      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.09) 0 1px, transparent 1px 7px),
-      linear-gradient(180deg, rgb(255 255 255 / 0.15), rgb(0 0 0 / 0.42) 46%, rgb(0 0 0 / 0.68));
+      linear-gradient(90deg, transparent 0%, var(--phase-wing) 14%, var(--phase-core) 50%, var(--phase-wing) 86%, transparent 100%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, transparent 42%, rgb(0 0 0 / 0.5) 100%);
     box-shadow:
-      inset 0 1px 0 rgb(255 246 198 / 0.3),
-      inset 0 -1px 0 rgb(0 0 0 / 0.62),
-      0 0 16px var(--phase-glow-soft),
-      0 20px 38px rgb(0 0 0 / 0.38);
+      inset 0 1px 0 rgb(255 246 198 / 0.28),
+      inset 0 -1px 0 rgb(0 0 0 / 0.58),
+      0 0 18px var(--phase-glow-soft),
+      0 18px 34px rgb(0 0 0 / 0.4);
     clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
     animation: phase-banner-in 1050ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -249,13 +248,11 @@
   .phase-banner::before {
     content: "";
     position: absolute;
-    inset: 0 4%;
+    inset: 0;
     z-index: 0;
-    background:
-      linear-gradient(180deg, transparent 0 20%, rgb(255 211 112 / 0.86) 20% 23%, transparent 23% 29%, var(--phase-carpet) 29% 71%, transparent 71% 77%, rgb(255 211 112 / 0.86) 77% 80%, transparent 80% 100%),
-      radial-gradient(ellipse at center, var(--phase-carpet-hot), transparent 60%);
-    filter: saturate(1.25) brightness(1.08);
-    opacity: 1;
+    background: radial-gradient(ellipse 62% 130% at center, var(--phase-carpet-hot), transparent 72%);
+    mix-blend-mode: screen;
+    opacity: 0.6;
   }
 
   .phase-banner::after {
@@ -1042,6 +1039,13 @@
       brightness(1.08);
   }
 
+  .horde-special-card {
+    width: 16rem;
+    aspect-ratio: 488 / 680;
+    z-index: 51;
+    filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.55));
+  }
+
   .counter-target-preview {
     display: flex;
     width: min(132%, 340px);
@@ -1056,6 +1060,19 @@
   .counter-target-preview > span,
   .counter-target-preview > strong {
     white-space: nowrap;
+  }
+
+  .smallpox-selection-panel-inline {
+    display: flex;
+    width: 100%;
+    margin-top: 0.65rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 0.85rem;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 850;
   }
 
   .counter-target-actions {

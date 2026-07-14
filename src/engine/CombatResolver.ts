@@ -106,12 +106,12 @@ export function resolveHordeCombat(game: GameState): GameState {
       attackerDamage += blockerStats.power;
       if (hasKeyword(next, blocker, "DEATHTOUCH") || attackerDamage >= attackerStats.toughness) break;
     }
+    destroyMarkedCreatures(next);
   }
   if (playerDamage > 0) {
     next.player.life -= playerDamage;
     log(next, `Horde deals ${playerDamage} damage to Player.`);
   }
-  destroyMarkedCreatures(next);
   drainEventQueue(next);
   next.combat.hordeAttackers = [];
   next.combat.blockers = {};

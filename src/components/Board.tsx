@@ -17,6 +17,7 @@ import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
+import { SmallpoxSelectionOverlay } from "./SmallpoxSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
@@ -48,6 +49,7 @@ export function Board({ playerName, setupTurns }: Props) {
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
+      <SmallpoxSelectionOverlay game={game} />
       <SpellTargetingOverlay game={game} />
       <HordeAttackAnimator />
       <HordeMillAnimator />

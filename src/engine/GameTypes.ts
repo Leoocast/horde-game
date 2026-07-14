@@ -148,6 +148,9 @@ export type HordeState = {
   graveyard: CardInstance[];
   exile: CardInstance[];
   poisonCounters: number;
+  /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
+   * multi-step resolution the store drives — parked here instead of resolved inline. */
+  pendingCard?: CardInstance;
 };
 
 export type CombatState = {
@@ -184,6 +187,7 @@ export type CastOptions = {
   xValue?: number;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
+  deferReactiveTriggers?: boolean;
 };
 
 export type AbilityOptions = {

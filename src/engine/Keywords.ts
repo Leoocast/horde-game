@@ -1,5 +1,5 @@
-import type { CardFilter, CardInstance, GameState, Keyword, Side } from "./GameTypes";
-import { matchesFilter } from "./StaticEffects";
+import type { CardFilter, CardInstance, GameState, Keyword } from "./GameTypes";
+import { matchesFilter, resolveAffectedController, staticConditionMet } from "./StaticEffects";
 
 export function isCreature(card: CardInstance): boolean {
   return card.cardTypes.includes("Creature");
@@ -22,29 +22,24 @@ export function getKeywords(game: GameState, card: CardInstance): Keyword[] {
 
   for (const source of [...game.player.battlefield, ...game.horde.battlefield]) {
     for (const effect of source.effects) {
-      if (effect.type !== "STATIC_GRANT_KEYWORD") continue;
-      const affectedController = resolveAffectedController(source.controller, effect.controller);
-      if (affectedController && card.controller !== affectedController) continue;
-      if (!matchesFilter(card, effect.filter as CardFilter | undefined, source)) continue;
-      const keyword = typeof effect.keyword === "string" ? effect.keyword : undefined;
-      if (keyword) keywords.add(keyword);
+      if (effect.type === "STATIC_GRANT_KEYWORD") {
+        const affectedController = resolveAffectedController(source.controller, effect.controller);
+        if (affectedController && card.controller !== affectedController) continue;
+        if (!matchesFilter(card, effect.filter as CardFilter | undefined, source)) continue;
+        const keyword = typeof effect.keyword === "string" ? effect.keyword : undefined;
+        if (keyword) keywords.add(keyword);
+        continue;
+      }
+      if (effect.type === "STATIC_CONDITIONAL_GRANT_KEYWORD") {
+        if (effect.target === "SELF" && card.instanceId !== source.instanceId) continue;
+        if (!staticConditionMet(game, effect.condition, source)) continue;
+        const keyword = typeof effect.keyword === "string" ? effect.keyword : undefined;
+        if (keyword) keywords.add(keyword);
+      }
     }
   }
 
-  if (card.definitionId === "hound_of_the_farbogs" && game.horde.graveyard.length >= 7) {
-    keywords.add("MENACE");
-  }
-
   return [...keywords];
-}
-
-function resolveAffectedController(sourceController: Side, controller: unknown): Side | undefined {
-  const text = String(controller ?? "SELF").toUpperCase();
-  if (text === "HORDE") return "horde";
-  if (text === "PLAYER") return "player";
-  if (text === "SELF") return sourceController;
-  if (text === "OPPONENT") return sourceController === "player" ? "horde" : "player";
-  return undefined;
 }
 
 function parseToxicKeyword(keyword: Keyword): number {

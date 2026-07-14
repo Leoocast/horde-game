@@ -70,6 +70,18 @@ function bestCreature(game: GameState, cards: CardInstance[]): CardInstance | un
   return pickRandom(game, tied);
 }
 
+export function weakestCreature(game: GameState, side: Side): CardInstance | undefined {
+  const creatures = game[side].battlefield.filter((card) => card.cardTypes.includes("Creature"));
+  if (creatures.length === 0) return undefined;
+  const scored = creatures.map((card) => {
+    const stats = getPowerToughness(game, card);
+    return { card, score: stats.power + stats.toughness };
+  });
+  const min = Math.min(...scored.map((item) => item.score));
+  const tied = scored.filter((item) => item.score === min).map((item) => item.card);
+  return pickRandom(game, tied);
+}
+
 export function opponent(side: Side): Side {
   return side === "player" ? "horde" : "player";
 }
