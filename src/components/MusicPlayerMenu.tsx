@@ -89,7 +89,7 @@ export function MusicPlayerMenu() {
               <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
             </div>
 
-            <div className="old-panel-soft max-h-72 overflow-auto p-1">
+            <div className="old-panel-soft old-scrollbar max-h-72 overflow-auto p-1 pr-2">
               {playlist.map((track) => (
                 <button
                   key={track.id}
