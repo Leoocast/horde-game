@@ -54,7 +54,7 @@ export type MusicCollectionId = keyof typeof musicCollections;
 
 export const musicCollectionIds = Object.keys(musicCollections) as MusicCollectionId[];
 
-export const battleThemeIds = musicCollectionIds.filter((id) => id !== "winTheme" && id !== "lossTheme" && id !== "mainMenuTheme");
+export const battleThemeIds: MusicCollectionId[] = musicCollectionIds.filter((id) => id !== "winTheme" && id !== "lossTheme" && id !== "mainMenuTheme");
 
 function makeCollection(index: number): MusicCollection {
   return {
