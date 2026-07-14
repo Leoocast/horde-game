@@ -28,10 +28,15 @@ export const musicCollections = {
     battle: new URL("../../assets/music/no_dinamic_music/BG3_Twisted_Forced.mp3", import.meta.url).href,
     climax: new URL("../../assets/music/no_dinamic_music/BG3_Twisted_Forced.mp3", import.meta.url).href,
   },
+  bg3Raphael: {
+    label: "BG3 - Raphael's Final Act",
+    battle: new URL("../../assets/music/no_dinamic_music/BG3_Raphael_song.mp3", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/BG3_Raphael_song.mp3", import.meta.url).href,
+  },
   winTheme: {
     label: "Passionate Duelist (Win)",
-    battle: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.wav", import.meta.url).href,
-    climax: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.wav", import.meta.url).href,
+    battle: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.mp3", import.meta.url).href,
+    climax: new URL("../../assets/music/no_dinamic_music/Passionate_Duelist_win.mp3", import.meta.url).href,
   },
   lossTheme: {
     label: "The Legacy of Bhaal (Loss)",
