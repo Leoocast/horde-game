@@ -314,6 +314,15 @@ function discardPlayer(game: GameState, amount: number): void {
   }
 }
 
+export function discardChosenCard(game: GameState, instanceId: string): void {
+  const index = game.player.hand.findIndex((card) => card.instanceId === instanceId);
+  if (index < 0) return;
+  const [card] = game.player.hand.splice(index, 1);
+  card.zone = "graveyard";
+  game.player.graveyard.push(card);
+  game.log.unshift(`Player discards ${card.name}.`);
+}
+
 export function triggerConditionMet(game: GameState, condition: Record<string, unknown> | undefined, source: CardInstance, event: EventItem): boolean {
   if (!condition) return true;
   if (condition.type === "CAST_CARD_IS_NON_TOKEN") {

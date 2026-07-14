@@ -1042,6 +1042,13 @@
       brightness(1.08);
   }
 
+  .horde-special-card {
+    width: 16rem;
+    aspect-ratio: 488 / 680;
+    z-index: 51;
+    filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.55));
+  }
+
   .counter-target-preview {
     display: flex;
     width: min(132%, 340px);
@@ -1056,6 +1063,19 @@
   .counter-target-preview > span,
   .counter-target-preview > strong {
     white-space: nowrap;
+  }
+
+  .smallpox-selection-panel-inline {
+    display: flex;
+    width: 100%;
+    margin-top: 0.65rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 0.85rem;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 850;
   }
 
   .counter-target-actions {

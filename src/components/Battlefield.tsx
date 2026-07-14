@@ -39,6 +39,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
+  const smallpoxSelection = useGameStore((state) => state.smallpoxSelection);
   const spellTargeting = useGameStore((state) => state.spellTargeting);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
@@ -52,6 +53,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
   const lockCounterTarget = useGameStore((state) => state.lockCounterTarget);
+  const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -344,6 +346,14 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.cardTypes.includes("Land");
+    const smallpoxTargetable = Boolean(
+      smallpoxSelection &&
+        !smallpoxSelection.targetId &&
+        side === "player" &&
+        ((smallpoxSelection.kind === "sacrifice-creature" && card.cardTypes.includes("Creature")) ||
+          (smallpoxSelection.kind === "sacrifice-land" && card.cardTypes.includes("Land"))),
+    );
+    const smallpoxTargetLocked = smallpoxSelection?.targetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -361,7 +371,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
     const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
-      isLand ||
+      (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
       (hordeCombat && side === "player" && !selectableBlocker) ||
@@ -419,6 +429,8 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActivating ? "effect-card-activating" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
+          smallpoxTargetable ? "counter-targetable-card" : "",
+          smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
         ].join(" ")}
@@ -430,14 +442,14 @@ export function Battlefield({ game, side, cards }: Props) {
         selected={selected}
         attacking={attacking}
         blocking={blocking}
-        actionable={actionable || counterTargetable}
+        actionable={actionable || counterTargetable || smallpoxTargetable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting)}
-        suppressHoverOverlay={Boolean(spellTargeting)}
+        suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting) || Boolean(smallpoxSelection)}
+        suppressHoverOverlay={Boolean(spellTargeting) || Boolean(smallpoxSelection)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
@@ -457,6 +469,10 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
+          if (smallpoxSelection) {
+            if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+            return;
+          }
           if (counterTargeting) {
             if (counterTargetable) lockCounterTarget(card.instanceId);
             return;
