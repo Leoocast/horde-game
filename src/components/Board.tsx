@@ -48,7 +48,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
 
   return (
     <main className="duel-table h-screen overflow-hidden">
-      <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} />
+      <AppHeader left={<GameStatusBadge game={game} />} center={<TurnPhaseHud game={game} />} right={<InfoMenu setupTurns={setupTurns} />} onReturnToMenu={onReturnToMenu} />
       <DuelHud game={game} />
       <PhaseBanner game={game} />
       <PhaseOrb game={game} />

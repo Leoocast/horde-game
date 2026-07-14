@@ -1,9 +1,13 @@
-import { Crown, Settings, Skull } from "lucide-react";
+import { Crown, Home, Settings, Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { AudioControls } from "./AudioControls";
 
-export function SettingsMenu() {
+type Props = {
+  onReturnToMenu?: () => void;
+};
+
+export function SettingsMenu({ onReturnToMenu }: Props) {
   const seed = useGameStore((state) => state.game?.seed);
   const triggerEndGame = useGameStore((state) => state.triggerEndGame);
   const isDeveloperMode = seed?.trim().toLowerCase() === "developer";
@@ -41,7 +45,20 @@ export function SettingsMenu() {
       {open && menuPos && (
         <div className="fixed z-[400] w-72" style={{ top: menuPos.top, right: menuPos.right }}>
           <AudioControls />
-          {isDeveloperMode && (
+          
+          {onReturnToMenu && (
+            <div className="mt-2">
+              <button
+                className="old-button flex h-11 w-full items-center justify-center gap-2 text-xs font-bold uppercase tracking-wide text-[#ffcfc2]"
+                onClick={onReturnToMenu}
+              >
+                <Home size={16} />
+                Return to Menu
+              </button>
+            </div>
+          )}
+
+          {isDeveloperMode && onReturnToMenu && (
             <div className="old-panel mt-2 p-4">
               <h3 className="old-title mb-3 text-center text-sm font-black uppercase tracking-widest text-[#f4cc74]">Developer Options</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -73,3 +90,4 @@ export function SettingsMenu() {
     </div>
   );
 }
+

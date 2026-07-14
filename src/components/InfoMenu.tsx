@@ -1,7 +1,6 @@
 import { Menu, RefreshCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store/useGameStore";
-import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
 import { ZoneDrawer } from "./ZoneDrawer";
 
@@ -52,7 +51,6 @@ export function InfoMenu({ setupTurns }: { setupTurns: number }) {
                 </button>
               </div>
             </div>
-            <AudioControls />
             <div className="text-xs text-[#d6b879]">RNG: {game.currentRandomState.toString(16)}</div>
             <ZoneDrawer game={game} />
             <GameLog game={game} className="h-60" />
