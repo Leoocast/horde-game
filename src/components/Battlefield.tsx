@@ -305,7 +305,7 @@ export function Battlefield({ game, side, cards }: Props) {
   function LandDock() {
     const landCount = lands.length;
     const columns = landCount <= 2 ? Math.max(landCount, 1) : landCount <= 6 ? 3 : 4;
-    const cardWidth = landCount <= 1 ? 150 : landCount <= 2 ? 132 : landCount <= 4 ? 105 : landCount <= 6 ? 88 : landCount <= 9 ? 60 : landCount <= 12 ? 52 : 44;
+    const cardWidth = landCount <= 1 ? 120 : landCount <= 2 ? 105 : landCount <= 4 ? 82 : landCount <= 6 ? 68 : landCount <= 9 ? 50 : landCount <= 12 ? 42 : 36;
     const dockStyle = {
       "--player-land-columns": columns,
       "--battlefield-compact-card-width": `${cardWidth}px`,
