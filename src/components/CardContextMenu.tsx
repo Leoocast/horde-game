@@ -72,10 +72,10 @@ export function CardContextMenu() {
     ) : null;
   }
 
-  const firstAbility = card.activatedAbilities[0];
+  const firstAbility = card.activatedAbilities.find((ability) => !isManaAbility(ability));
   const hasActivatedEffect = Boolean(firstAbility);
   const canActivate = Boolean(firstAbility && canActivateNow(game, card));
-  const activateLabel = activationLabel(card, firstAbility);
+  const activateLabel = activationLabel(firstAbility);
 
   function openDetails() {
     setDetailsCardId(card?.instanceId);
@@ -137,10 +137,13 @@ function canActivateNow(game: GameState, card: CardInstance): boolean {
   return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
 }
 
-function activationLabel(card: CardInstance, ability?: CardInstance["activatedAbilities"][number]): string {
+function activationLabel(ability?: CardInstance["activatedAbilities"][number]): string {
   if (!ability?.cost?.tap) return "Activate Effect";
-  if (card.cardTypes.includes("Land") && (ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC")) return "Tap for Mana";
   return "Tap for Effect";
+}
+
+function isManaAbility(ability: CardInstance["activatedAbilities"][number]): boolean {
+  return ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC";
 }
 
 function findCard(game: GameState, id: string): CardInstance | undefined {

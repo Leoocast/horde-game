@@ -1,19 +1,7 @@
 import type { AbilityOptions, CastOptions, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
-import { canPay, parseManaCost, payMana, payManaWithAvailableLands, tapForMana } from "./ManaSystem";
-
-export { tapForMana };
-
-export function toggleTap(game: GameState, id: string): GameState {
-  const next = structuredClone(game) as GameState;
-  const card = [...next.player.battlefield, ...next.horde.battlefield].find((item) => item.instanceId === id);
-  if (card) {
-    card.tapped = !card.tapped;
-    next.log.unshift(`${card.name} is ${card.tapped ? "tapped" : "untapped"}.`);
-  }
-  return next;
-}
+import { canPay, parseManaCost, payMana, payManaAutomatically } from "./ManaSystem";
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
@@ -33,7 +21,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   if (!canCastAtCurrentTiming(next, card)) return log(next, `${card.name} cannot be cast right now.`);
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
-  if (!payManaWithAvailableLands(next, cost)) return log(next, `Not enough available land mana to cast ${card.name}.`);
+  if (!payManaAutomatically(next, cost)) return log(next, `Not enough available mana to cast ${card.name}.`);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {

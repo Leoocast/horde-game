@@ -3,7 +3,7 @@ import { createInitialGame } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
-import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
+import { castCard, playLand, activateAbility } from "../engine/GameActions";
 import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
@@ -83,8 +83,6 @@ type GameStore = {
   endPlayerTurn: () => void;
   playLand: (id: string) => void;
   castCard: (id: string, options?: CastOptions) => void;
-  tapForMana: (id: string) => void;
-  toggleTap: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -525,8 +523,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       return buildCastCardPatch(state, id, options);
     }),
-  tapForMana: (id) => set(({ game }) => ({ game: tapForMana(game, id) })),
-  toggleTap: (id) => set(({ game }) => ({ game: toggleTap(game, id) })),
   activateAbility: (id, abilityId, options) => set(({ game }) => ({ game: activateAbility(game, id, abilityId, options), activeEffectCardId: undefined })),
   toggleAttacker: (id) =>
     set(({ game }) => {

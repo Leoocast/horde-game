@@ -1,6 +1,6 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
-import { canPay, parseManaCost } from "../engine/ManaSystem";
+import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
@@ -207,23 +207,7 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn;
-  const pool = { ...game.player.manaPool };
-  for (const land of game.player.battlefield) {
-    if (!land.cardTypes.includes("Land") || land.tapped) continue;
-    const ability = land.activatedAbilities.find((item) => item.effect.type === "ADD_MANA" && item.cost?.tap);
-    if (!ability) continue;
-    const mana = ability.effect.mana as Record<string, number> | undefined;
-    const entry = mana ? Object.entries(mana)[0] : undefined;
-    const color = entry?.[0] === "chosenColor" ? land.chosenColor ?? "G" : entry?.[0] ?? "G";
-    const amount = entry?.[1] ?? Number(ability.effect.amount ?? 1);
-    if (color === "G") pool.green += amount;
-    else if (color === "R") pool.red += amount;
-    else if (color === "U") pool.blue += amount;
-    else if (color === "W") pool.white += amount;
-    else if (color === "B") pool.black += amount;
-    else pool.colorless += amount;
-  }
-  if (!canPay(pool, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
+  if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
@@ -239,7 +223,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return "This land cannot be played right now.";
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return `No valid target sequence for ${card.displayName}.`;
-  return `Not enough available land mana to cast ${card.displayName}.`;
+  return `Not enough available mana to cast ${card.displayName}.`;
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {
