@@ -37,7 +37,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
   const battlefieldKeywords =
-    card.controller === "horde" && card.zone === "battlefield" && card.cardTypes.includes("Creature")
+    card.zone === "battlefield" && card.cardTypes.includes("Creature")
       ? cardKeywords(game, card)
           .split(",")
           .map((keyword) => keyword.trim())
@@ -125,7 +125,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         {battlefieldKeywords.length > 0 && (
           <div className="card-keyword-stack">
             {battlefieldKeywords.map((keyword) => (
-              <span key={keyword} className="card-keyword-badge">
+              <span key={keyword} className={["card-keyword-badge", card.controller === "horde" ? "card-keyword-badge-enemy" : "card-keyword-badge-ally"].join(" ")}>
                 {keyword}
               </span>
             ))}
