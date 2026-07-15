@@ -91,7 +91,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       }}
       style={style}
       className={[
-        "group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
+        "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
         selected && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
         card.tapped ? "rotate-2 opacity-80" : "",
         attacking ? "border-[#ff7a3d]" : "",
@@ -135,7 +135,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {!hideStats && stats.text && (
         <span
           className={[
-            "absolute bottom-1 right-1 flex h-[18px] min-w-[34px] items-center justify-center rounded-[999px] border px-1.5 text-[12px] font-black leading-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),inset_0_-1px_1px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.55)]",
+            "card-stat-badge absolute flex items-center justify-center rounded-[999px] border font-black leading-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),inset_0_-1px_1px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.55)]",
             stats.damaged
               ? "border-[#4b0f0a] bg-gradient-to-b from-[#f3a59b] via-[#b93327] to-[#6d150f] text-[#fff0e8]"
               : stats.buffed

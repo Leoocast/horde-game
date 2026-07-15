@@ -665,6 +665,19 @@
     flex: 0 0 auto;
   }
 
+  .card-visual {
+    container-type: inline-size;
+  }
+
+  .card-stat-badge {
+    right: clamp(3px, 2.2cqw, 5px);
+    bottom: clamp(3px, 2.2cqw, 5px);
+    height: clamp(18px, 11cqw, 22px);
+    min-width: clamp(34px, 21cqw, 42px);
+    padding-inline: clamp(6px, 4cqw, 8px);
+    font-size: clamp(12px, 7cqw, 14px);
+  }
+
   .battlefield-board-grid {
     display: grid;
     grid-template-rows: repeat(2, minmax(0, 1fr));
@@ -696,8 +709,8 @@
   .battlefield-card-slot {
     position: relative;
     top: 0;
-    width: clamp(140px, 10.5vw, 184px);
-    height: calc(clamp(140px, 10.5vw, 184px) * 1.393);
+    width: clamp(160px, 12vw, 212px);
+    height: calc(clamp(160px, 12vw, 212px) * 1.393);
     flex: 0 0 auto;
     transition:
       top 220ms ease,
@@ -1220,7 +1233,7 @@
 
   .battlefield-empty {
     height: 100%;
-    min-height: calc(clamp(140px, 10.5vw, 184px) * 1.393);
+    min-height: calc(clamp(160px, 12vw, 212px) * 1.393);
   }
 
   .battlefield-empty-compact {
@@ -1229,7 +1242,16 @@
 
   .battlefield-row-body {
     height: 100%;
-    min-height: calc(clamp(140px, 10.5vw, 184px) * 1.393);
+    min-height: calc(clamp(160px, 12vw, 212px) * 1.393);
+  }
+
+  .battlefield-row-surface {
+    border: 1px dashed rgb(181 134 66 / 0.35);
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgb(10 8 6 / 0.18), rgb(255 220 139 / 0.04)),
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 8px);
+    padding: 4px;
   }
 
   .battlefield-row-body-compact {
@@ -1301,6 +1323,7 @@
     left: clamp(300px, 20vw, 360px);
     right: clamp(196px, 12vw, 224px);
     padding-inline: 1rem;
+    container-type: inline-size;
   }
 
   .player-hand-cards {
@@ -1319,8 +1342,9 @@
   .hand-card {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(110px, 8.5vw, 164px);
-    height: calc(clamp(110px, 8.5vw, 164px) * 1.393);
+    --hand-card-width: clamp(118px, min(9.7vw, calc((100cqw - 48px) / 7)), 188px);
+    width: var(--hand-card-width);
+    height: calc(var(--hand-card-width) * 1.393);
     z-index: var(--hand-z);
     transform: translateY(48px);
     transform-origin: 50% 100%;
@@ -1341,6 +1365,7 @@
       z-index 0ms,
       filter 160ms ease;
   }
+
 }
 
 @keyframes player-life-damage {

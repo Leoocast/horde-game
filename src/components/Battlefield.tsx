@@ -255,9 +255,9 @@ export function Battlefield({ game, side, cards }: Props) {
           <span className="text-[10px] font-semibold text-[#d6b879]">{rowCards.length}</span>
         </div>
         {rowCards.length === 0 ? (
-          <div className={compact ? "battlefield-empty-compact" : "battlefield-empty"}>Empty</div>
+          <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
         ) : (
-          <div className={["flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
+          <div className={["battlefield-row-surface flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
             <AnimatePresence initial={false} mode="popLayout">
               {rowCards.map((card) => renderCard(card, compact))}
             </AnimatePresence>
@@ -277,9 +277,9 @@ export function Battlefield({ game, side, cards }: Props) {
           <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
         </div>
         {rowCreatures.length === 0 ? (
-          <div className="battlefield-empty">Empty</div>
+          <div className="battlefield-empty battlefield-row-surface">Empty</div>
         ) : (
-          <div className="battlefield-row-body flex flex-wrap items-center justify-center gap-2">
+          <div className="battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2">
             <AnimatePresence initial={false} mode="popLayout">
               {rowCreatures.map((card) => renderCard(card))}
             </AnimatePresence>
@@ -320,9 +320,9 @@ export function Battlefield({ game, side, cards }: Props) {
           <span className="text-[10px] font-semibold text-[#d6b879]">{landCount}</span>
         </div>
         {landCount === 0 ? (
-          <div className="player-land-dock-empty">Empty</div>
+          <div className="player-land-dock-empty battlefield-row-surface">Empty</div>
         ) : (
-          <div className={["player-land-grid", fillsRow ? "player-land-grid-fill" : ""].join(" ")}>
+          <div className={["player-land-grid battlefield-row-surface", fillsRow ? "player-land-grid-fill" : ""].join(" ")}>
             <AnimatePresence initial={false} mode="popLayout">
               {lands.map((card) => renderCard(card, true, "land-dock"))}
             </AnimatePresence>
