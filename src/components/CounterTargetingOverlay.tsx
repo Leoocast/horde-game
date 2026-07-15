@@ -29,6 +29,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
     }
 
     function contextMenu(event: MouseEvent) {
+      if (event.shiftKey) return;
       event.preventDefault();
       if (useGameStore.getState().counterTargeting?.targetId) deselectTarget();
     }

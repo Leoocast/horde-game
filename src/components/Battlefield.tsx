@@ -431,6 +431,7 @@ export function Battlefield({ game, side, cards }: Props) {
         data-entry-delay={0}
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
+          isLand ? "battlefield-land-slot" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
@@ -451,6 +452,7 @@ export function Battlefield({ game, side, cards }: Props) {
         game={game}
         card={card}
         compact={compact}
+        cropTopHalf={isLand}
         selected={selected}
         attacking={attacking}
         blocking={blocking}

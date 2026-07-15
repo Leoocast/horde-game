@@ -94,7 +94,9 @@ export function CardContextMenu() {
         className="old-panel fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
         style={{ left: position.left, top: position.top }}
         onPointerDown={(event) => event.stopPropagation()}
-        onContextMenu={(event) => event.preventDefault()}
+        onContextMenu={(event) => {
+          if (!event.shiftKey) event.preventDefault();
+        }}
       >
         <button data-audio-click="valid" className="context-menu-item" onClick={openDetails}>
           <Info size={15} />

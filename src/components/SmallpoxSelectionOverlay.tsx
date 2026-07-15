@@ -22,6 +22,7 @@ export function SmallpoxSelectionOverlay({ game: _game }: { game: GameState }) {
     }
 
     function contextMenu(event: MouseEvent) {
+      if (event.shiftKey) return;
       event.preventDefault();
       if (useGameStore.getState().smallpoxSelection?.targetId) deselectTarget();
     }

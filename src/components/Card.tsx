@@ -29,9 +29,10 @@ type Props = {
   shouldSuppressClick?: () => boolean;
   visualDamageMarked?: number;
   suppressHoverOverlay?: boolean;
+  cropTopHalf?: boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, cropTopHalf }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
@@ -78,6 +79,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       }}
       onPointerDown={onPointerDown}
       onContextMenu={(event) => {
+        if (event.shiftKey) return;
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
@@ -94,6 +96,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         card.tapped ? "rotate-2 opacity-80" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
+        cropTopHalf ? "battlefield-land-card-crop" : "",
         actionable ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
         summoningSick ? "summoning-sick-card" : "",

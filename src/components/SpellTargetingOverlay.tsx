@@ -52,6 +52,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     }
 
     function contextMenu(event: MouseEvent) {
+      if (event.shiftKey) return;
       event.preventDefault();
       if (hasAnyTarget) deselectTarget();
       else cancelTargeting();
