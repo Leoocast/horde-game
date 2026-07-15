@@ -65,7 +65,12 @@ export function Hand({ game }: { game: GameState }) {
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
   const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
-  const handStackMargin = handSize <= 7 ? 0 : Math.max(-140, -(handSize - 7) * 24);
+  const handStackMargin =
+    handSize <= 7
+      ? 0
+      : handSize <= 10
+        ? -(handSize - 7) * 24
+        : Math.max(-140, -72 - (handSize - 10) * 10);
 
   function playCard(card: CardInstance) {
     if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
