@@ -5,6 +5,7 @@ import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
 import { addMana } from "./ManaSystem";
+import { randomInt } from "./RNG";
 import { getPowerToughness } from "./StaticEffects";
 import { findPermanent } from "./Targeting";
 
@@ -306,8 +307,9 @@ export function effectNeedsManualTarget(effect: unknown): boolean {
 
 function discardPlayer(game: GameState, amount: number): void {
   for (let i = 0; i < amount; i += 1) {
-    const card = game.player.hand.shift();
-    if (!card) break;
+    if (game.player.hand.length === 0) break;
+    const randomIndex = randomInt(game, game.player.hand.length);
+    const [card] = game.player.hand.splice(randomIndex, 1);
     card.zone = "graveyard";
     game.player.graveyard.push(card);
     game.log.unshift(`Player discards ${card.name}.`);

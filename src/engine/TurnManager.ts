@@ -44,6 +44,7 @@ export function startPlayerTurnReady(game: GameState): void {
 }
 
 export function performPlayerDraw(game: GameState): void {
-  drawCards(game, "player", 1);
-  game.log.unshift("Player draws 1 card.");
+  const drawAmount = game.setupTurnsRemaining > 0 ? 1 : 2;
+  drawCards(game, "player", drawAmount);
+  game.log.unshift(`Player draws ${drawAmount} card${drawAmount === 1 ? "" : "s"}.`);
 }
