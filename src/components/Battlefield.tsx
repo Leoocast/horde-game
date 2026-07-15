@@ -279,7 +279,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length}>
+      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           {others.length > 0 ? (
             <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />

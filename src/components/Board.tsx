@@ -94,7 +94,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-56 pt-3">
+      <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-40 pt-3">
         <section className="old-panel battlefield-board-grid p-3">
           <div className="battlefield-side battlefield-side-horde">
             <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
