@@ -2,13 +2,18 @@
 
 Deck folders under `src/data/decks/` are the forward-looking card data format.
 
-Each deck should live in its own folder:
+Each deck should live under its side (`player` or `horde`) and in its own folder:
 
 ```text
 src/data/decks/
-  deck_id/
-    deck_id.json
-    deck_id_images.json
+  player/
+    deck_id/
+      deck_id.json
+      deck_id_images.json
+  horde/
+    deck_id/
+      deck_id.json
+      deck_id_images.json
 ```
 
 ## Deck JSON

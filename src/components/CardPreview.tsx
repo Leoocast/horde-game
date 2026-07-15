@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
@@ -17,6 +17,7 @@ export function CardPreview() {
   const game = useGameStore((state) => state.game);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
   const focusedCardId = useGameStore((state) => state.focusedCardId);
+  const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const selectHand = useGameStore((state) => state.selectHand);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
@@ -27,13 +28,19 @@ export function CardPreview() {
   const activeId = focusedCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
   const details = useCardDetails(card?.definitionId ?? "");
+
+  useEffect(() => {
+    if (hoveredCardId && !findCard(game, hoveredCardId)) setHoveredCardId(undefined);
+    if (focusedCardId && !findCard(game, focusedCardId)) setFocusedCardId(undefined);
+  }, [focusedCardId, game, hoveredCardId, setFocusedCardId, setHoveredCardId]);
+
   if (!card) {
     return null;
   }
 
   const stats = cardStats(game, card);
   const keywords = cardKeywords(game, card);
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
+  const text = card.cardTypes.includes("Land") ? "" : cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
   const hasText = text.length > 0;
   void PREVIOUS_PREVIEW_WIDTH_CLASS;
   void PREVIOUS_PREVIEW_IMAGE_MAX_CLASS;

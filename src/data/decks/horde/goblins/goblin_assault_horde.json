@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.2.0",
-  "id": "mons_goblin_horde_50",
-  "name": "Mons's Goblin Horde",
+  "id": "goblin_assault_horde",
+  "name": "Goblin Assault Horde",
   "format": "horde",
   "side": "HORDE",
   "standardCheckedAt": null,
@@ -10,45 +10,34 @@
     "R"
   ],
   "archetype": "horde",
-  "gamePlan": "Desplegar Goblins continuamente, potenciar ataques masivos y convertir muertes o sacrificios en daño y más fichas.",
+  "gamePlan": "Abrumar con fichas de Trasgo, señores tribales, creación de fichas y daño directo al atacar o sacrificar Trasgos.",
+  "hordeHasNoLifeTotal": true,
+  "hordeHasNoHand": true,
+  "hordeCastsRevealedCardsForFree": true,
+  "hordeCreaturesHaveHaste": true,
+  "hordeTokensPersistAcrossZones": true,
+  "damageToHordeRule": {
+    "type": "MILL_PER_DAMAGE_CHUNK",
+    "damagePerCard": 3,
+    "rounding": "floor"
+  },
+  "assaultRevealRule": {
+    "stopWhenCardsPlayedEquals": 3,
+    "stopWhenNonTokenCardPlayed": true
+  },
+  "surgeRule": {
+    "condition": {
+      "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
+    },
+    "additionalCardsAfterNormalReveal": 2
+  },
   "tokens": [
     {
-      "id": "red_goblin_1_1",
-      "name": "Goblin",
-      "displayNameEs": "Trasgo",
-      "cardTypes": [
-        "Token",
-        "Creature"
-      ],
-      "subtypes": [
-        "Goblin"
-      ],
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "power": 1,
-      "toughness": 1,
-      "keywords": [],
-      "scryfall": {
-        "lookupMode": "search",
-        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
-        "imagePath": "data[0].image_uris.normal",
-        "fallbackImagePath": "data[0].image_uris.large",
-        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
-      }
-    }
-  ],
-  "cards": [
-    {
-      "id": "mons_s_goblin_raiders",
-      "name": "Mons's Goblin Raiders",
-      "displayNameEs": "Trasgos de Mons",
-      "quantity": 25,
-      "manaCost": "{R}",
-      "manaValue": 1,
+      "id": "goblin_token_1_1_red",
+      "name": "Goblin Token",
+      "displayNameEs": "Ficha de Trasgo",
+      "manaCost": null,
+      "manaValue": 0,
       "colors": [
         "R"
       ],
@@ -65,17 +54,55 @@
       "toughness": 1,
       "keywords": [],
       "abilities": [],
+      "isToken": true,
+      "needsVerification": false,
       "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Mons's Goblin Raiders",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
+        "lookupMode": "search",
+        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
+        "imagePath": "data[0].image_uris.normal",
+        "fallbackImagePath": "data[0].image_uris.large",
+        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
       }
+    }
+  ],
+  "cards": [
+    {
+      "id": "goblin_token_1_1_red",
+      "name": "Goblin Token",
+      "displayNameEs": "Ficha de Trasgo",
+      "manaCost": null,
+      "manaValue": 0,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [],
+      "abilities": [],
+      "isToken": true,
+      "needsVerification": false,
+      "scryfall": {
+        "lookupMode": "search",
+        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
+        "imagePath": "data[0].image_uris.normal",
+        "fallbackImagePath": "data[0].image_uris.large",
+        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
+      },
+      "quantity": 25
     },
     {
-      "id": "goblin_caves",
-      "name": "Goblin Caves",
-      "displayNameEs": null,
+      "id": "hobgoblin_bandit_lord",
+      "name": "Hobgoblin Bandit Lord",
+      "displayNameEs": "Señor de los bandidos hobgoblin",
       "quantity": 2,
       "manaCost": "{1}{R}{R}",
       "manaValue": 3,
@@ -86,225 +113,21 @@
         "R"
       ],
       "cardTypes": [
-        "Enchantment"
+        "Creature"
       ],
       "subtypes": [
-        "Aura"
+        "Goblin",
+        "Rogue"
       ],
+      "power": 2,
+      "toughness": 3,
       "keywords": [],
       "abilities": [
         {
-          "id": "goblin_caves_cast_attach",
-          "kind": "SPELL",
-          "zone": "HAND",
-          "speed": "SORCERY",
-          "cost": {},
-          "targets": [
-            {
-              "id": "targetLand",
-              "zone": "BATTLEFIELD",
-              "controller": "ANY",
-              "filters": {
-                "cardTypes": [
-                  "Land"
-                ]
-              }
-            }
-          ],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "attach_aura_to_target",
-          "implementationNote": "Attach this Aura to targetLand. The target may be any land.",
-          "handlerParams": {
-            "targetId": "targetLand"
-          }
-        },
-        {
-          "id": "goblin_caves_basic_mountain_buff",
+          "id": "hobgoblin_bandit_lord_other_goblins_buff",
           "kind": "STATIC",
           "zone": "BATTLEFIELD",
-          "conditions": [],
-          "effects": [],
-          "customHandler": "goblin_caves_basic_mountain_buff",
-          "implementationNote": "While the enchanted land is a basic Mountain, all Goblin creatures get +0/+2.",
-          "handlerParams": {
-            "enchantedPermanentFilters": {
-              "cardTypes": [
-                "Land"
-              ],
-              "supertypes": [
-                "Basic"
-              ],
-              "subtypes": [
-                "Mountain"
-              ]
-            },
-            "scope": {
-              "controller": "ANY",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            },
-            "power": 0,
-            "toughness": 2,
-            "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
-          }
-        }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Caves",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
-    },
-    {
-      "id": "goblin_shrine",
-      "name": "Goblin Shrine",
-      "displayNameEs": null,
-      "quantity": 2,
-      "manaCost": "{1}{R}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Enchantment"
-      ],
-      "subtypes": [
-        "Aura"
-      ],
-      "keywords": [],
-      "abilities": [
-        {
-          "id": "goblin_shrine_cast_attach",
-          "kind": "SPELL",
-          "zone": "HAND",
-          "speed": "SORCERY",
-          "cost": {},
-          "targets": [
-            {
-              "id": "targetLand",
-              "zone": "BATTLEFIELD",
-              "controller": "ANY",
-              "filters": {
-                "cardTypes": [
-                  "Land"
-                ]
-              }
-            }
-          ],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "attach_aura_to_target",
-          "implementationNote": "Attach this Aura to targetLand. The target may be any land.",
-          "handlerParams": {
-            "targetId": "targetLand"
-          }
-        },
-        {
-          "id": "goblin_shrine_basic_mountain_buff",
-          "kind": "STATIC",
-          "zone": "BATTLEFIELD",
-          "conditions": [],
-          "effects": [],
-          "customHandler": "goblin_shrine_basic_mountain_buff",
-          "implementationNote": "While the enchanted land is a basic Mountain, all Goblin creatures get +1/+0.",
-          "handlerParams": {
-            "enchantedPermanentFilters": {
-              "cardTypes": [
-                "Land"
-              ],
-              "supertypes": [
-                "Basic"
-              ],
-              "subtypes": [
-                "Mountain"
-              ]
-            },
-            "scope": {
-              "controller": "ANY",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            },
-            "power": 1,
-            "toughness": 0,
-            "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
-          }
-        },
-        {
-          "id": "goblin_shrine_leave_damage",
-          "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
-          "trigger": {
-            "event": "LEAVES_BATTLEFIELD"
-          },
-          "conditions": [],
-          "effects": [],
-          "customHandler": "deal_damage_to_each_matching_permanent",
-          "implementationNote": "Goblin Shrine deals 1 noncombat damage to each Goblin creature.",
-          "handlerParams": {
-            "source": "SELF",
-            "scope": {
-              "controller": "ANY",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            },
-            "amount": 1,
-            "damageKind": "NON_COMBAT"
-          }
-        }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Shrine",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
-    },
-    {
-      "id": "goblin_oriflamme",
-      "name": "Goblin Oriflamme",
-      "displayNameEs": "Oriflama trasga",
-      "quantity": 2,
-      "manaCost": "{1}{R}",
-      "manaValue": 2,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Enchantment"
-      ],
-      "subtypes": [],
-      "keywords": [],
-      "abilities": [
-        {
-          "id": "goblin_oriflamme_attacking_buff",
-          "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "targets": [],
           "conditions": [],
           "effects": [
             {
@@ -315,19 +138,232 @@
                   "cardTypes": [
                     "Creature"
                   ],
-                  "attacking": true
+                  "subtypes": [
+                    "Goblin"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "toughness": 1,
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+            }
+          ]
+        },
+        {
+          "id": "hobgoblin_bandit_lord_entered_goblins_damage",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{R}",
+            "tap": true
+          },
+          "targets": [
+            {
+              "id": "damageTarget",
+              "zone": "ANY",
+              "controller": "ANY",
+              "filters": {
+                "objectTypes": [
+                  "Player",
+                  "Creature",
+                  "Planeswalker",
+                  "Battle"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "hobgoblin_bandit_lord_entered_goblins_damage",
+          "implementationNote": "Deal damage to damageTarget equal to the number of Goblins that entered the battlefield under this source controller's control this turn."
+        }
+      ],
+      "needsVerification": false,
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Hobgoblin Bandit Lord",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "rundvelt_hordemaster",
+      "name": "Rundvelt Hordemaster",
+      "displayNameEs": "Señor de la horda de Rundvelt",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "manaValue": 2,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Warrior"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "rundvelt_hordemaster_other_goblins_buff",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "toughness": 1,
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+            }
+          ]
+        },
+        {
+          "id": "rundvelt_hordemaster_goblin_died_exile",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "PERMANENT_DIED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "permanent",
+              "controller": "SELF",
+              "excludeSource": false,
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Goblin"
+                ]
+              }
+            }
+          ],
+          "effects": [],
+          "customHandler": "rundvelt_hordemaster_exile_top_if_goblin",
+          "implementationNote": "Exile the top card of the source controller's library. If it is a Goblin creature card, that player may cast it until the end of their next turn."
+        }
+      ],
+      "needsVerification": false,
+      "scryfall": {
+        "lookupMode": "named",
+        "lookupQuery": "Rundvelt Hordemaster",
+        "imagePath": "image_uris.normal",
+        "fallbackImagePath": "image_uris.large"
+      }
+    },
+    {
+      "id": "battle_cry_goblin",
+      "name": "Battle Cry Goblin",
+      "displayNameEs": "Goblin del grito de guerra",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "manaValue": 2,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "battle_cry_goblin_pump_and_haste",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "mana": "{1}{R}"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
                 }
               },
               "power": 1,
               "toughness": 0,
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "GRANT_KEYWORD",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
+                }
+              },
+              "keyword": "HASTE",
+              "duration": "END_OF_TURN"
             }
           ]
+        },
+        {
+          "id": "battle_cry_goblin_pack_tactics",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "battle_cry_goblin_pack_tactics",
+          "implementationNote": "Trigger only if the source controller attacked with creatures whose total power was 6 or greater. Create one 1/1 red Goblin creature token tapped and attacking."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Goblin Oriflamme",
+        "lookupQuery": "Battle Cry Goblin",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }
@@ -349,12 +385,15 @@
         "Enchantment"
       ],
       "subtypes": [],
+      "power": null,
+      "toughness": null,
       "keywords": [],
       "abilities": [
         {
           "id": "goblin_war_drums_grant_menace",
           "kind": "STATIC",
           "zone": "BATTLEFIELD",
+          "targets": [],
           "conditions": [],
           "effects": [
             {
@@ -373,6 +412,7 @@
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Goblin War Drums",
@@ -383,7 +423,7 @@
     {
       "id": "raid_bombardment",
       "name": "Raid Bombardment",
-      "displayNameEs": null,
+      "displayNameEs": "Bombardeo de incursión",
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -397,40 +437,25 @@
         "Enchantment"
       ],
       "subtypes": [],
+      "power": null,
+      "toughness": null,
       "keywords": [],
       "abilities": [
         {
-          "id": "raid_bombardment_attack_damage",
+          "id": "raid_bombardment_small_attacker_damage",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
             "event": "ATTACK_DECLARED"
           },
-          "conditions": [
-            {
-              "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "attacker",
-              "controller": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "powerAtMost": 2
-              }
-            }
-          ],
+          "targets": [],
+          "conditions": [],
           "effects": [],
-          "customHandler": "damage_attacked_player_or_planeswalker",
-          "implementationNote": "For each qualifying attacking creature, Raid Bombardment deals 1 noncombat damage to the player or planeswalker that creature is attacking. This ability does not target.",
-          "handlerParams": {
-            "source": "SELF",
-            "eventObject": "attacker",
-            "recipient": "ATTACKED_PLAYER_OR_PLANESWALKER",
-            "amount": 1,
-            "damageKind": "NON_COMBAT"
-          }
+          "customHandler": "raid_bombardment_small_attacker_damage",
+          "implementationNote": "For each creature controlled by the source controller that attacks with power 2 or less, deal 1 damage to the player or planeswalker that creature is attacking."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Raid Bombardment",
@@ -439,12 +464,12 @@
       }
     },
     {
-      "id": "goblin_marshal",
-      "name": "Goblin Marshal",
-      "displayNameEs": "Mariscal trasgo",
+      "id": "beetleback_chief",
+      "name": "Beetleback Chief",
+      "displayNameEs": "Jefe lomo de escarabajo",
       "quantity": 2,
-      "manaCost": "{4}{R}{R}",
-      "manaValue": 6,
+      "manaCost": "{2}{R}{R}",
+      "manaValue": 4,
       "colors": [
         "R"
       ],
@@ -458,63 +483,34 @@
         "Goblin",
         "Warrior"
       ],
-      "power": 3,
-      "toughness": 3,
+      "power": 2,
+      "toughness": 2,
       "keywords": [],
       "abilities": [
         {
-          "id": "goblin_marshal_echo",
+          "id": "beetleback_chief_create_goblins",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "BEGIN_UPKEEP"
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
-          "conditions": [],
-          "effects": [],
-          "customHandler": "echo_cost",
-          "implementationNote": "Echo {4}{R}{R}: at the beginning of the controller's upkeep, if this permanent came under that player's control since the beginning of their last upkeep, sacrifice it unless {4}{R}{R} is paid.",
-          "handlerParams": {
-            "mana": "{4}{R}{R}"
-          }
-        },
-        {
-          "id": "goblin_marshal_enter_tokens",
-          "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
-          "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
-          },
+          "targets": [],
           "conditions": [],
           "effects": [
             {
               "type": "CREATE_TOKEN",
               "player": "SELF",
-              "tokenId": "red_goblin_1_1",
-              "amount": 2
-            }
-          ]
-        },
-        {
-          "id": "goblin_marshal_dies_tokens",
-          "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
-          "trigger": {
-            "event": "THIS_DIES"
-          },
-          "conditions": [],
-          "effects": [
-            {
-              "type": "CREATE_TOKEN",
-              "player": "SELF",
-              "tokenId": "red_goblin_1_1",
+              "tokenId": "goblin_token_1_1_red",
               "amount": 2
             }
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Goblin Marshal",
+        "lookupQuery": "Beetleback Chief",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }
@@ -543,18 +539,20 @@
       "keywords": [],
       "abilities": [
         {
-          "id": "siege_gang_commander_enter_tokens",
+          "id": "siege_gang_commander_create_goblins",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
+          "targets": [],
           "conditions": [],
           "effects": [
             {
               "type": "CREATE_TOKEN",
               "player": "SELF",
-              "tokenId": "red_goblin_1_1",
+              "tokenId": "goblin_token_1_1_red",
               "amount": 3
             }
           ]
@@ -567,9 +565,11 @@
           "cost": {
             "mana": "{1}{R}",
             "sacrifice": {
-              "amount": 1,
               "controller": "SELF",
               "filters": {
+                "cardTypes": [
+                  "Creature"
+                ],
                 "subtypes": [
                   "Goblin"
                 ]
@@ -578,16 +578,17 @@
           },
           "targets": [
             {
-              "id": "anyTarget",
-              "zone": "BATTLEFIELD",
+              "id": "damageTarget",
+              "zone": "ANY",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
+                "objectTypes": [
+                  "Player",
                   "Creature",
-                  "Planeswalker"
+                  "Planeswalker",
+                  "Battle"
                 ]
-              },
-              "allowPlayers": true
+              }
             }
           ],
           "conditions": [],
@@ -595,13 +596,14 @@
             {
               "type": "DEAL_DAMAGE",
               "source": "SELF",
-              "target": "anyTarget",
+              "target": "damageTarget",
               "amount": 2,
               "damageKind": "NON_COMBAT"
             }
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Siege-Gang Commander",
@@ -637,24 +639,11 @@
           "id": "goblin_rabblemaster_other_goblins_must_attack",
           "kind": "STATIC",
           "zone": "BATTLEFIELD",
+          "targets": [],
           "conditions": [],
           "effects": [],
-          "customHandler": "must_attack_each_combat_if_able",
-          "implementationNote": "Other Goblin creatures controlled by this source's controller attack each combat if able.",
-          "handlerParams": {
-            "scope": {
-              "controller": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ],
-                "excludeSelf": true
-              }
-            }
-          }
+          "customHandler": "goblin_rabblemaster_force_other_goblins_attack",
+          "implementationNote": "Other Goblin creatures controlled by the source controller attack each combat if able while this source is on the battlefield."
         },
         {
           "id": "goblin_rabblemaster_begin_combat_token",
@@ -663,62 +652,33 @@
           "trigger": {
             "event": "BEGIN_COMBAT"
           },
+          "targets": [],
           "conditions": [
             {
-              "type": "TURN_PLAYER_IS",
+              "type": "ACTIVE_PLAYER_IS",
               "player": "SELF"
             }
           ],
-          "effects": [
-            {
-              "type": "CREATE_TOKEN",
-              "player": "SELF",
-              "tokenId": "red_goblin_1_1",
-              "amount": 1,
-              "grantedKeywords": [
-                "HASTE"
-              ],
-              "duration": "PERMANENT"
-            }
-          ]
+          "effects": [],
+          "customHandler": "goblin_rabblemaster_begin_combat_token",
+          "implementationNote": "Create one 1/1 red Goblin creature token. It gains haste until end of turn."
         },
         {
           "id": "goblin_rabblemaster_attack_buff",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "ATTACK_DECLARED"
+            "event": "ATTACK_DECLARED",
+            "source": "SELF"
           },
-          "conditions": [
-            {
-              "type": "EVENT_OBJECT_IS_SOURCE",
-              "eventObject": "attacker"
-            }
-          ],
-          "effects": [
-            {
-              "type": "MODIFY_STATS",
-              "target": "SELF",
-              "power": {
-                "type": "COUNT_PERMANENTS",
-                "controller": "SELF",
-                "filters": {
-                  "cardTypes": [
-                    "Creature"
-                  ],
-                  "subtypes": [
-                    "Goblin"
-                  ],
-                  "attacking": true,
-                  "excludeSource": true
-                }
-              },
-              "toughness": 0,
-              "duration": "END_OF_TURN"
-            }
-          ]
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "goblin_rabblemaster_attack_buff",
+          "implementationNote": "This source gets +1/+0 until end of turn for each other attacking Goblin."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Goblin Rabblemaster",
@@ -727,9 +687,9 @@
       }
     },
     {
-      "id": "you_see_a_pair_of_goblins",
-      "name": "You See a Pair of Goblins",
-      "displayNameEs": "Ves dos goblins",
+      "id": "goblin_surprise",
+      "name": "Goblin Surprise",
+      "displayNameEs": "Sorpresa trasga",
       "quantity": 3,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -743,10 +703,12 @@
         "Instant"
       ],
       "subtypes": [],
+      "power": null,
+      "toughness": null,
       "keywords": [],
       "abilities": [
         {
-          "id": "you_see_a_pair_of_goblins_choose_mode",
+          "id": "goblin_surprise_choose_mode",
           "kind": "SPELL",
           "zone": "HAND",
           "speed": "INSTANT",
@@ -757,10 +719,11 @@
             {
               "type": "CHOOSE",
               "player": "SELF",
-              "amount": 1,
+              "min": 1,
+              "max": 1,
               "options": [
                 {
-                  "id": "charge_them",
+                  "id": "goblin_surprise_pump",
                   "effects": [
                     {
                       "type": "MODIFY_STATS",
@@ -779,12 +742,12 @@
                   ]
                 },
                 {
-                  "id": "befriend_them",
+                  "id": "goblin_surprise_tokens",
                   "effects": [
                     {
                       "type": "CREATE_TOKEN",
                       "player": "SELF",
-                      "tokenId": "red_goblin_1_1",
+                      "tokenId": "goblin_token_1_1_red",
                       "amount": 2
                     }
                   ]
@@ -794,20 +757,21 @@
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "You See a Pair of Goblins",
+        "lookupQuery": "Goblin Surprise",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }
     },
     {
-      "id": "goblin_war_strike",
-      "name": "Goblin War Strike",
-      "displayNameEs": "Ataque de guerra trasgo",
+      "id": "mogg_mob",
+      "name": "Mogg Mob",
+      "displayNameEs": "Pandilla mogg",
       "quantity": 1,
-      "manaCost": "{R}",
-      "manaValue": 1,
+      "manaCost": "{R}{R}{R}",
+      "manaValue": 3,
       "colors": [
         "R"
       ],
@@ -815,56 +779,50 @@
         "R"
       ],
       "cardTypes": [
-        "Sorcery"
+        "Creature"
       ],
-      "subtypes": [],
+      "subtypes": [
+        "Goblin"
+      ],
+      "power": 3,
+      "toughness": 3,
       "keywords": [],
       "abilities": [
         {
-          "id": "goblin_war_strike_damage",
-          "kind": "SPELL",
-          "zone": "HAND",
-          "speed": "SORCERY",
-          "cost": {},
+          "id": "mogg_mob_sacrifice_divided_damage",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
+          "speed": "INSTANT",
+          "cost": {
+            "sacrificeSelf": true
+          },
           "targets": [
             {
-              "id": "targetPlayerOrPlaneswalker",
-              "zone": "BATTLEFIELD",
+              "id": "damageTargets",
+              "zone": "ANY",
               "controller": "ANY",
+              "min": 1,
+              "max": 3,
               "filters": {
-                "cardTypes": [
-                  "Planeswalker"
+                "objectTypes": [
+                  "Player",
+                  "Creature",
+                  "Planeswalker",
+                  "Battle"
                 ]
-              },
-              "allowPlayers": true
+              }
             }
           ],
           "conditions": [],
-          "effects": [
-            {
-              "type": "DEAL_DAMAGE",
-              "source": "SELF",
-              "target": "targetPlayerOrPlaneswalker",
-              "amount": {
-                "type": "COUNT_PERMANENTS",
-                "controller": "SELF",
-                "filters": {
-                  "cardTypes": [
-                    "Creature"
-                  ],
-                  "subtypes": [
-                    "Goblin"
-                  ]
-                }
-              },
-              "damageKind": "NON_COMBAT"
-            }
-          ]
+          "effects": [],
+          "customHandler": "mogg_mob_divide_three_damage",
+          "implementationNote": "Divide 3 damage as chosen among one, two, or three legal targets. Each chosen target must receive at least 1 damage."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Goblin War Strike",
+        "lookupQuery": "Mogg Mob",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }
@@ -898,11 +856,12 @@
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
           "targets": [
             {
-              "id": "targetOpponentCreature",
+              "id": "targetCreature",
               "zone": "BATTLEFIELD",
               "controller": "OPPONENT",
               "filters": {
@@ -917,7 +876,7 @@
             {
               "type": "DEAL_DAMAGE",
               "source": "SELF",
-              "target": "targetOpponentCreature",
+              "target": "targetCreature",
               "amount": {
                 "type": "COUNT_PERMANENTS",
                 "controller": "SELF",
@@ -935,6 +894,7 @@
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Volley Veteran",
@@ -969,33 +929,21 @@
       ],
       "abilities": [
         {
-          "id": "goblin_chainwhirler_enter_damage",
+          "id": "goblin_chainwhirler_enter_damage_all",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
+          "targets": [],
           "conditions": [],
           "effects": [],
-          "customHandler": "goblin_chainwhirler_mass_damage",
-          "implementationNote": "Deal 1 noncombat damage to each opponent and to each creature and planeswalker those opponents control.",
-          "handlerParams": {
-            "source": "SELF",
-            "players": "EACH_OPPONENT",
-            "permanentScope": {
-              "controller": "OPPONENT",
-              "filters": {
-                "cardTypes": [
-                  "Creature",
-                  "Planeswalker"
-                ]
-              }
-            },
-            "amount": 1,
-            "damageKind": "NON_COMBAT"
-          }
+          "customHandler": "goblin_chainwhirler_enter_damage_all",
+          "implementationNote": "Deal 1 damage to each opponent and each creature and planeswalker those opponents control."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Goblin Chainwhirler",
@@ -1031,6 +979,7 @@
           "id": "goblin_trashmaster_other_goblins_buff",
           "kind": "STATIC",
           "zone": "BATTLEFIELD",
+          "targets": [],
           "conditions": [],
           "effects": [
             {
@@ -1060,9 +1009,11 @@
           "speed": "INSTANT",
           "cost": {
             "sacrifice": {
-              "amount": 1,
               "controller": "SELF",
               "filters": {
+                "cardTypes": [
+                  "Creature"
+                ],
                 "subtypes": [
                   "Goblin"
                 ]
@@ -1090,6 +1041,7 @@
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Goblin Trashmaster",
@@ -1098,190 +1050,147 @@
       }
     },
     {
-      "id": "goblin_pyromancer",
-      "name": "Goblin Pyromancer",
-      "displayNameEs": "Piromante trasgo",
+      "id": "general_kreat_the_boltbringer",
+      "name": "General Kreat, the Boltbringer",
+      "displayNameEs": "General Kreat, la Crearrayos",
       "quantity": 1,
-      "manaCost": "{3}{R}",
-      "manaValue": 4,
+      "manaCost": "{2}{R}",
+      "manaValue": 3,
       "colors": [
         "R"
       ],
       "colorIdentity": [
         "R"
       ],
+      "supertypes": [
+        "Legendary"
+      ],
       "cardTypes": [
         "Creature"
       ],
       "subtypes": [
         "Goblin",
-        "Wizard"
+        "Soldier"
       ],
       "power": 2,
       "toughness": 2,
       "keywords": [],
       "abilities": [
         {
-          "id": "goblin_pyromancer_enter_buff",
+          "id": "general_kreat_goblins_attack_token",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "general_kreat_goblins_attack_token",
+          "implementationNote": "Whenever one or more Goblins controlled by the source controller attack, create one 1/1 red Goblin creature token tapped and attacking. Trigger only once for each attack declaration."
+        },
+        {
+          "id": "general_kreat_other_creature_enters_damage",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
             "event": "ENTERS_BATTLEFIELD"
           },
-          "conditions": [],
-          "effects": [
+          "targets": [],
+          "conditions": [
             {
-              "type": "MODIFY_STATS",
-              "scope": {
-                "controller": "ANY",
-                "filters": {
-                  "cardTypes": [
-                    "Creature"
-                  ],
-                  "subtypes": [
-                    "Goblin"
-                  ]
-                }
-              },
-              "power": 3,
-              "toughness": 0,
-              "duration": "END_OF_TURN"
-            }
-          ]
-        },
-        {
-          "id": "goblin_pyromancer_end_step_destroy",
-          "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
-          "trigger": {
-            "event": "END_STEP"
-          },
-          "conditions": [],
-          "effects": [
-            {
-              "type": "DESTROY",
-              "scope": {
-                "controller": "ANY",
-                "filters": {
-                  "cardTypes": [
-                    "Creature"
-                  ],
-                  "subtypes": [
-                    "Goblin"
-                  ]
-                }
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "permanent",
+              "controller": "SELF",
+              "excludeSource": true,
+              "filters": {
+                "cardTypes": [
+                  "Creature"
+                ]
               }
             }
-          ]
+          ],
+          "effects": [],
+          "customHandler": "general_kreat_damage_each_opponent",
+          "implementationNote": "Deal 1 damage to each opponent."
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Goblin Pyromancer",
+        "lookupQuery": "General Kreat, the Boltbringer",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
       }
     },
     {
-      "id": "ib_halfheart_goblin_tactician",
-      "name": "Ib Halfheart, Goblin Tactician",
-      "displayNameEs": "Ib Corazón de Ratón, estratega trasgo",
+      "id": "krenko_tin_street_kingpin",
+      "name": "Krenko, Tin Street Kingpin",
+      "displayNameEs": "Krenko, líder de la Calle Hojalata",
       "quantity": 1,
-      "manaCost": "{3}{R}",
-      "manaValue": 4,
+      "manaCost": "{2}{R}",
+      "manaValue": 3,
       "colors": [
         "R"
       ],
       "colorIdentity": [
         "R"
       ],
+      "supertypes": [
+        "Legendary"
+      ],
       "cardTypes": [
         "Creature"
       ],
       "subtypes": [
-        "Goblin",
-        "Advisor"
+        "Goblin"
       ],
-      "power": 3,
+      "power": 1,
       "toughness": 2,
       "keywords": [],
       "abilities": [
         {
-          "id": "ib_halfheart_blocked_goblin",
+          "id": "krenko_tin_street_kingpin_attack_grow_and_tokens",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "BLOCK_DECLARED"
-          },
-          "conditions": [
-            {
-              "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "blockedCreature",
-              "controller": "SELF",
-              "excludeSource": true,
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            }
-          ],
-          "effects": [],
-          "customHandler": "ib_halfheart_blocked_goblin",
-          "implementationNote": "Sacrifice the blocked Goblin. If it was sacrificed this way, that Goblin deals 4 noncombat damage to each creature blocking it.",
-          "handlerParams": {
-            "sacrificeEventObject": "blockedCreature",
-            "ifSacrificed": {
-              "source": "blockedCreature",
-              "recipientScope": "EACH_BLOCKING_CREATURE",
-              "amount": 4,
-              "damageKind": "NON_COMBAT"
-            }
-          }
-        },
-        {
-          "id": "ib_halfheart_sacrifice_mountains",
-          "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "sacrifice": {
-              "amount": 2,
-              "controller": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Land"
-                ],
-                "subtypes": [
-                  "Mountain"
-                ]
-              }
-            }
+            "event": "ATTACK_DECLARED",
+            "source": "SELF"
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "CREATE_TOKEN",
-              "player": "SELF",
-              "tokenId": "red_goblin_1_1",
-              "amount": 2
+              "type": "SEQUENCE",
+              "effects": [
+                {
+                  "type": "ADD_COUNTERS",
+                  "target": "SELF",
+                  "counter": "+1/+1",
+                  "amount": 1
+                },
+                {
+                  "type": "CREATE_TOKEN",
+                  "player": "SELF",
+                  "tokenId": "goblin_token_1_1_red",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "SELF",
+                    "stat": "POWER"
+                  }
+                }
+              ]
             }
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
-        "lookupQuery": "Ib Halfheart, Goblin Tactician",
+        "lookupQuery": "Krenko, Tin Street Kingpin",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
-      },
-      "supertypes": [
-        "Legendary"
-      ]
+      }
     },
     {
       "id": "pashalik_mons",
@@ -1295,6 +1204,9 @@
       ],
       "colorIdentity": [
         "R"
+      ],
+      "supertypes": [
+        "Legendary"
       ],
       "cardTypes": [
         "Creature"
@@ -1316,16 +1228,17 @@
           },
           "targets": [
             {
-              "id": "anyTarget",
-              "zone": "BATTLEFIELD",
+              "id": "damageTarget",
+              "zone": "ANY",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
+                "objectTypes": [
+                  "Player",
                   "Creature",
-                  "Planeswalker"
+                  "Planeswalker",
+                  "Battle"
                 ]
-              },
-              "allowPlayers": true
+              }
             }
           ],
           "conditions": [
@@ -1333,6 +1246,7 @@
               "type": "EVENT_OBJECT_MATCHES",
               "eventObject": "permanent",
               "controller": "SELF",
+              "excludeSource": false,
               "filters": {
                 "cardTypes": [
                   "Creature"
@@ -1347,23 +1261,25 @@
             {
               "type": "DEAL_DAMAGE",
               "source": "SELF",
-              "target": "anyTarget",
+              "target": "damageTarget",
               "amount": 1,
               "damageKind": "NON_COMBAT"
             }
           ]
         },
         {
-          "id": "pashalik_mons_sacrifice_create_tokens",
+          "id": "pashalik_mons_sacrifice_create_goblins",
           "kind": "ACTIVATED",
           "zone": "BATTLEFIELD",
           "speed": "INSTANT",
           "cost": {
             "mana": "{3}{R}",
             "sacrifice": {
-              "amount": 1,
               "controller": "SELF",
               "filters": {
+                "cardTypes": [
+                  "Creature"
+                ],
                 "subtypes": [
                   "Goblin"
                 ]
@@ -1376,104 +1292,89 @@
             {
               "type": "CREATE_TOKEN",
               "player": "SELF",
-              "tokenId": "red_goblin_1_1",
+              "tokenId": "goblin_token_1_1_red",
               "amount": 2
             }
           ]
         }
       ],
+      "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
         "lookupQuery": "Pashalik Mons",
         "imagePath": "image_uris.normal",
         "fallbackImagePath": "image_uris.large"
-      },
-      "supertypes": [
-        "Legendary"
-      ]
+      }
     }
   ],
-  "hordeHasNoLifeTotal": true,
-  "hordeHasNoHand": true,
-  "hordeCastsRevealedCardsForFree": true,
-  "hordeCreaturesHaveHaste": true,
-  "hordeTokensPersistAcrossZones": true,
-  "damageToHordeRule": {
-    "type": "MILL_PER_DAMAGE_CHUNK",
-    "damagePerCard": 3,
-    "rounding": "floor"
-  },
-  "assaultRevealRule": {
-    "stopWhenCardsPlayedEquals": 3,
-    "stopWhenNonTokenCardPlayed": true
-  },
-  "surgeRule": {
-    "condition": {
-      "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
-    },
-    "additionalCardsAfterNormalReveal": 2
-  },
   "engineSupportNeeded": [
     {
-      "feature": "AURA_ATTACHMENT",
-      "handlers": [
-        "attach_aura_to_target",
-        "goblin_caves_basic_mountain_buff",
-        "goblin_shrine_basic_mountain_buff"
-      ],
-      "cards": [
-        "Goblin Caves",
-        "Goblin Shrine"
+      "id": "multi_kind_any_target_selector",
+      "reason": "Damage abilities may target players, creatures, planeswalkers, or battles."
+    },
+    {
+      "id": "entered_permanent_count_this_turn",
+      "usedBy": [
+        "hobgoblin_bandit_lord_entered_goblins_damage"
       ]
     },
     {
-      "feature": "ECHO",
-      "handlers": [
-        "echo_cost"
-      ],
-      "cards": [
-        "Goblin Marshal"
+      "id": "temporary_cast_permission_from_exile",
+      "usedBy": [
+        "rundvelt_hordemaster_goblin_died_exile"
       ]
     },
     {
-      "feature": "ATTACK_DEFENDER_EVENT_REFERENCE",
-      "handlers": [
-        "damage_attacked_player_or_planeswalker"
-      ],
-      "cards": [
-        "Raid Bombardment"
+      "id": "attack_group_total_power_and_tapped_attacking_tokens",
+      "usedBy": [
+        "battle_cry_goblin_pack_tactics",
+        "general_kreat_goblins_attack_token"
       ]
     },
     {
-      "feature": "COMBAT_REQUIREMENTS_AND_BLOCK_RELATIONS",
-      "handlers": [
-        "must_attack_each_combat_if_able",
-        "ib_halfheart_blocked_goblin"
-      ],
-      "cards": [
-        "Goblin Rabblemaster",
-        "Ib Halfheart, Goblin Tactician"
+      "id": "defending_player_or_planeswalker_reference",
+      "usedBy": [
+        "raid_bombardment_small_attacker_damage"
       ]
     },
     {
-      "feature": "NON_TARGETED_MASS_EFFECTS",
-      "handlers": [
-        "deal_damage_to_each_matching_permanent",
-        "goblin_chainwhirler_mass_damage"
-      ],
-      "cards": [
-        "Goblin Shrine",
-        "Goblin Chainwhirler"
+      "id": "must_attack_if_able_continuous_rule",
+      "usedBy": [
+        "goblin_rabblemaster_other_goblins_must_attack"
       ]
     },
     {
-      "feature": "HORDE_COST_PAYMENT_POLICY",
-      "cards": [
-        "Goblin Marshal",
-        "Siege-Gang Commander",
-        "Pashalik Mons"
-      ],
-      "implementationNote": "The supplied Horde rules make revealed spells free but do not define how the Horde pays echo or mana costs of activated abilities. The engine must explicitly choose whether these costs are payable or those abilities remain unavailable."
+      "id": "created_token_temporary_haste",
+      "usedBy": [
+        "goblin_rabblemaster_begin_combat_token"
+      ]
+    },
+    {
+      "id": "count_other_attacking_goblins",
+      "usedBy": [
+        "goblin_rabblemaster_attack_buff"
+      ]
+    },
+    {
+      "id": "divide_damage_among_multiple_targets",
+      "usedBy": [
+        "mogg_mob_sacrifice_divided_damage"
+      ]
+    },
+    {
+      "id": "damage_each_opponent_and_controlled_permanents",
+      "usedBy": [
+        "goblin_chainwhirler_enter_damage_all",
+        "general_kreat_other_creature_enters_damage"
+      ]
+    },
+    {
+      "id": "horde_reveal_and_persistent_token_zone_rules",
+      "usedBy": [
+        "assaultRevealRule",
+        "surgeRule",
+        "hordeTokensPersistAcrossZones"
+      ]
     }
   ]
 }

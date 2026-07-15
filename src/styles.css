@@ -16,9 +16,18 @@
 
   body {
     margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
     font-family:
       "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
     background: #100b07;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   .duel-table {

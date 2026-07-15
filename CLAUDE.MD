@@ -82,8 +82,11 @@ src/
 
   data/
     decks/
-      mono_green_ramp/    deck Alpha 0.0.3 del player
-    horde-zombies.json    deck actual de la Horda
+      player/
+        mono_green_ramp/  deck Alpha 0.0.3 del player
+      horde/
+        zombies/          deck actual de la Horda
+        goblins/          deck Goblin disponible en el inspector
     normalizeDeck.ts      adapta el nuevo JSON del deck al engine viejo
 ```
 
@@ -184,7 +187,7 @@ Horde:
 - si un other permanent es target valido durante un spell, esa zona debe subir sobre el fade negro
 
 Graf Harvest:
-- esta en `horde-zombies.json`
+- esta en `src/data/decks/horde/zombies/horde-zombies.json`
 - es Enchantment
 - va en Other permanents de Horde
 - da `MENACE` a zombies via `STATIC_GRANT_KEYWORD`
@@ -256,12 +259,12 @@ Deck viejo MVP:
 Estos estan deprecated para el player Alpha.
 
 Deck actual del player:
-- `src/data/decks/mono_green_ramp/mono_green_ramp.json`
-- `src/data/decks/mono_green_ramp/mono_green_ramp_images.json`
+- `src/data/decks/player/mono_green_ramp/mono_green_ramp.json`
+- `src/data/decks/player/mono_green_ramp/mono_green_ramp_images.json`
 
 `src/data/decks.ts` importa:
 - player desde `normalizeDeck(monoGreenRampRaw)`
-- horde desde `horde-zombies.json`
+- horde desde `src/data/decks/horde/zombies/horde-zombies.json`
 
 La nueva estructura de imagenes del deck debe ser la base para el inspector.
 
@@ -560,7 +563,7 @@ Leer primero:
 - componente visual especifico involucrado
 
 Si es carta nueva:
-- revisar su JSON en `src/data/decks/mono_green_ramp/mono_green_ramp.json` o `src/data/horde-zombies.json`
+- revisar su JSON en `src/data/decks/player/mono_green_ramp/mono_green_ramp.json` o el deck correspondiente bajo `src/data/decks/horde/`
 - revisar normalizacion en `src/data/normalizeDeck.ts`
 - revisar si ya hay efecto generico en `EffectResolver.ts`
 
@@ -586,4 +589,3 @@ Este no es Magic completo. Es una version PvE clara, animada y jugable. Precisio
 - feedback visual fuerte
 - UX clara para atacar, defender, castear y resolver efectos
 - no esconder reglas importantes al jugador
-

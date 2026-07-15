@@ -54,6 +54,7 @@ export function Hand({ game }: { game: GameState }) {
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const selectHand = useGameStore((state) => state.selectHand);
+  const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
@@ -75,6 +76,9 @@ export function Hand({ game }: { game: GameState }) {
   function finishDrag(card: CardInstance, playable: boolean, info: PanInfo) {
     setSuppressedClickId(card.instanceId);
     window.setTimeout(() => setSuppressedClickId((current) => (current === card.instanceId ? undefined : current)), 240);
+    setHoveredCardId(undefined);
+    setFocusedCardId(undefined);
+    selectHand(undefined);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
     const releasedInPlayZone = info.point.y <= playZoneY;
     const shouldPlay = releasedInPlayZone && playable;
@@ -89,8 +93,6 @@ export function Hand({ game }: { game: GameState }) {
         tone: "warning",
       });
     }
-    setFocusedCardId(undefined);
-    selectHand(undefined);
   }
 
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);

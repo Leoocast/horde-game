@@ -24,7 +24,7 @@ export function CardContextMenu() {
   const details = useCardDetails(detailsCard?.definitionId ?? "");
   const keywords = detailsCard ? cardKeywords(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
-  const detailsText = detailsCard ? cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(detailsCard)) : "";
+  const detailsText = detailsCard && !detailsCard.cardTypes.includes("Land") ? cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(detailsCard)) : "";
 
   const position = useMemo(() => {
     if (!menu || typeof window === "undefined") return { left: 0, top: 0 };

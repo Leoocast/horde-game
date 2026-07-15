@@ -45,7 +45,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   const isDeveloperMode = game.seed.trim().toLowerCase() === "developer";
 
   useEffect(() => {
-    setMusicVariant(game.player.life <= 10 ? "climax" : "battle");
+    if (game.player.life <= 10) setMusicVariant("climax");
   }, [game.player.life, setMusicVariant]);
 
   useEffect(() => {

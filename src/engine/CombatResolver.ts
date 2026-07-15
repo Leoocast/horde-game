@@ -77,7 +77,7 @@ export function prepareHordeAttackers(game: GameState): GameState {
   return next;
 }
 
-export function resolveHordeCombat(game: GameState): GameState {
+export function resolveHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
   if (next.combat.hordeAttackers.length === 0) {
     return log(next, "No Horde attackers to resolve. Press Attack after Horde Turn first.");
@@ -112,10 +112,14 @@ export function resolveHordeCombat(game: GameState): GameState {
     next.player.life -= playerDamage;
     log(next, `Horde deals ${playerDamage} damage to Player.`);
   }
-  drainEventQueue(next);
+  if (!options.deferTriggeredEvents) {
+    drainEventQueue(next);
+    checkWinLoss(next);
+  } else if (next.player.life <= 0) {
+    checkWinLoss(next);
+  }
   next.combat.hordeAttackers = [];
   next.combat.blockers = {};
-  checkWinLoss(next);
   return next;
 }
 

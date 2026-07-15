@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "0.2.0",
+  "provider": "scryfall",
+  "name": "Goblin Assault Horde",
+  "format": "Horde Magic",
+  "totalCards": 50,
+  "composition": {
+    "tokenCards": 25,
+    "nonTokenCards": 25
+  },
+  "defaults": {
+    "imageSize": "normal",
+    "face": "front",
+    "cacheKey": "deck-card-images:v1"
+  },
+  "deck": [
+    {
+      "cardId": "goblin_token_1_1_red",
+      "quantity": 25,
+      "kind": "token"
+    },
+    {
+      "cardId": "hobgoblin_bandit_lord",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "rundvelt_hordemaster",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "battle_cry_goblin",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "goblin_war_drums",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "raid_bombardment",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "beetleback_chief",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "siege_gang_commander",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "goblin_rabblemaster",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "goblin_surprise",
+      "quantity": 3,
+      "kind": "card"
+    },
+    {
+      "cardId": "mogg_mob",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "volley_veteran",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "goblin_chainwhirler",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "goblin_trashmaster",
+      "quantity": 2,
+      "kind": "card"
+    },
+    {
+      "cardId": "general_kreat_the_boltbringer",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "krenko_tin_street_kingpin",
+      "quantity": 1,
+      "kind": "card"
+    },
+    {
+      "cardId": "pashalik_mons",
+      "quantity": 1,
+      "kind": "card"
+    }
+  ],
+  "cards": {
+    "goblin_token_1_1_red": {
+      "source": "scryfallSearch",
+      "query": "!\"Goblin\" t:token c:r pow=1 tou=1 set:tfdn",
+      "pick": 0
+    },
+    "hobgoblin_bandit_lord": {
+      "source": "scryfallNamed",
+      "exact": "Hobgoblin Bandit Lord",
+      "set": "afr"
+    },
+    "rundvelt_hordemaster": {
+      "source": "scryfallNamed",
+      "exact": "Rundvelt Hordemaster",
+      "set": "dmu"
+    },
+    "battle_cry_goblin": {
+      "source": "scryfallNamed",
+      "exact": "Battle Cry Goblin",
+      "set": "j25"
+    },
+    "goblin_war_drums": {
+      "source": "scryfallNamed",
+      "exact": "Goblin War Drums",
+      "set": "a25"
+    },
+    "raid_bombardment": {
+      "source": "scryfallNamed",
+      "exact": "Raid Bombardment",
+      "set": "wot"
+    },
+    "beetleback_chief": {
+      "source": "scryfallNamed",
+      "exact": "Beetleback Chief",
+      "set": "tdc"
+    },
+    "siege_gang_commander": {
+      "source": "scryfallNamed",
+      "exact": "Siege-Gang Commander",
+      "set": "tdc"
+    },
+    "goblin_rabblemaster": {
+      "source": "scryfallNamed",
+      "exact": "Goblin Rabblemaster",
+      "set": "j22"
+    },
+    "goblin_surprise": {
+      "source": "scryfallNamed",
+      "exact": "Goblin Surprise",
+      "set": "fdn"
+    },
+    "mogg_mob": {
+      "source": "scryfallNamed",
+      "exact": "Mogg Mob",
+      "set": "mh3"
+    },
+    "volley_veteran": {
+      "source": "scryfallNamed",
+      "exact": "Volley Veteran",
+      "set": "j25"
+    },
+    "goblin_chainwhirler": {
+      "source": "scryfallNamed",
+      "exact": "Goblin Chainwhirler"
+    },
+    "goblin_trashmaster": {
+      "source": "scryfallNamed",
+      "exact": "Goblin Trashmaster"
+    },
+    "general_kreat_the_boltbringer": {
+      "source": "scryfallNamed",
+      "exact": "General Kreat, the Boltbringer",
+      "set": "j25"
+    },
+    "krenko_tin_street_kingpin": {
+      "source": "scryfallNamed",
+      "exact": "Krenko, Tin Street Kingpin",
+      "set": "j25"
+    },
+    "pashalik_mons": {
+      "source": "scryfallNamed",
+      "exact": "Pashalik Mons",
+      "set": "dmr"
+    }
+  }
+}

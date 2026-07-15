@@ -23,7 +23,7 @@ export function MusicPlayerMenu() {
       const next = !value;
       if (next && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+        setMenuPos({ top: rect.bottom + 14, right: window.innerWidth - rect.right });
       }
       return next;
     });

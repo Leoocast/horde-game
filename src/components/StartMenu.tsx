@@ -282,7 +282,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
       )}
 
       {showDeveloperWarning && (
-        <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-[#090604]/90 p-6">
+        <div data-preserve-settings-menu="true" className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-[#090604]/90 p-6">
           <div className="old-panel w-full max-w-md p-6 text-center">
             <AlertTriangle className="mx-auto text-[#f0c46f]" size={38} />
             <p className="old-title mt-3 text-xs font-bold uppercase tracking-[0.28em]">Developer Mode</p>
@@ -310,7 +310,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
       )}
       
       <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
-        <div className="mb-0.5">Version: Alpha 1.0.0 Stable</div>
+        <div className="mb-0.5">Version: Alpha 1.0.3-DEV</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />

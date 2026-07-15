@@ -28,7 +28,9 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings }: Props) {
   useEffect(() => {
     if (!open) return;
     function handlePointerDown(event: PointerEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target;
+      if (target instanceof Element && target.closest("[data-preserve-settings-menu='true']")) return;
+      if (containerRef.current && !containerRef.current.contains(target as Node)) setOpen(false);
     }
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
@@ -39,7 +41,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings }: Props) {
       const next = !value;
       if (next && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+        setMenuPos({ top: rect.bottom + 14, right: window.innerWidth - rect.right });
       }
       return next;
     });
