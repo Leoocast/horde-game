@@ -1470,6 +1470,7 @@
   .player-hand-cards {
     gap: 8px;
     isolation: isolate;
+    transform: translateY(22px);
   }
 
   .player-hand-cards > * + * {

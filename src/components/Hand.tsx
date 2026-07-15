@@ -70,7 +70,7 @@ export function Hand({ game }: { game: GameState }) {
       ? 0
       : handSize <= 10
         ? -(handSize - 7) * 24
-        : Math.max(-140, -72 - (handSize - 10) * 10);
+        : Math.max(-140, -72 - (handSize - 10) * 2);
 
   function playCard(card: CardInstance) {
     if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
