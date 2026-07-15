@@ -702,15 +702,17 @@
   }
 
   .battlefield-side-content > .old-panel-soft {
+    --battlefield-card-width: clamp(140px, min(12vw, calc((100cqh - 16px) * 0.717875)), 212px);
     height: 100%;
     min-height: 0;
+    container-type: size;
   }
 
   .battlefield-card-slot {
     position: relative;
     top: 0;
-    width: clamp(160px, 12vw, 212px);
-    height: calc(clamp(160px, 12vw, 212px) * 1.393);
+    width: var(--battlefield-card-width);
+    height: calc(var(--battlefield-card-width) * 1.393);
     flex: 0 0 auto;
     transition:
       top 220ms ease,
@@ -1233,7 +1235,7 @@
 
   .battlefield-empty {
     height: 100%;
-    min-height: calc(clamp(160px, 12vw, 212px) * 1.393);
+    min-height: calc(var(--battlefield-card-width) * 1.393);
   }
 
   .battlefield-empty-compact {
@@ -1242,7 +1244,7 @@
 
   .battlefield-row-body {
     height: 100%;
-    min-height: calc(clamp(160px, 12vw, 212px) * 1.393);
+    min-height: calc(var(--battlefield-card-width) * 1.393);
   }
 
   .battlefield-row-surface {
