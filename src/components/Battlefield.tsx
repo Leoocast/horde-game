@@ -304,15 +304,17 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const columns = landCount <= 2 ? Math.max(landCount, 1) : landCount <= 6 ? 3 : 4;
-    const cardWidth = landCount <= 1 ? 120 : landCount <= 2 ? 105 : landCount <= 4 ? 82 : landCount <= 6 ? 68 : landCount <= 9 ? 50 : landCount <= 12 ? 42 : 36;
+    const columns = landCount >= 9 ? 5 : Math.min(Math.max(landCount, 1), 4);
+    const cardWidth = landCount <= 1 ? 120 : landCount <= 2 ? 105 : 88;
+    const fillsRow = landCount >= 4;
+    const smallpoxLandSelectionActive = smallpoxSelection?.kind === "sacrifice-land";
     const dockStyle = {
       "--player-land-columns": columns,
       "--battlefield-compact-card-width": `${cardWidth}px`,
     } as CSSProperties;
 
     return (
-      <aside ref={landDockRef} className="old-panel player-land-dock" style={dockStyle}>
+      <aside ref={landDockRef} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
         <div className="player-land-dock-header">
           <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
           <span className="text-[10px] font-semibold text-[#d6b879]">{landCount}</span>
@@ -320,7 +322,7 @@ export function Battlefield({ game, side, cards }: Props) {
         {landCount === 0 ? (
           <div className="player-land-dock-empty">Empty</div>
         ) : (
-          <div className="player-land-grid">
+          <div className={["player-land-grid", fillsRow ? "player-land-grid-fill" : ""].join(" ")}>
             <AnimatePresence initial={false} mode="popLayout">
               {lands.map((card) => renderCard(card, true, "land-dock"))}
             </AnimatePresence>

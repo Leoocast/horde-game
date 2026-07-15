@@ -1219,6 +1219,7 @@
   }
 
   .battlefield-empty {
+    height: 100%;
     min-height: calc(clamp(140px, 10.5vw, 184px) * 1.393);
   }
 
@@ -1227,6 +1228,7 @@
   }
 
   .battlefield-row-body {
+    height: 100%;
     min-height: calc(clamp(140px, 10.5vw, 184px) * 1.393);
   }
 
@@ -1247,6 +1249,10 @@
     padding: 0.5rem;
   }
 
+  .player-land-dock-targeting {
+    z-index: 110;
+  }
+
   .player-land-dock-header {
     display: flex;
     height: 1rem;
@@ -1262,8 +1268,22 @@
     flex: 1 1 auto;
     grid-template-columns: repeat(var(--player-land-columns), max-content);
     align-content: center;
-    justify-content: center;
-    gap: 6px;
+    justify-content: start;
+    gap: 4px;
+  }
+
+  .player-land-grid-fill {
+    grid-template-columns: repeat(var(--player-land-columns), minmax(0, 1fr));
+  }
+
+  .player-land-grid-fill .battlefield-layout-slot {
+    width: 100%;
+  }
+
+  .player-land-grid-fill .battlefield-card-slot-compact.battlefield-land-slot {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 0.91938;
   }
 
   .player-land-dock-empty {
@@ -1285,20 +1305,26 @@
 
   .player-hand-cards {
     gap: 8px;
+    isolation: isolate;
   }
 
   .player-hand-cards > * + * {
     margin-left: var(--hand-stack-margin);
   }
 
+  .player-hand-cards > * {
+    transition: margin-left 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
   .hand-card {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(104px, 8vw, 156px);
-    height: calc(clamp(104px, 8vw, 156px) * 1.393);
+    width: clamp(110px, 8.5vw, 164px);
+    height: calc(clamp(110px, 8.5vw, 164px) * 1.393);
     z-index: var(--hand-z);
     transform: translateY(48px);
     transform-origin: 50% 100%;
+    backface-visibility: hidden;
     transition:
       transform 160ms ease,
       z-index 0ms linear 160ms,
