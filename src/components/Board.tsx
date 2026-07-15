@@ -77,10 +77,14 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden px-3 pb-56 pt-3">
-        <section className="old-panel space-y-3 p-3">
-          <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
-          <Battlefield game={game} side="player" cards={game.player.battlefield} />
+      <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-56 pt-3">
+        <section className="old-panel battlefield-board-grid p-3">
+          <div className="battlefield-side battlefield-side-horde">
+            <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
+          </div>
+          <div className="battlefield-side battlefield-side-player">
+            <Battlefield game={game} side="player" cards={game.player.battlefield} />
+          </div>
         </section>
       </div>
       <Hand game={game} />

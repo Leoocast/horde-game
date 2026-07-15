@@ -10,7 +10,8 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 
 type Props = {
   game: GameState;
@@ -28,6 +29,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
+  const landDockRef = useRef<HTMLElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
@@ -81,7 +83,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
     seenAutoPaidEvents.current.add(autoPaidLandAnimation.eventId);
     for (const id of autoPaidLandAnimation.ids) {
-      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
+      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`) ?? landDockRef.current?.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
       if (!slot) continue;
       const layer = document.createElement("span");
       layer.className = "auto-paid-animation-layer";
@@ -98,7 +100,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
     seenBuffEvents.current.add(buffAnimationEventId);
     for (const id of buffAnimationCardIds) {
-      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
+      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`) ?? landDockRef.current?.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
       if (!slot) continue;
       const layer = document.createElement("span");
       layer.className = "buff-rise-lines buff-rise-lines-blue";
@@ -231,16 +233,18 @@ export function Battlefield({ game, side, cards }: Props) {
   });
 
   return (
-    <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={cards.length}>
-      <div ref={boardRef} className="space-y-3">
-        {side === "horde" && others.length > 0 ? (
-          <HordeBattlefieldRow creatures={creatures} others={others} />
-        ) : (
-          <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
-        )}
-        {side === "player" && <ResourceRow lands={lands} others={others} />}
-      </div>
-    </Zone>
+    <>
+      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length}>
+        <div ref={boardRef} className="battlefield-side-content">
+          {others.length > 0 ? (
+            <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
+          ) : (
+            <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
+          )}
+        </div>
+      </Zone>
+      {side === "player" && createPortal(<LandDock />, document.body)}
+    </>
   );
 
   function BattlefieldRow({ title, cards: rowCards, compact = false, dropTarget }: { title: string; cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
@@ -263,11 +267,11 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function HordeBattlefieldRow({ creatures: rowCreatures, others: rowOthers }: { creatures: CardInstance[]; others: CardInstance[] }) {
+  function PermanentBattlefieldRow({ creatures: rowCreatures, others: rowOthers, dropTarget }: { creatures: CardInstance[]; others: CardInstance[]; dropTarget?: string }) {
     const otherPermanentsTargetingActive = rowOthers.some((card) => isSpellTargetable(card) || isSpellTargetLocked(card));
 
     return (
-      <div data-battlefield-drop-target="player-attack" className="old-panel-soft relative p-1.5">
+      <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
         <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
           <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Creatures</h3>
           <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
@@ -298,42 +302,31 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function ResourceRow({ lands, others }: { lands: CardInstance[]; others: CardInstance[] }) {
+  function LandDock() {
+    const landCount = lands.length;
+    const columns = landCount <= 2 ? Math.max(landCount, 1) : landCount <= 6 ? 3 : 4;
+    const cardWidth = landCount <= 1 ? 150 : landCount <= 2 ? 132 : landCount <= 4 ? 105 : landCount <= 6 ? 88 : landCount <= 9 ? 60 : landCount <= 12 ? 52 : 44;
+    const dockStyle = {
+      "--player-land-columns": columns,
+      "--battlefield-compact-card-width": `${cardWidth}px`,
+    } as CSSProperties;
+
     return (
-      <div className="old-panel-soft p-1.5">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(150px,260px)]">
-          <div>
-            <div className="mb-1 flex h-4 items-center justify-between leading-none">
-              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
-              <span className="text-[10px] font-semibold text-[#d6b879]">{lands.length}</span>
-            </div>
-            {lands.length === 0 ? (
-              <div className="battlefield-empty-compact">Empty</div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                <AnimatePresence initial={false} mode="popLayout">
-                  {lands.map((card) => renderCard(card, true, "land"))}
-                </AnimatePresence>
-              </div>
-            )}
-          </div>
-          <div>
-            <div className="mb-1 flex h-4 items-center justify-between leading-none">
-              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
-              <span className="text-[10px] font-semibold text-[#d6b879]">{others.length}</span>
-            </div>
-            {others.length === 0 ? (
-              <div className="battlefield-empty-compact">Empty</div>
-            ) : (
-              <div className="flex flex-wrap justify-center gap-2">
-                <AnimatePresence initial={false} mode="popLayout">
-                  {others.map((card) => renderCard(card, true, "other"))}
-                </AnimatePresence>
-              </div>
-            )}
-          </div>
+      <aside ref={landDockRef} className="old-panel player-land-dock" style={dockStyle}>
+        <div className="player-land-dock-header">
+          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
+          <span className="text-[10px] font-semibold text-[#d6b879]">{landCount}</span>
         </div>
-      </div>
+        {landCount === 0 ? (
+          <div className="player-land-dock-empty">Empty</div>
+        ) : (
+          <div className="player-land-grid">
+            <AnimatePresence initial={false} mode="popLayout">
+              {lands.map((card) => renderCard(card, true, "land-dock"))}
+            </AnimatePresence>
+          </div>
+        )}
+      </aside>
     );
   }
 
