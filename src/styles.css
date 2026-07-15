@@ -1345,6 +1345,11 @@
     height: calc(var(--battlefield-card-width) * 0.89);
   }
 
+  .battlefield-row-overflow .card-keyword-stack {
+    top: clamp(26px, 14cqw, 30px);
+    left: 12px;
+  }
+
   .battlefield-row-overflow .battlefield-card-slot > .card-visual {
     position: absolute;
     inset: auto 0 0;
@@ -1359,7 +1364,8 @@
   }
 
   .battlefield-row-overflow .battlefield-card-slot > .card-visual > .card-stat-badge {
-    bottom: calc(clamp(10px, 6cqw, 14px) + 3px);
+    right: 5px;
+    bottom: 3px;
   }
 
   .battlefield-row-overflow .battlefield-card-slot > .card-visual > img {
