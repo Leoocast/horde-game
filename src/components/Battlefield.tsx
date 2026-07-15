@@ -7,6 +7,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { renderCardText } from "../utils/cardTextSymbols";
+import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
@@ -35,6 +36,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
+  const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
+  const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
+  const nextBattlefieldOrder = useRef(0);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
@@ -168,7 +172,10 @@ export function Battlefield({ game, side, cards }: Props) {
     }
     if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
 
-    const summoningElements = Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']"));
+    const summoningElements = [
+      ...Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']")),
+      ...Array.from(landDockRef.current?.querySelectorAll<HTMLElement>("[data-summoning='true']") ?? []),
+    ];
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       if (id) seenCardIds.current.add(id);
@@ -333,7 +340,26 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function renderCardStacks(rowCards: CardInstance[], compact = false, keyPrefix = "card") {
-    return groupBattlefieldCopies(rowCards).map((group) => (
+    const activeCardIds = new Set(rowCards.map((card) => card.instanceId));
+    const activeDefinitionIds = new Set(rowCards.map((card) => card.definitionId));
+    for (const instanceId of battlefieldCardOrder.current.keys()) {
+      if (!activeCardIds.has(instanceId)) battlefieldCardOrder.current.delete(instanceId);
+    }
+    for (const definitionId of battlefieldFamilyOrder.current.keys()) {
+      if (!activeDefinitionIds.has(definitionId)) battlefieldFamilyOrder.current.delete(definitionId);
+    }
+
+    for (const card of rowCards) {
+      if (!battlefieldCardOrder.current.has(card.instanceId)) {
+        battlefieldCardOrder.current.set(card.instanceId, nextBattlefieldOrder.current);
+        nextBattlefieldOrder.current += 1;
+      }
+      if (!battlefieldFamilyOrder.current.has(card.definitionId)) {
+        battlefieldFamilyOrder.current.set(card.definitionId, battlefieldCardOrder.current.get(card.instanceId) ?? 0);
+      }
+    }
+
+    return groupBattlefieldCopies(game, rowCards, battlefieldCardOrder.current, battlefieldFamilyOrder.current).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
         className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
@@ -704,19 +730,34 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 }
 
-function groupBattlefieldCopies(cards: CardInstance[]): Array<{ key: string; cards: CardInstance[] }> {
-  const groups = new Map<string, CardInstance[]>();
+function groupBattlefieldCopies(
+  game: GameState,
+  cards: CardInstance[],
+  cardOrder: Map<string, number>,
+  familyOrder: Map<string, number>,
+): Array<{ key: string; cards: CardInstance[] }> {
+  const groups = new Map<string, { key: string; cards: CardInstance[]; order: number; suborder: number }>();
   const stackZombieTokens = cards.length > 7;
 
   for (const card of cards) {
     const isZombieToken = card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
-    const key = isZombieToken && !stackZombieTokens ? `instance-${card.instanceId}` : `copy-${card.definitionId}`;
+    const stats = cardStatState(game, card);
+    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
+    const key = isZombieToken && !stackZombieTokens ? `instance-${card.instanceId}` : `copy-${card.definitionId}-${visualStatsKey}`;
+    const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    const order = isZombieToken && !stackZombieTokens ? instanceOrder : (familyOrder.get(card.definitionId) ?? instanceOrder);
     const group = groups.get(key);
-    if (group) group.push(card);
-    else groups.set(key, [card]);
+    if (group) {
+      group.cards.push(card);
+      group.suborder = Math.min(group.suborder, instanceOrder);
+    } else {
+      groups.set(key, { key, cards: [card], order, suborder: instanceOrder });
+    }
   }
 
-  return Array.from(groups, ([key, groupedCards]) => ({ key, cards: groupedCards }));
+  return Array.from(groups.values())
+    .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
+    .map(({ key, cards: groupedCards }) => ({ key, cards: groupedCards }));
 }
 
 function buffedStats(game: GameState, card: CardInstance): string {

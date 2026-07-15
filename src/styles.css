@@ -687,7 +687,7 @@
 
   .battlefield-copy-stack > .battlefield-layout-slot:hover,
   .battlefield-copy-stack > .battlefield-layout-slot:focus-within {
-    z-index: 90;
+    z-index: 64;
   }
 
   .battlefield-copy-stack > .battlefield-layout-slot-elevated {
@@ -1390,7 +1390,7 @@
     backface-visibility: hidden;
     will-change: transform, filter;
     transition:
-      z-index 0ms linear 300ms,
+      z-index 0ms,
       filter 260ms ease-out;
   }
 

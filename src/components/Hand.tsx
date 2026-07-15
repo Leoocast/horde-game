@@ -141,6 +141,8 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
                 }}
+                style={{ position: "relative", zIndex: index + 1 }}
+                whileHover={{ zIndex: 80 }}
                 drag={!smallpoxSelection && !tutorialDimmed}
                 dragElastic={0.08}
                 dragMomentum={false}
@@ -164,7 +166,7 @@ export function Hand({ game }: { game: GameState }) {
               >
                 <motion.div
                   className={[
-                    "hand-card transition-opacity duration-200",
+                    "hand-card",
                     spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
