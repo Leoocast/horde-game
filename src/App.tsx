@@ -17,6 +17,7 @@ export default function App() {
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
+  const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
 
   if (screen === "deckInspector") {
     return (
@@ -36,6 +37,7 @@ export default function App() {
           selectedDeckId={selectedDeckId}
           onSelectDeck={setSelectedDeckId}
           onViewDeck={() => {
+            setPreserveMenuMusic(true);
             setInspectorDeckId(selectedDeckId);
             setScreen("deckInspector");
           }}
@@ -43,10 +45,13 @@ export default function App() {
           selectedHordeDeckId={selectedHordeDeckId}
           onSelectHordeDeck={setSelectedHordeDeckId}
           onViewHordeDeck={() => {
+            setPreserveMenuMusic(true);
             setInspectorDeckId(selectedHordeDeckId);
             setScreen("deckInspector");
           }}
+          preserveMusicOnMount={preserveMenuMusic}
           onStart={(options) => {
+            setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
             reset(options.seed, options.setupTurns);
@@ -62,7 +67,14 @@ export default function App() {
   return (
     <>
       <AudioClickListener />
-      <Board playerName={playerName} setupTurns={setupTurns} onReturnToMenu={() => setScreen("start")} />
+      <Board
+        playerName={playerName}
+        setupTurns={setupTurns}
+        onReturnToMenu={() => {
+          setPreserveMenuMusic(false);
+          setScreen("start");
+        }}
+      />
     </>
   );
 }

@@ -751,8 +751,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 }));
 
 function readStoredSeed(): string {
-  if (typeof window === "undefined") return "developer";
-  return window.localStorage.getItem(SEED_STORAGE_KEY) ?? "developer";
+  if (typeof window === "undefined") return "horde-seed";
+  const storedSeed = window.localStorage.getItem(SEED_STORAGE_KEY);
+  return storedSeed?.trim().toLowerCase() === "developer" ? "horde-seed" : storedSeed ?? "horde-seed";
 }
 
 function persistSeed(seed: string): void {
