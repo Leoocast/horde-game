@@ -10,6 +10,7 @@
   html,
   body,
   #root {
+    --player-side-dock-width: clamp(280px, 18vw, 340px);
     height: 100%;
     overflow: hidden;
   }
@@ -1266,7 +1267,7 @@
     left: 1rem;
     z-index: 72;
     display: flex;
-    width: clamp(280px, 18vw, 340px);
+    width: var(--player-side-dock-width);
     height: 180px;
     flex-direction: column;
     overflow: visible;
@@ -1322,10 +1323,14 @@
   }
 
   .player-hand-region {
-    left: clamp(300px, 20vw, 360px);
-    right: clamp(196px, 12vw, 224px);
+    left: calc(var(--player-side-dock-width) + 2rem);
+    right: calc(var(--player-side-dock-width) + 2rem);
     padding-inline: 1rem;
     container-type: inline-size;
+  }
+
+  .player-life-dock {
+    width: var(--player-side-dock-width);
   }
 
   .player-hand-cards {
