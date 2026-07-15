@@ -2,6 +2,7 @@ import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
 import { canPay, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
+import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
@@ -92,14 +93,27 @@ export function Hand({ game }: { game: GameState }) {
     selectHand(undefined);
   }
 
+  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
+  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
+  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
+  const tutorialHandTargetId = tutorialZones.find((zone) => zone.zone === "hand")?.definitionId ?? null;
+  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const smallpoxDiscardMode = smallpoxSelection?.kind === "discard";
   const handInteractionBlocked = Boolean(
-    counterTargeting || spellTargeting || spellFightAnimation || pendingSpellHandId || hordeMillAnimating || playerDiscardAnimating || pendingTriggeredEffectCount > 0 || (smallpoxSelection && !smallpoxDiscardMode),
+    counterTargeting ||
+      spellTargeting ||
+      spellFightAnimation ||
+      pendingSpellHandId ||
+      hordeMillAnimating ||
+      playerDiscardAnimating ||
+      pendingTriggeredEffectCount > 0 ||
+      (smallpoxSelection && !smallpoxDiscardMode) ||
+      tutorialAwaitingContinue,
   );
 
   return (
     <>
-      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode ? "z-[110]" : "z-[70]"].join(" ")}>
+      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
         <div className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "absolute bottom-0 left-1/2 flex h-56 w-[min(100vw-32px,1040px)] -translate-x-1/2 items-end justify-center overflow-visible px-8"].join(" ")}>
           <div className="flex items-end justify-center gap-2 overflow-visible" style={{ "--hand-count": Math.max(handSize, 1) } as React.CSSProperties}>
@@ -108,6 +122,8 @@ export function Hand({ game }: { game: GameState }) {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
             const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
             const discardTargetLocked = smallpoxSelection?.kind === "discard" && smallpoxSelection.targetId === card.instanceId;
+            const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
+            const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
             return (
               <motion.div
                 key={card.instanceId}
@@ -120,13 +136,13 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
                 }}
-                drag={!smallpoxSelection}
+                drag={!smallpoxSelection && !tutorialDimmed}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
                 whileDrag={{ scale: 1.06, zIndex: 120, rotate: 0 }}
                 onDragStart={() => {
-                  setFocusedCardId(card.instanceId);
+                  if (!tutorialStepId) setFocusedCardId(card.instanceId);
                   selectHand(card.instanceId);
                 }}
                 onDragEnd={(_, info) => finishDrag(card, playable, info)}
@@ -147,6 +163,8 @@ export function Hand({ game }: { game: GameState }) {
                     spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
+                    tutorialTarget ? "counter-targetable-card" : "",
+                    tutorialDimmed ? "pointer-events-none opacity-30 saturate-50" : "",
                   ].join(" ")}
                   style={{ "--hand-z": index + 1 } as React.CSSProperties}
                 >
@@ -154,9 +172,9 @@ export function Hand({ game }: { game: GameState }) {
                     game={game}
                     card={card}
                     selected={selectedHandId === card.instanceId}
-                    actionable={smallpoxSelection ? discardTargetable : playable}
+                    actionable={!tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable)}
                     suppressContextMenu={Boolean(smallpoxSelection)}
-                    suppressHoverOverlay={Boolean(smallpoxSelection)}
+                    suppressHoverOverlay={Boolean(smallpoxSelection) || Boolean(tutorialStepId)}
                     onSelect={() => {
                       if (smallpoxSelection) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);

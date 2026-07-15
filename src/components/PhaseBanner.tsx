@@ -38,7 +38,7 @@ export function PhaseBanner({ game }: { game: GameState }) {
   if (!visiblePhase) return null;
 
   return (
-    <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[78] flex items-center justify-center">
+    <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[98] flex items-center justify-center">
       <div className={["phase-banner", TONE_CLASS[visiblePhase.tone]].join(" ")} key={visiblePhase.key}>
         <span className="phase-banner-edge-frame" />
         <span className="phase-banner-text">{visiblePhase.label}</span>

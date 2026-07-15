@@ -4,6 +4,7 @@ import { addMana, canPay, parseManaCost } from "../engine/ManaSystem";
 import type { CardInstance } from "../engine/GameTypes";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
+import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { GameTooltip } from "./GameTooltip";
@@ -31,10 +32,12 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount);
-  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
+  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
+  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason) || tutorialAwaitingContinue;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
@@ -63,6 +66,9 @@ export function PhaseOrb({ game }: { game: GameState }) {
     finishHordeTurn,
   });
   const orbTooltip = actionBlockedReason;
+  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
+  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
+  const tutorialOrbTarget = tutorialZones.some((zone) => zone.zone === "phase-orb");
 
   function runOrbAction() {
     if (state.warnIfActionsAvailable && hasAvailablePlayerActions(game) && !skipActionWarningDisabled()) {
@@ -85,7 +91,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)} className="fixed right-6 top-1/2 z-[80] -translate-y-1/2 xl:right-10">
+      <GameTooltip
+        content={orbTooltip}
+        visible={Boolean(orbTooltip)}
+        className={["fixed right-6 top-1/2 -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
+      >
         <button
           data-audio-click="off"
           onClick={runOrbAction}
@@ -115,7 +125,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
         <button
           data-audio-click="valid"
           onClick={cancelBlocks}
-          disabled={Boolean(game.winner) || attackAnimating}
+          disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
           className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel blocks"
         >
@@ -128,7 +138,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           <button
             data-audio-click="valid"
             onClick={attackAll}
-            disabled={Boolean(game.winner) || attackAnimating}
+            disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
             className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffd17a] bg-[linear-gradient(180deg,#b95514,#74300d_52%,#251006)] text-[8px] font-black uppercase tracking-wide text-[#fff0b8] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#d66b1b,#8d3a10_52%,#2f1407)]"
           >
             <Swords size={16} />
@@ -140,7 +150,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
         <button
           data-audio-click="valid"
           onClick={cancelPlayerAttackers}
-          disabled={Boolean(game.winner) || attackAnimating}
+          disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
           className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
           title="Cancel attackers"
         >

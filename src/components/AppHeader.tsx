@@ -8,9 +8,17 @@ type Props = {
   right?: ReactNode;
   showSettings?: boolean;
   onReturnToMenu?: () => void;
+  newGameSeedSettings?: {
+    seed: string;
+    developerMode: boolean;
+    onSeedChange: (seed: string) => void;
+    onCopySeed: () => void;
+    onRegenerateSeed: () => void;
+    onToggleDeveloperMode: () => void;
+  };
 };
 
-export function AppHeader({ left, center, right, showSettings = true, onReturnToMenu }: Props) {
+export function AppHeader({ left, center, right, showSettings = true, onReturnToMenu, newGameSeedSettings }: Props) {
   return (
     <header className="old-frame-top relative z-[130] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
       <div className="min-w-0 justify-self-start">{left}</div>
@@ -18,7 +26,7 @@ export function AppHeader({ left, center, right, showSettings = true, onReturnTo
       <div className="flex items-center gap-2 pr-3 justify-self-end">
         <MusicPlayerMenu />
         {right}
-        {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} />}
+        {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} newGameSeedSettings={newGameSeedSettings} />}
       </div>
     </header>
   );

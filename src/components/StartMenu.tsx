@@ -1,4 +1,4 @@
-import { ChevronDown, Copy, Github, Play, RefreshCw } from "lucide-react";
+import { AlertTriangle, ChevronDown, Github, GraduationCap, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
@@ -17,6 +17,7 @@ type Props = {
   selectedHordeDeckId: string;
   onSelectHordeDeck: (deckId: string) => void;
   onViewHordeDeck: () => void;
+  preserveMusicOnMount?: boolean;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -26,13 +27,17 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
   { id: "hard", label: "Hard", setupTurns: 3, description: "3 extra setup turns" },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, onStart }: Props) {
+const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
+
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, preserveMusicOnMount = false, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
-  const [developerMode, setDeveloperMode] = useState(true);
+  const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
   const [deckOpen, setDeckOpen] = useState(false);
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
+  const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
+  const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
@@ -41,8 +46,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const effectiveSeed = developerMode ? "developer" : seed;
 
   useEffect(() => {
-    startMenuMusic();
-  }, [startMenuMusic]);
+    if (!preserveMusicOnMount) startMenuMusic();
+  }, [preserveMusicOnMount, startMenuMusic]);
 
   async function copySeed() {
     try {
@@ -53,11 +58,44 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
     }
   }
 
+  function startGame() {
+    persistDeveloperMode(developerMode);
+    onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() });
+  }
+
+  function toggleDeveloperMode() {
+    if (developerMode) {
+      updateDeveloperMode(false);
+      return;
+    }
+    setShowDeveloperWarning(true);
+  }
+
+  function updateDeveloperMode(enabled: boolean) {
+    setDeveloperMode(enabled);
+    pushToast({
+      title: enabled ? "Developer Mode enabled" : "Developer Mode disabled",
+      message: enabled ? "Developer testing seed is active." : "New games will use the selected seed.",
+      tone: enabled ? "warning" : "success",
+    });
+  }
+
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]" onPointerDownCapture={startMenuMusic}>
+    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
       <AppHeader
         left={<div className="pl-3 old-title text-sm font-black uppercase tracking-[0.18em] text-[#f8dfa0]">Horde Magic PvE</div>}
         center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
+        newGameSeedSettings={{
+          seed,
+          developerMode,
+          onSeedChange: setSeed,
+          onCopySeed: copySeed,
+          onRegenerateSeed: () => {
+            if (developerMode) updateDeveloperMode(false);
+            setSeed(generateRandomSeed());
+          },
+          onToggleDeveloperMode: toggleDeveloperMode,
+        }}
       />
       <div className="flex h-[calc(100vh-56px)] items-center justify-center p-6">
         <section className="old-panel relative w-full max-w-lg p-6">
@@ -76,46 +114,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
           className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
           placeholder="Player"
         />
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="game-seed">
-          Seed
-        </label>
-        <div className="mt-2 grid grid-cols-[1fr_auto_auto] gap-2">
-          <input
-            id="game-seed"
-            value={effectiveSeed}
-            onChange={(event) => setSeed(event.target.value)}
-            disabled={developerMode}
-            className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74] disabled:opacity-70"
-            placeholder="random-seed"
-          />
-          <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title="Copy seed">
-            <Copy size={17} />
-          </button>
-          <button
-            className="old-button flex h-11 w-11 items-center justify-center"
-            type="button"
-            onClick={() => {
-              setDeveloperMode(false);
-              setSeed(generateRandomSeed());
-            }}
-            title="Regenerate seed"
-          >
-            <RefreshCw size={17} />
-          </button>
-        </div>
-        <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#8f6a36]/55 bg-[#1b120b]/55 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#d6b879]">
-          <span>Developer mode</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={developerMode}
-            onClick={() => setDeveloperMode((value) => !value)}
-            className={["relative h-6 w-11 rounded-full border transition", developerMode ? "border-[#f0c46f] bg-[#7a4515]" : "border-[#8f6a36]/70 bg-[#120b07]"].join(" ")}
-          >
-            <span className={["absolute top-1 h-3.5 w-3.5 rounded-full bg-[#ffe6aa] transition", developerMode ? "left-6" : "left-1"].join(" ")} />
-          </button>
-        </label>
 
         <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
           Player Deck
@@ -237,15 +235,79 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
           </div>
         </div>
 
-        <button
-          className="old-button-green mt-6 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-          onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() })}
-        >
-          <Play size={18} />
-          Start
-        </button>
+        <div className="mt-6 grid grid-cols-[1fr_auto] gap-2">
+          <button
+            className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            onClick={startGame}
+          >
+            <Play size={18} />
+            Start
+          </button>
+          <button
+            className="old-button flex h-12 items-center justify-center gap-2 px-4 text-sm font-black uppercase tracking-wide transition"
+            type="button"
+            onClick={() => setShowTutorialConfirm(true)}
+            title="How to play"
+          >
+            <GraduationCap size={18} />
+            How to play
+          </button>
+        </div>
         </section>
       </div>
+
+      {showTutorialConfirm && (
+        <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85 p-6">
+          <div className="old-panel w-full max-w-sm p-6 text-center">
+            <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Tutorial</p>
+            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Interactive Tutorial</h2>
+            <p className="mt-3 text-sm leading-snug text-[#d6b879]">Do you want to start?</p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowTutorialConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
+                type="button"
+                onClick={() => {
+                  setShowTutorialConfirm(false);
+                  onStart({ playerName: playerName.trim() || "Player", mode: "normal", setupTurns: 1, seed: "tutorial" });
+                }}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeveloperWarning && (
+        <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-[#090604]/90 p-6">
+          <div className="old-panel w-full max-w-md p-6 text-center">
+            <AlertTriangle className="mx-auto text-[#f0c46f]" size={38} />
+            <p className="old-title mt-3 text-xs font-bold uppercase tracking-[0.28em]">Developer Mode</p>
+            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Are you sure?</h2>
+            <p className="mt-3 text-sm leading-relaxed text-[#d6b879]">
+              Developer Mode can break the intended game experience. It is made only for the developer to test cards, effects, and unfinished features.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowDeveloperWarning(false)}>
+                Cancel
+              </button>
+              <button
+                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
+                type="button"
+                onClick={() => {
+                  updateDeveloperMode(true);
+                  setShowDeveloperWarning(false);
+                }}
+              >
+                Enable
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
         <div className="mb-0.5">Version: Alpha 1.0.0 Stable</div>
@@ -270,4 +332,14 @@ function generateRandomSeed(): string {
     cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
   }
   return `horde-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
+}
+
+function readStoredDeveloperMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(DEVELOPER_MODE_STORAGE_KEY) === "true";
+}
+
+function persistDeveloperMode(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(DEVELOPER_MODE_STORAGE_KEY, String(enabled));
 }

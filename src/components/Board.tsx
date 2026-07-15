@@ -23,6 +23,7 @@ import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
+import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
 
@@ -75,6 +76,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       <CardContextMenu />
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
+      <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
       <div className="grid h-[calc(100vh-56px)] grid-cols-1 items-start gap-3 overflow-hidden px-3 pb-56 pt-3">
         <section className="old-panel space-y-3 p-3">
           <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
