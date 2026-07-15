@@ -10,6 +10,7 @@ import { useGameStore } from "./store/useGameStore";
 export default function App() {
   const reset = useGameStore((state) => state.reset);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
+  const playCollection = useAudioStore((state) => state.playCollection);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
   const [setupTurns, setSetupTurns] = useState(4);
@@ -49,7 +50,8 @@ export default function App() {
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
             reset(options.seed, options.setupTurns);
-            startBattleMusic(true);
+            if (options.seed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");
+            else startBattleMusic(true);
             setScreen("game");
           }}
         />

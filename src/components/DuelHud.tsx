@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
@@ -35,9 +36,11 @@ export function DuelHud({ game }: { game: GameState }) {
     return attacker ? total + getPowerToughness(game, attacker).power : total;
   }, 0);
   const pendingMill = Math.floor(pendingDamage / 3);
+  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
+  const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {smallpoxCard && (
@@ -137,6 +140,8 @@ export function DuelHud({ game }: { game: GameState }) {
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
+  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
+  const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
@@ -162,7 +167,15 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
 
   return (
     <>
-      <div data-player-life-panel="true" className={["old-panel fixed bottom-4 right-4 z-[75] flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]", takingDamage ? "player-life-damage" : "", lifeBuffAnimationId ? "player-life-buff" : ""].join(" ")}>
+      <div
+        data-player-life-panel="true"
+        className={[
+          "old-panel fixed bottom-4 right-4 flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+          tutorialOverlayActive ? "z-[91]" : "z-[75]",
+          takingDamage ? "player-life-damage" : "",
+          lifeBuffAnimationId ? "player-life-buff" : "",
+        ].join(" ")}
+      >
         {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
         <div className="text-right">
           <div className="old-title text-xs font-bold uppercase tracking-wide">{playerName}</div>

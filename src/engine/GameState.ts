@@ -10,16 +10,29 @@ const DEVELOPER_STARTING_BATTLEFIELD = [
   { definitionId: "forest", amount: 5 },
 ] as const;
 
+const TUTORIAL_SEED = "tutorial";
+const TUTORIAL_OPENING_HAND = ["forest", "llanowar_elves"];
+// Kept tiny on purpose: the tutorial horde library is replaced (not just reordered) with these
+// cards. Turn 1 has no attack, so the Horde reveals and attacks with both on its first turn.
+// Ichorspit Basilisk can only block/kill one, so the survivor comes back for a second, shorter
+// attack/defend round on the Horde's next turn before the match ends.
+const TUTORIAL_HORDE_OPENING_LIBRARY = ["zombie_token", "zombie_token"];
+const TUTORIAL_STARTING_BATTLEFIELD = [
+  { definitionId: "forest", amount: 2 },
+  { definitionId: "beast_kin_ranger", amount: 1 },
+  { definitionId: "ichorspit_basilisk", amount: 1 },
+] as const;
+
 export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "horde-seed", setupTurns = 5): GameState {
   const playerCards = expandDeck(playerDeck, "player");
   const hordeCards = expandDeck(hordeDeck, "horde");
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
-  const playerLibrary = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
+  const playerLibrary = applyTutorialOpeningHand(seed, applyDeveloperOpeningHand(seed, shuffledPlayer.items));
   const shuffledHorde = shuffleWithState(hordeCards, randomState);
   randomState = shuffledHorde.randomState;
-  const hordeLibrary = applyDeveloperHordeOpeningLibrary(seed, shuffledHorde.items);
+  const hordeLibrary = applyTutorialHordeOpeningLibrary(seed, applyDeveloperHordeOpeningLibrary(seed, shuffledHorde.items));
 
   const game: GameState = {
     seed,
@@ -53,44 +66,52 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
   };
 
   applyDeveloperStartingBattlefield(game);
+  applyTutorialStartingBattlefield(game);
   const openingHandSize = seed.trim().toLowerCase() === DEVELOPER_SEED ? DEVELOPER_OPENING_HAND.length + DEVELOPER_RANDOM_OPENING_CARDS : 7;
   drawCards(game, "player", openingHandSize);
   game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${setupTurns}.`);
   return game;
 }
 
-function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-
+function forceCardsToFront(library: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
   const remaining = [...library];
-  const opening: CardInstance[] = [];
-  for (const definitionId of DEVELOPER_OPENING_HAND) {
+  const forced: CardInstance[] = [];
+  for (const definitionId of definitionIds) {
     const index = remaining.findIndex((card) => card.definitionId === definitionId);
     if (index < 0) continue;
     const [card] = remaining.splice(index, 1);
-    opening.push(card);
+    forced.push(card);
   }
-  return [...opening, ...remaining];
+  return { forced, remaining };
+}
+
+function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
+  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_OPENING_HAND);
+  return [...forced, ...remaining];
+}
+
+function applyTutorialOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== TUTORIAL_SEED) return library;
+  const { forced, remaining } = forceCardsToFront(library, TUTORIAL_OPENING_HAND);
+  return [...forced, ...remaining];
 }
 
 function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
   if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-
-  const remaining = [...library];
-  const opening: CardInstance[] = [];
-  for (const definitionId of DEVELOPER_HORDE_OPENING_LIBRARY) {
-    const index = remaining.findIndex((card) => card.definitionId === definitionId);
-    if (index < 0) continue;
-    const [card] = remaining.splice(index, 1);
-    opening.push(card);
-  }
-  return [...opening, ...remaining];
+  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_HORDE_OPENING_LIBRARY);
+  return [...forced, ...remaining];
 }
 
-function applyDeveloperStartingBattlefield(game: GameState): void {
-  if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
+function applyTutorialHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== TUTORIAL_SEED) return library;
+  // Replace the whole library, not just reorder it: the tutorial needs to end in one Horde turn.
+  const { forced } = forceCardsToFront(library, TUTORIAL_HORDE_OPENING_LIBRARY);
+  return forced;
+}
 
-  for (const entry of DEVELOPER_STARTING_BATTLEFIELD) {
+function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {
+  for (const entry of entries) {
     for (let index = 0; index < entry.amount; index += 1) {
       const libraryIndex = game.player.library.findIndex((card) => card.definitionId === entry.definitionId);
       if (libraryIndex < 0) break;
@@ -101,6 +122,16 @@ function applyDeveloperStartingBattlefield(game: GameState): void {
       game.player.battlefield.push(card);
     }
   }
+}
+
+function applyDeveloperStartingBattlefield(game: GameState): void {
+  if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
+  placeOnBattlefield(game, DEVELOPER_STARTING_BATTLEFIELD);
+}
+
+function applyTutorialStartingBattlefield(game: GameState): void {
+  if (game.seed.trim().toLowerCase() !== TUTORIAL_SEED) return;
+  placeOnBattlefield(game, TUTORIAL_STARTING_BATTLEFIELD);
 }
 
 export function expandDeck(deck: DeckList, side: Side): CardInstance[] {

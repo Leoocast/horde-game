@@ -16,13 +16,16 @@ export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
   const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
+  const playCollection = useAudioStore((state) => state.playCollection);
   const [seedInput, setSeedInput] = useState(game.seed);
+  const isTutorial = game.seed.trim().toLowerCase() === "tutorial";
 
   function restart() {
     const nextSeed = seedInput.trim() || game.seed;
     setSeed(nextSeed);
     reset(nextSeed, setupTurns);
-    startBattleMusic(true);
+    if (nextSeed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");
+    else startBattleMusic(true);
   }
 
   async function copySeed() {
@@ -57,38 +60,42 @@ export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
           Your life total has been reduced to 0
         </p>
 
-        <label className="mt-6 block text-left text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="defeat-seed">
-          Seed
-        </label>
-        <div className="mt-2 flex gap-2">
-          <input
-            id="defeat-seed"
-            value={seedInput}
-            onChange={(event) => setSeedInput(event.target.value)}
-            className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
-          />
-          <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title="Copy seed">
-            <Copy size={17} />
-          </button>
-          <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title="Regenerate seed">
-            <RefreshCw size={17} />
-          </button>
-        </div>
+        {!isTutorial && (
+          <>
+            <label className="mt-6 block text-left text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="defeat-seed">
+              Seed
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="defeat-seed"
+                value={seedInput}
+                onChange={(event) => setSeedInput(event.target.value)}
+                className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
+              />
+              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title="Copy seed">
+                <Copy size={17} />
+              </button>
+              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title="Regenerate seed">
+                <RefreshCw size={17} />
+              </button>
+            </div>
+          </>
+        )}
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className={["grid grid-cols-2 gap-3", isTutorial ? "mt-6" : "mt-5"].join(" ")}>
           <button
             className="old-button flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
             onClick={onReturnToMenu}
           >
             <Home size={18} />
-            Menu
+            {isTutorial ? "Home" : "Menu"}
           </button>
           <button
             className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
             onClick={restart}
           >
             <RefreshCcw size={18} />
-            Restart
+            {isTutorial ? "Restart Tutorial" : "Restart"}
           </button>
         </div>
       </section>

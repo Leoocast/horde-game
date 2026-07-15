@@ -2,6 +2,7 @@ import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
@@ -63,11 +64,15 @@ export function Battlefield({ game, side, cards }: Props) {
   const updatePlayerAttackDrag = useGameStore((state) => state.updatePlayerAttackDrag);
   const cancelPlayerAttackDrag = useGameStore((state) => state.cancelPlayerAttackDrag);
   const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
+  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
 
   const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
   const lands = cards.filter((card) => card.cardTypes.includes("Land"));
   const others = cards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
+  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
+  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
 
   useLayoutEffect(() => {
     if (!autoPaidLandAnimation || seenAutoPaidEvents.current.has(autoPaidLandAnimation.eventId)) return;
@@ -371,6 +376,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
     const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
+      tutorialAwaitingContinue ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
@@ -394,6 +400,11 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellTargetable = isSpellTargetable(card);
     const spellTargetLocked = isSpellTargetLocked(card);
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
+    const tutorialTargetable = tutorialZones.some(
+      (zone) =>
+        (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
+        (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk") || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
+    );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
 
@@ -433,6 +444,7 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
+          tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
       <Card
@@ -442,16 +454,17 @@ export function Battlefield({ game, side, cards }: Props) {
         selected={selected}
         attacking={attacking}
         blocking={blocking}
-        actionable={actionable || counterTargetable || smallpoxTargetable}
+        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || tutorialTargetable)}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting) || Boolean(smallpoxSelection)}
-        suppressHoverOverlay={Boolean(spellTargeting) || Boolean(smallpoxSelection)}
+        suppressHoverOverlay={Boolean(spellTargeting) || Boolean(smallpoxSelection) || Boolean(tutorialStepId)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
+          if (tutorialAwaitingContinue) return;
           if (legalAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
             return;
@@ -469,6 +482,7 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
+          if (tutorialAwaitingContinue) return;
           if (smallpoxSelection) {
             if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
             return;

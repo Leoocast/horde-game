@@ -1,4 +1,4 @@
-import { ChevronDown, Copy, Github, Play, RefreshCw } from "lucide-react";
+import { ChevronDown, Copy, Github, GraduationCap, Play, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
@@ -33,6 +33,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [developerMode, setDeveloperMode] = useState(true);
   const [deckOpen, setDeckOpen] = useState(false);
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
+  const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
@@ -237,15 +238,51 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
           </div>
         </div>
 
-        <button
-          className="old-button-green mt-6 flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-          onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() })}
-        >
-          <Play size={18} />
-          Start
-        </button>
+        <div className="mt-6 grid grid-cols-[1fr_auto] gap-2">
+          <button
+            className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            onClick={() => onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() })}
+          >
+            <Play size={18} />
+            Start
+          </button>
+          <button
+            className="old-button flex h-12 items-center justify-center gap-2 px-4 text-sm font-black uppercase tracking-wide transition"
+            type="button"
+            onClick={() => setShowTutorialConfirm(true)}
+            title="How to play"
+          >
+            <GraduationCap size={18} />
+            How to play
+          </button>
+        </div>
         </section>
       </div>
+
+      {showTutorialConfirm && (
+        <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85 p-6">
+          <div className="old-panel w-full max-w-sm p-6 text-center">
+            <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Tutorial</p>
+            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Interactive Tutorial</h2>
+            <p className="mt-3 text-sm leading-snug text-[#d6b879]">Do you want to start?</p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowTutorialConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
+                type="button"
+                onClick={() => {
+                  setShowTutorialConfirm(false);
+                  onStart({ playerName: playerName.trim() || "Player", mode: "normal", setupTurns: 1, seed: "tutorial" });
+                }}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
         <div className="mb-0.5">Version: Alpha 1.0.0 Stable</div>

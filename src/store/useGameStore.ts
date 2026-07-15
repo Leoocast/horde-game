@@ -11,6 +11,7 @@ import { getPowerToughness } from "../engine/StaticEffects";
 import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, runEnterBattlefieldTriggers, triggerConditionMet } from "../engine/EffectResolver";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
+import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 
@@ -49,9 +50,11 @@ type GameStore = {
   activatingEffectCardId?: string;
   hoveredCardId?: string;
   focusedCardId?: string;
+  tutorialAcknowledgedStepId?: TutorialStepId;
   seed: string;
   reset: (seed?: string, setupTurns?: number) => void;
   setSeed: (seed: string) => void;
+  acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
   selectPlayerCreature: (id?: string) => void;
   selectHordeCreature: (id?: string) => void;
@@ -250,6 +253,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
   lifeBuffAnimationId: undefined,
+  tutorialAcknowledgedStepId: undefined,
   seed: defaultSeed,
   reset: (seed = get().seed, setupTurns = 4) =>
     set(() => {
@@ -260,6 +264,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return {
         game: next,
         seed,
+        tutorialAcknowledgedStepId: undefined,
         selectedHandId: undefined,
         selectedPlayerCreatureId: undefined,
         selectedHordeCreatureId: undefined,
@@ -299,6 +304,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistSeed(seed);
     set({ seed });
   },
+  acknowledgeTutorialStep: (stepId) => set({ tutorialAcknowledgedStepId: stepId }),
   selectHand: (id) => set({ selectedHandId: id }),
   selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
   selectHordeCreature: (id) => set({ selectedHordeCreatureId: id }),
