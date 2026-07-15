@@ -54,7 +54,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
   const request = fetch(buildScryfallUrl(lookup, card), { headers: { Accept: "application/json" } })
     .then((response) => (response.ok ? response.json() : undefined))
     .then((payload) => {
-      const cardPayload = readSearchResult(payload) ?? payload;
+      const cardPayload = readSearchResult(payload, lookup.pick) ?? payload;
       const details: DeckCardDetails = {
         imageUrl:
           readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
@@ -84,6 +84,7 @@ async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: 
 
 function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewDeckCard): string {
   if (lookup.lookupUrl) return lookup.lookupUrl;
+  if (lookup.query) return `https://api.scryfall.com/cards/search?q=${encodeURIComponent(lookup.query)}`;
   const exact = lookup.exact ?? card.scryfall?.lookupQuery ?? card.name;
   if (lookup.set) {
     return `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${exact}" set:${lookup.set}`)}`;
@@ -101,10 +102,10 @@ function readFlavorText(payload: unknown): string | undefined {
   return readPath(payload, "flavor_text") ?? readPath(payload, "card_faces[0].flavor_text");
 }
 
-function readSearchResult(payload: unknown): unknown {
+function readSearchResult(payload: unknown, pick = 0): unknown {
   if (typeof payload !== "object" || payload === null || !("data" in payload)) return undefined;
   const data = (payload as { data?: unknown }).data;
-  return Array.isArray(data) ? data[0] : undefined;
+  return Array.isArray(data) ? data[pick] : undefined;
 }
 
 function readCachedDetails(cacheId: string): DeckCardDetails | null | undefined {
@@ -131,7 +132,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v3:${cacheId}`;
+  return `horde-deck-card-details:v4:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

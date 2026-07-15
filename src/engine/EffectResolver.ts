@@ -5,6 +5,7 @@ import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
 import { addMana } from "./ManaSystem";
+import { randomInt } from "./RNG";
 import { getPowerToughness } from "./StaticEffects";
 import { findPermanent } from "./Targeting";
 
@@ -31,6 +32,10 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     return;
   if (effect.type === "SEQUENCE") {
     resolveEffects(game, (effect.effects as EffectDefinition[]) ?? [], context);
+    return;
+  }
+  if (effect.type === "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD") {
+    exileTopGoblinToBattlefield(game);
     return;
   }
   if (effect.type === "ADD_MANA") {
@@ -179,8 +184,7 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
 }
 
 export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
-  const battlefield = [...game.player.battlefield, ...game.horde.battlefield];
-  for (const source of battlefield) {
+  for (const source of triggeredSourcesForEvent(game, event)) {
     for (const wrapper of source.effects) {
       if (wrapper.type !== "TRIGGERED_ABILITY" || wrapper.trigger !== event.type) continue;
       if (effectNeedsManualTarget(wrapper.effect)) continue;
@@ -188,6 +192,27 @@ export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
       resolveEffect(game, wrapper.effect as EffectDefinition, { source, side: source.controller });
     }
   }
+}
+
+export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
+  if (event.type === "THIS_DIES") {
+    const source = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
+    if (!source) return [];
+    return source.effects.some(
+      (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
+    )
+      ? [source]
+      : [];
+  }
+  return [...game.player.battlefield, ...game.horde.battlefield].filter((source) =>
+    source.effects.some(
+      (wrapper) =>
+        wrapper.type === "TRIGGERED_ABILITY" &&
+        wrapper.trigger === event.type &&
+        !effectNeedsManualTarget(wrapper.effect) &&
+        triggerConditionMet(game, wrapper.condition as Record<string, unknown> | undefined, source, event),
+    ),
+  );
 }
 
 export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance, targets?: Record<string, string | string[]>): void {
@@ -232,16 +257,36 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   card.damageMarked = 0;
   game[side].graveyard.push(card);
   game.log.unshift(`${card.name} dies.`);
-  for (const effect of card.effects) {
-    if (effect.type === "TRIGGERED_ABILITY" && effect.trigger === "THIS_DIES") {
-      resolveEffect(game, effect.effect as EffectDefinition, { source: card, side });
-    }
-  }
+  enqueue(game, {
+    type: "THIS_DIES",
+    sourceId: card.instanceId,
+    payload: { controller: side, definitionId: card.definitionId, cardTypes: card.cardTypes, subtypes: card.subtypes },
+  });
   enqueue(game, {
     type: "CREATURE_DIED",
     sourceId: card.instanceId,
     payload: { controller: side, definitionId: card.definitionId, cardTypes: card.cardTypes, subtypes: card.subtypes },
   });
+}
+
+function exileTopGoblinToBattlefield(game: GameState): void {
+  const card = game.horde.library.shift();
+  if (!card) {
+    game.log.unshift("Rundvelt Hordemaster finds no card to exile.");
+    return;
+  }
+  card.zone = "exile";
+  game.horde.exile.push(card);
+  game.log.unshift(`Horde exiles ${card.name} with Rundvelt Hordemaster.`);
+  if (!card.cardTypes.includes("Creature") || !card.subtypes.includes("Goblin")) return;
+
+  game.horde.exile = game.horde.exile.filter((item) => item.instanceId !== card.instanceId);
+  card.zone = "battlefield";
+  card.tapped = false;
+  card.summoningSickness = false;
+  game.horde.battlefield.push(card);
+  game.log.unshift(`${card.name} enters the battlefield from exile.`);
+  runEnterBattlefieldTriggers(game, card);
 }
 
 export function millHorde(game: GameState, amount: number): void {
@@ -306,8 +351,9 @@ export function effectNeedsManualTarget(effect: unknown): boolean {
 
 function discardPlayer(game: GameState, amount: number): void {
   for (let i = 0; i < amount; i += 1) {
-    const card = game.player.hand.shift();
-    if (!card) break;
+    if (game.player.hand.length === 0) break;
+    const randomIndex = randomInt(game, game.player.hand.length);
+    const [card] = game.player.hand.splice(randomIndex, 1);
     card.zone = "graveyard";
     game.player.graveyard.push(card);
     game.log.unshift(`Player discards ${card.name}.`);

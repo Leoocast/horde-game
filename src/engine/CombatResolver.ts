@@ -77,7 +77,7 @@ export function prepareHordeAttackers(game: GameState): GameState {
   return next;
 }
 
-export function resolveHordeCombat(game: GameState): GameState {
+export function resolveHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
   if (next.combat.hordeAttackers.length === 0) {
     return log(next, "No Horde attackers to resolve. Press Attack after Horde Turn first.");
@@ -99,7 +99,7 @@ export function resolveHordeCombat(game: GameState): GameState {
     }
     const attackerStats = getPowerToughness(next, attacker);
     let attackerDamage = attacker.damageMarked;
-    for (const blocker of sortBlockersRightToLeft(next, blockers)) {
+    for (const blocker of blockers) {
       const blockerStats = getPowerToughness(next, blocker);
       dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
       dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
@@ -112,10 +112,14 @@ export function resolveHordeCombat(game: GameState): GameState {
     next.player.life -= playerDamage;
     log(next, `Horde deals ${playerDamage} damage to Player.`);
   }
-  drainEventQueue(next);
+  if (!options.deferTriggeredEvents) {
+    drainEventQueue(next);
+    checkWinLoss(next);
+  } else if (next.player.life <= 0) {
+    checkWinLoss(next);
+  }
   next.combat.hordeAttackers = [];
   next.combat.blockers = {};
-  checkWinLoss(next);
   return next;
 }
 
@@ -128,10 +132,6 @@ export function checkWinLoss(game: GameState): void {
 function log(game: GameState, message: string): GameState {
   game.log.unshift(message);
   return game;
-}
-
-export function sortBlockersRightToLeft(game: GameState, blockers: CardInstance[]): CardInstance[] {
-  return [...blockers].sort((left, right) => battlefieldIndex(game, right.instanceId) - battlefieldIndex(game, left.instanceId));
 }
 
 export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: string[]): string[] {

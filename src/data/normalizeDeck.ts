@@ -64,13 +64,42 @@ function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbil
 function normalizeEffects(abilities: NewDeckAbility[]): EffectDefinition[] {
   return [
     ...abilities
+      .filter((ability) => ability.kind === "STATIC")
+      .flatMap(normalizeStaticAbility),
+    ...abilities
       .filter((ability) => ability.kind === "TRIGGERED")
-      .map(normalizeTriggeredAbility)
-      .filter(Boolean),
+      .flatMap(normalizeTriggeredAbility),
     ...abilities
       .filter((ability) => ability.kind === "SPELL")
       .flatMap((ability) => (ability.effects ?? []).map((effect) => normalizeEffect(effect as EffectDefinition)).filter(Boolean)),
   ] as EffectDefinition[];
+}
+
+function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
+  const normalized: EffectDefinition[] = [];
+  for (const rawEffect of ability.effects ?? []) {
+    const effect = rawEffect as EffectDefinition;
+    const scope = effect.scope && typeof effect.scope === "object" ? (effect.scope as Record<string, unknown>) : undefined;
+    if (effect.type === "MODIFY_STATS" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      normalized.push({
+        type: "STATIC_BUFF",
+        controller: scope?.controller ?? "SELF",
+        filter: scope?.filters,
+        power: effect.power ?? 0,
+        toughness: effect.toughness ?? 0,
+      });
+      continue;
+    }
+    if (effect.type === "GRANT_KEYWORD" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      normalized.push({
+        type: "STATIC_GRANT_KEYWORD",
+        controller: scope?.controller ?? "SELF",
+        filter: scope?.filters,
+        keyword: effect.keyword,
+      });
+    }
+  }
+  return normalized;
 }
 
 function normalizeTargets(abilities: NewDeckAbility[]) {
@@ -86,21 +115,43 @@ function normalizeTargets(abilities: NewDeckAbility[]) {
   });
 }
 
-function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition | undefined {
-  const trigger = normalizeTriggerEvent(String(ability.trigger?.event ?? ""));
-  const effects = (ability.effects ?? []).map((effect) => normalizeEffect(effect as EffectDefinition)).filter(Boolean) as EffectDefinition[];
+function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] {
+  const trigger = normalizeTriggerEvent(String(ability.trigger?.event ?? ""), String(ability.trigger?.source ?? ""));
+  const customEffect = normalizeCustomTriggeredEffect(ability);
+  const effects = customEffect
+    ? [customEffect]
+    : (ability.effects ?? []).map((effect) => normalizeEffect(effect as EffectDefinition)).filter(Boolean) as EffectDefinition[];
   const effect = effects.length > 1 ? { type: "SEQUENCE", effects } : effects[0];
-  if (!trigger || !effect) return undefined;
-  return {
+  if (!trigger || !effect) return [];
+  const normalized: EffectDefinition = {
     type: "TRIGGERED_ABILITY",
     trigger,
     condition: normalizeTriggerCondition(ability),
     effect,
   };
+  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
+    return [
+      normalized,
+      {
+        type: "TRIGGERED_ABILITY",
+        trigger: "THIS_DIES",
+        effect,
+      },
+    ];
+  }
+  return [normalized];
 }
 
-function normalizeTriggerEvent(event: string): string | undefined {
-  if (event === "ENTERS_BATTLEFIELD") return "CREATURE_ENTERS_BATTLEFIELD";
+function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
+  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
+    return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
+  }
+  return undefined;
+}
+
+function normalizeTriggerEvent(event: string, triggerSource: string): string | undefined {
+  if (event === "ENTERS_BATTLEFIELD") return triggerSource === "SELF" ? "ENTERS_BATTLEFIELD" : "CREATURE_ENTERS_BATTLEFIELD";
+  if (event === "PERMANENT_DIED") return "CREATURE_DIED";
   return event || undefined;
 }
 

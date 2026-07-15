@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import imageLookupsRaw from "../../cardImageLookups.json";
-import monoGreenRampImagesRaw from "../data/decks/mono_green_ramp/mono_green_ramp_images.json";
+import goblinHordeImagesRaw from "../data/decks/horde/goblins/goblin_assault_horde_images_definition.json";
+import monoGreenRampImagesRaw from "../data/decks/player/mono_green_ramp/mono_green_ramp_images.json";
 import type { DeckImageManifest } from "../data/deckCatalog";
 
 type LookupEntry = {
@@ -22,7 +23,11 @@ export type CardRemoteDetails = {
 
 const imageLookups = imageLookupsRaw as ImageLookups;
 const lookupById = new Map<string, LookupEntry>(
-  [...imageLookups.hordeZombieDeck, ...newDeckImageLookups(monoGreenRampImagesRaw as DeckImageManifest)].map((entry) => [entry.id, entry]),
+  [
+    ...imageLookups.hordeZombieDeck,
+    ...newDeckImageLookups(monoGreenRampImagesRaw as DeckImageManifest),
+    ...newDeckImageLookups(goblinHordeImagesRaw as DeckImageManifest),
+  ].map((entry) => [entry.id, entry]),
 );
 const directDetailsById = new Map<string, CardRemoteDetails>([
   [
@@ -158,7 +163,7 @@ function cacheKey(definitionId: string): string {
 function newDeckImageLookups(manifest: DeckImageManifest): LookupEntry[] {
   return Object.entries(manifest.cards).map(([id, entry]) => {
     const exact = entry.exact ?? id;
-    const query = entry.set ? `!"${exact}" set:${entry.set}` : `!"${exact}"`;
+    const query = entry.query ?? (entry.set ? `!"${exact}" set:${entry.set}` : `!"${exact}"`);
     return {
       id,
       name: exact,

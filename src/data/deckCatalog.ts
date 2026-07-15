@@ -1,8 +1,10 @@
 import type { Color } from "../engine/GameTypes";
 import type { DeckList } from "../engine/GameTypes";
-import hordeDeckRaw from "./horde-zombies.json";
-import monoGreenRampRaw from "./decks/mono_green_ramp/mono_green_ramp.json";
-import monoGreenRampImagesRaw from "./decks/mono_green_ramp/mono_green_ramp_images.json";
+import goblinHordeRaw from "./decks/horde/goblins/goblin_assault_horde.json";
+import goblinHordeImagesRaw from "./decks/horde/goblins/goblin_assault_horde_images_definition.json";
+import hordeDeckRaw from "./decks/horde/zombies/horde-zombies.json";
+import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
+import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
 import cardImageLookupsRaw from "../../cardImageLookups.json";
 
 export type NewDeckCard = {
@@ -62,6 +64,8 @@ export type DeckImageManifest = {
     {
       source: string;
       exact?: string;
+      query?: string;
+      pick?: number;
       set?: string;
       collectorNumber?: string;
       imageUrl?: string;
@@ -94,6 +98,12 @@ export const hordeInspectableDecks: InspectableDeck[] = [
     label: "Zombie Horde 50",
     deck: hordeDeckToInspectable(hordeDeckRaw as DeckList),
     images: hordeImageManifest(),
+  },
+  {
+    id: "goblin_assault_horde",
+    label: "Goblin Horde 50",
+    deck: goblinHordeRaw as unknown as NewDeckList,
+    images: goblinHordeImagesRaw as DeckImageManifest,
   },
 ];
 

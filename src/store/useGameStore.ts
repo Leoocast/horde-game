@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
-import { playerDeck, hordeDeck } from "../data/decks";
+import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
-import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersRightToLeft, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
+import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
-import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, runEnterBattlefieldTriggers, triggerConditionMet } from "../engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
@@ -52,7 +52,9 @@ type GameStore = {
   focusedCardId?: string;
   tutorialAcknowledgedStepId?: TutorialStepId;
   seed: string;
-  reset: (seed?: string, setupTurns?: number) => void;
+  playerDeckId: string;
+  hordeDeckId: string;
+  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string) => void;
   setSeed: (seed: string) => void;
   acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
@@ -227,7 +229,7 @@ export type SpellFightAnimationState = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createInitialGame(playerDeck, hordeDeck, defaultSeed, 4),
+  game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 4),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   resolvingHordeCombat: false,
@@ -255,15 +257,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lifeBuffAnimationId: undefined,
   tutorialAcknowledgedStepId: undefined,
   seed: defaultSeed,
-  reset: (seed = get().seed, setupTurns = 4) =>
+  playerDeckId: DEFAULT_PLAYER_DECK_ID,
+  hordeDeckId: DEFAULT_HORDE_DECK_ID,
+  reset: (seed = get().seed, setupTurns = 4, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
     set(() => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
-      const next = createInitialGame(playerDeck, hordeDeck, seed, setupTurns);
+      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
       useAudioStore.getState().playSfx("draw");
       return {
         game: next,
         seed,
+        playerDeckId,
+        hordeDeckId,
         tutorialAcknowledgedStepId: undefined,
         selectedHandId: undefined,
         selectedPlayerCreatureId: undefined,
@@ -509,7 +515,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
       if (playSucceeded) scheduleSummoningAnimationSafetyClear();
-      return { game: next, selectedHandId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
+      return { game: next, selectedHandId: undefined, hoveredCardId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
     }),
   castCard: (id, options) =>
     set((state) => {
@@ -697,9 +703,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      const next = resolveHordeCombat(game);
+      const next = resolveHordeCombat(game, { deferTriggeredEvents: true });
       notifyDiscardEffects(game, next);
       set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      scheduleQueuedHordeTriggers();
       return;
     }
     set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
@@ -731,9 +738,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      const next = resolveHordeCombat(latest);
+      const next = resolveHordeCombat(latest, { deferTriggeredEvents: true });
       notifyDiscardEffects(latest, next);
       set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
+      scheduleQueuedHordeTriggers();
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
@@ -818,6 +826,79 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
   });
 }
 
+function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
+  const sequenceId = hordeAutoTriggerSequenceId;
+  let event: EventItem | undefined;
+  let sources: CardInstance[] = [];
+
+  useGameStore.setState((state) => {
+    const previous = state.game;
+    const next = structuredClone(previous) as GameState;
+    while (next.eventQueue.length > 0) {
+      const candidate = next.eventQueue[0];
+      const candidateSources = triggeredSourcesForEvent(next, candidate);
+      if (candidateSources.some((source) => source.controller === "horde")) {
+        event = candidate;
+        sources = candidateSources;
+        break;
+      }
+      next.eventQueue.shift();
+      resolveTriggeredEvent(next, candidate);
+    }
+    if (!event) checkWinLoss(next);
+    return {
+      game: next,
+      hordeAutoTriggerCount: event ? 1 : 0,
+      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+    };
+  });
+
+  if (!event) {
+    onComplete?.();
+    return;
+  }
+  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
+  useToastStore.getState().pushToast({
+    title: "Horde effect",
+    message: queuedHordeTriggerMessage(sources[0]),
+    tone: "horde",
+  });
+
+  window.setTimeout(() => {
+    if (sequenceId !== hordeAutoTriggerSequenceId || !event) return;
+    useGameStore.setState((state) => {
+      const previous = state.game;
+      const next = structuredClone(previous) as GameState;
+      const queued = next.eventQueue[0];
+      if (queued?.id === event?.id) {
+        next.eventQueue.shift();
+        resolveTriggeredEvent(next, queued);
+      }
+      const summoned = next.horde.battlefield.find((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
+      if (summoned) useAudioStore.getState().playSfx(monsterSfx(summoned));
+      notifyDiscardEffects(previous, next);
+      return {
+        game: next,
+        hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      };
+    });
+    window.setTimeout(() => {
+      if (sequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
+    }, 260);
+  }, HORDE_ENTER_TRIGGER_RESOLVE_MS);
+}
+
+function queuedHordeTriggerMessage(source?: CardInstance): string {
+  if (source?.definitionId === "rundvelt_hordemaster") {
+    return `${source.name} triggers. Horde exiles the top card of its library.`;
+  }
+  if (source?.definitionId === "crow_of_dark_tidings") {
+    return `${source.name} triggers. Horde mills 2 cards.`;
+  }
+  return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
+}
+
 function scheduleSummoningAnimationSafetyClear(): void {
   if (summoningAnimationSafetyTimer) window.clearTimeout(summoningAnimationSafetyTimer);
   summoningAnimationSafetyTimer = window.setTimeout(() => {
@@ -859,6 +940,7 @@ function hasEnterBattlefieldTrigger(card: CardInstance): boolean {
 function hordeEnterTriggerMessage(card: CardInstance): string {
   const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD");
   const effect = trigger?.effect as EffectDefinition | undefined;
+  if (effect?.type === "CREATE_TOKEN") return `${card.name} resolves. Horde creates ${Number(effect.amount ?? 1)} token(s).`;
   if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return `${card.name} resolves. Horde mills ${Number(effect.amount ?? 1)} card(s).`;
   if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Player discards ${Number(effect.amount ?? 1)} card(s).`;
   if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Player loses ${Number(effect.amount ?? 1)} life.`;
@@ -1092,7 +1174,9 @@ function runSmallpoxSequence(card: CardInstance): void {
           if (target) destroyPermanent(next, target);
           return { game: next, specialDeadCardIds: [] };
         });
-        window.setTimeout(() => beginSmallpoxPlayerRound(resetEpoch), 320);
+        scheduleQueuedHordeTriggers(() => {
+          window.setTimeout(() => beginSmallpoxPlayerRound(resetEpoch), 320);
+        });
       }, 260);
     }, 650);
   }, 700);
@@ -1207,6 +1291,7 @@ function buildCastCardPatch(state: GameStore, id: string, options?: CastOptions)
   return {
     game: next,
     selectedHandId: undefined,
+    hoveredCardId: undefined,
     focusedCardId: undefined,
     activeEffectCardId: undefined,
     hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
@@ -1262,6 +1347,8 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     return {
       game: next,
       spellFightAnimation: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
       autoPaidLandAnimation,
       buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : useGameStore.getState().buffAnimationCardIds,
@@ -1300,6 +1387,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
             destroyMarkedCreatures(next);
             return { game: next, specialDeadCardIds: [] };
           });
+          scheduleQueuedHordeTriggers();
         }, 260);
       }, 520);
     }
@@ -1323,6 +1411,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
           destroyMarkedCreatures(next);
           return { game: next, specialDeadCardIds: [] };
         });
+        scheduleQueuedHordeTriggers();
       }, 260);
     }
   }, 520);
@@ -1366,12 +1455,9 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       continue;
     }
 
-    const blockers = sortBlockersRightToLeft(
-      game,
-      blockerIds
-        .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
-        .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card)),
-    );
+    const blockers = blockerIds
+      .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
+      .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card));
 
     for (const blocker of blockers) {
       const blockerStats = getPowerToughness(game, blocker, deadBuffSourceIds);

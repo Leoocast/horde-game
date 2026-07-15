@@ -4,6 +4,7 @@ import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
+import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
 
@@ -54,7 +55,13 @@ export default function App() {
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
-            reset(options.seed, options.setupTurns);
+            const isTutorial = options.seed.trim().toLowerCase() === "tutorial";
+            reset(
+              options.seed,
+              options.setupTurns,
+              isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
+              isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
+            );
             if (options.seed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");
             else startBattleMusic(true);
             setScreen("game");

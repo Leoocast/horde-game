@@ -24,7 +24,7 @@ export function CardContextMenu() {
   const details = useCardDetails(detailsCard?.definitionId ?? "");
   const keywords = detailsCard ? cardKeywords(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
-  const detailsText = detailsCard ? cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(detailsCard)) : "";
+  const detailsText = detailsCard && !detailsCard.cardTypes.includes("Land") ? cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(detailsCard)) : "";
 
   const position = useMemo(() => {
     if (!menu || typeof window === "undefined") return { left: 0, top: 0 };
@@ -94,7 +94,9 @@ export function CardContextMenu() {
         className="old-panel fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
         style={{ left: position.left, top: position.top }}
         onPointerDown={(event) => event.stopPropagation()}
-        onContextMenu={(event) => event.preventDefault()}
+        onContextMenu={(event) => {
+          if (!event.shiftKey) event.preventDefault();
+        }}
       >
         <button data-audio-click="valid" className="context-menu-item" onClick={openDetails}>
           <Info size={15} />
