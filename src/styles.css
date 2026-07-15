@@ -790,7 +790,7 @@
   }
 
   .battlefield-side-content > .old-panel-soft {
-    --battlefield-card-width: clamp(140px, min(12vw, calc((100cqh - 68px) * 0.717875)), 212px);
+    --battlefield-card-width: clamp(140px, min(12vw, calc((100cqh - 80px) * 0.717875)), 212px);
     height: 100%;
     min-height: 0;
     container-type: size;
