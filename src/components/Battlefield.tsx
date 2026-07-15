@@ -11,7 +11,7 @@ import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -23,6 +23,8 @@ type Props = {
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
 const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
+const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
+const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
@@ -31,6 +33,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
+  const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
@@ -39,6 +42,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
   const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
   const nextBattlefieldOrder = useRef(0);
+  const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
@@ -79,6 +83,40 @@ export function Battlefield({ game, side, cards }: Props) {
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
+
+  useLayoutEffect(() => {
+    const row = creatureRowRef.current;
+    if (!row) return;
+    const observedRow = row;
+    let frame = 0;
+
+    function measureOverflow() {
+      const styles = window.getComputedStyle(observedRow);
+      const gap = Number.parseFloat(styles.columnGap) || 0;
+      const stacks = Array.from(observedRow.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
+      const requiredWidth = stacks.reduce((total, stack) => total + stack.getBoundingClientRect().width, 0) + Math.max(0, stacks.length - 1) * gap;
+      const safeWidth = Math.max(0, observedRow.clientWidth - BATTLEFIELD_OVERFLOW_SAFE_INSET_PX * 2);
+
+      setCreatureRowOverflowing((current) => {
+        const threshold = current ? safeWidth - BATTLEFIELD_OVERFLOW_HYSTERESIS_PX : safeWidth;
+        return requiredWidth > threshold;
+      });
+    }
+
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measureOverflow);
+    }
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(observedRow);
+    for (const child of Array.from(observedRow.children)) observer.observe(child);
+    scheduleMeasure();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  });
 
   useLayoutEffect(() => {
     if (!autoPaidLandAnimation || seenAutoPaidEvents.current.has(autoPaidLandAnimation.eventId)) return;
@@ -264,7 +302,15 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCards.length === 0 ? (
           <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
         ) : (
-          <div className={["battlefield-row-surface flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
+          <div
+            ref={creatureRowRef}
+            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            className={[
+              "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
+              compact ? "battlefield-row-body-compact" : "battlefield-row-body",
+              creatureRowOverflowing ? "battlefield-row-overflow" : "",
+            ].join(" ")}
+          >
             <AnimatePresence initial={false} mode="popLayout">
               {renderCardStacks(rowCards, compact, "creature")}
             </AnimatePresence>
@@ -286,7 +332,11 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCreatures.length === 0 ? (
           <div className="battlefield-empty battlefield-row-surface">Empty</div>
         ) : (
-          <div className="battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2">
+          <div
+            ref={creatureRowRef}
+            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", creatureRowOverflowing ? "battlefield-row-overflow" : ""].join(" ")}
+          >
             <AnimatePresence initial={false} mode="popLayout">
               {renderCardStacks(rowCreatures, false, "creature")}
             </AnimatePresence>
