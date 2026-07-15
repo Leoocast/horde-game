@@ -670,7 +670,6 @@
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    isolation: isolate;
   }
 
   .battlefield-copy-stack > .battlefield-layout-slot {
@@ -689,6 +688,15 @@
   .battlefield-copy-stack > .battlefield-layout-slot:hover,
   .battlefield-copy-stack > .battlefield-layout-slot:focus-within {
     z-index: 90;
+  }
+
+  .battlefield-copy-stack > .battlefield-layout-slot-elevated {
+    z-index: 95;
+  }
+
+  .battlefield-copy-stack > .battlefield-layout-slot-elevated:hover,
+  .battlefield-copy-stack > .battlefield-layout-slot-elevated:focus-within {
+    z-index: 100;
   }
 
   .card-visual {

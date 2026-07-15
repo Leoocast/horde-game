@@ -334,17 +334,15 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function renderCardStacks(rowCards: CardInstance[], compact = false, keyPrefix = "card") {
     return groupBattlefieldCopies(rowCards).map((group) => (
-      <motion.div
+      <div
         key={`${keyPrefix}-stack-${group.key}`}
-        layout="position"
         className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
         data-stacked={group.cards.length > 1 ? "true" : undefined}
-        transition={{ layout: { type: "spring", stiffness: 700, damping: 50, mass: 0.4 } }}
       >
         <AnimatePresence initial={false} mode="popLayout">
           {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
         </AnimatePresence>
-      </motion.div>
+      </div>
     ));
   }
 
@@ -418,6 +416,18 @@ export function Battlefield({ game, side, cards }: Props) {
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
+    const interactionElevated = Boolean(
+      effectActive ||
+        effectClosing ||
+        effectActivating ||
+        counterTargetable ||
+        counterTargetLocked ||
+        smallpoxTargetable ||
+        smallpoxTargetLocked ||
+        spellTargetable ||
+        spellTargetLocked ||
+        tutorialTargetable,
+    );
 
     return (
       <motion.div
@@ -434,7 +444,7 @@ export function Battlefield({ game, side, cards }: Props) {
           rotate: { duration: 0.28, ease: "easeOut" },
           filter: { duration: 0.36, ease: "easeOut" },
         }}
-        className="battlefield-layout-slot"
+        className={["battlefield-layout-slot", interactionElevated ? "battlefield-layout-slot-elevated" : ""].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
       <div
