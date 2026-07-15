@@ -162,7 +162,7 @@ export function Hand({ game }: { game: GameState }) {
                   event.preventDefault();
                 }}
               >
-                <div
+                <motion.div
                   className={[
                     "hand-card transition-opacity duration-200",
                     spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
@@ -172,6 +172,17 @@ export function Hand({ game }: { game: GameState }) {
                     tutorialDimmed ? "pointer-events-none opacity-30 saturate-50" : "",
                   ].join(" ")}
                   style={{ "--hand-z": index + 1 } as React.CSSProperties}
+                  initial={false}
+                  animate={{
+                    y: 48,
+                    scale: 1,
+                    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                  }}
+                  whileHover={{
+                    y: -24,
+                    scale: 1.08,
+                    transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+                  }}
                 >
                   <Card
                     game={game}
@@ -191,7 +202,7 @@ export function Hand({ game }: { game: GameState }) {
                       if (selectedHandId === card.instanceId) selectHand(undefined);
                     }}
                   />
-                </div>
+                </motion.div>
               </motion.div>
             );
           })}

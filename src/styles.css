@@ -671,8 +671,8 @@
   }
 
   .card-stat-badge {
-    right: clamp(3px, 2.2cqw, 5px);
-    bottom: clamp(3px, 2.2cqw, 5px);
+    right: clamp(6px, 4cqw, 9px);
+    bottom: clamp(10px, 6cqw, 14px);
     height: clamp(18px, 11cqw, 22px);
     min-width: clamp(34px, 21cqw, 42px);
     padding-inline: clamp(6px, 4cqw, 8px);
@@ -1353,24 +1353,21 @@
     width: var(--hand-card-width);
     height: calc(var(--hand-card-width) * 1.393);
     z-index: var(--hand-z);
-    transform: translateY(48px);
     transform-origin: 50% 100%;
     backface-visibility: hidden;
+    will-change: transform, filter;
     transition:
-      transform 160ms ease,
-      z-index 0ms linear 160ms,
-      filter 160ms ease;
+      z-index 0ms linear 300ms,
+      filter 260ms ease-out;
   }
 
   .hand-card:hover,
   .hand-card:focus-within {
     z-index: 80;
-    transform: translateY(-24px) scale(1.08);
     filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.22));
     transition:
-      transform 160ms ease,
       z-index 0ms,
-      filter 160ms ease;
+      filter 180ms ease-out;
   }
 
 }
