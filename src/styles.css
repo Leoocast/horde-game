@@ -535,10 +535,12 @@
   }
 
   .card-keyword-stack {
+    position: absolute;
+    z-index: 2;
+    top: clamp(30px, 16cqw, 34px);
+    left: 16px;
     display: flex;
     max-width: 5.4rem;
-    margin-top: clamp(17px, 9.5cqw, 21px);
-    margin-left: 6px;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.2rem;
@@ -549,6 +551,7 @@
     max-width: 100%;
     align-items: center;
     justify-content: center;
+    gap: 0.22rem;
     border: 1px solid;
     border-radius: 999px;
     padding: 0.16rem 0.38rem;
@@ -576,6 +579,27 @@
     background: linear-gradient(to bottom, #f3a59b, #b93327 52%, #6d150f);
     color: #fff0e8;
     text-shadow: 0 1px 0 rgb(0 0 0 / 0.55);
+  }
+
+  .card-toxic-counter {
+    display: inline-flex;
+    width: clamp(13px, 8cqw, 17px);
+    height: clamp(13px, 8cqw, 17px);
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #4b235d;
+    border-radius: 999px;
+    background: linear-gradient(to bottom, #f4ddff, #b875dc 52%, #6d3b88);
+    color: #220d2d;
+    font-size: clamp(8px, 5.5cqw, 11px);
+    font-weight: 950;
+    line-height: 1;
+    text-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.62),
+      inset 0 -1px 1px rgb(0 0 0 / 0.34),
+      0 0 7px rgb(178 95 222 / 0.48);
   }
 
   .context-menu-item {
@@ -1321,6 +1345,10 @@
       border-color 220ms ease,
       box-shadow 220ms ease,
       filter 220ms ease;
+  }
+
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual > .card-stat-badge {
+    bottom: calc(clamp(10px, 6cqw, 14px) + 3px);
   }
 
   .battlefield-row-overflow .battlefield-card-slot > .card-visual > img {

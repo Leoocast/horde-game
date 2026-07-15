@@ -44,6 +44,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           .filter((keyword) => keyword !== "HASTE")
           .filter(Boolean)
       : [];
+  const usesAllyKeywordStyle = card.controller !== "horde" || card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const { imageUrl } = useCardDetails(card.definitionId);
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
@@ -122,16 +123,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
             </span>
           )}
         </div>
-        {battlefieldKeywords.length > 0 && (
-          <div className="card-keyword-stack">
-            {battlefieldKeywords.map((keyword) => (
-              <span key={keyword} className={["card-keyword-badge", card.controller === "horde" ? "card-keyword-badge-enemy" : "card-keyword-badge-ally"].join(" ")}>
-                {keyword}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
+      {battlefieldKeywords.length > 0 && (
+        <div className="card-keyword-stack">
+          {battlefieldKeywords.map((keyword) => (
+            <span key={keyword} className={["card-keyword-badge", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
+              {renderBattlefieldKeywordLabel(keyword)}
+            </span>
+          ))}
+        </div>
+      )}
       {!hideStats && stats.text && (
         <span
           className={[
@@ -147,5 +148,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         </span>
       )}
     </article>
+  );
+}
+
+function renderBattlefieldKeywordLabel(keyword: string) {
+  const toxic = keyword.match(/^TOXIC\s+\{(\d+)\}$/i);
+  if (!toxic) return keyword;
+  return (
+    <>
+      TOXIC <span className="card-toxic-counter">{toxic[1]}</span>
+    </>
   );
 }
