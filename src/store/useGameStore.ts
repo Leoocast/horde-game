@@ -4,7 +4,7 @@ import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, Event
 import { playerDeck, hordeDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { castCard, playLand, tapForMana, toggleTap, activateAbility } from "../engine/GameActions";
-import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortBlockersRightToLeft, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
+import { declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -1366,12 +1366,9 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       continue;
     }
 
-    const blockers = sortBlockersRightToLeft(
-      game,
-      blockerIds
-        .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
-        .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card)),
-    );
+    const blockers = blockerIds
+      .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
+      .filter((card): card is GameState["player"]["battlefield"][number] => Boolean(card));
 
     for (const blocker of blockers) {
       const blockerStats = getPowerToughness(game, blocker, deadBuffSourceIds);

@@ -565,15 +565,10 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
-    const orderedBlockers = [...(game.combat.blockers[attackerId] ?? [])].sort((left, right) => playerBattlefieldIndex(right) - playerBattlefieldIndex(left));
+    const orderedBlockers = game.combat.blockers[attackerId] ?? [];
     if (orderedBlockers.length < 2) return undefined;
     const orderIndex = orderedBlockers.indexOf(blockerId);
     return orderIndex >= 0 ? `${orderIndex + 1}` : undefined;
-  }
-
-  function playerBattlefieldIndex(cardId: string): number {
-    const index = game.player.battlefield.findIndex((card) => card.instanceId === cardId);
-    return index < 0 ? Number.MAX_SAFE_INTEGER : index;
   }
 
   function getAttackerColor(attackerId: string): string | undefined {
