@@ -546,6 +546,11 @@
     gap: 0.2rem;
   }
 
+  .card-keyword-stack-zombie {
+    top: 30px;
+    left: 16px;
+  }
+
   .card-keyword-badge {
     display: inline-flex;
     max-width: 100%;
