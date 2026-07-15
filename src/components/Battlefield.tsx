@@ -376,11 +376,7 @@ export function Battlefield({ game, side, cards }: Props) {
     } as CSSProperties;
 
     return (
-      <aside ref={landDockRef} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
-        <div className="player-land-dock-header">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{landCount}</span>
-        </div>
+      <aside ref={landDockRef} aria-label={`Lands (${landCount})`} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
         {landCount === 0 ? (
           <div className="player-land-dock-empty battlefield-row-surface">Empty</div>
         ) : (

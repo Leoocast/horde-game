@@ -1406,27 +1406,18 @@
   .player-land-dock {
     position: fixed;
     bottom: 1rem;
-    left: 1rem;
+    left: 0.75rem;
     z-index: 72;
     display: flex;
     width: var(--player-side-dock-width);
-    height: 180px;
+    height: 132px;
     flex-direction: column;
     overflow: visible;
-    padding: 0.5rem;
+    padding: 0 0.5rem 0.25rem;
   }
 
   .player-land-dock-targeting {
     z-index: 110;
-  }
-
-  .player-land-dock-header {
-    display: flex;
-    height: 1rem;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: space-between;
-    line-height: 1;
   }
 
   .player-land-grid {
@@ -1437,6 +1428,7 @@
     align-content: center;
     justify-content: start;
     gap: 4px;
+    padding: 0 2px 2px;
   }
 
   .player-land-grid-fill {
