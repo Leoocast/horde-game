@@ -259,7 +259,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div className={["battlefield-row-surface flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
             <AnimatePresence initial={false} mode="popLayout">
-              {rowCards.map((card) => renderCard(card, compact))}
+              {renderCardStacks(rowCards, compact, "creature")}
             </AnimatePresence>
           </div>
         )}
@@ -281,7 +281,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div className="battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2">
             <AnimatePresence initial={false} mode="popLayout">
-              {rowCreatures.map((card) => renderCard(card))}
+              {renderCardStacks(rowCreatures, false, "creature")}
             </AnimatePresence>
           </div>
         )}
@@ -332,7 +332,23 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function renderCard(card: CardInstance, compact = false, keyPrefix = "card") {
+  function renderCardStacks(rowCards: CardInstance[], compact = false, keyPrefix = "card") {
+    return groupBattlefieldCopies(rowCards).map((group) => (
+      <motion.div
+        key={`${keyPrefix}-stack-${group.key}`}
+        layout="position"
+        className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
+        data-stacked={group.cards.length > 1 ? "true" : undefined}
+        transition={{ layout: { type: "spring", stiffness: 700, damping: 50, mass: 0.4 } }}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
+        </AnimatePresence>
+      </motion.div>
+    ));
+  }
+
+  function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
     const useNewSummoning = side !== "horde";
     const firstTimeOnThisBattlefield = useNewSummoning && !seenCardIds.current.has(card.instanceId);
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
@@ -419,6 +435,7 @@ export function Battlefield({ game, side, cards }: Props) {
           filter: { duration: 0.36, ease: "easeOut" },
         }}
         className="battlefield-layout-slot"
+        style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
       <div
         data-card-slot-id={card.instanceId}
@@ -675,6 +692,21 @@ export function Battlefield({ game, side, cards }: Props) {
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
   }
+}
+
+function groupBattlefieldCopies(cards: CardInstance[]): Array<{ key: string; cards: CardInstance[] }> {
+  const groups = new Map<string, CardInstance[]>();
+  const stackZombieTokens = cards.length > 7;
+
+  for (const card of cards) {
+    const isZombieToken = card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+    const key = isZombieToken && !stackZombieTokens ? `instance-${card.instanceId}` : `copy-${card.definitionId}`;
+    const group = groups.get(key);
+    if (group) group.push(card);
+    else groups.set(key, [card]);
+  }
+
+  return Array.from(groups, ([key, groupedCards]) => ({ key, cards: groupedCards }));
 }
 
 function buffedStats(game: GameState, card: CardInstance): string {

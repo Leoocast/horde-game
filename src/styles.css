@@ -666,6 +666,31 @@
     flex: 0 0 auto;
   }
 
+  .battlefield-copy-stack {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    isolation: isolate;
+  }
+
+  .battlefield-copy-stack > .battlefield-layout-slot {
+    position: relative;
+    z-index: var(--copy-stack-index);
+  }
+
+  .battlefield-copy-stack[data-stacked="true"] > .battlefield-layout-slot + .battlefield-layout-slot {
+    margin-left: calc(var(--battlefield-card-width) * -0.68);
+  }
+
+  .battlefield-copy-stack-compact[data-stacked="true"] > .battlefield-layout-slot + .battlefield-layout-slot {
+    margin-left: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * -0.68);
+  }
+
+  .battlefield-copy-stack > .battlefield-layout-slot:hover,
+  .battlefield-copy-stack > .battlefield-layout-slot:focus-within {
+    z-index: 90;
+  }
+
   .card-visual {
     container-type: inline-size;
   }
