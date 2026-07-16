@@ -14,7 +14,7 @@ export default function App() {
   const playCollection = useAudioStore((state) => state.playCollection);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
-  const [setupTurns, setSetupTurns] = useState(4);
+  const [setupTurns, setSetupTurns] = useState(3);
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);

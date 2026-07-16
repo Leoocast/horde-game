@@ -1,6 +1,7 @@
 import type { AbilityOptions, CastOptions, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand } from "./GameRules";
 import { canPay, parseManaCost, payMana, payManaAutomatically } from "./ManaSystem";
 
 export function playLand(game: GameState, handId: string): GameState {
@@ -8,6 +9,7 @@ export function playLand(game: GameState, handId: string): GameState {
   if (next.winner || next.activeSide !== "player" || next.phase !== "main") return log(next, "Lands can only be played during your main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card || !card.cardTypes.includes("Land")) return log(next, "Choose a land to play.");
+  if (!canPlayerPutAnotherLand(next)) return log(next, `Player cannot control more than ${MAX_PLAYER_LANDS} lands.`);
   if (next.player.landPlayedThisTurn) return log(next, "Player already played a land this turn.");
   moveHandToBattlefield(next, card);
   next.player.landPlayedThisTurn = true;

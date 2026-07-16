@@ -227,7 +227,7 @@ export type SpellFightAnimationState = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 4),
+  game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 3),
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   resolvingHordeCombat: false,
@@ -257,7 +257,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 4, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
     set(() => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);

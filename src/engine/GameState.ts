@@ -23,7 +23,7 @@ const TUTORIAL_STARTING_BATTLEFIELD = [
   { definitionId: "ichorspit_basilisk", amount: 1 },
 ] as const;
 
-export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "horde-seed", setupTurns = 5): GameState {
+export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "horde-seed", setupTurns = 4): GameState {
   const playerCards = expandDeck(playerDeck, "player");
   const hordeCards = expandDeck(hordeDeck, "horde");
   let randomState = hashSeed(seed);

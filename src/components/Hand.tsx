@@ -1,5 +1,6 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
+import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
@@ -7,7 +8,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
 import { useLayoutEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
+import { motion, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const HAND_ENTRY_STAGGER = 0.07;
@@ -27,18 +28,6 @@ const handCardMotion: Variants = {
       scale: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
     },
   }),
-  exit: {
-    opacity: 0,
-    y: -80,
-    rotate: 5,
-    scale: 0.9,
-    transition: {
-      opacity: { duration: 0.12, ease: "easeOut" },
-      y: { duration: 0.18, ease: "easeOut" },
-      rotate: { duration: 0.16, ease: "easeOut" },
-      scale: { duration: 0.16, ease: "easeOut" },
-    },
-  },
 };
 
 export function Hand({ game }: { game: GameState }) {
@@ -167,7 +156,6 @@ export function Hand({ game }: { game: GameState }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div ref={handCardsRef} className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
-            <AnimatePresence initial={false} mode="popLayout">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
             const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
@@ -255,7 +243,6 @@ export function Hand({ game }: { game: GameState }) {
               </motion.div>
             );
           })}
-            </AnimatePresence>
             </div>
         </div>
       </section>
@@ -266,7 +253,7 @@ export function Hand({ game }: { game: GameState }) {
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
-  if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn;
+  if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
@@ -279,6 +266,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return "Cards can only be played during your main phase.";
   }
   if (card.cardTypes.includes("Land")) {
+    if (!canPlayerPutAnotherLand(game)) return `You cannot control more than ${MAX_PLAYER_LANDS} lands.`;
     if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
     return "This land cannot be played right now.";
   }
