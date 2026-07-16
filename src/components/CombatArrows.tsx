@@ -8,6 +8,7 @@ const DEFENSE_ARROW_COLOR = "#60a5fa";
 const PLAYER_ATTACK_ARROW_COLOR = "#f59e0b";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
+const STACKED_DEFENSE_ARROW_LEFT_INSET_PX = 24;
 
 type Arrow = {
   id: string;
@@ -102,7 +103,11 @@ export function CombatArrows({ game }: { game: GameState }) {
           if (!blocker) continue;
           const blockerRect = blocker.getBoundingClientRect();
           const start = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
-          const end = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.82 };
+          const attackerIsBehindInStack = isCardBehindInStack(attacker);
+          const end = {
+            x: attackerIsBehindInStack ? attackerRect.left + STACKED_DEFENSE_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
+            y: attackerRect.top + attackerRect.height * 0.82,
+          };
           next.push(makeArrow(arrowId, start, end, DEFENSE_ARROW_COLOR));
         }
       }
@@ -226,6 +231,15 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
   const rect = target?.getBoundingClientRect();
   if (!rect) return undefined;
   return { x: rect.left + 18, y: rect.top + rect.height * 0.5 };
+}
+
+function isCardBehindInStack(card: HTMLElement): boolean {
+  const stack = card.closest<HTMLElement>('[data-stacked="true"]');
+  const slot = card.closest<HTMLElement>(".battlefield-layout-slot");
+  if (!stack || !slot) return false;
+
+  const stackedSlots = Array.from(stack.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains("battlefield-layout-slot"));
+  return stackedSlots.length > 1 && slot !== stackedSlots[stackedSlots.length - 1];
 }
 
 function queueExitingArrows(removed: Arrow[], setExitingArrows: (updater: (current: Arrow[]) => Arrow[]) => void, timers: Map<string, number>): void {
