@@ -1355,6 +1355,16 @@
     padding-inline: 132px;
   }
 
+  .battlefield-row-overflow > .battlefield-copy-stack {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+  }
+
+  .battlefield-row-overflow > .battlefield-copy-stack:has(.battlefield-layout-slot-elevated) {
+    z-index: 96;
+  }
+
   .battlefield-row-overflow .battlefield-card-slot {
     height: calc(var(--battlefield-card-width) * 0.89);
   }
