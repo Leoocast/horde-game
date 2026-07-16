@@ -514,6 +514,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellTargetable = isSpellTargetable(card);
     const spellTargetLocked = isSpellTargetLocked(card);
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
+    const spellBuffPreview = spellLockedFriendly && spellCard && spellTargeting ? spellBuffedStats(game, card, spellCard, spellTargeting.targets) : undefined;
     const tutorialTargetable = tutorialZones.some(
       (zone) =>
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
@@ -672,9 +673,7 @@ export function Battlefield({ game, side, cards }: Props) {
         </button>
       )}
       {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
-      {spellLockedFriendly && spellCard && spellTargeting && (
-        <span className="counter-target-stat-preview">{spellBuffedStats(game, card, spellCard, spellTargeting.targets)}</span>
-      )}
+      {spellBuffPreview && <span className="counter-target-stat-preview">{spellBuffPreview}</span>}
       </div>
       </motion.div>
     );
@@ -863,14 +862,14 @@ function counterBuffedStats(game: GameState, card: CardInstance): string {
   return `${stats.power + 1}/${stats.toughness + 1}`;
 }
 
-function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string {
+function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string | undefined {
   const stats = getPowerToughness(game, card);
   let powerDelta = 0;
   let toughnessDelta = 0;
 
   function collect(effect: CardInstance["effects"][number]) {
-    if (effect.type === "MODIFY_STATS") {
-      const targetRef = typeof effect.target === "string" ? effect.target : undefined;
+    if (effect.type === "MODIFY_STATS" || effect.type === "PUMP" || effect.type === "PUMP_UNTIL_END_OF_TURN") {
+      const targetRef = typeof effect.targetRef === "string" ? effect.targetRef : typeof effect.target === "string" ? effect.target : undefined;
       const selected = targetRef ? targets[targetRef] : undefined;
       const applies = Array.isArray(selected) ? selected.includes(card.instanceId) : selected === card.instanceId;
       if (applies) {
@@ -884,6 +883,7 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
   }
 
   for (const effect of spell.effects) collect(effect);
+  if (powerDelta === 0 && toughnessDelta === 0) return undefined;
   return `${stats.power + powerDelta}/${stats.toughness + toughnessDelta}`;
 }
 
