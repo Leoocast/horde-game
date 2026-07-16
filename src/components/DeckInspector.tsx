@@ -278,7 +278,7 @@ function stats(card: NewDeckCard): string | undefined {
 }
 
 function deckKeywords(card: NewDeckCard): string {
-  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword));
+  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword).filter((keyword) => keyword !== "TRAMPLE"));
   for (const ability of card.abilities ?? []) {
     if (ability.customHandler === "toxic_1" || ability.id?.toLowerCase().includes("toxic_1")) keywords.add("TOXIC {1}");
   }
