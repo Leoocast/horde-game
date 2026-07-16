@@ -671,7 +671,10 @@ export function Battlefield({ game, side, cards }: Props) {
           {renderCardText(abilityButtonText(primaryAbility))}
         </button>
       )}
-      {(counterTargetLocked || spellLockedFriendly) && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
+      {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
+      {spellLockedFriendly && spellCard && spellTargeting && (
+        <span className="counter-target-stat-preview">{spellBuffedStats(game, card, spellCard, spellTargeting.targets)}</span>
+      )}
       </div>
       </motion.div>
     );
@@ -855,9 +858,33 @@ function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
 
-function buffedStats(game: GameState, card: CardInstance): string {
+function counterBuffedStats(game: GameState, card: CardInstance): string {
   const stats = getPowerToughness(game, card);
   return `${stats.power + 1}/${stats.toughness + 1}`;
+}
+
+function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string {
+  const stats = getPowerToughness(game, card);
+  let powerDelta = 0;
+  let toughnessDelta = 0;
+
+  function collect(effect: CardInstance["effects"][number]) {
+    if (effect.type === "MODIFY_STATS") {
+      const targetRef = typeof effect.target === "string" ? effect.target : undefined;
+      const selected = targetRef ? targets[targetRef] : undefined;
+      const applies = Array.isArray(selected) ? selected.includes(card.instanceId) : selected === card.instanceId;
+      if (applies) {
+        powerDelta += Number(effect.power) || 0;
+        toughnessDelta += Number(effect.toughness) || 0;
+      }
+    }
+    if (Array.isArray(effect.effects)) {
+      for (const nested of effect.effects) collect(nested as CardInstance["effects"][number]);
+    }
+  }
+
+  for (const effect of spell.effects) collect(effect);
+  return `${stats.power + powerDelta}/${stats.toughness + toughnessDelta}`;
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {

@@ -198,6 +198,7 @@ export function Hand({ game }: { game: GameState }) {
                     actionable={!tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable)}
                     suppressContextMenu={Boolean(smallpoxSelection)}
                     suppressHoverOverlay={Boolean(smallpoxSelection) || Boolean(tutorialStepId)}
+                    darkenOnHover={false}
                     onSelect={() => {
                       if (smallpoxSelection) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);

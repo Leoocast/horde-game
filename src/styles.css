@@ -716,6 +716,10 @@
   .battlefield-copy-stack > .battlefield-layout-slot {
     position: relative;
     z-index: var(--copy-stack-index);
+    transition:
+      opacity 150ms ease-out,
+      filter 150ms ease-out,
+      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .battlefield-copy-stack[data-stacked="true"] > .battlefield-layout-slot + .battlefield-layout-slot {
@@ -728,16 +732,27 @@
 
   .battlefield-copy-stack > .battlefield-layout-slot:hover,
   .battlefield-copy-stack > .battlefield-layout-slot:focus-within {
-    z-index: 64;
+    z-index: var(--copy-stack-index);
   }
 
   .battlefield-copy-stack > .battlefield-layout-slot-elevated {
-    z-index: 95;
+    z-index: calc(90 + var(--copy-stack-index));
   }
 
   .battlefield-copy-stack > .battlefield-layout-slot-elevated:hover,
   .battlefield-copy-stack > .battlefield-layout-slot-elevated:focus-within {
-    z-index: 100;
+    z-index: calc(90 + var(--copy-stack-index));
+  }
+
+  .battlefield-copy-stack[data-stacked="true"]:hover > .battlefield-layout-slot:not(:hover) {
+    opacity: 0.72;
+    filter: saturate(0.78) brightness(0.88);
+  }
+
+  .battlefield-copy-stack[data-stacked="true"] > .battlefield-layout-slot:hover {
+    opacity: 1;
+    filter: none;
+    transform: translateY(-3px);
   }
 
   .card-visual {
