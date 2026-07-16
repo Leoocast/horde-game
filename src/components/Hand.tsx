@@ -73,19 +73,21 @@ export function Hand({ game }: { game: GameState }) {
     const region = handRegionRef.current;
     const cards = handCardsRef.current;
     if (!region || !cards) return;
+    const observedRegion = region;
+    const observedCards = cards;
     let frame = 0;
 
     function measure() {
-      const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+      const firstCard = observedCards.querySelector<HTMLElement>(".hand-card");
       if (!firstCard || handSize <= 1) {
         setHandStackMargin(0);
         return;
       }
-      const regionStyles = window.getComputedStyle(region);
+      const regionStyles = window.getComputedStyle(observedRegion);
       const horizontalPadding = (Number.parseFloat(regionStyles.paddingLeft) || 0) + (Number.parseFloat(regionStyles.paddingRight) || 0);
-      const availableWidth = Math.max(0, region.clientWidth - horizontalPadding);
+      const availableWidth = Math.max(0, observedRegion.clientWidth - horizontalPadding);
       const cardWidth = firstCard.getBoundingClientRect().width;
-      const gap = Number.parseFloat(window.getComputedStyle(cards).columnGap) || 0;
+      const gap = Number.parseFloat(window.getComputedStyle(observedCards).columnGap) || 0;
       const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
       const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
       const minimumVisibleStrip = 28;
@@ -98,8 +100,8 @@ export function Hand({ game }: { game: GameState }) {
     }
 
     const observer = new ResizeObserver(scheduleMeasure);
-    observer.observe(region);
-    const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+    observer.observe(observedRegion);
+    const firstCard = observedCards.querySelector<HTMLElement>(".hand-card");
     if (firstCard) observer.observe(firstCard);
     scheduleMeasure();
     return () => {
