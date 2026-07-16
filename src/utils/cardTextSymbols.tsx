@@ -42,13 +42,27 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
         .filter((line) => {
           const normalized = normalizeKeywordLine(line);
           if (!normalized) return false;
-          return !baseKeywords.has(normalized) && !keywordSet.has(normalized);
+          return !isKeywordOnlyLine(normalized, keywordSet, baseKeywords);
         })
         .join("\n")
         .trim(),
     )
     .filter(Boolean);
   return blocks.join("\n\n").trim();
+}
+
+function isKeywordOnlyLine(normalizedLine: string, keywordSet: Set<string>, baseKeywords: Set<string>): boolean {
+  const knownKeywords = new Set([...baseKeywords, ...keywordSet]);
+  if (knownKeywords.has(normalizedLine)) return true;
+
+  // Oracle text combines multiple evergreen keywords on one line, for example
+  // "Reach, trample". They already have their own badges, so the whole line is
+  // redundant when every comma/semicolon-separated item is a known keyword.
+  const parts = normalizedLine
+    .split(/[,;]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.length > 1 && parts.every((part) => knownKeywords.has(part));
 }
 
 function normalizeKeywordLine(text: string): string {
