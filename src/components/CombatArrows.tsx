@@ -202,24 +202,17 @@ export function CombatArrows({ game }: { game: GameState }) {
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
-            <motion.g
-              initial={{ clipPath: "inset(100% 0 0 0)" }}
-              animate={{ clipPath: "inset(0 0 0% 0)" }}
-              exit={{ clipPath: "inset(0 0 100% 0)" }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <g className="combat-arrow-reveal">
               <path d={arrow.path} fill="none" stroke={arrow.color} strokeWidth={6} strokeLinecap="round" opacity="0.12" />
               <polygon points={arrow.tip} fill={arrow.color} opacity="0.14" />
-              <motion.g
-                initial={{ opacity: 0.85 }}
-                animate={{ opacity: [0.82, 0.96, 0.88] }}
-                transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
+              <g
+                className="combat-arrow-pulse"
                 filter={arrow.color === PLAYER_ATTACK_ARROW_COLOR ? "url(#combat-arrow-orange-glow)" : "url(#combat-arrow-blue-glow)"}
               >
                 <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={7} strokeLinecap="round" opacity="0.86" />
                 <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
-              </motion.g>
-            </motion.g>
+              </g>
+            </g>
           </motion.g>
           );
         })}

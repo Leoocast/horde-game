@@ -33,10 +33,16 @@
 
   .duel-table {
     background-color: #202b2f;
-    background-image: url("../assets/images/background.jpg");
-    background-position: calc(50% - 3.5rem) calc(50% + 20px + 3.1rem);
+    background-image:
+      linear-gradient(rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.5)),
+      url("../assets/images/background.jpg");
+    background-position:
+      center,
+      calc(50% - 3.5rem) calc(50% + 20px + 3.1rem);
     background-repeat: no-repeat;
-    background-size: 140% auto;
+    background-size:
+      100% 100%,
+      140% auto;
     color: #f6e6b8;
   }
 
@@ -1797,6 +1803,38 @@
   50% {
     opacity: 1;
     transform: scaleX(1.08);
+  }
+}
+
+@keyframes combat-arrow-pulse {
+  0% {
+    opacity: 0.82;
+  }
+
+  50% {
+    opacity: 0.96;
+  }
+
+  100% {
+    opacity: 0.88;
+  }
+}
+
+.combat-arrow-reveal {
+  animation: combat-arrow-reveal 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.combat-arrow-pulse {
+  animation: combat-arrow-pulse 1.25s ease-in-out infinite;
+}
+
+@keyframes combat-arrow-reveal {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
   }
 }
 
