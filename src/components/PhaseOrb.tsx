@@ -1,6 +1,6 @@
 import { Check, FastForward, Sparkles, Swords, X } from "lucide-react";
 import { useState } from "react";
-import { addMana, canPay, parseManaCost } from "../engine/ManaSystem";
+import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import type { CardInstance } from "../engine/GameTypes";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
@@ -259,26 +259,7 @@ function hasAvailablePlayerActions(game: GameState): boolean {
 
 function canCastWithAvailableResources(game: GameState, card: CardInstance): boolean {
   const cost = parseManaCost(card.manaCost, 0);
-  let simulatedPool = { ...game.player.manaPool };
-  if (canPay(simulatedPool, cost)) return true;
-  for (const land of game.player.battlefield) {
-    if (!land.cardTypes.includes("Land") || land.tapped) continue;
-    const produced = getStaticLandMana(land);
-    if (!produced) continue;
-    simulatedPool = addMana(simulatedPool, produced.color, produced.amount);
-    if (canPay(simulatedPool, cost)) return true;
-  }
-  return false;
-}
-
-function getStaticLandMana(card: CardInstance): { color: string; amount: number } | undefined {
-  const ability = card.activatedAbilities.find((item) => item.effect.type === "ADD_MANA");
-  if (!ability?.cost?.tap) return undefined;
-  const mana = ability.effect.mana as Record<string, number> | undefined;
-  const entry = mana ? Object.entries(mana)[0] : undefined;
-  const color = entry?.[0] === "chosenColor" ? card.chosenColor ?? "G" : entry?.[0] ?? "G";
-  const amount = entry?.[1] ?? Number(ability.effect.amount ?? 1);
-  return { color, amount };
+  return canPayWithAutomaticMana(game, cost);
 }
 
 function getDefendBlockedReason(game: GameState): string | undefined {

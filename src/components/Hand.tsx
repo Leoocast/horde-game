@@ -1,12 +1,12 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
-import { canPay, parseManaCost } from "../engine/ManaSystem";
+import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
@@ -62,10 +62,51 @@ export function Hand({ game }: { game: GameState }) {
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const pushToast = useToastStore((state) => state.pushToast);
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
+  const handRegionRef = useRef<HTMLDivElement>(null);
+  const handCardsRef = useRef<HTMLDivElement>(null);
+  const [handStackMargin, setHandStackMargin] = useState(0);
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
   const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
-  const handStackMargin = handSize <= 7 ? 0 : Math.max(-140, -(handSize - 7) * 24);
+
+  useLayoutEffect(() => {
+    const region = handRegionRef.current;
+    const cards = handCardsRef.current;
+    if (!region || !cards) return;
+    let frame = 0;
+
+    function measure() {
+      const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+      if (!firstCard || handSize <= 1) {
+        setHandStackMargin(0);
+        return;
+      }
+      const regionStyles = window.getComputedStyle(region);
+      const horizontalPadding = (Number.parseFloat(regionStyles.paddingLeft) || 0) + (Number.parseFloat(regionStyles.paddingRight) || 0);
+      const availableWidth = Math.max(0, region.clientWidth - horizontalPadding);
+      const cardWidth = firstCard.getBoundingClientRect().width;
+      const gap = Number.parseFloat(window.getComputedStyle(cards).columnGap) || 0;
+      const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
+      const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
+      const minimumVisibleStrip = 28;
+      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), requiredMargin));
+    }
+
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
+    }
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(region);
+    const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+    if (firstCard) observer.observe(firstCard);
+    scheduleMeasure();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [handLayoutSignature, handSize]);
 
   function playCard(card: CardInstance) {
     if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
@@ -119,8 +160,8 @@ export function Hand({ game }: { game: GameState }) {
     <>
       <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
-        <div className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
-          <div className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
+        <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
+          <div ref={handCardsRef} className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
             <AnimatePresence initial={false} mode="sync">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
@@ -141,6 +182,8 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
                 }}
+                style={{ position: "relative", zIndex: index + 1 }}
+                whileHover={{ zIndex: 80 }}
                 drag={!smallpoxSelection && !tutorialDimmed}
                 dragElastic={0.08}
                 dragMomentum={false}
@@ -162,9 +205,9 @@ export function Hand({ game }: { game: GameState }) {
                   event.preventDefault();
                 }}
               >
-                <div
+                <motion.div
                   className={[
-                    "hand-card transition-opacity duration-200",
+                    "hand-card",
                     spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
@@ -172,6 +215,17 @@ export function Hand({ game }: { game: GameState }) {
                     tutorialDimmed ? "pointer-events-none opacity-30 saturate-50" : "",
                   ].join(" ")}
                   style={{ "--hand-z": index + 1 } as React.CSSProperties}
+                  initial={false}
+                  animate={{
+                    y: 48,
+                    scale: 1,
+                    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                  }}
+                  whileHover={{
+                    y: -24,
+                    scale: 1,
+                    transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+                  }}
                 >
                   <Card
                     game={game}
@@ -180,6 +234,7 @@ export function Hand({ game }: { game: GameState }) {
                     actionable={!tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable)}
                     suppressContextMenu={Boolean(smallpoxSelection)}
                     suppressHoverOverlay={Boolean(smallpoxSelection) || Boolean(tutorialStepId)}
+                    darkenOnHover={false}
                     onSelect={() => {
                       if (smallpoxSelection) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
@@ -191,7 +246,7 @@ export function Hand({ game }: { game: GameState }) {
                       if (selectedHandId === card.instanceId) selectHand(undefined);
                     }}
                   />
-                </div>
+                </motion.div>
               </motion.div>
             );
           })}
@@ -207,23 +262,7 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn;
-  const pool = { ...game.player.manaPool };
-  for (const land of game.player.battlefield) {
-    if (!land.cardTypes.includes("Land") || land.tapped) continue;
-    const ability = land.activatedAbilities.find((item) => item.effect.type === "ADD_MANA" && item.cost?.tap);
-    if (!ability) continue;
-    const mana = ability.effect.mana as Record<string, number> | undefined;
-    const entry = mana ? Object.entries(mana)[0] : undefined;
-    const color = entry?.[0] === "chosenColor" ? land.chosenColor ?? "G" : entry?.[0] ?? "G";
-    const amount = entry?.[1] ?? Number(ability.effect.amount ?? 1);
-    if (color === "G") pool.green += amount;
-    else if (color === "R") pool.red += amount;
-    else if (color === "U") pool.blue += amount;
-    else if (color === "W") pool.white += amount;
-    else if (color === "B") pool.black += amount;
-    else pool.colorless += amount;
-  }
-  if (!canPay(pool, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
+  if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
@@ -239,7 +278,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return "This land cannot be played right now.";
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return `No valid target sequence for ${card.displayName}.`;
-  return `Not enough available land mana to cast ${card.displayName}.`;
+  return `Not enough available mana to cast ${card.displayName}.`;
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {

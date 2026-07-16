@@ -29,21 +29,24 @@ type Props = {
   shouldSuppressClick?: () => boolean;
   visualDamageMarked?: number;
   suppressHoverOverlay?: boolean;
+  darkenOnHover?: boolean;
   cropTopHalf?: boolean;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, cropTopHalf }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
-  const battlefieldKeywords =
-    card.controller === "horde" && card.zone === "battlefield" && card.cardTypes.includes("Creature")
+  const visibleKeywords =
+    (card.zone === "battlefield" || card.zone === "hand") && card.cardTypes.includes("Creature")
       ? cardKeywords(game, card)
           .split(",")
           .map((keyword) => keyword.trim())
           .filter((keyword) => keyword !== "HASTE")
           .filter(Boolean)
       : [];
+  const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+  const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
   const { imageUrl } = useCardDetails(card.definitionId);
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
@@ -109,7 +112,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{card.displayName}</div>
       )}
-      {!suppressHoverOverlay && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
+      {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
@@ -122,16 +125,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
             </span>
           )}
         </div>
-        {battlefieldKeywords.length > 0 && (
-          <div className="card-keyword-stack">
-            {battlefieldKeywords.map((keyword) => (
-              <span key={keyword} className="card-keyword-badge">
-                {keyword}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
+      {visibleKeywords.length > 0 && (
+        <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
+          {visibleKeywords.map((keyword) => (
+            <span key={keyword} className={["card-keyword-badge", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
+              {renderBattlefieldKeywordLabel(keyword)}
+            </span>
+          ))}
+        </div>
+      )}
       {!hideStats && stats.text && (
         <span
           className={[
@@ -147,5 +150,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         </span>
       )}
     </article>
+  );
+}
+
+function renderBattlefieldKeywordLabel(keyword: string) {
+  const toxic = keyword.match(/^TOXIC\s+\{(\d+)\}$/i);
+  if (!toxic) return keyword;
+  return (
+    <>
+      TOXIC <span className="card-toxic-counter">{toxic[1]}</span>
+    </>
   );
 }

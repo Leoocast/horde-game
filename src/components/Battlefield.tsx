@@ -7,10 +7,11 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { renderCardText } from "../utils/cardTextSymbols";
+import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -22,6 +23,8 @@ type Props = {
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
 const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
+const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
+const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
@@ -30,11 +33,21 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
+  const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
+  const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
+  const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
+  const zombieWaveByCardId = useRef<Map<string, number>>(new Map());
+  const zombieWaveOrder = useRef<Map<number, number>>(new Map());
+  const nextBattlefieldOrder = useRef(0);
+  const nextZombieWaveId = useRef(0);
+  const currentZombieEntryWaveId = useRef<number | undefined>(undefined);
+  const currentZombieEntryWaveTurn = useRef<number | undefined>(undefined);
+  const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
@@ -75,6 +88,40 @@ export function Battlefield({ game, side, cards }: Props) {
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
+
+  useLayoutEffect(() => {
+    const row = creatureRowRef.current;
+    if (!row) return;
+    const observedRow = row;
+    let frame = 0;
+
+    function measureOverflow() {
+      const styles = window.getComputedStyle(observedRow);
+      const gap = Number.parseFloat(styles.columnGap) || 0;
+      const stacks = Array.from(observedRow.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
+      const requiredWidth = stacks.reduce((total, stack) => total + stack.getBoundingClientRect().width, 0) + Math.max(0, stacks.length - 1) * gap;
+      const safeWidth = Math.max(0, observedRow.clientWidth - BATTLEFIELD_OVERFLOW_SAFE_INSET_PX * 2);
+
+      setCreatureRowOverflowing((current) => {
+        const threshold = current ? safeWidth - BATTLEFIELD_OVERFLOW_HYSTERESIS_PX : safeWidth;
+        return requiredWidth > threshold;
+      });
+    }
+
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measureOverflow);
+    }
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(observedRow);
+    for (const child of Array.from(observedRow.children)) observer.observe(child);
+    scheduleMeasure();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  });
 
   useLayoutEffect(() => {
     if (!autoPaidLandAnimation || seenAutoPaidEvents.current.has(autoPaidLandAnimation.eventId)) return;
@@ -168,7 +215,10 @@ export function Battlefield({ game, side, cards }: Props) {
     }
     if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
 
-    const summoningElements = Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']"));
+    const summoningElements = [
+      ...Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']")),
+      ...Array.from(landDockRef.current?.querySelectorAll<HTMLElement>("[data-summoning='true']") ?? []),
+    ];
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       if (id) seenCardIds.current.add(id);
@@ -234,7 +284,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length}>
+      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           {others.length > 0 ? (
             <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
@@ -257,9 +307,17 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCards.length === 0 ? (
           <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
         ) : (
-          <div className={["battlefield-row-surface flex flex-wrap items-center justify-center gap-2", compact ? "battlefield-row-body-compact" : "battlefield-row-body"].join(" ")}>
+          <div
+            ref={creatureRowRef}
+            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            className={[
+              "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
+              compact ? "battlefield-row-body-compact" : "battlefield-row-body",
+              creatureRowOverflowing ? "battlefield-row-overflow" : "",
+            ].join(" ")}
+          >
             <AnimatePresence initial={false} mode="popLayout">
-              {rowCards.map((card) => renderCard(card, compact))}
+              {renderCardStacks(rowCards, compact, "creature")}
             </AnimatePresence>
           </div>
         )}
@@ -279,15 +337,19 @@ export function Battlefield({ game, side, cards }: Props) {
         {rowCreatures.length === 0 ? (
           <div className="battlefield-empty battlefield-row-surface">Empty</div>
         ) : (
-          <div className="battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2">
+          <div
+            ref={creatureRowRef}
+            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", creatureRowOverflowing ? "battlefield-row-overflow" : ""].join(" ")}
+          >
             <AnimatePresence initial={false} mode="popLayout">
-              {rowCreatures.map((card) => renderCard(card))}
+              {renderCardStacks(rowCreatures, false, "creature")}
             </AnimatePresence>
           </div>
         )}
         <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
-          <div className="old-panel-soft w-max p-1">
-            <div className="mb-1 flex h-4 items-center justify-between gap-4 leading-none">
+          <div className="other-permanents-panel old-panel-soft p-1">
+            <div className="mb-1 flex h-4 items-center justify-between gap-1 leading-none">
               <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
               <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>
             </div>
@@ -314,11 +376,7 @@ export function Battlefield({ game, side, cards }: Props) {
     } as CSSProperties;
 
     return (
-      <aside ref={landDockRef} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
-        <div className="player-land-dock-header">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Lands</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{landCount}</span>
-        </div>
+      <aside ref={landDockRef} aria-label={`Lands (${landCount})`} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
         {landCount === 0 ? (
           <div className="player-land-dock-empty battlefield-row-surface">Empty</div>
         ) : (
@@ -332,7 +390,68 @@ export function Battlefield({ game, side, cards }: Props) {
     );
   }
 
-  function renderCard(card: CardInstance, compact = false, keyPrefix = "card") {
+  function renderCardStacks(rowCards: CardInstance[], compact = false, keyPrefix = "card") {
+    const activeCardIds = new Set(rowCards.map((card) => card.instanceId));
+    const activeDefinitionIds = new Set(rowCards.map((card) => card.definitionId));
+    for (const instanceId of battlefieldCardOrder.current.keys()) {
+      if (!activeCardIds.has(instanceId)) battlefieldCardOrder.current.delete(instanceId);
+    }
+    for (const definitionId of battlefieldFamilyOrder.current.keys()) {
+      if (!activeDefinitionIds.has(definitionId)) battlefieldFamilyOrder.current.delete(definitionId);
+    }
+    for (const instanceId of zombieWaveByCardId.current.keys()) {
+      if (!activeCardIds.has(instanceId)) zombieWaveByCardId.current.delete(instanceId);
+    }
+    const activeZombieWaveIds = new Set(zombieWaveByCardId.current.values());
+    for (const waveId of zombieWaveOrder.current.keys()) {
+      if (!activeZombieWaveIds.has(waveId)) zombieWaveOrder.current.delete(waveId);
+    }
+
+    for (const card of rowCards) {
+      if (!battlefieldCardOrder.current.has(card.instanceId)) {
+        const entryOrder = nextBattlefieldOrder.current;
+        battlefieldCardOrder.current.set(card.instanceId, entryOrder);
+        nextBattlefieldOrder.current += 1;
+
+        if (isZombieToken(card)) {
+          if (currentZombieEntryWaveId.current === undefined || currentZombieEntryWaveTurn.current !== game.turnNumber) {
+            currentZombieEntryWaveId.current = nextZombieWaveId.current;
+            nextZombieWaveId.current += 1;
+            currentZombieEntryWaveTurn.current = game.turnNumber;
+            zombieWaveOrder.current.set(currentZombieEntryWaveId.current, entryOrder);
+          }
+          zombieWaveByCardId.current.set(card.instanceId, currentZombieEntryWaveId.current);
+        } else {
+          currentZombieEntryWaveId.current = undefined;
+          currentZombieEntryWaveTurn.current = undefined;
+        }
+      }
+      if (!battlefieldFamilyOrder.current.has(card.definitionId)) {
+        battlefieldFamilyOrder.current.set(card.definitionId, battlefieldCardOrder.current.get(card.instanceId) ?? 0);
+      }
+    }
+
+    return groupBattlefieldCopies(
+      game,
+      rowCards,
+      battlefieldCardOrder.current,
+      battlefieldFamilyOrder.current,
+      zombieWaveByCardId.current,
+      zombieWaveOrder.current,
+    ).map((group) => (
+      <div
+        key={`${keyPrefix}-stack-${group.key}`}
+        className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
+        data-stacked={group.cards.length > 1 ? "true" : undefined}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
+        </AnimatePresence>
+      </div>
+    ));
+  }
+
+  function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
     const useNewSummoning = side !== "horde";
     const firstTimeOnThisBattlefield = useNewSummoning && !seenCardIds.current.has(card.instanceId);
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
@@ -402,6 +521,18 @@ export function Battlefield({ game, side, cards }: Props) {
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
+    const interactionElevated = Boolean(
+      effectActive ||
+        effectClosing ||
+        effectActivating ||
+        counterTargetable ||
+        counterTargetLocked ||
+        smallpoxTargetable ||
+        smallpoxTargetLocked ||
+        spellTargetable ||
+        spellTargetLocked ||
+        tutorialTargetable,
+    );
 
     return (
       <motion.div
@@ -418,7 +549,8 @@ export function Battlefield({ game, side, cards }: Props) {
           rotate: { duration: 0.28, ease: "easeOut" },
           filter: { duration: 0.36, ease: "easeOut" },
         }}
-        className="battlefield-layout-slot"
+        className={["battlefield-layout-slot", interactionElevated ? "battlefield-layout-slot-elevated" : ""].join(" ")}
+        style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
       <div
         data-card-slot-id={card.instanceId}
@@ -539,7 +671,10 @@ export function Battlefield({ game, side, cards }: Props) {
           {renderCardText(abilityButtonText(primaryAbility))}
         </button>
       )}
-      {(counterTargetLocked || spellLockedFriendly) && <span className="counter-target-stat-preview">{buffedStats(game, card)}</span>}
+      {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
+      {spellLockedFriendly && spellCard && spellTargeting && (
+        <span className="counter-target-stat-preview">{spellBuffedStats(game, card, spellCard, spellTargeting.targets)}</span>
+      )}
       </div>
       </motion.div>
     );
@@ -677,9 +812,79 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 }
 
-function buffedStats(game: GameState, card: CardInstance): string {
+function groupBattlefieldCopies(
+  game: GameState,
+  cards: CardInstance[],
+  cardOrder: Map<string, number>,
+  familyOrder: Map<string, number>,
+  zombieWaveByCardId: Map<string, number>,
+  zombieWaveOrder: Map<number, number>,
+): Array<{ key: string; cards: CardInstance[] }> {
+  const groups = new Map<string, { key: string; cards: CardInstance[]; order: number; suborder: number }>();
+  const stackZombieTokens = cards.length > 7;
+
+  for (const card of cards) {
+    const zombieToken = isZombieToken(card);
+    const stats = cardStatState(game, card);
+    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
+    const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
+    const key =
+      zombieToken && !stackZombieTokens
+        ? `instance-${card.instanceId}`
+        : zombieToken
+          ? `zombie-wave-${zombieWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
+          : `copy-${card.definitionId}-${visualStatsKey}`;
+    const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    const order = zombieToken
+      ? zombieWaveId === undefined
+        ? instanceOrder
+        : (zombieWaveOrder.get(zombieWaveId) ?? instanceOrder)
+      : (familyOrder.get(card.definitionId) ?? instanceOrder);
+    const group = groups.get(key);
+    if (group) {
+      group.cards.push(card);
+      group.suborder = Math.min(group.suborder, instanceOrder);
+    } else {
+      groups.set(key, { key, cards: [card], order, suborder: instanceOrder });
+    }
+  }
+
+  return Array.from(groups.values())
+    .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
+    .map(({ key, cards: groupedCards }) => ({ key, cards: groupedCards }));
+}
+
+function isZombieToken(card: CardInstance): boolean {
+  return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+}
+
+function counterBuffedStats(game: GameState, card: CardInstance): string {
   const stats = getPowerToughness(game, card);
   return `${stats.power + 1}/${stats.toughness + 1}`;
+}
+
+function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string {
+  const stats = getPowerToughness(game, card);
+  let powerDelta = 0;
+  let toughnessDelta = 0;
+
+  function collect(effect: CardInstance["effects"][number]) {
+    if (effect.type === "MODIFY_STATS") {
+      const targetRef = typeof effect.target === "string" ? effect.target : undefined;
+      const selected = targetRef ? targets[targetRef] : undefined;
+      const applies = Array.isArray(selected) ? selected.includes(card.instanceId) : selected === card.instanceId;
+      if (applies) {
+        powerDelta += Number(effect.power) || 0;
+        toughnessDelta += Number(effect.toughness) || 0;
+      }
+    }
+    if (Array.isArray(effect.effects)) {
+      for (const nested of effect.effects) collect(nested as CardInstance["effects"][number]);
+    }
+  }
+
+  for (const effect of spell.effects) collect(effect);
+  return `${stats.power + powerDelta}/${stats.toughness + toughnessDelta}`;
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
