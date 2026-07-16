@@ -6,7 +6,7 @@ import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinu
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
@@ -62,15 +62,51 @@ export function Hand({ game }: { game: GameState }) {
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const pushToast = useToastStore((state) => state.pushToast);
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
+  const handRegionRef = useRef<HTMLDivElement>(null);
+  const handCardsRef = useRef<HTMLDivElement>(null);
+  const [handStackMargin, setHandStackMargin] = useState(0);
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
   const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
-  const handStackMargin =
-    handSize <= 7
-      ? 0
-      : handSize <= 10
-        ? -(handSize - 7) * 24
-        : Math.max(-140, -72 - (handSize - 10) * 2);
+
+  useLayoutEffect(() => {
+    const region = handRegionRef.current;
+    const cards = handCardsRef.current;
+    if (!region || !cards) return;
+    let frame = 0;
+
+    function measure() {
+      const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+      if (!firstCard || handSize <= 1) {
+        setHandStackMargin(0);
+        return;
+      }
+      const regionStyles = window.getComputedStyle(region);
+      const horizontalPadding = (Number.parseFloat(regionStyles.paddingLeft) || 0) + (Number.parseFloat(regionStyles.paddingRight) || 0);
+      const availableWidth = Math.max(0, region.clientWidth - horizontalPadding);
+      const cardWidth = firstCard.getBoundingClientRect().width;
+      const gap = Number.parseFloat(window.getComputedStyle(cards).columnGap) || 0;
+      const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
+      const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
+      const minimumVisibleStrip = 28;
+      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), requiredMargin));
+    }
+
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
+    }
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(region);
+    const firstCard = cards.querySelector<HTMLElement>(".hand-card");
+    if (firstCard) observer.observe(firstCard);
+    scheduleMeasure();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [handLayoutSignature, handSize]);
 
   function playCard(card: CardInstance) {
     if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
@@ -124,8 +160,8 @@ export function Hand({ game }: { game: GameState }) {
     <>
       <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
-        <div className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
-          <div className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
+        <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
+          <div ref={handCardsRef} className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
             <AnimatePresence initial={false} mode="sync">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
@@ -187,7 +223,7 @@ export function Hand({ game }: { game: GameState }) {
                   }}
                   whileHover={{
                     y: -24,
-                    scale: 1.08,
+                    scale: 1,
                     transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
                   }}
                 >
