@@ -1,6 +1,7 @@
 import { Check, FastForward, Sparkles, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
+import { canPlayerPutAnotherLand } from "../engine/GameRules";
 import type { CardInstance } from "../engine/GameTypes";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
@@ -250,7 +251,7 @@ function skipActionWarningDisabled(): boolean {
 function hasAvailablePlayerActions(game: GameState): boolean {
   if (game.winner || game.activeSide !== "player") return false;
   if (game.phase !== "main" && game.phase !== "combat") return false;
-  if (!game.player.landPlayedThisTurn && game.player.hand.some((card) => card.cardTypes.includes("Land"))) return true;
+  if (!game.player.landPlayedThisTurn && canPlayerPutAnotherLand(game) && game.player.hand.some((card) => card.cardTypes.includes("Land"))) return true;
   if (game.phase === "combat") {
     return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !card.tapped && !card.summoningSickness);
   }

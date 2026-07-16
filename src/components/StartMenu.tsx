@@ -22,9 +22,9 @@ type Props = {
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Easy", setupTurns: 5, description: "5 extra setup turns" },
-  { id: "normal", label: "Normal", setupTurns: 4, description: "4 extra setup turns" },
-  { id: "hard", label: "Hard", setupTurns: 3, description: "3 extra setup turns" },
+  { id: "easy", label: "Easy", setupTurns: 4, description: "4 extra setup turns" },
+  { id: "normal", label: "Normal", setupTurns: 3, description: "3 extra setup turns" },
+  { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
 ];
 
 const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
@@ -310,7 +310,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
       )}
       
       <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
-        <div className="mb-0.5">Version: ALPHA 3.0</div>
+        <div className="mb-0.5">Version: ALPHA 3.3</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />
