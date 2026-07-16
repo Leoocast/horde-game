@@ -86,7 +86,10 @@ export function Hand({ game }: { game: GameState }) {
       const regionStyles = window.getComputedStyle(observedRegion);
       const horizontalPadding = (Number.parseFloat(regionStyles.paddingLeft) || 0) + (Number.parseFloat(regionStyles.paddingRight) || 0);
       const availableWidth = Math.max(0, observedRegion.clientWidth - horizontalPadding);
-      const cardWidth = firstCard.getBoundingClientRect().width;
+      // offsetWidth is stable while Framer Motion is translating/scaling the card.
+      // getBoundingClientRect() includes those temporary transforms and could leave
+      // the hand overlap calculated from an in-between animation frame.
+      const cardWidth = firstCard.offsetWidth;
       const gap = Number.parseFloat(window.getComputedStyle(observedCards).columnGap) || 0;
       const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
       const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
@@ -164,7 +167,7 @@ export function Hand({ game }: { game: GameState }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#120b06]/90 via-[#3a2b18]/45 to-transparent" />
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div ref={handCardsRef} className="player-hand-cards flex items-end justify-center overflow-visible" style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}>
-            <AnimatePresence initial={false} mode="sync">
+            <AnimatePresence initial={false} mode="popLayout">
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
             const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
@@ -182,7 +185,7 @@ export function Hand({ game }: { game: GameState }) {
                 animate="animate"
                 exit="exit"
                 transition={{
-                  layout: { type: "spring", stiffness: 640, damping: 44, mass: 0.45 },
+                  layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.55 },
                 }}
                 style={{ position: "relative", zIndex: index + 1 }}
                 whileHover={{ zIndex: 80 }}
