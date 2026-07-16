@@ -32,18 +32,11 @@
   }
 
   .duel-table {
-    background:
-      radial-gradient(circle at 50% 34%, rgb(172 119 37 / 0.24), transparent 30rem),
-      radial-gradient(circle at 72% 10%, rgb(255 104 26 / 0.18), transparent 16rem),
-      linear-gradient(90deg, rgb(50 36 19 / 0.28) 1px, transparent 1px),
-      linear-gradient(0deg, rgb(50 36 19 / 0.28) 1px, transparent 1px),
-      linear-gradient(135deg, #192018, #5b6545 48%, #21160e);
-    background-size:
-      auto,
-      auto,
-      96px 96px,
-      96px 96px,
-      auto;
+    background-color: #202b2f;
+    background-image: url("../assets/images/background.jpg");
+    background-position: calc(50% - 3.5rem) calc(50% + 20px + 3.1rem);
+    background-repeat: no-repeat;
+    background-size: 140% auto;
     color: #f6e6b8;
   }
 
@@ -1414,6 +1407,9 @@
     flex-direction: column;
     overflow: visible;
     padding: 0 0.5rem 0.25rem;
+    background:
+      linear-gradient(135deg, rgb(10 8 6 / 0.18), rgb(255 220 139 / 0.04)),
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 8px);
   }
 
   .player-land-dock-targeting {
