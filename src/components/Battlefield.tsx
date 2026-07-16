@@ -348,7 +348,7 @@ export function Battlefield({ game, side, cards }: Props) {
           </div>
         )}
         <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
-          <div className="old-panel-soft w-max p-1">
+          <div className="other-permanents-panel old-panel-soft p-1">
             <div className="mb-1 flex h-4 items-center justify-between gap-1 leading-none">
               <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
               <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>

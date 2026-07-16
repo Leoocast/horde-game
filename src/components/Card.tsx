@@ -37,8 +37,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
-  const battlefieldKeywords =
-    card.zone === "battlefield" && card.cardTypes.includes("Creature")
+  const visibleKeywords =
+    (card.zone === "battlefield" || card.zone === "hand") && card.cardTypes.includes("Creature")
       ? cardKeywords(game, card)
           .split(",")
           .map((keyword) => keyword.trim())
@@ -126,9 +126,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           )}
         </div>
       </div>
-      {battlefieldKeywords.length > 0 && (
+      {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
-          {battlefieldKeywords.map((keyword) => (
+          {visibleKeywords.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
               {renderBattlefieldKeywordLabel(keyword)}
             </span>
