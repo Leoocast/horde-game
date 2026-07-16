@@ -1530,6 +1530,10 @@
     transition: z-index 0ms;
   }
 
+  .duel-table:has(.battlefield-side-player .battlefield-row-overflow) .hand-card {
+    --hand-card-width: clamp(130px, min(10.8vw, calc((100cqw - 48px) / 6.31)), 209px);
+  }
+
   .hand-card:hover,
   .hand-card:focus-within {
     z-index: 80;
