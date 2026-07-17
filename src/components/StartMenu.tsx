@@ -1,4 +1,4 @@
-import { AlertTriangle, ChevronDown, Github, GraduationCap, Play } from "lucide-react";
+import { AlertTriangle, ChevronDown, Construction, Github, GraduationCap, Play, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
@@ -91,9 +91,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         <div className="main-menu-stage">
         <div className="main-menu-layout">
           <div className="main-menu-brand">
-            <div className="main-menu-kicker">Magic: The Gathering</div>
-            <h1 className="main-menu-title">Horde</h1>
-            <div className="main-menu-subtitle"><span /> PvE</div>
+            <div className="main-menu-kicker">Chronicles of the Shattered Realms</div>
+            <h1 className="main-menu-title">Hostfall</h1>
+            <div className="main-menu-subtitle"><span /> Act I — The Dead Awaken</div>
           </div>
 
           <nav className="main-menu-nav" aria-label="Main menu">
@@ -350,28 +350,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       )}
 
       {showTutorialConfirm && (
-        <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85 p-6">
-          <div className="old-panel w-full max-w-sm p-6 text-center">
-            <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Tutorial</p>
-            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Interactive Tutorial</h2>
-            <p className="mt-3 text-sm leading-snug text-[#d6b879]">Do you want to start?</p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowTutorialConfirm(false)}>
-                Cancel
-              </button>
-              <button
-                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
-                type="button"
-                onClick={() => {
-                  setShowTutorialConfirm(false);
-                  onStart({ playerName: playerName.trim() || "Player", mode: "normal", setupTurns: 1, seed: "tutorial" });
-                }}
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        </div>
+        <TutorialUnderConstructionModal onClose={() => setShowTutorialConfirm(false)} />
       )}
 
       {showDeveloperWarning && (
@@ -413,6 +392,51 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
       <ToastStack />
     </main>
+  );
+}
+
+function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (!closing) return;
+    const timeout = window.setTimeout(onClose, 160);
+    return () => window.clearTimeout(timeout);
+  }, [closing, onClose]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setClosing(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  return (
+    <div
+      className={`tutorial-construction-backdrop ${closing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setClosing(true);
+      }}
+    >
+      <section className="tutorial-construction-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-construction-title">
+        <button className="tutorial-construction-close" type="button" onClick={() => setClosing(true)} title="Close">
+          <X size={18} />
+        </button>
+        <div className="tutorial-construction-icon" aria-hidden="true">
+          <Construction size={30} />
+        </div>
+        <p className="tutorial-construction-kicker">How to Play · Feature locked</p>
+        <h2 id="tutorial-construction-title">Under Construction</h2>
+        <div className="tutorial-construction-rule" />
+        <p className="tutorial-construction-copy">
+          The chronicles are still being written. How to Play will become available in a future update.
+        </p>
+        <button className="tutorial-construction-action" type="button" onClick={() => setClosing(true)}>
+          Return to Hostfall
+        </button>
+      </section>
+    </div>
   );
 }
 

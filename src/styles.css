@@ -1317,6 +1317,176 @@
     }
   }
 
+  .tutorial-construction-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 46%, rgb(24 42 34 / 0.3), rgb(1 5 4 / 0.9) 68%),
+      rgb(0 0 0 / 0.76);
+    padding: 24px;
+    -webkit-backdrop-filter: blur(8px) saturate(1.06);
+    backdrop-filter: blur(8px) saturate(1.06);
+    animation: tutorial-construction-backdrop-open 160ms ease-out both;
+  }
+
+  .tutorial-construction-backdrop.is-closing {
+    pointer-events: none;
+    animation: tutorial-construction-backdrop-close 160ms ease-out both;
+  }
+
+  .tutorial-construction-modal {
+    position: relative;
+    width: min(480px, calc(100vw - 48px));
+    overflow: hidden;
+    border: 1px solid rgb(157 145 99 / 0.46);
+    background:
+      linear-gradient(135deg, rgb(23 39 33 / 0.88), rgb(6 16 13 / 0.95)),
+      repeating-linear-gradient(90deg, transparent 0 22px, rgb(151 139 92 / 0.028) 22px 23px);
+    padding: 42px 46px 38px;
+    color: #d9d5bd;
+    text-align: center;
+    -webkit-backdrop-filter: blur(18px) saturate(1.08);
+    backdrop-filter: blur(18px) saturate(1.08);
+    box-shadow:
+      inset 0 1px 0 rgb(235 225 183 / 0.11),
+      0 28px 70px rgb(0 0 0 / 0.68);
+    animation: tutorial-construction-modal-open 160ms ease-out both;
+  }
+
+  .tutorial-construction-backdrop.is-closing .tutorial-construction-modal {
+    animation: tutorial-construction-modal-close 160ms ease-out both;
+  }
+
+  .tutorial-construction-modal::before {
+    position: absolute;
+    top: 0;
+    right: 1px;
+    left: 1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.26), transparent);
+    content: "";
+  }
+
+  .tutorial-construction-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid rgb(128 140 122 / 0.22);
+    background: rgb(7 16 13 / 0.42);
+    color: #7e8f85;
+    transition: border-color 130ms ease, background-color 130ms ease, color 130ms ease;
+  }
+
+  .tutorial-construction-close:hover,
+  .tutorial-construction-close:focus-visible {
+    border-color: #96895e;
+    background: #233029;
+    color: #efe3c1;
+    outline: none;
+  }
+
+  .tutorial-construction-icon {
+    display: grid;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 22px;
+    place-items: center;
+    border: 1px solid rgb(157 145 99 / 0.42);
+    background: linear-gradient(145deg, rgb(86 99 78 / 0.28), rgb(17 29 24 / 0.72));
+    color: #b7aa78;
+    box-shadow: 7px 9px 0 rgb(10 18 14 / 0.56), 0 16px 24px rgb(0 0 0 / 0.3);
+    transform: rotate(45deg);
+  }
+
+  .tutorial-construction-icon > svg {
+    transform: rotate(-45deg);
+  }
+
+  .tutorial-construction-kicker {
+    margin: 0 0 11px;
+    color: #7b8d83;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.23em;
+    text-transform: uppercase;
+  }
+
+  .tutorial-construction-modal h2 {
+    margin: 0;
+    color: #e2d7b8;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(30px, 4vw, 42px);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    line-height: 1.05;
+  }
+
+  .tutorial-construction-rule {
+    width: 76px;
+    height: 1px;
+    margin: 21px auto 18px;
+    background: linear-gradient(90deg, transparent, #96885c, transparent);
+  }
+
+  .tutorial-construction-copy {
+    max-width: 340px;
+    margin: 0 auto;
+    color: #aeb7ac;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+    line-height: 1.58;
+  }
+
+  .tutorial-construction-action {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 30px;
+    border: 1px solid rgb(150 138 95 / 0.5);
+    background: linear-gradient(180deg, rgb(43 58 48 / 0.82), rgb(17 28 23 / 0.9));
+    color: #d9d0af;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: border-color 130ms ease, color 130ms ease, filter 130ms ease;
+  }
+
+  .tutorial-construction-action:hover,
+  .tutorial-construction-action:focus-visible {
+    border-color: #ad9d69;
+    color: #fff0ca;
+    filter: brightness(1.08);
+    outline: none;
+  }
+
+  @keyframes tutorial-construction-backdrop-open {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes tutorial-construction-backdrop-close {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes tutorial-construction-modal-open {
+    from { opacity: 0; transform: translateY(12px) scale(0.975); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes tutorial-construction-modal-close {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(8px) scale(0.982); }
+  }
+
   .main-menu-status {
     display: flex;
     align-items: center;
