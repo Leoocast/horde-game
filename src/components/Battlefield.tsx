@@ -68,6 +68,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
+  const blockDrag = useGameStore((state) => state.blockDrag);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
@@ -621,7 +622,29 @@ export function Battlefield({ game, side, cards }: Props) {
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
-    const cardActionable = !tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable);
+    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
+    const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
+    const isDraggedDefender = blockDrag?.blockerId === card.instanceId;
+    const draggedDefender = blockDrag ? game.player.battlefield.find((item) => item.instanceId === blockDrag.blockerId) : undefined;
+    const dragDefenseTargetable = Boolean(
+      blockDrag &&
+        draggedDefender &&
+        side === "horde" &&
+        game.combat.hordeAttackers.includes(card.instanceId) &&
+        canBlockAttacker(game, draggedDefender, card),
+    );
+    const showActionGem = blockDrag ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
+    const actionGemTone = isDraggedDefender || dragDefenseTargetable
+      ? "card-defense-gem"
+      : cardTargetable
+      ? "card-target-gem"
+      : playerCombat && actionable
+        ? "card-attack-gem"
+        : hordeCombat && actionable
+          ? "card-defense-gem"
+          : effectAvailable && !cardActionable
+            ? "card-effect-available-gem"
+            : "";
     const interactionElevated = Boolean(
       effectActive ||
         effectClosing ||
@@ -757,11 +780,11 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
-      {(cardActionable || effectAvailable) && (
+      {showActionGem && (
         <span
           className={[
             "card-actionable-gem card-actionable-gem-outside",
-            effectAvailable && !cardActionable ? "card-effect-available-gem" : "",
+            actionGemTone,
           ].join(" ")}
           aria-hidden="true"
         />

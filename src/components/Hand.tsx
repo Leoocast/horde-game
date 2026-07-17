@@ -235,6 +235,7 @@ export function Hand({ game }: { game: GameState }) {
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
             const cardActionable = !tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
+            const cardTargetable = Boolean((smallpoxSelection && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -329,7 +330,10 @@ export function Hand({ game }: { game: GameState }) {
                     }}
                   />
                   {cardActionable && draggingCardId !== card.instanceId && (
-                    <span className="card-actionable-gem card-actionable-gem-outside" aria-hidden="true" />
+                    <span
+                      className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}
+                      aria-hidden="true"
+                    />
                   )}
                 </motion.div>
               </motion.div>

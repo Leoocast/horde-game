@@ -5,7 +5,7 @@ import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
-const PLAYER_ATTACK_ARROW_COLOR = "#f04438";
+const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 const STACKED_DEFENSE_ARROW_LEFT_INSET_PX = 24;
