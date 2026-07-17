@@ -56,14 +56,14 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   void onMana;
   const draggingGlow = dragging
-    ? `inset 0 0 0 ${glowBorderWidth}px rgba(255,180,120,0.8), 0 0 10px rgba(255,122,61,0.85), 0 0 22px rgba(255,122,61,0.5)`
+    ? `0 0 0 ${glowBorderWidth}px rgba(255,180,120,0.8), 0 0 10px rgba(255,122,61,0.85), 0 0 22px rgba(255,122,61,0.5)`
     : "";
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
   const showCyanGlow = Boolean(actionable);
   const actionGlow = showCyanGlow
-    ? `inset 0 0 0 ${glowBorderWidth}px rgba(208,247,255,0.75), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)`
+    ? "0 0 0 1px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
     : "";
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
@@ -71,8 +71,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const style = accentColor || showCyanGlow || selected || showEffectAvailable || dragging
     ? ({
         borderColor: dragging ? "#ff7a3d" : selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
-        borderWidth: showCyanGlow || dragging ? `${glowBorderWidth}px` : undefined,
-        "--glow-border-width": showCyanGlow || dragging ? `${glowBorderWidth}px` : undefined,
+        "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
         boxShadow: [
           dragging ? draggingGlow : selectedGlow,
           !selected && !dragging && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "",
