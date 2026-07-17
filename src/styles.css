@@ -5097,3 +5097,366 @@
   transform: skewX(-8deg);
   animation: victory-text-pop 1050ms ease-out both;
 }
+
+/* In-game Hostfall interface — shares the visual language of the Play flow. */
+.game-screen {
+  --game-gold: #c7aa69;
+  --game-gold-bright: #ead59b;
+  --game-ink: #07100e;
+  --game-panel: rgb(8 20 17 / 0.92);
+  --game-line: rgb(197 177 111 / 0.34);
+  background-color: #07110f;
+  background-image:
+    radial-gradient(ellipse at 50% 44%, transparent 12%, rgb(1 5 4 / 0.32) 70%, rgb(0 2 2 / 0.72) 100%),
+    linear-gradient(180deg, rgb(1 5 4 / 0.56), rgb(3 12 10 / 0.18) 44%, rgb(0 4 4 / 0.68)),
+    url("../assets/images/background.jpg");
+  background-position: center, center, calc(50% - 3.5rem) calc(50% + 20px + 3.1rem);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%, 140% auto;
+}
+
+.game-command-bar {
+  border-bottom: 1px solid rgb(194 174 108 / 0.38);
+  background:
+    linear-gradient(90deg, rgb(4 12 10 / 0.98), rgb(9 23 19 / 0.94) 38%, rgb(8 21 18 / 0.94) 62%, rgb(4 12 10 / 0.98)),
+    radial-gradient(circle at 50% -40%, rgb(213 188 111 / 0.13), transparent 52%);
+  box-shadow:
+    inset 0 -1px 0 rgb(234 213 155 / 0.07),
+    0 12px 30px rgb(0 0 0 / 0.32);
+}
+
+.game-command-bar::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 4%, rgb(201 178 105 / 0.2) 28%, rgb(227 207 143 / 0.62) 50%, rgb(201 178 105 / 0.2) 72%, transparent 96%);
+  content: "";
+  pointer-events: none;
+}
+
+.game-command-left,
+.game-command-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.game-command-center {
+  position: relative;
+  z-index: 2;
+}
+
+.game-header-button {
+  position: relative;
+  border: 1px solid rgb(178 158 95 / 0.38);
+  background:
+    linear-gradient(180deg, rgb(19 39 32 / 0.96), rgb(6 17 14 / 0.98)),
+    radial-gradient(circle at 50% 0%, rgb(225 205 139 / 0.12), transparent 58%);
+  color: #cfc69e;
+  box-shadow:
+    inset 0 1px 0 rgb(241 228 181 / 0.08),
+    0 8px 18px rgb(0 0 0 / 0.3);
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.game-header-button::after {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgb(205 187 123 / 0.08);
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+}
+
+.game-header-button:hover,
+.game-header-button:focus-visible {
+  border-color: rgb(221 197 122 / 0.72);
+  color: #f0dfa8;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.game-status {
+  position: relative;
+  display: grid;
+  align-content: center;
+  min-width: 220px;
+  padding-left: 15px;
+}
+
+.game-status::before {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(transparent, rgb(202 180 111 / 0.7), transparent);
+  content: "";
+}
+
+.game-status-kicker {
+  color: #7f9589;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.game-status-title {
+  margin-top: 3px;
+  color: #e3d4a5;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.015em;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.65);
+}
+
+.game-status-meta {
+  margin-top: 1px;
+  color: #82958b;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.game-status-meta span {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 6px 2px;
+  border-radius: 999px;
+  background: #a99761;
+}
+
+.game-turn-hud {
+  position: relative;
+  min-width: 360px;
+  justify-content: center;
+  border-right: 1px solid rgb(195 175 110 / 0.34);
+  border-left: 1px solid rgb(195 175 110 / 0.34);
+  background: linear-gradient(90deg, transparent, rgb(20 41 34 / 0.78) 18%, rgb(20 41 34 / 0.78) 82%, transparent);
+}
+
+.game-turn-hud::before,
+.game-turn-hud::after {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgb(211 192 127 / 0.58);
+  background: #0c1c17;
+  content: "";
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.game-turn-hud::before { left: -4px; }
+.game-turn-hud::after { right: -4px; }
+
+.game-turn-hud.is-horde-turn {
+  border-color: rgb(173 83 56 / 0.62);
+  background: linear-gradient(90deg, transparent, rgb(66 24 17 / 0.72) 18%, rgb(66 24 17 / 0.72) 82%, transparent);
+}
+
+.game-turn-owner { color: #879b90; }
+.game-turn-phase {
+  min-width: 70px;
+  color: #e8d8a6;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.08em;
+}
+.game-turn-count { color: #9f9877; }
+.game-turn-divider { background: linear-gradient(transparent, rgb(198 178 112 / 0.58), transparent); }
+.game-turn-hud.is-horde-turn .game-turn-owner,
+.game-turn-hud.is-horde-turn .game-turn-phase { color: #e6a27f; }
+
+.game-screen .old-panel,
+.game-screen .old-panel-soft,
+.game-settings-popover .old-panel,
+.game-settings-popover .old-panel-soft {
+  border-color: rgb(183 164 102 / 0.38);
+  border-radius: 4px;
+  background:
+    linear-gradient(145deg, rgb(13 31 26 / 0.96), rgb(5 15 12 / 0.97)),
+    radial-gradient(circle at 18% 0%, rgb(221 199 130 / 0.08), transparent 42%);
+  box-shadow:
+    inset 0 1px 0 rgb(238 223 174 / 0.07),
+    inset 0 0 32px rgb(0 0 0 / 0.22),
+    0 18px 36px rgb(0 0 0 / 0.42);
+}
+
+.game-screen .old-title,
+.game-settings-popover .old-title {
+  color: #d6c58f;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.66);
+}
+
+.game-popover,
+.game-settings-popover > div {
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(18px) saturate(1.05);
+}
+
+.game-popover {
+  border-top-color: rgb(226 204 134 / 0.65) !important;
+}
+
+.game-screen .old-button,
+.game-screen .icon-button,
+.game-settings-popover .old-button,
+.game-settings-popover .icon-button {
+  border: 1px solid rgb(178 158 95 / 0.42);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgb(28 51 42 / 0.96), rgb(8 21 17 / 0.98));
+  color: #d9cfaa;
+  text-shadow: 0 1px 0 #020504;
+  box-shadow: inset 0 1px 0 rgb(238 225 178 / 0.08), 0 5px 12px rgb(0 0 0 / 0.26);
+}
+
+.game-screen .old-button:hover,
+.game-screen .icon-button:hover,
+.game-settings-popover .old-button:hover,
+.game-settings-popover .icon-button:hover {
+  border-color: rgb(221 197 122 / 0.72);
+  background: linear-gradient(180deg, rgb(38 67 55 / 0.98), rgb(10 27 22 / 0.98));
+  color: #f0dfa8;
+}
+
+.combatant-vitals {
+  position: relative;
+  overflow: hidden;
+  border-right: 0 !important;
+  padding-right: 14px !important;
+}
+
+.combatant-vitals::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(transparent, #af9c61 22%, #d8c47e 50%, #af9c61 78%, transparent);
+  content: "";
+  opacity: 0.75;
+}
+
+.combatant-vitals-horde {
+  background: linear-gradient(110deg, rgb(10 23 20 / 0.94), rgb(39 18 14 / 0.96)) !important;
+}
+
+.combatant-vitals-horde::before { background: linear-gradient(transparent, #81432e 22%, #bd6b48 50%, #81432e 78%, transparent); }
+.combatant-vitals-player { background: linear-gradient(110deg, rgb(8 22 18 / 0.96), rgb(13 38 27 / 0.96)) !important; }
+
+.game-phase-orb::before,
+.game-phase-orb::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  border: 1px solid rgb(201 180 112 / 0.2);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.game-phase-orb::before { width: 132px; height: 132px; }
+.game-phase-orb::after { width: 144px; height: 144px; border-style: dashed; opacity: 0.65; }
+
+.game-phase-button {
+  border-width: 1px !important;
+  box-shadow:
+    inset 0 0 0 5px rgb(5 14 11 / 0.34),
+    inset 0 1px 0 rgb(246 230 179 / 0.18),
+    0 0 0 1px rgb(4 10 8 / 0.86),
+    0 16px 34px rgb(0 0 0 / 0.48) !important;
+}
+
+.game-screen .battlefield-row-surface,
+.game-screen .player-land-dock {
+  border-color: rgb(166 154 104 / 0.22);
+  background:
+    linear-gradient(135deg, rgb(5 14 12 / 0.2), rgb(218 199 137 / 0.025)),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.012) 0 1px, transparent 1px 9px);
+}
+
+.game-screen .player-land-dock {
+  position: fixed;
+  border: 1px solid rgb(107 161 145 / 0.34);
+  border-radius: 5px;
+  background:
+    linear-gradient(145deg, rgb(7 24 21 / 0.7), rgb(3 13 12 / 0.82)),
+    radial-gradient(circle at 20% 0%, rgb(73 166 154 / 0.12), transparent 56%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.12);
+  backdrop-filter: blur(14px) saturate(1.12);
+  box-shadow:
+    inset 0 1px 0 rgb(186 230 213 / 0.09),
+    inset 0 0 28px rgb(0 0 0 / 0.2),
+    0 0 0 1px rgb(2 8 7 / 0.55),
+    0 15px 30px rgb(0 0 0 / 0.36),
+    0 0 22px rgb(25 104 101 / 0.08);
+}
+
+.game-screen .player-land-dock::before {
+  position: absolute;
+  top: -9px;
+  left: 16px;
+  z-index: 4;
+  padding: 2px 10px;
+  border-right: 1px solid rgb(111 176 158 / 0.3);
+  border-left: 1px solid rgb(111 176 158 / 0.3);
+  background: rgb(5 19 17 / 0.86);
+  color: #83a99c;
+  content: "Lands";
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+  line-height: 14px;
+  text-transform: uppercase;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.game-screen .player-land-dock::after {
+  position: absolute;
+  inset: 5px;
+  z-index: 0;
+  border: 1px solid rgb(123 181 164 / 0.09);
+  border-radius: 2px;
+  content: "";
+  pointer-events: none;
+}
+
+.game-screen .player-land-grid,
+.game-screen .player-land-dock-empty {
+  position: relative;
+  z-index: 1;
+  border-color: rgb(91 148 135 / 0.22);
+  background:
+    linear-gradient(135deg, rgb(2 10 9 / 0.24), rgb(45 118 108 / 0.04)),
+    repeating-linear-gradient(45deg, rgb(183 231 216 / 0.014) 0 1px, transparent 1px 9px);
+}
+
+.hand-atmosphere {
+  background:
+    radial-gradient(ellipse 48% 100% at 50% 100%, rgb(31 112 112 / 0.24), transparent 70%),
+    linear-gradient(to top, rgb(1 9 10 / 0.94), rgb(6 30 29 / 0.5) 44%, rgb(8 43 40 / 0.12) 76%, transparent);
+  -webkit-backdrop-filter: blur(2px) saturate(1.06);
+  backdrop-filter: blur(2px) saturate(1.06);
+}
+
+.game-dialog {
+  border-top-color: rgb(225 203 133 / 0.68) !important;
+}
+
+@media (max-width: 980px) {
+  .game-command-bar {
+    grid-template-columns: minmax(180px, 1fr) auto minmax(132px, 1fr);
+  }
+
+  .game-status-kicker,
+  .game-status-meta { display: none; }
+  .game-status { min-width: 120px; }
+  .game-turn-hud { min-width: 292px; gap: 0.55rem; padding-inline: 0.75rem; }
+}

@@ -95,14 +95,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <GameTooltip
         content={orbTooltip}
         visible={Boolean(orbTooltip)}
-        className={["fixed right-6 top-1/2 -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
+        className={["game-phase-orb fixed right-6 top-1/2 -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
       >
         <button
           data-audio-click="off"
           onClick={runOrbAction}
           disabled={orbDisabled}
           className={[
-            "relative flex h-28 w-28 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 disabled:cursor-default disabled:saturate-75",
+            "game-phase-button relative flex h-28 w-28 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 disabled:cursor-default disabled:saturate-75",
             state.tone === "confirm"
               ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
               : state.tone === "horde"

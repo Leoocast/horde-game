@@ -46,11 +46,11 @@ export function MusicPlayerMenu() {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Music player">
+      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Music player">
         <Music size={20} />
       </button>
       {open && menuPos && (
-        <div className="old-panel fixed z-[400] w-80 overflow-hidden text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
+        <div className="old-panel game-popover fixed z-[400] w-80 overflow-hidden text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <div className="old-title text-xs font-bold uppercase tracking-wide">Now Playing</div>

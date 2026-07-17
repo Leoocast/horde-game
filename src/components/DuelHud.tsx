@@ -88,7 +88,7 @@ export function DuelHud({ game }: { game: GameState }) {
           </motion.div>
         )}
         </AnimatePresence>
-        <div data-player-attack-target="horde-deck" className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
+        <div data-player-attack-target="horde-deck" className="old-panel combatant-vitals combatant-vitals-horde flex min-w-44 items-center justify-end gap-3 px-3 py-2">
           <div className="text-right">
             <div className="old-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
             <div className="flex items-end justify-end gap-2 leading-none">
@@ -176,7 +176,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         <div
           data-player-life-panel="true"
           className={[
-            "old-panel flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+            "old-panel combatant-vitals combatant-vitals-player flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
             takingDamage ? "player-life-damage" : "",
             lifeBuffAnimationId ? "player-life-buff" : "",
           ].join(" ")}

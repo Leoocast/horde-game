@@ -52,7 +52,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
     <div className="relative" ref={containerRef}>
       <button
         ref={buttonRef}
-        className={launcher === "main-menu" ? "main-menu-entry group" : "old-button flex h-10 w-10 items-center justify-center rounded-full transition"}
+        className={launcher === "main-menu" ? "main-menu-entry group" : "game-header-button flex h-10 w-10 items-center justify-center rounded-full transition"}
         onClick={toggle}
         title="Settings"
       >
@@ -66,7 +66,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
         )}
       </button>
       {open && menuPos && (
-        <div className={["fixed z-[400]", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
+        <div className={["game-settings-popover fixed z-[400]", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
           <AudioControls />
 
           {newGameSeedSettings && (

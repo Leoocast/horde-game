@@ -52,12 +52,12 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   }, [game.winner, playCollection]);
 
   return (
-    <main className="duel-table h-screen overflow-hidden">
+    <main className="duel-table game-screen h-screen overflow-hidden">
       <AppHeader
         left={
           <div className="flex min-w-0 items-center">
             <button
-              className="old-button ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              className="game-header-button ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
               type="button"
               onClick={() => setShowHomeConfirmation(true)}
               title="Return home"
@@ -109,7 +109,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
 
       {showHomeConfirmation && (
         <div className="fixed inset-0 z-[450] flex items-center justify-center bg-[#090604]/90 p-6 text-[#f6e6b8] backdrop-blur-sm" role="presentation">
-          <section className="old-panel w-full max-w-md p-5 shadow-2xl shadow-black/70" role="dialog" aria-modal="true" aria-labelledby="return-home-title">
+          <section className="old-panel game-dialog w-full max-w-md p-5 shadow-2xl shadow-black/70" role="dialog" aria-modal="true" aria-labelledby="return-home-title">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#b97637] bg-[#3a1b0d] text-[#ffbd73]">
                 <AlertTriangle size={20} />

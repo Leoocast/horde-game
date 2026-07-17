@@ -63,11 +63,11 @@ export function InfoMenu({ setupTurns }: { setupTurns: number }) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Extra info">
+      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Battle information">
         <Menu size={20} />
       </button>
       {open && menuPos && (
-        <div className="old-panel old-scrollbar fixed z-[400] max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
+        <div className="old-panel game-popover old-scrollbar fixed z-[400] max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <label className="old-title text-xs font-bold uppercase tracking-wide">Seed</label>

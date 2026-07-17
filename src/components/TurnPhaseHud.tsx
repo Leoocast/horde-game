@@ -10,15 +10,15 @@ export function TurnPhaseHud({ game }: { game: GameState }) {
   return (
     <div
       className={[
-        "old-panel-soft flex h-10 items-center gap-3 px-4 text-center text-[#f6e6b8]",
-        hordeTurn ? "outline outline-1 outline-[#c14f2a]" : "",
+        "game-turn-hud flex h-10 items-center gap-3 px-4 text-center text-[#f6e6b8]",
+        hordeTurn ? "is-horde-turn" : "",
       ].join(" ")}
     >
-      <div className={["old-title whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em]", hordeTurn ? "text-[#ffb36b]" : ""].join(" ")}>{owner}</div>
-      <div className="h-4 w-px bg-[#b88945]/45" />
-      <div className="whitespace-nowrap text-sm font-black capitalize leading-none text-[#fff0b2]">{phase}</div>
-      <div className="h-4 w-px bg-[#b88945]/45" />
-      <div className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{footer}</div>
+      <div className="game-turn-owner whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em]">{owner}</div>
+      <div className="game-turn-divider h-4 w-px" />
+      <div className="game-turn-phase whitespace-nowrap text-sm font-black capitalize leading-none">{phase}</div>
+      <div className="game-turn-divider h-4 w-px" />
+      <div className="game-turn-count whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.14em]">{footer}</div>
     </div>
   );
 }

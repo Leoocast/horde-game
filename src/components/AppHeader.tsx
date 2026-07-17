@@ -20,10 +20,10 @@ type Props = {
 
 export function AppHeader({ left, center, right, showSettings = true, onReturnToMenu, newGameSeedSettings }: Props) {
   return (
-    <header className="old-frame-top relative z-[130] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
-      <div className="min-w-0 justify-self-start">{left}</div>
-      <div className="justify-self-center">{center}</div>
-      <div className="flex items-center gap-2 pr-3 justify-self-end">
+    <header className="game-command-bar relative z-[130] grid h-14 grid-cols-[minmax(280px,1fr)_auto_minmax(48px,1fr)] items-center gap-2 px-0 py-0 text-[#f8dfa0]">
+      <div className="game-command-left min-w-0 justify-self-start">{left}</div>
+      <div className="game-command-center justify-self-center">{center}</div>
+      <div className="game-command-actions flex items-center gap-2 pr-3 justify-self-end">
         <MusicPlayerMenu />
         {right}
         {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} newGameSeedSettings={newGameSeedSettings} />}
