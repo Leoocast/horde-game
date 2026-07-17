@@ -1,6 +1,5 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Shield, Skull, Sparkles, Swords, UserRound, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Shield, Skull, Sparkles, Swords, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
@@ -41,6 +40,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [launching, setLaunching] = useState(false);
+  const [setupClosing, setSetupClosing] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
@@ -62,6 +62,15 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     }, 1650);
     return () => window.clearTimeout(timeout);
   }, [effectiveSeed, launching, mode, onStart, playerName, selectedMode.setupTurns]);
+
+  useEffect(() => {
+    if (!setupClosing) return;
+    const timeout = window.setTimeout(() => {
+      setMenuScreen("home");
+      setSetupClosing(false);
+    }, 220);
+    return () => window.clearTimeout(timeout);
+  }, [setupClosing]);
 
   async function copySeed() {
     try {
@@ -183,7 +192,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       ) : (
         <ExpeditionSetup
           playerName={playerName}
-          onPlayerNameChange={setPlayerName}
           playerDeck={selectedDeck}
           playerDecks={decks}
           selectedPlayerDeckId={selectedDeckId}
@@ -208,9 +216,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             setSeed(generateRandomSeed());
           }}
           onToggleDeveloperMode={toggleDeveloperMode}
-          onBack={() => setMenuScreen("home")}
+          onBack={() => setSetupClosing(true)}
           onStart={startGame}
           launching={launching}
+          closing={setupClosing}
         />
       )}
 
@@ -244,7 +253,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
 type ExpeditionSetupProps = {
   playerName: string;
-  onPlayerNameChange: (name: string) => void;
   playerDeck?: InspectableDeck;
   playerDecks: InspectableDeck[];
   selectedPlayerDeckId: string;
@@ -269,19 +277,18 @@ type ExpeditionSetupProps = {
   onBack: () => void;
   onStart: () => void;
   launching: boolean;
+  closing: boolean;
 };
 
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   return (
-    <section className="expedition-setup" aria-label="Prepare expedition">
+    <section className={`expedition-setup ${props.closing ? "is-closing" : ""}`} aria-label="Prepare expedition">
       <header className="expedition-header">
         <button className="expedition-back" type="button" onClick={props.onBack}>
           <ArrowLeft size={17} /> Main menu
         </button>
         <div>
-          <p>Chronicle I · The Dead Awaken</p>
           <h1>Prepare the expedition</h1>
-          <span>Choose who will stand against the coming horde.</span>
         </div>
         <div className="expedition-step"><span>01</span> Party setup</div>
       </header>
@@ -296,13 +303,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
             selectedDeckId={props.selectedPlayerDeckId}
             onSelectDeck={props.onSelectPlayerDeck}
             onInspect={props.onInspectPlayerDeck}
-          >
-            <label className="expedition-name-label" htmlFor="player-name">Champion name</label>
-            <div className="expedition-name-field">
-              <UserRound size={17} />
-              <input id="player-name" value={props.playerName} onChange={(event) => props.onPlayerNameChange(event.target.value)} placeholder="Player" />
-            </div>
-          </SetupCombatant>
+          />
 
           <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
 
@@ -314,12 +315,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
             selectedDeckId={props.selectedHordeDeckId}
             onSelectDeck={props.onSelectHordeDeck}
             onInspect={props.onInspectHordeDeck}
-          >
-            <div className="expedition-threat">
-              <Skull size={17} />
-              <div><small>Threat</small><strong>{props.hordeDeck?.id.includes("goblin") ? "Relentless assault" : "The restless dead"}</strong></div>
-            </div>
-          </SetupCombatant>
+          />
         </div>
 
         <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
@@ -362,7 +358,6 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
       </div>
 
       <footer className="expedition-footer">
-        <div><span>Ready</span><strong>{props.playerName.trim() || "Player"}</strong> faces <strong>{props.hordeDeck?.deck.name ?? "the Horde"}</strong></div>
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
           <span><small>Begin the</small> Expedition</span><Play size={19} />
         </button>
@@ -373,7 +368,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
   );
 }
 
-function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect, children }: {
+function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect }: {
   eyebrow: string;
   side: "player" | "horde";
   deck?: InspectableDeck;
@@ -381,7 +376,6 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
   onInspect: () => void;
-  children: ReactNode;
 }) {
   const keyCard = deck ? findSetupKeyCard(deck) : undefined;
   const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
@@ -401,7 +395,6 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
       <div className="expedition-deck-options" role="listbox" aria-label={`${eyebrow} deck`}>
         {decks.map((item) => <button key={item.id} className={item.id === selectedDeckId ? "is-selected" : ""} type="button" role="option" aria-selected={item.id === selectedDeckId} onClick={() => onSelectDeck(item.id)}>{item.deck.name}</button>)}
       </div>
-      <div className="expedition-combatant-detail">{children}</div>
     </article>
   );
 }

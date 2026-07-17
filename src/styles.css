@@ -241,6 +241,11 @@
     animation: expedition-screen-enter 280ms ease-out both;
   }
 
+  .expedition-setup.is-closing {
+    pointer-events: none;
+    animation: expedition-screen-exit 220ms ease-in both;
+  }
+
   .expedition-setup::before {
     position: absolute;
     z-index: -1;
@@ -256,12 +261,12 @@
     position: relative;
     z-index: 4;
     display: grid;
-    min-height: 116px;
+    min-height: 92px;
     grid-template-columns: 190px minmax(0, 1fr) 190px;
     align-items: center;
     gap: 28px;
     border-bottom: 1px solid rgb(155 143 97 / 0.22);
-    padding: 20px clamp(28px, 4vw, 64px);
+    padding: 12px clamp(28px, 4vw, 64px);
     background: linear-gradient(180deg, rgb(3 10 9 / 0.94), rgb(4 12 10 / 0.72));
     box-shadow: 0 18px 45px rgb(0 0 0 / 0.22);
   }
@@ -275,7 +280,7 @@
     background: transparent;
     padding: 10px 0;
     color: #819189;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.17em;
     text-transform: uppercase;
@@ -293,11 +298,10 @@
     text-align: center;
   }
 
-  .expedition-header p,
   .expedition-section-heading p {
     margin: 0 0 6px;
     color: #8d7b4b;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 900;
     letter-spacing: 0.28em;
     text-transform: uppercase;
@@ -307,26 +311,17 @@
     margin: 0;
     color: #ded3b2;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(27px, 2.5vw, 39px);
+    font-size: clamp(39px, 3.5vw, 54px);
     font-weight: 500;
     letter-spacing: 0.05em;
     line-height: 1;
     text-transform: uppercase;
   }
 
-  .expedition-header > div:nth-child(2) > span {
-    display: block;
-    margin-top: 8px;
-    color: #718078;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
-    font-style: italic;
-  }
-
   .expedition-step {
     justify-self: end;
     color: #73837a;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -336,11 +331,11 @@
     margin-right: 9px;
     color: #b39c60;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+    font-size: 22px;
   }
 
   .expedition-body {
-    width: min(1180px, calc(100vw - 64px));
+    width: min(1420px, calc(100vw - 36px));
     min-height: 0;
     margin: 0 auto;
     overflow-y: auto;
@@ -368,7 +363,7 @@
 
   .expedition-combatant-heading {
     display: flex;
-    min-height: 43px;
+    min-height: 56px;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgb(139 148 128 / 0.14);
@@ -381,39 +376,44 @@
     align-items: center;
     gap: 7px;
     color: #89988f;
-    font-size: 9px;
+    font-size: 13px;
     font-weight: 900;
     letter-spacing: 0.2em;
     text-transform: uppercase;
   }
 
   .expedition-combatant-heading button {
-    border: 0;
-    background: transparent;
-    padding: 8px 0;
-    color: #6e7e75;
-    letter-spacing: 0.12em;
-    transition: color 130ms ease;
+    min-height: 34px;
+    border: 1px solid rgb(157 145 96 / 0.34);
+    background: linear-gradient(180deg, rgb(61 76 63 / 0.34), rgb(17 30 25 / 0.48));
+    padding: 0 13px;
+    color: #a6ae9f;
+    letter-spacing: 0.1em;
+    box-shadow: inset 0 1px 0 rgb(229 218 175 / 0.07);
+    transition: border-color 130ms ease, background-color 130ms ease, color 130ms ease, transform 130ms ease;
   }
 
   .expedition-combatant-heading button:hover,
   .expedition-combatant-heading button:focus-visible {
+    border-color: rgb(195 175 108 / 0.62);
+    background: rgb(77 94 76 / 0.38);
     color: #daceab;
     outline: none;
+    transform: translateY(-1px);
   }
 
   .expedition-deck-feature {
     display: grid;
-    min-height: 150px;
-    grid-template-columns: 112px minmax(0, 1fr);
+    min-height: 252px;
+    grid-template-columns: 190px minmax(0, 1fr);
     align-items: center;
-    gap: 22px;
-    padding: 15px 20px;
+    gap: 32px;
+    padding: 22px 30px;
   }
 
   .expedition-deck-art {
     position: relative;
-    width: 100px;
+    width: 168px;
     aspect-ratio: 488 / 680;
     overflow: hidden;
     border: 1px solid rgb(188 163 96 / 0.38);
@@ -444,7 +444,7 @@
 
   .expedition-deck-copy small {
     color: #78877e;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -454,7 +454,7 @@
     margin: 5px 0 7px;
     color: #d5cfb4;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(20px, 1.65vw, 27px);
+    font-size: clamp(28px, 2.3vw, 37px);
     font-weight: 500;
     line-height: 1.04;
   }
@@ -463,26 +463,26 @@
     margin: 0;
     color: #76857d;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
+    font-size: 16px;
     line-height: 1.4;
   }
 
   .expedition-deck-options {
     display: flex;
-    min-height: 37px;
+    min-height: 51px;
     gap: 6px;
     border-top: 1px solid rgb(139 148 128 / 0.1);
     border-bottom: 1px solid rgb(139 148 128 / 0.1);
-    padding: 6px 14px;
+    padding: 7px 16px;
   }
 
   .expedition-deck-options button {
     overflow: hidden;
     border: 1px solid transparent;
     background: transparent;
-    padding: 5px 10px;
+    padding: 6px 12px;
     color: #68786f;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-overflow: ellipsis;
@@ -497,66 +497,6 @@
     background: rgb(116 129 102 / 0.1);
     color: #cec5a5;
     outline: none;
-  }
-
-  .expedition-combatant-detail {
-    min-height: 60px;
-    padding: 10px 16px 13px;
-  }
-
-  .expedition-name-label {
-    display: block;
-    margin-bottom: 5px;
-    color: #718078;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .expedition-name-field,
-  .expedition-threat {
-    display: flex;
-    height: 34px;
-    align-items: center;
-    gap: 9px;
-    color: #83958a;
-  }
-
-  .expedition-name-field {
-    border-bottom: 1px solid rgb(156 145 98 / 0.28);
-  }
-
-  .expedition-name-field input {
-    min-width: 0;
-    flex: 1;
-    border: 0;
-    background: transparent;
-    color: #ded5b7;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
-    outline: none;
-  }
-
-  .expedition-threat small,
-  .expedition-threat strong {
-    display: block;
-  }
-
-  .expedition-threat small {
-    color: #776f62;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .expedition-threat strong {
-    margin-top: 2px;
-    color: #bba993;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 14px;
-    font-weight: 500;
   }
 
   .expedition-versus {
@@ -581,7 +521,7 @@
   .expedition-versus strong {
     color: #cbc09e;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 14px;
+    font-size: 17px;
     letter-spacing: 0.16em;
   }
 
@@ -601,7 +541,7 @@
     margin: 0;
     color: #cfc8aa;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 21px;
+    font-size: 29px;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -610,7 +550,7 @@
   .expedition-section-heading > span {
     color: #6d7d74;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
+    font-size: 15px;
     font-style: italic;
   }
 
@@ -629,14 +569,14 @@
   .expedition-mode {
     position: relative;
     display: grid;
-    min-height: 64px;
-    grid-template-columns: 36px minmax(0, 1fr) auto;
+    min-height: 87px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 13px;
     overflow: hidden;
     border: 1px solid rgb(126 139 122 / 0.17);
     background: rgb(8 19 16 / 0.64);
-    padding: 9px 13px;
+    padding: 11px 16px;
     color: #788980;
     text-align: left;
     transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
@@ -653,8 +593,8 @@
 
   .expedition-mode-glyph {
     display: grid;
-    width: 33px;
-    height: 33px;
+    width: 40px;
+    height: 40px;
     place-items: center;
     border: 1px solid rgb(137 148 127 / 0.2);
     color: #7d8f84;
@@ -678,7 +618,7 @@
   .expedition-mode strong {
     color: #aeb7a9;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 14px;
+    font-size: 19px;
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -690,13 +630,13 @@
   .expedition-mode small {
     margin-top: 3px;
     color: #65766d;
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .expedition-mode i {
     color: #68786e;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 24px;
+    font-size: 31px;
     font-style: normal;
   }
 
@@ -713,13 +653,13 @@
   .expedition-advanced-toggle {
     display: flex;
     width: 100%;
-    min-height: 39px;
+    min-height: 54px;
     align-items: center;
     gap: 8px;
     border: 0;
     background: transparent;
     color: #798980;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 900;
     letter-spacing: 0.15em;
     text-align: left;
@@ -757,7 +697,7 @@
   .expedition-developer-setting strong {
     margin-bottom: 5px;
     color: #77877e;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -765,20 +705,20 @@
 
   .expedition-seed-field {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 34px 34px;
+    grid-template-columns: minmax(0, 1fr) 40px 40px;
     border: 1px solid rgb(127 141 123 / 0.2);
     background: rgb(3 11 9 / 0.62);
   }
 
   .expedition-seed-field input {
     min-width: 0;
-    height: 34px;
+    height: 40px;
     border: 0;
     background: transparent;
     padding: 0 10px;
     color: #b5b6a3;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 10px;
+    font-size: 12px;
     outline: none;
   }
 
@@ -807,16 +747,16 @@
 
   .expedition-developer-setting small {
     color: #5f7067;
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .expedition-footer {
     position: relative;
     z-index: 4;
     display: flex;
-    min-height: 82px;
+    min-height: 89px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 30px;
     border-top: 1px solid rgb(155 143 97 / 0.2);
     padding: 12px clamp(34px, 5vw, 78px);
@@ -846,8 +786,8 @@
 
   .expedition-begin {
     display: flex;
-    min-width: 240px;
-    min-height: 53px;
+    min-width: 318px;
+    min-height: 71px;
     align-items: center;
     justify-content: center;
     gap: 22px;
@@ -876,7 +816,7 @@
 
   .expedition-begin span {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
+    font-size: 22px;
     letter-spacing: 0.1em;
   }
 
@@ -884,7 +824,7 @@
     margin-bottom: 2px;
     color: #8fa092;
     font-family: "Trebuchet MS", Verdana, sans-serif;
-    font-size: 7px;
+    font-size: 9px;
     font-weight: 900;
     letter-spacing: 0.22em;
   }
@@ -974,6 +914,11 @@
     to { opacity: 1; transform: scale(1); }
   }
 
+  @keyframes expedition-screen-exit {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(1.008); }
+  }
+
   @keyframes expedition-advanced-open {
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1002,15 +947,14 @@
   }
 
   @media (max-height: 790px) {
-    .expedition-header { min-height: 92px; padding-block: 13px; }
+    .expedition-header { min-height: 72px; padding-block: 9px; }
     .expedition-header h1 { font-size: 28px; }
     .expedition-body { padding-top: 16px; }
     .expedition-deck-feature { min-height: 126px; grid-template-columns: 88px minmax(0, 1fr); padding-block: 10px; }
     .expedition-deck-art { width: 82px; }
-    .expedition-combatant-detail { min-height: 53px; padding-block: 7px; }
     .expedition-difficulty { margin-top: 14px; }
     .expedition-mode { min-height: 57px; }
-    .expedition-footer { min-height: 70px; }
+    .expedition-footer { min-height: 62px; }
   }
 
   @media (max-width: 820px) {
