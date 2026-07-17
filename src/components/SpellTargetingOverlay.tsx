@@ -6,7 +6,7 @@ import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 
 const FRIENDLY_ARROW = "#4ade80";
-const ENEMY_ARROW = "#f59e0b";
+const ENEMY_ARROW = "#f04438";
 
 export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const spellTargeting = useGameStore((state) => state.spellTargeting);
@@ -26,7 +26,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const activeReq = spellTargeting && spell ? requirements[Math.min(spellTargeting.stepIndex, Math.max(requirements.length - 1, 0))] : undefined;
   const activeTargetId = activeReq && spellTargeting ? String(spellTargeting.targets[activeReq.id] ?? "") : "";
   const activeTarget = activeTargetId ? findBattlefieldCard(game, activeTargetId) : undefined;
-  const arrowColor = activeReq?.controller === "SELF" ? FRIENDLY_ARROW : ENEMY_ARROW;
+  const arrowColor = spell && activeReq && isBuffTarget(spell, activeReq) ? FRIENDLY_ARROW : ENEMY_ARROW;
   const followEnd = spellTargeting ? { x: spellTargeting.x, y: spellTargeting.y } : undefined;
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     .map((req) => {
       const end = lockedEnds[req.id];
       if (!end) return undefined;
-      return { req, arrow: makeTargetArrow(start, end), color: req.controller === "SELF" ? FRIENDLY_ARROW : ENEMY_ARROW };
+      return { req, arrow: makeTargetArrow(start, end), color: isBuffTarget(spell, req) ? FRIENDLY_ARROW : ENEMY_ARROW };
     })
     .filter((item): item is { req: TargetRequirement; arrow: ReturnType<typeof makeTargetArrow>; color: string } => Boolean(item));
 
@@ -128,11 +128,25 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
       <div data-audio-click="off" className="counter-target-backdrop" />
       <svg className="pointer-events-none fixed inset-0 z-[104] h-screen w-screen overflow-visible">
         <defs>
-          <filter id="spell-target-arrow-glow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feColorMatrix in="blur" type="matrix" values="0 0 0 0 1 0 0 0 0 0.52 0 0 0 0 0.05 0 0 0 0.72 0" result="glow" />
+          <filter id="spell-target-arrow-green-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
+            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
+            <feFlood floodColor={FRIENDLY_ARROW} floodOpacity="0.82" result="glowColor" />
+            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
             <feMerge>
-              <feMergeNode in="glow" />
+              <feMergeNode in="outerGlow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="spell-target-arrow-red-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
+            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
+            <feFlood floodColor={ENEMY_ARROW} floodOpacity="0.82" result="glowColor" />
+            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
+            <feMerge>
+              <feMergeNode in="outerGlow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
@@ -144,16 +158,16 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           </linearGradient>
         </defs>
         {lockedArrows.map(({ req, arrow, color }) => (
-          <g key={req.id} filter="url(#spell-target-arrow-glow)">
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={9} opacity="0.13" />
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={6} opacity="0.84" />
+          <g key={req.id} filter={color === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
+            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
+            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={5.25} opacity="0.84" />
             <polygon points={arrow.tip} fill={color} opacity="0.92" />
           </g>
         ))}
         {!complete && (
-          <g filter="url(#spell-target-arrow-glow)">
-            <path d={followArrow.path} fill="none" stroke={arrowColor} strokeLinecap="round" strokeWidth={9} opacity="0.13" />
-            <path d={followArrow.path} fill="none" stroke="url(#spell-target-arrow-gradient)" strokeLinecap="round" strokeWidth={6} opacity="0.94" />
+          <g filter={arrowColor === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
+            <path d={followArrow.path} fill="none" stroke={arrowColor} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
+            <path d={followArrow.path} fill="none" stroke="url(#spell-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
             <polygon points={followArrow.tip} fill={arrowColor} opacity="0.96" />
           </g>
         )}
@@ -189,6 +203,20 @@ function findCardIdAtPoint(x: number, y: number): string | undefined {
     if (cardElement?.dataset.cardId) return cardElement.dataset.cardId;
   }
   return undefined;
+}
+
+function isBuffTarget(spell: CardInstance, requirement: TargetRequirement): boolean {
+  return spell.effects.some((effect) => effectBuffsTarget(effect, requirement.id));
+}
+
+function effectBuffsTarget(effect: Record<string, unknown>, targetId: string): boolean {
+  const buffTypes = new Set(["MODIFY_STATS", "ADD_COUNTERS", "GRANT_KEYWORD"]);
+  if (buffTypes.has(String(effect.type)) && String(effect.target ?? "") === targetId) return true;
+  for (const nestedKey of ["steps", "effects"] as const) {
+    const nested = effect[nestedKey];
+    if (Array.isArray(nested) && nested.some((item) => item && typeof item === "object" && effectBuffsTarget(item as Record<string, unknown>, targetId))) return true;
+  }
+  return false;
 }
 
 function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {

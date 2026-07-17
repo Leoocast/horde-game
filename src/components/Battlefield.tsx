@@ -585,7 +585,7 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         glowBorderWidth={4}
-        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || tutorialTargetable)}
+        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable)}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
