@@ -111,6 +111,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       }}
       onClick={() => {
         if (shouldSuppressClick?.()) return;
+        setHoveredCardId(undefined);
         if (!selectionDisabled) onSelect?.();
       }}
       style={style}

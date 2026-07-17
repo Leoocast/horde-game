@@ -47,6 +47,8 @@ export function useCardDetails(definitionId: string): CardRemoteDetails {
 
   useEffect(() => {
     let active = true;
+    // Do not display the previous card's image while a new definition is loading.
+    setDetails(readDirectDetails(definitionId) ?? readCachedDetails(definitionId) ?? {});
     loadCardDetails(definitionId).then((loaded) => {
       if (active) setDetails(loaded ?? {});
     });

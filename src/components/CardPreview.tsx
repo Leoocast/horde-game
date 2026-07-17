@@ -14,6 +14,7 @@ const HOVER_PREVIEW_MAX_WIDTH = 350;
 const VIEWPORT_PADDING = 12;
 
 type HoverPreviewPosition = {
+  cardId: string;
   left: number;
   top: number;
   width: number;
@@ -36,27 +37,29 @@ export function CardPreview() {
     if (focusedCardId && !findCard(game, focusedCardId)) setFocusedCardId(undefined);
   }, [focusedCardId, game, hoveredCardId, setFocusedCardId, setHoveredCardId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!focusedCardId) return;
 
     function closeLockedPreview(event: PointerEvent) {
       if (event.button !== 0) return;
       const target = event.target;
       if (target instanceof Element && target.closest("[data-card-preview-locked='true']")) return;
+      setHoveredCardId(undefined);
       setFocusedCardId(undefined);
     }
 
     document.addEventListener("pointerdown", closeLockedPreview, true);
     return () => document.removeEventListener("pointerdown", closeLockedPreview, true);
-  }, [focusedCardId, setFocusedCardId]);
+  }, [focusedCardId, setFocusedCardId, setHoveredCardId]);
 
   useLayoutEffect(() => {
     if (focusedCardId || !hoveredCardId) {
       setHoverPosition(undefined);
       return;
     }
+    const observedCardId = hoveredCardId;
 
-    const anchor = document.querySelector<HTMLElement>(`[data-card-id="${hoveredCardId}"]`);
+    const anchor = document.querySelector<HTMLElement>(`[data-card-id="${observedCardId}"]`);
     if (!anchor) {
       setHoverPosition(undefined);
       return;
@@ -66,6 +69,10 @@ export function CardPreview() {
     let frame = 0;
     function measure() {
       const rect = observedAnchor.getBoundingClientRect();
+      if (!observedAnchor.isConnected || rect.width < 24 || rect.height < 24) {
+        setHoverPosition(undefined);
+        return;
+      }
       const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
       const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, rect.width * 1.5));
       const height = width * (680 / 488);
@@ -76,7 +83,7 @@ export function CardPreview() {
       const left = Math.min(window.innerWidth - width - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
       const desiredTop = rect.top + (rect.height - height) / 2;
       const top = Math.min(window.innerHeight - height - VIEWPORT_PADDING, Math.max(64, desiredTop));
-      setHoverPosition({ left, top, width });
+      setHoverPosition({ cardId: observedCardId, left, top, width });
     }
 
     function scheduleMeasure() {
@@ -118,10 +125,13 @@ export function CardPreview() {
     );
   }
 
-  if (!hoverPosition) return null;
+  if (!hoverPosition || hoverPosition.cardId !== hoveredCardId) return null;
+
+  const { cardId: _positionCardId, ...hoverStyle } = hoverPosition;
+  void _positionCardId;
 
   return (
-    <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverPosition}>
+    <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverStyle}>
       <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
     </div>
   );
