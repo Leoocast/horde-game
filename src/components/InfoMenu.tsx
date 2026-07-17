@@ -1,5 +1,6 @@
 import { AlertTriangle, Copy, Menu, RefreshCcw, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { GameLog } from "./GameLog";
@@ -8,6 +9,7 @@ import { ZoneDrawer } from "./ZoneDrawer";
 export function InfoMenu({ setupTurns }: { setupTurns: number }) {
   const game = useGameStore((state) => state.game);
   const [open, setOpen] = useState(false);
+  const menuPresence = useAnimatedPresence(open);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
@@ -63,16 +65,16 @@ export function InfoMenu({ setupTurns }: { setupTurns: number }) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Battle information">
+      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={toggle} title="Battle information">
         <Menu size={20} />
       </button>
-      {open && menuPos && (
-        <div className="old-panel game-popover old-scrollbar fixed z-[400] max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
+      {menuPresence.mounted && menuPos && (
+        <div className={["old-panel game-popover game-menu-surface old-scrollbar fixed z-[400] max-h-[calc(100vh-90px)] w-80 overflow-auto text-[#f6e6b8]", menuPresence.closing ? "is-closing" : ""].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <label className="old-title text-xs font-bold uppercase tracking-wide">Seed</label>
               <div className="mt-1 grid grid-cols-[1fr_auto_auto] gap-2">
-                <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input min-w-0 flex-1 px-2 py-1 text-sm outline-none focus:border-[#f4cc74]" />
+                <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input game-seed-input min-w-0 flex-1 px-2 py-1 text-sm outline-none" />
                 <button className="icon-button" type="button" onClick={copySeed} title="Copy seed" aria-label="Copy seed">
                   <Copy size={16} />
                 </button>

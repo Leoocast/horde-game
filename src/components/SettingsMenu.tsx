@@ -1,5 +1,6 @@
 import { Copy, Crown, Home, RefreshCw, Settings, Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { AudioControls } from "./AudioControls";
 
@@ -22,6 +23,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
   const isDeveloperMode = seed?.trim().toLowerCase() === "developer";
 
   const [open, setOpen] = useState(false);
+  const menuPresence = useAnimatedPresence(open);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
@@ -52,7 +54,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
     <div className="relative" ref={containerRef}>
       <button
         ref={buttonRef}
-        className={launcher === "main-menu" ? "main-menu-entry group" : "game-header-button flex h-10 w-10 items-center justify-center rounded-full transition"}
+        className={launcher === "main-menu" ? "main-menu-entry group" : "game-header-button flex h-10 w-10 items-center justify-center transition"}
         onClick={toggle}
         title="Settings"
       >
@@ -65,8 +67,8 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
           <Settings size={18} />
         )}
       </button>
-      {open && menuPos && (
-        <div className={["game-settings-popover fixed z-[400]", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
+      {menuPresence.mounted && menuPos && (
+        <div className={["game-settings-popover game-menu-surface fixed z-[400]", menuPresence.closing ? "is-closing" : "", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
           <AudioControls />
 
           {newGameSeedSettings && (
@@ -81,7 +83,7 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "
                   value={newGameSeedSettings.developerMode ? "developer" : newGameSeedSettings.seed}
                   onChange={(event) => newGameSeedSettings.onSeedChange(event.target.value)}
                   disabled={newGameSeedSettings.developerMode}
-                  className="old-input h-10 min-w-0 px-3 text-sm outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74] disabled:opacity-70"
+                  className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none transition disabled:opacity-70"
                   placeholder="random-seed"
                 />
                 <button className="old-button flex h-10 w-10 items-center justify-center" type="button" onClick={newGameSeedSettings.onCopySeed} title="Copy seed">

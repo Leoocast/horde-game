@@ -1,10 +1,12 @@
 import { Music, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { MusicCollectionId } from "../audio/musicManifest";
+import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useAudioStore } from "../store/useAudioStore";
 
 export function MusicPlayerMenu() {
   const [open, setOpen] = useState(false);
+  const menuPresence = useAnimatedPresence(open);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
@@ -46,11 +48,11 @@ export function MusicPlayerMenu() {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Music player">
+      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={toggle} title="Music player">
         <Music size={20} />
       </button>
-      {open && menuPos && (
-        <div className="old-panel game-popover fixed z-[400] w-80 overflow-hidden text-[#f6e6b8]" style={{ top: menuPos.top, right: menuPos.right }}>
+      {menuPresence.mounted && menuPos && (
+        <div className={["old-panel game-popover game-menu-surface fixed z-[400] w-80 overflow-hidden text-[#f6e6b8]", menuPresence.closing ? "is-closing" : ""].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-3 p-3">
             <div>
               <div className="old-title text-xs font-bold uppercase tracking-wide">Now Playing</div>
@@ -84,7 +86,7 @@ export function MusicPlayerMenu() {
                 step={0.05}
                 value={musicVolume}
                 onChange={(event) => setMusicVolume(Number(event.target.value))}
-                className="min-w-0 flex-1 accent-[#d8a154]"
+                className="game-range min-w-0 flex-1"
               />
               <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
             </div>

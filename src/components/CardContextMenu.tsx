@@ -91,7 +91,7 @@ export function CardContextMenu() {
   return (
     <>
       <div
-        className="old-panel fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
+        className="old-panel game-context-menu fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
         style={{ left: position.left, top: position.top }}
         onPointerDown={(event) => event.stopPropagation()}
         onContextMenu={(event) => {

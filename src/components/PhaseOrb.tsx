@@ -99,10 +99,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
       >
         <button
           data-audio-click="off"
+          data-tone={state.tone}
           onClick={runOrbAction}
           disabled={orbDisabled}
           className={[
-            "game-phase-button relative flex h-28 w-28 flex-col items-center justify-center overflow-hidden rounded-full border-4 text-[#ffe6aa] transition hover:scale-105 disabled:cursor-default disabled:saturate-75",
+            "game-phase-button relative flex h-[70px] w-44 items-center justify-center overflow-hidden border text-[#e7dfc2] transition disabled:cursor-default disabled:saturate-75",
             state.tone === "confirm"
               ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
               : state.tone === "horde"
@@ -114,11 +115,13 @@ export function PhaseOrb({ game }: { game: GameState }) {
               : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
           ].join(" ")}
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/55" />
-          <span className="pointer-events-none absolute inset-x-3 top-2 h-6 rounded-full bg-white/12 blur-sm" />
-          <span className="relative z-10 flex flex-col items-center justify-center">
-            <state.Icon size={26} />
-            <span className="mt-1 text-xs font-black uppercase leading-tight">{state.label}</span>
+          <span className="game-phase-button-shade pointer-events-none absolute inset-0" />
+          <span className="relative z-10 flex w-full items-center justify-between gap-4 px-5 text-left">
+            <span className="flex flex-col">
+              <small className="game-phase-kicker">Advance to</small>
+              <strong className="game-phase-label">{state.label}</strong>
+            </span>
+            <state.Icon size={24} />
           </span>
         </button>
       </GameTooltip>
@@ -127,7 +130,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelBlocks}
           disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
+          className="fixed right-[12.75rem] top-[calc(50%+2.25rem)] z-[80] flex h-12 w-14 flex-col items-center justify-center border border-[#7f918b] bg-[#101b20]/95 text-[8px] font-black uppercase tracking-wide text-[#c9d3cd] shadow-xl shadow-black/45 transition hover:border-[#c2ae73] hover:text-[#eadcae]"
           title="Cancel blocks"
         >
           <X size={18} />
@@ -135,12 +138,12 @@ export function PhaseOrb({ game }: { game: GameState }) {
         </button>
       )}
       {showAttackAll && (
-        <GameTooltip content="Sends every available creature to attack." className="fixed right-[9.3rem] top-1/2 z-[80] -translate-y-1/2 xl:right-[10.3rem]">
+        <GameTooltip content="Sends every available creature to attack." className="fixed right-[13.75rem] top-1/2 z-[80] -translate-y-1/2">
           <button
             data-audio-click="valid"
             onClick={attackAll}
             disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffd17a] bg-[linear-gradient(180deg,#b95514,#74300d_52%,#251006)] text-[8px] font-black uppercase tracking-wide text-[#fff0b8] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#d66b1b,#8d3a10_52%,#2f1407)]"
+            className="flex h-12 w-14 flex-col items-center justify-center border border-[#9e8d58] bg-[#20241e]/95 text-[8px] font-black uppercase tracking-wide text-[#dfd2a6] shadow-xl shadow-black/45 transition hover:border-[#d0bb78] hover:text-[#f0e2b1]"
           >
             <Swords size={16} />
             All
@@ -152,7 +155,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           data-audio-click="valid"
           onClick={cancelPlayerAttackers}
           disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-          className="fixed right-[7.65rem] top-[calc(50%+2.75rem)] z-[80] flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-[#ffad72] bg-[linear-gradient(180deg,#8f2414,#4b120a_52%,#160604)] text-[8px] font-black uppercase tracking-wide text-[#ffe6aa] shadow-xl shadow-black/45 transition hover:scale-105 hover:bg-[linear-gradient(180deg,#b53218,#62180d_52%,#1d0704)] xl:right-[8.65rem]"
+          className="fixed right-[12.75rem] top-[calc(50%+2.25rem)] z-[80] flex h-12 w-14 flex-col items-center justify-center border border-[#7f918b] bg-[#101b20]/95 text-[8px] font-black uppercase tracking-wide text-[#c9d3cd] shadow-xl shadow-black/45 transition hover:border-[#c2ae73] hover:text-[#eadcae]"
           title="Cancel attackers"
         >
           <X size={18} />

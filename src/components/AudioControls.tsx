@@ -62,7 +62,7 @@ export function AudioControls({ variant = "panel" }: Props) {
       <div className="flex items-center justify-between gap-3">
         <div className="old-title text-xs font-bold uppercase tracking-wide">SFX</div>
         <button
-          className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
+          className="old-button flex h-8 w-8 items-center justify-center transition"
           onClick={() => setEnabled(!enabled)}
           title={enabled ? "Mute SFX" : "Enable SFX"}
         >
@@ -93,7 +93,7 @@ export function AudioControls({ variant = "panel" }: Props) {
         <div className="flex items-center justify-between gap-3">
           <div className="old-title text-xs font-bold uppercase tracking-wide">Music</div>
           <button
-            className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
+            className="old-button flex h-8 w-8 items-center justify-center transition"
             onClick={() => setMusicEnabled(!musicEnabled)}
             title={musicEnabled ? "Mute music" : "Enable music"}
           >

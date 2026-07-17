@@ -22,7 +22,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
 
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[250] flex items-center justify-center bg-black/82 p-5 text-[#f6e6b8] backdrop-blur-md">
-      <section className="old-panel flex h-[min(82vh,760px)] w-[min(1180px,calc(100vw-40px))] flex-col overflow-hidden p-4 shadow-2xl shadow-black/70">
+      <section className="old-panel game-modal-surface flex h-[min(82vh,760px)] w-[min(1180px,calc(100vw-40px))] flex-col overflow-hidden p-4 shadow-2xl shadow-black/70">
         <header className="flex items-center justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#8f6a36] bg-[#17100a] text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
