@@ -1,9 +1,10 @@
-import { AlertTriangle, ChevronDown, Construction, Github, GraduationCap, Play, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Shield, Skull, Sparkles, Swords, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { InspectableDeck } from "../data/deckCatalog";
+import type { ReactNode } from "react";
+import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
-import { AppHeader } from "./AppHeader";
+import { useDeckCardDetails } from "../utils/deckCardImages";
 import { AudioControls } from "./AudioControls";
 import { DecksView } from "./DecksView";
 import { ToastStack } from "./ToastStack";
@@ -26,9 +27,9 @@ type Props = {
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Easy", setupTurns: 4, description: "4 extra setup turns" },
-  { id: "normal", label: "Normal", setupTurns: 3, description: "3 extra setup turns" },
-  { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
+  { id: "easy", label: "Wanderer", setupTurns: 4, description: "Four turns to prepare" },
+  { id: "normal", label: "Adventurer", setupTurns: 3, description: "Three turns to prepare" },
+  { id: "hard", label: "Doomed", setupTurns: 2, description: "Two turns to prepare" },
 ];
 
 const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
@@ -38,8 +39,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
-  const [deckOpen, setDeckOpen] = useState(false);
-  const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [launching, setLaunching] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
@@ -54,6 +55,14 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     if (!preserveMusicOnMount) startMenuMusic();
   }, [preserveMusicOnMount, startMenuMusic]);
 
+  useEffect(() => {
+    if (!launching) return;
+    const timeout = window.setTimeout(() => {
+      onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() });
+    }, 1650);
+    return () => window.clearTimeout(timeout);
+  }, [effectiveSeed, launching, mode, onStart, playerName, selectedMode.setupTurns]);
+
   async function copySeed() {
     try {
       await navigator.clipboard.writeText(effectiveSeed);
@@ -65,7 +74,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   function startGame() {
     persistDeveloperMode(developerMode);
-    onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() });
+    setLaunching(true);
   }
 
   function toggleDeveloperMode() {
@@ -86,7 +95,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`h-screen overflow-hidden text-[#f6e6b8] ${menuScreen !== "setup" ? "main-menu-shell" : "duel-table"}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" ? "expedition-active" : ""}`}>
       {menuScreen !== "setup" ? (
         <div className="main-menu-stage">
         <div className="main-menu-layout">
@@ -172,181 +181,37 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         )}
         </div>
       ) : (
-        <>
-      <AppHeader
-        left={<button className="pl-3 text-sm font-black uppercase tracking-[0.18em] text-[#d8c99f] transition hover:text-[#fff3cb]" type="button" onClick={() => setMenuScreen("home")}>← Main Menu</button>}
-        center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
-        newGameSeedSettings={{
-          seed,
-          developerMode,
-          onSeedChange: setSeed,
-          onCopySeed: copySeed,
-          onRegenerateSeed: () => {
+        <ExpeditionSetup
+          playerName={playerName}
+          onPlayerNameChange={setPlayerName}
+          playerDeck={selectedDeck}
+          playerDecks={decks}
+          selectedPlayerDeckId={selectedDeckId}
+          onSelectPlayerDeck={onSelectDeck}
+          onInspectPlayerDeck={onViewDeck}
+          hordeDeck={selectedHordeDeck}
+          hordeDecks={hordeDecks}
+          selectedHordeDeckId={selectedHordeDeckId}
+          onSelectHordeDeck={onSelectHordeDeck}
+          onInspectHordeDeck={onViewHordeDeck}
+          mode={mode}
+          onModeChange={setMode}
+          selectedMode={selectedMode}
+          showAdvanced={showAdvanced}
+          onToggleAdvanced={() => setShowAdvanced((value) => !value)}
+          seed={effectiveSeed}
+          developerMode={developerMode}
+          onSeedChange={setSeed}
+          onCopySeed={copySeed}
+          onRegenerateSeed={() => {
             if (developerMode) updateDeveloperMode(false);
             setSeed(generateRandomSeed());
-          },
-          onToggleDeveloperMode: toggleDeveloperMode,
-        }}
-      />
-      <div className="flex h-[calc(100vh-56px)] items-center justify-center p-6">
-        <section className="old-panel relative w-full max-w-lg p-6">
-        <div className="mb-6">
-          <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Horde Magic PvE</p>
-          <h1 className="old-title mt-2 text-4xl font-black leading-tight">New Game</h1>
-        </div>
-
-        <label className="block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-name">
-          Name
-        </label>
-        <input
-          id="player-name"
-          value={playerName}
-          onChange={(event) => setPlayerName(event.target.value)}
-          className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
-          placeholder="Player"
+          }}
+          onToggleDeveloperMode={toggleDeveloperMode}
+          onBack={() => setMenuScreen("home")}
+          onStart={startGame}
+          launching={launching}
         />
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
-          Player Deck
-        </label>
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative min-w-0">
-            {deckOpen && <button aria-label="Close deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setDeckOpen(false)} />}
-            <button
-              id="player-deck"
-              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
-              onClick={() => setDeckOpen((value) => !value)}
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={deckOpen}
-            >
-              <span className="truncate">{selectedDeck?.label ?? "Select deck"}</span>
-              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${deckOpen ? "rotate-180" : ""}`} size={18} />
-            </button>
-            {deckOpen && (
-              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="player-deck">
-                {decks.map((deck) => {
-                  const selected = deck.id === selectedDeckId;
-                  return (
-                    <button
-                      key={deck.id}
-                      className={[
-                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
-                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
-                      ].join(" ")}
-                      onClick={() => {
-                        onSelectDeck(deck.id);
-                        setDeckOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={selected}
-                      type="button"
-                    >
-                      <span className="block truncate">{deck.label}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewDeck}>
-            View
-          </button>
-        </div>
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="horde-deck">
-          Horde Deck
-        </label>
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative min-w-0">
-            {hordeDeckOpen && <button aria-label="Close horde deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setHordeDeckOpen(false)} />}
-            <button
-              id="horde-deck"
-              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
-              onClick={() => setHordeDeckOpen((value) => !value)}
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={hordeDeckOpen}
-            >
-              <span className="truncate">{selectedHordeDeck?.label ?? "Select horde deck"}</span>
-              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${hordeDeckOpen ? "rotate-180" : ""}`} size={18} />
-            </button>
-            {hordeDeckOpen && (
-              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="horde-deck">
-                {hordeDecks.map((deck) => {
-                  const selected = deck.id === selectedHordeDeckId;
-                  return (
-                    <button
-                      key={deck.id}
-                      className={[
-                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
-                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
-                      ].join(" ")}
-                      onClick={() => {
-                        onSelectHordeDeck(deck.id);
-                        setHordeDeckOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={selected}
-                      type="button"
-                    >
-                      <span className="block truncate">{deck.label}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewHordeDeck}>
-            View
-          </button>
-        </div>
-
-        <div className="mt-5">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">Mode</div>
-          <div className="grid grid-cols-3 gap-2">
-            {modes.map((item) => {
-              const selected = item.id === mode;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setMode(item.id)}
-                  className={[
-                    "old-panel-soft px-3 py-3 text-left transition hover:brightness-125",
-                    selected ? "outline outline-2 outline-[#e6c36f] text-[#fff0b8]" : "text-[#d2bc83]",
-                  ].join(" ")}
-                >
-                  <div className="text-sm font-black uppercase tracking-wide">{item.label}</div>
-                  <div className="mt-1 text-[11px] leading-snug text-[#bda574]">{item.description}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-[1fr_auto] gap-2">
-          <button
-            className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-            onClick={startGame}
-          >
-            <Play size={18} />
-            Start
-          </button>
-          <button
-            className="old-button flex h-12 items-center justify-center gap-2 px-4 text-sm font-black uppercase tracking-wide transition"
-            type="button"
-            onClick={() => setShowTutorialConfirm(true)}
-            title="How to play"
-          >
-            <GraduationCap size={18} />
-            How to play
-          </button>
-        </div>
-        </section>
-      </div>
-        </>
       )}
 
       {showTutorialConfirm && (
@@ -363,18 +228,210 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         />
       )}
       
-      <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
+      {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: ALPHA 4.0-HAND-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />
           <span>Leoocast</span>
         </a>
-      </div>
+      </div>}
 
       <ToastStack variant="menu" />
     </main>
   );
+}
+
+type ExpeditionSetupProps = {
+  playerName: string;
+  onPlayerNameChange: (name: string) => void;
+  playerDeck?: InspectableDeck;
+  playerDecks: InspectableDeck[];
+  selectedPlayerDeckId: string;
+  onSelectPlayerDeck: (deckId: string) => void;
+  onInspectPlayerDeck: () => void;
+  hordeDeck?: InspectableDeck;
+  hordeDecks: InspectableDeck[];
+  selectedHordeDeckId: string;
+  onSelectHordeDeck: (deckId: string) => void;
+  onInspectHordeDeck: () => void;
+  mode: DifficultyMode;
+  onModeChange: (mode: DifficultyMode) => void;
+  selectedMode: (typeof modes)[number];
+  showAdvanced: boolean;
+  onToggleAdvanced: () => void;
+  seed: string;
+  developerMode: boolean;
+  onSeedChange: (seed: string) => void;
+  onCopySeed: () => void;
+  onRegenerateSeed: () => void;
+  onToggleDeveloperMode: () => void;
+  onBack: () => void;
+  onStart: () => void;
+  launching: boolean;
+};
+
+function ExpeditionSetup(props: ExpeditionSetupProps) {
+  return (
+    <section className="expedition-setup" aria-label="Prepare expedition">
+      <header className="expedition-header">
+        <button className="expedition-back" type="button" onClick={props.onBack}>
+          <ArrowLeft size={17} /> Main menu
+        </button>
+        <div>
+          <p>Chronicle I · The Dead Awaken</p>
+          <h1>Prepare the expedition</h1>
+          <span>Choose who will stand against the coming horde.</span>
+        </div>
+        <div className="expedition-step"><span>01</span> Party setup</div>
+      </header>
+
+      <div className="expedition-body old-scrollbar">
+        <div className="expedition-combatants">
+          <SetupCombatant
+            eyebrow="Your champion"
+            side="player"
+            deck={props.playerDeck}
+            decks={props.playerDecks}
+            selectedDeckId={props.selectedPlayerDeckId}
+            onSelectDeck={props.onSelectPlayerDeck}
+            onInspect={props.onInspectPlayerDeck}
+          >
+            <label className="expedition-name-label" htmlFor="player-name">Champion name</label>
+            <div className="expedition-name-field">
+              <UserRound size={17} />
+              <input id="player-name" value={props.playerName} onChange={(event) => props.onPlayerNameChange(event.target.value)} placeholder="Player" />
+            </div>
+          </SetupCombatant>
+
+          <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
+
+          <SetupCombatant
+            eyebrow="The adversary"
+            side="horde"
+            deck={props.hordeDeck}
+            decks={props.hordeDecks}
+            selectedDeckId={props.selectedHordeDeckId}
+            onSelectDeck={props.onSelectHordeDeck}
+            onInspect={props.onInspectHordeDeck}
+          >
+            <div className="expedition-threat">
+              <Skull size={17} />
+              <div><small>Threat</small><strong>{props.hordeDeck?.id.includes("goblin") ? "Relentless assault" : "The restless dead"}</strong></div>
+            </div>
+          </SetupCombatant>
+        </div>
+
+        <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
+          <div className="expedition-section-heading">
+            <div><p>Choose your fate</p><h2 id="difficulty-heading">Difficulty</h2></div>
+            <span>The Horde awakens after <strong>{props.selectedMode.setupTurns} turns</strong></span>
+          </div>
+          <div className="expedition-mode-grid">
+            {modes.map((item) => (
+              <button key={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)}>
+                <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
+                <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                <i>{item.setupTurns}</i>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
+          <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
+            <Sparkles size={15} /> Advanced settings <span>{props.showAdvanced ? "Hide" : "Seed & developer tools"}</span>
+          </button>
+          {props.showAdvanced && (
+            <div className="expedition-advanced-content">
+              <div>
+                <label htmlFor="expedition-seed">Seed</label>
+                <div className="expedition-seed-field">
+                  <input id="expedition-seed" value={props.seed} disabled={props.developerMode} onChange={(event) => props.onSeedChange(event.target.value)} />
+                  <button type="button" onClick={props.onCopySeed} title="Copy seed"><Copy size={16} /></button>
+                  <button type="button" onClick={props.onRegenerateSeed} title="New seed"><RefreshCw size={16} /></button>
+                </div>
+              </div>
+              <div className="expedition-developer-setting">
+                <span><strong>Developer Mode</strong><small>Testing tools and deterministic opening</small></span>
+                <button className={`main-settings-toggle ${props.developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={props.developerMode} onClick={props.onToggleDeveloperMode}><span /></button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <footer className="expedition-footer">
+        <div><span>Ready</span><strong>{props.playerName.trim() || "Player"}</strong> faces <strong>{props.hordeDeck?.deck.name ?? "the Horde"}</strong></div>
+        <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+          <span><small>Begin the</small> Expedition</span><Play size={19} />
+        </button>
+      </footer>
+
+      {props.launching && <EncounterIntro playerName={props.playerName.trim() || "Player"} hordeName={props.hordeDeck?.deck.name ?? "The Horde"} />}
+    </section>
+  );
+}
+
+function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect, children }: {
+  eyebrow: string;
+  side: "player" | "horde";
+  deck?: InspectableDeck;
+  decks: InspectableDeck[];
+  selectedDeckId: string;
+  onSelectDeck: (deckId: string) => void;
+  onInspect: () => void;
+  children: ReactNode;
+}) {
+  const keyCard = deck ? findSetupKeyCard(deck) : undefined;
+  const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
+  return (
+    <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
+      <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> Inspect deck</button></div>
+      <div className="expedition-deck-feature">
+        <div className="expedition-deck-art">
+          {details.imageUrl ? <img src={details.imageUrl} alt={keyCard?.name ?? deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
+        </div>
+        <div className="expedition-deck-copy">
+          <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} cards</small>
+          <h2>{deck?.deck.name ?? "Choose a deck"}</h2>
+          <p>{deckDescription(deck?.id)}</p>
+        </div>
+      </div>
+      <div className="expedition-deck-options" role="listbox" aria-label={`${eyebrow} deck`}>
+        {decks.map((item) => <button key={item.id} className={item.id === selectedDeckId ? "is-selected" : ""} type="button" role="option" aria-selected={item.id === selectedDeckId} onClick={() => onSelectDeck(item.id)}>{item.deck.name}</button>)}
+      </div>
+      <div className="expedition-combatant-detail">{children}</div>
+    </article>
+  );
+}
+
+function EncounterIntro({ playerName, hordeName }: { playerName: string; hordeName: string }) {
+  return (
+    <div className="encounter-intro" role="status" aria-live="polite">
+      <div className="encounter-intro-flare" />
+      <p>The chronicle begins</p>
+      <div className="encounter-intro-matchup"><strong>{playerName}</strong><span><Swords size={25} />VS</span><strong>{hordeName}</strong></div>
+      <small>The Horde stirs beyond the veil...</small>
+    </div>
+  );
+}
+
+const SETUP_KEY_CARD_IDS: Record<string, string> = {
+  mono_green_ramp: "sunshower_druid",
+  horde_zombies: "zombie_token",
+  goblin_assault_horde: "goblin_token_1_1_red",
+};
+
+function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
+  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
+  return cards.find((card) => card.id === SETUP_KEY_CARD_IDS[deck.id]) ?? cards[0];
+}
+
+function deckDescription(deckId?: string): string {
+  if (deckId === "mono_green_ramp") return "Build an ancient mana engine and awaken overwhelming creatures.";
+  if (deckId === "goblin_assault_horde") return "A warband of fire, haste, and numbers that never stops advancing.";
+  return "An endless host that returns from the grave and consumes the fallen.";
 }
 
 function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {

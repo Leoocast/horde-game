@@ -29,11 +29,12 @@ const toneStyles: Record<ToastTone, { icon: typeof Info; className: string }> = 
 export function ToastStack({ variant = "game" }: { variant?: "game" | "menu" }) {
   const toasts = useToastStore((state) => state.toasts);
   const dismissToast = useToastStore((state) => state.dismissToast);
+  const stackClassName = variant === "menu" ? "toast-stack-menu" : "toast-stack-game";
 
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className={`toast-stack toast-stack-${variant}`}>
+    <div className={`toast-stack ${stackClassName}`}>
       <AnimatePresence initial={false}>
         {toasts.map((toast) => {
           const tone = toneStyles[toast.tone];
