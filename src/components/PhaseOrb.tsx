@@ -1,4 +1,4 @@
-import { Check, FastForward, Sparkles, Swords, X } from "lucide-react";
+import { Check, FastForward, Shield, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { canPlayerPutAnotherLand } from "../engine/GameRules";
@@ -95,7 +95,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <GameTooltip
         content={orbTooltip}
         visible={Boolean(orbTooltip)}
-        className={["game-phase-orb fixed right-6 top-1/2 -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
+        className={["game-phase-orb fixed right-6 top-[46%] -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
       >
         <button
           data-audio-click="off"
@@ -103,7 +103,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
           onClick={runOrbAction}
           disabled={orbDisabled}
           className={[
-            "game-phase-button relative flex h-[70px] w-44 items-center justify-center overflow-hidden border text-[#e7dfc2] transition disabled:cursor-default disabled:saturate-75",
+            "game-phase-button relative flex h-20 w-52 items-center justify-center overflow-hidden border text-[#f1e6c2] transition disabled:cursor-default disabled:saturate-75",
             state.tone === "confirm"
               ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
               : state.tone === "horde"
@@ -121,7 +121,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
               <small className="game-phase-kicker">Advance to</small>
               <strong className="game-phase-label">{state.label}</strong>
             </span>
-            <state.Icon size={24} />
+            <state.Icon size={28} strokeWidth={2.2} />
           </span>
         </button>
       </GameTooltip>
@@ -218,7 +218,7 @@ function getOrbState(
 ) {
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
     const hasBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
-    return { label: hasBlocks ? "Defend" : "No Defend", Icon: Sparkles, action: actions.resolveHordeCombat, tone: "defend" as const };
+    return { label: hasBlocks ? "Defend" : "No Defend", Icon: Shield, action: actions.resolveHordeCombat, tone: "defend" as const };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
     return { label: "Horde Turn", Icon: FastForward, action: actions.runHordeMain, tone: "horde" as const };
