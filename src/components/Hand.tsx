@@ -234,6 +234,7 @@ export function Hand({ game }: { game: GameState }) {
             const discardTargetLocked = smallpoxSelection?.kind === "discard" && smallpoxSelection.targetId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
+            const cardActionable = !tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -310,7 +311,7 @@ export function Hand({ game }: { game: GameState }) {
                     card={card}
                     selected={selectedHandId === card.instanceId}
                     dragging={draggingCardId === card.instanceId}
-                    actionable={!tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable)}
+                    actionable={cardActionable}
                     suppressContextMenu={Boolean(smallpoxSelection)}
                     suppressHoverOverlay
                     darkenOnHover={false}
@@ -327,6 +328,9 @@ export function Hand({ game }: { game: GameState }) {
                       if (selectedHandId === card.instanceId) selectHand(undefined);
                     }}
                   />
+                  {cardActionable && draggingCardId !== card.instanceId && (
+                    <span className="card-actionable-gem card-actionable-gem-outside" aria-hidden="true" />
+                  )}
                 </motion.div>
               </motion.div>
             );

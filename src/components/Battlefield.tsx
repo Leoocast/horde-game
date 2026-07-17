@@ -307,7 +307,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
         {rowCards.length === 0 ? (
-          <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
+          <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
         ) : (
           <div
             ref={creatureRowRef}
@@ -333,7 +333,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
         {rowCreatures.length === 0 ? (
-          <div className="battlefield-empty battlefield-row-surface">Empty</div>
+          <div aria-label="Empty battlefield" className="battlefield-empty battlefield-row-surface" />
         ) : (
           <div
             ref={creatureRowRef}
@@ -621,6 +621,7 @@ export function Battlefield({ game, side, cards }: Props) {
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
+    const cardActionable = !tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable);
     const interactionElevated = Boolean(
       effectActive ||
         effectClosing ||
@@ -688,7 +689,7 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         glowBorderWidth={4}
-        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable)}
+        actionable={cardActionable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
@@ -756,6 +757,15 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
+      {(cardActionable || effectAvailable) && (
+        <span
+          className={[
+            "card-actionable-gem card-actionable-gem-outside",
+            effectAvailable && !cardActionable ? "card-effect-available-gem" : "",
+          ].join(" ")}
+          aria-hidden="true"
+        />
+      )}
       {effectActive && primaryAbility && (
         <button
           data-audio-click="valid"

@@ -64,16 +64,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
-  const showCyanGlow = Boolean(actionable);
-  const actionGlow = showCyanGlow
-    ? "0 0 0 1.5px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
+  const showActionGlow = Boolean(actionable);
+  const actionGlow = showActionGlow
+    ? "inset 0 0 0 1px rgba(228,218,158,0.42), 0 0 8px rgba(103,166,137,0.62), 0 0 18px rgba(44,111,99,0.4)"
     : "";
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
     : "";
-  const style = accentColor || showCyanGlow || showSelectedVisual || showEffectAvailable || dragging
+  const style = accentColor || showActionGlow || showSelectedVisual || showEffectAvailable || dragging
     ? ({
-        borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(190 183 111 / 0.88)",
         "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
         boxShadow: [
           dragging ? draggingGlow : selectedGlow,
@@ -138,6 +138,12 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className="card-sharp-image-overlay" aria-hidden="true">
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
         </div>
+      )}
+      {actionable && !dragging && (
+        <span className="card-actionable-sweep" aria-hidden="true" />
+      )}
+      {showEffectAvailable && (
+        <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}

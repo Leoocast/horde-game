@@ -3341,12 +3341,77 @@
   }
 
   .card-actionable {
-    border-color: rgb(102 216 255 / 0.9);
+    border-width: 2px;
+    border-color: rgb(210 197 119 / 0.96);
     box-shadow:
-      inset 0 0 0 1px rgb(208 247 255 / 0.65),
-      0 0 8px rgb(49 196 255 / 0.8),
-      0 0 18px rgb(49 196 255 / 0.48);
+      inset 0 0 0 1px rgb(239 226 155 / 0.54),
+      0 0 10px rgb(111 181 145 / 0.72),
+      0 0 23px rgb(47 123 108 / 0.48);
     animation: actionable-card-glow 1.5s ease-in-out infinite;
+  }
+
+  .card-actionable-sweep {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: linear-gradient(112deg, transparent 37%, rgb(227 242 193 / 0.05) 44%, rgb(212 231 178 / 0.24) 50%, rgb(104 183 151 / 0.1) 56%, transparent 63%);
+    transform: translateX(-145%);
+    animation: card-actionable-sweep 2.8s ease-in-out infinite;
+  }
+
+  .card-effect-available-sweep {
+    background: linear-gradient(112deg, transparent 37%, rgb(255 236 178 / 0.04) 44%, rgb(255 207 111 / 0.28) 50%, rgb(255 143 44 / 0.12) 56%, transparent 63%);
+  }
+
+  .card-actionable-gem {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 20;
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgb(221 204 128 / 0.88);
+    background: linear-gradient(145deg, #29493c, #13251f 72%);
+    box-shadow:
+      inset 0 0 0 3px rgb(5 14 13 / 0.28),
+      inset 0 1px 0 rgb(240 231 181 / 0.18),
+      0 0 0 3px rgb(210 193 112 / 0.1),
+      0 0 11px rgb(214 195 111 / 0.66),
+      0 0 21px rgb(72 158 127 / 0.48);
+    transform: rotate(45deg);
+    animation: card-actionable-gem-pulse 1.45s ease-in-out infinite;
+  }
+
+  .card-actionable-gem-outside {
+    top: -8px;
+    right: auto;
+    left: -8px;
+  }
+
+  .card-actionable-gem::after {
+    position: absolute;
+    inset: 6px;
+    background: linear-gradient(135deg, #fff0a9, #8fc99a);
+    box-shadow: 0 0 7px rgb(228 210 121 / 0.82);
+    content: "";
+  }
+
+  .card-effect-available-gem {
+    border-color: rgb(255 202 93 / 0.96);
+    background: linear-gradient(145deg, #613718, #27170d 72%);
+    box-shadow:
+      inset 0 0 0 3px rgb(23 11 5 / 0.32),
+      inset 0 1px 0 rgb(255 237 187 / 0.2),
+      0 0 0 3px rgb(255 167 60 / 0.12),
+      0 0 12px rgb(255 190 73 / 0.76),
+      0 0 23px rgb(255 112 31 / 0.5);
+  }
+
+  .card-effect-available-gem::after {
+    background: linear-gradient(135deg, #fff0a4, #ff9c36);
+    box-shadow: 0 0 8px rgb(255 174 62 / 0.9);
   }
 
   .card-auto-paid {
@@ -3365,6 +3430,7 @@
   }
 
   .card-effect-available {
+    border-width: 2px;
     border-color: rgb(255 211 112 / 0.95);
     animation: effect-available-card-glow 1.7s ease-in-out infinite;
   }
@@ -3783,8 +3849,8 @@
   .battlefield-card-actionable > .battlefield-card-depth,
   .counter-targetable-card > .battlefield-card-depth,
   .spell-targetable-card > .battlefield-card-depth {
-    --battlefield-depth-glow: 0 15px 28px rgb(49 196 255 / 0.42);
-    background-color: rgb(23 42 47 / 0.96);
+    --battlefield-depth-glow: 0 15px 28px rgb(74 139 116 / 0.34);
+    background-color: rgb(25 40 35 / 0.96);
   }
 
   .battlefield-card-effect-available > .battlefield-card-depth {
@@ -3911,11 +3977,11 @@
   }
 
   .counter-targetable-card > article {
-    border-color: rgb(102 216 255 / 0.95) !important;
+    border-color: rgb(207 190 116 / 0.92) !important;
     box-shadow:
-      0 0 0 1.5px rgb(208 247 255 / 0.68),
-      0 0 10px rgb(49 196 255 / 0.82),
-      0 0 22px rgb(49 196 255 / 0.5) !important;
+      inset 0 0 0 1px rgb(236 226 167 / 0.34),
+      0 0 9px rgb(104 173 142 / 0.66),
+      0 0 22px rgb(48 116 103 / 0.42) !important;
     animation: actionable-card-glow 1.5s ease-in-out infinite;
   }
 
@@ -3933,11 +3999,11 @@
   }
 
   .spell-targetable-card > article {
-    border-color: rgb(102 216 255 / 0.95) !important;
+    border-color: rgb(207 190 116 / 0.92) !important;
     box-shadow:
-      0 0 0 1.5px rgb(208 247 255 / 0.68),
-      0 0 10px rgb(49 196 255 / 0.82),
-      0 0 22px rgb(49 196 255 / 0.5) !important;
+      inset 0 0 0 1px rgb(236 226 167 / 0.34),
+      0 0 9px rgb(104 173 142 / 0.66),
+      0 0 22px rgb(48 116 103 / 0.42) !important;
     animation: actionable-card-glow 1.5s ease-in-out infinite;
   }
 
@@ -4993,17 +5059,29 @@
   0%,
   100% {
     box-shadow:
-      0 0 0 1.5px rgb(208 247 255 / 0.56),
-      0 0 7px rgb(49 196 255 / 0.68),
-      0 0 16px rgb(49 196 255 / 0.38);
+      inset 0 0 0 1px rgb(228 218 158 / 0.38),
+      0 0 7px rgb(91 151 126 / 0.58),
+      0 0 16px rgb(43 104 94 / 0.34);
   }
 
   50% {
     box-shadow:
-      0 0 0 1.5px rgb(238 253 255 / 0.85),
-      0 0 12px rgb(86 220 255 / 0.92),
-      0 0 26px rgb(86 220 255 / 0.58);
+      inset 0 0 0 1px rgb(244 231 166 / 0.62),
+      0 0 11px rgb(124 184 149 / 0.76),
+      0 0 25px rgb(62 128 111 / 0.46);
   }
+}
+
+@keyframes card-actionable-sweep {
+  0%, 54% { opacity: 0; transform: translateX(-145%); }
+  58% { opacity: 1; }
+  82% { opacity: 0.78; transform: translateX(145%); }
+  100% { opacity: 0; transform: translateX(145%); }
+}
+
+@keyframes card-actionable-gem-pulse {
+  0%, 100% { filter: brightness(0.96); transform: rotate(45deg) scale(0.9); }
+  50% { filter: brightness(1.3); transform: rotate(45deg) scale(1.17); }
 }
 
 @keyframes effect-available-card-glow {
