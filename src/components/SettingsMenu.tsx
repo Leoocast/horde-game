@@ -1,5 +1,5 @@
 import { AlertTriangle, Copy, Crown, Home, RefreshCcw, RefreshCw, Settings, Skull, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
@@ -27,6 +27,27 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
   const restartPresence = useAnimatedPresence(showRestartConfirmation, 190);
   const [restartSeed, setRestartSeed] = useState("");
   const effectiveSeed = seed.trim() || game.seed;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (showRestartConfirmation) {
+        event.preventDefault();
+        setShowRestartConfirmation(false);
+        return;
+      }
+      if (open) {
+        event.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (document.querySelector('[aria-modal="true"]')) return;
+      event.preventDefault();
+      setOpen(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, showRestartConfirmation]);
 
   async function copySeed() {
     try {

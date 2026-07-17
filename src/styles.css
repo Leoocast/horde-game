@@ -2043,6 +2043,7 @@
 
   .deck-collection-modal .keyword-pill {
     height: 1.3rem;
+    min-height: 1.3rem;
     min-width: 0;
     border-color: #4e6253;
     background: linear-gradient(180deg, #aab99b, #657b66 56%, #405044);
@@ -3537,8 +3538,9 @@
 
   .card-toxic-counter {
     display: inline-flex;
-    width: clamp(13px, 8cqw, 17px);
-    height: clamp(13px, 8cqw, 17px);
+    box-sizing: border-box;
+    width: 1.35em;
+    height: 1.35em;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
@@ -3546,7 +3548,7 @@
     border-radius: 999px;
     background: linear-gradient(to bottom, #f4ddff, #b875dc 52%, #6d3b88);
     color: #220d2d;
-    font-size: clamp(8px, 5.5cqw, 11px);
+    font-size: 0.9em;
     font-weight: 950;
     line-height: 1;
     text-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
@@ -3715,6 +3717,15 @@
     opacity: 1;
     filter: none;
     transform: translateY(-3px);
+  }
+
+  .battlefield-copy-stack[data-stacked="true"]:has(.spell-targetable-card):hover > .battlefield-layout-slot:not(:hover) {
+    opacity: 1;
+    filter: none;
+  }
+
+  .battlefield-copy-stack[data-stacked="true"]:has(.spell-targetable-card) > .battlefield-layout-slot:hover {
+    transform: translateY(0);
   }
 
   .card-visual {
@@ -4299,15 +4310,16 @@
 
   .toxic-keyword-badge {
     display: inline-flex;
-    width: 1rem;
-    height: 1rem;
+    box-sizing: border-box;
+    width: 1.1em;
+    height: 1.1em;
     align-items: center;
     justify-content: center;
     border: 1px solid #4b235d;
     border-radius: 999px;
     background: linear-gradient(to bottom, #f4ddff, #b875dc 52%, #6d3b88);
     color: #220d2d;
-    font-size: 0.68rem;
+    font-size: 0.78em;
     font-weight: 950;
     line-height: 1;
     box-shadow:
@@ -4965,6 +4977,120 @@
     color: rgb(255 235 184 / 0.48);
   }
 
+  .graveyard-viewer-backdrop {
+    z-index: 250;
+    padding: clamp(20px, 3vw, 42px);
+  }
+
+  .graveyard-viewer-modal {
+    display: flex;
+    width: min(1440px, calc(100vw - 40px));
+    height: min(850px, calc(100vh - 40px));
+    max-height: 92vh;
+    flex-direction: column;
+  }
+
+  .graveyard-viewer-header {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    width: 100%;
+    min-height: 112px;
+    flex: 0 0 auto;
+    gap: 22px;
+    padding: 20px 82px 20px clamp(24px, 3vw, 46px);
+  }
+
+  .graveyard-viewer-emblem {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border: 1px solid rgb(151 141 99 / 0.46);
+    background:
+      linear-gradient(145deg, rgb(47 67 56 / 0.86), rgb(11 24 20 / 0.96));
+    color: #c8bb8b;
+    box-shadow:
+      inset 0 1px 0 rgb(236 224 178 / 0.1),
+      0 10px 22px rgb(0 0 0 / 0.3);
+  }
+
+  .graveyard-viewer-tools {
+    padding-right: 8px;
+  }
+
+  .graveyard-viewer-collection {
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 0%, rgb(91 122 100 / 0.08), transparent 42%),
+      linear-gradient(90deg, rgb(3 9 8 / 0.42), rgb(6 14 13 / 0.14));
+  }
+
+  .graveyard-viewer-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 220px));
+    justify-content: center;
+    gap: 34px 28px;
+    padding: 38px clamp(30px, 4vw, 66px) 68px;
+  }
+
+  .graveyard-viewer-card {
+    width: 100%;
+    max-width: 220px;
+    justify-self: center;
+  }
+
+  .graveyard-card-position {
+    position: absolute;
+    top: -9px;
+    left: -9px;
+    z-index: 20;
+    display: grid;
+    min-width: 27px;
+    height: 27px;
+    place-items: center;
+    border: 1px solid rgb(139 137 101 / 0.7);
+    background: linear-gradient(145deg, #536258, #1c2c25 72%);
+    padding: 0 6px;
+    color: #e0d5ad;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 850;
+    box-shadow: 0 6px 15px rgb(0 0 0 / 0.48), 0 0 12px rgb(126 151 119 / 0.16);
+  }
+
+  .graveyard-card-missing {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    background: linear-gradient(145deg, #18251f, #08100d);
+    padding: 18px;
+    color: #aaa98e;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .graveyard-viewer-empty {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #85958c;
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .graveyard-viewer-empty svg {
+    color: #9c8d5d;
+    filter: drop-shadow(0 0 14px rgb(153 137 81 / 0.2));
+  }
+
   .player-hand-region {
     left: calc(var(--player-side-dock-width) + 2rem);
     right: calc(var(--player-side-dock-width) + 2rem);
@@ -5026,7 +5152,7 @@
   }
 
   .hand-card .card-keyword-stack {
-    top: 20px;
+    top: 25px;
     left: 8px;
   }
 

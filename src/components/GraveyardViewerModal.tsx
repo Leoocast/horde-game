@@ -1,11 +1,11 @@
-import { Archive, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Archive, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useCardDetails } from "../utils/cardImages";
-import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
+import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
-import { CardDetailsModal } from "./CardPreview";
+import { KeywordPills } from "./CardPreview";
 
 type Props = {
   game: GameState;
@@ -19,38 +19,75 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const detailsIndex = Math.max(0, cards.findIndex((card) => card.instanceId === detailsCardId));
   const detailsCard = detailsCardId ? cards[detailsIndex] : undefined;
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<number | undefined>(undefined);
+
+  function closeViewer() {
+    if (closing) return;
+    setClosing(true);
+    closeTimer.current = window.setTimeout(onClose, 180);
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (detailsCardId) setDetailsCardId(undefined);
+        else closeViewer();
+        return;
+      }
+      if (!detailsCardId || cards.length < 2) return;
+      if (event.key === "ArrowLeft") setDetailsCardId(cards[(detailsIndex - 1 + cards.length) % cards.length]?.instanceId);
+      if (event.key === "ArrowRight") setDetailsCardId(cards[(detailsIndex + 1) % cards.length]?.instanceId);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [cards, closing, detailsCardId, detailsIndex]);
+
+  useEffect(() => () => {
+    if (closeTimer.current !== undefined) window.clearTimeout(closeTimer.current);
+  }, []);
 
   return (
-    <div data-preserve-card-focus="true" className="fixed inset-0 z-[250] flex items-center justify-center bg-black/82 p-5 text-[#f6e6b8] backdrop-blur-md">
-      <section className="old-panel game-modal-surface flex h-[min(82vh,760px)] w-[min(1180px,calc(100vw-40px))] flex-col overflow-hidden p-4 shadow-2xl shadow-black/70">
-        <header className="flex items-center justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#8f6a36] bg-[#17100a] text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
-              <Archive size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <p className="old-title text-xs font-bold uppercase tracking-[0.22em]">Graveyard</p>
-              <h2 className="old-title text-2xl font-black">{title}</h2>
+    <div
+      data-preserve-card-focus="true"
+      className={["deck-collection-modal-backdrop graveyard-viewer-backdrop", closing ? "is-closing" : ""].join(" ")}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeViewer();
+      }}
+    >
+      <section className="deck-collection-modal graveyard-viewer-modal" role="dialog" aria-modal="true" aria-labelledby="graveyard-viewer-title">
+        <header className="deck-detail-header graveyard-viewer-header">
+          <div className="graveyard-viewer-emblem" aria-hidden="true">
+            <Archive size={22} strokeWidth={2.2} />
+          </div>
+          <div className="deck-detail-heading">
+            <p>Graveyard collection</p>
+            <h1 id="graveyard-viewer-title">{title}</h1>
+          </div>
+          <div className="deck-detail-tools graveyard-viewer-tools">
+            <div className="deck-detail-counts">
+              <span><strong>{cards.length}</strong> cards</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="deck-quantity-badge h-7 min-w-16 text-sm">x{cards.length}</div>
-            <button className="icon-button h-9 w-9" title="Close graveyard" onClick={onClose}>
-              <X size={18} />
-            </button>
-          </div>
+          <button className="deck-collection-modal-close" type="button" title="Close graveyard" aria-label="Close graveyard" onClick={closeViewer}>
+            <X size={20} />
+          </button>
         </header>
 
         {cards.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-center text-sm font-bold uppercase tracking-wide text-[#d6b879]">
+          <div className="graveyard-viewer-empty">
+            <Archive size={34} strokeWidth={1.5} />
             This graveyard is empty.
           </div>
         ) : (
-          <div className="old-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-4 px-2 pb-8 pt-5">
+          <div className="graveyard-viewer-collection">
+            <div className="deck-detail-grid-scroll">
+              <div className="deck-detail-grid graveyard-viewer-grid">
               {cards.map((card, index) => (
                 <GraveyardCardTile key={card.instanceId} card={card} index={index} onClick={() => setDetailsCardId(card.instanceId)} />
               ))}
+              </div>
             </div>
           </div>
         )}
@@ -65,6 +102,8 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
           onClose={() => setDetailsCardId(undefined)}
           onPrevious={cards.length > 1 ? () => setDetailsCardId(cards[(detailsIndex - 1 + cards.length) % cards.length]?.instanceId) : undefined}
           onNext={cards.length > 1 ? () => setDetailsCardId(cards[(detailsIndex + 1) % cards.length]?.instanceId) : undefined}
+          position={detailsIndex + 1}
+          total={cards.length}
         />
       )}
     </div>
@@ -76,21 +115,21 @@ function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index
 
   return (
     <button
-      className="group text-left transition hover:-translate-y-1 hover:drop-shadow-[0_0_14px_rgba(94,210,255,0.46)]"
+      className="deck-detail-card graveyard-viewer-card"
       onClick={onClick}
       title={card.displayName}
     >
-      <div className="relative mx-auto w-full max-w-[156px]">
-        <span className="deck-quantity-badge pointer-events-none absolute -left-2 -top-2 z-20 h-6 min-w-8 text-xs">{index + 1}</span>
-        <div className="relative aspect-[488/680] overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]">
+      <div className="deck-detail-card-frame">
+        <span className="graveyard-card-position" aria-hidden="true">{index + 1}</span>
+        <div className="deck-detail-card-image">
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={card.displayName} className="h-full w-full object-cover" draggable={false} />
+            <img src={details.imageUrl} alt={card.displayName} draggable={false} />
           ) : (
-            <div className="flex h-full w-full items-center justify-center p-3 text-center text-xs font-bold text-[#d6b879]">{card.displayName}</div>
+            <div className="graveyard-card-missing">{card.displayName}</div>
           )}
         </div>
       </div>
-      <div className="mx-auto mt-2 max-w-[156px] truncate text-center text-xs font-bold text-[#f4dfb0]">{card.displayName}</div>
+      <div className="deck-detail-card-name">{card.displayName}</div>
     </button>
   );
 }
@@ -103,6 +142,8 @@ function GraveyardDetailsModal({
   onClose,
   onPrevious,
   onNext,
+  position,
+  total,
 }: {
   game: GameState;
   card: CardInstance;
@@ -111,6 +152,8 @@ function GraveyardDetailsModal({
   onClose: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
+  position: number;
+  total: number;
 }) {
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
@@ -119,21 +162,70 @@ function GraveyardDetailsModal({
   const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(displayCard));
 
   return (
-    <CardDetailsModal
-      card={displayCard}
-      imageUrl={details.imageUrl}
-      keywords={keywords}
-      stats={stats}
-      text={text}
-      fontSize={fontSize}
-      setFontSize={setFontSize}
-      onClose={onClose}
-      onPrevious={onPrevious}
-      onNext={onNext}
-      previousLabel="Previous graveyard card"
-      nextLabel="Next graveyard card"
-    />
+    <div
+      data-preserve-card-focus="true"
+      className="deck-collection-modal-backdrop"
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section className="deck-collection-modal" role="dialog" aria-modal="true" aria-label={`${displayCard.displayName} details`}>
+        <button className="deck-collection-modal-close" type="button" onClick={onClose} title="Close details">
+          <X size={20} />
+        </button>
+
+        <div className="deck-collection-modal-content">
+          <div className="deck-collection-modal-art-column">
+            {onPrevious && (
+              <button className="deck-collection-modal-nav is-previous" type="button" onClick={onPrevious} title="Previous graveyard card">
+                <ChevronLeft size={24} />
+              </button>
+            )}
+            <div className="deck-collection-modal-art">
+              {details.imageUrl ? <img src={details.imageUrl} alt={displayCard.displayName} draggable={false} /> : <div className="graveyard-card-missing">{displayCard.displayName}</div>}
+            </div>
+            {onNext && (
+              <button className="deck-collection-modal-nav is-next" type="button" onClick={onNext} title="Next graveyard card">
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </div>
+
+          <div className="deck-collection-modal-info">
+            <header className="deck-collection-modal-header">
+              <p>Graveyard card <span>{position} / {total}</span></p>
+              <div><h2>{displayCard.displayName}</h2></div>
+              <small>{graveyardTypeLine(displayCard)}</small>
+            </header>
+
+            {(keywords || stats) && (
+              <div className="deck-collection-modal-badges">
+                {stats && <span className="deck-collection-modal-stats">{stats}</span>}
+                {keywords && <KeywordPills keywords={keywords} />}
+              </div>
+            )}
+
+            <div className="deck-collection-modal-rules">
+              <p style={{ fontSize }}>{renderCardText(text)}</p>
+            </div>
+
+            <footer className="deck-collection-modal-footer">
+              <span>Text size</span>
+              <button disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))}>-</button>
+              <input className="game-range" type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
+              <button disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))}>+</button>
+              <strong>{fontSize}</strong>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
   );
+}
+
+function graveyardTypeLine(card: CardInstance): string {
+  return [...card.cardTypes, card.subtypes.length ? `- ${card.subtypes.join(" ")}` : ""].filter(Boolean).join(" ");
 }
 
 function graveyardDisplayCard(card: CardInstance): CardInstance {
