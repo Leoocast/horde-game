@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { useCardDetails } from "../utils/cardImages";
+import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 
@@ -31,9 +31,12 @@ type Props = {
   suppressHoverOverlay?: boolean;
   darkenOnHover?: boolean;
   cropTopHalf?: boolean;
+  highRes?: boolean;
+  dragging?: boolean;
+  glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, dragging, glowBorderWidth = 6 }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
@@ -48,23 +51,37 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
   const { imageUrl } = useCardDetails(card.definitionId);
+  const displayImageUrl = highRes ? (toHighResImageUrl(imageUrl) ?? imageUrl) : imageUrl;
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   void onMana;
+  const draggingGlow = dragging
+    ? `inset 0 0 0 ${glowBorderWidth}px rgba(255,180,120,0.8), 0 0 10px rgba(255,122,61,0.85), 0 0 22px rgba(255,122,61,0.5)`
+    : "";
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
-  const actionGlow = actionable
-    ? "inset 0 0 0 1px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
+  const showCyanGlow = Boolean(actionable);
+  const actionGlow = showCyanGlow
+    ? `inset 0 0 0 ${glowBorderWidth}px rgba(208,247,255,0.75), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)`
     : "";
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
     : "";
-  const style = accentColor || actionable || selected || showEffectAvailable
+  const style = accentColor || showCyanGlow || selected || showEffectAvailable || dragging
     ? ({
-        borderColor: selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
-        boxShadow: [selectedGlow, !selected && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "", !selected ? actionGlow : "", !selected ? effectGlow : ""].filter(Boolean).join(", "),
-      } satisfies CSSProperties)
+        borderColor: dragging ? "#ff7a3d" : selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        borderWidth: showCyanGlow || dragging ? `${glowBorderWidth}px` : undefined,
+        "--glow-border-width": showCyanGlow || dragging ? `${glowBorderWidth}px` : undefined,
+        boxShadow: [
+          dragging ? draggingGlow : selectedGlow,
+          !selected && !dragging && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "",
+          !selected && !dragging ? actionGlow : "",
+          !selected && !dragging ? effectGlow : "",
+        ]
+          .filter(Boolean)
+          .join(", "),
+      } as CSSProperties)
     : undefined;
   return (
     <article
@@ -77,7 +94,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         if (!suppressHoverOverlay) setHoveredCardId(card.instanceId);
       }}
       onMouseLeave={() => {
-        setHoveredCardId(undefined);
+        if (!suppressHoverOverlay) setHoveredCardId(undefined);
         onLeave?.();
       }}
       onPointerDown={onPointerDown}
@@ -100,15 +117,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
-        actionable ? "card-actionable" : "",
+        actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
         summoningSick ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
     >
-      {imageUrl ? (
-        <img src={imageUrl} alt={card.name} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
+      {displayImageUrl ? (
+        <img src={displayImageUrl} alt={card.name} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{card.displayName}</div>
       )}

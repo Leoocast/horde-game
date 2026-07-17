@@ -62,6 +62,13 @@ export function useCardImage(definitionId: string): string | undefined {
   return useCardDetails(definitionId).imageUrl;
 }
 
+const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;
+
+export function toHighResImageUrl(imageUrl: string | undefined): string | undefined {
+  if (!imageUrl) return imageUrl;
+  return imageUrl.replace(SCRYFALL_RESOLUTION_PATTERN, "/large/");
+}
+
 async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails | null> {
   const directDetails = readDirectDetails(definitionId);
   if (directDetails) return directDetails;
