@@ -90,8 +90,11 @@ export function DuelHud({ game }: { game: GameState }) {
         )}
         </AnimatePresence>
         <div className="horde-deck-counter-cluster">
-          <div data-player-attack-target="horde-deck" className="old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2">
-            <div className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+          <div
+            data-player-attack-target="horde-deck"
+            className={["old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2", attackCountVisible ? "is-attack-locked" : ""].join(" ")}
+          >
+            <div data-horde-mill-origin="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
             <div className="horde-deck-counter-copy">
@@ -125,6 +128,7 @@ export function DuelHud({ game }: { game: GameState }) {
           </div>
           <GameTooltip content="View graveyard" side="bottom" className="horde-deck-graveyard-host">
             <button
+              data-horde-mill-target="true"
               data-audio-click="valid"
               className="horde-deck-graveyard flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
@@ -196,34 +200,37 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           tutorialOverlayActive ? "z-[91]" : "z-[75]",
         ].join(" ")}
       >
-        <div
-          data-player-life-panel="true"
-          className={[
-            "old-panel combatant-vitals combatant-vitals-player flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
-            takingDamage ? "player-life-damage" : "",
-            lifeBuffAnimationId ? "player-life-buff" : "",
-          ].join(" ")}
-        >
-          {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
-          <div className="text-right">
-            <div className="old-title text-xs font-bold uppercase tracking-wide">{playerName}</div>
-            <div className="flex items-end justify-end gap-2 leading-none">
-              <GameTooltip content="View graveyard">
-                <button
-                  data-audio-click="valid"
-                  className="mb-0.5 flex items-center gap-1.5 rounded-full border border-[#0d0906]/80 bg-[#130d09]/80 px-2 py-0.5 text-[13px] font-black text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.45)] transition hover:border-[#d6a34c] hover:text-[#ffe0a0]"
-                  onClick={() => setGraveyardOpen(true)}
-                >
-                  <Archive size={14} strokeWidth={2.6} />
-                  <span>{game.player.graveyard.length}</span>
-                </button>
-              </GameTooltip>
-              <div className="text-3xl font-black leading-none text-[#fff0b2]">{visualLife}</div>
+        <div className="player-life-cluster">
+          <div
+            data-player-life-panel="true"
+            className={[
+              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+              takingDamage ? "player-life-damage" : "",
+              lifeBuffAnimationId ? "player-life-buff" : "",
+            ].join(" ")}
+          >
+            {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
+            <div className="player-life-copy">
+              <div className="old-title player-life-title text-xs font-bold uppercase tracking-wide">{playerName}</div>
+              <div className="player-life-values flex items-end gap-2 leading-none">
+                <div className="player-life-count">{visualLife}</div>
+              </div>
+            </div>
+            <div className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
+              <Heart size={24} />
             </div>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#16340e] text-[#caff9f]">
-            <Heart size={20} />
-          </div>
+          <GameTooltip content="View graveyard" side="top" className="player-graveyard-host">
+            <button
+              data-audio-click="valid"
+              className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
+              onClick={() => setGraveyardOpen(true)}
+              aria-label={`View Player graveyard, ${game.player.graveyard.length} cards`}
+            >
+              <Archive size={15} strokeWidth={2.4} />
+              <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
+            </button>
+          </GameTooltip>
         </div>
       </div>
       {graveyardOpen && <GraveyardViewerModal game={game} title="Player Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}

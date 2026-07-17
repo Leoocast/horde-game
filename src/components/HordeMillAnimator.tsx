@@ -30,27 +30,29 @@ export function HordeMillAnimator() {
 
 function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: string; definitionId: string; name: string; onComplete: () => void }) {
   const { imageUrl } = useCardDetails(definitionId);
-  const origin = useMemo(readHordeDeckOrigin, [itemId]);
+  const path = useMemo(readHordeMillPath, [itemId]);
+  const deltaX = path.target.x - path.origin.x;
+  const deltaY = path.target.y - path.origin.y;
 
   return (
     <motion.div
       className="pointer-events-none fixed z-[130] overflow-hidden rounded-md border border-[#d8a154]/80 bg-[#180f09] shadow-[0_0_24px_rgba(0,0,0,0.75),0_0_22px_rgba(216,161,84,0.32)]"
       style={{
-        left: origin.x - CARD_WIDTH / 2,
-        top: origin.y - CARD_HEIGHT / 2,
+        left: path.origin.x - CARD_WIDTH / 2,
+        top: path.origin.y - CARD_HEIGHT / 2,
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
       }}
-      initial={{ x: 0, y: 0, opacity: 0, scale: 0.72, rotate: -2, filter: "brightness(1.55) saturate(1.15)" }}
+      initial={{ x: 0, y: 0, opacity: 0, scale: 0.24, rotate: 4, filter: "brightness(1.55) saturate(1.15)" }}
       animate={{
-        x: [0, 42, 188, 360],
-        y: [0, -18, -44, -86],
+        x: [0, deltaX * 0.2, deltaX * 0.65, deltaX],
+        y: [0, deltaY - 28, deltaY - 44, deltaY],
         opacity: [0, 1, 1, 0],
-        scale: [0.72, 1.04, 0.96, 0.78],
-        rotate: [-2, 6, 20, 38],
+        scale: [0.24, 0.54, 0.42, 0.18],
+        rotate: [4, -8, -16, -24],
         filter: ["brightness(1.65) saturate(1.18)", "brightness(1.25) saturate(1.08)", "brightness(1)", "brightness(0.55) saturate(0.75)"],
       }}
-      transition={{ duration: 0.72, times: [0, 0.1, 0.64, 1], ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.66, times: [0, 0.14, 0.7, 1], ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={onComplete}
     >
       {imageUrl ? (
@@ -63,8 +65,14 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
   );
 }
 
-function readHordeDeckOrigin(): { x: number; y: number } {
-  const rect = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']")?.getBoundingClientRect();
-  if (!rect) return { x: window.innerWidth - 96, y: 104 };
-  return { x: rect.left + rect.width * 0.12, y: rect.top + rect.height * 1.18 };
+function readHordeMillPath(): { origin: { x: number; y: number }; target: { x: number; y: number } } {
+  const originRect = document.querySelector<HTMLElement>("[data-horde-mill-origin='true']")?.getBoundingClientRect();
+  const targetRect = document.querySelector<HTMLElement>("[data-horde-mill-target='true']")?.getBoundingClientRect();
+  const origin = originRect
+    ? { x: originRect.left + originRect.width / 2, y: originRect.top + originRect.height / 2 }
+    : { x: window.innerWidth / 2 - 92, y: 42 };
+  const target = targetRect
+    ? { x: targetRect.left + targetRect.width / 2, y: targetRect.top + targetRect.height / 2 }
+    : { x: origin.x - 96, y: origin.y };
+  return { origin, target };
 }

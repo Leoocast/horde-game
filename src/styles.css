@@ -5491,6 +5491,15 @@
   transform: rotate(45deg);
 }
 
+.horde-deck-counter.is-attack-locked {
+  border-color: rgb(204 92 67 / 0.72) !important;
+  animation: horde-counter-attack-locked 1.35s ease-in-out infinite;
+}
+
+.horde-deck-counter.is-attack-locked::before {
+  background: linear-gradient(90deg, transparent, rgb(224 89 59 / 0.76), transparent);
+}
+
 .horde-deck-counter-copy {
   min-width: 105px;
   flex: 1 1 auto;
@@ -5656,6 +5665,122 @@
   line-height: 1;
   text-shadow: 0 0 12px rgb(230 115 44 / 0.28);
   white-space: nowrap;
+}
+
+.player-life-cluster {
+  position: relative;
+  width: 304px;
+}
+
+.player-life-counter {
+  position: relative;
+  width: 304px;
+  min-height: 82px;
+  justify-content: space-between !important;
+  gap: 15px !important;
+  overflow: visible;
+  border: 1px solid rgb(160 166 111 / 0.48) !important;
+  border-top-color: rgb(196 211 135 / 0.7) !important;
+  border-radius: 0 !important;
+  padding: 10px 20px 10px 22px !important;
+  background:
+    linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(229 246 184 / 0.08),
+    inset 0 -12px 26px rgb(0 0 0 / 0.18),
+    0 16px 36px rgb(0 0 0 / 0.48),
+    0 0 24px rgb(87 143 105 / 0.1) !important;
+}
+
+.player-life-counter::before {
+  top: auto;
+  right: 18px;
+  bottom: -5px;
+  left: 18px;
+  width: auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(164 190 111 / 0.6), transparent);
+}
+
+.player-life-counter::after {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(171 195 119 / 0.58);
+  background: #131d1c;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.player-life-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.player-life-title {
+  color: #bccc91 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.2em !important;
+}
+
+.player-life-values {
+  margin-top: 3px;
+}
+
+.player-life-count {
+  color: #e9f5ba;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 0.86;
+  text-shadow: 0 0 18px rgb(119 180 94 / 0.22), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.player-life-emblem {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 auto;
+  border-color: rgb(136 179 98 / 0.68) !important;
+  border-radius: 0 !important;
+  background: linear-gradient(145deg, #31532b, #17271a) !important;
+  color: #d8ffae !important;
+  box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26), 0 0 18px rgb(95 169 76 / 0.16);
+  transform: rotate(45deg);
+}
+
+.player-life-emblem > svg {
+  transform: rotate(-45deg);
+}
+
+.player-graveyard-host {
+  position: absolute;
+  top: 14px;
+  right: 100%;
+  z-index: -1;
+  display: block;
+}
+
+.player-graveyard-button {
+  border-color: rgb(134 158 102 / 0.42) !important;
+  color: #bccc91 !important;
+}
+
+.player-graveyard-button:hover,
+.player-graveyard-button:focus-visible {
+  border-color: rgb(190 215 130 / 0.72) !important;
+  color: #e6f8b8 !important;
+}
+
+@keyframes horde-counter-attack-locked {
+  0%, 100% {
+    filter: drop-shadow(0 0 7px rgb(210 62 40 / 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgb(224 67 42 / 0.44));
+  }
 }
 
 .game-phase-orb::before,

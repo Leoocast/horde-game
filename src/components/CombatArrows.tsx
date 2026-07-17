@@ -237,7 +237,7 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
   const target = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']") ?? document.querySelector<HTMLElement>("[data-battlefield-drop-target='player-attack']");
   const rect = target?.getBoundingClientRect();
   if (!rect) return undefined;
-  return { x: rect.left + 18, y: rect.top + rect.height * 0.5 };
+  return { x: rect.left + rect.width * 0.5, y: rect.bottom };
 }
 
 function isCardBehindInStack(card: HTMLElement): boolean {
