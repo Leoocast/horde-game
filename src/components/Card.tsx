@@ -36,7 +36,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, dragging, glowBorderWidth = 6 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, dragging, glowBorderWidth = 1.5 }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
   const stats = cardStatState(game, card, visualDamageMarked);
@@ -56,7 +56,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   void onMana;
   const draggingGlow = dragging
-    ? `0 0 0 ${glowBorderWidth}px rgba(255,180,120,0.8), 0 0 10px rgba(255,122,61,0.85), 0 0 22px rgba(255,122,61,0.5)`
+    ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
     : "";
   const selectedGlow = selected
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
@@ -70,7 +70,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : "";
   const style = accentColor || showCyanGlow || selected || showEffectAvailable || dragging
     ? ({
-        borderColor: dragging ? "#ff7a3d" : selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        borderColor: dragging ? "#ff6a00" : selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
         "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
         boxShadow: [
           dragging ? draggingGlow : selectedGlow,

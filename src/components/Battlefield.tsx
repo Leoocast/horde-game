@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
-import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
+import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
@@ -513,6 +513,13 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
     const spellTargetable = isSpellTargetable(card);
     const spellTargetLocked = isSpellTargetLocked(card);
+    const spellLockedReq = spellTargeting
+      ? spellCard?.requiresTargets.find((req) => {
+          const selectedTarget = spellTargeting.targets[req.id];
+          return Array.isArray(selectedTarget) ? selectedTarget.includes(card.instanceId) : selectedTarget === card.instanceId;
+        })
+      : undefined;
+    const spellTargetLockedIsBuff = Boolean(spellTargetLocked && spellCard && spellLockedReq && targetRequirementIsBuff(spellCard, spellLockedReq));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargeting ? spellBuffedStats(game, card, spellCard, spellTargeting.targets) : undefined;
     const tutorialTargetable = tutorialZones.some(
@@ -572,7 +579,7 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxTargetable ? "counter-targetable-card" : "",
           smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
-          spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
+          spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
           tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >

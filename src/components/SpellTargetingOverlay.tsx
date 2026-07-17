@@ -1,7 +1,7 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState, TargetRequirement } from "../engine/GameTypes";
-import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
+import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 
@@ -26,7 +26,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const activeReq = spellTargeting && spell ? requirements[Math.min(spellTargeting.stepIndex, Math.max(requirements.length - 1, 0))] : undefined;
   const activeTargetId = activeReq && spellTargeting ? String(spellTargeting.targets[activeReq.id] ?? "") : "";
   const activeTarget = activeTargetId ? findBattlefieldCard(game, activeTargetId) : undefined;
-  const arrowColor = spell && activeReq && isBuffTarget(spell, activeReq) ? FRIENDLY_ARROW : ENEMY_ARROW;
+  const arrowColor = spell && activeReq && targetRequirementIsBuff(spell, activeReq) ? FRIENDLY_ARROW : ENEMY_ARROW;
   const followEnd = spellTargeting ? { x: spellTargeting.x, y: spellTargeting.y } : undefined;
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     .map((req) => {
       const end = lockedEnds[req.id];
       if (!end) return undefined;
-      return { req, arrow: makeTargetArrow(start, end), color: isBuffTarget(spell, req) ? FRIENDLY_ARROW : ENEMY_ARROW };
+      return { req, arrow: makeTargetArrow(start, end), color: targetRequirementIsBuff(spell, req) ? FRIENDLY_ARROW : ENEMY_ARROW };
     })
     .filter((item): item is { req: TargetRequirement; arrow: ReturnType<typeof makeTargetArrow>; color: string } => Boolean(item));
 
@@ -203,20 +203,6 @@ function findCardIdAtPoint(x: number, y: number): string | undefined {
     if (cardElement?.dataset.cardId) return cardElement.dataset.cardId;
   }
   return undefined;
-}
-
-function isBuffTarget(spell: CardInstance, requirement: TargetRequirement): boolean {
-  return spell.effects.some((effect) => effectBuffsTarget(effect, requirement.id));
-}
-
-function effectBuffsTarget(effect: Record<string, unknown>, targetId: string): boolean {
-  const buffTypes = new Set(["MODIFY_STATS", "ADD_COUNTERS", "GRANT_KEYWORD"]);
-  if (buffTypes.has(String(effect.type)) && String(effect.target ?? "") === targetId) return true;
-  for (const nestedKey of ["steps", "effects"] as const) {
-    const nested = effect[nestedKey];
-    if (Array.isArray(nested) && nested.some((item) => item && typeof item === "object" && effectBuffsTarget(item as Record<string, unknown>, targetId))) return true;
-  }
-  return false;
 }
 
 function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {

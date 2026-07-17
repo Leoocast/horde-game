@@ -1009,7 +1009,7 @@
     animation: actionable-card-glow 1.5s ease-in-out infinite;
   }
 
-  .spell-target-locked-friendly > article {
+  .spell-target-locked-buff > article {
     border-color: rgb(145 245 143 / 0.98) !important;
     box-shadow:
       0 0 0 1.5px rgb(201 255 184 / 0.84),
@@ -1017,13 +1017,12 @@
       0 0 28px rgb(42 212 76 / 0.56) !important;
   }
 
-  .spell-target-locked-enemy > article {
-    border-color: rgb(255 178 76 / 0.98) !important;
+  .spell-target-locked-attack > article {
+    border-color: #f04438 !important;
     box-shadow:
-      0 0 0 1.5px rgb(255 226 177 / 0.72),
-      0 0 10px rgb(255 151 42 / 0.82),
-      0 0 22px rgb(255 106 28 / 0.52) !important;
-    animation: actionable-card-glow 1.5s ease-in-out infinite;
+      0 0 0 1.5px rgb(255 136 122 / 0.82),
+      0 0 10px rgb(240 68 56 / 0.86),
+      0 0 22px rgb(210 45 38 / 0.56) !important;
   }
 
   .counter-target-stat-preview {
