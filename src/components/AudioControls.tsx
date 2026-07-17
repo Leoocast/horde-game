@@ -26,7 +26,7 @@ export function AudioControls({ variant = "panel" }: Props) {
             <div className="main-settings-description">Actions, cards, and interface feedback</div>
           </div>
           <div className="main-settings-control">
-            <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range" />
+            <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range game-range" />
             <span className="main-settings-value">{Math.round(sfxVolume * 100)}%</span>
             <button className={`main-settings-toggle ${enabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={enabled} onClick={() => setEnabled(!enabled)}>
               <span />
@@ -39,7 +39,7 @@ export function AudioControls({ variant = "panel" }: Props) {
             <div className="main-settings-description">Menu and battle soundtrack</div>
           </div>
           <div className="main-settings-control">
-            <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range" />
+            <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range game-range" />
             <span className="main-settings-value">{Math.round(musicVolume * 100)}%</span>
             <button className={`main-settings-toggle ${musicEnabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={musicEnabled} onClick={() => setMusicEnabled(!musicEnabled)}>
               <span />
@@ -77,7 +77,7 @@ export function AudioControls({ variant = "panel" }: Props) {
           step={0.05}
           value={sfxVolume}
           onChange={(event) => setSfxVolume(Number(event.target.value))}
-          className="min-w-0 flex-1 accent-[#d8a154]"
+          className="game-range min-w-0 flex-1"
         />
         <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(sfxVolume * 100)}</span>
       </div>
@@ -108,7 +108,7 @@ export function AudioControls({ variant = "panel" }: Props) {
             step={0.05}
             value={musicVolume}
             onChange={(event) => setMusicVolume(Number(event.target.value))}
-            className="min-w-0 flex-1 accent-[#d8a154]"
+            className="game-range min-w-0 flex-1"
           />
           <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
         </div>

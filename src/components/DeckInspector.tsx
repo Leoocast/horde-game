@@ -1,11 +1,10 @@
-import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import type { CardInstance } from "../engine/GameTypes";
+import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
-import { CardDetailsModal, KeywordPills } from "./CardPreview";
+import { KeywordPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -67,7 +66,7 @@ export function DeckInspector({ deck, onBack }: Props) {
           <div className="deck-detail-zoom">
             <Search size={15} aria-label="Card zoom" />
             <button disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">−</button>
-            <input type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} />
+            <input className="game-range" type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} />
             <button disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">+</button>
           </div>
         </div>
@@ -101,6 +100,8 @@ export function DeckInspector({ deck, onBack }: Props) {
         <DeckInspectorDetailsModal
           deck={deck}
           card={detailsCard}
+          position={detailsIndex + 1}
+          total={cards.length}
           fontSize={detailsFontSize}
           setFontSize={setDetailsFontSize}
           onClose={() => {
@@ -221,6 +222,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
 function DeckInspectorDetailsModal({
   deck,
   card,
+  position,
+  total,
   fontSize,
   setFontSize,
   onClose,
@@ -229,6 +232,8 @@ function DeckInspectorDetailsModal({
 }: {
   deck: InspectableDeck;
   card: NewDeckCard;
+  position: number;
+  total: number;
   fontSize: number;
   setFontSize: (value: number) => void;
   onClose: () => void;
@@ -237,21 +242,106 @@ function DeckInspectorDetailsModal({
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
+  const playSfx = useAudioStore((state) => state.playSfx);
+  const [closing, setClosing] = useState(false);
+  const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
+  const timers = useRef<number[]>([]);
+  const closeLock = useRef(false);
+  const transitionLock = useRef(false);
+
+  useEffect(() => {
+    return () => timers.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
+  const closeModal = () => {
+    if (closeLock.current) return;
+    closeLock.current = true;
+    setClosing(true);
+    timers.current.push(window.setTimeout(onClose, 150));
+  };
+
+  const navigate = (direction: "next" | "previous") => {
+    if (transitionLock.current || closeLock.current || transition !== "idle" || closing) return;
+    transitionLock.current = true;
+    setTransition(`leave-${direction}`);
+    timers.current.push(window.setTimeout(() => {
+      if (direction === "next") onNext();
+      else onPrevious();
+      playSfx("drawOne", { volume: 0.52 });
+      setTransition(`enter-${direction}`);
+      timers.current.push(window.setTimeout(() => {
+        setTransition("idle");
+        transitionLock.current = false;
+      }, 160));
+    }, 90));
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeModal();
+      if (event.key === "ArrowLeft") navigate("previous");
+      if (event.key === "ArrowRight") navigate("next");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
-    <CardDetailsModal
-      card={toCardInstance(card)}
-      imageUrl={details.imageUrl}
-      keywords={deckKeywords(card)}
-      stats={stats(card)}
-      text={text}
-      fontSize={fontSize}
-      setFontSize={setFontSize}
-      onClose={onClose}
-      onPrevious={onPrevious}
-      onNext={onNext}
-      previousLabel="Previous deck card"
-      nextLabel="Next deck card"
-    />
+    <div
+      data-preserve-card-focus="true"
+      className={`deck-collection-modal-backdrop ${closing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeModal();
+      }}
+    >
+      <section className="deck-collection-modal" role="dialog" aria-modal="true" aria-label={`${card.name} details`}>
+        <button className="deck-collection-modal-close" type="button" onClick={closeModal} title="Close details">
+          <X size={20} />
+        </button>
+
+        <div className={`deck-collection-modal-content is-${transition}`}>
+          <div className="deck-collection-modal-art-column">
+            <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title="Previous deck card">
+              <ChevronLeft size={24} />
+            </button>
+            <div className="deck-collection-modal-art">
+              {details.imageUrl ? <img src={details.imageUrl} alt={card.name} draggable={false} /> : <MissingCardArt card={card} />}
+            </div>
+            <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title="Next deck card">
+              <ChevronRight size={24} />
+            </button>
+          </div>
+
+          <div className="deck-collection-modal-info">
+            <header className="deck-collection-modal-header">
+              <p>Card details <span>{position} / {total}</span></p>
+              <div>
+                <h2>{card.name}</h2>
+                {card.manaCost && <span className="deck-collection-modal-cost">{card.manaCost}</span>}
+              </div>
+              <small>{typeLine(card)}</small>
+            </header>
+
+            <div className="deck-collection-modal-badges">
+              {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} />}
+              {stats(card) && <span className="deck-collection-modal-stats">{stats(card)}</span>}
+            </div>
+
+            <div className="deck-collection-modal-rules">
+              <p style={{ fontSize }}>{renderCardText(text)}</p>
+            </div>
+
+            <footer className="deck-collection-modal-footer">
+              <span>Text size</span>
+              <button disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))}>−</button>
+              <input className="game-range" type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
+              <button disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))}>+</button>
+              <strong>{fontSize}</strong>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -294,41 +384,6 @@ function formatDeckKeyword(keyword: string): string {
   const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
   if (toxic) return `TOXIC {${toxic[1]}}`;
   return text.toUpperCase();
-}
-
-function toCardInstance(card: NewDeckCard): CardInstance {
-  return {
-    instanceId: `inspect-${card.id}`,
-    definitionId: card.id,
-    name: card.name,
-    displayName: card.name,
-    owner: "player",
-    controller: "player",
-    zone: "library",
-    isToken: false,
-    manaCost: card.manaCost ?? "",
-    manaValue: card.manaValue ?? 0,
-    colors: card.colors ?? [],
-    cardTypes: card.cardTypes ?? [],
-    subtypes: card.subtypes ?? [],
-    basePower: card.power ?? 0,
-    baseToughness: card.toughness ?? 0,
-    keywords: [],
-    effects: [],
-    activatedAbilities: [],
-    requiresTargets: [],
-    tapped: false,
-    entersTapped: false,
-    summoningSickness: false,
-    activatedThisTurn: false,
-    damageMarked: 0,
-    deathtouchDamage: false,
-    counters: {},
-    temporaryPower: 0,
-    temporaryToughness: 0,
-    temporaryKeywords: [],
-    flags: {},
-  };
 }
 
 function describeCardFromJson(card: NewDeckCard): string {
