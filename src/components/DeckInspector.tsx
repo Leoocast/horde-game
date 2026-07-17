@@ -177,7 +177,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     );
   }
 
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
+  const text = deckCardDescription(card, details.oracleText, details.flavorText);
   const hasText = text.length > 0;
 
   return (
@@ -201,9 +201,9 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         ) : (
           <MissingCardArt card={card} />
         )}
-        <div className="relative z-[120] flex items-center justify-between gap-2 overflow-visible">
+        <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
+          {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
           {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
-          {stats(card) && <span className="preview-stat-pill ml-auto">{stats(card)}</span>}
         </div>
         {hasText && (
           <div className="deck-detail-rules">
@@ -241,7 +241,9 @@ function DeckInspectorDetailsModal({
   onNext: () => void;
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
+  const text = deckCardDescription(card, details.oracleText, details.flavorText);
+  const keywords = deckKeywords(card);
+  const cardStats = stats(card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -317,15 +319,16 @@ function DeckInspectorDetailsModal({
               <p>Card details <span>{position} / {total}</span></p>
               <div>
                 <h2>{card.name}</h2>
-                {card.manaCost && <span className="deck-collection-modal-cost">{card.manaCost}</span>}
               </div>
               <small>{typeLine(card)}</small>
             </header>
 
-            <div className="deck-collection-modal-badges">
-              {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} />}
-              {stats(card) && <span className="deck-collection-modal-stats">{stats(card)}</span>}
-            </div>
+            {(keywords || cardStats) && (
+              <div className="deck-collection-modal-badges">
+                {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
+                {keywords && <KeywordPills keywords={keywords} />}
+              </div>
+            )}
 
             <div className="deck-collection-modal-rules">
               <p style={{ fontSize }}>{renderCardText(text)}</p>
@@ -389,6 +392,11 @@ function formatDeckKeyword(keyword: string): string {
 function describeCardFromJson(card: NewDeckCard): string {
   const abilities = card.abilities ?? [];
   return abilities.map(describeAbility).filter(Boolean).join("\n\n");
+}
+
+function deckCardDescription(card: NewDeckCard, oracleText?: string, flavorText?: string): string {
+  if ((card.cardTypes ?? []).some((type) => type.toLowerCase() === "land")) return "Add mana.";
+  return cleanCardDescriptionText(oracleText, flavorText, deckKeywords(card), describeCardFromJson(card));
 }
 
 function describeAbility(ability: NewDeckAbility): string {

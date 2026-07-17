@@ -948,14 +948,7 @@
   }
 
   .deck-collection-modal::before {
-    position: absolute;
-    z-index: 0;
-    top: 0;
-    bottom: 0;
-    left: 36%;
-    width: 1px;
-    background: linear-gradient(transparent, rgb(151 139 95 / 0.24) 12% 88%, transparent);
-    content: "";
+    display: none;
   }
 
   .deck-collection-modal::after {
@@ -1027,9 +1020,7 @@
     align-items: center;
     justify-content: center;
     padding: 34px 52px;
-    background:
-      radial-gradient(circle at 50% 44%, rgb(92 111 94 / 0.13), transparent 56%),
-      linear-gradient(180deg, rgb(4 11 9 / 0.72), rgb(8 16 13 / 0.5));
+    background: transparent;
   }
 
   .deck-collection-modal-art {
@@ -1139,14 +1130,6 @@
     line-height: 1.04;
   }
 
-  .deck-collection-modal-cost {
-    flex: 0 0 auto;
-    color: #aaa887;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-  }
-
   .deck-collection-modal-header small {
     display: block;
     margin-top: 12px;
@@ -1182,7 +1165,6 @@
     height: 27px;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
     border: 1px solid #6b715b;
     background: linear-gradient(180deg, #c5c4a8, #818b73);
     color: #121a15;
@@ -1202,6 +1184,10 @@
     scrollbar-width: thin;
   }
 
+  .deck-collection-modal-header + .deck-collection-modal-rules {
+    border-top: 0;
+  }
+
   .deck-collection-modal-rules p {
     margin: 0;
     color: #c2c4b0;
@@ -1214,6 +1200,7 @@
     min-height: 52px;
     flex: 0 0 auto;
     align-items: center;
+    justify-content: flex-end;
     gap: 9px;
     color: #75877d;
     font-size: 10px;
@@ -1223,7 +1210,7 @@
   }
 
   .deck-collection-modal-footer > span {
-    margin-right: auto;
+    margin-right: 8px;
   }
 
   .deck-collection-modal-footer button {
@@ -1299,10 +1286,6 @@
 
     .deck-collection-modal-content {
       grid-template-columns: 39% 61%;
-    }
-
-    .deck-collection-modal::before {
-      left: 39%;
     }
 
     .deck-collection-modal-art-column {
