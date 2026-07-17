@@ -1539,7 +1539,7 @@
     gap: 8px;
     isolation: isolate;
     transform: translateY(84px);
-    --hand-card-width: clamp(164px, min(13.6vw, calc((100cqw - 48px) / 5.0)), 263px);
+    --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
   }
 
   .player-hand-cards > * + * {
@@ -1548,10 +1548,6 @@
 
   .player-hand-cards > * {
     transition: margin-left 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  .duel-table:has(.battlefield-side-player .battlefield-row-overflow) .player-hand-cards {
-    --hand-card-width: clamp(139px, min(11.6vw, calc((100cqw - 48px) / 5.9)), 224px);
   }
 
   .hand-card-slot {
