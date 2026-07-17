@@ -63,7 +63,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : "";
   const showCyanGlow = Boolean(actionable);
   const actionGlow = showCyanGlow
-    ? "0 0 0 1px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
+    ? "0 0 0 1.5px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
     : "";
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
