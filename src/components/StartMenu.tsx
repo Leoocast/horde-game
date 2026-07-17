@@ -1,5 +1,5 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Shield, Skull, Sparkles, Swords, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Settings, Shield, Skull, Swords, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
@@ -25,10 +25,10 @@ type Props = {
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
-const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Wanderer", setupTurns: 4, description: "Four turns to prepare" },
-  { id: "normal", label: "Adventurer", setupTurns: 3, description: "Three turns to prepare" },
-  { id: "hard", label: "Doomed", setupTurns: 2, description: "Two turns to prepare" },
+const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = [
+  { id: "easy", label: "Adventurer", setupTurns: 4 },
+  { id: "normal", label: "Veteran", setupTurns: 3 },
+  { id: "hard", label: "Doomed", setupTurns: 2 },
 ];
 
 const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
@@ -45,6 +45,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
+  const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
@@ -84,6 +85,12 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   function startGame() {
     persistDeveloperMode(developerMode);
     setLaunching(true);
+  }
+
+  function changeDifficulty(nextMode: DifficultyMode) {
+    if (nextMode === mode) return;
+    playSfx("playLand", { volume: 0.72 });
+    setMode(nextMode);
   }
 
   function toggleDeveloperMode() {
@@ -203,7 +210,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onSelectHordeDeck={onSelectHordeDeck}
           onInspectHordeDeck={onViewHordeDeck}
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={changeDifficulty}
           selectedMode={selectedMode}
           showAdvanced={showAdvanced}
           onToggleAdvanced={() => setShowAdvanced((value) => !value)}
@@ -321,14 +328,13 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
           <div className="expedition-section-heading">
             <div><p>Choose your fate</p><h2 id="difficulty-heading">Difficulty</h2></div>
-            <span>The Horde awakens after <strong>{props.selectedMode.setupTurns} turns</strong></span>
+            <HordeAwakening turns={props.selectedMode.setupTurns} />
           </div>
           <div className="expedition-mode-grid">
             {modes.map((item) => (
-              <button key={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)}>
+              <button key={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
                 <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
-                <span><strong>{item.label}</strong><small>{item.description}</small></span>
-                <i>{item.setupTurns}</i>
+                <span><strong>{item.label}</strong></span>
               </button>
             ))}
           </div>
@@ -336,7 +342,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
 
         <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
           <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
-            <Sparkles size={15} /> Advanced settings <span>{props.showAdvanced ? "Hide" : "Seed & developer tools"}</span>
+            <Settings size={16} /> Advanced settings <span>{props.showAdvanced ? "Hide" : "Seed & developer tools"}</span>
           </button>
           {props.showAdvanced && (
             <div className="expedition-advanced-content">
@@ -359,12 +365,34 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
 
       <footer className="expedition-footer">
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          <span><small>Begin the</small> Expedition</span><Play size={19} />
+          <span><small>Begin the</small> Expedition</span><Play size={29} />
         </button>
       </footer>
 
       {props.launching && <EncounterIntro playerName={props.playerName.trim() || "Player"} hordeName={props.hordeDeck?.deck.name ?? "The Horde"} />}
     </section>
+  );
+}
+
+function HordeAwakening({ turns }: { turns: number }) {
+  const previousTurns = useRef(turns);
+  const [direction, setDirection] = useState<"idle" | "easier" | "harder">("idle");
+
+  useEffect(() => {
+    const previous = previousTurns.current;
+    previousTurns.current = turns;
+    if (turns === previous) return;
+    setDirection(turns > previous ? "easier" : "harder");
+    const timeout = window.setTimeout(() => setDirection("idle"), 650);
+    return () => window.clearTimeout(timeout);
+  }, [turns]);
+
+  return (
+    <div className={`expedition-awakening ${direction !== "idle" ? `is-${direction}` : ""} ${turns === 2 ? "is-doomed" : turns === 4 ? "is-safe" : ""}`} aria-live="polite">
+      <span>The Horde awakens after</span>
+      <strong key={`${turns}-${direction}`}>{turns}</strong>
+      <span>turns</span>
+    </div>
   );
 }
 

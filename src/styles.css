@@ -335,11 +335,11 @@
   }
 
   .expedition-body {
-    width: min(1420px, calc(100vw - 36px));
+    width: min(1500px, calc(100vw - 24px));
     min-height: 0;
     margin: 0 auto;
     overflow-y: auto;
-    padding: clamp(20px, 3vh, 34px) 12px 24px;
+    padding: clamp(64px, 8vh, 96px) 12px 24px;
   }
 
   .expedition-combatants {
@@ -526,12 +526,12 @@
   }
 
   .expedition-difficulty {
-    margin-top: 22px;
+    margin-top: 44px;
   }
 
   .expedition-section-heading {
     display: flex;
-    align-items: end;
+    align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgb(140 149 130 / 0.14);
     padding-bottom: 10px;
@@ -547,16 +547,53 @@
     text-transform: uppercase;
   }
 
-  .expedition-section-heading > span {
-    color: #6d7d74;
+  .expedition-awakening {
+    display: flex;
+    min-height: 54px;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgb(157 145 94 / 0.25);
+    background: linear-gradient(110deg, rgb(36 51 41 / 0.48), rgb(9 20 16 / 0.64));
+    padding: 5px 17px;
+    color: #a9ad98;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 15px;
-    font-style: italic;
+    font-size: 18px;
+    letter-spacing: 0.025em;
+    box-shadow: inset 0 1px 0 rgb(225 213 165 / 0.06), 0 8px 22px rgb(0 0 0 / 0.15);
+    animation: expedition-doomed-tremble 1.75s ease-in-out infinite;
   }
 
-  .expedition-section-heading > span strong {
-    color: #aaa17f;
+  .expedition-awakening strong {
+    display: inline-grid;
+    min-width: 38px;
+    place-items: center;
+    color: #d2bd78;
+    font-size: 34px;
     font-weight: 500;
+    line-height: 1;
+    text-shadow: 0 0 16px rgb(190 166 91 / 0.22);
+  }
+
+  .expedition-awakening.is-easier strong {
+    color: #86bd83;
+    text-shadow: 0 0 18px rgb(87 166 86 / 0.42);
+    animation: expedition-turns-rise 650ms ease-out both;
+  }
+
+  .expedition-awakening.is-harder strong {
+    color: #c97968;
+    text-shadow: 0 0 18px rgb(178 70 53 / 0.42);
+    animation: expedition-turns-fall 650ms ease-out both;
+  }
+
+  .expedition-awakening.is-doomed strong {
+    color: #c97968;
+    text-shadow: 0 0 18px rgb(178 70 53 / 0.42);
+  }
+
+  .expedition-awakening.is-safe strong {
+    color: #86bd83;
+    text-shadow: 0 0 18px rgb(87 166 86 / 0.38);
   }
 
   .expedition-mode-grid {
@@ -570,7 +607,7 @@
     position: relative;
     display: grid;
     min-height: 87px;
-    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-columns: 44px minmax(0, 1fr);
     align-items: center;
     gap: 13px;
     overflow: hidden;
@@ -610,8 +647,7 @@
     color: #c8b474;
   }
 
-  .expedition-mode strong,
-  .expedition-mode small {
+  .expedition-mode strong {
     display: block;
   }
 
@@ -627,25 +663,8 @@
     color: #e0d5b3;
   }
 
-  .expedition-mode small {
-    margin-top: 3px;
-    color: #65766d;
-    font-size: 13px;
-  }
-
-  .expedition-mode i {
-    color: #68786e;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 31px;
-    font-style: normal;
-  }
-
-  .expedition-mode.is-selected i {
-    color: #b29e62;
-  }
-
   .expedition-advanced {
-    margin-top: 13px;
+    margin-top: 34px;
     border-top: 1px solid rgb(137 146 128 / 0.1);
     border-bottom: 1px solid rgb(137 146 128 / 0.1);
   }
@@ -789,11 +808,11 @@
     min-width: 318px;
     min-height: 71px;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 22px;
     border: 1px solid rgb(178 158 92 / 0.6);
     background: linear-gradient(110deg, #324a39, #172c22 66%, #243b2e);
-    padding: 8px 22px;
+    padding: 8px 24px 8px 26px;
     color: #e3d8b5;
     box-shadow: inset 0 1px 0 rgb(231 218 168 / 0.13), 0 10px 25px rgb(0 0 0 / 0.3);
     text-align: left;
@@ -924,6 +943,27 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes expedition-turns-rise {
+    0% { opacity: 0; transform: translateY(12px) scale(0.82); }
+    55% { opacity: 1; transform: translateY(-3px) scale(1.12); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes expedition-turns-fall {
+    0% { opacity: 0; transform: translateY(-12px) scale(1.14); }
+    55% { opacity: 1; transform: translateY(3px) scale(0.94); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes expedition-doomed-tremble {
+    0%, 53%, 100% { transform: translateX(0); }
+    58% { transform: translateX(-1px) rotate(-0.15deg); }
+    63% { transform: translateX(2px) rotate(0.18deg); }
+    68% { transform: translateX(-2px) rotate(-0.18deg); }
+    73% { transform: translateX(1px) rotate(0.1deg); }
+    78% { transform: translateX(0); }
+  }
+
   @keyframes encounter-intro-open {
     0% { opacity: 0; }
     16%, 82% { opacity: 1; }
@@ -964,6 +1004,8 @@
     .expedition-combatants { grid-template-columns: 1fr; }
     .expedition-versus { display: none; }
     .expedition-mode-grid { grid-template-columns: 1fr; }
+    .expedition-section-heading { align-items: stretch; flex-direction: column; gap: 12px; }
+    .expedition-awakening { justify-content: center; }
     .expedition-advanced-content { grid-template-columns: 1fr; }
     .expedition-footer > div { display: none; }
     .expedition-begin { width: 100%; }
