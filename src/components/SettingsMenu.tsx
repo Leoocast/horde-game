@@ -1,158 +1,153 @@
-import { Copy, Crown, Home, RefreshCw, Settings, Skull } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, Copy, Crown, Home, RefreshCcw, RefreshCw, Settings, Skull, X } from "lucide-react";
+import { useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
+import { useToastStore } from "../store/useToastStore";
 import { AudioControls } from "./AudioControls";
+import { GameLog } from "./GameLog";
+import { ZoneDrawer } from "./ZoneDrawer";
 
 type Props = {
   onReturnToMenu?: () => void;
-  launcher?: "icon" | "main-menu";
-  newGameSeedSettings?: {
-    seed: string;
-    developerMode: boolean;
-    onSeedChange: (seed: string) => void;
-    onCopySeed: () => void;
-    onRegenerateSeed: () => void;
-    onToggleDeveloperMode: () => void;
-  };
+  setupTurns?: number;
 };
 
-export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "icon" }: Props) {
-  const seed = useGameStore((state) => state.game?.seed);
+export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
+  const game = useGameStore((state) => state.game);
+  const seed = useGameStore((state) => state.seed);
+  const setSeed = useGameStore((state) => state.setSeed);
+  const reset = useGameStore((state) => state.reset);
   const triggerEndGame = useGameStore((state) => state.triggerEndGame);
-  const isDeveloperMode = seed?.trim().toLowerCase() === "developer";
+  const pushToast = useToastStore((state) => state.pushToast);
+  const isDeveloperMode = game.seed.trim().toLowerCase() === "developer";
 
   const [open, setOpen] = useState(false);
-  const menuPresence = useAnimatedPresence(open);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | undefined>();
+  const modalPresence = useAnimatedPresence(open, 220);
+  const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
+  const restartPresence = useAnimatedPresence(showRestartConfirmation, 190);
+  const [restartSeed, setRestartSeed] = useState("");
+  const effectiveSeed = seed.trim() || game.seed;
 
-  useEffect(() => {
-    if (!open) return;
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target;
-      if (target instanceof Element && target.closest("[data-preserve-settings-menu='true']")) return;
-      if (containerRef.current && !containerRef.current.contains(target as Node)) setOpen(false);
+  async function copySeed() {
+    try {
+      await navigator.clipboard.writeText(effectiveSeed);
+      pushToast({ title: "Seed copied", message: effectiveSeed, tone: "success" });
+    } catch {
+      pushToast({ title: "Could not copy seed", message: effectiveSeed, tone: "warning" });
     }
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [open]);
+  }
 
-  const toggle = () => {
-    setOpen((value) => {
-      const next = !value;
-      if (next && buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setMenuPos({ top: rect.bottom + 14, right: window.innerWidth - rect.right });
-      }
-      return next;
-    });
-  };
+  function openRestartConfirmation() {
+    setRestartSeed(effectiveSeed);
+    setShowRestartConfirmation(true);
+  }
+
+  function restartGame() {
+    const confirmedSeed = restartSeed.trim() || game.seed;
+    setSeed(confirmedSeed);
+    reset(confirmedSeed, setupTurns);
+    setShowRestartConfirmation(false);
+    setOpen(false);
+  }
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        ref={buttonRef}
-        className={launcher === "main-menu" ? "main-menu-entry group" : "game-header-button flex h-10 w-10 items-center justify-center transition"}
-        onClick={toggle}
-        title="Settings"
-      >
-        {launcher === "main-menu" ? (
-          <>
-            <span className="main-menu-entry-mark" />
-            <span>Ajustes</span>
-          </>
-        ) : (
-          <Settings size={18} />
-        )}
+    <>
+      <button className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={() => setOpen(true)} title="Settings" aria-label="Open settings">
+        <Settings size={18} />
       </button>
-      {menuPresence.mounted && menuPos && (
-        <div className={["game-settings-popover game-menu-surface fixed z-[400]", menuPresence.closing ? "is-closing" : "", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
-          <AudioControls />
 
-          {newGameSeedSettings && (
-            <div className="old-panel mt-2 p-4 text-[#f6e6b8]">
-              <h3 className="old-title text-sm font-black uppercase tracking-widest text-[#f4cc74]">Game Setup</h3>
-              <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="game-seed">
-                Seed
-              </label>
-              <div className="mt-2 grid grid-cols-[1fr_auto_auto] gap-2">
-                <input
-                  id="game-seed"
-                  value={newGameSeedSettings.developerMode ? "developer" : newGameSeedSettings.seed}
-                  onChange={(event) => newGameSeedSettings.onSeedChange(event.target.value)}
-                  disabled={newGameSeedSettings.developerMode}
-                  className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none transition disabled:opacity-70"
-                  placeholder="random-seed"
-                />
-                <button className="old-button flex h-10 w-10 items-center justify-center" type="button" onClick={newGameSeedSettings.onCopySeed} title="Copy seed">
-                  <Copy size={16} />
-                </button>
-                <button className="old-button flex h-10 w-10 items-center justify-center" type="button" onClick={newGameSeedSettings.onRegenerateSeed} title="Regenerate seed">
-                  <RefreshCw size={16} />
-                </button>
+      {modalPresence.mounted && (
+        <div className={["game-settings-modal-backdrop fixed inset-0 z-[430] flex items-center justify-center p-5", modalPresence.closing ? "is-closing" : ""].join(" ")} role="presentation">
+          <section className={["game-settings-modal old-panel flex max-h-[min(860px,calc(100vh-40px))] w-[min(1040px,calc(100vw-40px))] flex-col overflow-hidden", modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
+            <header className="game-settings-modal-header flex items-center justify-between gap-5 px-7 py-5">
+              <div>
+                <div className="game-dialog-kicker">Battle configuration</div>
+                <h2 id="battle-settings-title">Settings &amp; Chronicle</h2>
               </div>
-
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#8f6a36]/55 bg-[#1b120b]/55 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#d6b879]">
-                <span>Developer mode</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={newGameSeedSettings.developerMode}
-                  onClick={newGameSeedSettings.onToggleDeveloperMode}
-                  className={[
-                    "relative h-6 w-11 rounded-full border transition",
-                    newGameSeedSettings.developerMode ? "border-[#f0c46f] bg-[#7a4515]" : "border-[#8f6a36]/70 bg-[#120b07]",
-                  ].join(" ")}
-                >
-                  <span className={["absolute top-1 h-3.5 w-3.5 rounded-full bg-[#ffe6aa] transition", newGameSeedSettings.developerMode ? "left-6" : "left-1"].join(" ")} />
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {onReturnToMenu && (
-            <div className="mt-2">
-              <button
-                className="old-button flex h-11 w-full items-center justify-center gap-2 text-xs font-bold uppercase tracking-wide text-[#ffcfc2]"
-                onClick={onReturnToMenu}
-              >
-                <Home size={16} />
-                Return to Menu
+              <button className="game-header-button flex h-10 w-10 items-center justify-center" type="button" onClick={() => setOpen(false)} title="Close settings" aria-label="Close settings">
+                <X size={19} />
               </button>
-            </div>
-          )}
+            </header>
 
-          {isDeveloperMode && onReturnToMenu && (
-            <div className="old-panel mt-2 p-4">
-              <h3 className="old-title mb-3 text-center text-sm font-black uppercase tracking-widest text-[#f4cc74]">Developer Options</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  className="old-button-green flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase"
-                  onClick={() => {
-                    triggerEndGame("player");
-                    setOpen(false);
-                  }}
-                >
-                  <Crown size={14} />
-                  Win
-                </button>
-                <button
-                  className="old-button flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase"
-                  onClick={() => {
-                    triggerEndGame("horde");
-                    setOpen(false);
-                  }}
-                >
-                  <Skull size={14} />
-                  Lose
-                </button>
+            <div className="old-scrollbar grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-5 overflow-y-auto p-5">
+              <div className="space-y-4">
+                <AudioControls />
+
+                <section className="old-panel-soft p-4">
+                  <div className="game-settings-section-title">Battle seed</div>
+                  <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-2">
+                    <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none" aria-label="Battle seed" />
+                    <button className="icon-button h-10 w-10" type="button" onClick={copySeed} title="Copy seed" aria-label="Copy seed"><Copy size={16} /></button>
+                    <button className="icon-button h-10 w-10" type="button" onClick={openRestartConfirmation} title="Restart battle" aria-label="Restart battle"><RefreshCcw size={16} /></button>
+                  </div>
+                  <div className="game-settings-rng mt-3">RNG state <span>{game.currentRandomState.toString(16)}</span></div>
+                </section>
+
+                <ZoneDrawer game={game} />
+
+                {isDeveloperMode && (
+                  <section className="old-panel-soft p-4">
+                    <div className="game-settings-section-title">Developer options</div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> Win</button>
+                      <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("horde")}><Skull size={14} /> Lose</button>
+                    </div>
+                  </section>
+                )}
               </div>
+
+              <section className="game-settings-log old-panel-soft flex min-h-[430px] flex-col p-4">
+                <div className="game-settings-section-title">Chronicle</div>
+                <p>Every action recorded during this battle.</p>
+                <GameLog game={game} className="mt-4 min-h-0 flex-1" />
+              </section>
             </div>
-          )}
+
+            <footer className="game-settings-modal-footer flex items-center justify-between gap-4 px-5 py-4">
+              <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>Close</button>
+              {onReturnToMenu && (
+                <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> Return to menu</button>
+              )}
+            </footer>
+          </section>
         </div>
       )}
-    </div>
+
+      {restartPresence.mounted && (
+        <div className={["game-home-backdrop fixed inset-0 z-[460] flex items-center justify-center p-6 text-[#e4ddc2]", restartPresence.closing ? "is-closing" : ""].join(" ")} role="presentation">
+          <section className={["old-panel game-home-dialog w-full max-w-md p-6", restartPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="restart-game-title">
+            <div className="flex items-start gap-3">
+              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
+              <div>
+                <div className="game-dialog-kicker">Rewrite this chronicle</div>
+                <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">Restart battle?</h2>
+                <p className="mt-2 text-sm text-[#8d9a94]">Current progress will be lost.</p>
+              </div>
+            </div>
+            <div className="mt-5 border border-[#687571]/35 bg-[#070d0f]/65 p-4">
+              <div className="game-settings-section-title">New seed</div>
+              <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                <input value={restartSeed} onChange={(event) => setRestartSeed(event.target.value)} className="game-seed-input h-10 min-w-0 px-3 text-sm outline-none" />
+                <button className="icon-button h-10 w-10" type="button" onClick={() => setRestartSeed(generateRandomSeed())} title="Generate seed"><RefreshCw size={16} /></button>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowRestartConfirmation(false)}>Cancel</button>
+              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={restartGame}><RefreshCcw size={16} /> Restart</button>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
   );
+}
+
+function generateRandomSeed(): string {
+  const cryptoRandom = new Uint32Array(2);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(cryptoRandom);
+  else {
+    cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
+    cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
+  }
+  return `horde-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

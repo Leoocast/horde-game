@@ -9,11 +9,9 @@ import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
 import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
-import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { HordeMillAnimator } from "./HordeMillAnimator";
-import { InfoMenu } from "./InfoMenu";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
@@ -56,22 +54,8 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   return (
     <main className="duel-table game-screen h-screen overflow-hidden">
       <AppHeader
-        left={
-          <div className="flex min-w-0 items-center">
-            <button
-              className="game-header-button ml-3 flex h-10 w-10 shrink-0 items-center justify-center"
-              type="button"
-              onClick={() => setShowHomeConfirmation(true)}
-              title="Return home"
-              aria-label="Return to home menu"
-            >
-              <Home size={18} />
-            </button>
-            <GameStatusBadge game={game} />
-          </div>
-        }
-        center={<TurnPhaseHud game={game} />}
-        right={<InfoMenu setupTurns={setupTurns} />}
+        left={<TurnPhaseHud game={game} />}
+        setupTurns={setupTurns}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -94,7 +78,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-40 pt-3">
+      <div className="grid h-[calc(100vh-72px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-40 pt-3">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-horde">
             <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
