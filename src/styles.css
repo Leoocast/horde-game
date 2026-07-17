@@ -243,7 +243,7 @@
 
   .expedition-setup.is-closing {
     pointer-events: none;
-    animation: expedition-screen-exit 220ms ease-in both;
+    animation: expedition-screen-exit 280ms ease-in both;
   }
 
   .expedition-setup::before {

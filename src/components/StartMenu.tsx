@@ -69,7 +69,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     const timeout = window.setTimeout(() => {
       setMenuScreen("home");
       setSetupClosing(false);
-    }, 220);
+    }, 330);
     return () => window.clearTimeout(timeout);
   }, [setupClosing]);
 
