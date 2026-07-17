@@ -47,6 +47,8 @@ export function useCardDetails(definitionId: string): CardRemoteDetails {
 
   useEffect(() => {
     let active = true;
+    // Do not display the previous card's image while a new definition is loading.
+    setDetails(readDirectDetails(definitionId) ?? readCachedDetails(definitionId) ?? {});
     loadCardDetails(definitionId).then((loaded) => {
       if (active) setDetails(loaded ?? {});
     });
@@ -60,6 +62,13 @@ export function useCardDetails(definitionId: string): CardRemoteDetails {
 
 export function useCardImage(definitionId: string): string | undefined {
   return useCardDetails(definitionId).imageUrl;
+}
+
+const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;
+
+export function toHighResImageUrl(imageUrl: string | undefined): string | undefined {
+  if (!imageUrl) return imageUrl;
+  return imageUrl.replace(SCRYFALL_RESOLUTION_PATTERN, "/large/");
 }
 
 async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails | null> {

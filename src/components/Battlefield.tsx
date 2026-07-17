@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
-import { targetCandidatesWithSelectedTargets } from "../engine/Targeting";
+import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
@@ -25,6 +25,8 @@ const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
+// Feature flag: disable to show full creature cards whenever the row has enough room.
+const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
@@ -88,6 +90,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
+  const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
 
   useLayoutEffect(() => {
     const row = creatureRowRef.current;
@@ -309,11 +312,11 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div
             ref={creatureRowRef}
-            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
             className={[
               "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
               compact ? "battlefield-row-body-compact" : "battlefield-row-body",
-              creatureRowOverflowing ? "battlefield-row-overflow" : "",
+              cropCreatureCards ? "battlefield-row-overflow" : "",
             ].join(" ")}
           >
             <AnimatePresence initial={false} mode="popLayout">
@@ -339,8 +342,8 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div
             ref={creatureRowRef}
-            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
-            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", creatureRowOverflowing ? "battlefield-row-overflow" : ""].join(" ")}
+            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
+            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", cropCreatureCards ? "battlefield-row-overflow" : ""].join(" ")}
           >
             <AnimatePresence initial={false} mode="popLayout">
               {renderCardStacks(rowCreatures, false, "creature")}
@@ -513,6 +516,13 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
     const spellTargetable = isSpellTargetable(card);
     const spellTargetLocked = isSpellTargetLocked(card);
+    const spellLockedReq = spellTargeting
+      ? spellCard?.requiresTargets.find((req) => {
+          const selectedTarget = spellTargeting.targets[req.id];
+          return Array.isArray(selectedTarget) ? selectedTarget.includes(card.instanceId) : selectedTarget === card.instanceId;
+        })
+      : undefined;
+    const spellTargetLockedIsBuff = Boolean(spellTargetLocked && spellCard && spellLockedReq && targetRequirementIsBuff(spellCard, spellLockedReq));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargeting ? spellBuffedStats(game, card, spellCard, spellTargeting.targets) : undefined;
     const tutorialTargetable = tutorialZones.some(
@@ -560,6 +570,9 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
           isLand ? "battlefield-land-slot" : "",
+          selected ? "battlefield-card-selected" : "",
+          actionable ? "battlefield-card-actionable" : "",
+          effectAvailable && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
@@ -572,10 +585,11 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxTargetable ? "counter-targetable-card" : "",
           smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
-          spellTargetLocked ? `spell-target-locked-card spell-target-locked-${card.controller === "player" ? "friendly" : "enemy"}` : "",
+          spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
           tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
+      <span className="battlefield-card-depth" aria-hidden="true" />
       <Card
         game={game}
         card={card}
@@ -584,7 +598,8 @@ export function Battlefield({ game, side, cards }: Props) {
         selected={selected}
         attacking={attacking}
         blocking={blocking}
-        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || tutorialTargetable)}
+        glowBorderWidth={4}
+        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable)}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}

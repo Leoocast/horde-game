@@ -30,6 +30,21 @@ export function targetCandidatesWithSelectedTargets(game: GameState, sourceSide:
   });
 }
 
+export function targetRequirementIsBuff(card: CardInstance, requirement: TargetRequirement): boolean {
+  return card.effects.some((effect) => effectBuffsTarget(effect, requirement.id));
+}
+
+function effectBuffsTarget(effect: Record<string, unknown>, targetId: string): boolean {
+  const buffTypes = new Set(["MODIFY_STATS", "PUMP", "PUMP_UNTIL_END_OF_TURN", "ADD_COUNTERS", "PUT_COUNTER", "GRANT_KEYWORD"]);
+  const referencedTarget = effect.targetRef ?? effect.target;
+  if (buffTypes.has(String(effect.type)) && String(referencedTarget ?? "") === targetId) return true;
+  for (const nestedKey of ["steps", "effects"] as const) {
+    const nested = effect[nestedKey];
+    if (Array.isArray(nested) && nested.some((item) => item && typeof item === "object" && effectBuffsTarget(item as Record<string, unknown>, targetId))) return true;
+  }
+  return false;
+}
+
 export function hasValidTargetSequence(game: GameState, sourceSide: Side, requirements: TargetRequirement[]): boolean {
   function visit(index: number, selected: Record<string, string | string[]>): boolean {
     if (index >= requirements.length) return true;

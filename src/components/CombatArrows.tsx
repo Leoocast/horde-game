@@ -4,8 +4,8 @@ import type { GameState } from "../engine/GameTypes";
 import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 
-const DEFENSE_ARROW_COLOR = "#60a5fa";
-const PLAYER_ATTACK_ARROW_COLOR = "#f59e0b";
+const DEFENSE_ARROW_COLOR = "#66d8ff";
+const PLAYER_ATTACK_ARROW_COLOR = "#f04438";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 const STACKED_DEFENSE_ARROW_LEFT_INSET_PX = 24;
@@ -169,19 +169,25 @@ export function CombatArrows({ game }: { game: GameState }) {
         <filter id="combat-arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />
         </filter>
-        <filter id="combat-arrow-blue-glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.2 0 0 0 0 0.66 0 0 0 0 1 0 0 0 0.7 0" result="glow" />
+        <filter id="combat-arrow-defense-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
+          <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+          <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
+          <feFlood floodColor={DEFENSE_ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
+          <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
           <feMerge>
-            <feMergeNode in="glow" />
+            <feMergeNode in="outerGlow" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <filter id="combat-arrow-orange-glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feColorMatrix in="blur" type="matrix" values="0 0 0 0 1 0 0 0 0 0.48 0 0 0 0 0.02 0 0 0 0.7 0" result="glow" />
+        <filter id="combat-arrow-attack-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
+          <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+          <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
+          <feFlood floodColor={PLAYER_ATTACK_ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
+          <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
           <feMerge>
-            <feMergeNode in="glow" />
+            <feMergeNode in="outerGlow" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
@@ -198,6 +204,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       <AnimatePresence>
         {renderedArrows.map((arrow) => {
           const exiting = exitingArrows.some((item) => item.id === arrow.id) && !arrows.some((item) => item.id === arrow.id);
+          const isDefenseArrow = arrow.color === DEFENSE_ARROW_COLOR;
           return (
           <motion.g
             key={arrow.id}
@@ -208,13 +215,13 @@ export function CombatArrows({ game }: { game: GameState }) {
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              <path d={arrow.path} fill="none" stroke={arrow.color} strokeWidth={6} strokeLinecap="round" opacity="0.12" />
+              <path d={arrow.path} fill="none" stroke={arrow.color} strokeWidth={4.5} strokeLinecap="round" opacity="0.12" />
               <polygon points={arrow.tip} fill={arrow.color} opacity="0.14" />
               <g
                 className="combat-arrow-pulse"
-                filter={arrow.color === PLAYER_ATTACK_ARROW_COLOR ? "url(#combat-arrow-orange-glow)" : "url(#combat-arrow-blue-glow)"}
+                filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}
               >
-                <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={7} strokeLinecap="round" opacity="0.86" />
+                <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={5.25} strokeLinecap="round" opacity="0.86" />
                 <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
               </g>
             </g>

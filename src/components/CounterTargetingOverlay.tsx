@@ -5,7 +5,7 @@ import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
 import { Card } from "./Card";
 
-const ARROW_COLOR = "#f59e0b";
+const ARROW_COLOR = "#4ade80";
 
 export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const counterTargeting = useGameStore((state) => state.counterTargeting);
@@ -97,11 +97,14 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
       <div data-audio-click="off" className="counter-target-backdrop" />
       <svg className="pointer-events-none fixed inset-0 z-[104] h-screen w-screen overflow-visible">
         <defs>
-          <filter id="counter-target-arrow-glow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feColorMatrix in="blur" type="matrix" values="0 0 0 0 1 0 0 0 0 0.52 0 0 0 0 0.05 0 0 0 0.74 0" result="glow" />
+          <filter id="counter-target-arrow-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
+            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
+            <feFlood floodColor={ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
+            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
             <feMerge>
-              <feMergeNode in="glow" />
+              <feMergeNode in="outerGlow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
@@ -113,8 +116,8 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           </linearGradient>
         </defs>
         <g filter="url(#counter-target-arrow-glow)">
-          <path d={arrow.path} fill="none" stroke={ARROW_COLOR} strokeLinecap="round" strokeWidth={9} opacity="0.13" />
-          <path d={arrow.path} fill="none" stroke="url(#counter-target-arrow-gradient)" strokeLinecap="round" strokeWidth={6} opacity="0.94" />
+          <path d={arrow.path} fill="none" stroke={ARROW_COLOR} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
+          <path d={arrow.path} fill="none" stroke="url(#counter-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
           <polygon points={arrow.tip} fill={ARROW_COLOR} opacity="0.96" />
         </g>
       </svg>
