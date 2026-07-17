@@ -1,36 +1,39 @@
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import { useToastStore, type ToastTone } from "../store/useToastStore";
 
 const toneStyles: Record<ToastTone, { icon: typeof Info; className: string }> = {
   info: {
     icon: Info,
-    className: "border-[#8db9ff]/70 bg-[#182842]/95 text-[#d9e8ff]",
+    className: "toast-tone-info",
   },
   warning: {
     icon: AlertTriangle,
-    className: "border-[#e5b45c]/80 bg-[#3b2712]/95 text-[#ffe0a0]",
+    className: "toast-tone-warning",
   },
   success: {
     icon: CheckCircle2,
-    className: "border-[#9fda72]/75 bg-[#1b3416]/95 text-[#e5ffd6]",
+    className: "toast-tone-success",
   },
   danger: {
     icon: XCircle,
-    className: "border-[#e06b52]/80 bg-[#3b1612]/95 text-[#ffd7cb]",
+    className: "toast-tone-danger",
   },
   horde: {
     icon: AlertTriangle,
-    className: "border-[#8b8172]/75 bg-[#12100d]/95 text-[#d8d0c2]",
+    className: "toast-tone-horde",
   },
 };
 
-export function ToastStack() {
+export function ToastStack({ variant = "game" }: { variant?: "game" | "menu" }) {
   const toasts = useToastStore((state) => state.toasts);
   const dismissToast = useToastStore((state) => state.dismissToast);
 
-  return (
-    <div className="pointer-events-none fixed bottom-[6.75rem] right-4 z-[160] flex w-[min(360px,calc(100vw-32px))] flex-col items-end gap-2">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className={`toast-stack toast-stack-${variant}`}>
       <AnimatePresence initial={false}>
         {toasts.map((toast) => {
           const tone = toneStyles[toast.tone];
@@ -39,22 +42,23 @@ export function ToastStack() {
             <motion.button
               key={toast.id}
               layout
-              initial={{ opacity: 0, y: 34, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.96 }}
-              transition={{ duration: 0.22, ease: "easeOut", layout: { type: "spring", stiffness: 520, damping: 38 } }}
-              className={`pointer-events-auto old-toast flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left shadow-2xl ${tone.className}`}
+              initial={variant === "menu" ? { opacity: 0, x: 46, y: 30, scale: 0.96 } : { opacity: 0, y: 34, scale: 0.96 }}
+              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              exit={variant === "menu" ? { opacity: 0, x: 28, y: 18, scale: 0.97 } : { opacity: 0, y: 18, scale: 0.96 }}
+              transition={{ duration: 0.16, ease: "easeOut", layout: { type: "spring", stiffness: 520, damping: 38 } }}
+              className={`game-toast ${tone.className}`}
               onClick={() => dismissToast(toast.id)}
             >
-              <Icon className="mt-0.5 shrink-0" size={18} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-black uppercase tracking-wide">{toast.title}</span>
-                {toast.message && <span className="mt-0.5 block text-xs leading-snug opacity-85">{toast.message}</span>}
+              <span className="game-toast-icon"><Icon size={19} /></span>
+              <span className="game-toast-copy">
+                <span className="game-toast-title">{toast.title}</span>
+                {toast.message && <span className="game-toast-message">{toast.message}</span>}
               </span>
             </motion.button>
           );
         })}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -354,31 +354,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       )}
 
       {showDeveloperWarning && (
-        <div data-preserve-settings-menu="true" className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-[#090604]/90 p-6">
-          <div className="old-panel w-full max-w-md p-6 text-center">
-            <AlertTriangle className="mx-auto text-[#f0c46f]" size={38} />
-            <p className="old-title mt-3 text-xs font-bold uppercase tracking-[0.28em]">Developer Mode</p>
-            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Are you sure?</h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#d6b879]">
-              Developer Mode can break the intended game experience. It is made only for the developer to test cards, effects, and unfinished features.
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowDeveloperWarning(false)}>
-                Cancel
-              </button>
-              <button
-                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
-                type="button"
-                onClick={() => {
-                  updateDeveloperMode(true);
-                  setShowDeveloperWarning(false);
-                }}
-              >
-                Enable
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeveloperWarningModal
+          onClose={() => setShowDeveloperWarning(false)}
+          onEnable={() => {
+            updateDeveloperMode(true);
+            setShowDeveloperWarning(false);
+          }}
+        />
       )}
       
       <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
@@ -390,7 +372,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         </a>
       </div>
 
-      <ToastStack />
+      <ToastStack variant="menu" />
     </main>
   );
 }
@@ -435,6 +417,58 @@ function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {
         <button className="tutorial-construction-action" type="button" onClick={() => setClosing(true)}>
           Return to Hostfall
         </button>
+      </section>
+    </div>
+  );
+}
+
+function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {
+  const [closingAction, setClosingAction] = useState<"cancel" | "enable" | null>(null);
+
+  useEffect(() => {
+    if (!closingAction) return;
+    const timeout = window.setTimeout(() => {
+      if (closingAction === "enable") onEnable();
+      else onClose();
+    }, 160);
+    return () => window.clearTimeout(timeout);
+  }, [closingAction, onClose, onEnable]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setClosingAction("cancel");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const isClosing = closingAction !== null;
+
+  return (
+    <div
+      data-preserve-settings-menu="true"
+      className={`tutorial-construction-backdrop ${isClosing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setClosingAction("cancel");
+      }}
+    >
+      <section className="tutorial-construction-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
+        <button className="tutorial-construction-close" type="button" onClick={() => setClosingAction("cancel")} title="Close">
+          <X size={18} />
+        </button>
+        <div className="tutorial-construction-icon developer-warning-icon" aria-hidden="true">
+          <AlertTriangle size={30} />
+        </div>
+        <p className="tutorial-construction-kicker">Developer Mode · Restricted tools</p>
+        <h2 id="developer-warning-title">Enter the Workshop?</h2>
+        <div className="tutorial-construction-rule" />
+        <p className="tutorial-construction-copy">
+          Developer Mode may disrupt the intended experience. Use it to test cards, effects, and unfinished features.
+        </p>
+        <div className="developer-warning-actions">
+          <button className="tutorial-construction-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>Cancel</button>
+          <button className="tutorial-construction-action" type="button" onClick={() => setClosingAction("enable")}>Enable Developer Mode</button>
+        </div>
       </section>
     </div>
   );
