@@ -14,11 +14,6 @@ const KEY_CARD_IDS: Record<string, string> = {
   goblin_assault_horde: "goblin_token_1_1_red",
 };
 
-const KEY_CARD_DESCRIPTIONS: Record<string, string> = {
-  horde_zombies: "Feroces no muertos.",
-  goblin_assault_horde: "Pequeños, ruidosos y peligrosamente numerosos.",
-};
-
 export function DecksView({ playerDecks, hordeDecks, onOpenDeck }: Props) {
   return (
     <section className="main-settings-screen decks-panel" aria-label="Decks">
@@ -27,7 +22,7 @@ export function DecksView({ playerDecks, hordeDecks, onOpenDeck }: Props) {
         <span>Choose a deck to explore cards.</span>
       </header>
 
-      <div className="decks-content old-scrollbar">
+      <div className="decks-content">
         <DeckSection title="Player" decks={playerDecks} onOpenDeck={onOpenDeck} />
         <DeckSection title="Horde" decks={hordeDecks} onOpenDeck={onOpenDeck} />
       </div>
@@ -55,7 +50,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
   const details = useDeckCardDetails(deck.id, keyCard, deck.images);
   const playSfx = useAudioStore((state) => state.playSfx);
 
-  const playHoverSound = () => playSfx("draw", { volume: 0.56 });
+  const playHoverSound = () => playSfx("drawOne", { volume: 0.56 });
 
   return (
     <button
@@ -85,7 +80,6 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
       </span>
       <span className="deck-key-card-copy">
         <strong>{deck.deck.name}</strong>
-        <small>{KEY_CARD_DESCRIPTIONS[deck.id] ?? keyCard?.name ?? "Key card"}</small>
       </span>
     </button>
   );
