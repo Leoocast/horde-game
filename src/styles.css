@@ -2916,6 +2916,7 @@
       radial-gradient(circle at 12% 0%, var(--toast-accent-soft), transparent 46%);
     padding: 14px 16px 14px 18px;
     color: #d9d8c1;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
     text-align: left;
     -webkit-backdrop-filter: blur(14px) saturate(1.07);
     backdrop-filter: blur(14px) saturate(1.07);
@@ -2988,7 +2989,6 @@
     display: block;
     margin-top: 6px;
     color: #aab5ac;
-    font-family: Georgia, "Times New Roman", serif;
     font-size: 13px;
     line-height: 1.35;
   }
@@ -3669,32 +3669,11 @@
   }
 
   .battlefield-board-grid::before {
-    position: absolute;
-    right: 0;
-    left: 0;
-    top: 50%;
-    z-index: 4;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 1%, rgb(116 136 137 / 0.18) 10%, rgb(198 178 111 / 0.58) 34%, rgb(232 215 157 / 0.82) 50%, rgb(198 178 111 / 0.58) 66%, rgb(116 136 137 / 0.18) 90%, transparent 99%);
-    box-shadow: 0 -5px 18px rgb(194 174 108 / 0.05), 0 5px 18px rgb(89 135 137 / 0.05);
-    content: "";
-    pointer-events: none;
-    transform: translateY(-50%);
+    display: none;
   }
 
   .battlefield-board-grid::after {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 5;
-    width: 9px;
-    height: 9px;
-    border: 1px solid rgb(220 200 137 / 0.68);
-    background: #11191b;
-    box-shadow: 0 0 0 4px rgb(8 13 15 / 0.7), 0 0 18px rgb(207 183 110 / 0.2);
-    content: "";
-    pointer-events: none;
-    transform: translate(-50%, -50%) rotate(45deg);
+    display: none;
   }
 
   .battlefield-side {
@@ -4229,7 +4208,7 @@
     top: 50%;
     z-index: 108;
     display: flex;
-    width: clamp(210px, 16vw, 270px);
+    width: clamp(230px, 18vw, 300px);
     transform: translateY(-50%);
     flex-direction: column;
     align-items: center;
@@ -4251,6 +4230,10 @@
     aspect-ratio: 488 / 680;
     z-index: 51;
     filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.55));
+  }
+
+  .horde-special-card-targeting {
+    width: 17.5rem;
   }
 
   .counter-target-preview {
@@ -5929,6 +5912,94 @@
   left: 0;
   display: flex;
   gap: 8px;
+}
+
+.game-phase-progress {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  left: 0;
+  height: 47px;
+  pointer-events: none;
+}
+
+.game-phase-progress-track {
+  position: relative;
+  display: flex;
+  height: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 18px 0;
+}
+
+.game-phase-progress-line {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  left: 2px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(226 111 39 / 0.72) 12%, #f09a4a 50%, rgb(226 111 39 / 0.72) 88%, transparent);
+  box-shadow: 0 0 8px rgb(225 91 24 / 0.34);
+  transform: translateY(-50%);
+}
+
+.game-phase-progress-step {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+}
+
+.game-phase-progress-diamond {
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(224 113 47 / 0.72);
+  background: #25150e;
+  box-shadow: inset 0 0 3px rgb(255 168 90 / 0.12), 0 0 5px rgb(220 81 20 / 0.2);
+  transform: rotate(45deg);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms ease, box-shadow 180ms ease;
+}
+
+.game-phase-progress-step.is-complete .game-phase-progress-diamond {
+  background: #a84c1d;
+  box-shadow: inset 0 0 4px rgb(255 211 142 / 0.28), 0 0 8px rgb(224 91 26 / 0.34);
+}
+
+.game-phase-progress-step.is-active .game-phase-progress-diamond {
+  border-color: #ffd08c;
+  background: linear-gradient(135deg, #ffd278, #e65f1e 70%);
+  box-shadow: 0 0 0 3px rgb(238 112 35 / 0.16), 0 0 13px #ed712d, 0 0 24px rgb(231 83 20 / 0.65);
+  animation: game-phase-diamond-pulse 1.8s ease-in-out infinite;
+}
+
+.game-phase-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  color: rgb(207 136 86 / 0.58);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.game-phase-progress-labels span {
+  width: 52px;
+  text-align: center;
+}
+
+.game-phase-progress-labels span:first-child { text-align: left; }
+.game-phase-progress-labels span:last-child { text-align: right; }
+
+.game-phase-progress-labels .is-active {
+  color: #ffc27b;
+  text-shadow: 0 0 9px rgb(239 104 35 / 0.82);
+}
+
+@keyframes game-phase-diamond-pulse {
+  0%, 100% { transform: rotate(45deg) scale(1); filter: brightness(1); }
+  50% { transform: rotate(45deg) scale(1.22); filter: brightness(1.24); }
 }
 
 .game-phase-secondary-tooltip {

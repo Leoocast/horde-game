@@ -80,7 +80,11 @@ export function DuelHud({ game }: { game: GameState }) {
           >
             <div
               data-card-id={smallpoxCard.instanceId}
-              className={["horde-special-card", activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : ""].join(" ")}
+              className={[
+                "horde-special-card",
+                smallpoxSelection ? "horde-special-card-targeting" : "",
+                activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
+              ].join(" ")}
             >
               <Card game={game} card={smallpoxCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
             </div>
@@ -197,6 +201,8 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
+  const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
+  const phaseSteps = ["Main", "Battle", "End"];
 
   useEffect(() => {
     setVisualLife(game.player.life);
@@ -225,6 +231,28 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         ].join(" ")}
       >
         <div className="player-life-cluster">
+          <div className="game-phase-progress" aria-label={`Current phase: ${phaseSteps[activePhaseIndex]}`}>
+            <div className="game-phase-progress-labels" aria-hidden="true">
+              {phaseSteps.map((phase, index) => (
+                <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>
+              ))}
+            </div>
+            <div className="game-phase-progress-track" aria-hidden="true">
+              <span className="game-phase-progress-line" />
+              {phaseSteps.map((phase, index) => (
+                <span
+                  key={phase}
+                  className={[
+                    "game-phase-progress-step",
+                    index === activePhaseIndex ? "is-active" : "",
+                    index < activePhaseIndex ? "is-complete" : "",
+                  ].join(" ")}
+                >
+                  <span className="game-phase-progress-diamond" />
+                </span>
+              ))}
+            </div>
+          </div>
           <div
             data-player-life-panel="true"
             className={[

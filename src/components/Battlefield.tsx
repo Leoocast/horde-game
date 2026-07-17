@@ -292,7 +292,7 @@ export function Battlefield({ game, side, cards }: Props) {
           {others.length > 0 ? (
             <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
           ) : (
-            <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
+            <BattlefieldRow cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
           )}
         </div>
       </Zone>
@@ -300,13 +300,9 @@ export function Battlefield({ game, side, cards }: Props) {
     </>
   );
 
-  function BattlefieldRow({ title, cards: rowCards, compact = false, dropTarget }: { title: string; cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
+  function BattlefieldRow({ cards: rowCards, compact = false, dropTarget }: { cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">{title}</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCards.length}</span>
-        </div>
         {rowCards.length === 0 ? (
           <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
         ) : (
@@ -333,10 +329,6 @@ export function Battlefield({ game, side, cards }: Props) {
 
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Creatures</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
-        </div>
         {rowCreatures.length === 0 ? (
           <div className="battlefield-empty battlefield-row-surface">Empty</div>
         ) : (

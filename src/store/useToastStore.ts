@@ -15,7 +15,7 @@ type ToastStore = {
   dismissToast: (id: string) => void;
 };
 
-const TOAST_DURATION_MS = 2800;
+const TOAST_DURATION_MS = 4000;
 
 export const useToastStore = create<ToastStore>((set, get) => ({
   toasts: [],
