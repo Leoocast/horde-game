@@ -777,6 +777,28 @@
     transform-origin: center;
   }
 
+  .card-sharp-image-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    backface-visibility: hidden;
+    contain: strict;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .card-sharp-image-overlay > img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    clip-path: inset(0 0 2.5% 0);
+    transform: translateY(1%) scale(1.085) translateZ(0);
+    transform-origin: center;
+    backface-visibility: hidden;
+  }
+
   .card-stat-badge {
     right: 2px;
     bottom: calc(clamp(10px, 6cqw, 14px) - 11px);

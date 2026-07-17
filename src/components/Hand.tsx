@@ -314,6 +314,7 @@ export function Hand({ game }: { game: GameState }) {
                     suppressHoverOverlay
                     darkenOnHover={false}
                     highRes={isHeld}
+                    sharpImageOverlay
                     onSelect={() => {
                       if (smallpoxSelection) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);

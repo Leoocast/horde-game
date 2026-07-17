@@ -25,6 +25,8 @@ const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
+// Feature flag: disable to show full creature cards whenever the row has enough room.
+const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
@@ -88,6 +90,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
+  const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
 
   useLayoutEffect(() => {
     const row = creatureRowRef.current;
@@ -309,11 +312,11 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div
             ref={creatureRowRef}
-            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
+            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
             className={[
               "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
               compact ? "battlefield-row-body-compact" : "battlefield-row-body",
-              creatureRowOverflowing ? "battlefield-row-overflow" : "",
+              cropCreatureCards ? "battlefield-row-overflow" : "",
             ].join(" ")}
           >
             <AnimatePresence initial={false} mode="popLayout">
@@ -339,8 +342,8 @@ export function Battlefield({ game, side, cards }: Props) {
         ) : (
           <div
             ref={creatureRowRef}
-            data-battlefield-overflowing={creatureRowOverflowing ? "true" : undefined}
-            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", creatureRowOverflowing ? "battlefield-row-overflow" : ""].join(" ")}
+            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
+            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", cropCreatureCards ? "battlefield-row-overflow" : ""].join(" ")}
           >
             <AnimatePresence initial={false} mode="popLayout">
               {renderCardStacks(rowCreatures, false, "creature")}
