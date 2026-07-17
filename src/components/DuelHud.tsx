@@ -23,7 +23,10 @@ export function DuelHud({ game }: { game: GameState }) {
   const deselectSmallpoxSelectionTarget = useGameStore((state) => state.deselectSmallpoxSelectionTarget);
   const confirmSmallpoxSelection = useGameStore((state) => state.confirmSmallpoxSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
+  const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
+  const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
   const smallpoxTarget = smallpoxSelection?.targetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelection.targetId) : undefined;
   const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
   const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
@@ -39,6 +42,23 @@ export function DuelHud({ game }: { game: GameState }) {
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
+
+  useEffect(() => {
+    if (!playerAttackAnimation) {
+      lastPlayerAttackEvent.current = undefined;
+      return;
+    }
+    const eventKey = `${playerAttackAnimation.attackerId}:${playerAttackAnimation.eventId}`;
+    if (lastPlayerAttackEvent.current === eventKey) return;
+    lastPlayerAttackEvent.current = eventKey;
+    setHordeTakingDamage(false);
+    const frame = window.requestAnimationFrame(() => setHordeTakingDamage(true));
+    const timeout = window.setTimeout(() => setHordeTakingDamage(false), 430);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [playerAttackAnimation]);
 
   return (
     <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
@@ -92,7 +112,11 @@ export function DuelHud({ game }: { game: GameState }) {
         <div className="horde-deck-counter-cluster">
           <div
             data-player-attack-target="horde-deck"
-            className={["old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2", attackCountVisible ? "is-attack-locked" : ""].join(" ")}
+            className={[
+              "old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
+              attackCountVisible ? "is-attack-locked" : "",
+              hordeTakingDamage ? "horde-counter-hit" : "",
+            ].join(" ")}
           >
             <div data-horde-mill-origin="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
@@ -216,12 +240,13 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
                 <div className="player-life-count">{visualLife}</div>
               </div>
             </div>
-            <div className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
+            <div data-player-discard-origin="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
               <Heart size={24} />
             </div>
           </div>
           <GameTooltip content="View graveyard" side="top" className="player-graveyard-host">
             <button
+              data-player-discard-target="true"
               data-audio-click="valid"
               className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}

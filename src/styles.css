@@ -3662,7 +3662,6 @@
 
   .battlefield-board-grid {
     position: relative;
-    isolation: isolate;
     display: grid;
     grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 0;
@@ -4146,6 +4145,10 @@
     transform: translate(-50%, 0) scale(1);
   }
 
+  body:has(.counter-target-backdrop) .game-tooltip-portal {
+    display: none;
+  }
+
   .keyword-pill,
   .preview-stat-pill {
     display: inline-flex;
@@ -4606,15 +4609,15 @@
 
 @keyframes player-life-damage {
   0% {
-    filter: brightness(1);
+    filter: brightness(1) drop-shadow(0 0 0 rgb(210 44 31 / 0));
   }
 
   24% {
-    filter: brightness(1.55) saturate(1.25);
+    filter: brightness(1.48) saturate(1.28) drop-shadow(0 0 18px rgb(226 56 38 / 0.64));
     box-shadow:
-      inset 0 0 0 1px rgb(255 238 190 / 0.18),
-      inset 0 14px 24px rgb(255 226 149 / 0.06),
-      0 0 28px rgb(180 38 22 / 0.58),
+      inset 0 0 0 1px rgb(255 155 137 / 0.22),
+      inset 0 0 28px rgb(166 30 20 / 0.2),
+      0 0 30px rgb(207 41 27 / 0.68),
       0 18px 36px rgb(0 0 0 / 0.45);
   }
 
@@ -5500,6 +5503,10 @@
   background: linear-gradient(90deg, transparent, rgb(224 89 59 / 0.76), transparent);
 }
 
+.horde-deck-counter.horde-counter-hit {
+  animation: horde-counter-hit 430ms ease-out both;
+}
+
 .horde-deck-counter-copy {
   min-width: 105px;
   flex: 1 1 auto;
@@ -5669,12 +5676,12 @@
 
 .player-life-cluster {
   position: relative;
-  width: 304px;
+  width: 244px;
 }
 
-.player-life-counter {
+.game-screen .player-life-counter {
   position: relative;
-  width: 304px;
+  width: 244px;
   min-height: 82px;
   justify-content: space-between !important;
   gap: 15px !important;
@@ -5682,14 +5689,14 @@
   border: 1px solid rgb(160 166 111 / 0.48) !important;
   border-top-color: rgb(196 211 135 / 0.7) !important;
   border-radius: 0 !important;
-  padding: 10px 20px 10px 22px !important;
+  padding: 10px 14px 10px 16px !important;
   background:
     linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99)) !important;
   box-shadow:
     inset 0 1px 0 rgb(229 246 184 / 0.08),
     inset 0 -12px 26px rgb(0 0 0 / 0.18),
     0 16px 36px rgb(0 0 0 / 0.48),
-    0 0 24px rgb(87 143 105 / 0.1) !important;
+    0 0 24px rgb(87 143 105 / 0.1);
 }
 
 .player-life-counter::before {
@@ -5780,6 +5787,28 @@
   }
   50% {
     filter: drop-shadow(0 0 16px rgb(224 67 42 / 0.44));
+  }
+}
+
+@keyframes horde-counter-hit {
+  0% {
+    filter: brightness(1);
+    transform: translateX(0);
+  }
+  24% {
+    filter: brightness(1.45) saturate(1.28) drop-shadow(0 0 17px rgb(226 62 42 / 0.58));
+    transform: translateX(-2px);
+  }
+  52% {
+    filter: brightness(1.16) saturate(1.12) drop-shadow(0 0 10px rgb(206 47 32 / 0.36));
+    transform: translateX(2px);
+  }
+  76% {
+    transform: translateX(-1px);
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgb(210 44 31 / 0));
+    transform: translateX(0);
   }
 }
 

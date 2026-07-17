@@ -33,6 +33,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
   const defendBlockedReason = getDefendBlockedReason(game);
@@ -66,7 +67,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
     resolveHordeCombat,
     finishHordeTurn,
   });
-  const orbTooltip = actionBlockedReason;
+  const orbTooltip = targetingActive ? undefined : actionBlockedReason;
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialOrbTarget = tutorialZones.some((zone) => zone.zone === "phase-orb");
