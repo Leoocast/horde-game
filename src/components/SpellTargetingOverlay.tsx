@@ -38,6 +38,9 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     }
 
     function click(event: MouseEvent) {
+      // The capture listener can see battlefield cards behind the targeting UI via
+      // elementsFromPoint(). Never reinterpret a control click as a target click.
+      if (event.target instanceof Element && event.target.closest("[data-spell-targeting-ui='true']")) return;
       const req = useGameStore.getState().spellTargeting ? activeSpell.requiresTargets[Math.min(useGameStore.getState().spellTargeting?.stepIndex ?? 0, activeSpell.requiresTargets.length - 1)] : undefined;
       if (!req) return;
       const cardId = findCardIdAtPoint(event.clientX, event.clientY);
@@ -172,7 +175,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           </g>
         )}
       </svg>
-      <aside className="counter-target-source-panel">
+      <aside data-spell-targeting-ui="true" className="counter-target-source-panel">
         <div ref={sourceRef} className="counter-target-source-card">
           <Card game={game} card={spell} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness hideStats />
         </div>
