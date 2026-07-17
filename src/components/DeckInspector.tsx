@@ -17,9 +17,10 @@ type CardCopy = {
   quantity: number;
 };
 
-const MIN_CARD_ZOOM = 120;
-const MAX_CARD_ZOOM = 272;
-const DEFAULT_CARD_ZOOM = 168;
+const MIN_CARD_ZOOM = 272;
+const MAX_CARD_ZOOM = 340;
+const DEFAULT_CARD_ZOOM = MIN_CARD_ZOOM;
+const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, onBack }: Props) {
   const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
@@ -72,7 +73,7 @@ export function DeckInspector({ deck, onBack }: Props) {
         </div>
       </header>
 
-      <div className="deck-detail-layout">
+      <div className={`deck-detail-layout ${ENABLE_DECK_CARD_PREVIEW ? "" : "is-preview-hidden"}`}>
         <section className="deck-detail-collection">
           <div className="deck-detail-grid-scroll">
             <div className="deck-detail-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
@@ -94,7 +95,9 @@ export function DeckInspector({ deck, onBack }: Props) {
             </div>
           </div>
         </section>
-        <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCardId(activeCard.id)} />
+        {ENABLE_DECK_CARD_PREVIEW && (
+          <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCardId(activeCard.id)} />
+        )}
       </div>
       {detailsCard && (
         <DeckInspectorDetailsModal
@@ -184,6 +187,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
       <div className="deck-detail-info-header">
         <div>
+          <span className="deck-detail-info-kicker">Selected card</span>
           <h2>{card.name}</h2>
           <p>{typeLine(card)}</p>
         </div>
@@ -211,8 +215,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           </div>
         )}
         <button className="deck-detail-action" onClick={onDetails}>
-          <Maximize2 className="mr-2 inline" size={16} />
-          Details
+          <span>Open details</span>
+          <Maximize2 size={18} />
         </button>
       </div>
     </aside>
@@ -259,7 +263,7 @@ function DeckInspectorDetailsModal({
     if (closeLock.current) return;
     closeLock.current = true;
     setClosing(true);
-    timers.current.push(window.setTimeout(onClose, 150));
+    timers.current.push(window.setTimeout(onClose, 210));
   };
 
   const navigate = (direction: "next" | "previous") => {

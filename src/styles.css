@@ -1413,10 +1413,14 @@
     position: relative;
     z-index: 2;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(310px, 24vw, 380px);
+    grid-template-columns: minmax(0, 1fr) clamp(360px, 27vw, 430px);
     height: calc(100vh - 122px);
     min-height: 0;
     overflow: hidden;
+  }
+
+  .deck-detail-layout.is-preview-hidden {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .deck-detail-collection {
@@ -1542,12 +1546,30 @@
   }
 
   .deck-detail-info {
-    border-left: 1px solid rgb(150 138 96 / 0.24);
+    position: relative;
+    margin: 22px 22px 22px 0;
+    overflow: hidden;
+    border: 1px solid rgb(150 138 96 / 0.32);
+    border-radius: 4px;
     background:
-      linear-gradient(180deg, rgb(7 16 14 / 0.95), rgb(5 12 11 / 0.98)),
-      repeating-linear-gradient(90deg, transparent 0 19px, rgb(143 132 91 / 0.025) 19px 20px);
-    box-shadow: -20px 0 40px rgb(0 0 0 / 0.2);
-    animation: deck-detail-info-open 160ms ease-out both;
+      radial-gradient(circle at 12% 0%, rgb(111 137 113 / 0.16), transparent 37%),
+      linear-gradient(145deg, rgb(16 31 26 / 0.94), rgb(4 13 11 / 0.98));
+    box-shadow:
+      inset 0 1px 0 rgb(230 219 174 / 0.08),
+      -16px 20px 46px rgb(0 0 0 / 0.34);
+    animation: deck-detail-info-open 220ms ease-out both;
+  }
+
+  .deck-detail-info::before {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: linear-gradient(180deg, transparent 3%, #7f957e 26%, #a18d55 72%, transparent 97%);
+    content: "";
+    pointer-events: none;
   }
 
   @keyframes deck-detail-screen-open {
@@ -1609,20 +1631,31 @@
 
   .deck-detail-info-header {
     display: flex;
-    min-height: 82px;
+    min-height: 104px;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
     border-bottom: 1px solid rgb(134 143 124 / 0.15);
-    padding: 22px 24px 17px;
+    padding: 20px 26px 19px 29px;
+    background: linear-gradient(180deg, rgb(34 51 42 / 0.34), transparent);
+  }
+
+  .deck-detail-info-kicker {
+    display: block;
+    margin-bottom: 8px;
+    color: #958553;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
   }
 
   .deck-detail-info-header h2 {
     margin: 0;
     color: #ddd2b2;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 21px;
-    font-weight: 600;
+    font-size: 25px;
+    font-weight: 500;
     line-height: 1.1;
   }
 
@@ -1637,12 +1670,12 @@
 
   .deck-detail-close {
     display: grid;
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     place-items: center;
     border: 1px solid rgb(124 137 119 / 0.22);
-    background: transparent;
-    color: #7f8d85;
+    background: rgb(6 16 13 / 0.62);
+    color: #899990;
   }
 
   .deck-detail-close:hover,
@@ -1657,30 +1690,33 @@
     min-height: 0;
     flex: 1;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     overflow: hidden;
-    padding: 20px 24px 24px;
+    padding: 22px 28px 26px;
   }
 
   .deck-detail-info-image {
     width: auto;
-    max-width: min(100%, 255px);
-    max-height: min(43vh, 355px);
+    max-width: min(100%, 275px);
+    max-height: min(44vh, 380px);
     margin: 0 auto;
     border: 1px solid rgb(151 137 91 / 0.5);
     border-radius: 4.6% / 3.4%;
     object-fit: contain;
-    box-shadow: 6px 10px 0 #18201b, 0 18px 28px rgb(0 0 0 / 0.44);
+    box-shadow:
+      7px 10px 0 #17231c,
+      0 20px 38px rgb(0 0 0 / 0.52),
+      0 0 28px rgb(127 151 126 / 0.08);
   }
 
   .deck-detail-rules {
     min-height: 0;
     flex: 1;
     overflow: auto;
-    border-top: 1px solid rgb(128 139 121 / 0.14);
-    border-bottom: 1px solid rgb(128 139 121 / 0.14);
-    padding: 13px 4px;
-    scrollbar-color: #65736a transparent;
+    border: 1px solid rgb(128 143 123 / 0.17);
+    background: rgb(3 11 9 / 0.42);
+    padding: 15px 16px;
+    scrollbar-color: #667a6d rgb(4 13 10 / 0.42);
     scrollbar-width: thin;
   }
 
@@ -1692,16 +1728,34 @@
     white-space: pre-line;
   }
 
+  .deck-detail-rules::-webkit-scrollbar,
+  .deck-collection-modal-rules::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .deck-detail-rules::-webkit-scrollbar-track,
+  .deck-collection-modal-rules::-webkit-scrollbar-track {
+    background: rgb(4 13 10 / 0.42);
+  }
+
+  .deck-detail-rules::-webkit-scrollbar-thumb,
+  .deck-collection-modal-rules::-webkit-scrollbar-thumb {
+    border: 2px solid rgb(4 13 10 / 0.66);
+    border-radius: 999px;
+    background: linear-gradient(180deg, #788b7d, #465b4f);
+  }
+
   .deck-detail-action {
     display: flex;
-    height: 42px;
+    height: 50px;
     flex: 0 0 auto;
     align-items: center;
-    justify-content: center;
-    border: 1px solid rgb(143 132 91 / 0.5);
-    background: linear-gradient(180deg, rgb(39 51 43 / 0.86), rgb(15 25 21 / 0.92));
+    justify-content: space-between;
+    border: 1px solid rgb(167 150 94 / 0.54);
+    background: linear-gradient(110deg, #314839, #172c22 68%, #253a2f);
+    padding: 0 18px 0 20px;
     color: #d8cfaf;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 900;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -1725,43 +1779,54 @@
     justify-content: center;
     overflow: hidden;
     background:
-      radial-gradient(ellipse at 50% 46%, rgb(13 25 21 / 0.38), rgb(1 4 3 / 0.92) 70%),
-      rgb(0 0 0 / 0.82);
+      radial-gradient(ellipse at 50% 44%, rgb(39 64 50 / 0.25), transparent 43%),
+      radial-gradient(ellipse at 50% 50%, rgb(5 13 11 / 0.42), rgb(0 3 2 / 0.94) 74%);
     padding: clamp(20px, 4vh, 42px);
-    -webkit-backdrop-filter: blur(7px) saturate(1.06);
-    backdrop-filter: blur(7px) saturate(1.06);
-    animation: deck-collection-backdrop-open 160ms ease-out both;
+    -webkit-backdrop-filter: blur(10px) saturate(1.08);
+    backdrop-filter: blur(10px) saturate(1.08);
+    animation: deck-collection-backdrop-open 200ms ease-out both;
   }
 
   .deck-collection-modal-backdrop.is-closing {
     pointer-events: none;
-    animation: deck-collection-backdrop-close 150ms ease-out both;
+    animation: deck-collection-backdrop-close 180ms ease-out both;
   }
 
   .deck-collection-modal {
     position: relative;
-    width: min(1240px, calc(100vw - 72px));
-    height: min(640px, calc(100vh - 72px));
-    max-height: 84vh;
+    width: min(1320px, calc(100vw - 72px));
+    height: min(700px, calc(100vh - 72px));
+    max-height: 88vh;
     overflow: hidden;
-    border: 1px solid rgb(154 142 96 / 0.42);
+    border: 1px solid rgb(161 148 96 / 0.5);
+    border-radius: 5px;
     background:
-      linear-gradient(120deg, rgb(18 31 27 / 0.82), rgb(6 15 12 / 0.9)),
-      repeating-linear-gradient(90deg, transparent 0 23px, rgb(147 134 88 / 0.025) 23px 24px);
+      radial-gradient(circle at 8% 3%, rgb(112 138 113 / 0.18), transparent 34%),
+      linear-gradient(125deg, rgb(18 34 28 / 0.96), rgb(4 13 11 / 0.985) 72%);
     -webkit-backdrop-filter: blur(18px) saturate(1.09);
     backdrop-filter: blur(18px) saturate(1.09);
     box-shadow:
-      inset 0 1px 0 rgb(230 218 169 / 0.08),
-      0 32px 80px rgb(0 0 0 / 0.72);
-    animation: deck-collection-modal-open 160ms ease-out both;
+      inset 0 1px 0 rgb(230 218 169 / 0.11),
+      0 36px 90px rgb(0 0 0 / 0.76),
+      0 0 0 1px rgb(91 112 96 / 0.06);
+    animation: deck-collection-modal-open 200ms ease-out both;
   }
 
   .deck-collection-modal-backdrop.is-closing .deck-collection-modal {
-    animation: deck-collection-modal-close 150ms ease-out both;
+    animation: deck-collection-modal-close 180ms ease-out both;
   }
 
   .deck-collection-modal::before {
-    display: none;
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: block;
+    width: 3px;
+    background: linear-gradient(180deg, transparent 2%, #7d927c 24%, #a18b53 74%, transparent 98%);
+    content: "";
+    pointer-events: none;
   }
 
   .deck-collection-modal::after {
@@ -1779,15 +1844,16 @@
   .deck-collection-modal-close {
     position: absolute;
     z-index: 8;
-    top: 18px;
-    right: 18px;
+    top: 20px;
+    right: 20px;
     display: grid;
     width: 44px;
     height: 44px;
     place-items: center;
-    border: 1px solid rgb(128 140 122 / 0.24);
-    background: rgb(7 16 14 / 0.78);
-    color: #89978e;
+    border: 1px solid rgb(143 150 127 / 0.3);
+    background: rgb(8 19 16 / 0.88);
+    color: #98a59d;
+    box-shadow: inset 0 1px 0 rgb(224 214 173 / 0.06), 0 8px 20px rgb(0 0 0 / 0.24);
     transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
   }
 
@@ -1803,7 +1869,7 @@
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 36% 64%;
+    grid-template-columns: 40% 60%;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -1832,18 +1898,24 @@
     min-height: 0;
     align-items: center;
     justify-content: center;
-    padding: 34px 52px;
-    background: transparent;
+    border-right: 1px solid rgb(135 146 126 / 0.13);
+    padding: 38px 60px;
+    background:
+      radial-gradient(circle at 50% 43%, rgb(104 132 105 / 0.16), transparent 45%),
+      linear-gradient(90deg, rgb(4 13 11 / 0.3), transparent);
   }
 
   .deck-collection-modal-art {
-    width: min(100%, 300px);
+    width: min(100%, 340px);
     aspect-ratio: 488 / 680;
     overflow: hidden;
     border: 1px solid rgb(171 154 100 / 0.56);
     border-radius: 4.6% / 3.4%;
     background: #101712;
-    box-shadow: 8px 12px 0 #19231d, 0 24px 36px rgb(0 0 0 / 0.54);
+    box-shadow:
+      9px 13px 0 #17231c,
+      0 28px 48px rgb(0 0 0 / 0.6),
+      0 0 38px rgb(124 151 124 / 0.08);
   }
 
   .deck-collection-modal-art > img {
@@ -1858,12 +1930,13 @@
     z-index: 4;
     top: 50%;
     display: grid;
-    width: 42px;
-    height: 62px;
+    width: 46px;
+    height: 54px;
     place-items: center;
-    border: 1px solid rgb(128 139 121 / 0.22);
-    background: rgb(9 19 16 / 0.78);
-    color: #7d8d84;
+    border: 1px solid rgb(143 150 127 / 0.3);
+    background: rgb(8 19 16 / 0.88);
+    color: #98a69e;
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.25);
     transform: translateY(-50%);
     transition: border-color 140ms ease, color 140ms ease, transform 140ms ease;
   }
@@ -1898,12 +1971,12 @@
     min-width: 0;
     min-height: 0;
     flex-direction: column;
-    padding: 38px 52px 26px;
+    padding: 42px 58px 28px;
   }
 
   .deck-collection-modal-header {
     flex: 0 0 auto;
-    border-bottom: 1px solid rgb(132 144 124 / 0.16);
+    border-bottom: 1px solid rgb(148 151 116 / 0.18);
     padding-right: 48px;
     padding-bottom: 22px;
   }
@@ -1913,7 +1986,7 @@
     align-items: center;
     gap: 11px;
     margin: 0 0 12px;
-    color: #73857c;
+    color: #9c8953;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.23em;
@@ -1937,7 +2010,7 @@
     margin: 0;
     color: #e2d6b5;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(28px, 3vw, 42px);
+    font-size: clamp(32px, 3.25vw, 48px);
     font-weight: 500;
     letter-spacing: 0.015em;
     line-height: 1.04;
@@ -1989,16 +2062,11 @@
     min-height: 0;
     flex: 1;
     overflow: auto;
-    border-top: 1px solid rgb(133 143 124 / 0.12);
-    border-bottom: 1px solid rgb(133 143 124 / 0.12);
-    background: transparent;
-    padding: 22px 18px;
-    scrollbar-color: #617067 transparent;
+    border: 1px solid rgb(133 146 126 / 0.17);
+    background: rgb(3 11 9 / 0.44);
+    padding: 24px 22px;
+    scrollbar-color: #667a6d rgb(4 13 10 / 0.42);
     scrollbar-width: thin;
-  }
-
-  .deck-collection-modal-header + .deck-collection-modal-rules {
-    border-top: 0;
   }
 
   .deck-collection-modal-rules p {
@@ -2010,10 +2078,12 @@
 
   .deck-collection-modal-footer {
     display: flex;
-    min-height: 52px;
+    min-height: 64px;
     flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
+    border-top: 1px solid rgb(132 145 125 / 0.12);
+    margin-top: 16px;
     gap: 9px;
     color: #75877d;
     font-size: 10px;
@@ -2122,7 +2192,11 @@
     }
 
     .deck-detail-layout {
-      grid-template-columns: minmax(0, 1fr) 310px;
+      grid-template-columns: minmax(0, 1fr) 340px;
+    }
+
+    .deck-detail-info {
+      margin: 14px 14px 14px 0;
     }
 
     .deck-detail-grid {
