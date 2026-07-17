@@ -840,6 +840,7 @@
 
   .battlefield-card-slot {
     position: relative;
+    isolation: isolate;
     top: 0;
     width: var(--battlefield-card-width);
     height: calc(var(--battlefield-card-width) * 1.393);
@@ -883,6 +884,7 @@
 
   .battlefield-card-slot-compact {
     position: relative;
+    isolation: isolate;
     top: 0;
     width: var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px));
     height: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * 1.393);
@@ -891,6 +893,52 @@
       top 220ms ease,
       transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
       filter 220ms ease;
+  }
+
+  .battlefield-card-depth {
+    --battlefield-depth-glow: 0 0 0 rgb(0 0 0 / 0);
+    position: absolute;
+    inset: 1px 0 0;
+    z-index: -1;
+    border-radius: 0.375rem;
+    pointer-events: none;
+    background: rgb(42 25 13 / 0.96);
+    transform: translateY(4px);
+    box-shadow:
+      0 4px 0 rgb(18 11 7 / 0.78),
+      0 10px 14px rgb(0 0 0 / 0.5),
+      0 19px 30px rgb(0 0 0 / 0.28),
+      var(--battlefield-depth-glow);
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .battlefield-card-selected > .battlefield-card-depth {
+    --battlefield-depth-glow: 0 14px 24px rgb(218 226 222 / 0.28);
+  }
+
+  .battlefield-card-actionable > .battlefield-card-depth,
+  .counter-targetable-card > .battlefield-card-depth,
+  .spell-targetable-card > .battlefield-card-depth {
+    --battlefield-depth-glow: 0 15px 28px rgb(49 196 255 / 0.42);
+    background-color: rgb(23 42 47 / 0.96);
+  }
+
+  .battlefield-card-effect-available > .battlefield-card-depth {
+    --battlefield-depth-glow: 0 15px 30px rgb(255 168 55 / 0.4);
+    background-color: rgb(53 34 15 / 0.96);
+  }
+
+  .counter-target-locked-card > .battlefield-card-depth,
+  .spell-target-locked-buff > .battlefield-card-depth {
+    --battlefield-depth-glow: 0 16px 30px rgb(42 212 76 / 0.46);
+    background-color: rgb(24 49 25 / 0.96);
+  }
+
+  .spell-target-locked-attack > .battlefield-card-depth {
+    --battlefield-depth-glow: 0 16px 30px rgb(210 45 38 / 0.48);
+    background-color: rgb(57 23 19 / 0.96);
   }
 
   .battlefield-card-slot-compact.battlefield-land-slot {

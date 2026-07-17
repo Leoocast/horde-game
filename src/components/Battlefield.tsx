@@ -570,6 +570,9 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
           isLand ? "battlefield-land-slot" : "",
+          selected ? "battlefield-card-selected" : "",
+          actionable ? "battlefield-card-actionable" : "",
+          effectAvailable && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
@@ -586,6 +589,7 @@ export function Battlefield({ game, side, cards }: Props) {
           tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
+      <span className="battlefield-card-depth" aria-hidden="true" />
       <Card
         game={game}
         card={card}
