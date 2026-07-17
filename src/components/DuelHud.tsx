@@ -78,8 +78,8 @@ export function DuelHud({ game }: { game: GameState }) {
                     <Check size={22} />
                   </button>
                   {smallpoxSelection.targetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Deselect">
-                      Deselect
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
+                      Cancel
                     </button>
                   )}
                 </div>

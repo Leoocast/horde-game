@@ -16,6 +16,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const [showActionWarning, setShowActionWarning] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | undefined>();
+  const [actionButtonSettled, setActionButtonSettled] = useState(false);
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -92,76 +93,47 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <GameTooltip
-        content={orbTooltip}
-        visible={Boolean(orbTooltip)}
-        className={["game-phase-orb fixed right-6 top-[46%] -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}
-      >
-        <button
-          data-audio-click="off"
-          data-tone={state.tone}
-          onClick={runOrbAction}
-          disabled={orbDisabled}
-          className={[
-            "game-phase-button relative flex h-20 w-52 items-center justify-center overflow-hidden border text-[#f1e6c2] transition disabled:cursor-default disabled:saturate-75",
-            state.tone === "confirm"
-              ? "border-[#f6d77d] bg-[#436d1d] shadow-[inset_0_2px_0_rgba(255,246,190,0.45),0_0_28px_rgba(109,164,43,0.45)] hover:bg-[#5d8d25]"
-              : state.tone === "horde"
-                ? "border-[#f3bf63] bg-[#9b3b13] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(214,112,26,0.5)] hover:bg-[#b74b18]"
-              : state.tone === "defend"
-                ? "border-[#b9d8ff] bg-[#174c85] shadow-[inset_0_2px_0_rgba(221,239,255,0.45),0_0_28px_rgba(59,130,246,0.5)] hover:bg-[#1f66a8]"
-              : state.tone === "skip"
-                ? "border-[#b88945] bg-[#2c2115] shadow-[inset_0_2px_0_rgba(255,231,173,0.22),0_0_24px_rgba(0,0,0,0.45)] hover:bg-[#3d2b18]"
-              : "border-[#f6d77d] bg-[#7b2513] shadow-[inset_0_2px_0_rgba(255,231,173,0.45),0_0_28px_rgba(166,69,24,0.48)] hover:bg-[#9a3318]",
-          ].join(" ")}
-        >
-          <span className="game-phase-button-shade pointer-events-none absolute inset-0" />
-          <span className="relative z-10 flex w-full items-center justify-between gap-4 px-5 text-left">
-            <span className="flex flex-col">
-              <small className="game-phase-kicker">Advance to</small>
-              <strong className="game-phase-label">{state.label}</strong>
-            </span>
-            <state.Icon size={28} strokeWidth={2.2} />
-          </span>
-        </button>
-      </GameTooltip>
-      {showCancelDefense && (
-        <button
-          data-audio-click="valid"
-          onClick={cancelBlocks}
-          disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-          className="fixed right-[12.75rem] top-[calc(50%+2.25rem)] z-[80] flex h-12 w-14 flex-col items-center justify-center border border-[#7f918b] bg-[#101b20]/95 text-[8px] font-black uppercase tracking-wide text-[#c9d3cd] shadow-xl shadow-black/45 transition hover:border-[#c2ae73] hover:text-[#eadcae]"
-          title="Cancel blocks"
-        >
-          <X size={18} />
-          Cancel
-        </button>
-      )}
-      {showAttackAll && (
-        <GameTooltip content="Sends every available creature to attack." className="fixed right-[13.75rem] top-1/2 z-[80] -translate-y-1/2">
+      <div className={["game-phase-orb fixed right-6 top-[46%] -translate-y-1/2 xl:right-10", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}>
+        <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)}>
           <button
-            data-audio-click="valid"
-            onClick={attackAll}
-            disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-            className="flex h-12 w-14 flex-col items-center justify-center border border-[#9e8d58] bg-[#20241e]/95 text-[8px] font-black uppercase tracking-wide text-[#dfd2a6] shadow-xl shadow-black/45 transition hover:border-[#d0bb78] hover:text-[#f0e2b1]"
+            data-audio-click="off"
+            data-tone={state.tone}
+            onClick={runOrbAction}
+            onPointerDown={() => setActionButtonSettled(true)}
+            onPointerLeave={() => setActionButtonSettled(false)}
+            onBlur={() => setActionButtonSettled(false)}
+            disabled={orbDisabled}
+            className={["game-phase-button relative flex h-20 w-60 items-center justify-center overflow-hidden border text-[#f1e6c2] disabled:cursor-default disabled:saturate-75", actionButtonSettled ? "is-settled" : ""].join(" ")}
           >
-            <Swords size={16} />
-            All
+            <span className="game-phase-button-shade pointer-events-none absolute inset-0" />
+            <span className="relative z-10 flex w-full items-center justify-between gap-4 px-5 text-left">
+              <strong className="game-phase-label">{state.label}</strong>
+              <state.Icon size={28} strokeWidth={2.2} />
+            </span>
           </button>
         </GameTooltip>
-      )}
-      {showCancelAttack && (
-        <button
-          data-audio-click="valid"
-          onClick={cancelPlayerAttackers}
-          disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue}
-          className="fixed right-[12.75rem] top-[calc(50%+2.25rem)] z-[80] flex h-12 w-14 flex-col items-center justify-center border border-[#7f918b] bg-[#101b20]/95 text-[8px] font-black uppercase tracking-wide text-[#c9d3cd] shadow-xl shadow-black/45 transition hover:border-[#c2ae73] hover:text-[#eadcae]"
-          title="Cancel attackers"
-        >
-          <X size={18} />
-          Cancel
-        </button>
-      )}
+        {(showAttackAll || showCancelAttack || showCancelDefense) && (
+          <div className="game-phase-secondary">
+            {showAttackAll && (
+              <GameTooltip content="Sends every available creature to attack." className="game-phase-secondary-tooltip">
+                <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-all">
+                  <Swords size={17} /> <span>All</span>
+                </button>
+              </GameTooltip>
+            )}
+            {showCancelDefense && (
+              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title="Cancel blocks">
+                <X size={17} /> <span>Cancel</span>
+              </button>
+            )}
+            {showCancelAttack && (
+              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title="Cancel attackers">
+                <X size={17} /> <span>Cancel</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       {showActionWarning && (
         <div className="fixed inset-0 z-[140] flex items-center justify-center bg-[#090604]/85 p-6 text-[#f6e6b8]">
           <section className="old-panel w-full max-w-md p-6 text-center">
@@ -239,12 +211,12 @@ function getOrbState(
     return { label: "Confirm", Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
+    return { label: "No Attack", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
   }
   if (game.phase === "end") {
     return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };
   }
-  return { label: "Battle", Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
+  return { label: "To Battle", Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
 }
 
 function skipActionWarningDisabled(): boolean {

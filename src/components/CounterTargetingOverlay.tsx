@@ -133,8 +133,8 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           <button data-audio-click={locked ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!locked} onClick={confirmTargeting} title="Confirm">
             <Check size={24} />
           </button>
-          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={locked ? deselectTarget : cancelTargeting} title={locked ? "Deselect" : "Cancel"}>
-            {locked ? "Deselect" : <X size={24} />}
+          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={locked ? deselectTarget : cancelTargeting} title="Cancel">
+            {locked ? "Cancel" : <X size={24} />}
           </button>
         </div>
       </aside>
