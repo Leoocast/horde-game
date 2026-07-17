@@ -16,7 +16,6 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const [showActionWarning, setShowActionWarning] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | undefined>();
-  const [actionButtonSettled, setActionButtonSettled] = useState(false);
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -99,11 +98,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
             data-audio-click="off"
             data-tone={state.tone}
             onClick={runOrbAction}
-            onPointerDown={() => setActionButtonSettled(true)}
-            onPointerLeave={() => setActionButtonSettled(false)}
-            onBlur={() => setActionButtonSettled(false)}
             disabled={orbDisabled}
-            className={["game-phase-button relative flex h-20 w-60 items-center justify-center overflow-hidden border text-[#f1e6c2] disabled:cursor-default disabled:saturate-75", actionButtonSettled ? "is-settled" : ""].join(" ")}
+            className="game-phase-button relative flex h-20 w-60 items-center justify-center overflow-hidden border text-[#f1e6c2] disabled:cursor-default disabled:saturate-75"
           >
             <span className="game-phase-button-shade pointer-events-none absolute inset-0" />
             <span className="relative z-10 flex w-full items-center justify-between gap-4 px-5 text-left">

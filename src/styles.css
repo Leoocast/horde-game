@@ -3996,20 +3996,21 @@
     left: 50%;
     z-index: 360;
     width: max-content;
-    max-width: 16rem;
+    max-width: 21rem;
     visibility: hidden;
     transform: translateX(-50%) translateY(var(--tooltip-shift-y)) scale(0.985);
-    border: 1px solid rgb(151 142 99 / 0.5);
-    border-radius: 4px;
+    border: 1px solid rgb(190 174 112 / 0.62);
+    border-radius: 2px;
     background:
-      linear-gradient(135deg, rgb(23 38 32 / 0.91), rgb(7 17 14 / 0.96)),
-      radial-gradient(circle at 22% 0%, rgb(191 179 121 / 0.11), transparent 48%);
-    padding: 0.62rem 0.76rem;
-    color: #d9d7c0;
-    font-size: 0.84rem;
-    font-weight: 750;
-    letter-spacing: 0.015em;
-    line-height: 1.35;
+      linear-gradient(135deg, rgb(29 41 43 / 0.97), rgb(8 16 19 / 0.98)),
+      radial-gradient(circle at 20% 0%, rgb(209 190 121 / 0.16), transparent 52%);
+    padding: 0.8rem 0.95rem;
+    color: #eee4c4;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.94rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.42;
     opacity: 0;
     text-align: center;
     text-shadow: 0 1px 0 rgb(0 0 0 / 0.7);
@@ -4017,9 +4018,10 @@
     -webkit-backdrop-filter: blur(12px) saturate(1.08);
     backdrop-filter: blur(12px) saturate(1.08);
     box-shadow:
-      inset 0 1px 0 rgb(232 221 176 / 0.1),
-      0 10px 24px rgb(0 0 0 / 0.52),
-      0 0 0 1px rgb(77 99 85 / 0.08);
+      inset 0 1px 0 rgb(242 229 181 / 0.14),
+      inset 3px 0 0 rgb(177 157 92 / 0.34),
+      0 12px 28px rgb(0 0 0 / 0.56),
+      0 0 18px rgb(77 126 135 / 0.16);
     transition:
       opacity 110ms ease-out,
       transform 150ms ease-out,
@@ -4067,6 +4069,7 @@
       opacity 110ms ease-out,
       transform 150ms ease-out,
       visibility 0s;
+    animation: game-tooltip-arrive 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .keyword-pill,
@@ -4204,15 +4207,17 @@
 
   .counter-target-actions {
     display: flex;
+    width: 100%;
     align-items: center;
     justify-content: center;
-    gap: 0.85rem;
+    gap: 0.5rem;
   }
 
   .counter-target-button {
     display: inline-flex;
-    min-width: 5.5rem;
+    min-width: 0;
     height: 2.75rem;
+    flex: 1 1 0;
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
@@ -4250,7 +4255,6 @@
   }
 
   .counter-target-confirm {
-    min-width: 3.6rem;
     border-color: rgb(175 215 111 / 0.68);
     background:
       linear-gradient(180deg, #4e7d32, #1e3d1c);
@@ -4260,6 +4264,12 @@
     border-color: rgb(197 119 94 / 0.64);
     background:
       linear-gradient(180deg, #724033, #321c19);
+  }
+
+  .counter-target-deselect {
+    border-color: rgb(131 178 195 / 0.62);
+    background: linear-gradient(180deg, #365e6b, #192e36);
+    color: #d5edf3;
   }
 
   .player-attacker-readied {
@@ -5411,16 +5421,8 @@
 
 .game-phase-button:active:not(:disabled) {
   filter: brightness(1.24) saturate(1.16);
-  transform: translateY(0) scale(1);
+  transform: translateY(2px) scale(0.945);
   transition-duration: 65ms;
-}
-
-.game-phase-button.is-settled,
-.game-phase-button.is-settled:hover:not(:disabled),
-.game-phase-button.is-settled:active:not(:disabled) {
-  filter: brightness(1.08) saturate(1.04);
-  transform: translateY(0) scale(1);
-  transition-duration: 90ms;
 }
 
 .game-phase-button:hover:not(:disabled) svg {
@@ -5428,12 +5430,7 @@
 }
 
 .game-phase-button:active:not(:disabled) svg {
-  transform: translateX(0) scale(1);
-}
-
-.game-phase-button.is-settled svg,
-.game-phase-button.is-settled:hover:not(:disabled) svg {
-  transform: translateX(0) scale(1);
+  transform: translateX(3px) scale(0.92);
 }
 
 .game-phase-button svg {
@@ -5859,6 +5856,18 @@
 @keyframes game-home-dialog-out {
   from { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
   to { opacity: 0; filter: blur(4px); transform: translateY(8px) scale(0.985); }
+}
+
+@keyframes game-tooltip-arrive {
+  0% {
+    filter: brightness(0.82) blur(2px);
+  }
+  58% {
+    filter: brightness(1.14) blur(0);
+  }
+  100% {
+    filter: brightness(1) blur(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
