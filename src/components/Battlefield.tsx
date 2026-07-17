@@ -2,6 +2,7 @@ import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -25,6 +26,7 @@ const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
+const BONUS_MANA_ORBIT_SLOTS = 8;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
@@ -35,6 +37,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
+  const manaSlotByLandId = useRef<Map<string, number>>(new Map());
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
@@ -296,7 +299,7 @@ export function Battlefield({ game, side, cards }: Props) {
           )}
         </div>
       </Zone>
-      {side === "player" && createPortal(<LandDock />, document.body)}
+      {side === "player" && createPortal(LandDock(), document.body)}
     </>
   );
 
@@ -363,12 +366,25 @@ export function Battlefield({ game, side, cards }: Props) {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelection?.kind === "sacrifice-land";
     const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+    const floatingManaCount = Object.values(game.player.manaPool).reduce((total, amount) => total + amount, 0);
+    const availableResourceCount = availableLandCount + floatingManaCount;
     const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
+    const activeLandIds = new Set(lands.map((card) => card.instanceId));
+    for (const id of manaSlotByLandId.current.keys()) {
+      if (!activeLandIds.has(id)) manaSlotByLandId.current.delete(id);
+    }
+    const usedManaSlots = new Set(manaSlotByLandId.current.values());
+    for (const card of lands) {
+      if (manaSlotByLandId.current.has(card.instanceId)) continue;
+      const freeSlot = Array.from({ length: MAX_PLAYER_LANDS }, (_, slot) => slot).find((slot) => !usedManaSlots.has(slot)) ?? usedManaSlots.size;
+      manaSlotByLandId.current.set(card.instanceId, freeSlot);
+      usedManaSlots.add(freeSlot);
+    }
 
     return (
       <aside
         ref={landDockRef}
-        aria-label={`${availableLandCount} of ${landCount} lands available`}
+        aria-label={`${availableResourceCount} mana available from ${landCount} lands`}
         className={[
           "player-mana-core",
           game.activeSide === "player" ? "is-player-turn" : "",
@@ -383,22 +399,24 @@ export function Battlefield({ game, side, cards }: Props) {
           <span className="mana-core-heart-light" />
         </div>
         <div className="mana-core-count" aria-hidden="true">
-          <strong>{availableLandCount}</strong>
+          <strong>{availableResourceCount}</strong>
           <span>/{landCount}</span>
-          <small>Mana</small>
         </div>
         <AnimatePresence initial={false}>
-          {lands.map((card, index) => {
-            const stableIndex = lands.findIndex((land) => land.instanceId === card.instanceId);
-            const angle = -Math.PI / 2 + (Math.PI * 2 * stableIndex) / Math.max(landCount, 1);
+          {lands.map((card) => {
+            const stableSlot = manaSlotByLandId.current.get(card.instanceId) ?? 0;
+            const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
             const spent = card.tapped || card.activatedThisTurn;
-            const visible = smallpoxLandSelectionActive || !spent;
+            const consuming = paidLandIds.has(card.instanceId);
+            const visible = smallpoxLandSelectionActive || !spent || consuming;
             const selected = smallpoxSelection?.targetId === card.instanceId;
             const targetable = smallpoxLandSelectionActive && !smallpoxSelection.targetId;
             const fragmentStyle = {
               left: `${70.5 + Math.cos(angle) * 72}px`,
               top: `${59.5 + Math.sin(angle) * 51}px`,
-              "--mana-fragment-delay": `${index * 55}ms`,
+              "--mana-fragment-delay": `${stableSlot * 55}ms`,
+              "--mana-consume-x": `${Math.cos(angle) * -72}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -51}px`,
             } as CSSProperties;
 
             return (
@@ -413,21 +431,49 @@ export function Battlefield({ game, side, cards }: Props) {
                 className={[
                   "mana-fragment",
                   spent ? "is-spent" : "is-available",
-                  paidLandIds.has(card.instanceId) ? "is-consuming" : "",
+                  consuming ? "is-consuming" : "",
                   targetable ? "is-targetable" : "",
                   selected ? "is-selected" : "",
                 ].join(" ")}
                 style={fragmentStyle}
                 initial={{ opacity: 0, scale: 0.15 }}
-                animate={{ opacity: visible ? (spent ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
+                animate={{ opacity: visible ? (spent && !consuming ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
                 exit={{ opacity: 0, scale: paidLandIds.has(card.instanceId) ? 1.8 : 0.12, filter: "blur(5px) brightness(1.8)" }}
-                transition={{ duration: 0.36, delay: index * 0.035, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => {
                   if (targetable) lockSmallpoxSelectionTarget(card.instanceId);
                 }}
               >
-                <span className="mana-fragment-energy" aria-hidden="true" />
+                <span className="mana-fragment-shell" aria-hidden="true">
+                  <span className="mana-fragment-energy" />
+                </span>
               </motion.button>
+            );
+          })}
+          {Array.from({ length: floatingManaCount }, (_, index) => {
+            const angle = -Math.PI / 2 + (Math.PI * 2 * index) / BONUS_MANA_ORBIT_SLOTS;
+            const bonusStyle = {
+              left: `${70.5 + Math.cos(angle) * 49}px`,
+              top: `${59.5 + Math.sin(angle) * 35}px`,
+              "--mana-fragment-delay": `${index * 70}ms`,
+              "--mana-consume-x": `${Math.cos(angle) * -49}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -35}px`,
+            } as CSSProperties;
+
+            return (
+              <motion.span
+                key={`bonus-mana-${index}`}
+                className="mana-fragment mana-fragment-bonus"
+                style={bonusStyle}
+                initial={{ opacity: 0, scale: 0.12 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.08, filter: "blur(4px) brightness(2)" }}
+                transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span className="mana-fragment-shell" aria-hidden="true">
+                  <span className="mana-fragment-energy" />
+                </span>
+              </motion.span>
             );
           })}
         </AnimatePresence>
