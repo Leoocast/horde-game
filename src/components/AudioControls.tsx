@@ -1,7 +1,11 @@
 import { Music, Volume2, VolumeX } from "lucide-react";
 import { useAudioStore } from "../store/useAudioStore";
 
-export function AudioControls() {
+type Props = {
+  variant?: "panel" | "screen";
+};
+
+export function AudioControls({ variant = "panel" }: Props) {
   const enabled = useAudioStore((state) => state.enabled);
   const sfxVolume = useAudioStore((state) => state.sfxVolume);
   const musicEnabled = useAudioStore((state) => state.musicEnabled);
@@ -11,6 +15,47 @@ export function AudioControls() {
   const setMusicEnabled = useAudioStore((state) => state.setMusicEnabled);
   const setMusicVolume = useAudioStore((state) => state.setMusicVolume);
   const playSfx = useAudioStore((state) => state.playSfx);
+
+  if (variant === "screen") {
+    return (
+      <section className="main-settings-section">
+        <div className="main-settings-section-title">Audio</div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Efectos de sonido</div>
+            <div className="main-settings-description">Acciones, cartas y respuesta de la interfaz</div>
+          </div>
+          <div className="main-settings-control">
+            <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range" />
+            <span className="main-settings-value">{Math.round(sfxVolume * 100)}%</span>
+            <button className={`main-settings-toggle ${enabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={enabled} onClick={() => setEnabled(!enabled)}>
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Música</div>
+            <div className="main-settings-description">Banda sonora del menú y el combate</div>
+          </div>
+          <div className="main-settings-control">
+            <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range" />
+            <span className="main-settings-value">{Math.round(musicVolume * 100)}%</span>
+            <button className={`main-settings-toggle ${musicEnabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={musicEnabled} onClick={() => setMusicEnabled(!musicEnabled)}>
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Comprobar sonido</div>
+            <div className="main-settings-description">Reproduce el sonido de confirmación</div>
+          </div>
+          <button data-audio-click="off" className="main-settings-action" disabled={!enabled} onClick={() => playSfx("click")} type="button">Probar</button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="old-panel-soft p-3">

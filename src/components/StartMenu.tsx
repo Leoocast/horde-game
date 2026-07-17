@@ -4,7 +4,7 @@ import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { AppHeader } from "./AppHeader";
-import { SettingsMenu } from "./SettingsMenu";
+import { AudioControls } from "./AudioControls";
 import { ToastStack } from "./ToastStack";
 
 export type DifficultyMode = "easy" | "normal" | "hard";
@@ -39,7 +39,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
-  const [menuScreen, setMenuScreen] = useState<"home" | "setup">("home");
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "settings">("home");
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
@@ -83,8 +83,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   }
 
   return (
-    <main className={`h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "home" ? "main-menu-shell" : "duel-table"}`}>
-      {menuScreen === "home" ? (
+    <main className={`h-screen overflow-hidden text-[#f6e6b8] ${menuScreen !== "setup" ? "main-menu-shell" : "duel-table"}`}>
+      {menuScreen !== "setup" ? (
+        <div className="main-menu-stage">
         <div className="main-menu-layout">
           <div className="main-menu-brand">
             <div className="main-menu-kicker">Magic: The Gathering</div>
@@ -105,26 +106,65 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
               <span className="main-menu-entry-mark" />
               <span>Cómo jugar</span>
             </button>
-            <SettingsMenu
-              launcher="main-menu"
-              newGameSeedSettings={{
-                seed,
-                developerMode,
-                onSeedChange: setSeed,
-                onCopySeed: copySeed,
-                onRegenerateSeed: () => {
-                  if (developerMode) updateDeveloperMode(false);
-                  setSeed(generateRandomSeed());
-                },
-                onToggleDeveloperMode: toggleDeveloperMode,
-              }}
-            />
+            <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => setMenuScreen("settings")}>
+              <span className="main-menu-entry-mark" />
+              <span>Ajustes</span>
+            </button>
           </nav>
 
-          <div className="main-menu-status">
-            <span className="main-menu-status-dot" />
-            <span>La horda espera</span>
-          </div>
+        </div>
+        {menuScreen === "settings" && (
+          <section className="main-settings-screen" aria-label="Ajustes">
+            <header className="main-settings-header">
+              <p>Opciones</p>
+              <h2>Ajustes</h2>
+              <span>Personaliza el audio y la configuración de tus partidas.</span>
+            </header>
+
+            <div className="main-settings-content old-scrollbar">
+              <AudioControls variant="screen" />
+
+              <section className="main-settings-section">
+                <div className="main-settings-section-title">Partida</div>
+                <div className="main-settings-row">
+                  <div>
+                    <label className="main-settings-label" htmlFor="main-settings-seed">Semilla</label>
+                    <div className="main-settings-description">Permite repetir exactamente la misma partida</div>
+                  </div>
+                  <div className="main-settings-seed-control">
+                    <input
+                      id="main-settings-seed"
+                      value={developerMode ? "developer" : seed}
+                      onChange={(event) => setSeed(event.target.value)}
+                      disabled={developerMode}
+                      className="main-settings-input"
+                    />
+                    <button className="main-settings-action" type="button" onClick={copySeed}>Copiar</button>
+                    <button
+                      className="main-settings-action"
+                      type="button"
+                      onClick={() => {
+                        if (developerMode) updateDeveloperMode(false);
+                        setSeed(generateRandomSeed());
+                      }}
+                    >
+                      Nueva
+                    </button>
+                  </div>
+                </div>
+                <div className="main-settings-row">
+                  <div>
+                    <div className="main-settings-label">Modo desarrollador</div>
+                    <div className="main-settings-description">Herramientas de prueba para cartas y efectos sin terminar</div>
+                  </div>
+                  <button className={`main-settings-toggle ${developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={developerMode} onClick={toggleDeveloperMode}>
+                    <span />
+                  </button>
+                </div>
+              </section>
+            </div>
+          </section>
+        )}
         </div>
       ) : (
         <>
@@ -357,7 +397,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
         </div>
       )}
       
-      <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
+      <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: ALPHA 4.0-HAND-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
