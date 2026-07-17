@@ -20,6 +20,7 @@ type Props = {
   selectedHordeDeckId: string;
   onSelectHordeDeck: (deckId: string) => void;
   onViewHordeDeck: () => void;
+  initialScreen?: "home" | "setup" | "decks" | "settings";
   preserveMusicOnMount?: boolean;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
@@ -32,7 +33,7 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
 
 const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, preserveMusicOnMount = false, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
@@ -41,7 +42,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
-  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">("home");
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];

@@ -1,10 +1,10 @@
 import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
-import { AppHeader } from "./AppHeader";
+import { useAudioStore } from "../store/useAudioStore";
 import { CardDetailsModal, KeywordPills } from "./CardPreview";
 
 type Props = {
@@ -23,7 +23,7 @@ const MAX_CARD_ZOOM = 272;
 const DEFAULT_CARD_ZOOM = 168;
 
 export function DeckInspector({ deck, onBack }: Props) {
-  const cards = useMemo(() => uniqueCards(deck.deck.cards), [deck]);
+  const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
   const activeCard = cards.find((copy) => copy.card.id === (focusedCardId ?? hoveredCardId))?.card ?? cards[0]?.card;
@@ -32,6 +32,7 @@ export function DeckInspector({ deck, onBack }: Props) {
   const detailsCard = detailsCardId ? cards[detailsIndex]?.card : undefined;
   const [cardZoom, setCardZoomState] = useState(readStoredCardZoom);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
+  const [closing, setClosing] = useState(false);
   const gridMin = Math.max(96, cardZoom - 34);
   const setCardZoom = (value: number | ((current: number) => number)) => {
     setCardZoomState((current) => {
@@ -41,43 +42,41 @@ export function DeckInspector({ deck, onBack }: Props) {
     });
   };
 
+  useEffect(() => {
+    if (!closing) return;
+    const timeout = window.setTimeout(onBack, 240);
+    return () => window.clearTimeout(timeout);
+  }, [closing, onBack]);
+
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
-      <AppHeader
-        left={
-          <button className="old-button ml-3 flex h-10 items-center gap-2 px-3 text-sm font-black uppercase tracking-wide" onClick={onBack}>
-            <ArrowLeft size={17} />
-            Back
-          </button>
-        }
-        center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">{deck.label}</div>}
-      />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-[minmax(0,1fr)_360px] gap-3 overflow-hidden p-3">
-        <section className="old-panel relative z-0 min-h-0 overflow-hidden p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#8f6a36]/60 pb-3">
-            <div>
-              <p className="old-title text-xs font-bold uppercase tracking-[0.24em]">Deck Inspector</p>
-              <h1 className="old-title mt-1 text-2xl font-black">{deck.deck.name}</h1>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="text-right text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-                <div>{cards.length} unique</div>
-                <div>{deck.deck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0)} total</div>
-              </div>
-              <div className="old-panel-soft flex items-center gap-2 px-2 py-1">
-                <Search className="text-[#ffd98a] drop-shadow-[0_0_8px_rgba(255,100,24,0.45)]" size={15} aria-label="Card zoom" />
-                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">
-                  -
-                </button>
-                <input type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} className="w-28 accent-[#d6a34c]" />
-                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">
-                  +
-                </button>
-              </div>
-            </div>
+    <main className={`deck-detail-screen main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
+      <header className="deck-detail-header">
+        <button className="deck-detail-back" type="button" onClick={() => setClosing(true)} disabled={closing}>
+          <ArrowLeft size={17} />
+          Decks
+        </button>
+        <div className="deck-detail-heading">
+          <p>Deck collection</p>
+          <h1>{deck.deck.name}</h1>
+        </div>
+        <div className="deck-detail-tools">
+          <div className="deck-detail-counts">
+            <span><strong>{cards.length}</strong> unique</span>
+            <span><strong>{cards.reduce((total, copy) => total + copy.quantity, 0)}</strong> cards</span>
           </div>
-          <div className="old-scrollbar h-[calc(100%-86px)] overflow-y-auto overflow-x-hidden pr-3">
-            <div className="grid gap-4 px-3 pb-8 pt-4" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
+          <div className="deck-detail-zoom">
+            <Search size={15} aria-label="Card zoom" />
+            <button disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">−</button>
+            <input type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} />
+            <button disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">+</button>
+          </div>
+        </div>
+      </header>
+
+      <div className="deck-detail-layout">
+        <section className="deck-detail-collection">
+          <div className="deck-detail-grid-scroll">
+            <div className="deck-detail-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
               {cards.map((copy) => (
                 <DeckCardTile
                   key={copy.key}
@@ -134,30 +133,35 @@ function DeckCardTile({
   onClick: () => void;
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
+  const playSfx = useAudioStore((state) => state.playSfx);
+  const playHoverSound = () => playSfx("draw", { volume: 0.42 });
 
   return (
     <button
-      className={[
-        "group text-left transition hover:-translate-y-1",
-        selected ? "drop-shadow-[0_0_16px_rgba(247,207,112,0.62)]" : "hover:drop-shadow-[0_0_12px_rgba(94,210,255,0.48)]",
-      ].join(" ")}
-      onMouseEnter={onHover}
-      onFocus={onHover}
+      className={`deck-detail-card ${selected ? "is-selected" : ""}`}
+      onMouseEnter={() => {
+        onHover();
+        playHoverSound();
+      }}
+      onFocus={(event) => {
+        onHover();
+        if (!event.currentTarget.matches(":hover")) playHoverSound();
+      }}
       onClick={onClick}
       title={card.name}
     >
-      <div className="relative mx-auto w-full" style={{ maxWidth: cardWidth }}>
+      <div className="deck-detail-card-frame" style={{ maxWidth: cardWidth }}>
         {quantity > 1 && (
           <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
             x{quantity}
           </span>
         )}
-        <div className="relative aspect-[488/680] overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]">
-          {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
-          {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
+        <div className="deck-detail-card-image">
+          {details.imageUrl ? <img src={details.imageUrl} alt={card.name} draggable={false} /> : <MissingCardArt card={card} />}
+          {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
-      <div className="mx-auto mt-2 truncate text-center text-xs font-bold text-[#f4dfb0]" style={{ maxWidth: cardWidth }}>{card.name}</div>
+      <div className="deck-detail-card-name" style={{ maxWidth: cardWidth }}>{card.name}</div>
     </button>
   );
 }
@@ -166,7 +170,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const details = useDeckCardDetails(deck.id, card, deck.images);
   if (!card) {
     return (
-      <aside className="old-panel flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#d6b879]">
+      <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
         Hover a card to inspect it.
       </aside>
     );
@@ -176,23 +180,23 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const hasText = text.length > 0;
 
   return (
-    <aside className="old-panel relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
-      <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
+    <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
+      <div className="deck-detail-info-header">
         <div>
-          <h2 className="old-title text-lg font-bold leading-tight">{card.name}</h2>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
+          <h2>{card.name}</h2>
+          <p>{typeLine(card)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {pinned && (
-            <button className="icon-button" title="Clear selection" onClick={onClearPin}>
+            <button className="deck-detail-close" title="Clear selection" onClick={onClearPin}>
               <X size={15} />
             </button>
           )}
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3">
+      <div className="deck-detail-info-body">
         {details.imageUrl ? (
-          <img src={details.imageUrl} alt={card.name} className="mx-auto max-h-[48vh] w-full max-w-[280px] rounded-md border-2 border-[#9c7238] object-contain shadow-lg shadow-black/45" />
+          <img src={details.imageUrl} alt={card.name} className="deck-detail-info-image" />
         ) : (
           <MissingCardArt card={card} />
         )}
@@ -201,11 +205,11 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           {stats(card) && <span className="preview-stat-pill ml-auto">{stats(card)}</span>}
         </div>
         {hasText && (
-          <div className="old-panel-soft old-scrollbar min-h-0 flex-1 overflow-auto p-2">
-            <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
+          <div className="deck-detail-rules">
+            <p>{renderCardText(text)}</p>
           </div>
         )}
-        <button className="old-button h-10 text-sm font-black uppercase tracking-wide" onClick={onDetails}>
+        <button className="deck-detail-action" onClick={onDetails}>
           <Maximize2 className="mr-2 inline" size={16} />
           Details
         </button>

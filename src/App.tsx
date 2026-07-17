@@ -18,6 +18,7 @@ export default function App() {
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
+  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "decks">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
 
   if (screen === "deckInspector") {
@@ -39,11 +40,13 @@ export default function App() {
           onSelectDeck={setSelectedDeckId}
           onOpenDeck={(deckId) => {
             setPreserveMenuMusic(true);
+            setMenuReturnScreen("decks");
             setInspectorDeckId(deckId);
             setScreen("deckInspector");
           }}
           onViewDeck={() => {
             setPreserveMenuMusic(true);
+            setMenuReturnScreen("setup");
             setInspectorDeckId(selectedDeckId);
             setScreen("deckInspector");
           }}
@@ -52,9 +55,11 @@ export default function App() {
           onSelectHordeDeck={setSelectedHordeDeckId}
           onViewHordeDeck={() => {
             setPreserveMenuMusic(true);
+            setMenuReturnScreen("setup");
             setInspectorDeckId(selectedHordeDeckId);
             setScreen("deckInspector");
           }}
+          initialScreen={menuReturnScreen}
           preserveMusicOnMount={preserveMenuMusic}
           onStart={(options) => {
             setPreserveMenuMusic(false);
@@ -84,6 +89,7 @@ export default function App() {
         setupTurns={setupTurns}
         onReturnToMenu={() => {
           setPreserveMenuMusic(false);
+          setMenuReturnScreen("home");
           setScreen("start");
         }}
       />
