@@ -1869,7 +1869,7 @@
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 40% 60%;
+    grid-template-columns: 44% 56%;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -1899,14 +1899,14 @@
     align-items: center;
     justify-content: center;
     border-right: 1px solid rgb(135 146 126 / 0.13);
-    padding: 38px 60px;
+    padding: 38px 54px;
     background:
       radial-gradient(circle at 50% 43%, rgb(104 132 105 / 0.16), transparent 45%),
       linear-gradient(90deg, rgb(4 13 11 / 0.3), transparent);
   }
 
   .deck-collection-modal-art {
-    width: min(100%, 340px);
+    width: min(100%, 410px);
     aspect-ratio: 488 / 680;
     overflow: hidden;
     border: 1px solid rgb(171 154 100 / 0.56);
@@ -2168,11 +2168,11 @@
     }
 
     .deck-collection-modal-content {
-      grid-template-columns: 39% 61%;
+      grid-template-columns: 43% 57%;
     }
 
     .deck-collection-modal-art-column {
-      padding-inline: 46px;
+      padding-inline: 42px;
     }
 
     .deck-collection-modal-info {

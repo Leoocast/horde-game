@@ -17,9 +17,10 @@ type CardCopy = {
   quantity: number;
 };
 
-const MIN_CARD_ZOOM = 272;
-const MAX_CARD_ZOOM = 340;
-const DEFAULT_CARD_ZOOM = MIN_CARD_ZOOM;
+const DECK_COLUMN_OPTIONS = [7, 6, 5] as const;
+type DeckColumnCount = (typeof DECK_COLUMN_OPTIONS)[number];
+const DEFAULT_DECK_COLUMNS = DECK_COLUMN_OPTIONS[0];
+const DECK_COLUMNS_STORAGE_KEY = "horde-deck-inspector-columns";
 const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, onBack }: Props) {
@@ -30,14 +31,14 @@ export function DeckInspector({ deck, onBack }: Props) {
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
   const detailsIndex = Math.max(0, cards.findIndex((copy) => copy.card.id === detailsCardId));
   const detailsCard = detailsCardId ? cards[detailsIndex]?.card : undefined;
-  const [cardZoom, setCardZoomState] = useState(readStoredCardZoom);
+  const [columnCount, setColumnCountState] = useState(readStoredColumnCount);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const [closing, setClosing] = useState(false);
-  const gridMin = Math.max(96, cardZoom - 34);
-  const setCardZoom = (value: number | ((current: number) => number)) => {
-    setCardZoomState((current) => {
-      const next = clampCardZoom(typeof value === "function" ? value(current) : value);
-      writeStoredCardZoom(next);
+  const zoomLevel = DECK_COLUMN_OPTIONS.indexOf(columnCount);
+  const setColumnCount = (value: number | ((current: number) => number)) => {
+    setColumnCountState((current) => {
+      const next = clampColumnCount(typeof value === "function" ? value(current) : value);
+      writeStoredColumnCount(next);
       return next;
     });
   };
@@ -66,9 +67,18 @@ export function DeckInspector({ deck, onBack }: Props) {
           </div>
           <div className="deck-detail-zoom">
             <Search size={15} aria-label="Card zoom" />
-            <button disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">−</button>
-            <input className="game-range" type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} />
-            <button disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">+</button>
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[0]} onClick={() => setColumnCount((value) => value + 1)} title="Zoom out">−</button>
+            <input
+              aria-label={`Card zoom, ${columnCount} columns`}
+              className="game-range"
+              type="range"
+              min={0}
+              max={DECK_COLUMN_OPTIONS.length - 1}
+              step={1}
+              value={zoomLevel}
+              onChange={(event) => setColumnCount(DECK_COLUMN_OPTIONS[Number(event.target.value)])}
+            />
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[DECK_COLUMN_OPTIONS.length - 1]} onClick={() => setColumnCount((value) => value - 1)} title="Zoom in">+</button>
           </div>
         </div>
       </header>
@@ -76,14 +86,13 @@ export function DeckInspector({ deck, onBack }: Props) {
       <div className={`deck-detail-layout ${ENABLE_DECK_CARD_PREVIEW ? "" : "is-preview-hidden"}`}>
         <section className="deck-detail-collection">
           <div className="deck-detail-grid-scroll">
-            <div className="deck-detail-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
+            <div className="deck-detail-grid" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
               {cards.map((copy) => (
                 <DeckCardTile
                   key={copy.key}
                   deck={deck}
                   card={copy.card}
                   quantity={copy.quantity}
-                  cardWidth={cardZoom}
                   selected={copy.card.id === focusedCardId}
                   onHover={() => setHoveredCardId(copy.card.id)}
                   onClick={() => {
@@ -123,7 +132,6 @@ function DeckCardTile({
   deck,
   card,
   quantity,
-  cardWidth,
   selected,
   onHover,
   onClick,
@@ -131,7 +139,6 @@ function DeckCardTile({
   deck: InspectableDeck;
   card: NewDeckCard;
   quantity: number;
-  cardWidth: number;
   selected: boolean;
   onHover: () => void;
   onClick: () => void;
@@ -154,7 +161,7 @@ function DeckCardTile({
       onClick={onClick}
       title={card.name}
     >
-      <div className="deck-detail-card-frame" style={{ maxWidth: cardWidth }}>
+      <div className="deck-detail-card-frame">
         {quantity > 1 && (
           <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
             x{quantity}
@@ -165,7 +172,7 @@ function DeckCardTile({
           {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
-      <div className="deck-detail-card-name" style={{ maxWidth: cardWidth }}>{card.name}</div>
+      <div className="deck-detail-card-name">{card.name}</div>
     </button>
   );
 }
@@ -430,18 +437,20 @@ function MissingCardArt({ card }: { card: NewDeckCard }) {
   );
 }
 
-function readStoredCardZoom(): number {
-  if (typeof window === "undefined") return DEFAULT_CARD_ZOOM;
-  const stored = window.localStorage.getItem("horde-deck-inspector-card-zoom");
-  const parsed = stored ? Number(stored) : DEFAULT_CARD_ZOOM;
-  return clampCardZoom(Number.isFinite(parsed) ? parsed : DEFAULT_CARD_ZOOM);
+function readStoredColumnCount(): DeckColumnCount {
+  if (typeof window === "undefined") return DEFAULT_DECK_COLUMNS;
+  const stored = window.localStorage.getItem(DECK_COLUMNS_STORAGE_KEY);
+  const parsed = stored ? Number(stored) : DEFAULT_DECK_COLUMNS;
+  return clampColumnCount(Number.isFinite(parsed) ? parsed : DEFAULT_DECK_COLUMNS);
 }
 
-function writeStoredCardZoom(value: number): void {
+function writeStoredColumnCount(value: number): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem("horde-deck-inspector-card-zoom", String(value));
+  window.localStorage.setItem(DECK_COLUMNS_STORAGE_KEY, String(value));
 }
 
-function clampCardZoom(value: number): number {
-  return Math.min(MAX_CARD_ZOOM, Math.max(MIN_CARD_ZOOM, value));
+function clampColumnCount(value: number): DeckColumnCount {
+  return DECK_COLUMN_OPTIONS.reduce((closest, option) => (
+    Math.abs(option - value) < Math.abs(closest - value) ? option : closest
+  ), DEFAULT_DECK_COLUMNS);
 }
