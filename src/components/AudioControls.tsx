@@ -22,8 +22,8 @@ export function AudioControls({ variant = "panel" }: Props) {
         <div className="main-settings-section-title">Audio</div>
         <div className="main-settings-row">
           <div>
-            <div className="main-settings-label">Efectos de sonido</div>
-            <div className="main-settings-description">Acciones, cartas y respuesta de la interfaz</div>
+            <div className="main-settings-label">Sound Effects</div>
+            <div className="main-settings-description">Actions, cards, and interface feedback</div>
           </div>
           <div className="main-settings-control">
             <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range" />
@@ -35,8 +35,8 @@ export function AudioControls({ variant = "panel" }: Props) {
         </div>
         <div className="main-settings-row">
           <div>
-            <div className="main-settings-label">Música</div>
-            <div className="main-settings-description">Banda sonora del menú y el combate</div>
+            <div className="main-settings-label">Music</div>
+            <div className="main-settings-description">Menu and battle soundtrack</div>
           </div>
           <div className="main-settings-control">
             <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range" />
@@ -48,10 +48,10 @@ export function AudioControls({ variant = "panel" }: Props) {
         </div>
         <div className="main-settings-row">
           <div>
-            <div className="main-settings-label">Comprobar sonido</div>
-            <div className="main-settings-description">Reproduce el sonido de confirmación</div>
+            <div className="main-settings-label">Test Sound</div>
+            <div className="main-settings-description">Play the interface confirmation sound</div>
           </div>
-          <button data-audio-click="off" className="main-settings-action" disabled={!enabled} onClick={() => playSfx("click")} type="button">Probar</button>
+          <button data-audio-click="off" className="main-settings-action" disabled={!enabled} onClick={() => playSfx("click")} type="button">Test</button>
         </div>
       </section>
     );

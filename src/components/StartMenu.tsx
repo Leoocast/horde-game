@@ -93,43 +93,42 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
             <div className="main-menu-subtitle"><span /> PvE</div>
           </div>
 
-          <nav className="main-menu-nav" aria-label="Menú principal">
+          <nav className="main-menu-nav" aria-label="Main menu">
             <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
               <span className="main-menu-entry-mark" />
-              <span>Jugar</span>
+              <span>Play</span>
             </button>
             <button className="main-menu-entry group" type="button" onClick={onViewDeck}>
               <span className="main-menu-entry-mark" />
-              <span>Mazos</span>
+              <span>Decks</span>
             </button>
             <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
               <span className="main-menu-entry-mark" />
-              <span>Cómo jugar</span>
+              <span>How to Play</span>
             </button>
             <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => setMenuScreen("settings")}>
               <span className="main-menu-entry-mark" />
-              <span>Ajustes</span>
+              <span>Settings</span>
             </button>
           </nav>
 
         </div>
         {menuScreen === "settings" && (
-          <section className="main-settings-screen" aria-label="Ajustes">
+          <section className="main-settings-screen" aria-label="Settings">
             <header className="main-settings-header">
-              <p>Opciones</p>
-              <h2>Ajustes</h2>
-              <span>Personaliza el audio y la configuración de tus partidas.</span>
+              <h2>Settings</h2>
+              <span>Customize audio and game configuration.</span>
             </header>
 
             <div className="main-settings-content old-scrollbar">
               <AudioControls variant="screen" />
 
               <section className="main-settings-section">
-                <div className="main-settings-section-title">Partida</div>
+                <div className="main-settings-section-title">Game</div>
                 <div className="main-settings-row">
                   <div>
-                    <label className="main-settings-label" htmlFor="main-settings-seed">Semilla</label>
-                    <div className="main-settings-description">Permite repetir exactamente la misma partida</div>
+                    <label className="main-settings-label" htmlFor="main-settings-seed">Seed</label>
+                    <div className="main-settings-description">Replay the exact same game configuration</div>
                   </div>
                   <div className="main-settings-seed-control">
                     <input
@@ -139,7 +138,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
                       disabled={developerMode}
                       className="main-settings-input"
                     />
-                    <button className="main-settings-action" type="button" onClick={copySeed}>Copiar</button>
+                    <button className="main-settings-action" type="button" onClick={copySeed}>Copy</button>
                     <button
                       className="main-settings-action"
                       type="button"
@@ -148,14 +147,14 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
                         setSeed(generateRandomSeed());
                       }}
                     >
-                      Nueva
+                      New
                     </button>
                   </div>
                 </div>
                 <div className="main-settings-row">
                   <div>
-                    <div className="main-settings-label">Modo desarrollador</div>
-                    <div className="main-settings-description">Herramientas de prueba para cartas y efectos sin terminar</div>
+                    <div className="main-settings-label">Developer Mode</div>
+                    <div className="main-settings-description">Testing tools for cards and unfinished effects</div>
                   </div>
                   <button className={`main-settings-toggle ${developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={developerMode} onClick={toggleDeveloperMode}>
                     <span />
@@ -169,7 +168,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
       ) : (
         <>
       <AppHeader
-        left={<button className="pl-3 text-sm font-black uppercase tracking-[0.18em] text-[#d8c99f] transition hover:text-[#fff3cb]" type="button" onClick={() => setMenuScreen("home")}>← Menú principal</button>}
+        left={<button className="pl-3 text-sm font-black uppercase tracking-[0.18em] text-[#d8c99f] transition hover:text-[#fff3cb]" type="button" onClick={() => setMenuScreen("home")}>← Main Menu</button>}
         center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
         newGameSeedSettings={{
           seed,
