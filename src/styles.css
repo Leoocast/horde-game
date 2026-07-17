@@ -56,10 +56,10 @@
   .main-menu-shell {
     position: relative;
     isolation: isolate;
-    background-color: #08100f;
+    background-color: #080c0f;
     background-image:
-      linear-gradient(90deg, rgb(3 8 8 / 0.98) 0%, rgb(5 13 12 / 0.94) 29%, rgb(7 17 16 / 0.57) 55%, rgb(5 9 8 / 0.4) 100%),
-      linear-gradient(0deg, rgb(2 5 5 / 0.9), rgb(0 0 0 / 0.08) 58%),
+      linear-gradient(90deg, rgb(4 7 9 / 0.98) 0%, rgb(9 14 17 / 0.95) 29%, rgb(13 19 22 / 0.62) 55%, rgb(7 10 12 / 0.42) 100%),
+      linear-gradient(0deg, rgb(3 6 8 / 0.92), rgb(0 0 0 / 0.08) 58%),
       url("../assets/images/background.webp");
     background-position: center, center, 58% center;
     background-repeat: no-repeat;
@@ -71,7 +71,7 @@
     z-index: -1;
     inset: 0;
     background:
-      radial-gradient(circle at 72% 43%, rgb(0 0 0 / 0.08) 0 17%, rgb(3 8 7 / 0.26) 42%, rgb(2 5 5 / 0.72) 100%),
+      radial-gradient(circle at 72% 43%, rgb(0 0 0 / 0.06) 0 17%, rgb(7 11 14 / 0.26) 42%, rgb(2 5 7 / 0.74) 100%),
       linear-gradient(180deg, rgb(0 0 0 / 0.74), rgb(0 0 0 / 0.08) 20% 68%, rgb(0 0 0 / 0.8));
     content: "";
   }
@@ -112,7 +112,7 @@
   }
 
   .main-menu-kicker {
-    color: #8f9e92;
+    color: #879397;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.28em;
@@ -136,7 +136,7 @@
     align-items: center;
     gap: 10px;
     margin-top: 12px;
-    color: #7d9288;
+    color: #7f8d91;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.42em;
@@ -162,9 +162,9 @@
     width: 100%;
     min-height: 58px;
     border: 0;
-    border-bottom: 1px solid rgb(141 151 132 / 0.15);
+    border-bottom: 1px solid rgb(145 154 157 / 0.15);
     background: transparent;
-    color: #aeb7ac;
+    color: #abb4b6;
     font-family: Georgia, "Times New Roman", serif;
     font-size: clamp(18px, 1.5vw, 23px);
     letter-spacing: 0.075em;
@@ -191,7 +191,7 @@
   .main-menu-entry:focus-visible,
   .main-menu-entry.is-active {
     padding-left: 8px;
-    background: linear-gradient(90deg, rgb(103 122 105 / 0.12), transparent 82%);
+    background: linear-gradient(90deg, rgb(111 124 128 / 0.13), transparent 82%);
     color: #f0e5c4;
     outline: none;
   }
@@ -208,7 +208,7 @@
     height: 5px;
     flex: 0 0 auto;
     border: 1px solid #877849;
-    background: #192420;
+    background: #1a2225;
     transform: rotate(45deg);
     transition: background-color 160ms ease, box-shadow 160ms ease;
   }
@@ -226,6 +226,12 @@
       linear-gradient(0deg, rgb(1 5 4 / 0.92), rgb(0 0 0 / 0.18) 60%),
       url("../assets/images/background.webp");
     background-position: center, center, center 44%;
+  }
+
+  .main-menu-shell.expedition-active::before {
+    background:
+      radial-gradient(circle at 72% 43%, rgb(0 0 0 / 0.08) 0 17%, rgb(3 8 7 / 0.26) 42%, rgb(2 5 5 / 0.72) 100%),
+      linear-gradient(180deg, rgb(0 0 0 / 0.74), rgb(0 0 0 / 0.08) 20% 68%, rgb(0 0 0 / 0.8));
   }
 
   .main-menu-shell.expedition-active::after {
@@ -1061,7 +1067,7 @@
   .decks-section-heading {
     position: relative;
     z-index: 10;
-    border-bottom: 1px solid rgb(137 150 133 / 0.16);
+    border-bottom: 1px solid rgb(145 154 157 / 0.16);
     margin-bottom: 18px;
     padding: 0 0 11px;
   }
@@ -2212,7 +2218,7 @@
     align-items: center;
     justify-content: center;
     background:
-      radial-gradient(circle at 50% 46%, rgb(24 42 34 / 0.3), rgb(1 5 4 / 0.9) 68%),
+      radial-gradient(circle at 50% 46%, rgb(39 48 51 / 0.28), rgb(2 5 7 / 0.92) 68%),
       rgb(0 0 0 / 0.76);
     padding: 24px;
     -webkit-backdrop-filter: blur(8px) saturate(1.06);
@@ -2227,14 +2233,14 @@
 
   .tutorial-construction-modal {
     position: relative;
-    width: min(480px, calc(100vw - 48px));
+    width: min(640px, calc(100vw - 48px));
     overflow: hidden;
-    border: 1px solid rgb(157 145 99 / 0.46);
+    border: 1px solid rgb(160 148 102 / 0.46);
     background:
-      linear-gradient(135deg, rgb(23 39 33 / 0.88), rgb(6 16 13 / 0.95)),
+      linear-gradient(135deg, rgb(28 35 38 / 0.94), rgb(7 12 15 / 0.98)),
       repeating-linear-gradient(90deg, transparent 0 22px, rgb(151 139 92 / 0.028) 22px 23px);
-    padding: 42px 46px 38px;
-    color: #d9d5bd;
+    padding: 38px 54px 34px;
+    color: #d7d4c3;
     text-align: center;
     -webkit-backdrop-filter: blur(18px) saturate(1.08);
     backdrop-filter: blur(18px) saturate(1.08);
@@ -2266,16 +2272,16 @@
     width: 40px;
     height: 40px;
     place-items: center;
-    border: 1px solid rgb(128 140 122 / 0.22);
-    background: rgb(7 16 13 / 0.42);
-    color: #7e8f85;
+    border: 1px solid rgb(135 146 149 / 0.24);
+    background: rgb(10 16 19 / 0.58);
+    color: #879397;
     transition: border-color 130ms ease, background-color 130ms ease, color 130ms ease;
   }
 
   .tutorial-construction-close:hover,
   .tutorial-construction-close:focus-visible {
     border-color: #96895e;
-    background: #233029;
+    background: #283236;
     color: #efe3c1;
     outline: none;
   }
@@ -2284,12 +2290,12 @@
     display: grid;
     width: 64px;
     height: 64px;
-    margin: 0 auto 22px;
+    margin: 0 auto 19px;
     place-items: center;
     border: 1px solid rgb(157 145 99 / 0.42);
-    background: linear-gradient(145deg, rgb(86 99 78 / 0.28), rgb(17 29 24 / 0.72));
+    background: linear-gradient(145deg, rgb(76 86 89 / 0.34), rgb(16 23 26 / 0.82));
     color: #b7aa78;
-    box-shadow: 7px 9px 0 rgb(10 18 14 / 0.56), 0 16px 24px rgb(0 0 0 / 0.3);
+    box-shadow: 7px 9px 0 rgb(8 13 16 / 0.62), 0 16px 24px rgb(0 0 0 / 0.3);
     transform: rotate(45deg);
   }
 
@@ -2299,7 +2305,7 @@
 
   .tutorial-construction-kicker {
     margin: 0 0 11px;
-    color: #7b8d83;
+    color: #7f8c90;
     font-size: 10px;
     font-weight: 850;
     letter-spacing: 0.23em;
@@ -2310,10 +2316,11 @@
     margin: 0;
     color: #e2d7b8;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(30px, 4vw, 42px);
+    font-size: clamp(32px, 3.4vw, 42px);
     font-weight: 500;
     letter-spacing: 0.025em;
     line-height: 1.05;
+    white-space: nowrap;
   }
 
   .tutorial-construction-rule {
@@ -2324,9 +2331,9 @@
   }
 
   .tutorial-construction-copy {
-    max-width: 340px;
+    max-width: 470px;
     margin: 0 auto;
-    color: #aeb7ac;
+    color: #aeb6b7;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 15px;
     line-height: 1.58;
@@ -2337,7 +2344,7 @@
     min-height: 46px;
     margin-top: 30px;
     border: 1px solid rgb(150 138 95 / 0.5);
-    background: linear-gradient(180deg, rgb(43 58 48 / 0.82), rgb(17 28 23 / 0.9));
+    background: linear-gradient(180deg, rgb(41 50 53 / 0.94), rgb(14 21 24 / 0.98));
     color: #d9d0af;
     font-size: 11px;
     font-weight: 900;
@@ -2370,12 +2377,21 @@
   }
 
   .tutorial-construction-action.is-secondary {
-    border-color: rgb(119 133 122 / 0.3);
-    background: rgb(8 18 15 / 0.5);
-    color: #87978e;
+    border-color: rgb(129 141 145 / 0.32);
+    background: rgb(9 15 18 / 0.62);
+    color: #8d999d;
   }
 
   @media (max-width: 520px) {
+    .tutorial-construction-modal {
+      padding: 38px 26px 30px;
+    }
+
+    .tutorial-construction-modal h2 {
+      font-size: clamp(28px, 9vw, 36px);
+      white-space: normal;
+    }
+
     .developer-warning-actions {
       grid-template-columns: 1fr;
     }
@@ -2405,7 +2421,7 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    color: #66776f;
+    color: #6f7b7f;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.2em;
@@ -2416,13 +2432,14 @@
     width: 5px;
     height: 5px;
     border-radius: 999px;
-    background: #829a72;
-    box-shadow: 0 0 8px rgb(130 154 114 / 0.55);
+    background: #8a9699;
+    box-shadow: 0 0 8px rgb(138 150 153 / 0.45);
   }
 
   .main-menu-credits {
     bottom: 34px;
     left: clamp(38px, 5vw, 80px);
+    color: #6f7b7f;
     text-align: left;
   }
 
@@ -2447,7 +2464,7 @@
 
   .main-settings-header p {
     margin: 0 0 10px;
-    color: #788b82;
+    color: #7d898d;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.3em;
@@ -2468,7 +2485,7 @@
   .main-settings-header > span {
     display: block;
     margin-top: 13px;
-    color: #77867f;
+    color: #7b878b;
     font-size: 14px;
   }
 
@@ -2485,7 +2502,7 @@
   }
 
   .main-settings-section-title {
-    border-bottom: 1px solid rgb(137 150 133 / 0.16);
+    border-bottom: 1px solid rgb(145 154 157 / 0.16);
     padding: 0 0 12px;
     color: #a3905e;
     font-size: 12px;
@@ -2500,12 +2517,12 @@
     align-items: center;
     gap: 40px;
     min-height: 86px;
-    border-bottom: 1px solid rgb(137 150 133 / 0.12);
+    border-bottom: 1px solid rgb(145 154 157 / 0.12);
     padding: 14px 2px;
   }
 
   .main-settings-label {
-    color: #c9c7b4;
+    color: #c7c8c1;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.045em;
@@ -2514,7 +2531,7 @@
 
   .main-settings-description {
     margin-top: 6px;
-    color: #65776f;
+    color: #6f7d81;
     font-size: 13px;
     line-height: 1.4;
   }
@@ -2595,7 +2612,7 @@
 
   .main-settings-value {
     width: 48px;
-    color: #aeb7ac;
+    color: #adb6b8;
     font-size: 13px;
     font-weight: 700;
     text-align: right;
@@ -2606,9 +2623,9 @@
     width: 44px;
     height: 22px;
     flex: 0 0 auto;
-    border: 1px solid #52635b;
+    border: 1px solid #566368;
     border-radius: 0;
-    background: #111b18;
+    background: #11181b;
     transition: border-color 150ms ease, background-color 150ms ease;
   }
 
@@ -2619,7 +2636,7 @@
     width: 14px;
     height: 14px;
     border-radius: 0;
-    background: #718078;
+    background: #747f83;
     transition: left 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
   }
 
@@ -2638,7 +2655,7 @@
     min-width: 94px;
     height: 42px;
     border: 1px solid rgb(150 138 95 / 0.5);
-    background: linear-gradient(180deg, rgb(43 58 48 / 0.82), rgb(17 28 23 / 0.9));
+    background: linear-gradient(180deg, rgb(40 49 52 / 0.9), rgb(14 21 24 / 0.96));
     color: #d9d0af;
     font-size: 11px;
     font-weight: 900;
@@ -2661,9 +2678,9 @@
     height: 40px;
     min-width: 160px;
     border: 0;
-    border-bottom: 1px solid #65766d;
-    background: rgb(6 13 12 / 0.58);
-    color: #c9c7b4;
+    border-bottom: 1px solid #647277;
+    background: rgb(6 10 13 / 0.62);
+    color: #c7c8c1;
     padding: 0 14px;
     font-size: 13px;
     outline: none;
@@ -2702,7 +2719,7 @@
       position: absolute;
       inset: 0;
       z-index: 5;
-      background: rgb(5 12 11 / 0.97);
+      background: rgb(7 11 14 / 0.97);
       padding: 36px 24px;
     }
 
