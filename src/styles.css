@@ -295,8 +295,8 @@
 
   .deck-key-card:hover .deck-key-card-stage,
   .deck-key-card:focus-visible .deck-key-card-stage {
-    transform: translateY(-17px);
-    filter: drop-shadow(0 30px 23px rgb(0 0 0 / 0.7)) drop-shadow(0 0 12px rgb(193 169 100 / 0.22));
+    transform: translateY(-14px);
+    filter: drop-shadow(0 16px 12px rgb(0 0 0 / 0.56)) drop-shadow(0 0 5px rgb(193 169 100 / 0.14));
   }
 
   .deck-key-card:focus-visible {
