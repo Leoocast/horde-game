@@ -5,6 +5,7 @@ import { AudioControls } from "./AudioControls";
 
 type Props = {
   onReturnToMenu?: () => void;
+  launcher?: "icon" | "main-menu";
   newGameSeedSettings?: {
     seed: string;
     developerMode: boolean;
@@ -15,7 +16,7 @@ type Props = {
   };
 };
 
-export function SettingsMenu({ onReturnToMenu, newGameSeedSettings }: Props) {
+export function SettingsMenu({ onReturnToMenu, newGameSeedSettings, launcher = "icon" }: Props) {
   const seed = useGameStore((state) => state.game?.seed);
   const triggerEndGame = useGameStore((state) => state.triggerEndGame);
   const isDeveloperMode = seed?.trim().toLowerCase() === "developer";
@@ -49,8 +50,20 @@ export function SettingsMenu({ onReturnToMenu, newGameSeedSettings }: Props) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="old-button flex h-10 w-10 items-center justify-center rounded-full transition" onClick={toggle} title="Settings">
-        <Settings size={18} />
+      <button
+        ref={buttonRef}
+        className={launcher === "main-menu" ? "main-menu-entry group" : "old-button flex h-10 w-10 items-center justify-center rounded-full transition"}
+        onClick={toggle}
+        title="Settings"
+      >
+        {launcher === "main-menu" ? (
+          <>
+            <span className="main-menu-entry-mark" />
+            <span>Ajustes</span>
+          </>
+        ) : (
+          <Settings size={18} />
+        )}
       </button>
       {open && menuPos && (
         <div className={["fixed z-[400]", newGameSeedSettings ? "w-80" : "w-72"].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>

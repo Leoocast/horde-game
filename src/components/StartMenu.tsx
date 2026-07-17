@@ -4,6 +4,7 @@ import type { InspectableDeck } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { AppHeader } from "./AppHeader";
+import { SettingsMenu } from "./SettingsMenu";
 import { ToastStack } from "./ToastStack";
 
 export type DifficultyMode = "easy" | "normal" | "hard";
@@ -38,6 +39,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup">("home");
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
@@ -81,9 +83,53 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   }
 
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
+    <main className={`h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "home" ? "main-menu-shell" : "duel-table"}`}>
+      {menuScreen === "home" ? (
+        <div className="main-menu-layout">
+          <div className="main-menu-brand">
+            <div className="main-menu-kicker">Magic: The Gathering</div>
+            <h1 className="main-menu-title">Horde</h1>
+            <div className="main-menu-subtitle"><span /> PvE</div>
+          </div>
+
+          <nav className="main-menu-nav" aria-label="Menú principal">
+            <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
+              <span className="main-menu-entry-mark" />
+              <span>Jugar</span>
+            </button>
+            <button className="main-menu-entry group" type="button" onClick={onViewDeck}>
+              <span className="main-menu-entry-mark" />
+              <span>Mazos</span>
+            </button>
+            <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
+              <span className="main-menu-entry-mark" />
+              <span>Cómo jugar</span>
+            </button>
+            <SettingsMenu
+              launcher="main-menu"
+              newGameSeedSettings={{
+                seed,
+                developerMode,
+                onSeedChange: setSeed,
+                onCopySeed: copySeed,
+                onRegenerateSeed: () => {
+                  if (developerMode) updateDeveloperMode(false);
+                  setSeed(generateRandomSeed());
+                },
+                onToggleDeveloperMode: toggleDeveloperMode,
+              }}
+            />
+          </nav>
+
+          <div className="main-menu-status">
+            <span className="main-menu-status-dot" />
+            <span>La horda espera</span>
+          </div>
+        </div>
+      ) : (
+        <>
       <AppHeader
-        left={<div className="pl-3 old-title text-sm font-black uppercase tracking-[0.18em] text-[#f8dfa0]">Horde Magic PvE</div>}
+        left={<button className="pl-3 text-sm font-black uppercase tracking-[0.18em] text-[#d8c99f] transition hover:text-[#fff3cb]" type="button" onClick={() => setMenuScreen("home")}>← Menú principal</button>}
         center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
         newGameSeedSettings={{
           seed,
@@ -255,6 +301,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
         </div>
         </section>
       </div>
+        </>
+      )}
 
       {showTutorialConfirm && (
         <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85 p-6">
