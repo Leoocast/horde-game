@@ -69,8 +69,8 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
               </button>
             </header>
 
-            <div className="old-scrollbar grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-5 overflow-y-auto p-5">
-              <div className="space-y-4">
+            <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-5 overflow-hidden p-5">
+              <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
                 <AudioControls />
 
                 <section className="old-panel-soft p-4">
@@ -89,25 +89,25 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
                   <section className="old-panel-soft p-4">
                     <div className="game-settings-section-title">Developer options</div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> Win</button>
                       <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("horde")}><Skull size={14} /> Lose</button>
+                      <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> Win</button>
                     </div>
                   </section>
                 )}
               </div>
 
-              <section className="game-settings-log old-panel-soft flex min-h-[430px] flex-col p-4">
-                <div className="game-settings-section-title">Chronicle</div>
+              <section className="game-settings-log old-panel-soft flex min-h-[430px] flex-col p-5">
+                <div className="game-settings-chronicle-title">Chronicle</div>
                 <p>Every action recorded during this battle.</p>
-                <GameLog game={game} className="mt-4 min-h-0 flex-1" />
+                <GameLog game={game} variant="embedded" className="mt-4 min-h-0 flex-1" />
               </section>
             </div>
 
             <footer className="game-settings-modal-footer flex items-center justify-between gap-4 px-5 py-4">
-              <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>Close</button>
               {onReturnToMenu && (
                 <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> Return to menu</button>
               )}
+              <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>Close</button>
             </footer>
           </section>
         </div>
