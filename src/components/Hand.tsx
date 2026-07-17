@@ -12,6 +12,7 @@ import { motion, motionValue, type MotionValue, type PanInfo, type Variants } fr
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const HAND_ENTRY_STAGGER = 0.07;
+const HAND_BASE_OVERLAP_RATIO = 0.12;
 const handCardMotion: Variants = {
   initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
   animate: (custom: { index: number; stagger: boolean }) => ({
@@ -89,8 +90,9 @@ export function Hand({ game }: { game: GameState }) {
       const gap = Number.parseFloat(window.getComputedStyle(observedCards).columnGap) || 0;
       const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
       const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
+      const baseOverlapMargin = -(cardWidth * HAND_BASE_OVERLAP_RATIO + gap);
       const minimumVisibleStrip = 28;
-      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), requiredMargin));
+      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), Math.min(baseOverlapMargin, requiredMargin)));
     }
 
     function scheduleMeasure() {

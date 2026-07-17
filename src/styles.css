@@ -1536,7 +1536,7 @@
   }
 
   .player-hand-cards {
-    gap: 8px;
+    gap: 0;
     isolation: isolate;
     transform: translateY(84px);
     --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
