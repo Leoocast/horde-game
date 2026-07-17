@@ -4980,6 +4980,9 @@
   .graveyard-viewer-backdrop {
     z-index: 250;
     padding: clamp(20px, 3vw, 42px);
+    background:
+      radial-gradient(circle at 50% 8%, rgb(73 105 119 / 0.17), transparent 40%),
+      rgb(1 5 7 / 0.86);
   }
 
   .graveyard-viewer-modal {
@@ -4990,6 +4993,28 @@
     flex-direction: column;
   }
 
+  .graveyard-viewer-modal,
+  .graveyard-card-details {
+    border-color: rgb(142 150 146 / 0.48);
+    background:
+      radial-gradient(circle at 9% 2%, rgb(67 94 105 / 0.17), transparent 34%),
+      linear-gradient(125deg, rgb(18 29 34 / 0.97), rgb(4 10 13 / 0.99) 72%);
+    box-shadow:
+      inset 0 1px 0 rgb(226 220 194 / 0.09),
+      0 36px 90px rgb(0 0 0 / 0.76),
+      0 0 0 1px rgb(93 113 120 / 0.06);
+  }
+
+  .graveyard-viewer-modal::before,
+  .graveyard-card-details::before {
+    background: linear-gradient(180deg, transparent 2%, #607c87 24%, #a08f5a 74%, transparent 98%);
+  }
+
+  .graveyard-viewer-modal::after,
+  .graveyard-card-details::after {
+    background: linear-gradient(90deg, transparent 3%, rgb(223 218 193 / 0.2) 28%, rgb(106 141 153 / 0.13) 72%, transparent 97%);
+  }
+
   .graveyard-viewer-header {
     grid-template-columns: 56px minmax(0, 1fr) auto;
     width: 100%;
@@ -4997,6 +5022,7 @@
     flex: 0 0 auto;
     gap: 22px;
     padding: 20px 82px 20px clamp(24px, 3vw, 46px);
+    background: linear-gradient(180deg, rgb(7 14 18 / 0.94), rgb(8 16 20 / 0.78));
   }
 
   .graveyard-viewer-emblem {
@@ -5006,7 +5032,7 @@
     place-items: center;
     border: 1px solid rgb(151 141 99 / 0.46);
     background:
-      linear-gradient(145deg, rgb(47 67 56 / 0.86), rgb(11 24 20 / 0.96));
+      linear-gradient(145deg, rgb(46 65 73 / 0.9), rgb(10 19 23 / 0.98));
     color: #c8bb8b;
     box-shadow:
       inset 0 1px 0 rgb(236 224 178 / 0.1),
@@ -5022,8 +5048,20 @@
     flex: 1;
     overflow: hidden;
     background:
-      radial-gradient(circle at 50% 0%, rgb(91 122 100 / 0.08), transparent 42%),
-      linear-gradient(90deg, rgb(3 9 8 / 0.42), rgb(6 14 13 / 0.14));
+      radial-gradient(circle at 50% 0%, rgb(78 109 122 / 0.09), transparent 42%),
+      linear-gradient(90deg, rgb(3 8 11 / 0.5), rgb(7 13 17 / 0.18));
+  }
+
+  .graveyard-viewer-modal .deck-detail-grid-scroll {
+    scrollbar-color: #64747b #071015;
+  }
+
+  .graveyard-viewer-modal .deck-detail-grid-scroll::-webkit-scrollbar-track {
+    background: rgb(4 10 14 / 0.78);
+  }
+
+  .graveyard-viewer-modal .deck-detail-grid-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #77858a, #435963) padding-box;
   }
 
   .graveyard-viewer-grid {
@@ -5039,6 +5077,27 @@
     justify-self: center;
   }
 
+  .graveyard-viewer-card .deck-detail-card-image {
+    border-color: rgb(126 130 119 / 0.58);
+    background: #0c1317;
+    box-shadow: 4px 7px 0 rgb(15 22 26 / 0.94), 9px 14px 20px rgb(0 0 0 / 0.46);
+  }
+
+  .graveyard-viewer-card:hover .deck-detail-card-image,
+  .graveyard-viewer-card:focus-visible .deck-detail-card-image {
+    border-color: rgb(190 176 122 / 0.78);
+    box-shadow: 4px 7px 0 #222b2e, 0 0 0 1px rgb(204 190 132 / 0.18), 0 12px 24px rgb(0 0 0 / 0.54);
+  }
+
+  .graveyard-viewer-card .deck-detail-card-name {
+    color: #afb8b7;
+  }
+
+  .graveyard-viewer-card:hover .deck-detail-card-name,
+  .graveyard-viewer-card:focus-visible .deck-detail-card-name {
+    color: #e2dcc3;
+  }
+
   .graveyard-card-position {
     position: absolute;
     top: -9px;
@@ -5049,7 +5108,7 @@
     height: 27px;
     place-items: center;
     border: 1px solid rgb(139 137 101 / 0.7);
-    background: linear-gradient(145deg, #536258, #1c2c25 72%);
+    background: linear-gradient(145deg, #50616a, #18262d 72%);
     padding: 0 6px;
     color: #e0d5ad;
     font-family: ui-sans-serif, system-ui, sans-serif;
@@ -5063,7 +5122,7 @@
     width: 100%;
     height: 100%;
     place-items: center;
-    background: linear-gradient(145deg, #18251f, #08100d);
+    background: linear-gradient(145deg, #17242a, #070e12);
     padding: 18px;
     color: #aaa98e;
     font-size: 12px;
@@ -5089,6 +5148,78 @@
   .graveyard-viewer-empty svg {
     color: #9c8d5d;
     filter: drop-shadow(0 0 14px rgb(153 137 81 / 0.2));
+  }
+
+  .graveyard-details-backdrop {
+    background:
+      radial-gradient(circle at 50% 18%, rgb(73 105 119 / 0.14), transparent 42%),
+      rgb(1 4 6 / 0.9);
+  }
+
+  .graveyard-card-details .deck-collection-modal-art-column {
+    border-right-color: rgb(118 133 139 / 0.14);
+    background:
+      radial-gradient(circle at 50% 43%, rgb(75 108 120 / 0.14), transparent 45%),
+      linear-gradient(90deg, rgb(3 9 12 / 0.38), transparent);
+  }
+
+  .graveyard-card-details .deck-collection-modal-art {
+    border-color: rgb(169 157 111 / 0.58);
+    background: #0c1317;
+    box-shadow:
+      9px 13px 0 #182328,
+      0 28px 48px rgb(0 0 0 / 0.62),
+      0 0 38px rgb(91 128 142 / 0.09);
+  }
+
+  .graveyard-viewer-modal .deck-collection-modal-close,
+  .graveyard-card-details .deck-collection-modal-close,
+  .graveyard-card-details .deck-collection-modal-nav {
+    border-color: rgb(125 140 145 / 0.32);
+    background: rgb(7 15 19 / 0.9);
+    color: #98a7ab;
+  }
+
+  .graveyard-viewer-modal .deck-collection-modal-close:hover,
+  .graveyard-viewer-modal .deck-collection-modal-close:focus-visible,
+  .graveyard-card-details .deck-collection-modal-close:hover,
+  .graveyard-card-details .deck-collection-modal-close:focus-visible,
+  .graveyard-card-details .deck-collection-modal-nav:hover,
+  .graveyard-card-details .deck-collection-modal-nav:focus-visible {
+    border-color: #9f9162;
+    background: #17242a;
+    color: #eee6ce;
+  }
+
+  .graveyard-card-details .deck-collection-modal-header {
+    border-bottom-color: rgb(132 145 149 / 0.18);
+  }
+
+  .graveyard-card-details .deck-collection-modal-header small,
+  .graveyard-card-details .deck-collection-modal-footer {
+    color: #7f9095;
+  }
+
+  .graveyard-card-details .deck-collection-modal-rules {
+    border-color: rgb(115 134 141 / 0.2);
+    background: rgb(3 9 12 / 0.54);
+    scrollbar-color: #61747c rgb(3 9 12 / 0.5);
+  }
+
+  .graveyard-card-details .deck-collection-modal-rules p {
+    color: #c3c9c6;
+  }
+
+  .graveyard-card-details .keyword-pill {
+    border-color: #59696c;
+    background: linear-gradient(180deg, #b8c0ba, #778682 56%, #4a5958);
+    color: #101719;
+  }
+
+  .graveyard-card-details .deck-collection-modal-stats {
+    border-color: #687274;
+    background: linear-gradient(180deg, #d0d0bd, #89918a);
+    color: #11191b;
   }
 
   .player-hand-region {

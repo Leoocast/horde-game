@@ -91,7 +91,7 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
             {isTutorial ? "Home" : "Menu"}
           </button>
           <button
-            className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            className="game-dialog-action game-dialog-action-primary flex h-12 w-full items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]"
             onClick={restart}
           >
             <RefreshCcw size={18} />
