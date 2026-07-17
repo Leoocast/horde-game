@@ -300,7 +300,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <div className="expedition-step"><span>01</span> Party setup</div>
       </header>
 
-      <div className="expedition-body old-scrollbar">
+      <div className="expedition-body">
         <div className="expedition-combatants">
           <SetupCombatant
             eyebrow="Your champion"
