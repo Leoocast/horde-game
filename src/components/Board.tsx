@@ -4,7 +4,6 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
-import { CardContextMenu } from "./CardContextMenu";
 import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
 import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
@@ -90,7 +89,6 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
       <CardPreview />
-      <CardContextMenu />
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />

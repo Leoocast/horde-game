@@ -1,17 +1,23 @@
-import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
-import { useCardDetails } from "../utils/cardImages";
-import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
-import { effectSummary, typeLine } from "../utils/cardText";
-import { cardKeywords, cardStats } from "../utils/selectors";
+import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { renderCardText } from "../utils/cardTextSymbols";
+import { typeLine } from "../utils/cardText";
+import { cardKeywords } from "../utils/selectors";
 import { GameTooltip } from "./GameTooltip";
 
-const PREVIEW_WIDTH_CLASS = "w-[340px]";
-const PREVIEW_IMAGE_MAX_CLASS = "max-w-72";
-const PREVIOUS_PREVIEW_WIDTH_CLASS = "w-[300px]";
-const PREVIOUS_PREVIEW_IMAGE_MAX_CLASS = "max-w-64";
+const HOVER_PREVIEW_GAP = 14;
+const HOVER_PREVIEW_MIN_WIDTH = 230;
+const HOVER_PREVIEW_MAX_WIDTH = 350;
+const VIEWPORT_PADDING = 12;
+
+type HoverPreviewPosition = {
+  left: number;
+  top: number;
+  width: number;
+};
 
 export function CardPreview() {
   const game = useGameStore((state) => state.game);
@@ -19,11 +25,7 @@ export function CardPreview() {
   const focusedCardId = useGameStore((state) => state.focusedCardId);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
-  const selectHand = useGameStore((state) => state.selectHand);
-  const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
-  const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [detailsFontSize, setDetailsFontSize] = useState(20);
+  const [hoverPosition, setHoverPosition] = useState<HoverPreviewPosition>();
 
   const activeId = focusedCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
@@ -34,71 +36,94 @@ export function CardPreview() {
     if (focusedCardId && !findCard(game, focusedCardId)) setFocusedCardId(undefined);
   }, [focusedCardId, game, hoveredCardId, setFocusedCardId, setHoveredCardId]);
 
-  if (!card) {
-    return null;
+  useEffect(() => {
+    if (!focusedCardId) return;
+
+    function closeLockedPreview(event: PointerEvent) {
+      if (event.button !== 0) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest("[data-card-preview-locked='true']")) return;
+      setFocusedCardId(undefined);
+    }
+
+    document.addEventListener("pointerdown", closeLockedPreview, true);
+    return () => document.removeEventListener("pointerdown", closeLockedPreview, true);
+  }, [focusedCardId, setFocusedCardId]);
+
+  useLayoutEffect(() => {
+    if (focusedCardId || !hoveredCardId) {
+      setHoverPosition(undefined);
+      return;
+    }
+
+    const anchor = document.querySelector<HTMLElement>(`[data-card-id="${hoveredCardId}"]`);
+    if (!anchor) {
+      setHoverPosition(undefined);
+      return;
+    }
+    const observedAnchor = anchor;
+
+    let frame = 0;
+    function measure() {
+      const rect = observedAnchor.getBoundingClientRect();
+      const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
+      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, rect.width * 1.5));
+      const height = width * (680 / 488);
+      const spaceRight = window.innerWidth - rect.right;
+      const spaceLeft = rect.left;
+      const placeRight = spaceRight >= width + HOVER_PREVIEW_GAP || spaceRight >= spaceLeft;
+      const desiredLeft = placeRight ? rect.right + HOVER_PREVIEW_GAP : rect.left - width - HOVER_PREVIEW_GAP;
+      const left = Math.min(window.innerWidth - width - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
+      const desiredTop = rect.top + (rect.height - height) / 2;
+      const top = Math.min(window.innerHeight - height - VIEWPORT_PADDING, Math.max(64, desiredTop));
+      setHoverPosition({ left, top, width });
+    }
+
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
+    }
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(observedAnchor);
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("scroll", scheduleMeasure, true);
+    scheduleMeasure();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("scroll", scheduleMeasure, true);
+    };
+  }, [focusedCardId, hoveredCardId]);
+
+  if (!card || card.zone === "hand" || !details.imageUrl) return null;
+
+  const keywords = cardKeywords(game, card);
+  const imageUrl = toHighResImageUrl(details.imageUrl) ?? details.imageUrl;
+
+  if (focusedCardId) {
+    return (
+      <aside
+        data-preserve-card-focus="true"
+        data-card-preview-locked="true"
+        className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <div className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
+          <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
+        </div>
+        {keywords && <KeywordExplanations keywords={keywords} />}
+      </aside>
+    );
   }
 
-  const stats = cardStats(game, card);
-  const keywords = cardKeywords(game, card);
-  const text = card.cardTypes.includes("Land") ? "" : cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(card));
-  const hasText = text.length > 0;
-  void PREVIOUS_PREVIEW_WIDTH_CLASS;
-  void PREVIOUS_PREVIEW_IMAGE_MAX_CLASS;
-  const closePreview = () => {
-    setFocusedCardId(undefined);
-    selectHand(undefined);
-    selectPlayerCreature(undefined);
-    selectHordeCreature(undefined);
-  };
+  if (!hoverPosition) return null;
 
   return (
-    <>
-      <aside data-preserve-card-focus="true" className={`old-panel fixed left-4 top-[6rem] z-[75] flex max-h-[calc(100vh-14rem)] ${PREVIEW_WIDTH_CLASS} flex-col overflow-hidden text-[#f6e6b8] shadow-2xl shadow-black/55`}>
-        <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
-          <div>
-            <h2 className="old-title text-base font-bold leading-tight">{card.displayName}</h2>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {focusedCardId && (
-              <>
-                <button className="control-button h-7 px-2 text-[11px] uppercase tracking-wide" title="Open card details" onClick={() => setDetailsOpen(true)}>
-                  <Maximize2 size={13} />
-                  Details
-                </button>
-                <button className="icon-button" title="Close preview" onClick={closePreview}>
-                  <X size={15} />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden p-3">
-          {details.imageUrl && <img src={details.imageUrl} alt={card.name} className={`mx-auto w-full ${PREVIEW_IMAGE_MAX_CLASS} border-2 border-[#9c7238] shadow-lg shadow-black/45`} />}
-          <div className="flex items-center justify-between gap-2">
-            {keywords && <KeywordPills keywords={keywords} compact />}
-            {stats && <span className="preview-stat-pill ml-auto">{stats}</span>}
-          </div>
-          {hasText && (
-            <div className="old-panel-soft min-h-0 flex-1 overflow-auto p-2">
-              <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
-            </div>
-          )}
-        </div>
-      </aside>
-      {detailsOpen && (
-        <CardDetailsModal
-          card={card}
-          imageUrl={details.imageUrl}
-          keywords={keywords}
-          stats={stats}
-          text={text}
-          fontSize={detailsFontSize}
-          setFontSize={setDetailsFontSize}
-          onClose={() => setDetailsOpen(false)}
-        />
-      )}
-    </>
+    <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverPosition}>
+      <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
+    </div>
   );
 }
 
@@ -199,6 +224,26 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
           </GameTooltip>
         );
       })}
+    </div>
+  );
+}
+
+function KeywordExplanations({ keywords }: { keywords: string }) {
+  const entries = keywords
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="flex w-[min(260px,20vw)] flex-col gap-2">
+      {entries.map((keyword) => (
+        <div key={keyword} className="old-panel-soft p-2.5">
+          <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(keyword)}</div>
+          <p className="mt-2 text-sm leading-snug text-[#f4dfb0]">{keywordTooltip(keyword)}</p>
+        </div>
+      ))}
     </div>
   );
 }

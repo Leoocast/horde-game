@@ -39,7 +39,7 @@ type Props = {
 
 export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
-  const openCardContextMenu = useGameStore((state) => state.openCardContextMenu);
+  const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStatState(game, card, visualDamageMarked);
   const visibleKeywords =
     (card.zone === "battlefield" || card.zone === "hand") && card.cardTypes.includes("Creature")
@@ -60,7 +60,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
     : "";
-  const selectedGlow = selected
+  const showSelectedVisual = Boolean(selected && card.zone !== "battlefield");
+  const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
   const showCyanGlow = Boolean(actionable);
@@ -70,15 +71,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
     : "";
-  const style = accentColor || showCyanGlow || selected || showEffectAvailable || dragging
+  const style = accentColor || showCyanGlow || showSelectedVisual || showEffectAvailable || dragging
     ? ({
-        borderColor: dragging ? "#ff6a00" : selected ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
         "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
         boxShadow: [
           dragging ? draggingGlow : selectedGlow,
-          !selected && !dragging && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "",
-          !selected && !dragging ? actionGlow : "",
-          !selected && !dragging ? effectGlow : "",
+          !showSelectedVisual && !dragging && accentColor ? `inset 0 0 0 1px ${accentColor}55` : "",
+          !showSelectedVisual && !dragging ? actionGlow : "",
+          !showSelectedVisual && !dragging ? effectGlow : "",
         ]
           .filter(Boolean)
           .join(", "),
@@ -104,7 +105,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
-        openCardContextMenu(card.instanceId, event.clientX, event.clientY);
+        if (card.zone === "hand") return;
+        setHoveredCardId(undefined);
+        setFocusedCardId(card.instanceId);
       }}
       onClick={() => {
         if (shouldSuppressClick?.()) return;
@@ -113,7 +116,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       style={style}
       className={[
         "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
-        selected && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
+        showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
         card.tapped ? "rotate-2 opacity-80" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",

@@ -262,7 +262,6 @@ export function Hand({ game }: { game: GameState }) {
                 whileDrag={{ scale: 1.06, zIndex: 120, rotate: 0 }}
                 onDragStart={(_, info) => {
                   beginCenterGrabDrag(card.instanceId, info.point.x, info.point.y);
-                  if (!tutorialStepId) setFocusedCardId(card.instanceId);
                   selectHand(card.instanceId);
                   setHoveredCardId(undefined);
                   setDraggingCardId(card.instanceId);
