@@ -37,6 +37,11 @@ export default function App() {
           decks={playerInspectableDecks}
           selectedDeckId={selectedDeckId}
           onSelectDeck={setSelectedDeckId}
+          onOpenDeck={(deckId) => {
+            setPreserveMenuMusic(true);
+            setInspectorDeckId(deckId);
+            setScreen("deckInspector");
+          }}
           onViewDeck={() => {
             setPreserveMenuMusic(true);
             setInspectorDeckId(selectedDeckId);

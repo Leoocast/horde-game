@@ -5,6 +5,7 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { AppHeader } from "./AppHeader";
 import { AudioControls } from "./AudioControls";
+import { DecksView } from "./DecksView";
 import { ToastStack } from "./ToastStack";
 
 export type DifficultyMode = "easy" | "normal" | "hard";
@@ -13,6 +14,7 @@ type Props = {
   decks: InspectableDeck[];
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
+  onOpenDeck: (deckId: string) => void;
   onViewDeck: () => void;
   hordeDecks: InspectableDeck[];
   selectedHordeDeckId: string;
@@ -30,7 +32,7 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; desc
 
 const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, preserveMusicOnMount = false, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, preserveMusicOnMount = false, onStart }: Props) {
   const [playerName, setPlayerName] = useState("Arky");
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
@@ -39,7 +41,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
-  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "settings">("home");
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">("home");
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
@@ -98,7 +100,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
               <span className="main-menu-entry-mark" />
               <span>Play</span>
             </button>
-            <button className="main-menu-entry group" type="button" onClick={onViewDeck}>
+            <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => setMenuScreen("decks")}>
               <span className="main-menu-entry-mark" />
               <span>Decks</span>
             </button>
@@ -163,6 +165,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
               </section>
             </div>
           </section>
+        )}
+        {menuScreen === "decks" && (
+          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} />
         )}
         </div>
       ) : (
