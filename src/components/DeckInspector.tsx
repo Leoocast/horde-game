@@ -44,7 +44,7 @@ export function DeckInspector({ deck, onBack }: Props) {
 
   useEffect(() => {
     if (!closing) return;
-    const timeout = window.setTimeout(onBack, 240);
+    const timeout = window.setTimeout(onBack, 160);
     return () => window.clearTimeout(timeout);
   }, [closing, onBack]);
 
@@ -134,7 +134,7 @@ function DeckCardTile({
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const playSfx = useAudioStore((state) => state.playSfx);
-  const playHoverSound = () => playSfx("draw", { volume: 0.42 });
+  const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
   return (
     <button
