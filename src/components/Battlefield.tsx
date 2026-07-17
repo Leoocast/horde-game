@@ -361,26 +361,77 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const columns = landCount >= 9 ? 5 : Math.min(Math.max(landCount, 1), 4);
-    const cardWidth = landCount <= 1 ? 120 : landCount <= 2 ? 105 : 88;
-    const fillsRow = landCount >= 4;
     const smallpoxLandSelectionActive = smallpoxSelection?.kind === "sacrifice-land";
-    const dockStyle = {
-      "--player-land-columns": columns,
-      "--battlefield-compact-card-width": `${cardWidth}px`,
-    } as CSSProperties;
+    const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+    const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
 
     return (
-      <aside ref={landDockRef} aria-label={`Lands (${landCount})`} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
-        {landCount === 0 ? (
-          <div className="player-land-dock-empty battlefield-row-surface">Empty</div>
-        ) : (
-          <div className={["player-land-grid battlefield-row-surface", fillsRow ? "player-land-grid-fill" : ""].join(" ")}>
-            <AnimatePresence initial={false} mode="popLayout">
-              {lands.map((card) => renderCard(card, true, "land-dock"))}
-            </AnimatePresence>
-          </div>
-        )}
+      <aside
+        ref={landDockRef}
+        aria-label={`${availableLandCount} of ${landCount} lands available`}
+        className={[
+          "player-mana-core",
+          game.activeSide === "player" ? "is-player-turn" : "",
+          smallpoxLandSelectionActive ? "is-targeting" : "",
+        ].join(" ")}
+      >
+        <div className="mana-core-rings" aria-hidden="true">
+          <span className="mana-core-ring mana-core-ring-outer" />
+          <span className="mana-core-ring mana-core-ring-inner" />
+        </div>
+        <div className="mana-core-heart" aria-hidden="true">
+          <span className="mana-core-heart-light" />
+        </div>
+        <div className="mana-core-count" aria-hidden="true">
+          <strong>{availableLandCount}</strong>
+          <span>/{landCount}</span>
+          <small>Mana</small>
+        </div>
+        <AnimatePresence initial={false}>
+          {lands.map((card, index) => {
+            const stableIndex = lands.findIndex((land) => land.instanceId === card.instanceId);
+            const angle = -Math.PI / 2 + (Math.PI * 2 * stableIndex) / Math.max(landCount, 1);
+            const spent = card.tapped || card.activatedThisTurn;
+            const visible = smallpoxLandSelectionActive || !spent;
+            const selected = smallpoxSelection?.targetId === card.instanceId;
+            const targetable = smallpoxLandSelectionActive && !smallpoxSelection.targetId;
+            const fragmentStyle = {
+              left: `${70.5 + Math.cos(angle) * 72}px`,
+              top: `${59.5 + Math.sin(angle) * 51}px`,
+              "--mana-fragment-delay": `${index * 55}ms`,
+            } as CSSProperties;
+
+            return (
+              <motion.button
+                key={card.instanceId}
+                type="button"
+                data-card-id={card.instanceId}
+                data-audio-click={targetable ? "valid" : undefined}
+                aria-label={`${card.displayName}${card.tapped ? ", tapped" : ", available"}`}
+                title={smallpoxLandSelectionActive ? `Select ${card.displayName}` : card.displayName}
+                disabled={!targetable}
+                className={[
+                  "mana-fragment",
+                  spent ? "is-spent" : "is-available",
+                  paidLandIds.has(card.instanceId) ? "is-consuming" : "",
+                  targetable ? "is-targetable" : "",
+                  selected ? "is-selected" : "",
+                ].join(" ")}
+                style={fragmentStyle}
+                initial={{ opacity: 0, scale: 0.15 }}
+                animate={{ opacity: visible ? (spent ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
+                exit={{ opacity: 0, scale: paidLandIds.has(card.instanceId) ? 1.8 : 0.12, filter: "blur(5px) brightness(1.8)" }}
+                transition={{ duration: 0.36, delay: index * 0.035, ease: [0.16, 1, 0.3, 1] }}
+                onClick={() => {
+                  if (targetable) lockSmallpoxSelectionTarget(card.instanceId);
+                }}
+              >
+                <span className="mana-fragment-energy" aria-hidden="true" />
+              </motion.button>
+            );
+          })}
+        </AnimatePresence>
+        {smallpoxLandSelectionActive && <div className="mana-core-target-label">Choose a land</div>}
       </aside>
     );
   }

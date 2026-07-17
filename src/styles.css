@@ -4487,6 +4487,263 @@
     z-index: 110;
   }
 
+  .player-mana-core {
+    position: fixed;
+    bottom: 0.5rem;
+    left: 0.75rem;
+    z-index: 72;
+    width: 178px;
+    height: 150px;
+    overflow: visible;
+    color: #dfffc8;
+    filter: drop-shadow(0 16px 22px rgb(0 0 0 / 0.5));
+  }
+
+  .player-mana-core.is-targeting {
+    z-index: 110;
+  }
+
+  .mana-core-rings,
+  .mana-core-heart,
+  .mana-core-count {
+    position: absolute;
+    left: 83px;
+    top: 72px;
+    transform: translate(-50%, -50%);
+  }
+
+  .mana-core-rings {
+    width: 106px;
+    height: 106px;
+    pointer-events: none;
+  }
+
+  .mana-core-ring {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .mana-core-ring-outer {
+    inset: 0;
+    border: 1px solid rgb(100 211 178 / 0.24);
+    border-right-color: rgb(216 185 101 / 0.62);
+    border-left-color: rgb(70 186 168 / 0.5);
+    box-shadow: inset 0 0 22px rgb(44 169 137 / 0.08), 0 0 18px rgb(32 133 119 / 0.1);
+    animation: mana-core-spin 13s linear infinite;
+  }
+
+  .mana-core-ring-outer::before,
+  .mana-core-ring-outer::after {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border: 1px solid rgb(219 188 100 / 0.68);
+    background: #13251d;
+    content: "";
+    transform: rotate(45deg);
+  }
+
+  .mana-core-ring-outer::before { top: 5px; left: 14px; }
+  .mana-core-ring-outer::after { right: 5px; bottom: 14px; }
+
+  .mana-core-ring-inner {
+    inset: 10px;
+    border: 1px dashed rgb(118 224 178 / 0.26);
+    animation: mana-core-spin-reverse 9s linear infinite;
+  }
+
+  .mana-core-heart {
+    width: 76px;
+    height: 76px;
+    pointer-events: none;
+    border: 1px solid rgb(129 225 176 / 0.44);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 30%, rgb(221 255 183 / 0.9), rgb(86 211 128 / 0.82) 9%, rgb(24 125 108 / 0.9) 31%, rgb(8 44 42 / 0.98) 62%, rgb(3 17 20 / 0.99) 76%),
+      #07191a;
+    box-shadow:
+      inset 0 0 12px rgb(218 255 184 / 0.28),
+      inset 0 -16px 24px rgb(0 18 23 / 0.62),
+      0 0 16px rgb(74 207 151 / 0.34),
+      0 0 38px rgb(25 154 139 / 0.2);
+    animation: mana-core-breathe 2.8s ease-in-out infinite;
+  }
+
+  .mana-core-heart::before,
+  .mana-core-heart::after,
+  .mana-core-heart-light {
+    position: absolute;
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+  }
+
+  .mana-core-heart::before {
+    inset: 8px;
+    border: 1px solid rgb(184 255 208 / 0.16);
+  }
+
+  .mana-core-heart::after {
+    inset: 19px;
+    background: radial-gradient(circle, rgb(212 255 163 / 0.7), rgb(64 208 143 / 0.16) 54%, transparent 72%);
+    filter: blur(3px);
+  }
+
+  .mana-core-heart-light {
+    top: 13px;
+    left: 17px;
+    width: 14px;
+    height: 8px;
+    background: rgb(234 255 207 / 0.72);
+    filter: blur(4px);
+    transform: rotate(-32deg);
+  }
+
+  .mana-core-count {
+    z-index: 3;
+    display: grid;
+    width: 62px;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    justify-content: center;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    line-height: 1;
+    pointer-events: none;
+    text-align: center;
+    text-shadow: 0 2px 7px rgb(0 0 0 / 0.82), 0 0 14px rgb(144 255 169 / 0.42);
+  }
+
+  .mana-core-count strong {
+    color: #ecffd0;
+    font-size: 27px;
+    font-weight: 950;
+    text-align: right;
+  }
+
+  .mana-core-count > span {
+    color: rgb(184 220 170 / 0.72);
+    font-size: 12px;
+    font-weight: 850;
+  }
+
+  .mana-core-count small {
+    grid-column: 1 / -1;
+    margin-top: 3px;
+    color: rgb(155 209 176 / 0.7);
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .mana-fragment {
+    position: absolute;
+    z-index: 5;
+    display: grid;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    background: transparent;
+  }
+
+  .mana-fragment:disabled {
+    cursor: default;
+  }
+
+  .mana-fragment-energy {
+    display: block;
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgb(181 244 179 / 0.76);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #f3ffd4, #79dc83 24%, #238f78 58%, #082d31 78%);
+    box-shadow:
+      inset 0 0 4px rgb(237 255 213 / 0.48),
+      0 0 7px rgb(101 230 135 / 0.68),
+      0 0 15px rgb(39 179 148 / 0.4);
+    animation: mana-fragment-idle 2.2s var(--mana-fragment-delay, 0ms) ease-in-out infinite;
+  }
+
+  .mana-fragment.is-spent .mana-fragment-energy {
+    border-color: rgb(91 126 115 / 0.34);
+    background: radial-gradient(circle at 35% 28%, #536c62, #203d3b 34%, #0b1e22 76%);
+    box-shadow: inset 0 0 4px rgb(0 0 0 / 0.42), 0 0 5px rgb(45 95 88 / 0.14);
+    animation: none;
+  }
+
+  .mana-fragment.is-consuming .mana-fragment-energy {
+    animation: mana-fragment-consume 420ms ease-in both;
+  }
+
+  .mana-fragment.is-targetable {
+    cursor: pointer;
+  }
+
+  .mana-fragment.is-targetable .mana-fragment-energy {
+    border-color: #d9fff1;
+    box-shadow: 0 0 0 4px rgb(71 199 211 / 0.16), 0 0 11px #68e4e7, 0 0 24px rgb(45 187 207 / 0.66);
+    animation: mana-fragment-target 1.15s ease-in-out infinite;
+  }
+
+  .mana-fragment.is-targetable:hover .mana-fragment-energy {
+    transform: scale(1.28);
+    filter: brightness(1.25);
+  }
+
+  .mana-fragment.is-selected .mana-fragment-energy {
+    border-color: #efffc7;
+    box-shadow: 0 0 0 4px rgb(106 224 105 / 0.18), 0 0 13px #8bf28b, 0 0 28px rgb(70 215 102 / 0.72);
+  }
+
+  .mana-core-target-label {
+    position: absolute;
+    left: 83px;
+    bottom: -1px;
+    z-index: 7;
+    min-width: 106px;
+    transform: translateX(-50%);
+    color: #c9f0d5;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-align: center;
+    text-shadow: 0 0 10px rgb(58 200 162 / 0.6);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  @keyframes mana-core-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes mana-core-spin-reverse {
+    to { transform: rotate(-360deg); }
+  }
+
+  @keyframes mana-core-breathe {
+    0%, 100% { filter: brightness(0.96) saturate(0.96); transform: translate(-50%, -50%) scale(0.97); }
+    50% { filter: brightness(1.12) saturate(1.08); transform: translate(-50%, -50%) scale(1.035); }
+  }
+
+  @keyframes mana-fragment-idle {
+    0%, 100% { filter: brightness(0.92); transform: translateY(1px) scale(0.94); }
+    50% { filter: brightness(1.22); transform: translateY(-2px) scale(1.08); }
+  }
+
+  @keyframes mana-fragment-consume {
+    0% { filter: brightness(1); transform: scale(1); }
+    38% { filter: brightness(1.8) saturate(1.35); transform: scale(1.42); }
+    100% { filter: brightness(2) blur(2px); transform: scale(0.12); }
+  }
+
+  @keyframes mana-fragment-target {
+    0%, 100% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.28); transform: scale(1.18); }
+  }
+
   .player-land-grid {
     display: grid;
     min-height: 0;
