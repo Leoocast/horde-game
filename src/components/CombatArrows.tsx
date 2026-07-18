@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
 const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
@@ -204,7 +205,6 @@ export function CombatArrows({ game }: { game: GameState }) {
       <AnimatePresence>
         {renderedArrows.map((arrow) => {
           const exiting = exitingArrows.some((item) => item.id === arrow.id) && !arrows.some((item) => item.id === arrow.id);
-          const isDefenseArrow = arrow.color === DEFENSE_ARROW_COLOR;
           return (
           <motion.g
             key={arrow.id}
@@ -215,15 +215,13 @@ export function CombatArrows({ game }: { game: GameState }) {
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              <path d={arrow.path} fill="none" stroke={arrow.color} strokeWidth={4.5} strokeLinecap="round" opacity="0.12" />
-              <polygon points={arrow.tip} fill={arrow.color} opacity="0.14" />
-              <g
-                className="combat-arrow-pulse"
-                filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}
-              >
-                <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={5.25} strokeLinecap="round" opacity="0.86" />
-                <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
-              </g>
+              <TacticalArrowGlyph
+                path={arrow.path}
+                tip={arrow.tip}
+                color={arrow.color}
+                start={{ x: arrow.startX, y: arrow.startY }}
+                stroke={`url(#${arrow.gradientId})`}
+              />
             </g>
           </motion.g>
           );

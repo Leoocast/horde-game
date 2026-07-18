@@ -362,6 +362,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const floatingManaCount = Object.values(game.player.manaPool).reduce((total, amount) => total + amount, 0);
     const availableResourceCount = availableLandCount + floatingManaCount;
     const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
+    const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
+    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelection.targetId && Boolean(smallpoxLandTarget);
     const activeLandIds = new Set(lands.map((card) => card.instanceId));
     for (const id of manaSlotByLandId.current.keys()) {
       if (!activeLandIds.has(id)) manaSlotByLandId.current.delete(id);
@@ -377,12 +379,25 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <aside
         ref={landDockRef}
+        data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
+        data-audio-click={canSelectManaCore ? "valid" : undefined}
+        role={canSelectManaCore ? "button" : undefined}
+        tabIndex={canSelectManaCore ? 0 : undefined}
         aria-label={`${availableResourceCount} mana available from ${landCount} lands`}
         className={[
           "player-mana-core",
           game.activeSide === "player" ? "is-player-turn" : "",
           smallpoxLandSelectionActive ? "is-targeting" : "",
         ].join(" ")}
+        onClick={() => {
+          if (canSelectManaCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+        }}
+        onKeyDown={(event) => {
+          if (canSelectManaCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+          }
+        }}
       >
         <div className="mana-core-rings" aria-hidden="true">
           <span className="mana-core-ring mana-core-ring-outer" />
@@ -402,8 +417,6 @@ export function Battlefield({ game, side, cards }: Props) {
             const spent = card.tapped || card.activatedThisTurn;
             const consuming = paidLandIds.has(card.instanceId);
             const visible = smallpoxLandSelectionActive || !spent || consuming;
-            const selected = smallpoxSelection?.targetId === card.instanceId;
-            const targetable = smallpoxLandSelectionActive && !smallpoxSelection.targetId;
             const fragmentStyle = {
               left: `${70.5 + Math.cos(angle) * 72}px`,
               top: `${59.5 + Math.sin(angle) * 51}px`,
@@ -416,26 +429,19 @@ export function Battlefield({ game, side, cards }: Props) {
               <motion.button
                 key={card.instanceId}
                 type="button"
-                data-card-id={card.instanceId}
-                data-audio-click={targetable ? "valid" : undefined}
                 aria-label={`${card.displayName}${card.tapped ? ", tapped" : ", available"}`}
-                title={smallpoxLandSelectionActive ? `Select ${card.displayName}` : card.displayName}
-                disabled={!targetable}
+                title={card.displayName}
+                disabled
                 className={[
                   "mana-fragment",
                   spent ? "is-spent" : "is-available",
                   consuming ? "is-consuming" : "",
-                  targetable ? "is-targetable" : "",
-                  selected ? "is-selected" : "",
                 ].join(" ")}
                 style={fragmentStyle}
                 initial={{ opacity: 0, scale: 0.15 }}
                 animate={{ opacity: visible ? (spent && !consuming ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
                 exit={{ opacity: 0, scale: paidLandIds.has(card.instanceId) ? 1.8 : 0.12, filter: "blur(5px) brightness(1.8)" }}
                 transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-                onClick={() => {
-                  if (targetable) lockSmallpoxSelectionTarget(card.instanceId);
-                }}
               >
                 <span className="mana-fragment-shell" aria-hidden="true">
                   <span className="mana-fragment-energy" />
@@ -470,7 +476,7 @@ export function Battlefield({ game, side, cards }: Props) {
             );
           })}
         </AnimatePresence>
-        {smallpoxLandSelectionActive && <div className="mana-core-target-label">Choose a land</div>}
+        {smallpoxLandSelectionActive && <div className="mana-core-target-label">Discard one energy</div>}
       </aside>
     );
   }

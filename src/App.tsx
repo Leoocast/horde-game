@@ -39,6 +39,37 @@ export default function App() {
   } | null>(null);
 
   useEffect(() => {
+    const disableBrowserHistory = (root: ParentNode) => {
+      if (root instanceof HTMLFormElement) root.setAttribute("autocomplete", "off");
+      if (root instanceof HTMLInputElement || root instanceof HTMLTextAreaElement) {
+        const textLike = root instanceof HTMLTextAreaElement || ["text", "search", "email", "password", "url", "tel"].includes((root as HTMLInputElement).type);
+        root.setAttribute("autocomplete", textLike ? "new-password" : "off");
+        root.setAttribute("data-lpignore", "true");
+        root.setAttribute("data-1p-ignore", "true");
+      }
+      root.querySelectorAll("form").forEach((form) => form.setAttribute("autocomplete", "off"));
+      root.querySelectorAll("input, textarea").forEach((field) => {
+        const input = field as HTMLInputElement;
+        const textLike = field instanceof HTMLTextAreaElement || ["text", "search", "email", "password", "url", "tel"].includes(input.type);
+        field.setAttribute("autocomplete", textLike ? "new-password" : "off");
+        field.setAttribute("data-lpignore", "true");
+        field.setAttribute("data-1p-ignore", "true");
+      });
+    };
+
+    disableBrowserHistory(document);
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node instanceof Element) disableBrowserHistory(node);
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     if (!loading) return;
     let active = true;
     const startedAt = Date.now();

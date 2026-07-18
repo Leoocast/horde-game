@@ -160,7 +160,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         </div>
       </div>
       {visibleKeywords.length > 0 && (
-        <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
+        <div className={["card-keyword-stack", isZombie && card.isToken ? "card-keyword-stack-zombie-token" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
               {renderBattlefieldKeywordLabel(keyword)}

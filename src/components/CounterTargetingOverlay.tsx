@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const ARROW_COLOR = "#4ade80";
@@ -115,10 +116,8 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             <stop offset="100%" stopColor={ARROW_COLOR} stopOpacity="0.96" />
           </linearGradient>
         </defs>
-        <g filter="url(#counter-target-arrow-glow)">
-          <path d={arrow.path} fill="none" stroke={ARROW_COLOR} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-          <path d={arrow.path} fill="none" stroke="url(#counter-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
-          <polygon points={arrow.tip} fill={ARROW_COLOR} opacity="0.96" />
+        <g>
+          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} start={start} stroke="url(#counter-target-arrow-gradient)" />
         </g>
       </svg>
       <aside className="counter-target-source-panel">

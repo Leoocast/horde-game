@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const ARROW_COLOR = "#f04438";
 
@@ -49,7 +50,9 @@ export function SmallpoxSelectionOverlay({ game: _game }: { game: GameState }) {
         });
       }
       if (activeSelection.targetId) {
-        const targetElement = document.querySelector<HTMLElement>(`[data-card-id="${activeSelection.targetId}"]`);
+        const targetElement = activeSelection.kind === "sacrifice-land"
+          ? document.querySelector<HTMLElement>("[data-smallpox-mana-target='true']")
+          : document.querySelector<HTMLElement>(`[data-card-id="${activeSelection.targetId}"]`);
         const rect = targetElement?.getBoundingClientRect();
         setLockedEnd(
           rect
@@ -106,10 +109,8 @@ export function SmallpoxSelectionOverlay({ game: _game }: { game: GameState }) {
             <stop offset="100%" stopColor={ARROW_COLOR} stopOpacity="0.96" />
           </linearGradient>
         </defs>
-        <g filter="url(#smallpox-target-arrow-glow)">
-          <path d={arrow.path} fill="none" stroke={ARROW_COLOR} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-          <path d={arrow.path} fill="none" stroke="url(#smallpox-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
-          <polygon points={arrow.tip} fill={ARROW_COLOR} opacity="0.96" />
+        <g>
+          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} start={start} stroke="url(#smallpox-target-arrow-gradient)" />
         </g>
       </svg>
     </>

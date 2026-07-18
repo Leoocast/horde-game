@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState, TargetRequirement } from "../engine/GameTypes";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const FRIENDLY_ARROW = "#4ade80";
@@ -161,17 +162,13 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           </linearGradient>
         </defs>
         {lockedArrows.map(({ req, arrow, color }) => (
-          <g key={req.id} filter={color === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={5.25} opacity="0.84" />
-            <polygon points={arrow.tip} fill={color} opacity="0.92" />
+          <g key={req.id}>
+            <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={color} start={start} />
           </g>
         ))}
         {!complete && (
-          <g filter={arrowColor === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <path d={followArrow.path} fill="none" stroke={arrowColor} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-            <path d={followArrow.path} fill="none" stroke="url(#spell-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
-            <polygon points={followArrow.tip} fill={arrowColor} opacity="0.96" />
+          <g>
+            <TacticalArrowGlyph path={followArrow.path} tip={followArrow.tip} color={arrowColor} start={start} stroke="url(#spell-target-arrow-gradient)" />
           </g>
         )}
       </svg>
