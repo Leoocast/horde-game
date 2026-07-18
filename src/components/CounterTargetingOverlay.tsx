@@ -116,8 +116,8 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             <stop offset="100%" stopColor={ARROW_COLOR} stopOpacity="0.96" />
           </linearGradient>
         </defs>
-        <g>
-          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} start={start} stroke="url(#counter-target-arrow-gradient)" />
+        <g filter="url(#counter-target-arrow-glow)">
+          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} stroke="url(#counter-target-arrow-gradient)" />
         </g>
       </svg>
       <aside className="counter-target-source-panel">

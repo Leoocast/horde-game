@@ -12,7 +12,7 @@ import { GraveyardViewerModal } from "./GraveyardViewerModal";
 const SMALLPOX_KIND_LABEL: Record<string, string> = {
   discard: "Choose a card to discard",
   "sacrifice-creature": "Choose a creature to sacrifice",
-  "sacrifice-land": "Choose a land to sacrifice",
+  "sacrifice-land": "Choose one energy to discard",
 };
 
 export function DuelHud({ game }: { game: GameState }) {
@@ -83,6 +83,7 @@ export function DuelHud({ game }: { game: GameState }) {
               className={[
                 "horde-special-card",
                 smallpoxSelection ? "horde-special-card-targeting" : "",
+                !smallpoxSelection ? "horde-special-card-resolving" : "",
                 activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
@@ -91,7 +92,13 @@ export function DuelHud({ game }: { game: GameState }) {
             {smallpoxSelection && (
               <div className="smallpox-selection-panel-inline old-panel-soft">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{SMALLPOX_KIND_LABEL[smallpoxSelection.kind]}</span>
-                <span className="text-sm text-[#d6b879]">{smallpoxTarget ? smallpoxTarget.displayName : "No target selected"}</span>
+                <span className="text-sm text-[#d6b879]">
+                  {smallpoxSelection.kind === "sacrifice-land" && smallpoxSelection.targetId
+                    ? "Energy selected"
+                    : smallpoxTarget
+                      ? smallpoxTarget.displayName
+                      : "No target selected"}
+                </span>
                 <div className="counter-target-actions">
                   <button
                     data-audio-click={smallpoxSelection.targetId ? "valid" : undefined}

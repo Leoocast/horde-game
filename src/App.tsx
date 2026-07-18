@@ -43,7 +43,7 @@ export default function App() {
       if (root instanceof HTMLFormElement) root.setAttribute("autocomplete", "off");
       if (root instanceof HTMLInputElement || root instanceof HTMLTextAreaElement) {
         const textLike = root instanceof HTMLTextAreaElement || ["text", "search", "email", "password", "url", "tel"].includes((root as HTMLInputElement).type);
-        root.setAttribute("autocomplete", textLike ? "new-password" : "off");
+        root.setAttribute("autocomplete", textLike ? "one-time-code" : "off");
         root.setAttribute("data-lpignore", "true");
         root.setAttribute("data-1p-ignore", "true");
       }
@@ -51,7 +51,7 @@ export default function App() {
       root.querySelectorAll("input, textarea").forEach((field) => {
         const input = field as HTMLInputElement;
         const textLike = field instanceof HTMLTextAreaElement || ["text", "search", "email", "password", "url", "tel"].includes(input.type);
-        field.setAttribute("autocomplete", textLike ? "new-password" : "off");
+        field.setAttribute("autocomplete", textLike ? "one-time-code" : "off");
         field.setAttribute("data-lpignore", "true");
         field.setAttribute("data-1p-ignore", "true");
       });

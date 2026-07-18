@@ -162,13 +162,13 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           </linearGradient>
         </defs>
         {lockedArrows.map(({ req, arrow, color }) => (
-          <g key={req.id}>
-            <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={color} start={start} />
+          <g key={req.id} filter={color === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
+            <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={color} />
           </g>
         ))}
         {!complete && (
-          <g>
-            <TacticalArrowGlyph path={followArrow.path} tip={followArrow.tip} color={arrowColor} start={start} stroke="url(#spell-target-arrow-gradient)" />
+          <g filter={arrowColor === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
+            <TacticalArrowGlyph path={followArrow.path} tip={followArrow.tip} color={arrowColor} stroke="url(#spell-target-arrow-gradient)" />
           </g>
         )}
       </svg>

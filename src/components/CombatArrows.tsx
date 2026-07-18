@@ -205,6 +205,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       <AnimatePresence>
         {renderedArrows.map((arrow) => {
           const exiting = exitingArrows.some((item) => item.id === arrow.id) && !arrows.some((item) => item.id === arrow.id);
+          const isDefenseArrow = arrow.color === DEFENSE_ARROW_COLOR;
           return (
           <motion.g
             key={arrow.id}
@@ -215,13 +216,14 @@ export function CombatArrows({ game }: { game: GameState }) {
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              <TacticalArrowGlyph
-                path={arrow.path}
-                tip={arrow.tip}
-                color={arrow.color}
-                start={{ x: arrow.startX, y: arrow.startY }}
-                stroke={`url(#${arrow.gradientId})`}
-              />
+              <g filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}>
+                <TacticalArrowGlyph
+                  path={arrow.path}
+                  tip={arrow.tip}
+                  color={arrow.color}
+                  stroke={`url(#${arrow.gradientId})`}
+                />
+              </g>
             </g>
           </motion.g>
           );

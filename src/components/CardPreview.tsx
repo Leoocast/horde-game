@@ -251,7 +251,7 @@ function KeywordExplanations({ keywords }: { keywords: string }) {
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
           <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(keyword)}</div>
-          <p className="mt-2 text-sm leading-snug text-[#f4dfb0]">{keywordTooltip(keyword)}</p>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{keywordTooltip(keyword)}</p>
         </div>
       ))}
     </div>

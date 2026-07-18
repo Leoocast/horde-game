@@ -109,8 +109,8 @@ export function SmallpoxSelectionOverlay({ game: _game }: { game: GameState }) {
             <stop offset="100%" stopColor={ARROW_COLOR} stopOpacity="0.96" />
           </linearGradient>
         </defs>
-        <g>
-          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} start={start} stroke="url(#smallpox-target-arrow-gradient)" />
+        <g filter="url(#smallpox-target-arrow-glow)">
+          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} stroke="url(#smallpox-target-arrow-gradient)" />
         </g>
       </svg>
     </>

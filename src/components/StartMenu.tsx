@@ -390,6 +390,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 }
 
 function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, required }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean; required: boolean }) {
+  const inputIdentity = useRef(`chronicle-alias-${crypto.randomUUID()}`);
+  const inputId = `${inputIdentity.current}-field`;
   return (
     <div
       className={`chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5 ${closing ? "is-closing" : ""}`}
@@ -404,14 +406,16 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, requir
         <p>Before the first page</p>
         <h2 id="chronicler-name-title">Claim Your Name</h2>
         <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
-        <label htmlFor="chronicler-name-input">Let it be remembered</label>
+        <label htmlFor={inputId}>Let it be remembered</label>
         <div className="chronicler-name-input-shell">
           <input
-            id="chronicler-name-input"
-            name="hostfall-chronicle-alias"
+            id={inputId}
+            name={inputIdentity.current}
             value={value}
             maxLength={24}
-            autoComplete="new-password"
+            autoComplete="one-time-code"
+            aria-autocomplete="none"
+            data-form-type="other"
             autoCorrect="off"
             autoCapitalize="words"
             spellCheck={false}
