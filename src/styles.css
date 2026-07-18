@@ -7610,10 +7610,6 @@
   animation: tactical-arrow-brightness 1.25s ease-in-out infinite;
 }
 
-.combat-arrow-horde-underglow {
-  opacity: 0.82;
-}
-
 @keyframes tactical-arrow-runes-flow {
   to { stroke-dashoffset: -12; }
 }

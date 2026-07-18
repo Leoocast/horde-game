@@ -35,9 +35,9 @@ export const useAudioStore = create<AudioStore>()(
   persist(
     (set, get) => ({
       enabled: true,
-      sfxVolume: 0.8,
+      sfxVolume: 1,
       musicEnabled: true,
-      musicVolume: 0.1,
+      musicVolume: 0.6,
       musicStatus: audioEngine.getStatus(),
       selectedCollectionId: undefined,
       playlist: musicCollectionIds.map((id) => ({ id, label: musicCollections[id].label })),
@@ -112,7 +112,7 @@ export const useAudioStore = create<AudioStore>()(
       },
       preload: () => {
         syncEngine();
-        audioEngine.preloadSfx();
+        void audioEngine.preloadSfx();
       },
       stopAllSfx: () => audioEngine.stopAllSfx(),
     }),

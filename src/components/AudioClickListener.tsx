@@ -4,6 +4,10 @@ import { useGameStore } from "../store/useGameStore";
 
 export function AudioClickListener() {
   useEffect(() => {
+    function unlockMusic() {
+      useAudioStore.getState().resumeMusic();
+    }
+
     function handleClick(event: MouseEvent) {
       const target = event.target;
       if (!(target instanceof Element)) return;
@@ -18,8 +22,14 @@ export function AudioClickListener() {
       audio.playSfx("click", { volume: 0.65 });
     }
 
+    document.addEventListener("pointerdown", unlockMusic, { capture: true, once: true });
+    document.addEventListener("keydown", unlockMusic, { capture: true, once: true });
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    return () => {
+      document.removeEventListener("pointerdown", unlockMusic, true);
+      document.removeEventListener("keydown", unlockMusic, true);
+      document.removeEventListener("click", handleClick, true);
+    };
   }, []);
 
   return null;

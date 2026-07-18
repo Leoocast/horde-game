@@ -1,8 +1,4 @@
 import { Check, FastForward, Shield, Swords, X } from "lucide-react";
-import { useState } from "react";
-import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
-import { canPlayerPutAnotherLand } from "../engine/GameRules";
-import type { CardInstance } from "../engine/GameTypes";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
@@ -10,12 +6,7 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { GameTooltip } from "./GameTooltip";
 
-const SKIP_ACTION_WARNING_KEY = "horde-skip-action-warning-disabled";
-
 export function PhaseOrb({ game }: { game: GameState }) {
-  const [showActionWarning, setShowActionWarning] = useState(false);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | undefined>();
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -73,22 +64,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const tutorialOrbTarget = tutorialZones.some((zone) => zone.zone === "phase-orb");
 
   function runOrbAction() {
-    if (state.warnIfActionsAvailable && hasAvailablePlayerActions(game) && !skipActionWarningDisabled()) {
-      setPendingAction(() => state.action);
-      setDontShowAgain(false);
-      setShowActionWarning(true);
-      return;
-    }
     playSfx("skipNextBattle");
     state.action();
-  }
-
-  function confirmPendingAction() {
-    if (dontShowAgain) window.localStorage.setItem(SKIP_ACTION_WARNING_KEY, "true");
-    setShowActionWarning(false);
-    playSfx("skipNextBattle");
-    pendingAction?.();
-    setPendingAction(undefined);
   }
 
   return (
@@ -131,42 +108,6 @@ export function PhaseOrb({ game }: { game: GameState }) {
           </div>
         )}
       </div>
-      {showActionWarning && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-[#090604]/85 p-6 text-[#f6e6b8]">
-          <section className="old-panel w-full max-w-md p-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#d8a154] bg-[#5a2b0d] text-[#ffd59b] shadow-[0_0_28px_rgba(214,112,26,0.45)]">
-              <FastForward size={32} />
-            </div>
-            <h2 className="old-title mt-4 text-2xl font-black uppercase tracking-wide">Continue?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#d6b879]">You still have available actions. Are you sure you want to continue?</p>
-
-            <label className="mt-5 flex items-center justify-center gap-2 text-sm font-bold text-[#d6b879]">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(event) => setDontShowAgain(event.target.checked)}
-                className="h-4 w-4 accent-[#d8a154]"
-              />
-              Don't show this again
-            </label>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
-                onClick={() => {
-                  setShowActionWarning(false);
-                  setPendingAction(undefined);
-                }}
-              >
-                Cancel
-              </button>
-              <button className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" onClick={confirmPendingAction}>
-                Continue
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
     </>
   );
 }
@@ -197,9 +138,9 @@ function getOrbState(
   }
   if (game.setupTurnsRemaining > 0) {
     if (game.setupTurnsRemaining === 1) {
-      return { label: "End Turn", Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
+      return { label: "End Turn", Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const };
     }
-    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const, warnIfActionsAvailable: true };
+    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const };
   }
   if (game.setupCompletePendingHorde) {
     return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };
@@ -208,31 +149,12 @@ function getOrbState(
     return { label: "Confirm", Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: "No Attack", Icon: Check, action: actions.goToEndStep, tone: "main" as const, warnIfActionsAvailable: true };
+    return { label: "No Attack", Icon: Check, action: actions.goToEndStep, tone: "main" as const };
   }
   if (game.phase === "end") {
     return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };
   }
   return { label: "To Battle", Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
-}
-
-function skipActionWarningDisabled(): boolean {
-  return window.localStorage.getItem(SKIP_ACTION_WARNING_KEY) === "true";
-}
-
-function hasAvailablePlayerActions(game: GameState): boolean {
-  if (game.winner || game.activeSide !== "player") return false;
-  if (game.phase !== "main" && game.phase !== "combat") return false;
-  if (!game.player.landPlayedThisTurn && canPlayerPutAnotherLand(game) && game.player.hand.some((card) => card.cardTypes.includes("Land"))) return true;
-  if (game.phase === "combat") {
-    return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !card.tapped && !card.summoningSickness);
-  }
-  return game.player.hand.some((card) => !card.cardTypes.includes("Land") && canCastWithAvailableResources(game, card));
-}
-
-function canCastWithAvailableResources(game: GameState, card: CardInstance): boolean {
-  const cost = parseManaCost(card.manaCost, 0);
-  return canPayWithAutomaticMana(game, cost);
 }
 
 function getDefendBlockedReason(game: GameState): string | undefined {

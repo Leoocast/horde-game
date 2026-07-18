@@ -24,15 +24,18 @@ export type MusicStatus = {
 
 const DEFAULT_SETTINGS: AudioSettings = {
   enabled: true,
-  sfxVolume: 0.8,
+  sfxVolume: 1,
   musicEnabled: true,
-  musicVolume: 0.1,
+  musicVolume: 0.6,
 };
+
+const SFX_POOL_SIZE = 3;
 
 class AudioEngine {
   private settings: AudioSettings = DEFAULT_SETTINGS;
-  private sfxCache = new Map<SfxId, HTMLAudioElement>();
+  private sfxCache = new Map<SfxId, HTMLAudioElement[]>();
   private activeSfx = new Set<HTMLAudioElement>();
+  private preparedMusic = new Map<string, HTMLAudioElement>();
   private music?: HTMLAudioElement;
   private currentCollectionId?: MusicCollectionId;
   private currentVariant: MusicVariant = "battle";
@@ -49,23 +52,36 @@ class AudioEngine {
     this.syncMusicSettings();
   }
 
-  preloadSfx(ids: SfxId[] = Object.keys(sfxManifest) as SfxId[]) {
-    for (const id of ids) this.getBaseSfx(id);
+  async preloadSfx(ids: SfxId[] = Object.keys(sfxManifest) as SfxId[]) {
+    await Promise.all(ids.flatMap((id) => this.getSfxPool(id).map((audio) => waitForMediaReady(audio))));
+  }
+
+  async preloadMusic(ids: MusicCollectionId[]) {
+    const tracks = Array.from(new Map(ids.flatMap((id) => (["battle", "climax"] as MusicVariant[]).map((variant) => ({
+      key: musicKey(id, variant),
+      url: musicCollections[id][variant],
+    }))).map((track) => [track.key, track])).values());
+    await Promise.all(tracks.map(({ key, url }) => {
+      const prepared = this.preparedMusic.get(key);
+      if (prepared) return waitForMediaReady(prepared);
+      const audio = createAudio(url);
+      this.preparedMusic.set(key, audio);
+      return waitForMediaReady(audio);
+    }));
   }
 
   playSfx(id: SfxId, options: PlayOptions = {}) {
     if (!this.settings.enabled) return;
-    const base = this.getBaseSfx(id);
-    const instance = base.cloneNode(true) as HTMLAudioElement;
+    const pool = this.getSfxPool(id);
+    const instance = pool.find((audio) => audio.paused || audio.ended) ?? createAudio(sfxManifest[id]);
+    instance.pause();
+    instance.currentTime = 0;
     instance.volume = clamp01(volumeToGain(this.settings.sfxVolume) * (options.volume ?? 1));
     instance.playbackRate = options.rate ?? 1;
     instance.preload = "auto";
     this.activeSfx.add(instance);
 
     const cleanup = () => {
-      instance.pause();
-      instance.removeAttribute("src");
-      instance.load();
       this.activeSfx.delete(instance);
     };
     instance.addEventListener("ended", cleanup, { once: true });
@@ -155,8 +171,7 @@ class AudioEngine {
 
   stopMusic() {
     if (!this.music) return;
-    this.music.pause();
-    this.music.currentTime = 0;
+    this.stashCurrentMusic();
     this.music = undefined;
     this.currentCollectionId = undefined;
     this.currentVariant = "battle";
@@ -187,13 +202,14 @@ class AudioEngine {
   }
 
   private replaceMusic(id: MusicCollectionId, variant: MusicVariant, startAt = 0) {
-    if (this.music) this.music.pause();
+    if (this.music) this.stashCurrentMusic();
     this.currentCollectionId = id;
     this.currentVariant = variant;
 
-    const music = new Audio(musicCollections[id][variant]);
+    const key = musicKey(id, variant);
+    const music = this.preparedMusic.get(key) ?? createAudio(musicCollections[id][variant]);
+    this.preparedMusic.delete(key);
     music.loop = true;
-    music.preload = "auto";
     music.volume = volumeToGain(this.settings.musicVolume);
     try {
       music.currentTime = Math.max(0, startAt);
@@ -205,14 +221,45 @@ class AudioEngine {
     this.music = music;
   }
 
-  private getBaseSfx(id: SfxId) {
+  private stashCurrentMusic() {
+    if (!this.music || !this.currentCollectionId) return;
+    this.music.pause();
+    this.music.currentTime = 0;
+    this.preparedMusic.set(musicKey(this.currentCollectionId, this.currentVariant), this.music);
+  }
+
+  private getSfxPool(id: SfxId) {
     const cached = this.sfxCache.get(id);
     if (cached) return cached;
-    const audio = new Audio(sfxManifest[id]);
-    audio.preload = "auto";
-    this.sfxCache.set(id, audio);
-    return audio;
+    const pool = Array.from({ length: SFX_POOL_SIZE }, () => createAudio(sfxManifest[id]));
+    this.sfxCache.set(id, pool);
+    return pool;
   }
+}
+
+function createAudio(url: string) {
+  const audio = new Audio(url);
+  audio.preload = "auto";
+  return audio;
+}
+
+function waitForMediaReady(audio: HTMLAudioElement): Promise<void> {
+  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      audio.removeEventListener("canplaythrough", onReady);
+      audio.removeEventListener("error", onError);
+    };
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = () => { cleanup(); reject(new Error(`Audio failed to preload: ${audio.currentSrc || audio.src}`)); };
+    audio.addEventListener("canplaythrough", onReady, { once: true });
+    audio.addEventListener("error", onError, { once: true });
+    audio.load();
+  });
+}
+
+function musicKey(id: MusicCollectionId, variant: MusicVariant) {
+  return musicCollections[id][variant];
 }
 
 function clamp01(value: number) {
