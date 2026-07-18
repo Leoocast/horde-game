@@ -1,9 +1,10 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, Settings, Shield, Skull, Swords, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Swords, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
+import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
 import { AudioControls } from "./AudioControls";
 import { DecksView } from "./DecksView";
 import { ToastStack } from "./ToastStack";
@@ -22,6 +23,9 @@ type Props = {
   onViewHordeDeck: () => void;
   initialScreen?: "home" | "setup" | "decks" | "settings";
   preserveMusicOnMount?: boolean;
+  requestInitialName?: boolean;
+  onNameSaved?: (name: string) => void;
+  onRestartFirstTime?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -31,10 +35,8 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = 
   { id: "hard", label: "Doomed", setupTurns: 2 },
 ];
 
-const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
-
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, onStart }: Props) {
-  const [playerName, setPlayerName] = useState("Arky");
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onStart }: Props) {
+  const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
@@ -43,9 +45,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [setupClosing, setSetupClosing] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
-  const [showNameEditor, setShowNameEditor] = useState(false);
+  const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
   const [nameEditorClosing, setNameEditorClosing] = useState(false);
   const [nameDraft, setNameDraft] = useState(playerName);
+  const [nameRequired, setNameRequired] = useState(requestInitialName);
+  const [clearingCache, setClearingCache] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
   const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
@@ -83,7 +87,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       if (event.key !== "Escape") return;
       if (showNameEditor) {
         event.preventDefault();
-        closeNameEditor();
+        if (!nameRequired) closeNameEditor();
         return;
       }
       if (showTutorialConfirm || showDeveloperWarning) return;
@@ -94,7 +98,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuScreen, nameEditorClosing, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
 
   function openNameEditor() {
     setNameDraft(playerName);
@@ -103,6 +107,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function closeNameEditor() {
+    if (nameRequired) return;
     if (nameEditorClosing) return;
     setNameEditorClosing(true);
     window.setTimeout(() => {
@@ -112,9 +117,35 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function savePlayerName() {
-    setPlayerName(nameDraft.trim() || "Chronicler");
+    const nextName = nameDraft.trim() || "Chronicler";
+    setPlayerName(nextName);
+    completeOnboarding(nextName);
+    setNameRequired(false);
+    onNameSaved?.(nextName);
     playSfx("playLand", { volume: 0.62 });
-    closeNameEditor();
+    setNameEditorClosing(true);
+    window.setTimeout(() => {
+      setShowNameEditor(false);
+      setNameEditorClosing(false);
+    }, 200);
+  }
+
+  async function clearCache() {
+    if (clearingCache) return;
+    setClearingCache(true);
+    try {
+      await clearAppAssetCache();
+      pushToast({ title: "Asset cache cleared", message: "Images and audio will be prepared again on the next visit.", tone: "success" });
+    } catch {
+      pushToast({ title: "Cache could not be cleared", message: "Your browser prevented access to its stored assets.", tone: "warning" });
+    } finally {
+      setClearingCache(false);
+    }
+  }
+
+  function restartFirstTimeFlow() {
+    resetOnboarding();
+    onRestartFirstTime?.();
   }
 
   function closeMenuPanel() {
@@ -158,6 +189,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   function updateDeveloperMode(enabled: boolean) {
     setDeveloperMode(enabled);
+    persistDeveloperMode(enabled);
     pushToast({
       title: enabled ? "Developer Mode enabled" : "Developer Mode disabled",
       message: enabled ? "Developer testing seed is active." : "New games will use the selected seed.",
@@ -257,6 +289,26 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                     <span />
                   </button>
                 </div>
+                <div className="main-settings-row">
+                  <div>
+                    <div className="main-settings-label">Asset cache</div>
+                    <div className="main-settings-description">Remove saved image and audio data so it is prepared again</div>
+                  </div>
+                  <button className="main-settings-action main-settings-action-wide" type="button" onClick={clearCache} disabled={clearingCache}>
+                    <Trash2 size={14} /> {clearingCache ? "Clearing…" : "Clear cache"}
+                  </button>
+                </div>
+                {developerMode && (
+                  <div className="main-settings-row main-settings-developer-row">
+                    <div>
+                      <div className="main-settings-label">First-time flow</div>
+                      <div className="main-settings-description">Replay loading and player-name onboarding for testing</div>
+                    </div>
+                    <button className="main-settings-action main-settings-action-wide is-developer" type="button" onClick={restartFirstTimeFlow}>
+                      <RotateCcw size={14} /> Test first time
+                    </button>
+                  </div>
+                )}
               </section>
             </div>
           </section>
@@ -319,6 +371,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onClose={closeNameEditor}
           onSave={savePlayerName}
           closing={nameEditorClosing}
+          required={nameRequired}
         />
       )}
       
@@ -336,18 +389,18 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   );
 }
 
-function ChroniclerNameModal({ value, onChange, onClose, onSave, closing }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean }) {
+function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, required }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean; required: boolean }) {
   return (
     <div
       className={`chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5 ${closing ? "is-closing" : ""}`}
       role="presentation"
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (!required && event.target === event.currentTarget) onClose();
       }}
     >
       <form className="chronicler-name-modal" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
         <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
-        <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>
+        {!required && <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>}
         <p>Before the first page</p>
         <h2 id="chronicler-name-title">Claim Your Name</h2>
         <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
@@ -689,14 +742,4 @@ function generateRandomSeed(): string {
     cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
   }
   return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
-}
-
-function readStoredDeveloperMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(DEVELOPER_MODE_STORAGE_KEY) === "true";
-}
-
-function persistDeveloperMode(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(DEVELOPER_MODE_STORAGE_KEY, String(enabled));
 }

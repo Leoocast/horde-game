@@ -3,11 +3,14 @@ import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { EncounterTransition } from "./components/EncounterTransition";
+import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
+import { hasCompletedOnboarding, readStoredPlayerName } from "./utils/appPersistence";
+import { preloadGameAssets } from "./utils/assetPreloader";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -16,7 +19,12 @@ export default function App() {
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
-  const [playerName, setPlayerName] = useState("Player");
+  const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
+  const [bootRevision, setBootRevision] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingLeaving, setLoadingLeaving] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ percent: 0, label: "Opening the ancient gates" });
+  const [requestInitialName, setRequestInitialName] = useState(false);
   const [setupTurns, setSetupTurns] = useState(3);
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
@@ -29,6 +37,31 @@ export default function App() {
     hordeDeckId: string;
     tutorial: boolean;
   } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const startedAt = Date.now();
+    setLoading(true);
+    setLoadingLeaving(false);
+    setLoadingProgress({ percent: 0, label: "Opening the ancient gates" });
+    void preloadGameAssets((progress) => {
+      if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
+    }).then(() => {
+      const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
+      window.setTimeout(() => {
+        if (!active) return;
+        setLoadingProgress({ percent: 100, label: "The chronicle awaits" });
+        setLoadingLeaving(true);
+        window.setTimeout(() => {
+          if (!active) return;
+          setRequestInitialName(!hasCompletedOnboarding());
+          setPlayerName(readStoredPlayerName());
+          setLoading(false);
+        }, 520);
+      }, remaining);
+    });
+    return () => { active = false; };
+  }, [bootRevision]);
 
   useEffect(() => {
     if (!launchTransition) return;
@@ -47,6 +80,8 @@ export default function App() {
       window.clearTimeout(finishTimeout);
     };
   }, [launchTransition, playCollection, playSfx, startBattleMusic]);
+
+  if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
@@ -97,6 +132,17 @@ export default function App() {
           }}
           initialScreen={menuReturnScreen}
           preserveMusicOnMount={preserveMenuMusic}
+          requestInitialName={requestInitialName}
+          onNameSaved={(name) => {
+            setPlayerName(name);
+            setRequestInitialName(false);
+          }}
+          onRestartFirstTime={() => {
+            setScreen("start");
+            setMenuReturnScreen("home");
+            setPreserveMenuMusic(false);
+            setBootRevision((revision) => revision + 1);
+          }}
           onStart={(options) => {
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);

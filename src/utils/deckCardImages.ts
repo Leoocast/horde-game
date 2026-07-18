@@ -20,7 +20,7 @@ export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined
       return;
     }
     let active = true;
-    loadDeckCardDetails(deckId, card, manifest).then((loaded) => {
+    resolveDeckCardDetails(deckId, card, manifest).then((loaded) => {
       if (active) setDetails(loaded ?? {});
     });
     return () => {
@@ -31,7 +31,7 @@ export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined
   return details;
 }
 
-async function loadDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest): Promise<DeckCardDetails | null> {
+export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest): Promise<DeckCardDetails | null> {
   const cacheId = `${deckId}:${card.id}`;
   const lookup = manifest.cards[card.id];
   if (!lookup) {
