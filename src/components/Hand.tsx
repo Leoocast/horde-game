@@ -34,6 +34,7 @@ const handCardMotion: Variants = {
 export function Hand({ game }: { game: GameState }) {
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
+  const focusedCardId = useGameStore((state) => state.focusedCardId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
@@ -249,7 +250,7 @@ export function Hand({ game }: { game: GameState }) {
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
             const isHovered = hoveredCardId === card.instanceId;
-            const isHeld = isHovered || draggingCardId === card.instanceId;
+            const isHeld = isHovered || focusedCardId === card.instanceId || draggingCardId === card.instanceId;
             const { x: dragX, y: dragY } = getDragMotionValues(card.instanceId);
             return (
               <motion.div

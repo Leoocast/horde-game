@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Github, Play, RefreshCw, Settings, Shield, Skull, Swords, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, Settings, Shield, Skull, Swords, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
@@ -43,6 +43,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [setupClosing, setSetupClosing] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
+  const [showNameEditor, setShowNameEditor] = useState(false);
+  const [nameDraft, setNameDraft] = useState(playerName);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
   const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
@@ -77,7 +79,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || showTutorialConfirm || showDeveloperWarning) return;
+      if (event.key !== "Escape") return;
+      if (showNameEditor) {
+        event.preventDefault();
+        setShowNameEditor(false);
+        return;
+      }
+      if (showTutorialConfirm || showDeveloperWarning) return;
       if (menuScreen === "home") return;
       event.preventDefault();
       if (menuScreen === "setup") setSetupClosing(true);
@@ -85,7 +93,18 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuScreen, showDeveloperWarning, showTutorialConfirm]);
+  }, [menuScreen, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+
+  function openNameEditor() {
+    setNameDraft(playerName);
+    setShowNameEditor(true);
+  }
+
+  function savePlayerName() {
+    setPlayerName(nameDraft.trim() || "Chronicler");
+    setShowNameEditor(false);
+    playSfx("playLand", { volume: 0.62 });
+  }
 
   function closeMenuPanel() {
     if (menuScreen === "decks" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
@@ -144,16 +163,12 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           <div className="main-menu-chronicler" aria-label="Chronicler profile">
             <span className="main-menu-chronicler-mark" aria-hidden="true" />
             <div>
-              <input
-                value={playerName}
-                maxLength={24}
-                aria-label="Chronicler name"
-                onChange={(event) => setPlayerName(event.currentTarget.value)}
-                onFocus={(event) => event.currentTarget.select()}
-                placeholder="Chronicler"
-              />
+              <strong className="main-menu-chronicler-name">{playerName || "Chronicler"}</strong>
               <span>Chronicler</span>
             </div>
+            <button className="main-menu-chronicler-edit" type="button" onClick={openNameEditor} title="Edit Chronicler name" aria-label="Edit Chronicler name">
+              <Feather size={19} />
+            </button>
           </div>
         )}
         <div className="main-menu-layout">
@@ -285,6 +300,15 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           }}
         />
       )}
+
+      {showNameEditor && (
+        <ChroniclerNameModal
+          value={nameDraft}
+          onChange={setNameDraft}
+          onClose={() => setShowNameEditor(false)}
+          onSave={savePlayerName}
+        />
+      )}
       
       {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: ALPHA 4.0-HAND-UPDATE</div>
@@ -297,6 +321,39 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
       <ToastStack variant="menu" />
     </main>
+  );
+}
+
+function ChroniclerNameModal({ value, onChange, onClose, onSave }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void }) {
+  return (
+    <div
+      className="chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5"
+      role="presentation"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <form className="chronicler-name-modal" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
+        <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
+        <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>
+        <div className="chronicler-name-feather" aria-hidden="true"><Feather size={29} /></div>
+        <p>Record of the expedition</p>
+        <h2 id="chronicler-name-title">Name your Chronicler</h2>
+        <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
+        <label htmlFor="chronicler-name-input">The name written in the chronicles</label>
+        <input
+          id="chronicler-name-input"
+          value={value}
+          maxLength={24}
+          autoFocus
+          onFocus={(event) => event.currentTarget.select()}
+          onChange={(event) => onChange(event.currentTarget.value)}
+          placeholder="Chronicler"
+        />
+        <button className="chronicler-name-save" type="submit"><Feather size={16} /> Inscribe name</button>
+        <span className="chronicler-name-ornament is-bottom" aria-hidden="true"><i /><b>◆</b><i /></span>
+      </form>
+    </div>
   );
 }
 

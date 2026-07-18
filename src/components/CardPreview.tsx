@@ -113,15 +113,13 @@ export function CardPreview() {
       <>
         <div className="card-preview-dismiss-layer fixed inset-0 z-[179]" aria-hidden="true" />
         <aside
-          data-preserve-card-focus="true"
-          data-card-preview-locked="true"
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
           onContextMenu={(event) => event.preventDefault()}
         >
-          <div className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
+          <div data-preserve-card-focus="true" data-card-preview-locked="true" className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
             <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
           </div>
-          {keywords && <KeywordExplanations keywords={keywords} />}
+          {keywords && <div data-preserve-card-focus="true" data-card-preview-locked="true"><KeywordExplanations keywords={keywords} /></div>}
         </aside>
       </>
     );
