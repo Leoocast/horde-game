@@ -57,14 +57,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }, [preserveMusicOnMount, startMenuMusic]);
 
   useEffect(() => {
-    if (!launching) return;
-    const timeout = window.setTimeout(() => {
-      onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() });
-    }, 1650);
-    return () => window.clearTimeout(timeout);
-  }, [effectiveSeed, launching, mode, onStart, playerName, selectedMode.setupTurns]);
-
-  useEffect(() => {
     if (!setupClosing) return;
     const timeout = window.setTimeout(() => {
       setMenuScreen("home");
@@ -83,8 +75,15 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function startGame() {
+    if (launching) return;
     persistDeveloperMode(developerMode);
     setLaunching(true);
+    onStart({
+      playerName: playerName.trim() || "Player",
+      mode,
+      setupTurns: selectedMode.setupTurns,
+      seed: effectiveSeed.trim() || generateRandomSeed(),
+    });
   }
 
   function changeDifficulty(nextMode: DifficultyMode) {
@@ -198,7 +197,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         </div>
       ) : (
         <ExpeditionSetup
-          playerName={playerName}
           playerDeck={selectedDeck}
           playerDecks={decks}
           selectedPlayerDeckId={selectedDeckId}
@@ -259,7 +257,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 }
 
 type ExpeditionSetupProps = {
-  playerName: string;
   playerDeck?: InspectableDeck;
   playerDecks: InspectableDeck[];
   selectedPlayerDeckId: string;
@@ -369,7 +366,6 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         </button>
       </footer>
 
-      {props.launching && <EncounterIntro playerName={props.playerName.trim() || "Player"} hordeName={props.hordeDeck?.deck.name ?? "The Horde"} />}
     </section>
   );
 }
@@ -424,17 +420,6 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
         {decks.map((item) => <button key={item.id} className={item.id === selectedDeckId ? "is-selected" : ""} type="button" role="option" aria-selected={item.id === selectedDeckId} onClick={() => onSelectDeck(item.id)}>{item.deck.name}</button>)}
       </div>
     </article>
-  );
-}
-
-function EncounterIntro({ playerName, hordeName }: { playerName: string; hordeName: string }) {
-  return (
-    <div className="encounter-intro" role="status" aria-live="polite">
-      <div className="encounter-intro-flare" />
-      <p>The chronicle begins</p>
-      <div className="encounter-intro-matchup"><strong>{playerName}</strong><span><Swords size={25} />VS</span><strong>{hordeName}</strong></div>
-      <small>The Horde stirs beyond the veil...</small>
-    </div>
   );
 }
 

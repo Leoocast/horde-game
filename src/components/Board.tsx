@@ -28,10 +28,11 @@ import { VictoryModal } from "./VictoryModal";
 type Props = {
   playerName: string;
   setupTurns: number;
+  encounterEntering?: boolean;
   onReturnToMenu: () => void;
 };
 
-export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
+export function Board({ playerName, setupTurns, encounterEntering = false, onReturnToMenu }: Props) {
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
@@ -52,7 +53,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   }, [game.winner, playCollection]);
 
   return (
-    <main className="duel-table game-screen h-screen overflow-hidden">
+    <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
       <AppHeader
         left={<TurnPhaseHud game={game} />}
         setupTurns={setupTurns}

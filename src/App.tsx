@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
+import { EncounterTransition } from "./components/EncounterTransition";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
@@ -12,6 +13,7 @@ export default function App() {
   const reset = useGameStore((state) => state.reset);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playCollection = useAudioStore((state) => state.playCollection);
+  const playSfx = useAudioStore((state) => state.playSfx);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
   const [setupTurns, setSetupTurns] = useState(3);
@@ -20,12 +22,46 @@ export default function App() {
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "decks">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
+  const [launchTransition, setLaunchTransition] = useState<{
+    playerName: string;
+    hordeName: string;
+    hordeDeckId: string;
+    tutorial: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!launchTransition) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const impactTimeout = window.setTimeout(() => {
+      if (!reducedMotion) playSfx("attack", { volume: 0.42, rate: 0.86 });
+    }, reducedMotion ? 0 : 560);
+    const revealTimeout = window.setTimeout(() => {
+      if (launchTransition.tutorial) playCollection("battleTheme1");
+      else startBattleMusic(true);
+      setScreen("game");
+    }, reducedMotion ? 80 : 1050);
+    const finishTimeout = window.setTimeout(() => setLaunchTransition(null), reducedMotion ? 180 : 2450);
+    return () => {
+      window.clearTimeout(impactTimeout);
+      window.clearTimeout(revealTimeout);
+      window.clearTimeout(finishTimeout);
+    };
+  }, [launchTransition, playCollection, playSfx, startBattleMusic]);
+
+  const transitionOverlay = launchTransition ? (
+    <EncounterTransition
+      playerName={launchTransition.playerName}
+      hordeName={launchTransition.hordeName}
+      hordeDeckId={launchTransition.hordeDeckId}
+    />
+  ) : null;
 
   if (screen === "deckInspector") {
     return (
       <>
         <AudioClickListener />
         <DeckInspector deck={findInspectableDeck(inspectorDeckId)} onBack={() => setScreen("start")} />
+        {transitionOverlay}
       </>
     );
   }
@@ -72,11 +108,15 @@ export default function App() {
               isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
               isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
             );
-            if (options.seed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");
-            else startBattleMusic(true);
-            setScreen("game");
+            setLaunchTransition({
+              playerName: options.playerName,
+              hordeName: hordeInspectableDecks.find((deck) => deck.id === selectedHordeDeckId)?.deck.name ?? "The Horde",
+              hordeDeckId: selectedHordeDeckId,
+              tutorial: isTutorial,
+            });
           }}
         />
+        {transitionOverlay}
       </>
     );
   }
@@ -87,12 +127,14 @@ export default function App() {
       <Board
         playerName={playerName}
         setupTurns={setupTurns}
+        encounterEntering={Boolean(launchTransition)}
         onReturnToMenu={() => {
           setPreserveMenuMusic(false);
           setMenuReturnScreen("home");
           setScreen("start");
         }}
       />
+      {transitionOverlay}
     </>
   );
 }
