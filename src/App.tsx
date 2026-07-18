@@ -9,7 +9,7 @@ import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } fr
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
-import { hasCompletedOnboarding, readStoredPlayerName } from "./utils/appPersistence";
+import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets } from "./utils/assetPreloader";
 
 export default function App() {
@@ -21,10 +21,10 @@ export default function App() {
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
   const [loadingLeaving, setLoadingLeaving] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ percent: 0, label: "Opening the ancient gates" });
-  const [requestInitialName, setRequestInitialName] = useState(false);
+  const [requestInitialName, setRequestInitialName] = useState(() => !hasCompletedOnboarding());
   const [setupTurns, setSetupTurns] = useState(3);
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
@@ -39,6 +39,7 @@ export default function App() {
   } | null>(null);
 
   useEffect(() => {
+    if (!loading) return;
     let active = true;
     const startedAt = Date.now();
     setLoading(true);
@@ -47,16 +48,18 @@ export default function App() {
     void preloadGameAssets((progress) => {
       if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
     }).then(() => {
+      markGameAssetsPreloaded();
       const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
       window.setTimeout(() => {
         if (!active) return;
         setLoadingProgress({ percent: 100, label: "The chronicle awaits" });
+        setRequestInitialName(!hasCompletedOnboarding());
+        setPlayerName(readStoredPlayerName());
+        setLoading(false);
         setLoadingLeaving(true);
         window.setTimeout(() => {
           if (!active) return;
-          setRequestInitialName(!hasCompletedOnboarding());
-          setPlayerName(readStoredPlayerName());
-          setLoading(false);
+          setLoadingLeaving(false);
         }, 520);
       }, remaining);
     });
@@ -141,6 +144,7 @@ export default function App() {
             setScreen("start");
             setMenuReturnScreen("home");
             setPreserveMenuMusic(false);
+            setLoading(true);
             setBootRevision((revision) => revision + 1);
           }}
           onStart={(options) => {
@@ -166,6 +170,7 @@ export default function App() {
           }}
         />
         {transitionOverlay}
+        {loadingLeaving && <GameLoadingScreen percent={100} label="The chronicle awaits" leaving />}
       </>
     );
   }

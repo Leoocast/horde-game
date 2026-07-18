@@ -51,8 +51,7 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
   const existing = pending.get(cacheId);
   if (existing) return existing;
 
-  const request = fetch(buildScryfallUrl(lookup, card), { headers: { Accept: "application/json" } })
-    .then((response) => (response.ok ? response.json() : undefined))
+  const request = fetchCardJson(buildScryfallUrl(lookup, card))
     .then((payload) => {
       const cardPayload = readSearchResult(payload, lookup.pick) ?? payload;
       const details: DeckCardDetails = {
@@ -67,13 +66,11 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
         oracleText: readOracleText(cardPayload),
         flavorText: readFlavorText(cardPayload),
       };
+      if (!details.imageUrl) throw new Error("Card lookup returned no image");
       writeCachedDetails(cacheId, details);
       return details;
     })
-    .catch(() => {
-      writeCachedDetails(cacheId, null);
-      return null;
-    })
+    .catch(() => null)
     .finally(() => {
       pending.delete(cacheId);
     });
@@ -119,10 +116,30 @@ function readCachedDetails(cacheId: string): DeckCardDetails | null | undefined 
   }
   if (stored) {
     const parsed = JSON.parse(stored) as DeckCardDetails;
+    if (!parsed.imageUrl) {
+      window.localStorage.removeItem(cacheKey(cacheId));
+      return undefined;
+    }
     memoryCache.set(cacheId, parsed);
     return parsed;
   }
   return undefined;
+}
+
+async function fetchCardJson(url: string, attempt = 0): Promise<unknown> {
+  try {
+    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-cache" });
+    if (!response.ok) throw new Error(`Card lookup failed: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    if (attempt >= 2) throw error;
+    await delay(650 * (attempt + 1));
+    return fetchCardJson(url, attempt + 1);
+  }
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): void {
@@ -132,7 +149,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v4:${cacheId}`;
+  return `horde-deck-card-details:v5:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

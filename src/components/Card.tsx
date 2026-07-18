@@ -3,6 +3,7 @@ import type { CardInstance, GameState } from "../engine/GameTypes";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
+import { Heart, Swords } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -161,25 +162,25 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
-            <span key={keyword} className={["card-keyword-badge", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
+            <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
               {renderBattlefieldKeywordLabel(keyword)}
             </span>
           ))}
         </div>
       )}
       {!hideStats && stats.text && (
-        <span
+        <div
+          aria-label={`${stats.power} attack, ${stats.toughness} life`}
           className={[
-            "card-stat-badge absolute flex items-center justify-center rounded-[999px] border font-black leading-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),inset_0_-1px_1px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.55)]",
-            stats.damaged
-              ? "border-[#4b0f0a] bg-gradient-to-b from-[#f3a59b] via-[#b93327] to-[#6d150f] text-[#fff0e8]"
-              : stats.buffed
-                ? "border-[#275d21] bg-gradient-to-b from-[#edffe6] via-[#a7d694] to-[#5c8750] text-[#123910]"
-                : "border-[#485356] bg-gradient-to-b from-[#edf4ed] via-[#b9c5bf] to-[#7f8b87] text-[#18201f]",
+            "card-stat-badge",
+            stats.damaged ? "is-damaged" : "",
+            stats.buffed ? "is-buffed" : "",
           ].join(" ")}
         >
-          {stats.text}
-        </span>
+          <span className="card-stat-segment card-stat-attack"><Swords aria-hidden="true" /><b>{stats.power}</b></span>
+          <i aria-hidden="true" />
+          <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+        </div>
       )}
     </article>
   );

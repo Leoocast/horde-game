@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Github } from "lucide-react";
 
 type Props = {
   percent: number;
@@ -17,7 +18,14 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
     <main className={`game-loading-screen ${leaving ? "is-leaving" : ""}`} aria-label="Loading Hostfall">
       <div className="game-loading-embers" aria-hidden="true">
         {Array.from({ length: 22 }, (_, index) => (
-          <i key={index} style={{ "--ember-index": index, "--ember-left": `${(index * 47) % 100}%` } as React.CSSProperties} />
+          <i
+            key={index}
+            style={{
+              "--ember-index": index,
+              "--ember-left": `${(index * 47) % 100}%`,
+              "--ember-duration": `${5 + (index % 5)}s`,
+            } as React.CSSProperties}
+          />
         ))}
       </div>
       <section className="game-loading-content">
@@ -33,6 +41,12 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
         </div>
         <small>Preparing images &amp; audio</small>
       </section>
+      <footer className="game-loading-credits">
+        <span>Version: ALPHA 4.0-HAND-UPDATE</span>
+        <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer">
+          <span>Developed by</span><Github aria-hidden="true" /><strong>Leoocast</strong>
+        </a>
+      </footer>
     </main>
   );
 }

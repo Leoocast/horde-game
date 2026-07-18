@@ -31,23 +31,24 @@ export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => 
     return cards.map((card) => ({ deck, card }));
   });
   const uniqueCardTasks = Array.from(new Map(cardTasks.map((task) => [`${task.deck.id}:${task.card.id}`, task])).values());
-  const tasks: Array<{ label: string; run: () => Promise<void> }> = [
+  const mediaTasks: Array<{ label: string; run: () => Promise<void> }> = [
     ...bundledImages.map((url) => ({ label: "Preparing artwork", run: () => preloadUrl(url) })),
     ...audioUrls.map((url) => ({ label: "Tuning the soundscape", run: () => preloadUrl(url) })),
-    ...uniqueCardTasks.map(({ deck, card }) => ({
+  ];
+  const imageTasks = uniqueCardTasks.map(({ deck, card }) => ({
       label: "Gathering the chronicles",
+      usesRemoteLookup: !deck.images.cards[card.id]?.imageUrl,
       run: async () => {
         const details = await resolveDeckCardDetails(deck.id, card, deck.images);
         if (details?.imageUrl) await preloadUrl(details.imageUrl);
       },
-    })),
-  ];
+    }));
 
   let completed = 0;
-  const total = Math.max(tasks.length, 1);
+  const total = Math.max(mediaTasks.length + imageTasks.length, 1);
   onProgress({ completed, total, percent: 0, label: "Opening the ancient gates" });
 
-  await runWithConcurrency(tasks, 6, async (task) => {
+  const finishTask = async (task: { label: string; run: () => Promise<void> }) => {
     try {
       await withTimeout(task.run(), 15000);
     } catch {
@@ -55,7 +56,22 @@ export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => 
     }
     completed += 1;
     onProgress({ completed, total, percent: Math.round((completed / total) * 100), label: task.label });
-  });
+  };
+
+  const preloadMedia = runWithConcurrency(mediaTasks, 6, finishTask);
+  const preloadCardImages = (async () => {
+    for (const task of imageTasks) {
+      await finishTask(task);
+      // Scryfall asks clients to keep API requests below roughly ten per second.
+      if (task.usesRemoteLookup) await delay(110);
+    }
+  })();
+
+  await Promise.all([preloadMedia, preloadCardImages]);
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 async function preloadUrl(url: string): Promise<void> {

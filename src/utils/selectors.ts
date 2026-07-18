@@ -6,7 +6,7 @@ export function cardStats(game: GameState, card: CardInstance): string {
   return cardStatState(game, card).text;
 }
 
-export function cardStatState(game: GameState, card: CardInstance, visualDamageMarked = 0): { text: string; damaged: boolean; buffed: boolean } {
+export function cardStatState(game: GameState, card: CardInstance, visualDamageMarked = 0): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
   if (!card.cardTypes.includes("Creature")) return { text: "", damaged: false, buffed: false };
   const { power, toughness } = getPowerToughness(game, card);
   const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
@@ -14,6 +14,8 @@ export function cardStatState(game: GameState, card: CardInstance, visualDamageM
   const buffed = power > card.basePower || toughness > card.baseToughness;
   return {
     text: damageMarked > 0 ? `${power}/${visibleToughness}` : `${power}/${toughness}`,
+    power,
+    toughness: damageMarked > 0 ? visibleToughness : toughness,
     damaged: damageMarked > 0,
     buffed,
   };

@@ -14,6 +14,7 @@ import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
+import { Sparkles } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -806,7 +807,11 @@ export function Battlefield({ game, side, cards }: Props) {
             }, 620);
           }}
         >
-          {renderCardText(abilityButtonText(primaryAbility))}
+          <Sparkles className="effect-action-icon" aria-hidden="true" />
+          <span className="effect-action-copy">
+            <small>Activate ability</small>
+            <strong>{renderCardText(abilityButtonText(primaryAbility))}</strong>
+          </span>
         </button>
       )}
       {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}

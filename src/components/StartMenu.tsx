@@ -47,7 +47,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
   const [nameEditorClosing, setNameEditorClosing] = useState(false);
-  const [nameDraft, setNameDraft] = useState(playerName);
+  const [nameDraft, setNameDraft] = useState(requestInitialName ? "" : playerName);
   const [nameRequired, setNameRequired] = useState(requestInitialName);
   const [clearingCache, setClearingCache] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
@@ -398,7 +398,7 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, requir
         if (!required && event.target === event.currentTarget) onClose();
       }}
     >
-      <form className="chronicler-name-modal" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
+      <form className="chronicler-name-modal" autoComplete="off" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
         <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
         {!required && <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>}
         <p>Before the first page</p>
@@ -408,8 +408,13 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, requir
         <div className="chronicler-name-input-shell">
           <input
             id="chronicler-name-input"
+            name="hostfall-chronicle-alias"
             value={value}
             maxLength={24}
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="words"
+            spellCheck={false}
             autoFocus
             onFocus={(event) => event.currentTarget.select()}
             onChange={(event) => onChange(event.currentTarget.value)}
