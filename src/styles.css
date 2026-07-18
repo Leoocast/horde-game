@@ -7786,8 +7786,8 @@
 
 .main-settings-screen:not(.decks-panel) .main-settings-header,
 .main-settings-screen:not(.decks-panel) .main-settings-content {
-  width: min(100%, 1160px);
-  max-width: 1160px;
+  width: 100%;
+  max-width: none;
 }
 
 .main-settings-screen:not(.decks-panel) {
