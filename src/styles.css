@@ -3210,143 +3210,175 @@
   }
 
   .phase-banner-shell {
-    perspective: 900px;
+    display: grid;
+    place-items: center;
+    perspective: 1000px;
   }
 
   .phase-banner {
+    --phase-accent: #b9a76c;
+    --phase-accent-bright: #eadca8;
+    --phase-accent-soft: rgb(185 167 108 / 0.18);
     position: relative;
-    display: flex;
-    min-width: min(620px, 76vw);
-    height: 58px;
+    display: grid;
+    width: min(900px, 86vw);
+    grid-template-columns: minmax(48px, 1fr) 60px auto minmax(48px, 1fr);
     align-items: center;
+    gap: clamp(12px, 2vw, 24px);
     justify-content: center;
-    overflow: hidden;
-    border: 1px solid var(--phase-border);
-    border-radius: 3px;
-    background:
-      linear-gradient(90deg, transparent 0%, var(--phase-wing) 14%, var(--phase-core) 50%, var(--phase-wing) 86%, transparent 100%),
-      linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, transparent 42%, rgb(0 0 0 / 0.5) 100%);
-    box-shadow:
-      inset 0 1px 0 rgb(255 246 198 / 0.28),
-      inset 0 -1px 0 rgb(0 0 0 / 0.58),
-      0 0 18px var(--phase-glow-soft),
-      0 18px 34px rgb(0 0 0 / 0.4);
-    clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
-    animation: phase-banner-in 1050ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: phase-banner-in 1320ms cubic-bezier(0.22, 0.78, 0.2, 1) both;
   }
 
   .phase-banner::before {
-    content: "";
     position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: radial-gradient(ellipse 62% 130% at center, var(--phase-carpet-hot), transparent 72%);
-    mix-blend-mode: screen;
-    opacity: 0.6;
+    z-index: -2;
+    top: 50%;
+    right: 9%;
+    left: 9%;
+    height: 96px;
+    background: radial-gradient(ellipse at center, rgb(1 7 5 / 0.9) 0%, rgb(1 6 5 / 0.58) 38%, transparent 74%);
+    content: "";
+    filter: blur(3px);
+    transform: translateY(-50%);
   }
 
   .phase-banner::after {
-    content: "";
     position: absolute;
-    top: -35%;
-    bottom: -35%;
-    z-index: 2;
-    width: 26%;
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.52), transparent);
-    filter: blur(7px);
-    transform: skewX(-22deg);
-    animation: phase-banner-sweep 760ms 90ms ease-out both;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    width: 270px;
+    height: 90px;
+    background: radial-gradient(ellipse, var(--phase-accent-soft), transparent 70%);
+    content: "";
+    filter: blur(8px);
+    transform: translate(-50%, -50%);
+    animation: phase-banner-aura 1320ms ease-in-out both;
   }
 
   .phase-banner-edge-frame {
-    display: none;
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    width: min(430px, 56vw);
+    height: 82px;
+    border-top: 1px solid color-mix(in srgb, var(--phase-accent) 24%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--phase-accent) 17%, transparent);
+    background: linear-gradient(90deg, transparent, rgb(5 13 11 / 0.78) 19%, rgb(5 13 11 / 0.94) 50%, rgb(5 13 11 / 0.78) 81%, transparent);
+    clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+    transform: translate(-50%, -50%);
+    animation: phase-banner-frame 1320ms ease-out both;
+  }
+
+  .phase-banner-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--phase-accent));
+    box-shadow: 0 0 8px color-mix(in srgb, var(--phase-accent) 42%, transparent);
+    transform-origin: right center;
+    animation: phase-banner-line-in 1320ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
+  }
+
+  .phase-banner-line-right {
+    background: linear-gradient(90deg, var(--phase-accent), transparent);
+    transform-origin: left center;
+  }
+
+  .phase-banner-crest {
+    display: grid;
+    width: 51px;
+    height: 51px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--phase-accent) 74%, transparent);
+    background:
+      linear-gradient(135deg, rgb(32 39 31 / 0.98), rgb(6 13 11 / 0.99)),
+      radial-gradient(circle, var(--phase-accent-soft), transparent 68%);
+    color: var(--phase-accent-bright);
+    box-shadow:
+      inset 0 0 0 3px rgb(2 8 6 / 0.82),
+      inset 0 0 0 4px color-mix(in srgb, var(--phase-accent) 24%, transparent),
+      0 0 18px var(--phase-accent-soft);
+    transform: rotate(45deg);
+    animation: phase-banner-crest-in 1320ms cubic-bezier(0.16, 0.92, 0.24, 1.18) both;
+  }
+
+  .phase-banner-crest svg {
+    filter: drop-shadow(0 0 5px var(--phase-accent-soft));
+    transform: rotate(-45deg);
+  }
+
+  .phase-banner-copy {
+    display: flex;
+    min-width: clamp(220px, 28vw, 340px);
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    text-align: center;
+    animation: phase-text-pop 1320ms ease-out both;
   }
 
   .phase-banner-text {
-    position: relative;
-    z-index: 1;
-    color: var(--phase-text);
-    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-    font-size: clamp(1.8rem, 4.6vw, 3.25rem);
-    font-style: italic;
-    font-weight: 950;
-    letter-spacing: 0.08em;
-    line-height: 1;
+    color: #e4dcc0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.9rem, 4vw, 3rem);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
     text-transform: uppercase;
     text-shadow:
-      0 2px 0 rgb(0 0 0 / 0.88),
-      0 0 8px var(--phase-glow),
-      0 0 22px var(--phase-glow),
-      0 0 38px var(--phase-glow-soft);
-    transform: skewX(-8deg);
-    animation: phase-text-pop 1050ms ease-out both;
-  }
-
-  .phase-banner-edge {
-    position: absolute;
-    top: 50%;
-    z-index: 1;
-    width: 27%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--phase-line), transparent);
-    box-shadow: 0 0 10px var(--phase-glow);
-  }
-
-  .phase-banner-edge-left {
-    left: 3%;
-  }
-
-  .phase-banner-edge-right {
-    right: 3%;
-    transform: scaleX(-1);
+      0 2px 0 rgb(0 0 0 / 0.92),
+      0 0 12px var(--phase-accent-soft);
   }
 
   .phase-banner-main {
-    --phase-border: rgb(203 177 96 / 0.9);
-    --phase-core: rgb(67 91 43 / 0.78);
-    --phase-wing: rgb(48 35 19 / 0.62);
-    --phase-line: rgb(235 214 126 / 0.85);
-    --phase-carpet: rgb(45 225 69 / 0.9);
-    --phase-carpet-hot: rgb(85 255 82 / 0.52);
-    --phase-text: #fff1a6;
-    --phase-glow: rgb(190 255 111 / 0.84);
-    --phase-glow-soft: rgb(233 184 70 / 0.42);
+    --phase-accent: #a9b579;
+    --phase-accent-bright: #dce3ad;
+    --phase-accent-soft: rgb(144 167 102 / 0.25);
   }
 
   .phase-banner-battle {
-    --phase-border: rgb(244 151 76 / 0.95);
-    --phase-core: rgb(113 30 17 / 0.82);
-    --phase-wing: rgb(52 21 12 / 0.66);
-    --phase-line: rgb(255 188 93 / 0.9);
-    --phase-carpet: rgb(255 47 35 / 0.92);
-    --phase-carpet-hot: rgb(255 91 40 / 0.58);
-    --phase-text: #ffe0a3;
-    --phase-glow: rgb(255 91 40 / 0.9);
-    --phase-glow-soft: rgb(255 120 38 / 0.52);
+    --phase-accent: #b76c48;
+    --phase-accent-bright: #e7b17c;
+    --phase-accent-soft: rgb(175 76 43 / 0.28);
   }
 
   .phase-banner-defend {
-    --phase-border: rgb(150 206 255 / 0.95);
-    --phase-core: rgb(22 72 122 / 0.82);
-    --phase-wing: rgb(16 29 48 / 0.66);
-    --phase-line: rgb(185 226 255 / 0.9);
-    --phase-carpet: rgb(53 166 255 / 0.92);
-    --phase-carpet-hot: rgb(88 203 255 / 0.58);
-    --phase-text: #ddecff;
-    --phase-glow: rgb(87 181 255 / 0.92);
-    --phase-glow-soft: rgb(45 135 255 / 0.5);
+    --phase-accent: #7698a5;
+    --phase-accent-bright: #bed5d9;
+    --phase-accent-soft: rgb(79 137 157 / 0.26);
   }
 
   .phase-banner-horde {
-    --phase-border: rgb(244 151 76 / 0.95);
-    --phase-core: rgb(106 49 19 / 0.84);
-    --phase-wing: rgb(40 19 10 / 0.7);
-    --phase-line: rgb(255 184 89 / 0.9);
-    --phase-carpet: rgb(244 96 25 / 0.9);
-    --phase-carpet-hot: rgb(255 132 43 / 0.56);
-    --phase-text: #ffd89a;
-    --phase-glow: rgb(255 132 43 / 0.88);
-    --phase-glow-soft: rgb(215 79 24 / 0.5);
+    --phase-accent: #9d6753;
+    --phase-accent-bright: #d5a184;
+    --phase-accent-soft: rgb(143 64 45 / 0.28);
+  }
+
+  @media (max-width: 700px) {
+    .phase-banner {
+      width: 94vw;
+      grid-template-columns: minmax(18px, 1fr) 43px auto minmax(18px, 1fr);
+      gap: 9px;
+    }
+
+    .phase-banner-crest {
+      width: 39px;
+      height: 39px;
+    }
+
+    .phase-banner-crest svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .phase-banner-copy {
+      min-width: 180px;
+    }
+
+    .phase-banner-text {
+      font-size: clamp(1.3rem, 6vw, 2.15rem);
+      letter-spacing: 0.055em;
+    }
   }
 
   .player-life-damage {
@@ -5551,73 +5583,39 @@
 }
 
 @keyframes phase-banner-in {
-  0% {
-    opacity: 0;
-    filter: blur(8px) brightness(1.4);
-    transform: translateY(-12px) rotateX(58deg) scaleX(0.42);
-  }
-
-  16% {
-    opacity: 1;
-    filter: blur(0) brightness(1.45);
-    transform: translateY(0) rotateX(0deg) scaleX(1.08);
-  }
-
-  30% {
-    filter: brightness(1.12);
-    transform: scaleX(1);
-  }
-
-  76% {
-    opacity: 1;
-    filter: brightness(1.05);
-    transform: scaleX(1);
-  }
-
-  100% {
-    opacity: 0;
-    filter: blur(5px) brightness(1.18);
-    transform: translateY(-5px) scaleX(1.05);
-  }
+  0%, 5% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  18%, 77% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(1.015); }
 }
 
 @keyframes phase-text-pop {
-  0% {
-    opacity: 0;
-    transform: skewX(-8deg) translateX(-20px) scale(0.92);
-  }
-
-  18% {
-    opacity: 1;
-    transform: skewX(-8deg) translateX(0) scale(1.04);
-  }
-
-  34%,
-  80% {
-    opacity: 1;
-    transform: skewX(-8deg) translateX(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: skewX(-8deg) translateX(16px) scale(0.98);
-  }
+  0%, 10% { opacity: 0; filter: blur(4px); transform: translateY(6px); }
+  27%, 76% { opacity: 1; filter: blur(0); transform: translateY(0); }
+  100% { opacity: 0; filter: blur(2px); transform: translateY(-5px); }
 }
 
-@keyframes phase-banner-sweep {
-  from {
-    left: -34%;
-    opacity: 0;
-  }
+@keyframes phase-banner-line-in {
+  0%, 8% { opacity: 0; transform: scaleX(0); }
+  24%, 78% { opacity: 0.88; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(0.72); }
+}
 
-  18% {
-    opacity: 0.95;
-  }
+@keyframes phase-banner-crest-in {
+  0%, 7% { opacity: 0; filter: brightness(1.8); transform: rotate(45deg) scale(0.32); }
+  23% { opacity: 1; filter: brightness(1.35); transform: rotate(45deg) scale(1.12); }
+  34%, 78% { opacity: 1; filter: brightness(1); transform: rotate(45deg) scale(1); }
+  100% { opacity: 0; filter: brightness(1.15); transform: rotate(45deg) scale(0.76); }
+}
 
-  to {
-    left: 108%;
-    opacity: 0;
-  }
+@keyframes phase-banner-frame {
+  0%, 10% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.5); }
+  28%, 78% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1.08); }
+}
+
+@keyframes phase-banner-aura {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  28%, 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @keyframes effect-focus-backdrop-in {
