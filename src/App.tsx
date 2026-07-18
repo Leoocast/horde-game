@@ -14,6 +14,7 @@ export default function App() {
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
+  const stopMusic = useAudioStore((state) => state.stopMusic);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
   const [playerName, setPlayerName] = useState("Player");
   const [setupTurns, setSetupTurns] = useState(3);
@@ -32,17 +33,16 @@ export default function App() {
   useEffect(() => {
     if (!launchTransition) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const impactTimeout = window.setTimeout(() => {
-      if (!reducedMotion) playSfx("attack", { volume: 0.42, rate: 0.86 });
-    }, reducedMotion ? 0 : 560);
     const revealTimeout = window.setTimeout(() => {
       if (launchTransition.tutorial) playCollection("battleTheme1");
       else startBattleMusic(true);
       setScreen("game");
     }, reducedMotion ? 80 : 1050);
-    const finishTimeout = window.setTimeout(() => setLaunchTransition(null), reducedMotion ? 180 : 2450);
+    const finishTimeout = window.setTimeout(() => {
+      playSfx("skipNextBattle", { volume: 0.72 });
+      setLaunchTransition(null);
+    }, reducedMotion ? 180 : 2450);
     return () => {
-      window.clearTimeout(impactTimeout);
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
@@ -101,6 +101,7 @@ export default function App() {
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
+            stopMusic();
             playSfx("draw", { volume: 0.82 });
             playSfx("playMonsterHeavy", { volume: 0.78, rate: 0.92 });
             const isTutorial = options.seed.trim().toLowerCase() === "tutorial";
