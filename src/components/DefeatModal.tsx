@@ -54,7 +54,7 @@ export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
       <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="defeat-result-title">
         <span className="game-result-panel-mark"><Skull size={17} /></span>
         <p id="defeat-result-title" className="game-result-message">
-          Your life total has been reduced to 0
+          The expedition ends in darkness
         </p>
 
         {!isTutorial && (
