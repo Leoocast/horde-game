@@ -8,6 +8,7 @@ type Props = {
   hordeDecks: InspectableDeck[];
   onOpenDeck: (deckId: string) => void;
   onBack: () => void;
+  closing?: boolean;
 };
 
 const KEY_CARD_IDS: Record<string, string> = {
@@ -16,17 +17,17 @@ const KEY_CARD_IDS: Record<string, string> = {
   goblin_assault_horde: "goblin_token_1_1_red",
 };
 
-export function DecksView({ playerDecks, hordeDecks, onOpenDeck, onBack }: Props) {
+export function DecksView({ playerDecks, hordeDecks, onOpenDeck, onBack, closing = false }: Props) {
   return (
-    <section className="main-settings-screen decks-panel" aria-label="Decks">
+    <section className={`main-settings-screen decks-panel ${closing ? "is-closing" : ""}`} aria-label="Decks">
       <header className="main-settings-header">
         <button className="menu-screen-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back</button>
         <h2>Decks</h2>
       </header>
 
       <div className="decks-content">
-        <DeckSection title="Player" decks={playerDecks} onOpenDeck={onOpenDeck} />
-        <DeckSection title="Horde" decks={hordeDecks} onOpenDeck={onOpenDeck} />
+        <DeckSection title="Chronicles" decks={playerDecks} onOpenDeck={onOpenDeck} />
+        <DeckSection title="Hosts" decks={hordeDecks} onOpenDeck={onOpenDeck} />
       </div>
     </section>
   );

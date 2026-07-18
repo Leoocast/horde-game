@@ -44,6 +44,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
+  const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
@@ -66,16 +67,29 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }, [setupClosing]);
 
   useEffect(() => {
+    if (!closingMenuScreen) return;
+    const timeout = window.setTimeout(() => {
+      setMenuScreen("home");
+      setClosingMenuScreen(undefined);
+    }, 210);
+    return () => window.clearTimeout(timeout);
+  }, [closingMenuScreen]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || showTutorialConfirm || showDeveloperWarning) return;
       if (menuScreen === "home") return;
       event.preventDefault();
       if (menuScreen === "setup") setSetupClosing(true);
-      else setMenuScreen("home");
+      else closeMenuPanel();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuScreen, showDeveloperWarning, showTutorialConfirm]);
+
+  function closeMenuPanel() {
+    if (menuScreen === "decks" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+  }
 
   async function copySeed() {
     try {
@@ -138,7 +152,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>Play</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => setMenuScreen("decks")}>
+            <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("decks"); }}>
               <span className="main-menu-entry-mark" />
               <span>Decks</span>
             </button>
@@ -146,7 +160,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>How to Play</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => setMenuScreen("settings")}>
+            <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("settings"); }}>
               <span className="main-menu-entry-mark" />
               <span>Settings</span>
             </button>
@@ -154,9 +168,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
         </div>
         {menuScreen === "settings" && (
-          <section className="main-settings-screen" aria-label="Settings">
+          <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label="Settings">
             <header className="main-settings-header">
-              <button className="menu-screen-back" type="button" onClick={() => setMenuScreen("home")}><ArrowLeft size={16} /> Back</button>
+              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> Back</button>
               <h2>Settings</h2>
               <span>Customize audio and game configuration.</span>
             </header>
@@ -206,7 +220,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </section>
         )}
         {menuScreen === "decks" && (
-          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} onBack={() => setMenuScreen("home")} />
+          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "decks"} />
         )}
         </div>
       ) : (

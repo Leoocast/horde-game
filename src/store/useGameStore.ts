@@ -521,7 +521,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
-    set(({ game }) => {
+    set((state) => {
+      if (discardPauseInProgress(state)) return {};
+      const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
       return {
@@ -533,6 +535,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
+      if (discardPauseInProgress(state)) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -616,7 +619,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, state.game, next) };
   }),
   finishPlayerCombat: () => {
-    const { game, playerAttackAnimation } = get();
+    const state = get();
+    if (discardPauseInProgress(state)) return;
+    const { game, playerAttackAnimation } = state;
     if (playerAttackAnimation) return;
 
     const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
@@ -664,6 +669,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHordeMain: () => {
     const state = get();
+    if (discardPauseInProgress(state)) return;
     const { game } = state;
     const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
     const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
@@ -692,7 +698,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
   },
-  prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
+  prepareHordeAttackers: () => set((state) => (discardPauseInProgress(state) ? {} : { game: prepareHordeAttackers(state.game) })),
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
       const previousLog = game.log[0];
@@ -746,7 +752,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
     })),
   resolveHordeCombat: () => {
-    const { game, hordeAttackAnimation, playerAttackAnimation } = get();
+    const state = get();
+    if (discardPauseInProgress(state)) return;
+    const { game, hordeAttackAnimation, playerAttackAnimation } = state;
     if (hordeAttackAnimation || playerAttackAnimation) return;
 
     const attackEvents = buildHordeAttackEvents(game);
@@ -795,7 +803,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
-    set(({ game }) => {
+    set((state) => {
+      if (discardPauseInProgress(state)) return {};
+      const { game } = state;
       const next = finishHordeTurn(game);
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, hordeAutoTriggerCount: 0 };
@@ -820,7 +830,11 @@ function persistSeed(seed: string): void {
 }
 
 function combatResolutionInProgress(state: GameStore): boolean {
-  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat);
+  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || discardPauseInProgress(state));
+}
+
+function discardPauseInProgress(state: GameStore): boolean {
+  return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
 }
 
 function monsterSfx(card: GameState["player"]["hand"][number]) {
