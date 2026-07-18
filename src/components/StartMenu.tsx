@@ -37,7 +37,7 @@ const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = 
 
 export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onStart }: Props) {
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
-  const [mode, setMode] = useState<DifficultyMode>("normal");
+  const [mode, setMode] = useState<DifficultyMode>("easy");
   const [seed, setSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -55,7 +55,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
-  const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
+  const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
   const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
@@ -175,7 +175,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   function changeDifficulty(nextMode: DifficultyMode) {
     if (nextMode === mode) return;
-    playSfx("playLand", { volume: 0.72 });
+    const rate = nextMode === "easy" ? 1.08 : nextMode === "hard" ? 0.9 : 1;
+    playSfx("playLand", { volume: 0.76, rate });
     setMode(nextMode);
   }
 
@@ -376,7 +377,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       )}
       
       {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
-        <div className="mb-0.5">Version: ALPHA 7.0-HOSTFALL-UPDATE</div>
+        <div className="mb-0.5">Version: ALPHA 7.1-HOSTFALL-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />
@@ -534,7 +535,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           </div>
           <div className="expedition-mode-grid">
             {modes.map((item) => (
-              <button key={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
+              <button key={item.id} data-difficulty={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
                 <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
                 <span><strong>{item.label}</strong></span>
               </button>

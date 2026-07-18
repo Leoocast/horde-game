@@ -14,7 +14,6 @@ import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -418,11 +417,11 @@ export function Battlefield({ game, side, cards }: Props) {
             const consuming = paidLandIds.has(card.instanceId);
             const visible = smallpoxLandSelectionActive || !spent || consuming;
             const fragmentStyle = {
-              left: `${70.5 + Math.cos(angle) * 72}px`,
-              top: `${59.5 + Math.sin(angle) * 51}px`,
+              left: `${70.5 + Math.cos(angle) * 68}px`,
+              top: `${59.5 + Math.sin(angle) * 68}px`,
               "--mana-fragment-delay": `${stableSlot * 55}ms`,
-              "--mana-consume-x": `${Math.cos(angle) * -72}px`,
-              "--mana-consume-y": `${Math.sin(angle) * -51}px`,
+              "--mana-consume-x": `${Math.cos(angle) * -68}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -68}px`,
             } as CSSProperties;
 
             return (
@@ -452,11 +451,11 @@ export function Battlefield({ game, side, cards }: Props) {
           {Array.from({ length: floatingManaCount }, (_, index) => {
             const angle = -Math.PI / 2 + (Math.PI * 2 * index) / BONUS_MANA_ORBIT_SLOTS;
             const bonusStyle = {
-              left: `${70.5 + Math.cos(angle) * 49}px`,
-              top: `${59.5 + Math.sin(angle) * 35}px`,
+              left: `${70.5 + Math.cos(angle) * 48}px`,
+              top: `${59.5 + Math.sin(angle) * 48}px`,
               "--mana-fragment-delay": `${index * 70}ms`,
-              "--mana-consume-x": `${Math.cos(angle) * -49}px`,
-              "--mana-consume-y": `${Math.sin(angle) * -35}px`,
+              "--mana-consume-x": `${Math.cos(angle) * -48}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -48}px`,
             } as CSSProperties;
 
             return (
@@ -828,9 +827,7 @@ export function Battlefield({ game, side, cards }: Props) {
             }, 620);
           }}
         >
-          <Sparkles className="effect-action-icon" aria-hidden="true" />
           <span className="effect-action-copy">
-            <small>Activate ability</small>
             <strong>{renderCardText(abilityButtonText(primaryAbility))}</strong>
           </span>
         </button>

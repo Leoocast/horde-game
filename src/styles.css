@@ -297,8 +297,7 @@
     inset: 0;
     background:
       radial-gradient(circle at 21% 44%, rgb(82 119 87 / 0.1), transparent 30%),
-      radial-gradient(circle at 78% 44%, rgb(129 55 39 / 0.11), transparent 31%),
-      linear-gradient(90deg, transparent 49.92%, rgb(174 153 94 / 0.12) 50%, transparent 50.08%);
+      radial-gradient(circle at 78% 44%, rgb(129 55 39 / 0.11), transparent 31%);
     content: "";
   }
 
@@ -600,7 +599,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgb(140 149 130 / 0.14);
     padding-bottom: 10px;
   }
 
@@ -671,7 +669,9 @@
   }
 
   .expedition-mode {
+    --difficulty-accent: 200 180 116;
     position: relative;
+    isolation: isolate;
     display: grid;
     min-height: 87px;
     grid-template-columns: 44px minmax(0, 1fr);
@@ -683,7 +683,41 @@
     padding: 11px 16px;
     color: #788980;
     text-align: left;
-    transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+    transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, filter 120ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .expedition-mode[data-difficulty="easy"] { --difficulty-accent: 128 190 132; }
+  .expedition-mode[data-difficulty="hard"] { --difficulty-accent: 198 105 88; }
+
+  .expedition-mode::before,
+  .expedition-mode::after {
+    position: absolute;
+    z-index: 0;
+    content: "";
+    pointer-events: none;
+  }
+
+  .expedition-mode::before {
+    top: 9px;
+    bottom: 9px;
+    left: 0;
+    width: 3px;
+    background: linear-gradient(180deg, transparent, rgb(var(--difficulty-accent) / 0.95), transparent);
+    box-shadow: 0 0 12px rgb(var(--difficulty-accent) / 0.52);
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+
+  .expedition-mode::after {
+    inset: 0;
+    background: linear-gradient(105deg, transparent 18%, rgb(var(--difficulty-accent) / 0.2) 48%, transparent 72%);
+    opacity: 0;
+    transform: translateX(-72%);
+  }
+
+  .expedition-mode > span {
+    position: relative;
+    z-index: 1;
   }
 
   .expedition-mode:hover,
@@ -693,6 +727,27 @@
     background: linear-gradient(110deg, rgb(51 68 53 / 0.58), rgb(11 23 19 / 0.8));
     outline: none;
     transform: translateY(-1px);
+  }
+
+  .expedition-mode:active {
+    filter: brightness(1.18) saturate(1.12);
+    transform: translateY(2px) scale(0.965);
+    transition-duration: 55ms;
+  }
+
+  .expedition-mode.is-selected {
+    box-shadow: inset 0 0 24px rgb(var(--difficulty-accent) / 0.1), 0 7px 20px rgb(0 0 0 / 0.24);
+    animation: expedition-mode-selected 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .expedition-mode.is-selected::before {
+    opacity: 1;
+    transform: scaleY(1);
+    animation: expedition-mode-accent-in 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .expedition-mode.is-selected::after {
+    animation: expedition-mode-selection-sweep 460ms ease-out;
   }
 
   .expedition-mode-glyph {
@@ -712,6 +767,7 @@
   .expedition-mode.is-selected .expedition-mode-glyph {
     border-color: rgb(185 165 101 / 0.52);
     color: #c8b474;
+    animation: expedition-mode-glyph-impact 380ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .expedition-mode strong {
@@ -728,6 +784,30 @@
 
   .expedition-mode.is-selected strong {
     color: #e0d5b3;
+  }
+
+  @keyframes expedition-mode-selected {
+    0% { box-shadow: inset 0 0 0 rgb(var(--difficulty-accent) / 0), 0 0 0 rgb(var(--difficulty-accent) / 0); transform: translateY(2px) scale(0.965); }
+    52% { box-shadow: inset 0 0 32px rgb(var(--difficulty-accent) / 0.18), 0 0 18px rgb(var(--difficulty-accent) / 0.28); transform: translateY(-3px) scale(1.018); }
+    100% { transform: translateY(-1px) scale(1); }
+  }
+
+  @keyframes expedition-mode-accent-in {
+    from { opacity: 0; transform: scaleY(0.15); }
+    55% { opacity: 1; transform: scaleY(1.16); }
+    to { opacity: 1; transform: scaleY(1); }
+  }
+
+  @keyframes expedition-mode-selection-sweep {
+    0% { opacity: 0; transform: translateX(-72%); }
+    32% { opacity: 0.9; }
+    100% { opacity: 0; transform: translateX(72%); }
+  }
+
+  @keyframes expedition-mode-glyph-impact {
+    0% { filter: brightness(1.8); transform: rotate(45deg) scale(0.72); }
+    58% { filter: brightness(1.28); transform: rotate(45deg) scale(1.14); }
+    100% { filter: brightness(1); transform: rotate(45deg) scale(1); }
   }
 
   .expedition-advanced {
@@ -4398,27 +4478,10 @@
     z-index: 95;
   }
 
-  .effect-action-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex: 0 0 auto;
-    color: #c8b66f;
-    filter: drop-shadow(0 0 7px rgb(191 174 103 / 0.3));
-  }
-
   .effect-action-copy {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .effect-action-copy small {
-    color: #82958b;
-    font-size: 0.56rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
   }
 
   .effect-action-copy strong {
@@ -7803,8 +7866,8 @@
 
 .main-settings-screen:not(.decks-panel) .main-settings-header,
 .main-settings-screen:not(.decks-panel) .main-settings-content {
-  width: min(100%, 1160px);
-  max-width: 1160px;
+  width: 100%;
+  max-width: none;
 }
 
 .main-settings-screen:not(.decks-panel) {
@@ -8915,7 +8978,8 @@
 
 .game-result-crest {
   position: absolute;
-  top: -61px;
+  z-index: 2;
+  top: -76px;
   left: 50%;
   display: grid;
   width: 66px;
@@ -9131,7 +9195,7 @@
     gap: 11px;
     margin-top: 36px;
   }
-  .game-result-crest { top: -47px; width: 46px; height: 46px; }
+  .game-result-crest { top: -58px; width: 46px; height: 46px; }
   .game-result-crest svg { width: 24px; height: 24px; }
   .game-result-banner h1 {
     min-width: 0;

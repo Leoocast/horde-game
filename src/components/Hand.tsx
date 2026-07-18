@@ -33,8 +33,6 @@ const handCardMotion: Variants = {
 
 export function Hand({ game }: { game: GameState }) {
   const selectedHandId = useGameStore((state) => state.selectedHandId);
-  const hoveredCardId = useGameStore((state) => state.hoveredCardId);
-  const focusedCardId = useGameStore((state) => state.focusedCardId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
@@ -58,6 +56,7 @@ export function Hand({ game }: { game: GameState }) {
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
+  const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const [draggingCardId, setDraggingCardId] = useState<string | undefined>();
   const handRegionRef = useRef<HTMLDivElement>(null);
@@ -159,6 +158,7 @@ export function Hand({ game }: { game: GameState }) {
     setSuppressedClickId(card.instanceId);
     window.setTimeout(() => setSuppressedClickId((current) => (current === card.instanceId ? undefined : current)), 240);
     setHoveredCardId(undefined);
+    setHoveredHandId(undefined);
     setFocusedCardId(undefined);
     selectHand(undefined);
     setDraggingCardId(undefined);
@@ -217,11 +217,11 @@ export function Hand({ game }: { game: GameState }) {
         nearestId = el.dataset.handCardId;
       }
     });
-    if (nearestId && useGameStore.getState().hoveredCardId !== nearestId) setHoveredCardId(nearestId);
+    if (nearestId && hoveredHandId !== nearestId) setHoveredHandId(nearestId);
   }
 
   function handleHandPointerLeave() {
-    setHoveredCardId(undefined);
+    setHoveredHandId(undefined);
   }
 
   return (
@@ -249,8 +249,8 @@ export function Hand({ game }: { game: GameState }) {
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
-            const isHovered = hoveredCardId === card.instanceId;
-            const isHeld = isHovered || focusedCardId === card.instanceId || draggingCardId === card.instanceId;
+            const isHovered = hoveredHandId === card.instanceId;
+            const isHeld = isHovered || draggingCardId === card.instanceId;
             const { x: dragX, y: dragY } = getDragMotionValues(card.instanceId);
             return (
               <motion.div
@@ -276,6 +276,7 @@ export function Hand({ game }: { game: GameState }) {
                   beginCenterGrabDrag(card.instanceId, info.point.x, info.point.y);
                   selectHand(card.instanceId);
                   setHoveredCardId(undefined);
+                  setHoveredHandId(undefined);
                   setDraggingCardId(card.instanceId);
                 }}
                 onDrag={(_, info) => updateCenterGrabDrag(card.instanceId, info.point.x, info.point.y)}
