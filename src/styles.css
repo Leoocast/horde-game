@@ -1088,7 +1088,17 @@
     animation: encounter-name-left 720ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  .encounter-transition-matchup strong:last-child {
+  .encounter-transition-name {
+    width: max-content;
+    white-space: nowrap;
+  }
+
+  .encounter-transition-name-player {
+    justify-self: end;
+  }
+
+  .encounter-transition-name-horde {
+    justify-self: start;
     color: #bfa897;
     text-align: left;
     animation-name: encounter-name-right;
