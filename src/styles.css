@@ -4398,27 +4398,10 @@
     z-index: 95;
   }
 
-  .effect-action-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex: 0 0 auto;
-    color: #c8b66f;
-    filter: drop-shadow(0 0 7px rgb(191 174 103 / 0.3));
-  }
-
   .effect-action-copy {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .effect-action-copy small {
-    color: #82958b;
-    font-size: 0.56rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
   }
 
   .effect-action-copy strong {
@@ -8915,7 +8898,8 @@
 
 .game-result-crest {
   position: absolute;
-  top: -61px;
+  z-index: 2;
+  top: -76px;
   left: 50%;
   display: grid;
   width: 66px;
@@ -9131,7 +9115,7 @@
     gap: 11px;
     margin-top: 36px;
   }
-  .game-result-crest { top: -47px; width: 46px; height: 46px; }
+  .game-result-crest { top: -58px; width: 46px; height: 46px; }
   .game-result-crest svg { width: 24px; height: 24px; }
   .game-result-banner h1 {
     min-width: 0;
