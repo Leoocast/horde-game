@@ -7586,19 +7586,19 @@
 
 /* Tactical arrows: fade into color, with the moving rune detail retained. */
 .tactical-arrow-halo {
-  stroke-width: 8;
-  opacity: 0.18;
+  stroke-width: 7.5;
+  opacity: 0.16;
 }
 
 .tactical-arrow-core {
-  stroke-width: 5.25;
+  stroke-width: 4.75;
   opacity: 0.96;
 }
 
 .tactical-arrow-runes {
   stroke: rgb(247 242 220 / 0.74);
-  stroke-width: 1.1;
-  stroke-dasharray: 2 10;
+  stroke-width: 1;
+  stroke-dasharray: 2 11;
   animation: tactical-arrow-runes-flow 1.25s linear infinite;
 }
 

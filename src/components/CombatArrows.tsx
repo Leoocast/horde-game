@@ -171,12 +171,17 @@ export function CombatArrows({ game }: { game: GameState }) {
           <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />
         </filter>
         <filter id="combat-arrow-defense-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="4.6" result="attackBlur" />
+          <feOffset in="attackBlur" dx="0" dy="5" result="attackGlowOffset" />
+          <feFlood floodColor={PLAYER_ATTACK_ARROW_COLOR} floodOpacity="0.72" result="attackGlowColor" />
+          <feComposite in="attackGlowColor" in2="attackGlowOffset" operator="in" result="attackUnderglow" />
           <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
           <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
           <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
           <feFlood floodColor={DEFENSE_ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
           <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
           <feMerge>
+            <feMergeNode in="attackUnderglow" />
             <feMergeNode in="outerGlow" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
@@ -283,14 +288,18 @@ function makeArrow(id: string, start: { x: number; y: number }, end: { x: number
   const uy = dy / length;
   const px = -uy;
   const py = ux;
-  const curve = Math.min(42, Math.max(14, length * 0.14));
+  const curve = Math.min(38, Math.max(10, length * 0.11));
   const curveDirection = dx >= 0 ? -1 : 1;
-  const control = {
-    x: (start.x + end.x) / 2 + px * curve * curveDirection,
-    y: (start.y + end.y) / 2 + py * curve * curveDirection,
+  const controlA = {
+    x: start.x + dx * 0.36 + px * curve * curveDirection,
+    y: start.y + dy * 0.36 + py * curve * curveDirection,
   };
-  const tangentX = end.x - control.x;
-  const tangentY = end.y - control.y;
+  const controlB = {
+    x: start.x + dx * 0.72 + px * curve * curveDirection * 0.42,
+    y: start.y + dy * 0.72 + py * curve * curveDirection * 0.42,
+  };
+  const tangentX = end.x - controlB.x;
+  const tangentY = end.y - controlB.y;
   const tangentLength = Math.hypot(tangentX, tangentY) || 1;
   const tx = tangentX / tangentLength;
   const ty = tangentY / tangentLength;
@@ -299,7 +308,7 @@ function makeArrow(id: string, start: { x: number; y: number }, end: { x: number
   const headLength = 22;
   const headWing = 10;
   const neckAt = { x: end.x - tx * headLength, y: end.y - ty * headLength };
-  const path = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${neckAt.x} ${neckAt.y}`;
+  const path = `M ${start.x} ${start.y} C ${controlA.x} ${controlA.y} ${controlB.x} ${controlB.y} ${neckAt.x} ${neckAt.y}`;
   const tip = [`${end.x},${end.y}`, `${end.x - tx * headLength + tpx * headWing},${end.y - ty * headLength + tpy * headWing}`, `${end.x - tx * headLength - tpx * headWing},${end.y - ty * headLength - tpy * headWing}`].join(" ");
   return { id, color, path, tip, gradientId: `combat-arrow-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`, startX: start.x, startY: start.y, tipX: end.x, tipY: end.y };
 }
