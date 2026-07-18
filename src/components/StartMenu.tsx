@@ -44,6 +44,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(false);
+  const [nameEditorClosing, setNameEditorClosing] = useState(false);
   const [nameDraft, setNameDraft] = useState(playerName);
   const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
   const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
@@ -82,7 +83,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       if (event.key !== "Escape") return;
       if (showNameEditor) {
         event.preventDefault();
-        setShowNameEditor(false);
+        closeNameEditor();
         return;
       }
       if (showTutorialConfirm || showDeveloperWarning) return;
@@ -93,17 +94,27 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuScreen, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+  }, [menuScreen, nameEditorClosing, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
 
   function openNameEditor() {
     setNameDraft(playerName);
+    setNameEditorClosing(false);
     setShowNameEditor(true);
+  }
+
+  function closeNameEditor() {
+    if (nameEditorClosing) return;
+    setNameEditorClosing(true);
+    window.setTimeout(() => {
+      setShowNameEditor(false);
+      setNameEditorClosing(false);
+    }, 200);
   }
 
   function savePlayerName() {
     setPlayerName(nameDraft.trim() || "Chronicler");
-    setShowNameEditor(false);
     playSfx("playLand", { volume: 0.62 });
+    closeNameEditor();
   }
 
   function closeMenuPanel() {
@@ -305,8 +316,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         <ChroniclerNameModal
           value={nameDraft}
           onChange={setNameDraft}
-          onClose={() => setShowNameEditor(false)}
+          onClose={closeNameEditor}
           onSave={savePlayerName}
+          closing={nameEditorClosing}
         />
       )}
       
@@ -324,10 +336,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   );
 }
 
-function ChroniclerNameModal({ value, onChange, onClose, onSave }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void }) {
+function ChroniclerNameModal({ value, onChange, onClose, onSave, closing }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean }) {
   return (
     <div
-      className="chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5"
+      className={`chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5 ${closing ? "is-closing" : ""}`}
       role="presentation"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -431,7 +443,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
       <div className="expedition-body">
         <div className="expedition-combatants">
           <SetupCombatant
-            eyebrow="Your champion"
+            eyebrow="Chronicler"
             side="player"
             deck={props.playerDeck}
             decks={props.playerDecks}
@@ -443,7 +455,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
 
           <SetupCombatant
-            eyebrow="The adversary"
+            eyebrow="Host"
             side="horde"
             deck={props.hordeDeck}
             decks={props.hordeDecks}

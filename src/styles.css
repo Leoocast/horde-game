@@ -7922,6 +7922,25 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.chronicler-name-backdrop.is-closing {
+  pointer-events: none;
+  animation: chronicler-backdrop-out 200ms ease-in both;
+}
+
+.chronicler-name-backdrop.is-closing .chronicler-name-modal {
+  animation: chronicler-modal-out 200ms cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+@keyframes chronicler-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes chronicler-modal-out {
+  from { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+  to { opacity: 0; filter: blur(3px); transform: translateY(15px) scale(0.965); }
+}
+
 @media (max-width: 700px) {
   .main-menu-chronicler {
     width: 205px;
