@@ -16,9 +16,9 @@ export function EncounterTransition({ playerName, hordeName, hordeDeckId }: Prop
       <div className="encounter-transition-content">
         <p>The chronicle begins</p>
         <div className="encounter-transition-matchup">
-          <strong>{playerName}</strong>
+          <strong className="encounter-transition-name encounter-transition-name-player">{playerName}</strong>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
-          <strong>{hordeName}</strong>
+          <strong className="encounter-transition-name encounter-transition-name-horde">{hordeName}</strong>
         </div>
       </div>
     </div>

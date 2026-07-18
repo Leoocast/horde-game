@@ -181,16 +181,17 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           <strong className={activeReq.controller === "SELF" ? "text-[#91f58f]" : "text-[#ffcf8a]"}>{activeTarget ? activeTarget.displayName : "No target selected"}</strong>
         </div>
         <div className="counter-target-actions">
+          <button
+            data-audio-click="valid"
+            className="counter-target-button counter-target-cancel"
+            onClick={hasAnyTarget ? deselectTarget : cancelTargeting}
+            title={hasAnyTarget ? "Deselect target" : "Cancel card"}
+            aria-label={hasAnyTarget ? "Deselect target" : "Cancel card"}
+          >
+            {hasAnyTarget ? <X size={22} /> : "Cancel"}
+          </button>
           <button data-audio-click={complete ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!complete} onClick={confirmTargeting} title="Confirm">
             <Check size={24} />
-          </button>
-          {hasAnyTarget && (
-            <button data-audio-click="valid" className="counter-target-button counter-target-deselect" onClick={deselectTarget} title="Deselect target" aria-label="Deselect target">
-              <X size={22} />
-            </button>
-          )}
-          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={cancelTargeting} title="Cancel card">
-            Cancel
           </button>
         </div>
       </aside>

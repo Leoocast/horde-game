@@ -100,6 +100,11 @@ export function DuelHud({ game }: { game: GameState }) {
                       : "No target selected"}
                 </span>
                 <div className="counter-target-actions">
+                  {smallpoxSelection.targetId && (
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
+                      Cancel
+                    </button>
+                  )}
                   <button
                     data-audio-click={smallpoxSelection.targetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
@@ -109,11 +114,6 @@ export function DuelHud({ game }: { game: GameState }) {
                   >
                     <Check size={22} />
                   </button>
-                  {smallpoxSelection.targetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
-                      Cancel
-                    </button>
-                  )}
                 </div>
               </div>
             )}
@@ -279,7 +279,6 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
                 onChange={(event) => setChroniclerName(event.currentTarget.value)}
                 onFocus={(event) => event.currentTarget.select()}
               />
-              <div className="player-life-subtitle">Chronicler</div>
               <div className="player-life-values flex items-end gap-2 leading-none">
                 <div className="player-life-count">{visualLife}</div>
               </div>

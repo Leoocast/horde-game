@@ -35,9 +35,15 @@ export function Hand({ game }: { game: GameState }) {
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
-  const counterTargeting = useGameStore((state) => state.counterTargeting);
-  const smallpoxSelection = useGameStore((state) => state.smallpoxSelection);
-  const spellTargeting = useGameStore((state) => state.spellTargeting);
+  // Primitive/stable selectors: avoids re-rendering the whole hand on every mousemove
+  // while a CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay arrow
+  // is tracking the pointer (those only mutate x/y on the underlying object).
+  const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
+  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
+  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
+  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
+  const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
+  const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
@@ -184,10 +190,10 @@ export function Hand({ game }: { game: GameState }) {
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialHandTargetId = tutorialZones.find((zone) => zone.zone === "hand")?.definitionId ?? null;
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
-  const smallpoxDiscardMode = smallpoxSelection?.kind === "discard";
+  const smallpoxDiscardMode = smallpoxSelectionKind === "discard";
   const handInteractionBlocked = Boolean(
-    counterTargeting ||
-      spellTargeting ||
+    counterTargetingActive ||
+      spellTargetingActive ||
       spellFightAnimation ||
       pendingSpellHandId ||
       hordeMillAnimating ||
@@ -195,10 +201,10 @@ export function Hand({ game }: { game: GameState }) {
       hordeAttackAnimating ||
       playerAttackAnimating ||
       pendingTriggeredEffectCount > 0 ||
-      (smallpoxSelection && !smallpoxDiscardMode) ||
+      (smallpoxSelectionActive && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,
   );
-  const hoverSuppressed = Boolean(smallpoxSelection) || handLimitDiscardActive || Boolean(tutorialStepId);
+  const hoverSuppressed = smallpoxSelectionActive || handLimitDiscardActive || Boolean(tutorialStepId);
 
   function handleHandPointerMove(event: React.MouseEvent<HTMLDivElement>) {
     if (handInteractionBlocked || hoverSuppressed || draggingCardId) return;
@@ -238,14 +244,14 @@ export function Hand({ game }: { game: GameState }) {
           >
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
-            const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
-            const discardTargetLocked = smallpoxSelection?.kind === "discard" && smallpoxSelection.targetId === card.instanceId;
+            const discardTargetable = smallpoxSelectionKind === "discard" && !smallpoxSelectionTargetId;
+            const discardTargetLocked = smallpoxSelectionKind === "discard" && smallpoxSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
-            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
-            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelection && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
+            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
+            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -267,7 +273,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: isHeld ? 80 : index + 1, x: dragX, y: dragY }}
-                drag={!smallpoxSelection && !handLimitDiscardActive && !tutorialDimmed && !hordeAttackAnimating && !playerAttackAnimating}
+                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !tutorialDimmed && !hordeAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -300,7 +306,7 @@ export function Hand({ game }: { game: GameState }) {
                   className={[
                     "hand-card",
                     isHeld ? "hand-card-hovered" : "",
-                    spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
+                    spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
                     handLimitTargetable ? "counter-targetable-card hand-limit-targetable" : "",
@@ -326,7 +332,7 @@ export function Hand({ game }: { game: GameState }) {
                     selected={selectedHandId === card.instanceId}
                     dragging={draggingCardId === card.instanceId}
                     actionable={cardActionable}
-                    suppressContextMenu={Boolean(smallpoxSelection) || handLimitDiscardActive}
+                    suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
                     suppressHoverOverlay
                     darkenOnHover={false}
                     highRes={isHeld}
@@ -336,7 +342,7 @@ export function Hand({ game }: { game: GameState }) {
                         selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
                         return;
                       }
-                      if (smallpoxSelection) {
+                      if (smallpoxSelectionActive) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
                         return;
                       }

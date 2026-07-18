@@ -1061,11 +1061,12 @@
   .encounter-transition-content > p {
     margin: 0 0 32px;
     color: var(--encounter-accent-bright);
-    font-size: clamp(13px, 1.25vw, 17px);
+    font-size: clamp(15px, 1.5vw, 21px);
     font-weight: 900;
     letter-spacing: 0.38em;
     text-shadow: 0 0 18px color-mix(in srgb, var(--encounter-accent) 52%, transparent), 0 3px 12px #000;
     text-transform: uppercase;
+    transform: translateY(-27px);
   }
 
   .encounter-transition-matchup {
@@ -1088,7 +1089,17 @@
     animation: encounter-name-left 720ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  .encounter-transition-matchup strong:last-child {
+  .encounter-transition-name {
+    width: max-content;
+    white-space: nowrap;
+  }
+
+  .encounter-transition-name-player {
+    justify-self: end;
+  }
+
+  .encounter-transition-name-horde {
+    justify-self: start;
     color: #bfa897;
     text-align: left;
     animation-name: encounter-name-right;
@@ -4043,6 +4054,11 @@
 
   .battlefield-layout-slot {
     flex: 0 0 auto;
+    transition: margin-right 300ms ease-out;
+  }
+
+  .battlefield-layout-slot-tapped-creature {
+    margin-right: clamp(6px, 0.55vw, 9px);
   }
 
   .battlefield-copy-stack {
@@ -4063,7 +4079,8 @@
     transition:
       opacity 150ms ease-out,
       filter 150ms ease-out,
-      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      margin-right 300ms ease-out;
   }
 
   .battlefield-copy-stack[data-stacked="true"] > .battlefield-layout-slot + .battlefield-layout-slot {
@@ -4110,6 +4127,17 @@
 
   .card-visual {
     container-type: inline-size;
+  }
+
+  .card-visual.card-tapped {
+    opacity: 0.92;
+    filter: grayscale(0.28) saturate(0.72) brightness(0.82);
+    transform: rotate(4deg);
+  }
+
+  .card-visual.card-tapped-zombie {
+    opacity: 1;
+    filter: none;
   }
 
   .card-visual > img {
@@ -4334,7 +4362,7 @@
     border-radius: 0.375rem;
     pointer-events: none;
     background: rgb(42 25 13 / 0.96);
-    transform: translateY(4px);
+    transform: translateY(2px);
     box-shadow:
       0 4px 0 rgb(18 11 7 / 0.78),
       0 10px 14px rgb(0 0 0 / 0.5),
@@ -4342,7 +4370,14 @@
       var(--battlefield-depth-glow);
     transition:
       background-color 180ms ease,
-      box-shadow 180ms ease;
+      box-shadow 180ms ease,
+      transform 300ms ease-out;
+  }
+
+  .battlefield-layout-slot-tapped > div > .battlefield-card-depth {
+    inset: 0;
+    transform: translate(3px, 1px) rotate(4deg);
+    transform-origin: center center;
   }
 
   .battlefield-card-selected > .battlefield-card-depth {
@@ -4802,7 +4837,7 @@
     z-index: 108;
     display: flex;
     width: clamp(230px, 18vw, 300px);
-    transform: translateY(-50%);
+    transform: translateY(-72%);
     flex-direction: column;
     align-items: center;
     gap: 0.85rem;
@@ -4855,12 +4890,13 @@
 
   .smallpox-selection-panel-inline {
     display: flex;
-    width: 100%;
-    margin-top: 0.65rem;
+    width: min(18rem, calc(100vw - 2rem));
+    margin-top: 1.5rem;
     flex-direction: column;
     align-items: center;
-    gap: 0.55rem;
-    padding: 0.7rem 0.85rem;
+    align-self: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.85rem;
     text-align: center;
     font-size: 0.88rem;
     font-weight: 850;
@@ -4921,16 +4957,23 @@
       linear-gradient(180deg, #4e7d32, #1e3d1c);
   }
 
+  .counter-target-confirm svg {
+    stroke-width: 3.2;
+  }
+
+  .counter-target-source-panel .counter-target-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+
+  .counter-target-source-panel .counter-target-actions > .counter-target-button {
+    width: 100%;
+  }
+
   .counter-target-cancel {
     border-color: rgb(197 119 94 / 0.64);
     background:
       linear-gradient(180deg, #724033, #321c19);
-  }
-
-  .counter-target-deselect {
-    border-color: rgb(131 178 195 / 0.62);
-    background: linear-gradient(180deg, #365e6b, #192e36);
-    color: #d5edf3;
   }
 
   .player-attacker-readied {
@@ -6054,12 +6097,12 @@
 @keyframes counter-source-enter {
   from {
     opacity: 0;
-    transform: translate(130%, -50%) scale(0.96);
+    transform: translate(130%, -72%) scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translate(0, -50%) scale(1);
+    transform: translate(0, -72%) scale(1);
   }
 }
 
@@ -9485,7 +9528,7 @@
   outline: 0;
   background: transparent;
   color: #f1dfac;
-  text-align: right;
+  text-align: left;
   cursor: text;
   transition: border-color 160ms ease, color 160ms ease, text-shadow 160ms ease;
 }
@@ -9495,17 +9538,6 @@
   border-bottom-color: rgb(166 202 127 / 0.56);
   color: #efffcf;
   text-shadow: 0 0 10px rgb(137 221 112 / 0.25);
-}
-
-.player-life-subtitle {
-  margin-top: 0.08rem;
-  color: #809187;
-  font-size: 0.57rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  line-height: 1;
-  text-align: right;
-  text-transform: uppercase;
 }
 
 .expedition-footer {
