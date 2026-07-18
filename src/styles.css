@@ -297,11 +297,7 @@
     inset: 0;
     background:
       radial-gradient(circle at 21% 44%, rgb(82 119 87 / 0.1), transparent 30%),
-      radial-gradient(circle at 78% 44%, rgb(129 55 39 / 0.11), transparent 31%),
-      linear-gradient(180deg, rgb(174 153 94 / 0.12) 0%, rgb(174 153 94 / 0.12) 40%, rgb(174 153 94 / 0.06) 49%, transparent 59%);
-    background-position: center, center, center;
-    background-repeat: no-repeat;
-    background-size: auto, auto, 1px 100%;
+      radial-gradient(circle at 78% 44%, rgb(129 55 39 / 0.11), transparent 31%);
     content: "";
   }
 

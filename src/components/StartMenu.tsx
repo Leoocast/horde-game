@@ -377,7 +377,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       )}
       
       {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
-        <div className="mb-0.5">Version: ALPHA 7.0-HOSTFALL-UPDATE</div>
+        <div className="mb-0.5">Version: ALPHA 7.1-HOSTFALL-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />

@@ -42,7 +42,7 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
         <small>Preparing images &amp; audio</small>
       </section>
       <footer className="game-loading-credits">
-        <span>Version: ALPHA 7.0-HOSTFALL-UPDATE</span>
+        <span>Version: ALPHA 7.1-HOSTFALL-UPDATE</span>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer">
           <span>Developed by</span><Github aria-hidden="true" /><strong>Leoocast</strong>
         </a>
