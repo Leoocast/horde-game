@@ -1061,11 +1061,12 @@
   .encounter-transition-content > p {
     margin: 0 0 32px;
     color: var(--encounter-accent-bright);
-    font-size: clamp(13px, 1.25vw, 17px);
+    font-size: clamp(15px, 1.5vw, 21px);
     font-weight: 900;
     letter-spacing: 0.38em;
     text-shadow: 0 0 18px color-mix(in srgb, var(--encounter-accent) 52%, transparent), 0 3px 12px #000;
     text-transform: uppercase;
+    transform: translateY(-27px);
   }
 
   .encounter-transition-matchup {
