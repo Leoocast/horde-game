@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -37,6 +37,7 @@ export default function App() {
     hordeDeckId: string;
     tutorial: boolean;
   } | null>(null);
+  const firstBattleThemePending = useRef(true);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -76,9 +77,10 @@ export default function App() {
     setLoading(true);
     setLoadingLeaving(false);
     setLoadingProgress({ percent: 0, label: "Opening the ancient gates" });
+    const includeNonCriticalAssets = !hasPreloadedGameAssets();
     void preloadGameAssets((progress) => {
       if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
-    }).then(() => {
+    }, includeNonCriticalAssets).then(() => {
       markGameAssetsPreloaded();
       const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
       window.setTimeout(() => {
@@ -98,11 +100,22 @@ export default function App() {
   }, [bootRevision]);
 
   useEffect(() => {
+    if (loading) return;
+    void preloadGameAssets(() => undefined, false);
+  }, [loading]);
+
+  useEffect(() => {
     if (!launchTransition) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealTimeout = window.setTimeout(() => {
-      if (launchTransition.tutorial) playCollection("battleTheme1");
-      else startBattleMusic(true);
+      if (launchTransition.tutorial) {
+        playCollection("battleTheme1");
+      } else if (firstBattleThemePending.current) {
+        firstBattleThemePending.current = false;
+        playCollection("battleTheme3");
+      } else {
+        startBattleMusic(true);
+      }
       setScreen("game");
     }, reducedMotion ? 80 : 1050);
     const finishTimeout = window.setTimeout(() => {

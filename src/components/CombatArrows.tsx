@@ -171,18 +171,15 @@ export function CombatArrows({ game }: { game: GameState }) {
           <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />
         </filter>
         <filter id="combat-arrow-defense-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
-          <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="expanded" />
+          <feGaussianBlur in="expanded" stdDeviation="2.2" result="blurred" />
           <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-          <feFlood floodColor={DEFENSE_ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
+          <feFlood floodColor={DEFENSE_ARROW_COLOR} floodOpacity="0.55" result="glowColor" />
           <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
           <feMerge>
             <feMergeNode in="outerGlow" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
-        </filter>
-        <filter id="combat-arrow-horde-orange-underglow" x="-100%" y="-100%" width="300%" height="300%" colorInterpolationFilters="sRGB">
-          <feGaussianBlur stdDeviation="5.5" />
         </filter>
         <filter id="combat-arrow-attack-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
           <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
@@ -219,16 +216,6 @@ export function CombatArrows({ game }: { game: GameState }) {
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              {isDefenseArrow && (
-                <g
-                  className="combat-arrow-horde-underglow"
-                  transform="translate(0 7)"
-                  filter="url(#combat-arrow-horde-orange-underglow)"
-                >
-                  <path d={arrow.path} fill="none" stroke={PLAYER_ATTACK_ARROW_COLOR} strokeWidth="11" strokeLinecap="round" />
-                  <polygon points={arrow.tip} fill={PLAYER_ATTACK_ARROW_COLOR} stroke={PLAYER_ATTACK_ARROW_COLOR} strokeWidth="5" />
-                </g>
-              )}
               <g filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}>
                 <TacticalArrowGlyph
                   path={arrow.path}

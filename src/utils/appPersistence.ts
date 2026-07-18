@@ -1,7 +1,7 @@
 export const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
 export const PLAYER_NAME_STORAGE_KEY = "horde-game-player-name";
 export const ONBOARDING_STORAGE_KEY = "horde-game-onboarding-complete";
-export const ASSET_PRELOAD_STORAGE_KEY = "horde-game-assets-preloaded-v1";
+export const ASSET_PRELOAD_STORAGE_KEY = "horde-game-assets-preloaded-v2";
 
 const APP_CACHE_PREFIXES = ["horde-card-details:", "horde-deck-card-details:"];
 

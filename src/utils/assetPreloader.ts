@@ -1,9 +1,10 @@
-import { musicCollections } from "../audio/musicManifest";
-import { sfxManifest } from "../audio/soundManifest";
+import { audioEngine } from "../audio/AudioEngine";
+import type { MusicCollectionId } from "../audio/musicManifest";
 import { inspectableDecks } from "../data/deckCatalog";
 import { resolveDeckCardDetails } from "./deckCardImages";
 
-const ASSET_CACHE_NAME = "hostfall-assets-v1";
+const ASSET_CACHE_NAME = "hostfall-assets-v2";
+const CRITICAL_MUSIC: MusicCollectionId[] = ["mainMenuTheme", "winTheme", "lossTheme", "battleTheme1", "battleTheme3"];
 
 type ProgressUpdate = {
   completed: number;
@@ -20,20 +21,16 @@ const bundledImages = Object.values(
   }),
 ) as string[];
 
-const audioUrls = Array.from(new Set([
-  ...Object.values(sfxManifest),
-  ...Object.values(musicCollections).flatMap((collection) => [collection.battle, collection.climax]),
-]));
-
-export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => void): Promise<void> {
-  const cardTasks = inspectableDecks.flatMap((deck) => {
+export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => void, includeNonCriticalAssets = true): Promise<void> {
+  const cardTasks = (includeNonCriticalAssets ? inspectableDecks : []).flatMap((deck) => {
     const cards = [...deck.deck.cards, ...(deck.deck.tokens ?? [])];
     return cards.map((card) => ({ deck, card }));
   });
   const uniqueCardTasks = Array.from(new Map(cardTasks.map((task) => [`${task.deck.id}:${task.card.id}`, task])).values());
-  const mediaTasks: Array<{ label: string; run: () => Promise<void> }> = [
-    ...bundledImages.map((url) => ({ label: "Preparing artwork", run: () => preloadUrl(url) })),
-    ...audioUrls.map((url) => ({ label: "Tuning the soundscape", run: () => preloadUrl(url) })),
+  const mediaTasks: Array<{ label: string; run: () => Promise<void>; timeoutMs?: number }> = [
+    ...(includeNonCriticalAssets ? bundledImages.map((url) => ({ label: "Preparing artwork", run: () => preloadUrl(url) })) : []),
+    { label: "Tuning sound effects", run: () => audioEngine.preloadSfx() },
+    { label: "Preparing the first songs", run: () => audioEngine.preloadMusic(CRITICAL_MUSIC), timeoutMs: 60000 },
   ];
   const imageTasks = uniqueCardTasks.map(({ deck, card }) => ({
       label: "Gathering the chronicles",
@@ -48,9 +45,9 @@ export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => 
   const total = Math.max(mediaTasks.length + imageTasks.length, 1);
   onProgress({ completed, total, percent: 0, label: "Opening the ancient gates" });
 
-  const finishTask = async (task: { label: string; run: () => Promise<void> }) => {
+  const finishTask = async (task: { label: string; run: () => Promise<void>; timeoutMs?: number }) => {
     try {
-      await withTimeout(task.run(), 15000);
+      await withTimeout(task.run(), task.timeoutMs ?? 15000);
     } catch {
       // One unavailable remote asset must not prevent the game from opening.
     }
