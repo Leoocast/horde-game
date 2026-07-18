@@ -4043,6 +4043,11 @@
 
   .battlefield-layout-slot {
     flex: 0 0 auto;
+    transition: margin-right 300ms ease-out;
+  }
+
+  .battlefield-layout-slot-tapped-creature {
+    margin-right: clamp(6px, 0.55vw, 9px);
   }
 
   .battlefield-copy-stack {
@@ -4063,7 +4068,8 @@
     transition:
       opacity 150ms ease-out,
       filter 150ms ease-out,
-      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      margin-right 300ms ease-out;
   }
 
   .battlefield-copy-stack[data-stacked="true"] > .battlefield-layout-slot + .battlefield-layout-slot {
@@ -4110,6 +4116,12 @@
 
   .card-visual {
     container-type: inline-size;
+  }
+
+  .card-visual.card-tapped {
+    opacity: 0.92;
+    filter: grayscale(0.28) saturate(0.72) brightness(0.82);
+    transform: rotate(4deg);
   }
 
   .card-visual > img {
@@ -4342,7 +4354,12 @@
       var(--battlefield-depth-glow);
     transition:
       background-color 180ms ease,
-      box-shadow 180ms ease;
+      box-shadow 180ms ease,
+      transform 300ms ease-out;
+  }
+
+  .battlefield-layout-slot-tapped > div > .battlefield-card-depth {
+    transform: rotate(4deg) translateY(4px);
   }
 
   .battlefield-card-selected > .battlefield-card-depth {
@@ -9485,7 +9502,7 @@
   outline: 0;
   background: transparent;
   color: #f1dfac;
-  text-align: right;
+  text-align: left;
   cursor: text;
   transition: border-color 160ms ease, color 160ms ease, text-shadow 160ms ease;
 }
@@ -9495,17 +9512,6 @@
   border-bottom-color: rgb(166 202 127 / 0.56);
   color: #efffcf;
   text-shadow: 0 0 10px rgb(137 221 112 / 0.25);
-}
-
-.player-life-subtitle {
-  margin-top: 0.08rem;
-  color: #809187;
-  font-size: 0.57rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  line-height: 1;
-  text-align: right;
-  text-transform: uppercase;
 }
 
 .expedition-footer {

@@ -692,7 +692,12 @@ export function Battlefield({ game, side, cards }: Props) {
           rotate: { duration: 0.28, ease: "easeOut" },
           filter: { duration: 0.36, ease: "easeOut" },
         }}
-        className={["battlefield-layout-slot", interactionElevated ? "battlefield-layout-slot-elevated" : ""].join(" ")}
+        className={[
+          "battlefield-layout-slot",
+          interactionElevated ? "battlefield-layout-slot-elevated" : "",
+          card.tapped ? "battlefield-layout-slot-tapped" : "",
+          card.tapped && card.cardTypes.includes("Creature") ? "battlefield-layout-slot-tapped-creature" : "",
+        ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
       <div

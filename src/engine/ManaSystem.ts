@@ -63,7 +63,7 @@ export function payManaAutomatically(game: GameState, cost: ManaPool): boolean {
     return true;
   }
 
-  const availableSources = getAutomaticManaSources(game);
+  const availableSources = getAutomaticLandManaSources(game);
   const selected: typeof availableSources = [];
   let simulatedPool = { ...game.player.manaPool };
 
@@ -89,7 +89,7 @@ export function payManaAutomatically(game: GameState, cost: ManaPool): boolean {
 export function canPayWithAutomaticMana(game: GameState, cost: ManaPool): boolean {
   let simulatedPool = { ...game.player.manaPool };
   if (canPay(simulatedPool, cost)) return true;
-  for (const { produced } of getAutomaticManaSources(game)) {
+  for (const { produced } of getAutomaticLandManaSources(game)) {
     simulatedPool = addMana(simulatedPool, produced.color, produced.amount);
     if (canPay(simulatedPool, cost)) return true;
   }
@@ -118,12 +118,14 @@ function getAutomaticMana(game: GameState, card: CardInstance): { color: Color |
   return { color, amount };
 }
 
-function getAutomaticManaSources(game: GameState): Array<{ card: CardInstance; produced: { color: Color | string; amount: number } }> {
+function getAutomaticLandManaSources(game: GameState): Array<{ card: CardInstance; produced: { color: Color | string; amount: number } }> {
   return game.player.battlefield
-    .filter((card) => !card.tapped && !card.activatedThisTurn && !(card.cardTypes.includes("Creature") && card.summoningSickness))
+    // Creatures and other nonland permanents are tactical resources. They must be
+    // activated explicitly so casting a spell never removes a potential attacker
+    // or blocker without the player's consent.
+    .filter((card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn)
     .map((card) => ({ card, produced: getAutomaticMana(game, card) }))
-    .filter((source): source is { card: CardInstance; produced: { color: Color | string; amount: number } } => Boolean(source.produced))
-    .sort((left, right) => Number(!left.card.cardTypes.includes("Land")) - Number(!right.card.cardTypes.includes("Land")));
+    .filter((source): source is { card: CardInstance; produced: { color: Color | string; amount: number } } => Boolean(source.produced));
 }
 
 function addColor(pool: ManaPool, color: Color | string, amount: number): void {

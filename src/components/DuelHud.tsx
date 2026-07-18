@@ -279,7 +279,6 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
                 onChange={(event) => setChroniclerName(event.currentTarget.value)}
                 onFocus={(event) => event.currentTarget.select()}
               />
-              <div className="player-life-subtitle">Chronicler</div>
               <div className="player-life-values flex items-end gap-2 leading-none">
                 <div className="player-life-count">{visualLife}</div>
               </div>
