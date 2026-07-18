@@ -336,21 +336,23 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave }: { value: stri
       <form className="chronicler-name-modal" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
         <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
         <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>
-        <div className="chronicler-name-feather" aria-hidden="true"><Feather size={29} /></div>
-        <p>Record of the expedition</p>
-        <h2 id="chronicler-name-title">Name your Chronicler</h2>
+        <p>Before the first page</p>
+        <h2 id="chronicler-name-title">Claim Your Name</h2>
         <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
-        <label htmlFor="chronicler-name-input">The name written in the chronicles</label>
-        <input
-          id="chronicler-name-input"
-          value={value}
-          maxLength={24}
-          autoFocus
-          onFocus={(event) => event.currentTarget.select()}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="Chronicler"
-        />
-        <button className="chronicler-name-save" type="submit"><Feather size={16} /> Inscribe name</button>
+        <label htmlFor="chronicler-name-input">Let it be remembered</label>
+        <div className="chronicler-name-input-shell">
+          <input
+            id="chronicler-name-input"
+            value={value}
+            maxLength={24}
+            autoFocus
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => onChange(event.currentTarget.value)}
+            placeholder="YOUR NAME"
+          />
+          <Feather size={21} aria-hidden="true" />
+        </div>
+        <button className="chronicler-name-save" type="submit">Inscribe</button>
         <span className="chronicler-name-ornament is-bottom" aria-hidden="true"><i /><b>◆</b><i /></span>
       </form>
     </div>

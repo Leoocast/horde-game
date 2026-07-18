@@ -975,21 +975,16 @@
   }
 
   .encounter-transition-content::before {
-    position: absolute;
-    width: min(760px, 76vw);
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--encounter-accent-bright), transparent);
-    box-shadow: 0 0 30px color-mix(in srgb, var(--encounter-accent) 52%, transparent);
-    content: "";
-    animation: encounter-flare 1450ms ease-out both;
+    display: none;
   }
 
   .encounter-transition-content > p {
-    margin: 0 0 25px;
-    color: #8a7b50;
-    font-size: 9px;
+    margin: 0 0 32px;
+    color: var(--encounter-accent-bright);
+    font-size: clamp(13px, 1.25vw, 17px);
     font-weight: 900;
-    letter-spacing: 0.34em;
+    letter-spacing: 0.38em;
+    text-shadow: 0 0 18px color-mix(in srgb, var(--encounter-accent) 52%, transparent), 0 3px 12px #000;
     text-transform: uppercase;
   }
 
@@ -7841,8 +7836,31 @@
   font-family: Georgia, "Times New Roman", serif;
   font-size: 23px;
   letter-spacing: 0.055em;
+  padding: 0 48px;
   text-align: center;
   box-shadow: 0 10px 18px -18px rgb(219 193 113 / 0.8);
+}
+
+.chronicler-name-modal input::placeholder {
+  color: #8d866d;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  opacity: 0.72;
+}
+
+.chronicler-name-input-shell {
+  position: relative;
+}
+
+.chronicler-name-input-shell > svg {
+  position: absolute;
+  top: 50%;
+  right: 17px;
+  color: #b49d60;
+  filter: drop-shadow(0 0 8px rgb(178 207 115 / 0.2));
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .chronicler-name-modal input:focus {
