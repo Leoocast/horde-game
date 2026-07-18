@@ -1,7 +1,12 @@
 import { Music, Volume2, VolumeX } from "lucide-react";
 import { useAudioStore } from "../store/useAudioStore";
+import { VolumePercentInput } from "./VolumePercentInput";
 
-export function AudioControls() {
+type Props = {
+  variant?: "panel" | "screen";
+};
+
+export function AudioControls({ variant = "panel" }: Props) {
   const enabled = useAudioStore((state) => state.enabled);
   const sfxVolume = useAudioStore((state) => state.sfxVolume);
   const musicEnabled = useAudioStore((state) => state.musicEnabled);
@@ -12,12 +17,53 @@ export function AudioControls() {
   const setMusicVolume = useAudioStore((state) => state.setMusicVolume);
   const playSfx = useAudioStore((state) => state.playSfx);
 
+  if (variant === "screen") {
+    return (
+      <section className="main-settings-section">
+        <div className="main-settings-section-title">Audio</div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Sound Effects</div>
+            <div className="main-settings-description">Actions, cards, and interface feedback</div>
+          </div>
+          <div className="main-settings-control">
+            <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range game-range" />
+            <VolumePercentInput value={sfxVolume} onChange={setSfxVolume} ariaLabel="Sound effects volume percentage" className="main-settings-value" />
+            <button className={`main-settings-toggle ${enabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={enabled} onClick={() => setEnabled(!enabled)}>
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Music</div>
+            <div className="main-settings-description">Menu and battle soundtrack</div>
+          </div>
+          <div className="main-settings-control">
+            <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range game-range" />
+            <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" className="main-settings-value" />
+            <button className={`main-settings-toggle ${musicEnabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={musicEnabled} onClick={() => setMusicEnabled(!musicEnabled)}>
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="main-settings-row">
+          <div>
+            <div className="main-settings-label">Test Sound</div>
+            <div className="main-settings-description">Play the interface confirmation sound</div>
+          </div>
+          <button data-audio-click="off" className="main-settings-action" disabled={!enabled} onClick={() => playSfx("click")} type="button">Test</button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="old-panel-soft p-3">
       <div className="flex items-center justify-between gap-3">
         <div className="old-title text-xs font-bold uppercase tracking-wide">SFX</div>
         <button
-          className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
+          className="old-button flex h-8 w-8 items-center justify-center transition"
           onClick={() => setEnabled(!enabled)}
           title={enabled ? "Mute SFX" : "Enable SFX"}
         >
@@ -32,9 +78,9 @@ export function AudioControls() {
           step={0.05}
           value={sfxVolume}
           onChange={(event) => setSfxVolume(Number(event.target.value))}
-          className="min-w-0 flex-1 accent-[#d8a154]"
+          className="game-range min-w-0 flex-1"
         />
-        <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(sfxVolume * 100)}</span>
+        <VolumePercentInput value={sfxVolume} onChange={setSfxVolume} ariaLabel="Sound effects volume percentage" />
       </div>
       <button
         data-audio-click="off"
@@ -48,7 +94,7 @@ export function AudioControls() {
         <div className="flex items-center justify-between gap-3">
           <div className="old-title text-xs font-bold uppercase tracking-wide">Music</div>
           <button
-            className="old-button flex h-8 w-8 items-center justify-center rounded-full transition"
+            className="old-button flex h-8 w-8 items-center justify-center transition"
             onClick={() => setMusicEnabled(!musicEnabled)}
             title={musicEnabled ? "Mute music" : "Enable music"}
           >
@@ -63,9 +109,9 @@ export function AudioControls() {
             step={0.05}
             value={musicVolume}
             onChange={(event) => setMusicVolume(Number(event.target.value))}
-            className="min-w-0 flex-1 accent-[#d8a154]"
+            className="game-range min-w-0 flex-1"
           />
-          <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
+          <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" />
         </div>
       </div>
     </section>

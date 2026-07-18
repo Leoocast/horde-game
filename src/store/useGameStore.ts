@@ -14,6 +14,7 @@ import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
+import { playerHandOverflow } from "../engine/GameRules";
 
 type GameStore = {
   game: GameState;
@@ -29,6 +30,8 @@ type GameStore = {
   hordeMillAnimationQueue: HordeMillAnimationItem[];
   hordeMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
+  handLimitDiscardActive: boolean;
+  handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
   blockDrag?: BlockDragState;
   playerAttackDrag?: PlayerAttackDragState;
@@ -71,6 +74,8 @@ type GameStore = {
   lockSmallpoxSelectionTarget: (targetId: string) => void;
   deselectSmallpoxSelectionTarget: () => void;
   confirmSmallpoxSelection: () => void;
+  selectHandLimitDiscard: (id?: string) => void;
+  confirmHandLimitDiscard: () => void;
   startSpellTargeting: (handId: string, x: number, y: number) => void;
   updateSpellTargetPointer: (x: number, y: number) => void;
   lockSpellTarget: (targetId: string) => void;
@@ -173,6 +178,7 @@ export type HordeMillAnimationItem = {
 export type PlayerDiscardAnimationItem = {
   id: string;
   card: CardInstance;
+  origin?: { x: number; y: number };
 };
 
 export type BlockDragState = {
@@ -240,6 +246,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeMillAnimationQueue: [],
   hordeMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
+  handLimitDiscardActive: false,
+  handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
   blockDrag: undefined,
   playerAttackDrag: undefined,
@@ -262,7 +270,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
-      useAudioStore.getState().playSfx("draw");
       return {
         game: next,
         seed,
@@ -289,6 +296,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillAnimationQueue: [],
         hordeMillPreviewCards: [],
         playerDiscardAnimationQueue: [],
+        handLimitDiscardActive: false,
+        handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
         blockDrag: undefined,
         playerAttackDrag: undefined,
@@ -414,7 +423,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       discardChosenCard(next, targetId);
       notifyDiscardEffects(game, next);
       set({ game: next, smallpoxSelection: undefined });
-      window.setTimeout(() => advanceSmallpoxSequence("after-discard"), 480);
+      resumeAfterDiscardPause(() => advanceSmallpoxSequence("after-discard"));
       return;
     }
     set({ smallpoxSelection: undefined, specialDeadCardIds: [targetId] });
@@ -429,15 +438,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
       window.setTimeout(() => advanceSmallpoxSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
     }, 260);
   },
-  startSpellTargeting: (handId, x, y) =>
+  selectHandLimitDiscard: (id) => {
+    if (id) useAudioStore.getState().playSfx("playLand", { volume: 0.68 });
+    set({ handLimitSelectionId: id, hoveredCardId: undefined, focusedCardId: undefined });
+  },
+  confirmHandLimitDiscard: () => {
+    const state = get();
+    const { handLimitSelectionId, game } = state;
+    if (!handLimitSelectionId || playerHandOverflow(game) <= 0) return;
+    const next = structuredClone(game) as GameState;
+    discardChosenCard(next, handLimitSelectionId);
+    notifyDiscardEffects(game, next, { title: "Hand limit", tone: "warning" });
+    const overflow = playerHandOverflow(next);
     set({
-      spellTargeting: { handId, stepIndex: 0, targets: {}, x, y },
-      selectedHandId: handId,
-      focusedCardId: undefined,
+      game: next,
+      handLimitSelectionId: undefined,
+      handLimitDiscardActive: overflow > 0,
+      selectedHandId: undefined,
       hoveredCardId: undefined,
-      activeEffectCardId: undefined,
-      cardContextMenu: undefined,
-    }),
+      focusedCardId: undefined,
+    });
+    if (overflow === 0) {
+      resumeAfterDiscardPause(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide !== "player" || latest.game.phase !== "end") return;
+        latest.endPlayerTurn();
+        const afterTurn = useGameStore.getState();
+        if (afterTurn.game.activeSide === "horde" && afterTurn.game.phase === "horde") afterTurn.runHordeMain();
+      });
+    }
+  },
+  startSpellTargeting: (handId, x, y) =>
+    set((state) =>
+      combatResolutionInProgress(state)
+        ? {}
+        : {
+            spellTargeting: { handId, stepIndex: 0, targets: {}, x, y },
+            selectedHandId: handId,
+            focusedCardId: undefined,
+            hoveredCardId: undefined,
+            activeEffectCardId: undefined,
+            cardContextMenu: undefined,
+          },
+    ),
   updateSpellTargetPointer: (x, y) =>
     set(({ spellTargeting }) => ({
       spellTargeting: spellTargeting ? { ...spellTargeting, x, y } : undefined,
@@ -487,20 +530,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
-    set(({ game }) => {
+    set((state) => {
+      if (discardPauseInProgress(state)) return {};
+      const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, playerAttackDrag: undefined };
+      return {
+        game: next,
+        playerAttackDrag: undefined,
+        handLimitDiscardActive: next.activeSide === "player" && next.phase === "end" && playerHandOverflow(next) > 0,
+        handLimitSelectionId: undefined,
+      };
     }),
   endPlayerTurn: () =>
     set((state) => {
+      if (discardPauseInProgress(state)) return {};
       const { game } = state;
+      const overflow = playerHandOverflow(game);
+      if (overflow > 0) {
+        useToastStore.getState().pushToast({
+          title: "Hand limit",
+          message: `Discard ${overflow} card${overflow === 1 ? "" : "s"} before ending your turn.`,
+          tone: "warning",
+        });
+        return { handLimitDiscardActive: true, handLimitSelectionId: undefined };
+      }
       const next = endPlayerTurn(game);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) };
+      return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) };
     }),
   playLand: (id) =>
     set((state) => {
+      if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
         showActionToast("Resolve the triggered effect before playing another card.");
         return {};
@@ -517,6 +578,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   castCard: (id, options) =>
     set((state) => {
+      if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
         showActionToast("Resolve the triggered effect before playing another card.");
         return {};
@@ -566,7 +628,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, state.game, next) };
   }),
   finishPlayerCombat: () => {
-    const { game, playerAttackAnimation } = get();
+    const state = get();
+    if (discardPauseInProgress(state)) return;
+    const { game, playerAttackAnimation } = state;
     if (playerAttackAnimation) return;
 
     const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
@@ -603,6 +667,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
+        handLimitDiscardActive: playerHandOverflow(next) > 0,
+        handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
         selectedPlayerCreatureId: undefined,
         hordeMillPreviewCards: [],
@@ -612,6 +678,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHordeMain: () => {
     const state = get();
+    if (discardPauseInProgress(state)) return;
     const { game } = state;
     const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
     const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
@@ -640,7 +707,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
   },
-  prepareHordeAttackers: () => set(({ game }) => ({ game: prepareHordeAttackers(game) })),
+  prepareHordeAttackers: () => set((state) => (discardPauseInProgress(state) ? {} : { game: prepareHordeAttackers(state.game) })),
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
       const previousLog = game.log[0];
@@ -694,12 +761,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
     })),
   resolveHordeCombat: () => {
-    const { game, hordeAttackAnimation, playerAttackAnimation } = get();
+    const state = get();
+    if (discardPauseInProgress(state)) return;
+    const { game, hordeAttackAnimation, playerAttackAnimation } = state;
     if (hordeAttackAnimation || playerAttackAnimation) return;
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      const next = resolveHordeCombat(game, { deferTriggeredEvents: true });
+      const resolved = resolveHordeCombat(game, { deferTriggeredEvents: true });
+      const next = advancePhase(resolved, "end");
       notifyDiscardEffects(game, next);
       set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
       scheduleQueuedHordeTriggers();
@@ -734,14 +804,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      const next = resolveHordeCombat(latest, { deferTriggeredEvents: true });
+      const resolved = resolveHordeCombat(latest, { deferTriggeredEvents: true });
+      const next = advancePhase(resolved, "end");
       notifyDiscardEffects(latest, next);
       set({ game: next, hordeAttackAnimation: undefined, resolvingHordeCombat: false, hordeCombatVisualDamage: undefined, hordeCombatDeadCardIds: [], selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
       scheduleQueuedHordeTriggers();
     }, attackEvents.length * HORDE_ATTACK_ANIMATION_MS + 40);
   },
   finishHordeTurn: () =>
-    set(({ game }) => {
+    set((state) => {
+      if (discardPauseInProgress(state)) return {};
+      const { game } = state;
       const next = finishHordeTurn(game);
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, hordeAutoTriggerCount: 0 };
@@ -755,14 +828,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
 }));
 
 function readStoredSeed(): string {
-  if (typeof window === "undefined") return "horde-seed";
+  if (typeof window === "undefined") return "hostfall-seed";
   const storedSeed = window.localStorage.getItem(SEED_STORAGE_KEY);
-  return storedSeed?.trim().toLowerCase() === "developer" ? "horde-seed" : storedSeed ?? "horde-seed";
+  return storedSeed?.trim().toLowerCase() === "developer" ? "hostfall-seed" : storedSeed ?? "hostfall-seed";
 }
 
 function persistSeed(seed: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(SEED_STORAGE_KEY, seed);
+}
+
+function combatResolutionInProgress(state: GameStore): boolean {
+  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || discardPauseInProgress(state));
+}
+
+function discardPauseInProgress(state: GameStore): boolean {
+  return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
+}
+
+function resumeAfterDiscardPause(onReady: () => void): void {
+  const check = () => {
+    if (discardPauseInProgress(useGameStore.getState())) {
+      window.setTimeout(check, 120);
+      return;
+    }
+    onReady();
+  };
+  window.setTimeout(check, 120);
 }
 
 function monsterSfx(card: GameState["player"]["hand"][number]) {
@@ -823,6 +915,10 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
 }
 
 function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
+  if (discardPauseInProgress(useGameStore.getState())) {
+    window.setTimeout(() => scheduleQueuedHordeTriggers(onComplete), 120);
+    return;
+  }
   const sequenceId = hordeAutoTriggerSequenceId;
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
@@ -903,18 +999,25 @@ function scheduleSummoningAnimationSafetyClear(): void {
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 
-function notifyDiscardEffects(previous: GameState, next: GameState): void {
+function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "horde" }): void {
   const newLogCount = Math.max(0, next.log.length - previous.log.length);
   const discardLogs = next.log.slice(0, newLogCount).filter((message) => message.startsWith("Player discards "));
   const previousPlayerGraveyardIds = new Set(previous.player.graveyard.map((card) => card.instanceId));
   const discardedCards = next.player.graveyard.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
   if (discardedCards.length > 0) {
+    const origins = new Map(
+      discardedCards.map((card) => {
+        const rect = document.querySelector<HTMLElement>(`[data-hand-card-id="${card.instanceId}"]`)?.getBoundingClientRect();
+        return [card.instanceId, rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : undefined] as const;
+      }),
+    );
     useGameStore.setState((state) => ({
       playerDiscardAnimationQueue: [
         ...state.playerDiscardAnimationQueue,
         ...discardedCards.map((card) => ({
           id: `player-discard-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           card,
+          origin: origins.get(card.instanceId),
         })),
       ],
     }));
@@ -922,9 +1025,9 @@ function notifyDiscardEffects(previous: GameState, next: GameState): void {
   for (const message of discardLogs) {
     useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
     useToastStore.getState().pushToast({
-      title: "Horde effect",
-      message,
-      tone: "horde",
+      title: options?.title ?? "Horde effect",
+      message: message.replace(/^Player\b/, "Chronicler"),
+      tone: options?.tone ?? "horde",
     });
   }
 }
@@ -938,8 +1041,8 @@ function hordeEnterTriggerMessage(card: CardInstance): string {
   const effect = trigger?.effect as EffectDefinition | undefined;
   if (effect?.type === "CREATE_TOKEN") return `${card.name} resolves. Horde creates ${Number(effect.amount ?? 1)} token(s).`;
   if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return `${card.name} resolves. Horde mills ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Player discards ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Player loses ${Number(effect.amount ?? 1)} life.`;
+  if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Chronicler discards ${Number(effect.amount ?? 1)} card(s).`;
+  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Chronicler loses ${Number(effect.amount ?? 1)} life.`;
   return `${card.name} resolves its triggered effect.`;
 }
 

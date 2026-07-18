@@ -12,7 +12,7 @@ import { GraveyardViewerModal } from "./GraveyardViewerModal";
 const SMALLPOX_KIND_LABEL: Record<string, string> = {
   discard: "Choose a card to discard",
   "sacrifice-creature": "Choose a creature to sacrifice",
-  "sacrifice-land": "Choose a land to sacrifice",
+  "sacrifice-land": "Choose one energy to discard",
 };
 
 export function DuelHud({ game }: { game: GameState }) {
@@ -23,7 +23,10 @@ export function DuelHud({ game }: { game: GameState }) {
   const deselectSmallpoxSelectionTarget = useGameStore((state) => state.deselectSmallpoxSelectionTarget);
   const confirmSmallpoxSelection = useGameStore((state) => state.confirmSmallpoxSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
+  const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
+  const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
   const smallpoxTarget = smallpoxSelection?.targetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelection.targetId) : undefined;
   const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
   const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
@@ -36,8 +39,26 @@ export function DuelHud({ game }: { game: GameState }) {
     return attacker ? total + getPowerToughness(game, attacker).power : total;
   }, 0);
   const pendingMill = Math.floor(pendingDamage / 3);
+  const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
+
+  useEffect(() => {
+    if (!playerAttackAnimation) {
+      lastPlayerAttackEvent.current = undefined;
+      return;
+    }
+    const eventKey = `${playerAttackAnimation.attackerId}:${playerAttackAnimation.eventId}`;
+    if (lastPlayerAttackEvent.current === eventKey) return;
+    lastPlayerAttackEvent.current = eventKey;
+    setHordeTakingDamage(false);
+    const frame = window.requestAnimationFrame(() => setHordeTakingDamage(true));
+    const timeout = window.setTimeout(() => setHordeTakingDamage(false), 430);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [playerAttackAnimation]);
 
   return (
     <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
@@ -46,27 +67,38 @@ export function DuelHud({ game }: { game: GameState }) {
         {smallpoxCard && (
           <motion.div
             key={smallpoxCard.instanceId}
-            className="flex flex-col items-center gap-2"
+            className="horde-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
               opacity: [1, 1, 0],
-              x: [0, -8, 50],
+              x: [0, 8, -50],
               y: [0, 10, -36],
               scale: [1, 0.97, 0.66],
-              rotate: [0, -3, -9],
+              rotate: [0, 3, 9],
               transition: { duration: 0.3, times: [0, 0.22, 1], ease: ["easeOut", "easeIn"] },
             }}
           >
             <div
               data-card-id={smallpoxCard.instanceId}
-              className={["horde-special-card", activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : ""].join(" ")}
+              className={[
+                "horde-special-card",
+                smallpoxSelection ? "horde-special-card-targeting" : "",
+                !smallpoxSelection ? "horde-special-card-resolving" : "",
+                activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
+              ].join(" ")}
             >
               <Card game={game} card={smallpoxCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
             </div>
             {smallpoxSelection && (
               <div className="smallpox-selection-panel-inline old-panel-soft">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{SMALLPOX_KIND_LABEL[smallpoxSelection.kind]}</span>
-                <span className="text-sm text-[#d6b879]">{smallpoxTarget ? smallpoxTarget.displayName : "No target selected"}</span>
+                <span className="text-sm text-[#d6b879]">
+                  {smallpoxSelection.kind === "sacrifice-land" && smallpoxSelection.targetId
+                    ? "Energy selected"
+                    : smallpoxTarget
+                      ? smallpoxTarget.displayName
+                      : "No target selected"}
+                </span>
                 <div className="counter-target-actions">
                   <button
                     data-audio-click={smallpoxSelection.targetId ? "valid" : undefined}
@@ -78,8 +110,8 @@ export function DuelHud({ game }: { game: GameState }) {
                     <Check size={22} />
                   </button>
                   {smallpoxSelection.targetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Deselect">
-                      Deselect
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
+                      Cancel
                     </button>
                   )}
                 </div>
@@ -88,50 +120,80 @@ export function DuelHud({ game }: { game: GameState }) {
           </motion.div>
         )}
         </AnimatePresence>
-        <div data-player-attack-target="horde-deck" className="old-panel flex min-w-44 items-center justify-end gap-3 px-3 py-2">
-          <div className="text-right">
-            <div className="old-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
-            <div className="flex items-end justify-end gap-2 leading-none">
-              <GameTooltip content="View graveyard">
-                <button
-                  data-audio-click="valid"
-                  className="mb-0.5 flex items-center gap-1.5 rounded-full border border-[#0d0906]/80 bg-[#130d09]/80 px-2 py-0.5 text-[13px] font-black text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.45)] transition hover:border-[#d6a34c] hover:text-[#ffe0a0]"
-                  onClick={() => setGraveyardOpen(true)}
-                >
-                  <Archive size={14} strokeWidth={2.6} />
-                  <span>{visualHordeGraveyardCount}</span>
-                </button>
-              </GameTooltip>
-              <div className="text-3xl font-black text-[#fff0b2]">{visualHordeLibraryCount}</div>
+        <div className="horde-deck-counter-cluster">
+          <div
+            data-player-attack-target="horde-deck"
+            className={[
+              "old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
+              attackCountVisible ? "is-attack-locked" : "",
+              hordeTakingDamage ? "horde-counter-hit" : "",
+            ].join(" ")}
+          >
+            <div data-horde-mill-origin="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+              <Skull size={24} />
             </div>
+            <div className="horde-deck-counter-copy">
+              <div className="old-title horde-deck-counter-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
+              <div className="horde-deck-counter-values flex items-end gap-2 leading-none">
+                <div className="horde-deck-count text-3xl font-black">{visualHordeLibraryCount}</div>
+                <AnimatePresence initial={false} mode="popLayout">
+                  {attackCountVisible && (
+                    <motion.span
+                      key={pendingMill}
+                      className="horde-deck-pending-mill"
+                      initial={{ opacity: 0, x: -8, scale: 0.8 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -6, scale: 0.86 }}
+                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      - {pendingMill}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+            {game.horde.poisonCounters > 0 && (
+              <GameTooltip content={`Poison counters: ${game.horde.poisonCounters} of 3`} side="bottom" className="horde-poison-tooltip">
+                <div className="horde-poison-status" aria-label={`Horde poison counters: ${game.horde.poisonCounters} of 3`}>
+                  <Droplet size={15} fill="currentColor" strokeWidth={2.2} />
+                  <span>{game.horde.poisonCounters}</span>
+                </div>
+              </GameTooltip>
+            )}
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#41100b] text-[#ffd59b]">
-            <Skull size={20} />
-          </div>
+          <GameTooltip content="View graveyard" side="bottom" className="horde-deck-graveyard-host">
+            <button
+              data-horde-mill-target="true"
+              data-audio-click="valid"
+              className="horde-deck-graveyard flex items-center justify-center border font-black transition"
+              onClick={() => setGraveyardOpen(true)}
+              aria-label={`View Horde graveyard, ${visualHordeGraveyardCount} cards`}
+            >
+              <Archive size={15} strokeWidth={2.4} />
+              <span className="horde-deck-graveyard-count">{visualHordeGraveyardCount}</span>
+            </button>
+          </GameTooltip>
+          <AnimatePresence initial={false} mode="popLayout">
+            {attackCountVisible && (
+              <motion.div
+                key={game.combat.playerAttackers.join("|")}
+                className="horde-attack-count-host"
+                initial={{ opacity: 0, x: -24, scaleX: 0.62 }}
+                animate={{ opacity: 1, x: 0, scaleX: 1 }}
+                exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <GameTooltip content={`${pendingDamage} attack damage ÷ 3 mills ${pendingMill} Horde cards`} side="bottom">
+                  <div className="horde-attack-count" aria-label={`${pendingDamage} attack damage mills ${pendingMill} Horde cards`}>
+                    <Swords size={17} strokeWidth={2.3} />
+                    <span className="horde-attack-formula">{pendingDamage} / 3 = - {pendingMill}</span>
+                  </div>
+                </GameTooltip>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-      {game.horde.poisonCounters > 0 && (
-        <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-[#cfa7ff]">Poison</div>
-            <div className="text-sm font-black text-[#f0d7ff]">{game.horde.poisonCounters}/3</div>
-          </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8b5cf6] bg-[#251036] text-[#d8b4fe] shadow-[0_0_16px_rgba(168,85,247,0.42)]">
-            <Droplet size={19} fill="currentColor" strokeWidth={2.2} />
-          </div>
-        </div>
-      )}
-      {game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && (
-        <div className="old-panel ml-auto flex min-w-44 items-center justify-end gap-2 px-3 py-2">
-          <Swords size={18} className="text-[#ffbe72]" />
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-[#d6b879]">Attack Damage</div>
-            <div className="text-sm font-black text-[#ffe6aa]">
-              {pendingDamage} dmg / 3 = -{pendingMill}
-            </div>
-          </div>
-        </div>
-      )}
       {graveyardOpen && <GraveyardViewerModal game={game} title="Horde Graveyard" cards={game.horde.graveyard} onClose={() => setGraveyardOpen(false)} />}
     </div>
   );
@@ -143,9 +205,12 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [chroniclerName, setChroniclerName] = useState(playerName);
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
+  const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
+  const phaseSteps = ["Main", "Battle", "End"];
 
   useEffect(() => {
     setVisualLife(game.player.life);
@@ -173,37 +238,71 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           tutorialOverlayActive ? "z-[91]" : "z-[75]",
         ].join(" ")}
       >
-        <div
-          data-player-life-panel="true"
-          className={[
-            "old-panel flex min-w-44 items-center justify-end gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
-            takingDamage ? "player-life-damage" : "",
-            lifeBuffAnimationId ? "player-life-buff" : "",
-          ].join(" ")}
-        >
-          {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
-          <div className="text-right">
-            <div className="old-title text-xs font-bold uppercase tracking-wide">{playerName}</div>
-            <div className="flex items-end justify-end gap-2 leading-none">
-              <GameTooltip content="View graveyard">
-                <button
-                  data-audio-click="valid"
-                  className="mb-0.5 flex items-center gap-1.5 rounded-full border border-[#0d0906]/80 bg-[#130d09]/80 px-2 py-0.5 text-[13px] font-black text-[#d7b878] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.45)] transition hover:border-[#d6a34c] hover:text-[#ffe0a0]"
-                  onClick={() => setGraveyardOpen(true)}
+        <div className="player-life-cluster">
+          <div className="game-phase-progress" aria-label={`Current phase: ${phaseSteps[activePhaseIndex]}`}>
+            <div className="game-phase-progress-labels" aria-hidden="true">
+              {phaseSteps.map((phase, index) => (
+                <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>
+              ))}
+            </div>
+            <div className="game-phase-progress-track" aria-hidden="true">
+              <span className="game-phase-progress-line" />
+              {phaseSteps.map((phase, index) => (
+                <span
+                  key={phase}
+                  className={[
+                    "game-phase-progress-step",
+                    index === activePhaseIndex ? "is-active" : "",
+                    index < activePhaseIndex ? "is-complete" : "",
+                  ].join(" ")}
                 >
-                  <Archive size={14} strokeWidth={2.6} />
-                  <span>{game.player.graveyard.length}</span>
-                </button>
-              </GameTooltip>
-              <div className="text-3xl font-black leading-none text-[#fff0b2]">{visualLife}</div>
+                  <span className="game-phase-progress-diamond" />
+                </span>
+              ))}
             </div>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#b88945] bg-[#16340e] text-[#caff9f]">
-            <Heart size={20} />
+          <div
+            data-player-life-panel="true"
+            className={[
+              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+              takingDamage ? "player-life-damage" : "",
+              lifeBuffAnimationId ? "player-life-buff" : "",
+            ].join(" ")}
+          >
+            {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
+            <div className="player-life-copy">
+              <input
+                className="old-title player-life-name-input text-xs font-bold uppercase tracking-wide"
+                value={chroniclerName}
+                maxLength={24}
+                aria-label="Chronicler name"
+                onChange={(event) => setChroniclerName(event.currentTarget.value)}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <div className="player-life-subtitle">Chronicler</div>
+              <div className="player-life-values flex items-end gap-2 leading-none">
+                <div className="player-life-count">{visualLife}</div>
+              </div>
+            </div>
+            <div data-player-discard-origin="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
+              <Heart size={24} />
+            </div>
           </div>
+          <GameTooltip content="View graveyard" side="top" className="player-graveyard-host">
+            <button
+              data-player-discard-target="true"
+              data-audio-click="valid"
+              className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
+              onClick={() => setGraveyardOpen(true)}
+              aria-label={`View Chronicler graveyard, ${game.player.graveyard.length} cards`}
+            >
+              <Archive size={15} strokeWidth={2.4} />
+              <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
+            </button>
+          </GameTooltip>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title="Player Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title="Chronicler Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
     </>
   );
 }

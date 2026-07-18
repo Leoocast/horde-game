@@ -1,11 +1,10 @@
-import { ArrowLeft, Maximize2, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { CardInstance } from "../engine/GameTypes";
+import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
-import { AppHeader } from "./AppHeader";
-import { CardDetailsModal, KeywordPills } from "./CardPreview";
+import { useAudioStore } from "../store/useAudioStore";
+import { KeywordPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -18,73 +17,94 @@ type CardCopy = {
   quantity: number;
 };
 
-const MIN_CARD_ZOOM = 120;
-const MAX_CARD_ZOOM = 272;
-const DEFAULT_CARD_ZOOM = 168;
+const DECK_COLUMN_OPTIONS = [7, 6, 5] as const;
+type DeckColumnCount = (typeof DECK_COLUMN_OPTIONS)[number];
+const DEFAULT_DECK_COLUMNS = DECK_COLUMN_OPTIONS[0];
+const DECK_COLUMNS_STORAGE_KEY = "horde-deck-inspector-columns";
+const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, onBack }: Props) {
-  const cards = useMemo(() => uniqueCards(deck.deck.cards), [deck]);
+  const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
   const activeCard = cards.find((copy) => copy.card.id === (focusedCardId ?? hoveredCardId))?.card ?? cards[0]?.card;
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
   const detailsIndex = Math.max(0, cards.findIndex((copy) => copy.card.id === detailsCardId));
   const detailsCard = detailsCardId ? cards[detailsIndex]?.card : undefined;
-  const [cardZoom, setCardZoomState] = useState(readStoredCardZoom);
+  const [columnCount, setColumnCountState] = useState(readStoredColumnCount);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
-  const gridMin = Math.max(96, cardZoom - 34);
-  const setCardZoom = (value: number | ((current: number) => number)) => {
-    setCardZoomState((current) => {
-      const next = clampCardZoom(typeof value === "function" ? value(current) : value);
-      writeStoredCardZoom(next);
+  const [closing, setClosing] = useState(false);
+  const theme = deckTheme(deck.id);
+  const zoomLevel = DECK_COLUMN_OPTIONS.indexOf(columnCount);
+  const setColumnCount = (value: number | ((current: number) => number)) => {
+    setColumnCountState((current) => {
+      const next = clampColumnCount(typeof value === "function" ? value(current) : value);
+      writeStoredColumnCount(next);
       return next;
     });
   };
 
+  useEffect(() => {
+    if (!closing) return;
+    const timeout = window.setTimeout(onBack, 160);
+    return () => window.clearTimeout(timeout);
+  }, [closing, onBack]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || detailsCardId || closing) return;
+      event.preventDefault();
+      setClosing(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [closing, detailsCardId]);
+
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
-      <AppHeader
-        left={
-          <button className="old-button ml-3 flex h-10 items-center gap-2 px-3 text-sm font-black uppercase tracking-wide" onClick={onBack}>
-            <ArrowLeft size={17} />
-            Back
-          </button>
-        }
-        center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">{deck.label}</div>}
-      />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-[minmax(0,1fr)_360px] gap-3 overflow-hidden p-3">
-        <section className="old-panel relative z-0 min-h-0 overflow-hidden p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#8f6a36]/60 pb-3">
-            <div>
-              <p className="old-title text-xs font-bold uppercase tracking-[0.24em]">Deck Inspector</p>
-              <h1 className="old-title mt-1 text-2xl font-black">{deck.deck.name}</h1>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="text-right text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-                <div>{cards.length} unique</div>
-                <div>{deck.deck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0)} total</div>
-              </div>
-              <div className="old-panel-soft flex items-center gap-2 px-2 py-1">
-                <Search className="text-[#ffd98a] drop-shadow-[0_0_8px_rgba(255,100,24,0.45)]" size={15} aria-label="Card zoom" />
-                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom <= MIN_CARD_ZOOM} onClick={() => setCardZoom((value) => value - 12)} title="Zoom out">
-                  -
-                </button>
-                <input type="range" min={MIN_CARD_ZOOM} max={MAX_CARD_ZOOM} step={4} value={cardZoom} onChange={(event) => setCardZoom(Number(event.target.value))} className="w-28 accent-[#d6a34c]" />
-                <button className="icon-button h-7 w-7 text-sm" disabled={cardZoom >= MAX_CARD_ZOOM} onClick={() => setCardZoom((value) => value + 12)} title="Zoom in">
-                  +
-                </button>
-              </div>
-            </div>
+    <main className={`deck-detail-screen main-menu-shell deck-theme-${theme} h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
+      <DeckFireflies />
+      <header className="deck-detail-header">
+        <button className="deck-detail-back" type="button" onClick={() => setClosing(true)} disabled={closing}>
+          <ArrowLeft size={17} />
+          Decks
+        </button>
+        <div className="deck-detail-heading">
+          <p>Deck collection</p>
+          <h1>{deck.deck.name}</h1>
+        </div>
+        <div className="deck-detail-tools">
+          <div className="deck-detail-counts">
+            <span><strong>{cards.length}</strong> unique</span>
+            <span><strong>{cards.reduce((total, copy) => total + copy.quantity, 0)}</strong> cards</span>
           </div>
-          <div className="old-scrollbar h-[calc(100%-86px)] overflow-y-auto overflow-x-hidden pr-3">
-            <div className="grid gap-4 px-3 pb-8 pt-4" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))` }}>
+          <div className="deck-detail-zoom">
+            <Search size={15} aria-label="Card zoom" />
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[0]} onClick={() => setColumnCount((value) => value + 1)} title="Zoom out">−</button>
+            <input
+              aria-label={`Card zoom, ${columnCount} columns`}
+              className="game-range"
+              type="range"
+              min={0}
+              max={DECK_COLUMN_OPTIONS.length - 1}
+              step={1}
+              value={zoomLevel}
+              onChange={(event) => setColumnCount(DECK_COLUMN_OPTIONS[Number(event.target.value)])}
+            />
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[DECK_COLUMN_OPTIONS.length - 1]} onClick={() => setColumnCount((value) => value - 1)} title="Zoom in">+</button>
+          </div>
+        </div>
+      </header>
+
+      <div className={`deck-detail-layout ${ENABLE_DECK_CARD_PREVIEW ? "" : "is-preview-hidden"}`}>
+        <section className="deck-detail-collection">
+          <div className="deck-detail-grid-scroll">
+            <div className="deck-detail-grid" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
               {cards.map((copy) => (
                 <DeckCardTile
                   key={copy.key}
                   deck={deck}
                   card={copy.card}
                   quantity={copy.quantity}
-                  cardWidth={cardZoom}
                   selected={copy.card.id === focusedCardId}
                   onHover={() => setHoveredCardId(copy.card.id)}
                   onClick={() => {
@@ -96,12 +116,16 @@ export function DeckInspector({ deck, onBack }: Props) {
             </div>
           </div>
         </section>
-        <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCardId(activeCard.id)} />
+        {ENABLE_DECK_CARD_PREVIEW && (
+          <DeckCardInfo deck={deck} card={activeCard} pinned={Boolean(focusedCardId)} onClearPin={() => setFocusedCardId(undefined)} onDetails={() => activeCard && setDetailsCardId(activeCard.id)} />
+        )}
       </div>
       {detailsCard && (
         <DeckInspectorDetailsModal
           deck={deck}
           card={detailsCard}
+          position={detailsIndex + 1}
+          total={cards.length}
           fontSize={detailsFontSize}
           setFontSize={setDetailsFontSize}
           onClose={() => {
@@ -120,7 +144,6 @@ function DeckCardTile({
   deck,
   card,
   quantity,
-  cardWidth,
   selected,
   onHover,
   onClick,
@@ -128,36 +151,40 @@ function DeckCardTile({
   deck: InspectableDeck;
   card: NewDeckCard;
   quantity: number;
-  cardWidth: number;
   selected: boolean;
   onHover: () => void;
   onClick: () => void;
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
+  const playSfx = useAudioStore((state) => state.playSfx);
+  const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
   return (
     <button
-      className={[
-        "group text-left transition hover:-translate-y-1",
-        selected ? "drop-shadow-[0_0_16px_rgba(247,207,112,0.62)]" : "hover:drop-shadow-[0_0_12px_rgba(94,210,255,0.48)]",
-      ].join(" ")}
-      onMouseEnter={onHover}
-      onFocus={onHover}
+      className={`deck-detail-card ${selected ? "is-selected" : ""}`}
+      onMouseEnter={() => {
+        onHover();
+        playHoverSound();
+      }}
+      onFocus={(event) => {
+        onHover();
+        if (!event.currentTarget.matches(":hover")) playHoverSound();
+      }}
       onClick={onClick}
       title={card.name}
     >
-      <div className="relative mx-auto w-full" style={{ maxWidth: cardWidth }}>
+      <div className="deck-detail-card-frame">
         {quantity > 1 && (
           <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
             x{quantity}
           </span>
         )}
-        <div className="relative aspect-[488/680] overflow-hidden rounded-md border-2 border-[#5e3f1f] bg-[#170f09] shadow-lg shadow-black/45 group-hover:border-[#78d9ff]">
-          {details.imageUrl ? <img src={details.imageUrl} alt={card.name} className="h-full w-full object-cover" draggable={false} /> : <MissingCardArt card={card} />}
-          {selected && <div className="pointer-events-none absolute inset-0 border-2 border-[#f5d078] shadow-[inset_0_0_18px_rgba(245,208,120,0.55)]" />}
+        <div className="deck-detail-card-image">
+          {details.imageUrl ? <img src={details.imageUrl} alt={card.name} draggable={false} /> : <MissingCardArt card={card} />}
+          {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
-      <div className="mx-auto mt-2 truncate text-center text-xs font-bold text-[#f4dfb0]" style={{ maxWidth: cardWidth }}>{card.name}</div>
+      <div className="deck-detail-card-name">{card.name}</div>
     </button>
   );
 }
@@ -166,48 +193,49 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const details = useDeckCardDetails(deck.id, card, deck.images);
   if (!card) {
     return (
-      <aside className="old-panel flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#d6b879]">
+      <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
         Hover a card to inspect it.
       </aside>
     );
   }
 
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
+  const text = deckCardDescription(card, details.oracleText, details.flavorText);
   const hasText = text.length > 0;
 
   return (
-    <aside className="old-panel relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
-      <div className="flex items-start justify-between gap-3 border-b border-[#8f6a36]/60 p-3">
+    <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
+      <div className="deck-detail-info-header">
         <div>
-          <h2 className="old-title text-lg font-bold leading-tight">{card.name}</h2>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
+          <span className="deck-detail-info-kicker">Selected card</span>
+          <h2>{card.name}</h2>
+          <p>{typeLine(card)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {pinned && (
-            <button className="icon-button" title="Clear selection" onClick={onClearPin}>
+            <button className="deck-detail-close" title="Clear selection" onClick={onClearPin}>
               <X size={15} />
             </button>
           )}
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3">
+      <div className="deck-detail-info-body">
         {details.imageUrl ? (
-          <img src={details.imageUrl} alt={card.name} className="mx-auto max-h-[48vh] w-full max-w-[280px] rounded-md border-2 border-[#9c7238] object-contain shadow-lg shadow-black/45" />
+          <img src={details.imageUrl} alt={card.name} className="deck-detail-info-image" />
         ) : (
           <MissingCardArt card={card} />
         )}
-        <div className="relative z-[120] flex items-center justify-between gap-2 overflow-visible">
+        <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
+          {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
           {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
-          {stats(card) && <span className="preview-stat-pill ml-auto">{stats(card)}</span>}
         </div>
         {hasText && (
-          <div className="old-panel-soft old-scrollbar min-h-0 flex-1 overflow-auto p-2">
-            <p className="whitespace-pre-line text-base leading-relaxed text-[#f4dfb0]">{renderCardText(text)}</p>
+          <div className="deck-detail-rules">
+            <p>{renderCardText(text)}</p>
           </div>
         )}
-        <button className="old-button h-10 text-sm font-black uppercase tracking-wide" onClick={onDetails}>
-          <Maximize2 className="mr-2 inline" size={16} />
-          Details
+        <button className="deck-detail-action" onClick={onDetails}>
+          <span>Open details</span>
+          <Maximize2 size={18} />
         </button>
       </div>
     </aside>
@@ -217,6 +245,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
 function DeckInspectorDetailsModal({
   deck,
   card,
+  position,
+  total,
   fontSize,
   setFontSize,
   onClose,
@@ -225,6 +255,8 @@ function DeckInspectorDetailsModal({
 }: {
   deck: InspectableDeck;
   card: NewDeckCard;
+  position: number;
+  total: number;
   fontSize: number;
   setFontSize: (value: number) => void;
   onClose: () => void;
@@ -232,22 +264,113 @@ function DeckInspectorDetailsModal({
   onNext: () => void;
 }) {
   const details = useDeckCardDetails(deck.id, card, deck.images);
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, deckKeywords(card), describeCardFromJson(card));
+  const text = deckCardDescription(card, details.oracleText, details.flavorText);
+  const keywords = deckKeywords(card);
+  const cardStats = stats(card);
+  const playSfx = useAudioStore((state) => state.playSfx);
+  const [closing, setClosing] = useState(false);
+  const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
+  const timers = useRef<number[]>([]);
+  const closeLock = useRef(false);
+  const transitionLock = useRef(false);
+
+  useEffect(() => {
+    return () => timers.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
+  const closeModal = () => {
+    if (closeLock.current) return;
+    closeLock.current = true;
+    setClosing(true);
+    timers.current.push(window.setTimeout(onClose, 210));
+  };
+
+  const navigate = (direction: "next" | "previous") => {
+    if (transitionLock.current || closeLock.current || transition !== "idle" || closing) return;
+    transitionLock.current = true;
+    setTransition(`leave-${direction}`);
+    timers.current.push(window.setTimeout(() => {
+      if (direction === "next") onNext();
+      else onPrevious();
+      playSfx("drawOne", { volume: 0.52 });
+      setTransition(`enter-${direction}`);
+      timers.current.push(window.setTimeout(() => {
+        setTransition("idle");
+        transitionLock.current = false;
+      }, 160));
+    }, 90));
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeModal();
+      }
+      if (event.key === "ArrowLeft") navigate("previous");
+      if (event.key === "ArrowRight") navigate("next");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
-    <CardDetailsModal
-      card={toCardInstance(card)}
-      imageUrl={details.imageUrl}
-      keywords={deckKeywords(card)}
-      stats={stats(card)}
-      text={text}
-      fontSize={fontSize}
-      setFontSize={setFontSize}
-      onClose={onClose}
-      onPrevious={onPrevious}
-      onNext={onNext}
-      previousLabel="Previous deck card"
-      nextLabel="Next deck card"
-    />
+    <div
+      data-preserve-card-focus="true"
+      className={`deck-collection-modal-backdrop deck-theme-${deckTheme(deck.id)} ${closing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeModal();
+      }}
+    >
+      <section className="deck-collection-modal" role="dialog" aria-modal="true" aria-label={`${card.name} details`}>
+        <button className="deck-collection-modal-close" type="button" onClick={closeModal} title="Close details">
+          <X size={20} />
+        </button>
+
+        <div className={`deck-collection-modal-content is-${transition}`}>
+          <div className="deck-collection-modal-art-column">
+            <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title="Previous deck card">
+              <ChevronLeft size={24} />
+            </button>
+            <div className="deck-collection-modal-art">
+              {details.imageUrl ? <img src={details.imageUrl} alt={card.name} draggable={false} /> : <MissingCardArt card={card} />}
+            </div>
+            <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title="Next deck card">
+              <ChevronRight size={24} />
+            </button>
+          </div>
+
+          <div className="deck-collection-modal-info">
+            <header className="deck-collection-modal-header">
+              <p>Card details <span>{position} / {total}</span></p>
+              <div>
+                <h2>{card.name}</h2>
+              </div>
+              <small>{typeLine(card)}</small>
+            </header>
+
+            {(keywords || cardStats) && (
+              <div className="deck-collection-modal-badges">
+                {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
+                {keywords && <KeywordPills keywords={keywords} />}
+              </div>
+            )}
+
+            <div className="deck-collection-modal-rules">
+              <p style={{ fontSize }}>{renderCardText(text)}</p>
+            </div>
+
+            <footer className="deck-collection-modal-footer">
+              <span>Text size</span>
+              <button disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))}>−</button>
+              <input className="game-range" type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
+              <button disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))}>+</button>
+              <strong>{fontSize}</strong>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -292,44 +415,14 @@ function formatDeckKeyword(keyword: string): string {
   return text.toUpperCase();
 }
 
-function toCardInstance(card: NewDeckCard): CardInstance {
-  return {
-    instanceId: `inspect-${card.id}`,
-    definitionId: card.id,
-    name: card.name,
-    displayName: card.name,
-    owner: "player",
-    controller: "player",
-    zone: "library",
-    isToken: false,
-    manaCost: card.manaCost ?? "",
-    manaValue: card.manaValue ?? 0,
-    colors: card.colors ?? [],
-    cardTypes: card.cardTypes ?? [],
-    subtypes: card.subtypes ?? [],
-    basePower: card.power ?? 0,
-    baseToughness: card.toughness ?? 0,
-    keywords: [],
-    effects: [],
-    activatedAbilities: [],
-    requiresTargets: [],
-    tapped: false,
-    entersTapped: false,
-    summoningSickness: false,
-    activatedThisTurn: false,
-    damageMarked: 0,
-    deathtouchDamage: false,
-    counters: {},
-    temporaryPower: 0,
-    temporaryToughness: 0,
-    temporaryKeywords: [],
-    flags: {},
-  };
-}
-
 function describeCardFromJson(card: NewDeckCard): string {
   const abilities = card.abilities ?? [];
   return abilities.map(describeAbility).filter(Boolean).join("\n\n");
+}
+
+function deckCardDescription(card: NewDeckCard, oracleText?: string, flavorText?: string): string {
+  if ((card.cardTypes ?? []).some((type) => type.toLowerCase() === "land")) return "Add mana.";
+  return cleanCardDescriptionText(oracleText, flavorText, deckKeywords(card), describeCardFromJson(card));
 }
 
 function describeAbility(ability: NewDeckAbility): string {
@@ -359,18 +452,54 @@ function MissingCardArt({ card }: { card: NewDeckCard }) {
   );
 }
 
-function readStoredCardZoom(): number {
-  if (typeof window === "undefined") return DEFAULT_CARD_ZOOM;
-  const stored = window.localStorage.getItem("horde-deck-inspector-card-zoom");
-  const parsed = stored ? Number(stored) : DEFAULT_CARD_ZOOM;
-  return clampCardZoom(Number.isFinite(parsed) ? parsed : DEFAULT_CARD_ZOOM);
+function readStoredColumnCount(): DeckColumnCount {
+  if (typeof window === "undefined") return DEFAULT_DECK_COLUMNS;
+  const stored = window.localStorage.getItem(DECK_COLUMNS_STORAGE_KEY);
+  const parsed = stored ? Number(stored) : DEFAULT_DECK_COLUMNS;
+  return clampColumnCount(Number.isFinite(parsed) ? parsed : DEFAULT_DECK_COLUMNS);
 }
 
-function writeStoredCardZoom(value: number): void {
+function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
+  if (deckId === "horde_zombies") return "zombie";
+  if (deckId === "goblin_assault_horde") return "goblin";
+  return "ramp";
+}
+
+function DeckFireflies() {
+  return (
+    <div className="menu-fireflies deck-detail-fireflies" aria-hidden="true">
+      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
+    </div>
+  );
+}
+
+function fireflyStyle(index: number): React.CSSProperties {
+  const random = (salt: number) => {
+    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const driftX = -45 + random(6) * 90;
+  const driftY = -60 + random(7) * 80;
+  return {
+    "--firefly-left": `${3 + random(1) * 94}%`,
+    "--firefly-top": `${5 + random(2) * 88}%`,
+    "--firefly-size": `${1.5 + random(3) * 3}px`,
+    "--firefly-duration": `${7 + random(4) * 8}s`,
+    "--firefly-delay": `${-random(5) * 13}s`,
+    "--firefly-mid-x": `${driftX * 0.55}px`,
+    "--firefly-mid-y": `${driftY * 0.72}px`,
+    "--firefly-drift-x": `${driftX}px`,
+    "--firefly-drift-y": `${driftY}px`,
+  } as React.CSSProperties;
+}
+
+function writeStoredColumnCount(value: number): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem("horde-deck-inspector-card-zoom", String(value));
+  window.localStorage.setItem(DECK_COLUMNS_STORAGE_KEY, String(value));
 }
 
-function clampCardZoom(value: number): number {
-  return Math.min(MAX_CARD_ZOOM, Math.max(MIN_CARD_ZOOM, value));
+function clampColumnCount(value: number): DeckColumnCount {
+  return DECK_COLUMN_OPTIONS.reduce((closest, option) => (
+    Math.abs(option - value) < Math.abs(closest - value) ? option : closest
+  ), DEFAULT_DECK_COLUMNS);
 }

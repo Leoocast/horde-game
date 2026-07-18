@@ -1,9 +1,12 @@
-import { AlertTriangle, ChevronDown, Github, GraduationCap, Play } from "lucide-react";
-import { useEffect, useState } from "react";
-import type { InspectableDeck } from "../data/deckCatalog";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Swords, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
-import { AppHeader } from "./AppHeader";
+import { useDeckCardDetails } from "../utils/deckCardImages";
+import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
+import { AudioControls } from "./AudioControls";
+import { DecksView } from "./DecksView";
 import { ToastStack } from "./ToastStack";
 
 export type DifficultyMode = "easy" | "normal" | "hard";
@@ -12,33 +15,45 @@ type Props = {
   decks: InspectableDeck[];
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
+  onOpenDeck: (deckId: string) => void;
   onViewDeck: () => void;
   hordeDecks: InspectableDeck[];
   selectedHordeDeckId: string;
   onSelectHordeDeck: (deckId: string) => void;
   onViewHordeDeck: () => void;
+  initialScreen?: "home" | "setup" | "decks" | "settings";
   preserveMusicOnMount?: boolean;
+  requestInitialName?: boolean;
+  onNameSaved?: (name: string) => void;
+  onRestartFirstTime?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
 };
 
-const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number; description: string }> = [
-  { id: "easy", label: "Easy", setupTurns: 4, description: "4 extra setup turns" },
-  { id: "normal", label: "Normal", setupTurns: 3, description: "3 extra setup turns" },
-  { id: "hard", label: "Hard", setupTurns: 2, description: "2 extra setup turns" },
+const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = [
+  { id: "easy", label: "Adventurer", setupTurns: 4 },
+  { id: "normal", label: "Veteran", setupTurns: 3 },
+  { id: "hard", label: "Doomed", setupTurns: 2 },
 ];
 
-const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
-
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, preserveMusicOnMount = false, onStart }: Props) {
-  const [playerName, setPlayerName] = useState("Arky");
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onStart }: Props) {
+  const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("normal");
   const [seed, setSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
-  const [deckOpen, setDeckOpen] = useState(false);
-  const [hordeDeckOpen, setHordeDeckOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [launching, setLaunching] = useState(false);
+  const [setupClosing, setSetupClosing] = useState(false);
   const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
+  const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
+  const [nameEditorClosing, setNameEditorClosing] = useState(false);
+  const [nameDraft, setNameDraft] = useState(requestInitialName ? "" : playerName);
+  const [nameRequired, setNameRequired] = useState(requestInitialName);
+  const [clearingCache, setClearingCache] = useState(false);
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
+  const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
+  const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[1];
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
@@ -48,6 +63,94 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   useEffect(() => {
     if (!preserveMusicOnMount) startMenuMusic();
   }, [preserveMusicOnMount, startMenuMusic]);
+
+  useEffect(() => {
+    if (!setupClosing) return;
+    const timeout = window.setTimeout(() => {
+      setMenuScreen("home");
+      setSetupClosing(false);
+    }, 330);
+    return () => window.clearTimeout(timeout);
+  }, [setupClosing]);
+
+  useEffect(() => {
+    if (!closingMenuScreen) return;
+    const timeout = window.setTimeout(() => {
+      setMenuScreen("home");
+      setClosingMenuScreen(undefined);
+    }, 210);
+    return () => window.clearTimeout(timeout);
+  }, [closingMenuScreen]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (showNameEditor) {
+        event.preventDefault();
+        if (!nameRequired) closeNameEditor();
+        return;
+      }
+      if (showTutorialConfirm || showDeveloperWarning) return;
+      if (menuScreen === "home") return;
+      event.preventDefault();
+      if (menuScreen === "setup") setSetupClosing(true);
+      else closeMenuPanel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+
+  function openNameEditor() {
+    setNameDraft(playerName);
+    setNameEditorClosing(false);
+    setShowNameEditor(true);
+  }
+
+  function closeNameEditor() {
+    if (nameRequired) return;
+    if (nameEditorClosing) return;
+    setNameEditorClosing(true);
+    window.setTimeout(() => {
+      setShowNameEditor(false);
+      setNameEditorClosing(false);
+    }, 200);
+  }
+
+  function savePlayerName() {
+    const nextName = nameDraft.trim() || "Chronicler";
+    setPlayerName(nextName);
+    completeOnboarding(nextName);
+    setNameRequired(false);
+    onNameSaved?.(nextName);
+    playSfx("playLand", { volume: 0.62 });
+    setNameEditorClosing(true);
+    window.setTimeout(() => {
+      setShowNameEditor(false);
+      setNameEditorClosing(false);
+    }, 200);
+  }
+
+  async function clearCache() {
+    if (clearingCache) return;
+    setClearingCache(true);
+    try {
+      await clearAppAssetCache();
+      pushToast({ title: "Asset cache cleared", message: "Images and audio will be prepared again on the next visit.", tone: "success" });
+    } catch {
+      pushToast({ title: "Cache could not be cleared", message: "Your browser prevented access to its stored assets.", tone: "warning" });
+    } finally {
+      setClearingCache(false);
+    }
+  }
+
+  function restartFirstTimeFlow() {
+    resetOnboarding();
+    onRestartFirstTime?.();
+  }
+
+  function closeMenuPanel() {
+    if (menuScreen === "decks" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+  }
 
   async function copySeed() {
     try {
@@ -59,8 +162,21 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   }
 
   function startGame() {
+    if (launching) return;
     persistDeveloperMode(developerMode);
-    onStart({ playerName: playerName.trim() || "Player", mode, setupTurns: selectedMode.setupTurns, seed: effectiveSeed.trim() || generateRandomSeed() });
+    setLaunching(true);
+    onStart({
+      playerName: playerName.trim() || "Chronicler",
+      mode,
+      setupTurns: selectedMode.setupTurns,
+      seed: effectiveSeed.trim() || generateRandomSeed(),
+    });
+  }
+
+  function changeDifficulty(nextMode: DifficultyMode) {
+    if (nextMode === mode) return;
+    playSfx("playLand", { volume: 0.72 });
+    setMode(nextMode);
   }
 
   function toggleDeveloperMode() {
@@ -73,6 +189,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
 
   function updateDeveloperMode(enabled: boolean) {
     setDeveloperMode(enabled);
+    persistDeveloperMode(enabled);
     pushToast({
       title: enabled ? "Developer Mode enabled" : "Developer Mode disabled",
       message: enabled ? "Developer testing seed is active." : "New games will use the selected seed.",
@@ -81,245 +198,547 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onViewDeck, hor
   }
 
   return (
-    <main className="duel-table h-screen overflow-hidden text-[#f6e6b8]">
-      <AppHeader
-        left={<div className="pl-3 old-title text-sm font-black uppercase tracking-[0.18em] text-[#f8dfa0]">Horde Magic PvE</div>}
-        center={<div className="old-panel-soft px-4 py-2 text-sm font-black uppercase tracking-wide text-[#fff0b2]">New Game</div>}
-        newGameSeedSettings={{
-          seed,
-          developerMode,
-          onSeedChange: setSeed,
-          onCopySeed: copySeed,
-          onRegenerateSeed: () => {
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" ? "expedition-active" : ""}`}>
+      <MenuFireflies />
+      {menuScreen !== "setup" ? (
+        <div className="main-menu-stage">
+        {menuScreen === "home" && (
+          <div className="main-menu-chronicler" aria-label="Chronicler profile">
+            <span className="main-menu-chronicler-mark" aria-hidden="true" />
+            <div>
+              <strong className="main-menu-chronicler-name">{playerName || "Chronicler"}</strong>
+              <span>Chronicler</span>
+            </div>
+            <button className="main-menu-chronicler-edit" type="button" onClick={openNameEditor} title="Edit Chronicler name" aria-label="Edit Chronicler name">
+              <Feather size={19} />
+            </button>
+          </div>
+        )}
+        <div className="main-menu-layout">
+          <div className="main-menu-brand">
+            <div className="main-menu-kicker">Chronicles of the Shattered Realms</div>
+            <h1 className="main-menu-title">Hostfall</h1>
+            <div className="main-menu-subtitle"><span /> Act I — The Dead Awaken</div>
+          </div>
+
+          <nav className="main-menu-nav" aria-label="Main menu">
+            <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
+              <span className="main-menu-entry-mark" />
+              <span>Play</span>
+            </button>
+            <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("decks"); }}>
+              <span className="main-menu-entry-mark" />
+              <span>Decks</span>
+            </button>
+            <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
+              <span className="main-menu-entry-mark" />
+              <span>How to Play</span>
+            </button>
+            <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("settings"); }}>
+              <span className="main-menu-entry-mark" />
+              <span>Settings</span>
+            </button>
+          </nav>
+
+        </div>
+        {menuScreen === "settings" && (
+          <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label="Settings">
+            <header className="main-settings-header">
+              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> Back</button>
+              <h2>Settings</h2>
+              <span>Customize audio and game configuration.</span>
+            </header>
+
+            <div className="main-settings-content old-scrollbar">
+              <AudioControls variant="screen" />
+
+              <section className="main-settings-section">
+                <div className="main-settings-section-title">Game</div>
+                <div className="main-settings-row">
+                  <div>
+                    <label className="main-settings-label" htmlFor="main-settings-seed">Seed</label>
+                    <div className="main-settings-description">Replay the exact same game configuration</div>
+                  </div>
+                  <div className="main-settings-seed-control">
+                    <input
+                      id="main-settings-seed"
+                      value={developerMode ? "developer" : seed}
+                      onChange={(event) => setSeed(event.target.value)}
+                      disabled={developerMode}
+                      className="main-settings-input"
+                    />
+                    <button className="main-settings-action" type="button" onClick={copySeed}>Copy</button>
+                    <button
+                      className="main-settings-action"
+                      type="button"
+                      onClick={() => {
+                        if (developerMode) updateDeveloperMode(false);
+                        setSeed(generateRandomSeed());
+                      }}
+                    >
+                      New
+                    </button>
+                  </div>
+                </div>
+                <div className="main-settings-row">
+                  <div>
+                    <div className="main-settings-label">Developer Mode</div>
+                    <div className="main-settings-description">Testing tools for cards and unfinished effects</div>
+                  </div>
+                  <button className={`main-settings-toggle ${developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={developerMode} onClick={toggleDeveloperMode}>
+                    <span />
+                  </button>
+                </div>
+                <div className="main-settings-row">
+                  <div>
+                    <div className="main-settings-label">Asset cache</div>
+                    <div className="main-settings-description">Remove saved image and audio data so it is prepared again</div>
+                  </div>
+                  <button className="main-settings-action main-settings-action-wide" type="button" onClick={clearCache} disabled={clearingCache}>
+                    <Trash2 size={14} /> {clearingCache ? "Clearing…" : "Clear cache"}
+                  </button>
+                </div>
+                {developerMode && (
+                  <div className="main-settings-row main-settings-developer-row">
+                    <div>
+                      <div className="main-settings-label">First-time flow</div>
+                      <div className="main-settings-description">Replay loading and player-name onboarding for testing</div>
+                    </div>
+                    <button className="main-settings-action main-settings-action-wide is-developer" type="button" onClick={restartFirstTimeFlow}>
+                      <RotateCcw size={14} /> Test first time
+                    </button>
+                  </div>
+                )}
+              </section>
+            </div>
+          </section>
+        )}
+        {menuScreen === "decks" && (
+          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "decks"} />
+        )}
+        </div>
+      ) : (
+        <ExpeditionSetup
+          playerDeck={selectedDeck}
+          playerDecks={decks}
+          selectedPlayerDeckId={selectedDeckId}
+          onSelectPlayerDeck={onSelectDeck}
+          onInspectPlayerDeck={onViewDeck}
+          hordeDeck={selectedHordeDeck}
+          hordeDecks={hordeDecks}
+          selectedHordeDeckId={selectedHordeDeckId}
+          onSelectHordeDeck={onSelectHordeDeck}
+          onInspectHordeDeck={onViewHordeDeck}
+          mode={mode}
+          onModeChange={changeDifficulty}
+          selectedMode={selectedMode}
+          showAdvanced={showAdvanced}
+          onToggleAdvanced={() => setShowAdvanced((value) => !value)}
+          seed={effectiveSeed}
+          developerMode={developerMode}
+          onSeedChange={setSeed}
+          onCopySeed={copySeed}
+          onRegenerateSeed={() => {
             if (developerMode) updateDeveloperMode(false);
             setSeed(generateRandomSeed());
-          },
-          onToggleDeveloperMode: toggleDeveloperMode,
-        }}
-      />
-      <div className="flex h-[calc(100vh-56px)] items-center justify-center p-6">
-        <section className="old-panel relative w-full max-w-lg p-6">
-        <div className="mb-6">
-          <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Horde Magic PvE</p>
-          <h1 className="old-title mt-2 text-4xl font-black leading-tight">New Game</h1>
-        </div>
-
-        <label className="block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-name">
-          Name
-        </label>
-        <input
-          id="player-name"
-          value={playerName}
-          onChange={(event) => setPlayerName(event.target.value)}
-          className="old-input mt-2 h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
-          placeholder="Player"
+          }}
+          onToggleDeveloperMode={toggleDeveloperMode}
+          onBack={() => setSetupClosing(true)}
+          onStart={startGame}
+          launching={launching}
+          closing={setupClosing}
         />
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="player-deck">
-          Player Deck
-        </label>
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative min-w-0">
-            {deckOpen && <button aria-label="Close deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setDeckOpen(false)} />}
-            <button
-              id="player-deck"
-              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
-              onClick={() => setDeckOpen((value) => !value)}
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={deckOpen}
-            >
-              <span className="truncate">{selectedDeck?.label ?? "Select deck"}</span>
-              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${deckOpen ? "rotate-180" : ""}`} size={18} />
-            </button>
-            {deckOpen && (
-              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="player-deck">
-                {decks.map((deck) => {
-                  const selected = deck.id === selectedDeckId;
-                  return (
-                    <button
-                      key={deck.id}
-                      className={[
-                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
-                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
-                      ].join(" ")}
-                      onClick={() => {
-                        onSelectDeck(deck.id);
-                        setDeckOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={selected}
-                      type="button"
-                    >
-                      <span className="block truncate">{deck.label}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewDeck}>
-            View
-          </button>
-        </div>
-
-        <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="horde-deck">
-          Horde Deck
-        </label>
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative min-w-0">
-            {hordeDeckOpen && <button aria-label="Close horde deck selector" className="fixed inset-0 z-10 cursor-default bg-transparent" onClick={() => setHordeDeckOpen(false)} />}
-            <button
-              id="horde-deck"
-              className="old-select relative z-20 flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 pr-2 text-left text-sm font-bold outline-none transition"
-              onClick={() => setHordeDeckOpen((value) => !value)}
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={hordeDeckOpen}
-            >
-              <span className="truncate">{selectedHordeDeck?.label ?? "Select horde deck"}</span>
-              <ChevronDown className={`shrink-0 text-[#f0c46f] transition ${hordeDeckOpen ? "rotate-180" : ""}`} size={18} />
-            </button>
-            {hordeDeckOpen && (
-              <div className="old-panel old-scrollbar absolute left-0 right-0 top-full z-30 mt-2 max-h-56 overflow-auto p-1 shadow-2xl shadow-black/60" role="listbox" aria-labelledby="horde-deck">
-                {hordeDecks.map((deck) => {
-                  const selected = deck.id === selectedHordeDeckId;
-                  return (
-                    <button
-                      key={deck.id}
-                      className={[
-                        "w-full rounded-md px-3 py-2 text-left text-sm font-bold transition",
-                        selected ? "bg-[#8a5b20]/65 text-[#fff0b2] shadow-[inset_0_0_0_1px_rgba(246,211,132,0.38)]" : "text-[#d6b879] hover:bg-[#4d3018]/80 hover:text-[#ffe6aa]",
-                      ].join(" ")}
-                      onClick={() => {
-                        onSelectHordeDeck(deck.id);
-                        setHordeDeckOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={selected}
-                      type="button"
-                    >
-                      <span className="block truncate">{deck.label}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide text-[#a88956]">{deck.deck.deckSize ?? deck.deck.cards.length} cards</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <button className="old-button h-11 px-4 text-sm font-black uppercase tracking-wide" onClick={onViewHordeDeck}>
-            View
-          </button>
-        </div>
-
-        <div className="mt-5">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">Mode</div>
-          <div className="grid grid-cols-3 gap-2">
-            {modes.map((item) => {
-              const selected = item.id === mode;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setMode(item.id)}
-                  className={[
-                    "old-panel-soft px-3 py-3 text-left transition hover:brightness-125",
-                    selected ? "outline outline-2 outline-[#e6c36f] text-[#fff0b8]" : "text-[#d2bc83]",
-                  ].join(" ")}
-                >
-                  <div className="text-sm font-black uppercase tracking-wide">{item.label}</div>
-                  <div className="mt-1 text-[11px] leading-snug text-[#bda574]">{item.description}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-[1fr_auto] gap-2">
-          <button
-            className="old-button-green flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
-            onClick={startGame}
-          >
-            <Play size={18} />
-            Start
-          </button>
-          <button
-            className="old-button flex h-12 items-center justify-center gap-2 px-4 text-sm font-black uppercase tracking-wide transition"
-            type="button"
-            onClick={() => setShowTutorialConfirm(true)}
-            title="How to play"
-          >
-            <GraduationCap size={18} />
-            How to play
-          </button>
-        </div>
-        </section>
-      </div>
+      )}
 
       {showTutorialConfirm && (
-        <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85 p-6">
-          <div className="old-panel w-full max-w-sm p-6 text-center">
-            <p className="old-title text-xs font-bold uppercase tracking-[0.28em]">Tutorial</p>
-            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Interactive Tutorial</h2>
-            <p className="mt-3 text-sm leading-snug text-[#d6b879]">Do you want to start?</p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowTutorialConfirm(false)}>
-                Cancel
-              </button>
-              <button
-                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
-                type="button"
-                onClick={() => {
-                  setShowTutorialConfirm(false);
-                  onStart({ playerName: playerName.trim() || "Player", mode: "normal", setupTurns: 1, seed: "tutorial" });
-                }}
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        </div>
+        <TutorialUnderConstructionModal onClose={() => setShowTutorialConfirm(false)} />
       )}
 
       {showDeveloperWarning && (
-        <div data-preserve-settings-menu="true" className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-[#090604]/90 p-6">
-          <div className="old-panel w-full max-w-md p-6 text-center">
-            <AlertTriangle className="mx-auto text-[#f0c46f]" size={38} />
-            <p className="old-title mt-3 text-xs font-bold uppercase tracking-[0.28em]">Developer Mode</p>
-            <h2 className="old-title mt-2 text-2xl font-black leading-tight">Are you sure?</h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#d6b879]">
-              Developer Mode can break the intended game experience. It is made only for the developer to test cards, effects, and unfinished features.
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowDeveloperWarning(false)}>
-                Cancel
-              </button>
-              <button
-                className="old-button-green flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide"
-                type="button"
-                onClick={() => {
-                  updateDeveloperMode(true);
-                  setShowDeveloperWarning(false);
-                }}
-              >
-                Enable
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeveloperWarningModal
+          onClose={() => setShowDeveloperWarning(false)}
+          onEnable={() => {
+            updateDeveloperMode(true);
+            setShowDeveloperWarning(false);
+          }}
+        />
+      )}
+
+      {showNameEditor && (
+        <ChroniclerNameModal
+          value={nameDraft}
+          onChange={setNameDraft}
+          onClose={closeNameEditor}
+          onSave={savePlayerName}
+          closing={nameEditorClosing}
+          required={nameRequired}
+        />
       )}
       
-      <div className="fixed bottom-3 left-4 z-[300] text-[10px] font-bold uppercase tracking-wide text-[#bda574]/60">
-        <div className="mb-0.5">Version: ALPHA 4.0-HAND-UPDATE</div>
+      {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
+        <div className="mb-0.5">Version: ALPHA 7.0-HOSTFALL-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
           <Github size={11} className="-mt-[1px]" />
           <span>Leoocast</span>
         </a>
+      </div>}
+
+      <ToastStack variant="menu" />
+    </main>
+  );
+}
+
+function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, required }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean; required: boolean }) {
+  const inputIdentity = useRef(`chronicle-alias-${crypto.randomUUID()}`);
+  const inputId = `${inputIdentity.current}-field`;
+  return (
+    <div
+      className={`chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5 ${closing ? "is-closing" : ""}`}
+      role="presentation"
+      onPointerDown={(event) => {
+        if (!required && event.target === event.currentTarget) onClose();
+      }}
+    >
+      <form className="chronicler-name-modal" autoComplete="off" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
+        <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
+        {!required && <button className="chronicler-name-close" type="button" onClick={onClose} title="Close"><X size={17} /></button>}
+        <p>Before the first page</p>
+        <h2 id="chronicler-name-title">Claim Your Name</h2>
+        <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
+        <label htmlFor={inputId}>Let it be remembered</label>
+        <div className="chronicler-name-input-shell">
+          <input
+            id={inputId}
+            name={inputIdentity.current}
+            value={value}
+            maxLength={24}
+            autoComplete="one-time-code"
+            aria-autocomplete="none"
+            data-form-type="other"
+            autoCorrect="off"
+            autoCapitalize="words"
+            spellCheck={false}
+            autoFocus
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => onChange(event.currentTarget.value)}
+            placeholder="YOUR NAME"
+          />
+          <Feather size={21} aria-hidden="true" />
+        </div>
+        <button className="chronicler-name-save" type="submit">Inscribe</button>
+        <span className="chronicler-name-ornament is-bottom" aria-hidden="true"><i /><b>◆</b><i /></span>
+      </form>
+    </div>
+  );
+}
+
+function MenuFireflies() {
+  return (
+    <div className="menu-fireflies" aria-hidden="true">
+      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
+    </div>
+  );
+}
+
+function fireflyStyle(index: number): React.CSSProperties {
+  const random = (salt: number) => {
+    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const driftX = -45 + random(6) * 90;
+  const driftY = -60 + random(7) * 80;
+  return {
+    "--firefly-left": `${3 + random(1) * 94}%`,
+    "--firefly-top": `${5 + random(2) * 88}%`,
+    "--firefly-size": `${1.5 + random(3) * 3}px`,
+    "--firefly-duration": `${7 + random(4) * 8}s`,
+    "--firefly-delay": `${-random(5) * 13}s`,
+    "--firefly-mid-x": `${driftX * 0.55}px`,
+    "--firefly-mid-y": `${driftY * 0.72}px`,
+    "--firefly-drift-x": `${driftX}px`,
+    "--firefly-drift-y": `${driftY}px`,
+  } as React.CSSProperties;
+}
+
+type ExpeditionSetupProps = {
+  playerDeck?: InspectableDeck;
+  playerDecks: InspectableDeck[];
+  selectedPlayerDeckId: string;
+  onSelectPlayerDeck: (deckId: string) => void;
+  onInspectPlayerDeck: () => void;
+  hordeDeck?: InspectableDeck;
+  hordeDecks: InspectableDeck[];
+  selectedHordeDeckId: string;
+  onSelectHordeDeck: (deckId: string) => void;
+  onInspectHordeDeck: () => void;
+  mode: DifficultyMode;
+  onModeChange: (mode: DifficultyMode) => void;
+  selectedMode: (typeof modes)[number];
+  showAdvanced: boolean;
+  onToggleAdvanced: () => void;
+  seed: string;
+  developerMode: boolean;
+  onSeedChange: (seed: string) => void;
+  onCopySeed: () => void;
+  onRegenerateSeed: () => void;
+  onToggleDeveloperMode: () => void;
+  onBack: () => void;
+  onStart: () => void;
+  launching: boolean;
+  closing: boolean;
+};
+
+function ExpeditionSetup(props: ExpeditionSetupProps) {
+  return (
+    <section className={`expedition-setup ${props.closing ? "is-closing" : ""}`} aria-label="Prepare expedition">
+      <header className="expedition-header">
+        <button className="expedition-back" type="button" onClick={props.onBack}>
+          <ArrowLeft size={17} /> Main menu
+        </button>
+        <div>
+          <h1>Prepare the expedition</h1>
+        </div>
+        <div className="expedition-step"><span>01</span> Party setup</div>
+      </header>
+
+      <div className="expedition-body">
+        <div className="expedition-combatants">
+          <SetupCombatant
+            eyebrow="Chronicler"
+            side="player"
+            deck={props.playerDeck}
+            decks={props.playerDecks}
+            selectedDeckId={props.selectedPlayerDeckId}
+            onSelectDeck={props.onSelectPlayerDeck}
+            onInspect={props.onInspectPlayerDeck}
+          />
+
+          <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
+
+          <SetupCombatant
+            eyebrow="Host"
+            side="horde"
+            deck={props.hordeDeck}
+            decks={props.hordeDecks}
+            selectedDeckId={props.selectedHordeDeckId}
+            onSelectDeck={props.onSelectHordeDeck}
+            onInspect={props.onInspectHordeDeck}
+          />
+        </div>
+
+        <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
+          <div className="expedition-section-heading">
+            <div><p>Choose your fate</p><h2 id="difficulty-heading">Difficulty</h2></div>
+            <HordeAwakening turns={props.selectedMode.setupTurns} />
+          </div>
+          <div className="expedition-mode-grid">
+            {modes.map((item) => (
+              <button key={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
+                <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
+                <span><strong>{item.label}</strong></span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
+          <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
+            <Settings size={16} /> Advanced settings <span>{props.showAdvanced ? "Hide" : "Seed & developer tools"}</span>
+          </button>
+          {props.showAdvanced && (
+            <div className="expedition-advanced-content">
+              <div>
+                <label htmlFor="expedition-seed">Seed</label>
+                <div className="expedition-seed-field">
+                  <input id="expedition-seed" value={props.seed} disabled={props.developerMode} onChange={(event) => props.onSeedChange(event.target.value)} />
+                  <button type="button" onClick={props.onCopySeed} title="Copy seed"><Copy size={16} /></button>
+                  <button type="button" onClick={props.onRegenerateSeed} title="New seed"><RefreshCw size={16} /></button>
+                </div>
+              </div>
+              <div className="expedition-developer-setting">
+                <span><strong>Developer Mode</strong><small>Testing tools and deterministic opening</small></span>
+                <button className={`main-settings-toggle ${props.developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={props.developerMode} onClick={props.onToggleDeveloperMode}><span /></button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
 
-      <ToastStack />
-    </main>
+      <footer className="expedition-footer">
+        <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+          <span><small>Begin the</small> Expedition</span><Play size={29} />
+        </button>
+      </footer>
+
+    </section>
+  );
+}
+
+function HordeAwakening({ turns }: { turns: number }) {
+  const previousTurns = useRef(turns);
+  const [direction, setDirection] = useState<"idle" | "easier" | "harder">("idle");
+
+  useEffect(() => {
+    const previous = previousTurns.current;
+    previousTurns.current = turns;
+    if (turns === previous) return;
+    setDirection(turns > previous ? "easier" : "harder");
+    const timeout = window.setTimeout(() => setDirection("idle"), 650);
+    return () => window.clearTimeout(timeout);
+  }, [turns]);
+
+  return (
+    <div className={`expedition-awakening ${direction !== "idle" ? `is-${direction}` : ""} ${turns === 2 ? "is-doomed" : turns === 4 ? "is-safe" : ""}`} aria-live="polite">
+      <span>The Horde awakens after</span>
+      <strong key={`${turns}-${direction}`}>{turns}</strong>
+      <span>turns</span>
+    </div>
+  );
+}
+
+function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect }: {
+  eyebrow: string;
+  side: "player" | "horde";
+  deck?: InspectableDeck;
+  decks: InspectableDeck[];
+  selectedDeckId: string;
+  onSelectDeck: (deckId: string) => void;
+  onInspect: () => void;
+}) {
+  const keyCard = deck ? findSetupKeyCard(deck) : undefined;
+  const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
+  return (
+    <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
+      <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> Inspect deck</button></div>
+      <div className="expedition-deck-feature">
+        <div className="expedition-deck-art">
+          {details.imageUrl ? <img src={details.imageUrl} alt={keyCard?.name ?? deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
+        </div>
+        <div className="expedition-deck-copy">
+          <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} cards</small>
+          <h2>{deck?.deck.name ?? "Choose a deck"}</h2>
+          <p>{deckDescription(deck?.id)}</p>
+        </div>
+      </div>
+      <div className="expedition-deck-options" role="listbox" aria-label={`${eyebrow} deck`}>
+        {decks.map((item) => <button key={item.id} className={item.id === selectedDeckId ? "is-selected" : ""} type="button" role="option" aria-selected={item.id === selectedDeckId} onClick={() => onSelectDeck(item.id)}>{item.deck.name}</button>)}
+      </div>
+    </article>
+  );
+}
+
+const SETUP_KEY_CARD_IDS: Record<string, string> = {
+  mono_green_ramp: "sunshower_druid",
+  horde_zombies: "zombie_token",
+  goblin_assault_horde: "goblin_token_1_1_red",
+};
+
+function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
+  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
+  return cards.find((card) => card.id === SETUP_KEY_CARD_IDS[deck.id]) ?? cards[0];
+}
+
+function deckDescription(deckId?: string): string {
+  if (deckId === "mono_green_ramp") return "Build an ancient mana engine and awaken overwhelming creatures.";
+  if (deckId === "goblin_assault_horde") return "A warband of fire, haste, and numbers that never stops advancing.";
+  return "An endless host that returns from the grave and consumes the fallen.";
+}
+
+function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (!closing) return;
+    const timeout = window.setTimeout(onClose, 160);
+    return () => window.clearTimeout(timeout);
+  }, [closing, onClose]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setClosing(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  return (
+    <div
+      className={`tutorial-construction-backdrop ${closing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setClosing(true);
+      }}
+    >
+      <section className="tutorial-construction-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-construction-title">
+        <button className="tutorial-construction-close" type="button" onClick={() => setClosing(true)} title="Close">
+          <X size={18} />
+        </button>
+        <div className="tutorial-construction-icon" aria-hidden="true">
+          <Construction size={30} />
+        </div>
+        <p className="tutorial-construction-kicker">How to Play · Feature locked</p>
+        <h2 id="tutorial-construction-title">Under Construction</h2>
+        <div className="tutorial-construction-rule" />
+        <p className="tutorial-construction-copy">
+          The chronicles are still being written. How to Play will become available in a future update.
+        </p>
+        <button className="tutorial-construction-action" type="button" onClick={() => setClosing(true)}>
+          Return to Hostfall
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {
+  const [closingAction, setClosingAction] = useState<"cancel" | "enable" | null>(null);
+
+  useEffect(() => {
+    if (!closingAction) return;
+    const timeout = window.setTimeout(() => {
+      if (closingAction === "enable") onEnable();
+      else onClose();
+    }, 160);
+    return () => window.clearTimeout(timeout);
+  }, [closingAction, onClose, onEnable]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setClosingAction("cancel");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const isClosing = closingAction !== null;
+
+  return (
+    <div
+      data-preserve-settings-menu="true"
+      className={`tutorial-construction-backdrop ${isClosing ? "is-closing" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setClosingAction("cancel");
+      }}
+    >
+      <section className="tutorial-construction-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
+        <button className="tutorial-construction-close" type="button" onClick={() => setClosingAction("cancel")} title="Close">
+          <X size={18} />
+        </button>
+        <div className="tutorial-construction-icon developer-warning-icon" aria-hidden="true">
+          <AlertTriangle size={30} />
+        </div>
+        <p className="tutorial-construction-kicker">Developer Mode · Restricted tools</p>
+        <h2 id="developer-warning-title">Enter the Workshop?</h2>
+        <div className="tutorial-construction-rule" />
+        <p className="tutorial-construction-copy">
+          Developer Mode may disrupt the intended experience. Use it to test cards, effects, and unfinished features.
+        </p>
+        <div className="developer-warning-actions">
+          <button className="tutorial-construction-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>Cancel</button>
+          <button className="tutorial-construction-action" type="button" onClick={() => setClosingAction("enable")}>Enable Developer Mode</button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -331,15 +750,5 @@ function generateRandomSeed(): string {
     cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
     cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
   }
-  return `horde-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
-}
-
-function readStoredDeveloperMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(DEVELOPER_MODE_STORAGE_KEY) === "true";
-}
-
-function persistDeveloperMode(enabled: boolean): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(DEVELOPER_MODE_STORAGE_KEY, String(enabled));
+  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

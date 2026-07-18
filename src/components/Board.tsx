@@ -1,5 +1,6 @@
 import { AlertTriangle, Home } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { AppHeader } from "./AppHeader";
@@ -8,11 +9,10 @@ import { CardPreview } from "./CardPreview";
 import { CombatArrows } from "./CombatArrows";
 import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
-import { GameStatusBadge } from "./GameStatusBadge";
 import { Hand } from "./Hand";
+import { HandLimitOverlay } from "./HandLimitOverlay";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { HordeMillAnimator } from "./HordeMillAnimator";
-import { InfoMenu } from "./InfoMenu";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
@@ -29,10 +29,11 @@ import { VictoryModal } from "./VictoryModal";
 type Props = {
   playerName: string;
   setupTurns: number;
+  encounterEntering?: boolean;
   onReturnToMenu: () => void;
 };
 
-export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
+export function Board({ playerName, setupTurns, encounterEntering = false, onReturnToMenu }: Props) {
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
@@ -41,6 +42,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
+  const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
 
   useEffect(() => {
     if (game.player.life <= 10) setMusicVariant("climax");
@@ -52,28 +54,15 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
   }, [game.winner, playCollection]);
 
   return (
-    <main className="duel-table h-screen overflow-hidden">
+    <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
+      <BattlefieldFireflies />
       <AppHeader
-        left={
-          <div className="flex min-w-0 items-center">
-            <button
-              className="old-button ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-              type="button"
-              onClick={() => setShowHomeConfirmation(true)}
-              title="Return home"
-              aria-label="Return to home menu"
-            >
-              <Home size={18} />
-            </button>
-            <GameStatusBadge game={game} />
-          </div>
-        }
-        center={<TurnPhaseHud game={game} />}
-        right={<InfoMenu setupTurns={setupTurns} />}
+        left={<TurnPhaseHud game={game} />}
+        setupTurns={setupTurns}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} />
+      <PhaseBanner game={game} suspended={encounterEntering} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
@@ -82,6 +71,7 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       <HordeAttackAnimator />
       <HordeMillAnimator />
       <PlayerDiscardAnimator />
+      <HandLimitOverlay game={game} />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       {hordeAutoTriggerCount > 0 && <div data-audio-click="off" className="fixed inset-0 z-[79]" />}
@@ -90,9 +80,9 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       )}
       <CardPreview />
       <PlayerLifePanel game={game} playerName={playerName} />
-      <ToastStack />
+      <ToastStack variant={game.winner ? "menu" : "game"} />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
-      <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-3 overflow-hidden px-3 pb-40 pt-3">
+      <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-horde">
             <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
@@ -107,26 +97,27 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
       {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
       {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
 
-      {showHomeConfirmation && (
-        <div className="fixed inset-0 z-[450] flex items-center justify-center bg-[#090604]/90 p-6 text-[#f6e6b8] backdrop-blur-sm" role="presentation">
-          <section className="old-panel w-full max-w-md p-5 shadow-2xl shadow-black/70" role="dialog" aria-modal="true" aria-labelledby="return-home-title">
+      {homeConfirmationPresence.mounted && (
+        <div className={["game-home-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6 text-[#e4ddc2]", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="presentation">
+          <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#b97637] bg-[#3a1b0d] text-[#ffbd73]">
+              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <h2 id="return-home-title" className="old-title text-lg font-black uppercase tracking-wide text-[#f4cc74]">
+                <div className="game-dialog-kicker">Leave the battlefield</div>
+                <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
                   Return home?
                 </h2>
-                <p className="mt-1 text-sm text-[#d6b879]">Your current game progress will be lost.</p>
+                <p className="mt-2 text-sm text-[#8d9a94]">Your current game progress will be lost.</p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="old-button flex h-11 items-center justify-center text-sm font-black uppercase tracking-wide" type="button" onClick={() => setShowHomeConfirmation(false)}>
+              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowHomeConfirmation(false)}>
                 Cancel
               </button>
-              <button className="old-button-green flex h-11 items-center justify-center gap-2 text-sm font-black uppercase tracking-wide" type="button" onClick={onReturnToMenu}>
+              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
                 <Home size={16} />
                 Return home
               </button>
@@ -135,5 +126,25 @@ export function Board({ playerName, setupTurns, onReturnToMenu }: Props) {
         </div>
       )}
     </main>
+  );
+}
+
+function BattlefieldFireflies() {
+  return (
+    <div className="game-battlefield-fireflies" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, index) => {
+        const left = 6 + ((index * 37 + 11) % 87);
+        const top = 8 + ((index * 53 + 17) % 69);
+        const style = {
+          left: `${left}%`,
+          top: `${top}%`,
+          "--battlefly-delay": `${-(index * 1.37)}s`,
+          "--battlefly-duration": `${7.5 + (index % 4) * 1.45}s`,
+          "--battlefly-x": `${index % 2 === 0 ? 22 + index * 2 : -18 - index * 2}px`,
+          "--battlefly-y": `${index % 3 === 0 ? -34 : 24 + index}px`,
+        } as CSSProperties;
+        return <span key={index} style={style} />;
+      })}
+    </div>
   );
 }

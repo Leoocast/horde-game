@@ -3,6 +3,7 @@ import type { CardInstance, GameState } from "../engine/GameTypes";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
+import { Heart, Swords } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -64,16 +65,16 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
-  const showCyanGlow = Boolean(actionable);
-  const actionGlow = showCyanGlow
-    ? "0 0 0 1.5px rgba(208,247,255,0.65), 0 0 8px rgba(49,196,255,0.8), 0 0 18px rgba(49,196,255,0.48)"
+  const showActionGlow = Boolean(actionable);
+  const actionGlow = showActionGlow
+    ? "inset 0 0 0 1px rgba(228,218,158,0.42), 0 0 8px rgba(103,166,137,0.62), 0 0 18px rgba(44,111,99,0.4)"
     : "";
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
     : "";
-  const style = accentColor || showCyanGlow || showSelectedVisual || showEffectAvailable || dragging
+  const style = accentColor || showActionGlow || showSelectedVisual || showEffectAvailable || dragging
     ? ({
-        borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(102 216 255 / 0.9)",
+        borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(190 183 111 / 0.88)",
         "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
         boxShadow: [
           dragging ? draggingGlow : selectedGlow,
@@ -105,7 +106,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
-        if (card.zone === "hand") return;
         setHoveredCardId(undefined);
         setFocusedCardId(card.instanceId);
       }}
@@ -139,12 +139,18 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
         </div>
       )}
+      {actionable && !dragging && (
+        <span className="card-actionable-sweep" aria-hidden="true" />
+      )}
+      {showEffectAvailable && (
+        <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
+      )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
-          {attacking && <span className="rounded-sm bg-[#7b2513]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Atk</span>}
+          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
+          {attacking && <span className="card-state-tag card-state-tag-attack">Atk</span>}
           {blocking && <span className="rounded-sm bg-[#5b421f]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Blk</span>}
           {linkLabel && (
             <span className="rounded-sm px-1.5 py-0.5 text-[12px] font-black text-white shadow" style={{ backgroundColor: accentColor ?? "#2563eb" }}>
@@ -156,25 +162,25 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
-            <span key={keyword} className={["card-keyword-badge", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
+            <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
               {renderBattlefieldKeywordLabel(keyword)}
             </span>
           ))}
         </div>
       )}
       {!hideStats && stats.text && (
-        <span
+        <div
+          aria-label={`${stats.power} attack, ${stats.toughness} life`}
           className={[
-            "card-stat-badge absolute flex items-center justify-center rounded-[999px] border font-black leading-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),inset_0_-1px_1px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.55)]",
-            stats.damaged
-              ? "border-[#4b0f0a] bg-gradient-to-b from-[#f3a59b] via-[#b93327] to-[#6d150f] text-[#fff0e8]"
-              : stats.buffed
-                ? "border-[#275d21] bg-gradient-to-b from-[#edffe6] via-[#a7d694] to-[#5c8750] text-[#123910]"
-                : "border-[#485356] bg-gradient-to-b from-[#edf4ed] via-[#b9c5bf] to-[#7f8b87] text-[#18201f]",
+            "card-stat-badge",
+            stats.damaged ? "is-damaged" : "",
+            stats.buffed ? "is-buffed" : "",
           ].join(" ")}
         >
-          {stats.text}
-        </span>
+          <span className="card-stat-segment card-stat-attack"><Swords aria-hidden="true" /><b>{stats.power}</b></span>
+          <i aria-hidden="true" />
+          <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+        </div>
       )}
     </article>
   );

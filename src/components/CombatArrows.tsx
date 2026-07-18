@@ -3,9 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
-const PLAYER_ATTACK_ARROW_COLOR = "#f04438";
+const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 const STACKED_DEFENSE_ARROW_LEFT_INSET_PX = 24;
@@ -180,6 +181,9 @@ export function CombatArrows({ game }: { game: GameState }) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <filter id="combat-arrow-horde-orange-underglow" x="-100%" y="-100%" width="300%" height="300%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur stdDeviation="5.5" />
+        </filter>
         <filter id="combat-arrow-attack-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
           <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
           <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
@@ -215,14 +219,23 @@ export function CombatArrows({ game }: { game: GameState }) {
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              <path d={arrow.path} fill="none" stroke={arrow.color} strokeWidth={4.5} strokeLinecap="round" opacity="0.12" />
-              <polygon points={arrow.tip} fill={arrow.color} opacity="0.14" />
-              <g
-                className="combat-arrow-pulse"
-                filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}
-              >
-                <path d={arrow.path} fill="none" stroke={`url(#${arrow.gradientId})`} strokeWidth={5.25} strokeLinecap="round" opacity="0.86" />
-                <polygon points={arrow.tip} fill={`url(#${arrow.gradientId})`} opacity="0.94" />
+              {isDefenseArrow && (
+                <g
+                  className="combat-arrow-horde-underglow"
+                  transform="translate(0 7)"
+                  filter="url(#combat-arrow-horde-orange-underglow)"
+                >
+                  <path d={arrow.path} fill="none" stroke={PLAYER_ATTACK_ARROW_COLOR} strokeWidth="11" strokeLinecap="round" />
+                  <polygon points={arrow.tip} fill={PLAYER_ATTACK_ARROW_COLOR} stroke={PLAYER_ATTACK_ARROW_COLOR} strokeWidth="5" />
+                </g>
+              )}
+              <g filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}>
+                <TacticalArrowGlyph
+                  path={arrow.path}
+                  tip={arrow.tip}
+                  color={arrow.color}
+                  stroke={`url(#${arrow.gradientId})`}
+                />
               </g>
             </g>
           </motion.g>
@@ -237,7 +250,7 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
   const target = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']") ?? document.querySelector<HTMLElement>("[data-battlefield-drop-target='player-attack']");
   const rect = target?.getBoundingClientRect();
   if (!rect) return undefined;
-  return { x: rect.left + 18, y: rect.top + rect.height * 0.5 };
+  return { x: rect.left + rect.width * 0.5, y: rect.bottom };
 }
 
 function isCardBehindInStack(card: HTMLElement): boolean {
@@ -283,14 +296,18 @@ function makeArrow(id: string, start: { x: number; y: number }, end: { x: number
   const uy = dy / length;
   const px = -uy;
   const py = ux;
-  const curve = Math.min(42, Math.max(14, length * 0.14));
+  const curve = Math.min(38, Math.max(10, length * 0.11));
   const curveDirection = dx >= 0 ? -1 : 1;
-  const control = {
-    x: (start.x + end.x) / 2 + px * curve * curveDirection,
-    y: (start.y + end.y) / 2 + py * curve * curveDirection,
+  const controlA = {
+    x: start.x + dx * 0.36 + px * curve * curveDirection,
+    y: start.y + dy * 0.36 + py * curve * curveDirection,
   };
-  const tangentX = end.x - control.x;
-  const tangentY = end.y - control.y;
+  const controlB = {
+    x: start.x + dx * 0.72 + px * curve * curveDirection * 0.42,
+    y: start.y + dy * 0.72 + py * curve * curveDirection * 0.42,
+  };
+  const tangentX = end.x - controlB.x;
+  const tangentY = end.y - controlB.y;
   const tangentLength = Math.hypot(tangentX, tangentY) || 1;
   const tx = tangentX / tangentLength;
   const ty = tangentY / tangentLength;
@@ -299,7 +316,7 @@ function makeArrow(id: string, start: { x: number; y: number }, end: { x: number
   const headLength = 22;
   const headWing = 10;
   const neckAt = { x: end.x - tx * headLength, y: end.y - ty * headLength };
-  const path = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${neckAt.x} ${neckAt.y}`;
+  const path = `M ${start.x} ${start.y} C ${controlA.x} ${controlA.y} ${controlB.x} ${controlB.y} ${neckAt.x} ${neckAt.y}`;
   const tip = [`${end.x},${end.y}`, `${end.x - tx * headLength + tpx * headWing},${end.y - ty * headLength + tpy * headWing}`, `${end.x - tx * headLength - tpx * headWing},${end.y - ty * headLength - tpy * headWing}`].join(" ");
   return { id, color, path, tip, gradientId: `combat-arrow-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`, startX: start.x, startY: start.y, tipX: end.x, tipY: end.y };
 }

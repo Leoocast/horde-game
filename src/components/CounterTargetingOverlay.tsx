@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const ARROW_COLOR = "#4ade80";
@@ -116,9 +117,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           </linearGradient>
         </defs>
         <g filter="url(#counter-target-arrow-glow)">
-          <path d={arrow.path} fill="none" stroke={ARROW_COLOR} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-          <path d={arrow.path} fill="none" stroke="url(#counter-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
-          <polygon points={arrow.tip} fill={ARROW_COLOR} opacity="0.96" />
+          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} stroke="url(#counter-target-arrow-gradient)" />
         </g>
       </svg>
       <aside className="counter-target-source-panel">
@@ -133,8 +132,13 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           <button data-audio-click={locked ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!locked} onClick={confirmTargeting} title="Confirm">
             <Check size={24} />
           </button>
-          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={locked ? deselectTarget : cancelTargeting} title={locked ? "Deselect" : "Cancel"}>
-            {locked ? "Deselect" : <X size={24} />}
+          {locked && (
+            <button data-audio-click="valid" className="counter-target-button counter-target-deselect" onClick={deselectTarget} title="Deselect target" aria-label="Deselect target">
+              <X size={22} />
+            </button>
+          )}
+          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={cancelTargeting} title="Cancel card">
+            Cancel
           </button>
         </div>
       </aside>

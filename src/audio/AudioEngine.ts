@@ -57,7 +57,7 @@ class AudioEngine {
     if (!this.settings.enabled) return;
     const base = this.getBaseSfx(id);
     const instance = base.cloneNode(true) as HTMLAudioElement;
-    instance.volume = clamp01(this.settings.sfxVolume * (options.volume ?? 1));
+    instance.volume = clamp01(volumeToGain(this.settings.sfxVolume) * (options.volume ?? 1));
     instance.playbackRate = options.rate ?? 1;
     instance.preload = "auto";
     this.activeSfx.add(instance);
@@ -177,7 +177,7 @@ class AudioEngine {
 
   private syncMusicSettings() {
     if (!this.music) return;
-    this.music.volume = this.settings.musicVolume;
+    this.music.volume = volumeToGain(this.settings.musicVolume);
     if (!this.settings.musicEnabled) {
       this.pausedByMute = true;
       this.music.pause();
@@ -194,7 +194,7 @@ class AudioEngine {
     const music = new Audio(musicCollections[id][variant]);
     music.loop = true;
     music.preload = "auto";
-    music.volume = this.settings.musicVolume;
+    music.volume = volumeToGain(this.settings.musicVolume);
     try {
       music.currentTime = Math.max(0, startAt);
     } catch {
@@ -218,6 +218,13 @@ class AudioEngine {
 function clamp01(value: number) {
   if (Number.isNaN(value)) return 0;
   return Math.max(0, Math.min(1, value));
+}
+
+// HTMLMediaElement.volume is a linear gain control, but the slider is easier to
+// use when its low end follows human loudness perception more closely.
+function volumeToGain(value: number) {
+  const normalized = clamp01(value);
+  return normalized * normalized;
 }
 
 export const audioEngine = new AudioEngine();

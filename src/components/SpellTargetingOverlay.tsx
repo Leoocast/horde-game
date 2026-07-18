@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState, TargetRequirement } from "../engine/GameTypes";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { useGameStore } from "../store/useGameStore";
+import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const FRIENDLY_ARROW = "#4ade80";
@@ -162,16 +163,12 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
         </defs>
         {lockedArrows.map(({ req, arrow, color }) => (
           <g key={req.id} filter={color === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-            <path d={arrow.path} fill="none" stroke={color} strokeLinecap="round" strokeWidth={5.25} opacity="0.84" />
-            <polygon points={arrow.tip} fill={color} opacity="0.92" />
+            <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={color} />
           </g>
         ))}
         {!complete && (
           <g filter={arrowColor === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <path d={followArrow.path} fill="none" stroke={arrowColor} strokeLinecap="round" strokeWidth={4.5} opacity="0.13" />
-            <path d={followArrow.path} fill="none" stroke="url(#spell-target-arrow-gradient)" strokeLinecap="round" strokeWidth={5.25} opacity="0.94" />
-            <polygon points={followArrow.tip} fill={arrowColor} opacity="0.96" />
+            <TacticalArrowGlyph path={followArrow.path} tip={followArrow.tip} color={arrowColor} stroke="url(#spell-target-arrow-gradient)" />
           </g>
         )}
       </svg>
@@ -187,8 +184,13 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           <button data-audio-click={complete ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!complete} onClick={confirmTargeting} title="Confirm">
             <Check size={24} />
           </button>
-          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={complete ? deselectTarget : cancelTargeting} title={complete ? "Deselect" : "Cancel"}>
-            {complete ? "Deselect" : <X size={24} />}
+          {hasAnyTarget && (
+            <button data-audio-click="valid" className="counter-target-button counter-target-deselect" onClick={deselectTarget} title="Deselect target" aria-label="Deselect target">
+              <X size={22} />
+            </button>
+          )}
+          <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={cancelTargeting} title="Cancel card">
+            Cancel
           </button>
         </div>
       </aside>

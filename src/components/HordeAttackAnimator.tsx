@@ -28,21 +28,22 @@ export function HordeAttackAnimator() {
 function animateAttacker(element: HTMLElement, dies: boolean): () => void {
   const previousZIndex = element.style.zIndex;
   const previousWillChange = element.style.willChange;
+  const previousTransform = element.style.transform;
   element.style.zIndex = "25";
-  element.style.willChange = "top, opacity, filter";
+  element.style.willChange = "transform, opacity";
 
   const animation = element.animate(
     dies
       ? [
-          { top: "0px", opacity: 1, filter: "brightness(1)" },
-          { top: "30px", opacity: 0.95, filter: "brightness(1.35) saturate(1.12)", offset: 0.55 },
-          { top: "24px", opacity: 0, filter: "brightness(0.45) saturate(0.55)" },
+          { transform: "translateY(0)", opacity: 1 },
+          { transform: "translateY(30px)", opacity: 0.95, offset: 0.55 },
+          { transform: "translateY(24px) scale(0.96)", opacity: 0 },
         ]
       : [
-          { top: "0px", filter: "brightness(1)" },
-          { top: "30px", filter: "brightness(1.18) saturate(1.08)", offset: 0.55 },
-          { top: "22px", filter: "brightness(1.12) saturate(1.04)", offset: 0.72 },
-          { top: "0px", filter: "brightness(1)" },
+          { transform: "translateY(0)" },
+          { transform: "translateY(30px)", offset: 0.55 },
+          { transform: "translateY(22px)", offset: 0.72 },
+          { transform: "translateY(0)" },
         ],
     {
       duration: ATTACK_DURATION_MS,
@@ -53,12 +54,14 @@ function animateAttacker(element: HTMLElement, dies: boolean): () => void {
   animation.onfinish = () => {
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
+    element.style.transform = previousTransform;
   };
 
   return () => {
     animation.cancel();
     element.style.zIndex = previousZIndex;
     element.style.willChange = previousWillChange;
+    element.style.transform = previousTransform;
     void dies;
   };
 }

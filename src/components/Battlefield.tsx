@@ -2,6 +2,7 @@ import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -13,6 +14,7 @@ import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
+import { Sparkles } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -25,6 +27,7 @@ const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
+const BONUS_MANA_ORBIT_SLOTS = 8;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
@@ -35,6 +38,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
+  const manaSlotByLandId = useRef<Map<string, number>>(new Map());
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
   const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
@@ -65,6 +69,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
+  const blockDrag = useGameStore((state) => state.blockDrag);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
@@ -186,6 +191,7 @@ export function Battlefield({ game, side, cards }: Props) {
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
         animatedHordeIds.current.add(card.instanceId);
+        seenCardIds.current.add(card.instanceId);
         visual.style.opacity = "0";
         visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
         visual.style.filter = "brightness(1.8) saturate(1.25)";
@@ -287,28 +293,24 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={side === "player" ? "Player Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
+      <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           {others.length > 0 ? (
             <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
           ) : (
-            <BattlefieldRow title="Creatures" cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
+            <BattlefieldRow cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
           )}
         </div>
       </Zone>
-      {side === "player" && createPortal(<LandDock />, document.body)}
+      {side === "player" && createPortal(LandDock(), document.body)}
     </>
   );
 
-  function BattlefieldRow({ title, cards: rowCards, compact = false, dropTarget }: { title: string; cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
+  function BattlefieldRow({ cards: rowCards, compact = false, dropTarget }: { cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">{title}</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCards.length}</span>
-        </div>
         {rowCards.length === 0 ? (
-          <div className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")}>Empty</div>
+          <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
         ) : (
           <div
             ref={creatureRowRef}
@@ -333,12 +335,8 @@ export function Battlefield({ game, side, cards }: Props) {
 
     return (
       <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        <div className="pointer-events-none absolute left-2 right-2 top-1 z-10 flex h-4 items-center justify-between leading-none">
-          <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Creatures</h3>
-          <span className="text-[10px] font-semibold text-[#d6b879]">{rowCreatures.length}</span>
-        </div>
         {rowCreatures.length === 0 ? (
-          <div className="battlefield-empty battlefield-row-surface">Empty</div>
+          <div aria-label="Empty battlefield" className="battlefield-empty battlefield-row-surface" />
         ) : (
           <div
             ref={creatureRowRef}
@@ -350,18 +348,8 @@ export function Battlefield({ game, side, cards }: Props) {
             </AnimatePresence>
           </div>
         )}
-        <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
-          <div className="other-permanents-panel old-panel-soft p-1">
-            <div className="mb-1 flex h-4 items-center justify-between gap-1 leading-none">
-              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
-              <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AnimatePresence initial={false} mode="popLayout">
-                {rowOthers.map((card) => renderCard(card, true, "other"))}
-              </AnimatePresence>
-            </div>
-          </div>
+        <div className={["other-permanents-dock", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
+          {renderOtherPermanentStacks(rowOthers)}
         </div>
       </div>
     );
@@ -369,26 +357,126 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const columns = landCount >= 9 ? 5 : Math.min(Math.max(landCount, 1), 4);
-    const cardWidth = landCount <= 1 ? 120 : landCount <= 2 ? 105 : 88;
-    const fillsRow = landCount >= 4;
     const smallpoxLandSelectionActive = smallpoxSelection?.kind === "sacrifice-land";
-    const dockStyle = {
-      "--player-land-columns": columns,
-      "--battlefield-compact-card-width": `${cardWidth}px`,
-    } as CSSProperties;
+    const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+    const floatingManaCount = Object.values(game.player.manaPool).reduce((total, amount) => total + amount, 0);
+    const availableResourceCount = availableLandCount + floatingManaCount;
+    const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
+    const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
+    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelection.targetId && Boolean(smallpoxLandTarget);
+    const activeLandIds = new Set(lands.map((card) => card.instanceId));
+    for (const id of manaSlotByLandId.current.keys()) {
+      if (!activeLandIds.has(id)) manaSlotByLandId.current.delete(id);
+    }
+    const usedManaSlots = new Set(manaSlotByLandId.current.values());
+    for (const card of lands) {
+      if (manaSlotByLandId.current.has(card.instanceId)) continue;
+      const freeSlot = Array.from({ length: MAX_PLAYER_LANDS }, (_, slot) => slot).find((slot) => !usedManaSlots.has(slot)) ?? usedManaSlots.size;
+      manaSlotByLandId.current.set(card.instanceId, freeSlot);
+      usedManaSlots.add(freeSlot);
+    }
 
     return (
-      <aside ref={landDockRef} aria-label={`Lands (${landCount})`} className={["old-panel player-land-dock", smallpoxLandSelectionActive ? "player-land-dock-targeting" : ""].join(" ")} style={dockStyle}>
-        {landCount === 0 ? (
-          <div className="player-land-dock-empty battlefield-row-surface">Empty</div>
-        ) : (
-          <div className={["player-land-grid battlefield-row-surface", fillsRow ? "player-land-grid-fill" : ""].join(" ")}>
-            <AnimatePresence initial={false} mode="popLayout">
-              {lands.map((card) => renderCard(card, true, "land-dock"))}
-            </AnimatePresence>
-          </div>
-        )}
+      <aside
+        ref={landDockRef}
+        data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
+        data-audio-click={canSelectManaCore ? "valid" : undefined}
+        role={canSelectManaCore ? "button" : undefined}
+        tabIndex={canSelectManaCore ? 0 : undefined}
+        aria-label={`${availableResourceCount} mana available from ${landCount} lands`}
+        className={[
+          "player-mana-core",
+          game.activeSide === "player" ? "is-player-turn" : "",
+          smallpoxLandSelectionActive ? "is-targeting" : "",
+        ].join(" ")}
+        onClick={() => {
+          if (canSelectManaCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+        }}
+        onKeyDown={(event) => {
+          if (canSelectManaCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+          }
+        }}
+      >
+        <div className="mana-core-rings" aria-hidden="true">
+          <span className="mana-core-ring mana-core-ring-outer" />
+          <span className="mana-core-ring mana-core-ring-inner" />
+        </div>
+        <div className="mana-core-heart" aria-hidden="true">
+          <span className="mana-core-heart-light" />
+        </div>
+        <div className="mana-core-count" aria-hidden="true">
+          <strong>{availableResourceCount}</strong>
+          <span>/{landCount}</span>
+        </div>
+        <AnimatePresence initial={false}>
+          {lands.map((card) => {
+            const stableSlot = manaSlotByLandId.current.get(card.instanceId) ?? 0;
+            const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
+            const spent = card.tapped || card.activatedThisTurn;
+            const consuming = paidLandIds.has(card.instanceId);
+            const visible = smallpoxLandSelectionActive || !spent || consuming;
+            const fragmentStyle = {
+              left: `${70.5 + Math.cos(angle) * 72}px`,
+              top: `${59.5 + Math.sin(angle) * 51}px`,
+              "--mana-fragment-delay": `${stableSlot * 55}ms`,
+              "--mana-consume-x": `${Math.cos(angle) * -72}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -51}px`,
+            } as CSSProperties;
+
+            return (
+              <motion.button
+                key={card.instanceId}
+                type="button"
+                aria-label={`${card.displayName}${card.tapped ? ", tapped" : ", available"}`}
+                title={card.displayName}
+                disabled
+                className={[
+                  "mana-fragment",
+                  spent ? "is-spent" : "is-available",
+                  consuming ? "is-consuming" : "",
+                ].join(" ")}
+                style={fragmentStyle}
+                initial={{ opacity: 0, scale: 0.15 }}
+                animate={{ opacity: visible ? (spent && !consuming ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
+                exit={{ opacity: 0, scale: paidLandIds.has(card.instanceId) ? 1.8 : 0.12, filter: "blur(5px) brightness(1.8)" }}
+                transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span className="mana-fragment-shell" aria-hidden="true">
+                  <span className="mana-fragment-energy" />
+                </span>
+              </motion.button>
+            );
+          })}
+          {Array.from({ length: floatingManaCount }, (_, index) => {
+            const angle = -Math.PI / 2 + (Math.PI * 2 * index) / BONUS_MANA_ORBIT_SLOTS;
+            const bonusStyle = {
+              left: `${70.5 + Math.cos(angle) * 49}px`,
+              top: `${59.5 + Math.sin(angle) * 35}px`,
+              "--mana-fragment-delay": `${index * 70}ms`,
+              "--mana-consume-x": `${Math.cos(angle) * -49}px`,
+              "--mana-consume-y": `${Math.sin(angle) * -35}px`,
+            } as CSSProperties;
+
+            return (
+              <motion.span
+                key={`bonus-mana-${index}`}
+                className="mana-fragment mana-fragment-bonus"
+                style={bonusStyle}
+                initial={{ opacity: 0, scale: 0.12 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.08, filter: "blur(4px) brightness(2)" }}
+                transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span className="mana-fragment-shell" aria-hidden="true">
+                  <span className="mana-fragment-energy" />
+                </span>
+              </motion.span>
+            );
+          })}
+        </AnimatePresence>
+        {smallpoxLandSelectionActive && <div className="mana-core-target-label">Discard one energy</div>}
       </aside>
     );
   }
@@ -454,9 +542,31 @@ export function Battlefield({ game, side, cards }: Props) {
     ));
   }
 
+  function renderOtherPermanentStacks(permanents: CardInstance[]) {
+    const groups = new Map<string, CardInstance[]>();
+    for (const permanent of permanents) {
+      const group = groups.get(permanent.definitionId);
+      if (group) group.push(permanent);
+      else groups.set(permanent.definitionId, [permanent]);
+    }
+    return Array.from(groups.entries()).map(([definitionId, groupedCards]) => (
+      <div
+        key={`other-stack-${definitionId}`}
+        className="battlefield-copy-stack battlefield-copy-stack-compact other-permanent-stack"
+        data-stacked={groupedCards.length > 1 ? "true" : undefined}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          {groupedCards.map((card, stackIndex) => renderCard(card, true, "other", stackIndex))}
+        </AnimatePresence>
+      </div>
+    ));
+  }
+
   function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
     const useNewSummoning = side !== "horde";
-    const firstTimeOnThisBattlefield = useNewSummoning && !seenCardIds.current.has(card.instanceId);
+    const newlyArrived = !seenCardIds.current.has(card.instanceId);
+    const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
+    const isOtherPermanent = keyPrefix === "other";
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
@@ -532,6 +642,29 @@ export function Battlefield({ game, side, cards }: Props) {
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
+    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
+    const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
+    const isDraggedDefender = blockDrag?.blockerId === card.instanceId;
+    const draggedDefender = blockDrag ? game.player.battlefield.find((item) => item.instanceId === blockDrag.blockerId) : undefined;
+    const dragDefenseTargetable = Boolean(
+      blockDrag &&
+        draggedDefender &&
+        side === "horde" &&
+        game.combat.hordeAttackers.includes(card.instanceId) &&
+        canBlockAttacker(game, draggedDefender, card),
+    );
+    const showActionGem = blockDrag ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
+    const actionGemTone = isDraggedDefender || dragDefenseTargetable
+      ? "card-defense-gem"
+      : cardTargetable
+      ? "card-target-gem"
+      : playerCombat && actionable
+        ? "card-attack-gem"
+        : hordeCombat && actionable
+          ? "card-defense-gem"
+          : effectAvailable && !cardActionable
+            ? "card-effect-available-gem"
+            : "";
     const interactionElevated = Boolean(
       effectActive ||
         effectClosing ||
@@ -569,6 +702,7 @@ export function Battlefield({ game, side, cards }: Props) {
         data-entry-delay={0}
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
+          isOtherPermanent ? "battlefield-other-permanent-slot" : "",
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
           actionable ? "battlefield-card-actionable" : "",
@@ -590,6 +724,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ].join(" ")}
       >
       <span className="battlefield-card-depth" aria-hidden="true" />
+      {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}
         card={card}
@@ -599,7 +734,7 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         glowBorderWidth={4}
-        actionable={!tutorialAwaitingContinue && (actionable || counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable)}
+        actionable={cardActionable}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
@@ -667,6 +802,15 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
+      {showActionGem && (
+        <span
+          className={[
+            "card-actionable-gem card-actionable-gem-outside",
+            actionGemTone,
+          ].join(" ")}
+          aria-hidden="true"
+        />
+      )}
       {effectActive && primaryAbility && (
         <button
           data-audio-click="valid"
@@ -684,7 +828,11 @@ export function Battlefield({ game, side, cards }: Props) {
             }, 620);
           }}
         >
-          {renderCardText(abilityButtonText(primaryAbility))}
+          <Sparkles className="effect-action-icon" aria-hidden="true" />
+          <span className="effect-action-copy">
+            <small>Activate ability</small>
+            <strong>{renderCardText(abilityButtonText(primaryAbility))}</strong>
+          </span>
         </button>
       )}
       {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
