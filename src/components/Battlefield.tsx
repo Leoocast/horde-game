@@ -610,7 +610,8 @@ export function Battlefield({ game, side, cards }: Props) {
       (hordeCombat && side === "horde" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
-      (playerCombat && side === "horde");
+      (playerCombat && side === "horde") ||
+      (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const effectAvailable = canUseTapActivatedAbility(card);
     const effectActive = activeEffectCardId === card.instanceId;
@@ -637,7 +638,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const tutorialTargetable = tutorialZones.some(
       (zone) =>
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
-        (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk") || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
+        (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk" && legalBlocker) || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
     );
     const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
