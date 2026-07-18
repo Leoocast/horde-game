@@ -193,13 +193,13 @@ function getOrbState(
     return { label: "Horde Turn", Icon: FastForward, action: actions.runHordeMain, tone: "horde" as const };
   }
   if (game.activeSide === "horde") {
-    return { label: "My Turn", Icon: Check, action: actions.finishHordeTurn, tone: "horde" as const };
+    return { label: "My Turn", Icon: Check, action: actions.finishHordeTurn, tone: "main" as const };
   }
   if (game.setupTurnsRemaining > 0) {
     if (game.setupTurnsRemaining === 1) {
       return { label: "End Turn", Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
     }
-    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "skip" as const, warnIfActionsAvailable: true };
+    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const, warnIfActionsAvailable: true };
   }
   if (game.setupCompletePendingHorde) {
     return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };

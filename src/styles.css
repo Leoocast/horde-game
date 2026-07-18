@@ -3211,6 +3211,8 @@
 
   .phase-banner-shell {
     display: grid;
+    box-sizing: border-box;
+    padding-bottom: 8vh;
     place-items: center;
     perspective: 1000px;
   }
@@ -3221,8 +3223,8 @@
     --phase-accent-soft: rgb(185 167 108 / 0.18);
     position: relative;
     display: grid;
-    width: min(900px, 86vw);
-    grid-template-columns: minmax(48px, 1fr) 60px auto minmax(48px, 1fr);
+    width: min(980px, 90vw);
+    grid-template-columns: minmax(52px, 1fr) 68px auto minmax(52px, 1fr);
     align-items: center;
     gap: clamp(12px, 2vw, 24px);
     justify-content: center;
@@ -3261,8 +3263,8 @@
     z-index: -1;
     top: 50%;
     left: 50%;
-    width: min(430px, 56vw);
-    height: 82px;
+    width: min(480px, 60vw);
+    height: 92px;
     border-top: 1px solid color-mix(in srgb, var(--phase-accent) 24%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--phase-accent) 17%, transparent);
     background: linear-gradient(90deg, transparent, rgb(5 13 11 / 0.78) 19%, rgb(5 13 11 / 0.94) 50%, rgb(5 13 11 / 0.78) 81%, transparent);
@@ -3286,8 +3288,8 @@
 
   .phase-banner-crest {
     display: grid;
-    width: 51px;
-    height: 51px;
+    width: 58px;
+    height: 58px;
     place-items: center;
     border: 1px solid color-mix(in srgb, var(--phase-accent) 74%, transparent);
     background:
@@ -3309,7 +3311,7 @@
 
   .phase-banner-copy {
     display: flex;
-    min-width: clamp(220px, 28vw, 340px);
+    min-width: clamp(245px, 30vw, 380px);
     align-items: center;
     justify-content: center;
     line-height: 1;
@@ -3320,7 +3322,7 @@
   .phase-banner-text {
     color: #e4dcc0;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1.9rem, 4vw, 3rem);
+    font-size: clamp(2.1rem, 4.4vw, 3.35rem);
     font-weight: 500;
     letter-spacing: 0.1em;
     white-space: nowrap;
@@ -3356,14 +3358,14 @@
 
   @media (max-width: 700px) {
     .phase-banner {
-      width: 94vw;
-      grid-template-columns: minmax(18px, 1fr) 43px auto minmax(18px, 1fr);
+      width: 96vw;
+      grid-template-columns: minmax(14px, 1fr) 47px auto minmax(14px, 1fr);
       gap: 9px;
     }
 
     .phase-banner-crest {
-      width: 39px;
-      height: 39px;
+      width: 43px;
+      height: 43px;
     }
 
     .phase-banner-crest svg {
@@ -3372,11 +3374,11 @@
     }
 
     .phase-banner-copy {
-      min-width: 180px;
+      min-width: 190px;
     }
 
     .phase-banner-text {
-      font-size: clamp(1.3rem, 6vw, 2.15rem);
+      font-size: clamp(1.4rem, 6.4vw, 2.3rem);
       letter-spacing: 0.055em;
     }
   }
@@ -6727,6 +6729,16 @@
     inset 0 1px 0 rgb(240 255 181 / 0.22),
     0 18px 40px rgb(0 0 0 / 0.54),
     0 0 32px rgb(118 190 51 / 0.34) !important;
+}
+
+.game-phase-button[data-tone="main"] {
+  border-color: rgb(169 181 121 / 0.82) !important;
+  background: linear-gradient(110deg, #657044, #303b27 66%, #4c5937) !important;
+  box-shadow:
+    inset 0 0 0 4px rgb(12 28 15 / 0.28),
+    inset 0 1px 0 rgb(232 239 186 / 0.2),
+    0 18px 40px rgb(0 0 0 / 0.54),
+    0 0 30px rgb(144 167 102 / 0.25) !important;
 }
 
 .game-phase-button[data-tone="defend"] {
