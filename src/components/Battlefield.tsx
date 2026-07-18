@@ -191,6 +191,7 @@ export function Battlefield({ game, side, cards }: Props) {
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
         animatedHordeIds.current.add(card.instanceId);
+        seenCardIds.current.add(card.instanceId);
         visual.style.opacity = "0";
         visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
         visual.style.filter = "brightness(1.8) saturate(1.25)";
@@ -347,18 +348,8 @@ export function Battlefield({ game, side, cards }: Props) {
             </AnimatePresence>
           </div>
         )}
-        <div className={["absolute left-1.5 top-6", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
-          <div className="other-permanents-panel old-panel-soft p-1">
-            <div className="mb-1 flex h-4 items-center justify-between gap-1 leading-none">
-              <h3 className="old-title text-[10px] font-bold uppercase tracking-wide">Other permanents</h3>
-              <span className="text-[10px] font-semibold text-[#d6b879]">{rowOthers.length}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AnimatePresence initial={false} mode="popLayout">
-                {rowOthers.map((card) => renderCard(card, true, "other"))}
-              </AnimatePresence>
-            </div>
-          </div>
+        <div className={["other-permanents-dock", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
+          {renderOtherPermanentStacks(rowOthers)}
         </div>
       </div>
     );
@@ -545,9 +536,31 @@ export function Battlefield({ game, side, cards }: Props) {
     ));
   }
 
+  function renderOtherPermanentStacks(permanents: CardInstance[]) {
+    const groups = new Map<string, CardInstance[]>();
+    for (const permanent of permanents) {
+      const group = groups.get(permanent.definitionId);
+      if (group) group.push(permanent);
+      else groups.set(permanent.definitionId, [permanent]);
+    }
+    return Array.from(groups.entries()).map(([definitionId, groupedCards]) => (
+      <div
+        key={`other-stack-${definitionId}`}
+        className="battlefield-copy-stack battlefield-copy-stack-compact other-permanent-stack"
+        data-stacked={groupedCards.length > 1 ? "true" : undefined}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          {groupedCards.map((card, stackIndex) => renderCard(card, true, "other", stackIndex))}
+        </AnimatePresence>
+      </div>
+    ));
+  }
+
   function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
     const useNewSummoning = side !== "horde";
-    const firstTimeOnThisBattlefield = useNewSummoning && !seenCardIds.current.has(card.instanceId);
+    const newlyArrived = !seenCardIds.current.has(card.instanceId);
+    const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
+    const isOtherPermanent = keyPrefix === "other";
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
@@ -683,6 +696,7 @@ export function Battlefield({ game, side, cards }: Props) {
         data-entry-delay={0}
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
+          isOtherPermanent ? "battlefield-other-permanent-slot" : "",
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
           actionable ? "battlefield-card-actionable" : "",
@@ -704,6 +718,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ].join(" ")}
       >
       <span className="battlefield-card-depth" aria-hidden="true" />
+      {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}
         card={card}
