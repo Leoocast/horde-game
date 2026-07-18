@@ -59,9 +59,18 @@ export function Battlefield({ game, side, cards }: Props) {
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
-  const counterTargeting = useGameStore((state) => state.counterTargeting);
-  const smallpoxSelection = useGameStore((state) => state.smallpoxSelection);
-  const spellTargeting = useGameStore((state) => state.spellTargeting);
+  // Split into primitive/stable selectors so mousemove-driven x/y updates on these
+  // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay)
+  // don't force a full Battlefield re-render on every pointer event.
+  const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
+  const counterTargetingTargetId = useGameStore((state) => state.counterTargeting?.targetId);
+  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
+  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
+  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
+  const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
+  const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
+  const spellTargetingStepIndex = useGameStore((state) => state.spellTargeting?.stepIndex);
+  const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
@@ -356,13 +365,13 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const smallpoxLandSelectionActive = smallpoxSelection?.kind === "sacrifice-land";
+    const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
     const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
     const floatingManaCount = Object.values(game.player.manaPool).reduce((total, amount) => total + amount, 0);
     const availableResourceCount = availableLandCount + floatingManaCount;
     const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
     const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
-    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelection.targetId && Boolean(smallpoxLandTarget);
+    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
     const activeLandIds = new Set(lands.map((card) => card.instanceId));
     for (const id of manaSlotByLandId.current.keys()) {
       if (!activeLandIds.has(id)) manaSlotByLandId.current.delete(id);
@@ -578,13 +587,13 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.cardTypes.includes("Land");
     const smallpoxTargetable = Boolean(
-      smallpoxSelection &&
-        !smallpoxSelection.targetId &&
+      smallpoxSelectionActive &&
+        !smallpoxSelectionTargetId &&
         side === "player" &&
-        ((smallpoxSelection.kind === "sacrifice-creature" && card.cardTypes.includes("Creature")) ||
-          (smallpoxSelection.kind === "sacrifice-land" && card.cardTypes.includes("Land"))),
+        ((smallpoxSelectionKind === "sacrifice-creature" && card.cardTypes.includes("Creature")) ||
+          (smallpoxSelectionKind === "sacrifice-land" && card.cardTypes.includes("Land"))),
     );
-    const smallpoxTargetLocked = smallpoxSelection?.targetId === card.instanceId;
+    const smallpoxTargetLocked = smallpoxSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -618,23 +627,23 @@ export function Battlefield({ game, side, cards }: Props) {
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
     const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
-    const counterTargetable = Boolean(counterTargeting && !counterTargeting.targetId && card.cardTypes.includes("Creature"));
-    const counterTargetLocked = counterTargeting?.targetId === card.instanceId;
-    const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
-    const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
-    const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
-    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
+    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("Creature"));
+    const counterTargetLocked = counterTargetingTargetId === card.instanceId;
+    const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
+    const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
+    const spellTargetsComplete = Boolean(spellTargetingActive && spellCard?.requiresTargets.every((req) => Boolean(spellTargetingTargets?.[req.id])));
+    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargetingTargets ?? {}) : [];
     const spellTargetable = isSpellTargetable(card);
     const spellTargetLocked = isSpellTargetLocked(card);
-    const spellLockedReq = spellTargeting
+    const spellLockedReq = spellTargetingActive
       ? spellCard?.requiresTargets.find((req) => {
-          const selectedTarget = spellTargeting.targets[req.id];
+          const selectedTarget = spellTargetingTargets?.[req.id];
           return Array.isArray(selectedTarget) ? selectedTarget.includes(card.instanceId) : selectedTarget === card.instanceId;
         })
       : undefined;
     const spellTargetLockedIsBuff = Boolean(spellTargetLocked && spellCard && spellLockedReq && targetRequirementIsBuff(spellCard, spellLockedReq));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
-    const spellBuffPreview = spellLockedFriendly && spellCard && spellTargeting ? spellBuffedStats(game, card, spellCard, spellTargeting.targets) : undefined;
+    const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
     const tutorialTargetable = tutorialZones.some(
       (zone) =>
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
@@ -745,8 +754,8 @@ export function Battlefield({ game, side, cards }: Props) {
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        suppressContextMenu={effectActive || Boolean(counterTargeting) || Boolean(spellTargeting) || Boolean(smallpoxSelection)}
-        suppressHoverOverlay={Boolean(spellTargeting) || Boolean(smallpoxSelection) || Boolean(tutorialStepId)}
+        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
+        suppressHoverOverlay={spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (tutorialAwaitingContinue) return;
@@ -768,11 +777,11 @@ export function Battlefield({ game, side, cards }: Props) {
         }}
         onSelect={() => {
           if (tutorialAwaitingContinue) return;
-          if (smallpoxSelection) {
+          if (smallpoxSelectionActive) {
             if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
             return;
           }
-          if (counterTargeting) {
+          if (counterTargetingActive) {
             if (counterTargetable) lockCounterTarget(card.instanceId);
             return;
           }
@@ -850,15 +859,21 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function isSpellTargetable(card: CardInstance): boolean {
-    const spellCard = spellTargeting ? game.player.hand.find((item) => item.instanceId === spellTargeting.handId) : undefined;
-    const spellReq = spellCard?.requiresTargets[spellTargeting?.stepIndex ?? 0];
-    const spellTargetsComplete = Boolean(spellTargeting && spellCard?.requiresTargets.every((req) => Boolean(spellTargeting.targets[req.id])));
-    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargeting?.targets ?? {}) : [];
-    return Boolean(spellTargeting && !spellTargetsComplete && spellReq && spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) && !Object.values(spellTargeting.targets).includes(card.instanceId));
+    const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
+    const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
+    const spellTargetsComplete = Boolean(spellTargetingActive && spellCard?.requiresTargets.every((req) => Boolean(spellTargetingTargets?.[req.id])));
+    const spellCandidates = spellReq ? targetCandidatesWithSelectedTargets(game, "player", spellReq, spellTargetingTargets ?? {}) : [];
+    return Boolean(
+      spellTargetingActive &&
+        !spellTargetsComplete &&
+        spellReq &&
+        spellCandidates.some((candidate) => candidate.instanceId === card.instanceId) &&
+        !Object.values(spellTargetingTargets ?? {}).includes(card.instanceId),
+    );
   }
 
   function isSpellTargetLocked(card: CardInstance): boolean {
-    return Boolean(spellTargeting && Object.values(spellTargeting.targets).includes(card.instanceId));
+    return Boolean(spellTargetingActive && Object.values(spellTargetingTargets ?? {}).includes(card.instanceId));
   }
 
   function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
@@ -880,7 +895,7 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function canUseTapActivatedAbility(card: CardInstance): boolean {
-    if (spellTargeting) return false;
+    if (spellTargetingActive) return false;
     if (game.activeSide !== "player" || game.phase !== "main") return false;
     if (side !== "player") return false;
     if (card.zone !== "battlefield") return false;
