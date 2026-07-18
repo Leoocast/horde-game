@@ -111,7 +111,7 @@ export function CardPreview() {
   if (focusedCardId) {
     return (
       <>
-        <div className="card-preview-dismiss-layer fixed inset-0 z-[179]" aria-hidden="true" />
+        <div className="card-preview-dismiss-layer pointer-events-none fixed inset-0 z-[179]" aria-hidden="true" />
         <aside
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
           onContextMenu={(event) => event.preventDefault()}
