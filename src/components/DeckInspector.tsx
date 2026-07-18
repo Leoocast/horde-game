@@ -34,6 +34,7 @@ export function DeckInspector({ deck, onBack }: Props) {
   const [columnCount, setColumnCountState] = useState(readStoredColumnCount);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const [closing, setClosing] = useState(false);
+  const theme = deckTheme(deck.id);
   const zoomLevel = DECK_COLUMN_OPTIONS.indexOf(columnCount);
   const setColumnCount = (value: number | ((current: number) => number)) => {
     setColumnCountState((current) => {
@@ -49,8 +50,19 @@ export function DeckInspector({ deck, onBack }: Props) {
     return () => window.clearTimeout(timeout);
   }, [closing, onBack]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || detailsCardId || closing) return;
+      event.preventDefault();
+      setClosing(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [closing, detailsCardId]);
+
   return (
-    <main className={`deck-detail-screen main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
+    <main className={`deck-detail-screen main-menu-shell deck-theme-${theme} h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
+      <DeckFireflies />
       <header className="deck-detail-header">
         <button className="deck-detail-back" type="button" onClick={() => setClosing(true)} disabled={closing}>
           <ArrowLeft size={17} />
@@ -291,7 +303,10 @@ function DeckInspectorDetailsModal({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeModal();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeModal();
+      }
       if (event.key === "ArrowLeft") navigate("previous");
       if (event.key === "ArrowRight") navigate("next");
     };
@@ -302,7 +317,7 @@ function DeckInspectorDetailsModal({
   return (
     <div
       data-preserve-card-focus="true"
-      className={`deck-collection-modal-backdrop ${closing ? "is-closing" : ""}`}
+      className={`deck-collection-modal-backdrop deck-theme-${deckTheme(deck.id)} ${closing ? "is-closing" : ""}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) closeModal();
       }}
@@ -442,6 +457,40 @@ function readStoredColumnCount(): DeckColumnCount {
   const stored = window.localStorage.getItem(DECK_COLUMNS_STORAGE_KEY);
   const parsed = stored ? Number(stored) : DEFAULT_DECK_COLUMNS;
   return clampColumnCount(Number.isFinite(parsed) ? parsed : DEFAULT_DECK_COLUMNS);
+}
+
+function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
+  if (deckId === "horde_zombies") return "zombie";
+  if (deckId === "goblin_assault_horde") return "goblin";
+  return "ramp";
+}
+
+function DeckFireflies() {
+  return (
+    <div className="menu-fireflies deck-detail-fireflies" aria-hidden="true">
+      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
+    </div>
+  );
+}
+
+function fireflyStyle(index: number): React.CSSProperties {
+  const random = (salt: number) => {
+    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const driftX = -45 + random(6) * 90;
+  const driftY = -60 + random(7) * 80;
+  return {
+    "--firefly-left": `${3 + random(1) * 94}%`,
+    "--firefly-top": `${5 + random(2) * 88}%`,
+    "--firefly-size": `${1.5 + random(3) * 3}px`,
+    "--firefly-duration": `${7 + random(4) * 8}s`,
+    "--firefly-delay": `${-random(5) * 13}s`,
+    "--firefly-mid-x": `${driftX * 0.55}px`,
+    "--firefly-mid-y": `${driftY * 0.72}px`,
+    "--firefly-drift-x": `${driftX}px`,
+    "--firefly-drift-y": `${driftY}px`,
+  } as React.CSSProperties;
 }
 
 function writeStoredColumnCount(value: number): void {

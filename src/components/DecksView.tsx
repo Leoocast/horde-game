@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { useAudioStore } from "../store/useAudioStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
@@ -6,6 +7,7 @@ type Props = {
   playerDecks: InspectableDeck[];
   hordeDecks: InspectableDeck[];
   onOpenDeck: (deckId: string) => void;
+  onBack: () => void;
 };
 
 const KEY_CARD_IDS: Record<string, string> = {
@@ -14,12 +16,12 @@ const KEY_CARD_IDS: Record<string, string> = {
   goblin_assault_horde: "goblin_token_1_1_red",
 };
 
-export function DecksView({ playerDecks, hordeDecks, onOpenDeck }: Props) {
+export function DecksView({ playerDecks, hordeDecks, onOpenDeck, onBack }: Props) {
   return (
     <section className="main-settings-screen decks-panel" aria-label="Decks">
       <header className="main-settings-header">
+        <button className="menu-screen-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back</button>
         <h2>Decks</h2>
-        <span>Choose a deck to explore cards.</span>
       </header>
 
       <div className="decks-content">
@@ -54,7 +56,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
 
   return (
     <button
-      className="deck-key-card"
+      className={`deck-key-card deck-theme-${deckTheme(deck.id)}`}
       type="button"
       onClick={onOpen}
       onMouseEnter={playHoverSound}
@@ -89,4 +91,10 @@ function findKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
   const cardId = KEY_CARD_IDS[deck.id];
   const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
   return cards.find((card) => card.id === cardId) ?? cards[0];
+}
+
+function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
+  if (deckId === "horde_zombies") return "zombie";
+  if (deckId === "goblin_assault_horde") return "goblin";
+  return "ramp";
 }

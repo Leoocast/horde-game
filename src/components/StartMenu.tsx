@@ -65,6 +65,18 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     return () => window.clearTimeout(timeout);
   }, [setupClosing]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || showTutorialConfirm || showDeveloperWarning) return;
+      if (menuScreen === "home") return;
+      event.preventDefault();
+      if (menuScreen === "setup") setSetupClosing(true);
+      else setMenuScreen("home");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [menuScreen, showDeveloperWarning, showTutorialConfirm]);
+
   async function copySeed() {
     try {
       await navigator.clipboard.writeText(effectiveSeed);
@@ -144,6 +156,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         {menuScreen === "settings" && (
           <section className="main-settings-screen" aria-label="Settings">
             <header className="main-settings-header">
+              <button className="menu-screen-back" type="button" onClick={() => setMenuScreen("home")}><ArrowLeft size={16} /> Back</button>
               <h2>Settings</h2>
               <span>Customize audio and game configuration.</span>
             </header>
@@ -193,7 +206,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </section>
         )}
         {menuScreen === "decks" && (
-          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} />
+          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} onBack={() => setMenuScreen("home")} />
         )}
         </div>
       ) : (
@@ -260,20 +273,29 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 function MenuFireflies() {
   return (
     <div className="menu-fireflies" aria-hidden="true">
-      {Array.from({ length: 18 }, (_, index) => (
-        <span
-          key={index}
-          style={{
-            "--firefly-left": `${8 + ((index * 47) % 86)}%`,
-            "--firefly-top": `${12 + ((index * 83) % 76)}%`,
-            "--firefly-size": `${2 + (index % 3)}px`,
-            "--firefly-duration": `${8 + (index % 6) * 1.1}s`,
-            "--firefly-delay": `${index * -0.73}s`,
-          } as React.CSSProperties}
-        />
-      ))}
+      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
     </div>
   );
+}
+
+function fireflyStyle(index: number): React.CSSProperties {
+  const random = (salt: number) => {
+    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const driftX = -45 + random(6) * 90;
+  const driftY = -60 + random(7) * 80;
+  return {
+    "--firefly-left": `${3 + random(1) * 94}%`,
+    "--firefly-top": `${5 + random(2) * 88}%`,
+    "--firefly-size": `${1.5 + random(3) * 3}px`,
+    "--firefly-duration": `${7 + random(4) * 8}s`,
+    "--firefly-delay": `${-random(5) * 13}s`,
+    "--firefly-mid-x": `${driftX * 0.55}px`,
+    "--firefly-mid-y": `${driftY * 0.72}px`,
+    "--firefly-drift-x": `${driftX}px`,
+    "--firefly-drift-y": `${driftY}px`,
+  } as React.CSSProperties;
 }
 
 type ExpeditionSetupProps = {

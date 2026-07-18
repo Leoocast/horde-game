@@ -15,6 +15,11 @@ export function VolumePercentInput({ value, onChange, className = "", ariaLabel 
         step={1}
         value={Math.round(value * 100)}
         onFocus={(event) => event.currentTarget.select()}
+        onClick={(event) => event.currentTarget.select()}
+        onPointerUp={(event) => {
+          event.preventDefault();
+          event.currentTarget.select();
+        }}
         onChange={(event) => onChange(Number(event.target.value) / 100)}
         aria-label={ariaLabel}
         inputMode="numeric"
