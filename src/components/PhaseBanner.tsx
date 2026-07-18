@@ -21,11 +21,15 @@ const TONE_CLASS: Record<BannerTone, string> = {
   horde: "phase-banner-horde",
 };
 
-export function PhaseBanner({ game }: { game: GameState }) {
+export function PhaseBanner({ game, suspended = false }: { game: GameState; suspended?: boolean }) {
   const phase = useMemo(() => getBannerState(game), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner]);
   const [visiblePhase, setVisiblePhase] = useState<BannerState | undefined>();
 
   useEffect(() => {
+    if (suspended) {
+      setVisiblePhase(undefined);
+      return;
+    }
     if (!phase) {
       setVisiblePhase(undefined);
       return;
@@ -33,7 +37,7 @@ export function PhaseBanner({ game }: { game: GameState }) {
     setVisiblePhase(phase);
     const timer = window.setTimeout(() => setVisiblePhase(undefined), BANNER_DURATION_MS);
     return () => window.clearTimeout(timer);
-  }, [phase?.key]);
+  }, [phase?.key, suspended]);
 
   if (!visiblePhase) return null;
 

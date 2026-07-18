@@ -20,7 +20,6 @@ export function EncounterTransition({ playerName, hordeName, hordeDeckId }: Prop
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
           <strong>{hordeName}</strong>
         </div>
-        <small>The Horde stirs beyond the veil...</small>
       </div>
     </div>
   );

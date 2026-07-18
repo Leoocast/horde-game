@@ -262,7 +262,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
-      useAudioStore.getState().playSfx("draw");
       return {
         game: next,
         seed,

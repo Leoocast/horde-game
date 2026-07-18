@@ -101,6 +101,8 @@ export default function App() {
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
+            playSfx("draw", { volume: 0.82 });
+            playSfx("playMonsterHeavy", { volume: 0.78, rate: 0.92 });
             const isTutorial = options.seed.trim().toLowerCase() === "tutorial";
             reset(
               options.seed,

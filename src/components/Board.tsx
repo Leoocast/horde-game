@@ -60,7 +60,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} />
+      <PhaseBanner game={game} suspended={encounterEntering} />
       <PhaseOrb game={game} />
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />

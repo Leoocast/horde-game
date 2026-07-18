@@ -998,14 +998,6 @@
     font-size: 12px;
   }
 
-  .encounter-transition-content > small {
-    margin-top: 28px;
-    color: #78877e;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 13px;
-    font-style: italic;
-  }
-
   .encounter-transition-rift {
     position: absolute;
     z-index: 3;
