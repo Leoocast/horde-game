@@ -42,30 +42,27 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[140] flex flex-col items-center justify-center bg-[#090604]/85">
-      <div className="victory-banner-shell mb-8">
-        <div className="victory-banner">
-          <span className="victory-banner-text flex items-center gap-4">
-            <Crown className="mt-1" size={56} strokeWidth={2.5} />
-            Victory
-          </span>
-        </div>
+    <div className="game-result-overlay game-result-victory fixed inset-0 z-[140] flex flex-col items-center justify-center">
+      <div className="game-result-atmosphere" />
+      <div className="game-result-banner" aria-hidden="true">
+        <span className="game-result-line" />
+        <span className="game-result-crest"><Crown size={32} strokeWidth={1.7} /></span>
+        <h1>Victory</h1>
+        <span className="game-result-line game-result-line-right" />
       </div>
 
-      <section
-        className="old-panel w-full max-w-md p-6 text-center"
-        style={{ animation: "victory-panel-fade-in 800ms 600ms both" }}
-      >
-        <p className="text-sm font-bold uppercase tracking-widest text-[#d6b879]">
+      <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="victory-result-title">
+        <span className="game-result-panel-mark"><Crown size={17} /></span>
+        <p id="victory-result-title" className="game-result-message">
           The Horde has been defeated
         </p>
 
         {!isTutorial && (
           <>
-            <label className="mt-6 block text-left text-xs font-bold uppercase tracking-wide text-[#d6b879]" htmlFor="victory-seed">
-              Seed
+            <label className="game-result-seed-label mt-6 block text-left" htmlFor="victory-seed">
+              Chronicle seed
             </label>
-            <div className="mt-2 flex gap-2">
+            <div className="game-result-seed mt-2 flex gap-2">
               <input
                 id="victory-seed"
                 value={seedInput}
@@ -82,16 +79,16 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
           </>
         )}
 
-        <div className={["grid grid-cols-2 gap-3", isTutorial ? "mt-6" : "mt-5"].join(" ")}>
+        <div className={["game-result-actions grid grid-cols-2 gap-3", isTutorial ? "mt-6" : "mt-5"].join(" ")}>
           <button
-            className="old-button flex h-12 w-full items-center justify-center gap-2 text-sm font-black uppercase tracking-wide transition"
+            className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
             onClick={onReturnToMenu}
           >
             <Home size={18} />
             {isTutorial ? "Home" : "Menu"}
           </button>
           <button
-            className="game-dialog-action game-dialog-action-primary flex h-12 w-full items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]"
+            className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
             onClick={restart}
           >
             <RefreshCcw size={18} />
