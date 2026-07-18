@@ -100,10 +100,49 @@
 
   .main-menu-stage {
     position: relative;
+    z-index: 1;
     display: flex;
     height: 100vh;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .menu-fireflies {
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .menu-fireflies span {
+    position: absolute;
+    left: var(--firefly-left);
+    top: var(--firefly-top);
+    width: var(--firefly-size);
+    height: var(--firefly-size);
+    border-radius: 50%;
+    background: #e8d98c;
+    box-shadow: 0 0 7px 2px rgb(220 205 114 / 0.55), 0 0 18px 5px rgb(148 178 93 / 0.18);
+    opacity: 0;
+    animation: menu-firefly-drift var(--firefly-duration) ease-in-out var(--firefly-delay) infinite;
+  }
+
+  @keyframes menu-firefly-drift {
+    0%, 100% { opacity: 0; transform: translate3d(-18px, 18px, 0) scale(0.6); }
+    12% { opacity: 0.85; }
+    44% { opacity: 0.3; transform: translate3d(34px, -28px, 0) scale(1); }
+    68% { opacity: 0.92; transform: translate3d(58px, -8px, 0) scale(0.78); }
+    88% { opacity: 0.18; }
+  }
+
+  .main-menu-layout,
+  .main-settings-screen,
+  .decks-panel,
+  .expedition-setup {
+    background: linear-gradient(115deg, rgb(7 13 15 / 0.66), rgb(9 15 16 / 0.3));
+    backdrop-filter: blur(10px) saturate(0.9);
+    -webkit-backdrop-filter: blur(10px) saturate(0.9);
   }
 
   .main-menu-brand {
@@ -2762,6 +2801,70 @@
     font-weight: 700;
     text-align: right;
   }
+
+  .volume-percent-input {
+    display: inline-flex;
+    width: 52px;
+    height: 30px;
+    flex: 0 0 auto;
+    align-items: center;
+    border-bottom: 1px solid rgb(162 149 99 / 0.52);
+    background: rgb(5 10 12 / 0.52);
+    color: #c8bc91;
+  }
+
+  .volume-percent-input:focus-within {
+    border-bottom-color: #ddc881;
+    box-shadow: 0 5px 12px -8px rgb(225 201 124 / 0.9);
+  }
+
+  .volume-percent-input input {
+    width: 34px;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: right;
+    outline: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .volume-percent-input input::-webkit-inner-spin-button,
+  .volume-percent-input input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+
+  .volume-percent-input span { padding-right: 5px; font-size: 11px; opacity: 0.75; }
+
+  .hand-limit-backdrop {
+    background: radial-gradient(circle at 50% 75%, rgb(85 68 28 / 0.16), rgb(3 5 6 / 0.72));
+    backdrop-filter: blur(2px);
+  }
+
+  .hand-limit-panel {
+    border-color: rgb(198 173 99 / 0.62) !important;
+    box-shadow: 0 18px 55px rgb(0 0 0 / 0.72), 0 0 28px rgb(176 137 56 / 0.12) !important;
+  }
+
+  .hand-limit-icon {
+    display: flex;
+    width: 38px;
+    height: 38px;
+    margin: -34px auto 10px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(206 181 106 / 0.68);
+    background: linear-gradient(145deg, #4a3d22, #171b18);
+    color: #ead58f;
+    box-shadow: 0 0 18px rgb(203 161 65 / 0.22);
+    transform: rotate(45deg);
+  }
+
+  .hand-limit-icon svg { transform: rotate(-45deg); }
+
+  .hand-limit-targetable { filter: brightness(1.04) saturate(0.9); }
 
   .main-settings-toggle {
     position: relative;
@@ -6288,6 +6391,14 @@
   z-index: 2;
   width: 304px;
   transform: translateX(-50%);
+}
+
+.horde-special-card-host {
+  position: fixed;
+  top: 8px;
+  left: calc(50% + 164px);
+  z-index: 117;
+  width: 190px;
 }
 
 .horde-deck-counter {

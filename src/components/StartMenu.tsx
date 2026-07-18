@@ -111,6 +111,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   return (
     <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" ? "expedition-active" : ""}`}>
+      <MenuFireflies />
       {menuScreen !== "setup" ? (
         <div className="main-menu-stage">
         <div className="main-menu-layout">
@@ -253,6 +254,25 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
       <ToastStack variant="menu" />
     </main>
+  );
+}
+
+function MenuFireflies() {
+  return (
+    <div className="menu-fireflies" aria-hidden="true">
+      {Array.from({ length: 18 }, (_, index) => (
+        <span
+          key={index}
+          style={{
+            "--firefly-left": `${8 + ((index * 47) % 86)}%`,
+            "--firefly-top": `${12 + ((index * 83) % 76)}%`,
+            "--firefly-size": `${2 + (index % 3)}px`,
+            "--firefly-duration": `${8 + (index % 6) * 1.1}s`,
+            "--firefly-delay": `${index * -0.73}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
   );
 }
 

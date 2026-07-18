@@ -1,5 +1,6 @@
 import { Music, Volume2, VolumeX } from "lucide-react";
 import { useAudioStore } from "../store/useAudioStore";
+import { VolumePercentInput } from "./VolumePercentInput";
 
 type Props = {
   variant?: "panel" | "screen";
@@ -27,7 +28,7 @@ export function AudioControls({ variant = "panel" }: Props) {
           </div>
           <div className="main-settings-control">
             <input type="range" min={0} max={1} step={0.05} value={sfxVolume} onChange={(event) => setSfxVolume(Number(event.target.value))} className="main-settings-range game-range" />
-            <span className="main-settings-value">{Math.round(sfxVolume * 100)}%</span>
+            <VolumePercentInput value={sfxVolume} onChange={setSfxVolume} ariaLabel="Sound effects volume percentage" className="main-settings-value" />
             <button className={`main-settings-toggle ${enabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={enabled} onClick={() => setEnabled(!enabled)}>
               <span />
             </button>
@@ -40,7 +41,7 @@ export function AudioControls({ variant = "panel" }: Props) {
           </div>
           <div className="main-settings-control">
             <input type="range" min={0} max={1} step={0.05} value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} className="main-settings-range game-range" />
-            <span className="main-settings-value">{Math.round(musicVolume * 100)}%</span>
+            <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" className="main-settings-value" />
             <button className={`main-settings-toggle ${musicEnabled ? "is-on" : ""}`} type="button" role="switch" aria-checked={musicEnabled} onClick={() => setMusicEnabled(!musicEnabled)}>
               <span />
             </button>
@@ -79,7 +80,7 @@ export function AudioControls({ variant = "panel" }: Props) {
           onChange={(event) => setSfxVolume(Number(event.target.value))}
           className="game-range min-w-0 flex-1"
         />
-        <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(sfxVolume * 100)}</span>
+        <VolumePercentInput value={sfxVolume} onChange={setSfxVolume} ariaLabel="Sound effects volume percentage" />
       </div>
       <button
         data-audio-click="off"
@@ -110,7 +111,7 @@ export function AudioControls({ variant = "panel" }: Props) {
             onChange={(event) => setMusicVolume(Number(event.target.value))}
             className="game-range min-w-0 flex-1"
           />
-          <span className="w-9 text-right text-xs font-bold text-[#d6b879]">{Math.round(musicVolume * 100)}</span>
+          <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" />
         </div>
       </div>
     </section>

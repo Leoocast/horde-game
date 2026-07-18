@@ -208,7 +208,7 @@ function getOrbState(
     return { label: "Confirm", Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: "No Attack", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const, warnIfActionsAvailable: true };
+    return { label: "No Attack", Icon: Check, action: actions.goToEndStep, tone: "main" as const, warnIfActionsAvailable: true };
   }
   if (game.phase === "end") {
     return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };

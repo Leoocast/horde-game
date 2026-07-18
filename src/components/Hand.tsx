@@ -43,6 +43,10 @@ export function Hand({ game }: { game: GameState }) {
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
+  const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
+  const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const handLimitDiscardActive = useGameStore((state) => state.handLimitDiscardActive);
+  const handLimitSelectionId = useGameStore((state) => state.handLimitSelectionId);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const selectHand = useGameStore((state) => state.selectHand);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -51,6 +55,7 @@ export function Hand({ game }: { game: GameState }) {
   const playLand = useGameStore((state) => state.playLand);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
+  const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const [draggingCardId, setDraggingCardId] = useState<string | undefined>();
@@ -186,11 +191,13 @@ export function Hand({ game }: { game: GameState }) {
       pendingSpellHandId ||
       hordeMillAnimating ||
       playerDiscardAnimating ||
+      hordeAttackAnimating ||
+      playerAttackAnimating ||
       pendingTriggeredEffectCount > 0 ||
       (smallpoxSelection && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,
   );
-  const hoverSuppressed = Boolean(smallpoxSelection) || Boolean(tutorialStepId);
+  const hoverSuppressed = Boolean(smallpoxSelection) || handLimitDiscardActive || Boolean(tutorialStepId);
 
   function handleHandPointerMove(event: React.MouseEvent<HTMLDivElement>) {
     if (handInteractionBlocked || hoverSuppressed || draggingCardId) return;
@@ -218,7 +225,7 @@ export function Hand({ game }: { game: GameState }) {
 
   return (
     <>
-      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
+      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
         <div className="hand-atmosphere pointer-events-none absolute inset-x-0 bottom-0 h-40" />
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
@@ -232,10 +239,12 @@ export function Hand({ game }: { game: GameState }) {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
             const discardTargetable = smallpoxSelection?.kind === "discard" && !smallpoxSelection.targetId;
             const discardTargetLocked = smallpoxSelection?.kind === "discard" && smallpoxSelection.targetId === card.instanceId;
+            const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
+            const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
-            const cardActionable = !tutorialAwaitingContinue && (smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
-            const cardTargetable = Boolean((smallpoxSelection && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
+            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelection ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
+            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelection && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -257,7 +266,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: isHeld ? 80 : index + 1, x: dragX, y: dragY }}
-                drag={!smallpoxSelection && !tutorialDimmed}
+                drag={!smallpoxSelection && !handLimitDiscardActive && !tutorialDimmed && !hordeAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -292,6 +301,8 @@ export function Hand({ game }: { game: GameState }) {
                     spellTargeting?.handId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
+                    handLimitTargetable ? "counter-targetable-card hand-limit-targetable" : "",
+                    handLimitTargetLocked ? "counter-target-locked-card hand-limit-target-locked" : "",
                     tutorialTarget ? "counter-targetable-card" : "",
                     tutorialDimmed ? "pointer-events-none opacity-30 saturate-50" : "",
                   ].join(" ")}
@@ -313,12 +324,16 @@ export function Hand({ game }: { game: GameState }) {
                     selected={selectedHandId === card.instanceId}
                     dragging={draggingCardId === card.instanceId}
                     actionable={cardActionable}
-                    suppressContextMenu={Boolean(smallpoxSelection)}
+                    suppressContextMenu={Boolean(smallpoxSelection) || handLimitDiscardActive}
                     suppressHoverOverlay
                     darkenOnHover={false}
                     highRes={isHeld}
                     sharpImageOverlay
                     onSelect={() => {
+                      if (handLimitDiscardActive) {
+                        selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
+                        return;
+                      }
                       if (smallpoxSelection) {
                         if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
                         return;

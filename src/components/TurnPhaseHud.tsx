@@ -2,7 +2,7 @@ import type { GameState } from "../engine/GameTypes";
 
 export function TurnPhaseHud({ game }: { game: GameState }) {
   const hordeReady = game.activeSide === "horde" && game.phase === "horde" && game.combat.hordeAttackers.length === 0;
-  const owner = game.activeSide === "horde" && !hordeReady ? "Horde Turn" : "Player Turn";
+  const owner = game.activeSide === "horde" && game.phase !== "end" && !hordeReady ? "Horde Turn" : "Player Turn";
   const setupActive = game.activeSide === "player" && game.setupTurnsRemaining > 0;
   const phase = setupActive ? "Setup" : hordeReady ? "End" : game.phase === "horde" ? "Main" : game.phase;
   const hordeTurn = game.activeSide === "horde" && !hordeReady;

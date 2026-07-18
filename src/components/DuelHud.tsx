@@ -67,14 +67,14 @@ export function DuelHud({ game }: { game: GameState }) {
         {smallpoxCard && (
           <motion.div
             key={smallpoxCard.instanceId}
-            className="flex flex-col items-center gap-2"
+            className="horde-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
               opacity: [1, 1, 0],
-              x: [0, -8, 50],
+              x: [0, 8, -50],
               y: [0, 10, -36],
               scale: [1, 0.97, 0.66],
-              rotate: [0, -3, -9],
+              rotate: [0, 3, 9],
               transition: { duration: 0.3, times: [0, 0.22, 1], ease: ["easeOut", "easeIn"] },
             }}
           >

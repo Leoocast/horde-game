@@ -21,15 +21,16 @@ export function PlayerDiscardAnimator() {
         itemId={active.id}
         definitionId={active.card.definitionId}
         name={active.card.displayName}
+        origin={active.origin}
         onComplete={() => complete(active.id)}
       />
     </>
   );
 }
 
-function PlayerDiscardCard({ itemId, definitionId, name, onComplete }: { itemId: string; definitionId: string; name: string; onComplete: () => void }) {
+function PlayerDiscardCard({ itemId, definitionId, name, origin, onComplete }: { itemId: string; definitionId: string; name: string; origin?: { x: number; y: number }; onComplete: () => void }) {
   const { imageUrl } = useCardDetails(definitionId);
-  const path = useMemo(readPlayerDiscardPath, [itemId]);
+  const path = useMemo(() => readPlayerDiscardPath(origin), [itemId, origin]);
   const deltaX = path.target.x - path.origin.x;
   const deltaY = path.target.y - path.origin.y;
 
@@ -64,12 +65,12 @@ function PlayerDiscardCard({ itemId, definitionId, name, onComplete }: { itemId:
   );
 }
 
-function readPlayerDiscardPath(): { origin: { x: number; y: number }; target: { x: number; y: number } } {
+function readPlayerDiscardPath(capturedOrigin?: { x: number; y: number }): { origin: { x: number; y: number }; target: { x: number; y: number } } {
   const originRect = document.querySelector<HTMLElement>("[data-player-discard-origin='true']")?.getBoundingClientRect();
   const targetRect = document.querySelector<HTMLElement>("[data-player-discard-target='true']")?.getBoundingClientRect();
-  const origin = originRect
+  const origin = capturedOrigin ?? (originRect
     ? { x: originRect.left + originRect.width / 2, y: originRect.top + originRect.height / 2 }
-    : { x: window.innerWidth - 72, y: window.innerHeight - 58 };
+    : { x: window.innerWidth - 72, y: window.innerHeight - 58 });
   const target = targetRect
     ? { x: targetRect.left + targetRect.width / 2, y: targetRect.top + targetRect.height / 2 }
     : { x: origin.x - 96, y: origin.y };

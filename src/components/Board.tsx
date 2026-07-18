@@ -10,6 +10,7 @@ import { CombatArrows } from "./CombatArrows";
 import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { Hand } from "./Hand";
+import { HandLimitOverlay } from "./HandLimitOverlay";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { HordeMillAnimator } from "./HordeMillAnimator";
 import { PhaseBanner } from "./PhaseBanner";
@@ -69,6 +70,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <HordeAttackAnimator />
       <HordeMillAnimator />
       <PlayerDiscardAnimator />
+      <HandLimitOverlay game={game} />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       {hordeAutoTriggerCount > 0 && <div data-audio-click="off" className="fixed inset-0 z-[79]" />}
@@ -77,7 +79,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       )}
       <CardPreview />
       <PlayerLifePanel game={game} playerName={playerName} />
-      <ToastStack />
+      <ToastStack variant={game.winner ? "menu" : "game"} />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">

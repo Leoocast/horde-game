@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MusicCollectionId } from "../audio/musicManifest";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useAudioStore } from "../store/useAudioStore";
+import { VolumePercentInput } from "./VolumePercentInput";
 
 export function MusicPlayerMenu() {
   const [open, setOpen] = useState(false);
@@ -88,7 +89,7 @@ export function MusicPlayerMenu() {
                 onChange={(event) => setMusicVolume(Number(event.target.value))}
                 className="game-range min-w-0 flex-1"
               />
-              <span className="game-music-volume-value w-9 text-right text-xs font-bold">{Math.round(musicVolume * 100)}</span>
+              <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" className="game-music-volume-value" />
             </div>
 
             <div className="game-music-playlist old-scrollbar max-h-72 overflow-auto pr-1">

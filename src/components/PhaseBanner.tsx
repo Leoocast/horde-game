@@ -1,4 +1,4 @@
-import { Shield, Skull, Sparkles, Swords, type LucideIcon } from "lucide-react";
+import { Moon, Shield, Skull, Sparkles, Swords, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 
@@ -76,6 +76,9 @@ function getBannerState(game: GameState): BannerState | undefined {
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
     return { key: `horde-main-${game.turnNumber}`, label: "Horde Phase", tone: "horde", Icon: Skull };
+  }
+  if (game.phase === "end") {
+    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: "End Phase", tone: game.activeSide === "horde" ? "horde" : "main", Icon: Moon };
   }
   return undefined;
 }
