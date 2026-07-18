@@ -7749,19 +7749,27 @@
 
 .game-result-panel-mark {
   position: absolute;
-  top: -17px;
+  top: -7px;
   left: 50%;
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
+  width: 14px;
+  height: 14px;
   border: 1px solid color-mix(in srgb, var(--result-accent) 68%, transparent);
   background: #111b17;
-  color: var(--result-accent-bright);
+  box-shadow: 0 0 14px var(--result-accent-soft);
   transform: translateX(-50%) rotate(45deg);
 }
 
-.game-result-panel-mark svg { transform: rotate(-45deg); }
+.game-result-panel-mark::before {
+  position: absolute;
+  right: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--result-accent) 62%, transparent));
+  content: "";
+  transform: rotate(-45deg) translate(1px, -2px);
+  transform-origin: bottom center;
+}
 
 .game-result-message {
   margin: 8px 0 0;

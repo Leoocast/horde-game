@@ -52,7 +52,7 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
       </div>
 
       <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="victory-result-title">
-        <span className="game-result-panel-mark"><Crown size={17} /></span>
+        <span className="game-result-panel-mark" />
         <p id="victory-result-title" className="game-result-message">
           The Horde has been defeated
         </p>
