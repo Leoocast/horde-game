@@ -198,6 +198,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [chroniclerName, setChroniclerName] = useState(playerName);
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
@@ -263,7 +264,15 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           >
             {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
             <div className="player-life-copy">
-              <div className="old-title player-life-title text-xs font-bold uppercase tracking-wide">{playerName}</div>
+              <input
+                className="old-title player-life-name-input text-xs font-bold uppercase tracking-wide"
+                value={chroniclerName}
+                maxLength={24}
+                aria-label="Chronicler name"
+                onChange={(event) => setChroniclerName(event.currentTarget.value)}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <div className="player-life-subtitle">Chronicler</div>
               <div className="player-life-values flex items-end gap-2 leading-none">
                 <div className="player-life-count">{visualLife}</div>
               </div>
@@ -278,7 +287,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               data-audio-click="valid"
               className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={`View Player graveyard, ${game.player.graveyard.length} cards`}
+              aria-label={`View Chronicler graveyard, ${game.player.graveyard.length} cards`}
             >
               <Archive size={15} strokeWidth={2.4} />
               <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
@@ -286,7 +295,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           </GameTooltip>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title="Player Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title="Chronicler Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
     </>
   );
 }

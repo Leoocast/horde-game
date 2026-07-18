@@ -1,5 +1,5 @@
 import { AlertTriangle, Home } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -55,6 +55,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
 
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
+      <BattlefieldFireflies />
       <AppHeader
         left={<TurnPhaseHud game={game} />}
         setupTurns={setupTurns}
@@ -125,5 +126,25 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
         </div>
       )}
     </main>
+  );
+}
+
+function BattlefieldFireflies() {
+  return (
+    <div className="game-battlefield-fireflies" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, index) => {
+        const left = 6 + ((index * 37 + 11) % 87);
+        const top = 8 + ((index * 53 + 17) % 69);
+        const style = {
+          left: `${left}%`,
+          top: `${top}%`,
+          "--battlefly-delay": `${-(index * 1.37)}s`,
+          "--battlefly-duration": `${7.5 + (index % 4) * 1.45}s`,
+          "--battlefly-x": `${index % 2 === 0 ? 22 + index * 2 : -18 - index * 2}px`,
+          "--battlefly-y": `${index % 3 === 0 ? -34 : 24 + index}px`,
+        } as CSSProperties;
+        return <span key={index} style={style} />;
+      })}
+    </div>
   );
 }

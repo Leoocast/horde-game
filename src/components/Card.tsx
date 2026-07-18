@@ -105,7 +105,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
-        if (card.zone === "hand") return;
         setHoveredCardId(undefined);
         setFocusedCardId(card.instanceId);
       }}

@@ -423,7 +423,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       discardChosenCard(next, targetId);
       notifyDiscardEffects(game, next);
       set({ game: next, smallpoxSelection: undefined });
-      window.setTimeout(() => advanceSmallpoxSequence("after-discard"), 480);
+      resumeAfterDiscardPause(() => advanceSmallpoxSequence("after-discard"));
       return;
     }
     set({ smallpoxSelection: undefined, specialDeadCardIds: [targetId] });
@@ -458,6 +458,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoveredCardId: undefined,
       focusedCardId: undefined,
     });
+    if (overflow === 0) {
+      resumeAfterDiscardPause(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide !== "player" || latest.game.phase !== "end") return;
+        latest.endPlayerTurn();
+        const afterTurn = useGameStore.getState();
+        if (afterTurn.game.activeSide === "horde" && afterTurn.game.phase === "horde") afterTurn.runHordeMain();
+      });
+    }
   },
   startSpellTargeting: (handId, x, y) =>
     set((state) =>
@@ -819,9 +828,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 }));
 
 function readStoredSeed(): string {
-  if (typeof window === "undefined") return "horde-seed";
+  if (typeof window === "undefined") return "hostfall-seed";
   const storedSeed = window.localStorage.getItem(SEED_STORAGE_KEY);
-  return storedSeed?.trim().toLowerCase() === "developer" ? "horde-seed" : storedSeed ?? "horde-seed";
+  return storedSeed?.trim().toLowerCase() === "developer" ? "hostfall-seed" : storedSeed ?? "hostfall-seed";
 }
 
 function persistSeed(seed: string): void {
@@ -835,6 +844,17 @@ function combatResolutionInProgress(state: GameStore): boolean {
 
 function discardPauseInProgress(state: GameStore): boolean {
   return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
+}
+
+function resumeAfterDiscardPause(onReady: () => void): void {
+  const check = () => {
+    if (discardPauseInProgress(useGameStore.getState())) {
+      window.setTimeout(check, 120);
+      return;
+    }
+    onReady();
+  };
+  window.setTimeout(check, 120);
 }
 
 function monsterSfx(card: GameState["player"]["hand"][number]) {
@@ -895,6 +915,10 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
 }
 
 function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
+  if (discardPauseInProgress(useGameStore.getState())) {
+    window.setTimeout(() => scheduleQueuedHordeTriggers(onComplete), 120);
+    return;
+  }
   const sequenceId = hordeAutoTriggerSequenceId;
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
@@ -1002,7 +1026,7 @@ function notifyDiscardEffects(previous: GameState, next: GameState, options?: { 
     useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
     useToastStore.getState().pushToast({
       title: options?.title ?? "Horde effect",
-      message,
+      message: message.replace(/^Player\b/, "Chronicler"),
       tone: options?.tone ?? "horde",
     });
   }
@@ -1017,8 +1041,8 @@ function hordeEnterTriggerMessage(card: CardInstance): string {
   const effect = trigger?.effect as EffectDefinition | undefined;
   if (effect?.type === "CREATE_TOKEN") return `${card.name} resolves. Horde creates ${Number(effect.amount ?? 1)} token(s).`;
   if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return `${card.name} resolves. Horde mills ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Player discards ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Player loses ${Number(effect.amount ?? 1)} life.`;
+  if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Chronicler discards ${Number(effect.amount ?? 1)} card(s).`;
+  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Chronicler loses ${Number(effect.amount ?? 1)} life.`;
   return `${card.name} resolves its triggered effect.`;
 }
 

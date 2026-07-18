@@ -105,7 +105,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     persistDeveloperMode(developerMode);
     setLaunching(true);
     onStart({
-      playerName: playerName.trim() || "Player",
+      playerName: playerName.trim() || "Chronicler",
       mode,
       setupTurns: selectedMode.setupTurns,
       seed: effectiveSeed.trim() || generateRandomSeed(),
@@ -140,6 +140,22 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       <MenuFireflies />
       {menuScreen !== "setup" ? (
         <div className="main-menu-stage">
+        {menuScreen === "home" && (
+          <div className="main-menu-chronicler" aria-label="Chronicler profile">
+            <span className="main-menu-chronicler-mark" aria-hidden="true" />
+            <div>
+              <input
+                value={playerName}
+                maxLength={24}
+                aria-label="Chronicler name"
+                onChange={(event) => setPlayerName(event.currentTarget.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                placeholder="Chronicler"
+              />
+              <span>Chronicler</span>
+            </div>
+          </div>
+        )}
         <div className="main-menu-layout">
           <div className="main-menu-brand">
             <div className="main-menu-kicker">Chronicles of the Shattered Realms</div>
@@ -601,7 +617,7 @@ function generateRandomSeed(): string {
     cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
     cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
   }
-  return `horde-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
+  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }
 
 function readStoredDeveloperMode(): boolean {

@@ -41,7 +41,6 @@ export function CardPreview() {
     if (!focusedCardId) return;
 
     function closeLockedPreview(event: PointerEvent) {
-      if (event.button !== 0) return;
       const target = event.target;
       if (target instanceof Element && target.closest("[data-card-preview-locked='true']")) return;
       setHoveredCardId(undefined);
@@ -104,24 +103,27 @@ export function CardPreview() {
     };
   }, [focusedCardId, hoveredCardId]);
 
-  if (!card || card.zone === "hand" || !details.imageUrl) return null;
+  if (!card || !details.imageUrl) return null;
 
   const keywords = cardKeywords(game, card);
   const imageUrl = toHighResImageUrl(details.imageUrl) ?? details.imageUrl;
 
   if (focusedCardId) {
     return (
-      <aside
-        data-preserve-card-focus="true"
-        data-card-preview-locked="true"
-        className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
-        onContextMenu={(event) => event.preventDefault()}
-      >
-        <div className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
-          <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
-        </div>
-        {keywords && <KeywordExplanations keywords={keywords} />}
-      </aside>
+      <>
+        <div className="card-preview-dismiss-layer fixed inset-0 z-[179]" aria-hidden="true" />
+        <aside
+          data-preserve-card-focus="true"
+          data-card-preview-locked="true"
+          className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          <div className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
+            <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
+          </div>
+          {keywords && <KeywordExplanations keywords={keywords} />}
+        </aside>
+      </>
     );
   }
 

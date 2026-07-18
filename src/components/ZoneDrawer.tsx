@@ -22,7 +22,7 @@ function ZoneSide({ game, side }: { game: GameState; side: Side }) {
   const state = game[side];
   return (
     <div className="game-zone-side">
-      <h3>{side}</h3>
+      <h3>{side === "player" ? "Chronicler" : "Horde"}</h3>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <ZoneMetric label="Deck" count={state.library.length} />
         {side === "player" && <ZoneMetric label="Hand" count={game.player.hand.length} />}

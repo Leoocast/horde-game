@@ -151,5 +151,5 @@ function generateRandomSeed(): string {
     cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
     cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
   }
-  return `horde-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
+  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

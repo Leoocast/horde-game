@@ -6,7 +6,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
       <div className={`game-log-embedded min-h-0 overflow-y-auto ${className}`}>
         <ol className="space-y-2.5 text-sm text-[#d9d2b8]">
           {game.log.slice(0, 80).map((entry, index) => (
-            <li key={`${entry}-${index}`}>{entry}</li>
+            <li key={`${entry}-${index}`}>{chroniclerLabel(entry)}</li>
           ))}
         </ol>
       </div>
@@ -19,10 +19,14 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
       <div className="min-h-0 flex-1 overflow-auto p-3">
         <ol className="space-y-2 text-sm text-[#f0d49a]">
           {game.log.slice(0, 80).map((entry, index) => (
-            <li key={`${entry}-${index}`}>{entry}</li>
+            <li key={`${entry}-${index}`}>{chroniclerLabel(entry)}</li>
           ))}
         </ol>
       </div>
     </aside>
   );
+}
+
+function chroniclerLabel(entry: string): string {
+  return entry.replace(/\bPlayer\b/g, "Chronicler").replace(/\bplayer\b/g, "Chronicler");
 }
