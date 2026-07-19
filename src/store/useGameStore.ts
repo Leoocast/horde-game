@@ -8,7 +8,7 @@ import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
-import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
@@ -1617,15 +1617,6 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     focusedCardId: undefined,
     spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
   };
-}
-
-function findManualEnterTargetTrigger(card: GameState["player"]["hand"][number] | GameState["player"]["battlefield"][number] | undefined): EffectDefinition | undefined {
-  return card?.effects.find(
-    (effect) =>
-      effect.type === "TRIGGERED_ABILITY" &&
-      effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
-      effectNeedsManualTarget(effect.effect),
-  );
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

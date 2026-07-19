@@ -27,6 +27,12 @@ Comando de TypeScript:
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\typescript\lib\tsc.js -b
 ```
 
+Tests deterministas del engine:
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
+```
+
 Build completo:
 
 ```powershell
