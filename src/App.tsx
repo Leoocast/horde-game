@@ -78,10 +78,9 @@ export default function App() {
     setLoading(true);
     setLoadingLeaving(false);
     setLoadingProgress({ percent: 0, label: "Opening the ancient gates" });
-    const includeNonCriticalAssets = !hasPreloadedGameAssets();
     void preloadGameAssets((progress) => {
       if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
-    }, includeNonCriticalAssets).then(() => {
+    }).then(() => {
       markGameAssetsPreloaded();
       const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
       window.setTimeout(() => {
@@ -102,7 +101,7 @@ export default function App() {
 
   useEffect(() => {
     if (loading) return;
-    void preloadGameAssets(() => undefined, false);
+    void preloadGameAssets(() => undefined);
   }, [loading]);
 
   useEffect(() => {

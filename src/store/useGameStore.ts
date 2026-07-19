@@ -1207,25 +1207,38 @@ function cardCastReactionMessage(card: CardInstance): string {
 const CARD_CAST_REACTION_RESOLVE_MS = 620;
 const MANUAL_TRIGGER_AFTER_REACTION_MS = 420;
 
+const MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS = 60;
+
 function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDelayMs: number): void {
+  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), startDelayMs);
+}
+
+// `.effect-card-lifted`/`.effect-card-activating` (the pulse this triggers) animate the same
+// `transform`/`filter` on the same card slot the summon "pop" animation (Battlefield.tsx) does.
+// The fixed delay callers pass is usually enough clearance, but under main-thread jank the pulse
+// can still start while the pop is mid-flight and cut it short. Wait for summoningAnimationCount
+// to actually drop to 0 (with a bounded safety clear already in the store) instead of guessing.
+function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
+  const latest = useGameStore.getState().game;
+  if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
+    useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
+    return;
+  }
+  if (useGameStore.getState().summoningAnimationCount > 0) {
+    window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS);
+    return;
+  }
+  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
   window.setTimeout(() => {
-    const latest = useGameStore.getState().game;
-    if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
-      useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
-      return;
-    }
-    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-    useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
-    window.setTimeout(() => {
-      useGameStore.setState({
-        counterTargeting: {
-          sourceId: manualTriggeredCard.instanceId,
-          x: window.innerWidth * 0.62,
-          y: window.innerHeight * 0.48,
-        },
-      });
-    }, 520);
-  }, startDelayMs);
+    useGameStore.setState({
+      counterTargeting: {
+        sourceId: manualTriggeredCard.instanceId,
+        x: window.innerWidth * 0.62,
+        y: window.innerHeight * 0.48,
+      },
+    });
+  }, 520);
 }
 
 // Card already entered play (or resolved) synchronously with `deferReactiveTriggers`; this only

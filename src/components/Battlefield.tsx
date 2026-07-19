@@ -34,6 +34,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
+  const activeReflowAnimations = useRef<Map<string, Animation>>(new Map());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
@@ -303,15 +304,26 @@ export function Battlefield({ game, side, cards }: Props) {
 
         const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
         if (!visual || visual.style.visibility === "hidden") continue;
+        // A card can get re-reflowed more than once while it's still mid-entrance
+        // (each further arrival in the same wave nudges it again). Cancel the
+        // previous reflow nudge before layering a new one so they don't pile up
+        // additively and overshoot.
+        activeReflowAnimations.current.get(id)?.cancel();
         // A card still mid-entrance (see entranceAnimatingIds) already owns a "replace"
         // animation on this same transform property. Compose the reflow nudge with
         // "add" so it layers on top instead of cutting the entrance animation short;
         // settled cards keep the default "replace" reflow slide.
-        visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
+        const reflowAnimation = visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
           duration: 360,
           easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
           composite: entranceAnimatingIds.current.has(id) ? "add" : "replace",
         });
+        activeReflowAnimations.current.set(id, reflowAnimation);
+        const clearReflowAnimation = () => {
+          if (activeReflowAnimations.current.get(id) === reflowAnimation) activeReflowAnimations.current.delete(id);
+        };
+        reflowAnimation.onfinish = clearReflowAnimation;
+        reflowAnimation.oncancel = clearReflowAnimation;
       }
     }
 
