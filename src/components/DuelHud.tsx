@@ -19,7 +19,11 @@ export function DuelHud({ game }: { game: GameState }) {
   const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
   const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
   const smallpoxCard = useGameStore((state) => state.smallpoxCard);
-  const smallpoxSelection = useGameStore((state) => state.smallpoxSelection);
+  // Primitive selectors: smallpoxSelection.x/y update on every mousemove while the
+  // SmallpoxSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
+  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
+  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
+  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
   const deselectSmallpoxSelectionTarget = useGameStore((state) => state.deselectSmallpoxSelectionTarget);
   const confirmSmallpoxSelection = useGameStore((state) => state.confirmSmallpoxSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -27,7 +31,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
-  const smallpoxTarget = smallpoxSelection?.targetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelection.targetId) : undefined;
+  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
   const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
   const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hordeMillPreviewCards.filter((card) => hordeLibraryIds.has(card.instanceId)).length;
@@ -82,33 +86,33 @@ export function DuelHud({ game }: { game: GameState }) {
               data-card-id={smallpoxCard.instanceId}
               className={[
                 "horde-special-card",
-                smallpoxSelection ? "horde-special-card-targeting" : "",
-                !smallpoxSelection ? "horde-special-card-resolving" : "",
+                smallpoxSelectionActive ? "horde-special-card-targeting" : "",
+                !smallpoxSelectionActive ? "horde-special-card-resolving" : "",
                 activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
               <Card game={game} card={smallpoxCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
             </div>
-            {smallpoxSelection && (
+            {smallpoxSelectionActive && (
               <div className="smallpox-selection-panel-inline old-panel-soft">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{SMALLPOX_KIND_LABEL[smallpoxSelection.kind]}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{SMALLPOX_KIND_LABEL[smallpoxSelectionKind!]}</span>
                 <span className="text-sm text-[#d6b879]">
-                  {smallpoxSelection.kind === "sacrifice-land" && smallpoxSelection.targetId
+                  {smallpoxSelectionKind === "sacrifice-land" && smallpoxSelectionTargetId
                     ? "Energy selected"
                     : smallpoxTarget
                       ? smallpoxTarget.displayName
                       : "No target selected"}
                 </span>
                 <div className="counter-target-actions">
-                  {smallpoxSelection.targetId && (
+                  {smallpoxSelectionTargetId && (
                     <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
                       Cancel
                     </button>
                   )}
                   <button
-                    data-audio-click={smallpoxSelection.targetId ? "valid" : undefined}
+                    data-audio-click={smallpoxSelectionTargetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
-                    disabled={!smallpoxSelection.targetId}
+                    disabled={!smallpoxSelectionTargetId}
                     onClick={confirmSmallpoxSelection}
                     title="Confirm"
                   >

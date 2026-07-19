@@ -17,6 +17,7 @@ import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
+import { LandPlayAnimator } from "./LandPlayAnimator";
 import { SmallpoxSelectionOverlay } from "./SmallpoxSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
@@ -71,6 +72,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <HordeAttackAnimator />
       <HordeMillAnimator />
       <PlayerDiscardAnimator />
+      <LandPlayAnimator />
       <HandLimitOverlay game={game} />
       <PlayerAttackAnimator />
       <SpellFightAnimator />

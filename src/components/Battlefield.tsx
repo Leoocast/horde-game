@@ -77,7 +77,13 @@ export function Battlefield({ game, side, cards }: Props) {
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
-  const blockDrag = useGameStore((state) => state.blockDrag);
+  const landPlayAnimationQueue = useGameStore((state) => state.landPlayAnimationQueue);
+  const landPlayAnimationIds = landPlayAnimationQueue.map((item) => item.card.instanceId);
+  // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
+  // dragging and are consumed by CombatArrows, not here — same rationale as the
+  // targeting selectors above.
+  const blockDragActive = useGameStore((state) => Boolean(state.blockDrag));
+  const blockDragBlockerId = useGameStore((state) => state.blockDrag?.blockerId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
@@ -387,6 +393,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <aside
         ref={landDockRef}
+        data-player-mana-core="true"
         data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
         data-audio-click={canSelectManaCore ? "valid" : undefined}
         role={canSelectManaCore ? "button" : undefined}
@@ -424,7 +431,8 @@ export function Battlefield({ game, side, cards }: Props) {
             const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
             const spent = card.tapped || card.activatedThisTurn;
             const consuming = paidLandIds.has(card.instanceId);
-            const visible = smallpoxLandSelectionActive || !spent || consuming;
+            const forming = landPlayAnimationIds.includes(card.instanceId);
+            const visible = !forming && (smallpoxLandSelectionActive || !spent || consuming);
             const fragmentStyle = {
               left: `${70.5 + Math.cos(angle) * 68}px`,
               top: `${59.5 + Math.sin(angle) * 68}px`,
@@ -653,16 +661,16 @@ export function Battlefield({ game, side, cards }: Props) {
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
     const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
-    const isDraggedDefender = blockDrag?.blockerId === card.instanceId;
-    const draggedDefender = blockDrag ? game.player.battlefield.find((item) => item.instanceId === blockDrag.blockerId) : undefined;
+    const isDraggedDefender = blockDragBlockerId === card.instanceId;
+    const draggedDefender = blockDragActive ? game.player.battlefield.find((item) => item.instanceId === blockDragBlockerId) : undefined;
     const dragDefenseTargetable = Boolean(
-      blockDrag &&
+      blockDragActive &&
         draggedDefender &&
         side === "horde" &&
         game.combat.hordeAttackers.includes(card.instanceId) &&
         canBlockAttacker(game, draggedDefender, card),
     );
-    const showActionGem = blockDrag ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
+    const showActionGem = blockDragActive ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable

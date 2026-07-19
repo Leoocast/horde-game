@@ -30,6 +30,7 @@ type GameStore = {
   hordeMillAnimationQueue: HordeMillAnimationItem[];
   hordeMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
+  landPlayAnimationQueue: LandPlayAnimationItem[];
   handLimitDiscardActive: boolean;
   handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -110,6 +111,7 @@ type GameStore = {
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   completePlayerDiscardAnimation: (id: string) => void;
+  completeLandPlayAnimation: (id: string) => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
   completeHordeMillAnimation: (id: string) => void;
@@ -181,6 +183,12 @@ export type PlayerDiscardAnimationItem = {
   origin?: { x: number; y: number };
 };
 
+export type LandPlayAnimationItem = {
+  id: string;
+  card: CardInstance;
+  origin?: { x: number; y: number };
+};
+
 export type BlockDragState = {
   blockerId: string;
   startX: number;
@@ -246,6 +254,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeMillAnimationQueue: [],
   hordeMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
+  landPlayAnimationQueue: [],
   handLimitDiscardActive: false,
   handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
@@ -296,6 +305,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillAnimationQueue: [],
         hordeMillPreviewCards: [],
         playerDiscardAnimationQueue: [],
+        landPlayAnimationQueue: [],
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
@@ -568,13 +578,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
+      const handCardRect = document.querySelector<HTMLElement>(`[data-hand-card-id="${id}"]`)?.getBoundingClientRect();
+      const animationOrigin = handCardRect
+        ? { x: handCardRect.left + handCardRect.width / 2, y: handCardRect.top + handCardRect.height / 2 }
+        : undefined;
       const previousLog = game.log[0];
       const next = playLand(game, id);
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
       if (playSucceeded) scheduleSummoningAnimationSafetyClear();
-      return { game: next, selectedHandId: undefined, hoveredCardId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
+      return {
+        game: next,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+        activeEffectCardId: undefined,
+        summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
+        landPlayAnimationQueue: playSucceeded && card
+          ? [...state.landPlayAnimationQueue, {
+              id: `land-play-${card.instanceId}-${Date.now()}`,
+              card,
+              origin: animationOrigin,
+            }]
+          : state.landPlayAnimationQueue,
+      };
     }),
   castCard: (id, options) =>
     set((state) => {
@@ -755,6 +783,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   completePlayerDiscardAnimation: (id) =>
     set((state) => ({
       playerDiscardAnimationQueue: state.playerDiscardAnimationQueue.filter((item) => item.id !== id),
+    })),
+  completeLandPlayAnimation: (id) =>
+    set((state) => ({
+      landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
+      summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
   completeHordeMillAnimation: (id) =>
     set((state) => ({
