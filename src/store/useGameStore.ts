@@ -18,11 +18,13 @@ import { playerHandOverflow } from "../engine/GameRules";
 
 type GameStore = {
   game: GameState;
+  gameSessionId: number;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
   resolvingHordeCombat: boolean;
   summoningAnimationCount: number;
   pendingTriggeredEffectCount: number;
+  pendingTriggeredEffectSourceId?: string;
   hordeAutoTriggerCount: number;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
@@ -30,6 +32,7 @@ type GameStore = {
   hordeMillAnimationQueue: HordeMillAnimationItem[];
   hordeMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
+  landPlayAnimationQueue: LandPlayAnimationItem[];
   handLimitDiscardActive: boolean;
   handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -110,6 +113,8 @@ type GameStore = {
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   completePlayerDiscardAnimation: (id: string) => void;
+  materializeLandPlayAnimation: (id: string) => void;
+  completeLandPlayAnimation: (id: string) => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
   completeHordeMillAnimation: (id: string) => void;
@@ -136,6 +141,7 @@ let effectActivationPulseTimer: number | undefined;
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
+let landPlaySummoningSafetyTimer: number | undefined;
 let hordeAutoTriggerSequenceId = 0;
 
 type HordeAttackAnimation = {
@@ -179,6 +185,13 @@ export type PlayerDiscardAnimationItem = {
   id: string;
   card: CardInstance;
   origin?: { x: number; y: number };
+};
+
+export type LandPlayAnimationItem = {
+  id: string;
+  card: CardInstance;
+  origin?: { x: number; y: number };
+  materialized?: boolean;
 };
 
 export type BlockDragState = {
@@ -234,11 +247,13 @@ export type SpellFightAnimationState = {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 3),
+  gameSessionId: 0,
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   resolvingHordeCombat: false,
   summoningAnimationCount: 0,
   pendingTriggeredEffectCount: 0,
+  pendingTriggeredEffectSourceId: undefined,
   hordeAutoTriggerCount: 0,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
@@ -246,6 +261,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeMillAnimationQueue: [],
   hordeMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
+  landPlayAnimationQueue: [],
   handLimitDiscardActive: false,
   handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
@@ -266,12 +282,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
-    set(() => {
+    set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
       return {
         game: next,
+        gameSessionId: state.gameSessionId + 1,
         seed,
         playerDeckId,
         hordeDeckId,
@@ -289,6 +306,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         resolvingHordeCombat: false,
         summoningAnimationCount: 0,
         pendingTriggeredEffectCount: 0,
+        pendingTriggeredEffectSourceId: undefined,
         hordeAutoTriggerCount: 0,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
@@ -296,6 +314,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillAnimationQueue: [],
         hordeMillPreviewCards: [],
         playerDiscardAnimationQueue: [],
+        landPlayAnimationQueue: [],
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
@@ -360,14 +379,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ counterTargeting }) => ({
       counterTargeting: counterTargeting ? { ...counterTargeting, targetId: undefined } : undefined,
     })),
-  cancelCounterTargeting: () => set((state) => ({ counterTargeting: undefined, pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount })),
+  cancelCounterTargeting: () =>
+    set((state) => ({
+      counterTargeting: undefined,
+      pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount,
+      pendingTriggeredEffectSourceId: state.counterTargeting ? undefined : state.pendingTriggeredEffectSourceId,
+    })),
   confirmCounterTargeting: () =>
     set(({ game, counterTargeting }) => {
       if (!counterTargeting?.targetId) return {};
       const next = structuredClone(game) as GameState;
       const source = findBattlefieldCard(next, counterTargeting.sourceId);
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!source || !target) return { counterTargeting: undefined, pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1) };
+      if (!source || !target) {
+        return {
+          counterTargeting: undefined,
+          pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
+          pendingTriggeredEffectSourceId: undefined,
+        };
+      }
       const previousLife = next.player.life;
       const manualTrigger = findManualEnterTargetTrigger(source);
       if (manualTrigger) {
@@ -395,6 +425,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game: next,
         counterTargeting: undefined,
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
+        pendingTriggeredEffectSourceId: undefined,
         buffAnimationCardIds: [target.instanceId],
         buffAnimationEventId: Date.now(),
         lifeBuffAnimationId: next.player.life > previousLife ? Date.now() : get().lifeBuffAnimationId,
@@ -458,15 +489,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoveredCardId: undefined,
       focusedCardId: undefined,
     });
-    if (overflow === 0) {
-      resumeAfterDiscardPause(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide !== "player" || latest.game.phase !== "end") return;
-        latest.endPlayerTurn();
-        const afterTurn = useGameStore.getState();
-        if (afterTurn.game.activeSide === "horde" && afterTurn.game.phase === "horde") afterTurn.runHordeMain();
-      });
-    }
   },
   startSpellTargeting: (handId, x, y) =>
     set((state) =>
@@ -538,7 +560,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return {
         game: next,
         playerAttackDrag: undefined,
-        handLimitDiscardActive: next.activeSide === "player" && next.phase === "end" && playerHandOverflow(next) > 0,
+        // The hand limit is checked when the player explicitly ends the turn,
+        // not merely when combat advances into the end phase.
+        handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
       };
     }),
@@ -548,11 +572,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
-        useToastStore.getState().pushToast({
-          title: "Hand limit",
-          message: `Discard ${overflow} card${overflow === 1 ? "" : "s"} before ending your turn.`,
-          tone: "warning",
-        });
         return { handLimitDiscardActive: true, handLimitSelectionId: undefined };
       }
       const next = endPlayerTurn(game);
@@ -568,13 +587,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       const { game } = state;
       const card = game.player.hand.find((item) => item.instanceId === id);
+      const handCardRect = document.querySelector<HTMLElement>(`[data-hand-card-id="${id}"]`)?.getBoundingClientRect();
+      const animationOrigin = handCardRect
+        ? { x: handCardRect.left + handCardRect.width / 2, y: handCardRect.top + handCardRect.height / 2 }
+        : undefined;
       const previousLog = game.log[0];
       const next = playLand(game, id);
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
-      if (playSucceeded) scheduleSummoningAnimationSafetyClear();
-      return { game: next, selectedHandId: undefined, hoveredCardId: undefined, focusedCardId: undefined, activeEffectCardId: undefined, summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount };
+      if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
+      return {
+        game: next,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+        activeEffectCardId: undefined,
+        summoningAnimationCount: playSucceeded ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
+        landPlayAnimationQueue: playSucceeded && card
+          ? [...state.landPlayAnimationQueue, {
+              id: `land-play-${card.instanceId}-${Date.now()}`,
+              card,
+              origin: animationOrigin,
+            }]
+          : state.landPlayAnimationQueue,
+      };
     }),
   castCard: (id, options) =>
     set((state) => {
@@ -667,7 +704,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
-        handLimitDiscardActive: playerHandOverflow(next) > 0,
+        handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
         selectedPlayerCreatureId: undefined,
@@ -755,6 +792,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   completePlayerDiscardAnimation: (id) =>
     set((state) => ({
       playerDiscardAnimationQueue: state.playerDiscardAnimationQueue.filter((item) => item.id !== id),
+    })),
+  materializeLandPlayAnimation: (id) =>
+    set((state) => ({
+      landPlayAnimationQueue: state.landPlayAnimationQueue.map((item) => item.id === id ? { ...item, materialized: true } : item),
+    })),
+  completeLandPlayAnimation: (id) =>
+    set((state) => ({
+      landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
+      summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
   completeHordeMillAnimation: (id) =>
     set((state) => ({
@@ -991,11 +1037,24 @@ function queuedHordeTriggerMessage(source?: CardInstance): string {
   return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
 }
 
+// Creature casts and land plays both bump the shared summoningAnimationCount, but each used to
+// share one safety-clear timer var: rescheduling it from one call site canceled the other's
+// fallback, and firing it hard-set the count to 0 instead of decrementing — so a land's flight
+// still in flight when a creature was cast could get its own pending decrement wiped out (or
+// vice versa). Give each its own timer and decrement by 1 so they never step on each other.
 function scheduleSummoningAnimationSafetyClear(): void {
   if (summoningAnimationSafetyTimer) window.clearTimeout(summoningAnimationSafetyTimer);
   summoningAnimationSafetyTimer = window.setTimeout(() => {
-    useGameStore.setState({ summoningAnimationCount: 0 });
+    useGameStore.setState((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) }));
     summoningAnimationSafetyTimer = undefined;
+  }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
+}
+
+function scheduleLandPlaySummoningSafetyClear(): void {
+  if (landPlaySummoningSafetyTimer) window.clearTimeout(landPlaySummoningSafetyTimer);
+  landPlaySummoningSafetyTimer = window.setTimeout(() => {
+    useGameStore.setState((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) }));
+    landPlaySummoningSafetyTimer = undefined;
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 
@@ -1165,25 +1224,41 @@ function cardCastReactionMessage(card: CardInstance): string {
 const CARD_CAST_REACTION_RESOLVE_MS = 620;
 const MANUAL_TRIGGER_AFTER_REACTION_MS = 420;
 
+const MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS = 60;
+
 function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDelayMs: number): void {
+  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), startDelayMs);
+}
+
+// `.effect-card-lifted`/`.effect-card-activating` (the pulse this triggers) animate the same
+// `transform`/`filter` on the same card slot the summon "pop" animation (Battlefield.tsx) does.
+// The fixed delay callers pass is usually enough clearance, but under main-thread jank the pulse
+// can still start while the pop is mid-flight and cut it short. Wait for summoningAnimationCount
+// to actually drop to 0 (with a bounded safety clear already in the store) instead of guessing.
+function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
+  const latest = useGameStore.getState().game;
+  if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
+    useGameStore.setState((state) => ({
+      pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
+      pendingTriggeredEffectSourceId: undefined,
+    }));
+    return;
+  }
+  if (useGameStore.getState().summoningAnimationCount > 0) {
+    window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS);
+    return;
+  }
+  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
   window.setTimeout(() => {
-    const latest = useGameStore.getState().game;
-    if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
-      useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
-      return;
-    }
-    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-    useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
-    window.setTimeout(() => {
-      useGameStore.setState({
-        counterTargeting: {
-          sourceId: manualTriggeredCard.instanceId,
-          x: window.innerWidth * 0.62,
-          y: window.innerHeight * 0.48,
-        },
-      });
-    }, 520);
-  }, startDelayMs);
+    useGameStore.setState({
+      counterTargeting: {
+        sourceId: manualTriggeredCard.instanceId,
+        x: window.innerWidth * 0.62,
+        y: window.innerHeight * 0.48,
+      },
+    });
+  }, 520);
 }
 
 // Card already entered play (or resolved) synchronously with `deferReactiveTriggers`; this only
@@ -1399,6 +1474,7 @@ function buildCastCardPatch(state: GameStore, id: string, options?: CastOptions)
     buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
     summoningAnimationCount: startsSummoningAnimation ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
     pendingTriggeredEffectCount: manualTriggeredCard ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
+    pendingTriggeredEffectSourceId: manualTriggeredCard?.instanceId ?? state.pendingTriggeredEffectSourceId,
   };
 }
 

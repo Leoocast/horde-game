@@ -19,6 +19,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const [lockedEnd, setLockedEnd] = useState<{ x: number; y: number } | undefined>();
 
   const source = counterTargeting ? findBattlefieldCard(game, counterTargeting.sourceId) : undefined;
+  const preserveRequiredEffect = source?.definitionId === "sunshower_druid";
   const target = counterTargeting?.targetId ? findBattlefieldCard(game, counterTargeting.targetId) : undefined;
   const end = lockedEnd ?? (counterTargeting ? { x: counterTargeting.x, y: counterTargeting.y } : undefined);
 
@@ -33,7 +34,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
       if (event.shiftKey) return;
       event.preventDefault();
       if (useGameStore.getState().counterTargeting?.targetId) deselectTarget();
-      else cancelTargeting();
+      else if (!preserveRequiredEffect) cancelTargeting();
     }
 
     window.addEventListener("mousemove", move);
@@ -42,7 +43,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("contextmenu", contextMenu);
     };
-  }, [cancelTargeting, counterTargeting, deselectTarget, updatePointer]);
+  }, [cancelTargeting, counterTargeting, deselectTarget, preserveRequiredEffect, updatePointer]);
 
   useLayoutEffect(() => {
     if (!counterTargeting) return;

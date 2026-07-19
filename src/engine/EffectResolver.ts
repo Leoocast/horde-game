@@ -183,8 +183,15 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
   return Number(amount) || 0;
 }
 
-export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
+// Returns true if any matching source was skipped because of `deferController`, so the
+// caller can keep the event queued to resolve that side's triggers later.
+export function resolveTriggeredEvent(game: GameState, event: EventItem, deferController?: "player" | "horde"): boolean {
+  let deferredAny = false;
   for (const source of triggeredSourcesForEvent(game, event)) {
+    if (deferController && source.controller === deferController) {
+      deferredAny = true;
+      continue;
+    }
     for (const wrapper of source.effects) {
       if (wrapper.type !== "TRIGGERED_ABILITY" || wrapper.trigger !== event.type) continue;
       if (effectNeedsManualTarget(wrapper.effect)) continue;
@@ -192,26 +199,29 @@ export function resolveTriggeredEvent(game: GameState, event: EventItem): void {
       resolveEffect(game, wrapper.effect as EffectDefinition, { source, side: source.controller });
     }
   }
+  return deferredAny;
 }
 
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
   if (event.type === "THIS_DIES") {
     const source = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
-    if (!source) return [];
+    if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(
       (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
     )
       ? [source]
       : [];
   }
-  return [...game.player.battlefield, ...game.horde.battlefield].filter((source) =>
-    source.effects.some(
-      (wrapper) =>
-        wrapper.type === "TRIGGERED_ABILITY" &&
-        wrapper.trigger === event.type &&
-        !effectNeedsManualTarget(wrapper.effect) &&
-        triggerConditionMet(game, wrapper.condition as Record<string, unknown> | undefined, source, event),
-    ),
+  return [...game.player.battlefield, ...game.horde.battlefield].filter(
+    (source) =>
+      (!event.triggerController || source.controller === event.triggerController) &&
+      source.effects.some(
+        (wrapper) =>
+          wrapper.type === "TRIGGERED_ABILITY" &&
+          wrapper.trigger === event.type &&
+          !effectNeedsManualTarget(wrapper.effect) &&
+          triggerConditionMet(game, wrapper.condition as Record<string, unknown> | undefined, source, event),
+      ),
   );
 }
 

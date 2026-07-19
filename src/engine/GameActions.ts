@@ -40,7 +40,10 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     runEnterBattlefieldTriggers(next, card, options.targets);
   }
   enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
-  if (!options.deferReactiveTriggers) drainEventQueue(next);
+  // Always resolve the player's own reactive triggers now (so e.g. Beast-Kin's self-buff lands
+  // in the same frame the new creature enters, never flickering through a same-stats stack).
+  // When a Horde reaction is pending, defer only the Horde's triggers to glow after the cast.
+  drainEventQueue(next, options.deferReactiveTriggers ? { deferController: "horde" } : undefined);
   return log(next, `Player casts ${card.name}.`);
 }
 

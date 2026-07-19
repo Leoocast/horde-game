@@ -152,12 +152,26 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className="flex flex-wrap gap-1">
           {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
           {attacking && <span className="card-state-tag card-state-tag-attack">Atk</span>}
-          {blocking && <span className="rounded-sm bg-[#5b421f]/90 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Blk</span>}
-          {linkLabel && (
-            <span className="rounded-sm px-1.5 py-0.5 text-[12px] font-black text-white shadow" style={{ backgroundColor: accentColor ?? "#2563eb" }}>
+          {blocking && linkLabel ? (
+            <span
+              className="card-block-state-tag"
+              aria-label={`Blocking, order ${linkLabel}`}
+              style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
+            >
+              <span>Blk</span>
+              <strong>{linkLabel}</strong>
+            </span>
+          ) : blocking ? (
+            <span className="card-state-tag card-state-tag-block">Blk</span>
+          ) : linkLabel ? (
+            <span
+              className="card-block-order-badge"
+              aria-label={`${linkLabel} blockers assigned`}
+              style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
+            >
               {linkLabel}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
       {visibleKeywords.length > 0 && (

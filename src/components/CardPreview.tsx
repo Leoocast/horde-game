@@ -24,11 +24,12 @@ export function CardPreview() {
   const game = useGameStore((state) => state.game);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
   const focusedCardId = useGameStore((state) => state.focusedCardId);
+  const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const [hoverPosition, setHoverPosition] = useState<HoverPreviewPosition>();
 
-  const activeId = focusedCardId ?? hoveredCardId;
+  const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
   const details = useCardDetails(card?.definitionId ?? "");
 
@@ -52,11 +53,16 @@ export function CardPreview() {
   }, [focusedCardId, setFocusedCardId, setHoveredCardId]);
 
   useLayoutEffect(() => {
-    if (focusedCardId || !hoveredCardId) {
+    // The lifted-effect preview must follow the zoomed/translated card, so it is
+    // driven by activeEffectCardId (set at click time) rather than hover. The hover
+    // clears on click, so relying on it here left the preview measuring a stale,
+    // unzoomed rect until a fresh mouseenter fired.
+    const previewCardId = activeEffectCardId ?? hoveredCardId;
+    if (focusedCardId || !previewCardId) {
       setHoverPosition(undefined);
       return;
     }
-    const observedCardId = hoveredCardId;
+    const observedCardId = previewCardId;
 
     const anchor = document.querySelector<HTMLElement>(`[data-card-id="${observedCardId}"]`);
     if (!anchor) {
@@ -64,17 +70,43 @@ export function CardPreview() {
       return;
     }
     const observedAnchor = anchor;
+    const battlefieldSlot = observedAnchor.closest<HTMLElement>(".battlefield-card-slot, .battlefield-card-slot-compact");
 
-    let frame = 0;
+    let scheduleFrame = 0;
+    let settleFrame = 0;
     function measure() {
-      const rect = observedAnchor.getBoundingClientRect();
+      const liftedSlot = observedAnchor.closest<HTMLElement>(".effect-card-lifted");
+      const placementAnchor = liftedSlot ?? observedAnchor;
+      const rect = placementAnchor.getBoundingClientRect();
       if (!observedAnchor.isConnected || rect.width < 24 || rect.height < 24) {
         setHoverPosition(undefined);
         return;
       }
       const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
-      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, rect.width * 1.5));
+      const unscaledCardWidth = placementAnchor.offsetWidth || rect.width;
+      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, unscaledCardWidth * 1.5));
       const height = width * (680 / 488);
+      const effectActionOpen = Boolean(liftedSlot?.querySelector(".effect-action-button"));
+
+      if (effectActionOpen) {
+        const hasRoomOnLeft = rect.left >= width + HOVER_PREVIEW_GAP + VIEWPORT_PADDING;
+        const availableAbove = Math.max(0, rect.top - HOVER_PREVIEW_GAP - VIEWPORT_PADDING);
+        const previewWidth = hasRoomOnLeft
+          ? width
+          : Math.min(width, Math.max(150, availableAbove * (488 / 680)));
+        const previewHeight = previewWidth * (680 / 488);
+        const desiredLeft = hasRoomOnLeft
+          ? rect.left - previewWidth - HOVER_PREVIEW_GAP
+          : rect.left + (rect.width - previewWidth) / 2;
+        const left = Math.min(window.innerWidth - previewWidth - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
+        const desiredTop = hasRoomOnLeft
+          ? rect.top + (rect.height - previewHeight) / 2
+          : rect.top - previewHeight - HOVER_PREVIEW_GAP;
+        const top = Math.min(window.innerHeight - previewHeight - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredTop));
+        setHoverPosition({ cardId: observedCardId, left, top, width: previewWidth });
+        return;
+      }
+
       const spaceRight = window.innerWidth - rect.right;
       const spaceLeft = rect.left;
       const placeRight = spaceRight >= width + HOVER_PREVIEW_GAP || spaceRight >= spaceLeft;
@@ -85,23 +117,37 @@ export function CardPreview() {
       setHoverPosition({ cardId: observedCardId, left, top, width });
     }
 
+    // Uses its own frame handle so the settle loop below is never cancelled by it.
+    // ResizeObserver fires an initial callback right after observe(); if it shared
+    // the settle handle it would kill the loop before the lift/zoom animation ended,
+    // freezing the preview at the card's unzoomed position.
     function scheduleMeasure() {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(measure);
+      window.cancelAnimationFrame(scheduleFrame);
+      scheduleFrame = window.requestAnimationFrame(measure);
+    }
+
+    // CSS transforms do not trigger ResizeObserver. Keep measuring through the
+    // whole lift animation so the preview follows the card's visible, zoomed box.
+    const settleUntil = performance.now() + 460;
+    function measureUntilSettled() {
+      measure();
+      if (performance.now() < settleUntil) settleFrame = window.requestAnimationFrame(measureUntilSettled);
     }
 
     const observer = new ResizeObserver(scheduleMeasure);
     observer.observe(observedAnchor);
+    if (battlefieldSlot && battlefieldSlot !== observedAnchor) observer.observe(battlefieldSlot);
     window.addEventListener("resize", scheduleMeasure);
     window.addEventListener("scroll", scheduleMeasure, true);
-    scheduleMeasure();
+    settleFrame = window.requestAnimationFrame(measureUntilSettled);
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(scheduleFrame);
+      window.cancelAnimationFrame(settleFrame);
       observer.disconnect();
       window.removeEventListener("resize", scheduleMeasure);
       window.removeEventListener("scroll", scheduleMeasure, true);
     };
-  }, [focusedCardId, hoveredCardId]);
+  }, [activeEffectCardId, focusedCardId, hoveredCardId]);
 
   if (!card || !details.imageUrl) return null;
 
@@ -125,7 +171,7 @@ export function CardPreview() {
     );
   }
 
-  if (!hoverPosition || hoverPosition.cardId !== hoveredCardId) return null;
+  if (!hoverPosition || hoverPosition.cardId !== (activeEffectCardId ?? hoveredCardId)) return null;
 
   const { cardId: _positionCardId, ...hoverStyle } = hoverPosition;
   void _positionCardId;

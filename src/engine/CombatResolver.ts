@@ -70,7 +70,10 @@ export function prepareHordeAttackers(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   next.activeSide = "horde";
   next.phase = "combat";
-  const attackers = next.horde.battlefield.filter((card) => canAttack(next, card));
+  const attackers = sortBattlefieldCardsByVisualOrder(
+    next.horde.battlefield,
+    next.horde.battlefield.filter((card) => canAttack(next, card)),
+  );
   next.combat.hordeAttackers = attackers.map((card) => card.instanceId);
   for (const attacker of attackers) attacker.tapped = true;
   log(next, `Horde attacks with ${next.combat.hordeAttackers.length} creature(s).`);
@@ -135,10 +138,39 @@ function log(game: GameState, message: string): GameState {
 }
 
 export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: string[]): string[] {
-  return [...attackerIds].sort((left, right) => battlefieldIndex(game, left) - battlefieldIndex(game, right));
+  const attackers = attackerIds
+    .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
+    .filter((card): card is CardInstance => Boolean(card));
+  return sortBattlefieldCardsByVisualOrder(game.player.battlefield, attackers).map((card) => card.instanceId);
 }
 
-function battlefieldIndex(game: GameState, id: string): number {
-  const index = game.player.battlefield.findIndex((card) => card.instanceId === id);
-  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
+  const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+  // Zombie tokens are re-summoned every horde turn and reuse the same handful of
+  // definitionIds, so grouping them by "first time this definitionId ever appeared"
+  // (like non-zombie creatures) yanks later waves back in line with the very first
+  // zombie of that name and attacks out of visual left-to-right order. The board
+  // (Battlefield.tsx groupBattlefieldCopies) groups zombies by arrival wave instead,
+  // which for ordering purposes is equivalent to plain chronological entry order.
+  const familyIndex = new Map<string, number>();
+  for (const card of battlefield) {
+    if (isZombieToken(card)) continue;
+    const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);
+  }
+
+  const orderOf = (card: CardInstance): number => {
+    const own = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    return isZombieToken(card) ? own : (familyIndex.get(card.definitionId) ?? own);
+  };
+
+  return [...cards].sort((left, right) => {
+    const orderDelta = orderOf(left) - orderOf(right);
+    if (orderDelta !== 0) return orderDelta;
+    return (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) - (entryIndex.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER);
+  });
+}
+
+function isZombieToken(card: CardInstance): boolean {
+  return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }

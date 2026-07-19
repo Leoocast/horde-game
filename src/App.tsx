@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -14,6 +14,7 @@ import { preloadGameAssets } from "./utils/assetPreloader";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -37,7 +38,6 @@ export default function App() {
     hordeDeckId: string;
     tutorial: boolean;
   } | null>(null);
-  const firstBattleThemePending = useRef(true);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -77,10 +77,9 @@ export default function App() {
     setLoading(true);
     setLoadingLeaving(false);
     setLoadingProgress({ percent: 0, label: "Opening the ancient gates" });
-    const includeNonCriticalAssets = !hasPreloadedGameAssets();
     void preloadGameAssets((progress) => {
       if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
-    }, includeNonCriticalAssets).then(() => {
+    }).then(() => {
       markGameAssetsPreloaded();
       const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
       window.setTimeout(() => {
@@ -101,7 +100,7 @@ export default function App() {
 
   useEffect(() => {
     if (loading) return;
-    void preloadGameAssets(() => undefined, false);
+    void preloadGameAssets(() => undefined);
   }, [loading]);
 
   useEffect(() => {
@@ -110,9 +109,6 @@ export default function App() {
     const revealTimeout = window.setTimeout(() => {
       if (launchTransition.tutorial) {
         playCollection("battleTheme1");
-      } else if (firstBattleThemePending.current) {
-        firstBattleThemePending.current = false;
-        playCollection("battleTheme3");
       } else {
         startBattleMusic(true);
       }
@@ -223,6 +219,7 @@ export default function App() {
     <>
       <AudioClickListener />
       <Board
+        key={gameSessionId}
         playerName={playerName}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}

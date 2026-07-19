@@ -12,7 +12,7 @@ import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -30,17 +30,65 @@ const BONUS_MANA_ORBIT_SLOTS = 8;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
+type BattlefieldRowSurfaceProps = {
+  cardsEmpty: boolean;
+  compact?: boolean;
+  cropCreatureCards: boolean;
+  creatureRowRef: RefObject<HTMLDivElement | null>;
+  dropTarget?: string;
+  children: ReactNode;
+  otherPermanents?: ReactNode;
+  otherPermanentsTargetingActive?: boolean;
+};
+
+function BattlefieldRowSurface({
+  cardsEmpty,
+  compact = false,
+  cropCreatureCards,
+  creatureRowRef,
+  dropTarget,
+  children,
+  otherPermanents,
+  otherPermanentsTargetingActive = false,
+}: BattlefieldRowSurfaceProps) {
+  return (
+    <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
+      {cardsEmpty ? (
+        <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
+      ) : (
+        <div
+          ref={creatureRowRef}
+          data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
+          className={[
+            "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
+            compact ? "battlefield-row-body-compact" : "battlefield-row-body",
+            cropCreatureCards ? "battlefield-row-overflow" : "",
+          ].join(" ")}
+        >
+          {children}
+        </div>
+      )}
+      {otherPermanents !== undefined && (
+        <div className={["other-permanents-dock", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
+          {otherPermanents}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
+  const entranceAnimatingIds = useRef<Set<string>>(new Set());
+  const activeReflowAnimations = useRef<Map<string, Animation>>(new Map());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
-  const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
   const manaSlotByLandId = useRef<Map<string, number>>(new Map());
   const creatureRowRef = useRef<HTMLDivElement>(null);
-  const previousRects = useRef<Map<string, DOMRect>>(new Map());
-  const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const previousRects = useRef<Map<string, { left: number; top: number }>>(new Map());
+  const reflowSampleFrame = useRef<number | undefined>(undefined);
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
@@ -73,11 +121,20 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
-  const blockDrag = useGameStore((state) => state.blockDrag);
+  const landPlayAnimationQueue = useGameStore((state) => state.landPlayAnimationQueue);
+  const formingLandIds = landPlayAnimationQueue
+    .filter((item) => !item.materialized)
+    .map((item) => item.card.instanceId);
+  // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
+  // dragging and are consumed by CombatArrows, not here — same rationale as the
+  // targeting selectors above.
+  const blockDragActive = useGameStore((state) => Boolean(state.blockDrag));
+  const blockDragBlockerId = useGameStore((state) => state.blockDrag?.blockerId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
   const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
@@ -157,25 +214,25 @@ export function Battlefield({ game, side, cards }: Props) {
   }, [autoPaidLandAnimation]);
 
   useLayoutEffect(() => {
-    if (!buffAnimationEventId || seenBuffEvents.current.has(buffAnimationEventId)) return;
     const root = boardRef.current;
     if (!root) return;
 
-    seenBuffEvents.current.add(buffAnimationEventId);
-    for (const id of buffAnimationCardIds) {
-      const slot = root.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`) ?? landDockRef.current?.querySelector<HTMLElement>(`[data-card-slot-id="${id}"]`);
-      if (!slot) continue;
-      const layer = document.createElement("span");
-      layer.className = "buff-rise-lines buff-rise-lines-blue";
-      layer.setAttribute("aria-hidden", "true");
-      slot.appendChild(layer);
-      window.setTimeout(() => layer.remove(), 1040);
+    // If this render wraps the creature row from N lines to N+1 (or collapses it back),
+    // let the existing cards' reflow-nudge settle before a newly-summoned card's entrance
+    // animation plays, instead of both happening in the same frame. The measured outer
+    // layout slot is not transformed by the entrance animation, which runs two layers in.
+    const creatureLayoutElements = Array.from(creatureRowRef.current?.querySelectorAll<HTMLElement>("[data-card-layout-id]") ?? []);
+    const previousCreatureTops: number[] = [];
+    const nextCreatureTops: number[] = [];
+    for (const element of creatureLayoutElements) {
+      const id = element.dataset.cardLayoutId;
+      if (!id) continue;
+      nextCreatureTops.push(element.getBoundingClientRect().top);
+      const previous = previousRects.current.get(id);
+      if (previous) previousCreatureTops.push(previous.top);
     }
-  }, [buffAnimationCardIds, buffAnimationEventId]);
-
-  useLayoutEffect(() => {
-    const root = boardRef.current;
-    if (!root) return;
+    const creatureRowCountIncreased = previousCreatureTops.length > 0 && countRowBands(nextCreatureTops) > countRowBands(previousCreatureTops);
+    const rowShiftSettleDelay = creatureRowCountIncreased ? 0.26 : 0;
 
     if (side === "player") {
       const currentAttackers = new Set(game.combat.playerAttackers);
@@ -200,6 +257,7 @@ export function Battlefield({ game, side, cards }: Props) {
         if (!visual) continue;
         animatedHordeIds.current.add(card.instanceId);
         seenCardIds.current.add(card.instanceId);
+        entranceAnimatingIds.current.add(card.instanceId);
         visual.style.opacity = "0";
         visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
         visual.style.filter = "brightness(1.8) saturate(1.25)";
@@ -218,7 +276,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: hordeEntryDelay(card) * 1000,
+            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -227,6 +285,11 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.opacity = "";
           visual.style.transform = "";
           visual.style.filter = "";
+          // fill:"both" is only needed through the entrance delay. Release the finished
+          // WAAPI effect so later CSS effects (for example Sunshower's activation pulse)
+          // can own transform/filter on this slot again.
+          animation.cancel();
+          entranceAnimatingIds.current.delete(card.instanceId);
         };
       }
     }
@@ -238,7 +301,12 @@ export function Battlefield({ game, side, cards }: Props) {
     ];
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
-      if (id) seenCardIds.current.add(id);
+      const summonedCard = id ? cards.find((item) => item.instanceId === id) : undefined;
+      const entranceExtraDelay = summonedCard?.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0;
+      if (id) {
+        seenCardIds.current.add(id);
+        entranceAnimatingIds.current.add(id);
+      }
       const animation = visual.animate(
         [
           {
@@ -254,114 +322,114 @@ export function Battlefield({ game, side, cards }: Props) {
         ],
         {
           duration: 360,
-          delay: Number(visual.dataset.entryDelay ?? 0) * 1000,
+          delay: (Number(visual.dataset.entryDelay ?? 0) + entranceExtraDelay) * 1000,
           easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          // "both" keeps the card invisible through the delay (e.g. while the row it
+          // just wrapped settles) instead of showing it statically before the entrance.
+          fill: "both",
         },
       );
       animation.onfinish = () => {
+        // Do not leave the final fill frame attached to this stable DOM node: a retained
+        // WAAPI transform/filter outranks the CSS activation and targeting animations that
+        // run immediately after an enters-the-battlefield trigger such as Sunshower Druid.
+        animation.cancel();
         if (side === "player") endSummoningAnimation();
+        if (id) entranceAnimatingIds.current.delete(id);
       };
       visual.removeAttribute("data-summoning");
     }
 
-    const layoutSignature = cards.map((card) => card.instanceId).join("|");
-    const shouldAnimateLayout = previousLayoutSignature.current !== layoutSignature;
-    const nextRects = new Map<string, DOMRect>();
-    const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-card-layout-id]"));
-    for (const element of elements) {
-      const id = element.dataset.cardLayoutId;
-      if (!id) continue;
-      nextRects.set(id, element.getBoundingClientRect());
-    }
+    // Single owner of battlefield position changes: measure the stable outer layout slot,
+    // then FLIP-animate a dedicated middle layer. The inner [data-card-slot-id] remains the
+    // sole owner of summon/effect transforms and contains the buff particles, so neither
+    // visual can be replaced or cancelled by the row reflow animation.
+    // Sampled over a short window (not just once per render) because CSS margin transitions
+    // can re-wrap the row a few frames AFTER the render that started them.
+    const REFLOW_MIN_DELTA_PX = 4;
+    const liveInstanceIds = new Set(cards.map((card) => card.instanceId));
 
-    if (shouldAnimateLayout) {
-      for (const element of elements) {
+    const observedRoot = root;
+    function sampleReflow() {
+      const seenIds = new Set<string>();
+      for (const element of Array.from(observedRoot.querySelectorAll<HTMLElement>("[data-card-layout-id]"))) {
         const id = element.dataset.cardLayoutId;
         if (!id) continue;
+        // Skip cards leaving the battlefield: popLayout keeps them in the DOM (often
+        // position:absolute) while their exit animation runs, and their sampled position is
+        // meaningless. Also skip cards still playing their entrance — they own their slot.
+        if (!liveInstanceIds.has(id) || entranceAnimatingIds.current.has(id)) {
+          seenIds.add(id);
+          const current = element.getBoundingClientRect();
+          previousRects.current.set(id, { left: current.left, top: current.top });
+          continue;
+        }
+        seenIds.add(id);
+        const current = element.getBoundingClientRect();
         const previous = previousRects.current.get(id);
-        const current = nextRects.get(id);
-        if (!previous || !current) continue;
+        previousRects.current.set(id, current);
+        if (!previous) continue;
 
         const deltaX = previous.left - current.left;
         const deltaY = previous.top - current.top;
-        if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
+        if (Math.abs(deltaX) < REFLOW_MIN_DELTA_PX && Math.abs(deltaY) < REFLOW_MIN_DELTA_PX) continue;
 
-        const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
-        if (!visual || visual.style.visibility === "hidden") continue;
-        visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
+        const reflowLayer = element.querySelector<HTMLElement>("[data-card-reflow-id]");
+        const slot = element.querySelector<HTMLElement>("[data-card-slot-id]");
+        if (!reflowLayer || !slot || slot.style.visibility === "hidden") continue;
+        // A card can get re-reflowed more than once in quick succession (each further
+        // arrival in the same wave nudges it again). Cancel the previous reflow nudge
+        // before layering a new one so they don't pile up additively and overshoot.
+        activeReflowAnimations.current.get(id)?.cancel();
+        const reflowAnimation = reflowLayer.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
           duration: 360,
           easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
         });
+        activeReflowAnimations.current.set(id, reflowAnimation);
+        const clearReflowAnimation = () => {
+          if (activeReflowAnimations.current.get(id) === reflowAnimation) activeReflowAnimations.current.delete(id);
+        };
+        reflowAnimation.onfinish = clearReflowAnimation;
+        reflowAnimation.oncancel = clearReflowAnimation;
+      }
+      for (const id of Array.from(previousRects.current.keys())) {
+        if (!seenIds.has(id)) previousRects.current.delete(id);
       }
     }
 
-    previousRects.current = nextRects;
-    previousLayoutSignature.current = layoutSignature;
+    const reflowWindowEnd = performance.now() + 450;
+    function reflowSampleLoop() {
+      sampleReflow();
+      reflowSampleFrame.current = performance.now() < reflowWindowEnd ? window.requestAnimationFrame(reflowSampleLoop) : undefined;
+    }
+    sampleReflow();
+    reflowSampleFrame.current = window.requestAnimationFrame(reflowSampleLoop);
+    return () => {
+      if (reflowSampleFrame.current !== undefined) window.cancelAnimationFrame(reflowSampleFrame.current);
+    };
   });
+
+  const otherPermanentsTargetingActive = others.some((card) => isSpellTargetable(card) || isSpellTargetLocked(card));
 
   return (
     <>
       <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
-          {others.length > 0 ? (
-            <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
-          ) : (
-            <BattlefieldRow cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
-          )}
+          <BattlefieldRowSurface
+            cardsEmpty={creatures.length === 0}
+            cropCreatureCards={cropCreatureCards}
+            creatureRowRef={creatureRowRef}
+            dropTarget={side === "horde" ? "player-attack" : undefined}
+            otherPermanents={others.length > 0 ? renderOtherPermanentStacks(others) : undefined}
+            otherPermanentsTargetingActive={otherPermanentsTargetingActive}
+          >
+            {renderCardStacks(creatures, false, "creature")}
+          </BattlefieldRowSurface>
         </div>
       </Zone>
       {side === "player" && createPortal(LandDock(), document.body)}
     </>
   );
-
-  function BattlefieldRow({ cards: rowCards, compact = false, dropTarget }: { cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
-    return (
-      <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        {rowCards.length === 0 ? (
-          <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
-        ) : (
-          <div
-            ref={creatureRowRef}
-            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
-            className={[
-              "battlefield-row-surface flex flex-wrap items-center justify-center gap-2",
-              compact ? "battlefield-row-body-compact" : "battlefield-row-body",
-              cropCreatureCards ? "battlefield-row-overflow" : "",
-            ].join(" ")}
-          >
-            <AnimatePresence initial={false} mode="popLayout">
-              {renderCardStacks(rowCards, compact, "creature")}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function PermanentBattlefieldRow({ creatures: rowCreatures, others: rowOthers, dropTarget }: { creatures: CardInstance[]; others: CardInstance[]; dropTarget?: string }) {
-    const otherPermanentsTargetingActive = rowOthers.some((card) => isSpellTargetable(card) || isSpellTargetLocked(card));
-
-    return (
-      <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
-        {rowCreatures.length === 0 ? (
-          <div aria-label="Empty battlefield" className="battlefield-empty battlefield-row-surface" />
-        ) : (
-          <div
-            ref={creatureRowRef}
-            data-battlefield-overflowing={cropCreatureCards ? "true" : undefined}
-            className={["battlefield-row-body battlefield-row-surface flex flex-wrap items-center justify-center gap-2", cropCreatureCards ? "battlefield-row-overflow" : ""].join(" ")}
-          >
-            <AnimatePresence initial={false} mode="popLayout">
-              {renderCardStacks(rowCreatures, false, "creature")}
-            </AnimatePresence>
-          </div>
-        )}
-        <div className={["other-permanents-dock", otherPermanentsTargetingActive ? "z-[96]" : "z-20"].join(" ")}>
-          {renderOtherPermanentStacks(rowOthers)}
-        </div>
-      </div>
-    );
-  }
 
   function LandDock() {
     const landCount = lands.length;
@@ -387,6 +455,7 @@ export function Battlefield({ game, side, cards }: Props) {
     return (
       <aside
         ref={landDockRef}
+        data-player-mana-core="true"
         data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
         data-audio-click={canSelectManaCore ? "valid" : undefined}
         role={canSelectManaCore ? "button" : undefined}
@@ -424,7 +493,8 @@ export function Battlefield({ game, side, cards }: Props) {
             const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
             const spent = card.tapped || card.activatedThisTurn;
             const consuming = paidLandIds.has(card.instanceId);
-            const visible = smallpoxLandSelectionActive || !spent || consuming;
+            const forming = formingLandIds.includes(card.instanceId);
+            const visible = !forming && (smallpoxLandSelectionActive || !spent || consuming);
             const fragmentStyle = {
               left: `${70.5 + Math.cos(angle) * 68}px`,
               top: `${59.5 + Math.sin(angle) * 68}px`,
@@ -537,34 +607,30 @@ export function Battlefield({ game, side, cards }: Props) {
       battlefieldFamilyOrder.current,
       zombieWaveByCardId.current,
       zombieWaveOrder.current,
+      pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
         className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
         data-stacked={group.cards.length > 1 ? "true" : undefined}
       >
-        <AnimatePresence initial={false} mode="popLayout">
-          {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
-        </AnimatePresence>
+        {/* A live card can move from one stat stack to another. Keeping an AnimatePresence
+            inside each stack leaves an exiting duplicate behind while the same card's new
+            reflow/buff animation is already running. The battlefield's FLIP layer owns that
+            movement; death effects are staged before the card is removed from game state. */}
+        {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
       </div>
     ));
   }
 
   function renderOtherPermanentStacks(permanents: CardInstance[]) {
-    const groups = new Map<string, CardInstance[]>();
-    for (const permanent of permanents) {
-      const group = groups.get(permanent.definitionId);
-      if (group) group.push(permanent);
-      else groups.set(permanent.definitionId, [permanent]);
-    }
-    return Array.from(groups.entries()).map(([definitionId, groupedCards]) => (
+    return permanents.map((card) => (
       <div
-        key={`other-stack-${definitionId}`}
+        key={`other-stack-${card.instanceId}`}
         className="battlefield-copy-stack battlefield-copy-stack-compact other-permanent-stack"
-        data-stacked={groupedCards.length > 1 ? "true" : undefined}
       >
         <AnimatePresence initial={false} mode="popLayout">
-          {groupedCards.map((card, stackIndex) => renderCard(card, true, "other", stackIndex))}
+          {renderCard(card, true, "other", 0)}
         </AnimatePresence>
       </div>
     ));
@@ -574,6 +640,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const useNewSummoning = side !== "horde";
     const newlyArrived = !seenCardIds.current.has(card.instanceId);
     const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
+    const buffAnimationActive = Boolean(buffAnimationEventId && buffAnimationCardIds.includes(card.instanceId));
     const isOtherPermanent = keyPrefix === "other";
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
@@ -653,16 +720,16 @@ export function Battlefield({ game, side, cards }: Props) {
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
     const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
-    const isDraggedDefender = blockDrag?.blockerId === card.instanceId;
-    const draggedDefender = blockDrag ? game.player.battlefield.find((item) => item.instanceId === blockDrag.blockerId) : undefined;
+    const isDraggedDefender = blockDragBlockerId === card.instanceId;
+    const draggedDefender = blockDragActive ? game.player.battlefield.find((item) => item.instanceId === blockDragBlockerId) : undefined;
     const dragDefenseTargetable = Boolean(
-      blockDrag &&
+      blockDragActive &&
         draggedDefender &&
         side === "horde" &&
         game.combat.hordeAttackers.includes(card.instanceId) &&
         canBlockAttacker(game, draggedDefender, card),
     );
-    const showActionGem = blockDrag ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
+    const showActionGem = blockDragActive ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable
@@ -695,7 +762,6 @@ export function Battlefield({ game, side, cards }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
         transition={{
-          layout: { type: "spring", stiffness: 760, damping: 54, mass: 0.38 },
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
           y: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
@@ -706,10 +772,11 @@ export function Battlefield({ game, side, cards }: Props) {
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
           card.tapped ? "battlefield-layout-slot-tapped" : "",
-          card.tapped && card.cardTypes.includes("Creature") ? "battlefield-layout-slot-tapped-creature" : "",
+          card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
+      <div className="battlefield-card-reflow" data-card-reflow-id={card.instanceId}>
       <div
         data-card-slot-id={card.instanceId}
         data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
@@ -738,6 +805,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ].join(" ")}
       >
       <span className="battlefield-card-depth" aria-hidden="true" />
+      {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
       {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}
@@ -850,6 +918,7 @@ export function Battlefield({ game, side, cards }: Props) {
       {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
       {spellBuffPreview && <span className="counter-target-stat-preview">{spellBuffPreview}</span>}
       </div>
+      </div>
       </motion.div>
     );
   }
@@ -878,7 +947,6 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
     const orderedBlockers = game.combat.blockers[attackerId] ?? [];
-    if (orderedBlockers.length < 2) return undefined;
     const orderIndex = orderedBlockers.indexOf(blockerId);
     return orderIndex >= 0 ? `${orderIndex + 1}` : undefined;
   }
@@ -999,8 +1067,9 @@ function groupBattlefieldCopies(
   familyOrder: Map<string, number>,
   zombieWaveByCardId: Map<string, number>,
   zombieWaveOrder: Map<number, number>,
+  keepSeparateCardIds?: Set<string>,
 ): Array<{ key: string; cards: CardInstance[] }> {
-  const groups = new Map<string, { key: string; cards: CardInstance[]; order: number; suborder: number }>();
+  const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
   const stackZombieTokens = cards.length > 7;
 
   for (const card of cards) {
@@ -1008,8 +1077,10 @@ function groupBattlefieldCopies(
     const stats = cardStatState(game, card);
     const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
     const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
-    const key =
-      zombieToken && !stackZombieTokens
+    const groupingKey =
+      keepSeparateCardIds?.has(card.instanceId)
+        ? `pending-trigger-${card.instanceId}`
+        : zombieToken && !stackZombieTokens
         ? `instance-${card.instanceId}`
         : zombieToken
           ? `zombie-wave-${zombieWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
@@ -1020,18 +1091,27 @@ function groupBattlefieldCopies(
         ? instanceOrder
         : (zombieWaveOrder.get(zombieWaveId) ?? instanceOrder)
       : (familyOrder.get(card.definitionId) ?? instanceOrder);
-    const group = groups.get(key);
+    const group = groups.get(groupingKey);
     if (group) {
       group.cards.push(card);
       group.suborder = Math.min(group.suborder, instanceOrder);
     } else {
-      groups.set(key, { key, cards: [card], order, suborder: instanceOrder });
+      groups.set(groupingKey, { cards: [card], order, suborder: instanceOrder });
     }
   }
 
   return Array.from(groups.values())
     .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
-    .map(({ key, cards: groupedCards }) => ({ key, cards: groupedCards }));
+    .map(({ cards: groupedCards }) => {
+      // The visual grouping criteria can change when a trigger alters a creature's stats.
+      // Anchor the React key to the oldest member instead of those volatile stats; otherwise
+      // a newly-cast base copy can inherit the old group's key while the existing buffed copy
+      // is remounted in a new group, which looks like a brief stack-then-destack jump.
+      const anchor = groupedCards.reduce((oldest, card) =>
+        (cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER) < (cardOrder.get(oldest.instanceId) ?? Number.MAX_SAFE_INTEGER) ? card : oldest,
+      );
+      return { key: `anchor-${anchor.instanceId}`, cards: groupedCards };
+    });
 }
 
 function isZombieToken(card: CardInstance): boolean {
@@ -1114,4 +1194,20 @@ function animateReadiedShift(element: HTMLElement, forward: boolean): void {
     duration: 220,
     easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
   });
+}
+
+// Groups vertical positions into row "bands" so the creature row's line count can be
+// compared before/after a render (used to tell whether a summon just wrapped the row).
+function countRowBands(tops: number[]): number {
+  if (tops.length === 0) return 0;
+  const sorted = [...tops].sort((a, b) => a - b);
+  let bands = 1;
+  let bandTop = sorted[0];
+  for (const top of sorted.slice(1)) {
+    if (top - bandTop > 16) {
+      bands += 1;
+      bandTop = top;
+    }
+  }
+  return bands;
 }
