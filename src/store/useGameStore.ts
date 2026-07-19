@@ -1679,7 +1679,3 @@ function nextDeadCardIds(event: HordeAttackEvent): string[] {
   if (event.blockerDies && event.blockerId) next.add(event.blockerId);
   return [...next];
 }
-
-// Temporary debug hook: exposed only in dev so board states can be reproduced
-// programmatically while diagnosing battlefield reflow animations.
-if (import.meta.env.DEV) (window as unknown as { __gameStore?: typeof useGameStore }).__gameStore = useGameStore;

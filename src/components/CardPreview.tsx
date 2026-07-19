@@ -29,7 +29,7 @@ export function CardPreview() {
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const [hoverPosition, setHoverPosition] = useState<HoverPreviewPosition>();
 
-  const activeId = focusedCardId ?? hoveredCardId;
+  const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
   const details = useCardDetails(card?.definitionId ?? "");
 
@@ -53,11 +53,16 @@ export function CardPreview() {
   }, [focusedCardId, setFocusedCardId, setHoveredCardId]);
 
   useLayoutEffect(() => {
-    if (focusedCardId || !hoveredCardId) {
+    // The lifted-effect preview must follow the zoomed/translated card, so it is
+    // driven by activeEffectCardId (set at click time) rather than hover. The hover
+    // clears on click, so relying on it here left the preview measuring a stale,
+    // unzoomed rect until a fresh mouseenter fired.
+    const previewCardId = activeEffectCardId ?? hoveredCardId;
+    if (focusedCardId || !previewCardId) {
       setHoverPosition(undefined);
       return;
     }
-    const observedCardId = hoveredCardId;
+    const observedCardId = previewCardId;
 
     const anchor = document.querySelector<HTMLElement>(`[data-card-id="${observedCardId}"]`);
     if (!anchor) {
@@ -67,7 +72,8 @@ export function CardPreview() {
     const observedAnchor = anchor;
     const battlefieldSlot = observedAnchor.closest<HTMLElement>(".battlefield-card-slot, .battlefield-card-slot-compact");
 
-    let frame = 0;
+    let scheduleFrame = 0;
+    let settleFrame = 0;
     function measure() {
       const liftedSlot = observedAnchor.closest<HTMLElement>(".effect-card-lifted");
       const placementAnchor = liftedSlot ?? observedAnchor;
@@ -111,9 +117,13 @@ export function CardPreview() {
       setHoverPosition({ cardId: observedCardId, left, top, width });
     }
 
+    // Uses its own frame handle so the settle loop below is never cancelled by it.
+    // ResizeObserver fires an initial callback right after observe(); if it shared
+    // the settle handle it would kill the loop before the lift/zoom animation ended,
+    // freezing the preview at the card's unzoomed position.
     function scheduleMeasure() {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(measure);
+      window.cancelAnimationFrame(scheduleFrame);
+      scheduleFrame = window.requestAnimationFrame(measure);
     }
 
     // CSS transforms do not trigger ResizeObserver. Keep measuring through the
@@ -121,7 +131,7 @@ export function CardPreview() {
     const settleUntil = performance.now() + 460;
     function measureUntilSettled() {
       measure();
-      if (performance.now() < settleUntil) frame = window.requestAnimationFrame(measureUntilSettled);
+      if (performance.now() < settleUntil) settleFrame = window.requestAnimationFrame(measureUntilSettled);
     }
 
     const observer = new ResizeObserver(scheduleMeasure);
@@ -129,9 +139,10 @@ export function CardPreview() {
     if (battlefieldSlot && battlefieldSlot !== observedAnchor) observer.observe(battlefieldSlot);
     window.addEventListener("resize", scheduleMeasure);
     window.addEventListener("scroll", scheduleMeasure, true);
-    frame = window.requestAnimationFrame(measureUntilSettled);
+    settleFrame = window.requestAnimationFrame(measureUntilSettled);
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(scheduleFrame);
+      window.cancelAnimationFrame(settleFrame);
       observer.disconnect();
       window.removeEventListener("resize", scheduleMeasure);
       window.removeEventListener("scroll", scheduleMeasure, true);
@@ -160,7 +171,7 @@ export function CardPreview() {
     );
   }
 
-  if (!hoverPosition || hoverPosition.cardId !== hoveredCardId) return null;
+  if (!hoverPosition || hoverPosition.cardId !== (activeEffectCardId ?? hoveredCardId)) return null;
 
   const { cardId: _positionCardId, ...hoverStyle } = hoverPosition;
   void _positionCardId;

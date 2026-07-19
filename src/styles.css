@@ -4374,7 +4374,7 @@
       transform 300ms ease-out;
   }
 
-  .battlefield-layout-slot-tapped > div > .battlefield-card-depth {
+  .battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .battlefield-card-depth {
     inset: 0;
     transform: translate(3px, 1px) rotate(4deg);
     transform-origin: center center;
