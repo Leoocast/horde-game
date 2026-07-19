@@ -14,6 +14,7 @@ import { preloadGameAssets } from "./utils/assetPreloader";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -223,6 +224,7 @@ export default function App() {
     <>
       <AudioClickListener />
       <Board
+        key={gameSessionId}
         playerName={playerName}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}

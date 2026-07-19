@@ -18,6 +18,7 @@ import { playerHandOverflow } from "../engine/GameRules";
 
 type GameStore = {
   game: GameState;
+  gameSessionId: number;
   hordeAttackAnimation?: HordeAttackAnimation;
   playerAttackAnimation?: PlayerAttackAnimation;
   resolvingHordeCombat: boolean;
@@ -244,6 +245,7 @@ export type SpellFightAnimationState = {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 3),
+  gameSessionId: 0,
   hordeAttackAnimation: undefined,
   playerAttackAnimation: undefined,
   resolvingHordeCombat: false,
@@ -277,12 +279,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
-    set(() => {
+    set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
       return {
         game: next,
+        gameSessionId: state.gameSessionId + 1,
         seed,
         playerDeckId,
         hordeDeckId,
