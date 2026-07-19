@@ -26,6 +26,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     subtypes: card.subtypes,
     power: card.power,
     toughness: card.toughness,
+    triggerMessage: card.triggerMessage,
     keywords: normalizeKeywords(card),
     activatedAbilities: normalizeActivatedAbilities(card.abilities ?? []),
     effects: normalizeEffects(card.abilities ?? []),

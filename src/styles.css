@@ -9906,6 +9906,106 @@
   animation-delay: 0ms;
 }
 
+/* One-shot warning shown before the first Horde turn that resolves in Surge. */
+.surge-transition {
+  --result-accent: #a93f2d;
+  --result-accent-bright: #f0a06f;
+  --result-accent-soft: rgb(169 48 31 / 0.34);
+  overflow: hidden;
+  padding: 28px;
+  background: rgb(5 1 1 / 0.9);
+  color: #ead7c8;
+  cursor: wait;
+  isolation: isolate;
+  -webkit-backdrop-filter: blur(10px) saturate(0.65);
+  backdrop-filter: blur(10px) saturate(0.65);
+  animation: surge-transition-life 2600ms cubic-bezier(0.45, 0, 0.22, 1) both;
+}
+
+.surge-transition .game-result-atmosphere {
+  background:
+    radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
+    radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
+  animation: surge-atmosphere-life 2600ms ease-in-out both;
+}
+
+.surge-transition-rift {
+  position: absolute;
+  z-index: -1;
+  top: -20vh;
+  bottom: -20vh;
+  left: 50%;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
+  box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
+  transform: translateX(-50%) rotate(7deg);
+  animation: surge-rift-life 2600ms ease-in-out both;
+}
+
+.surge-transition .game-result-banner {
+  margin-top: 0;
+  animation: surge-banner-life 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both;
+}
+
+.surge-transition .game-result-banner::before {
+  background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.96) 14%, rgb(12 2 2 / 0.99) 50%, rgb(28 5 3 / 0.96) 86%, transparent);
+}
+
+.surge-transition .game-result-banner h1 {
+  color: #ead5c7;
+  text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.52);
+}
+
+.surge-transition-message {
+  margin: 26px 0 0;
+  color: #c99175;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(0.72rem, 1.2vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-shadow: 0 2px 12px #000, 0 0 14px rgb(183 61 38 / 0.42);
+  text-transform: uppercase;
+  animation: surge-message-life 2600ms ease-in-out both;
+}
+
+@keyframes surge-transition-life {
+  0% { opacity: 0; }
+  16%, 76% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes surge-atmosphere-life {
+  0% { opacity: 0; transform: scale(1.12); }
+  24%, 72% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes surge-rift-life {
+  0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+  30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+  100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+}
+
+@keyframes surge-banner-life {
+  0%, 8% { opacity: 0; filter: blur(7px); transform: translateY(15px) scale(0.88); }
+  28%, 72% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+  100% { opacity: 0; filter: blur(8px); transform: translateY(-9px) scale(1.08); }
+}
+
+@keyframes surge-message-life {
+  0%, 24% { opacity: 0; letter-spacing: 0.46em; transform: translateY(8px); }
+  38%, 72% { opacity: 1; letter-spacing: 0.3em; transform: translateY(0); }
+  100% { opacity: 0; letter-spacing: 0.38em; transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surge-transition,
+  .surge-transition * {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+}
+
 @media (max-width: 640px) {
   .game-result-overlay { gap: 52px; padding: 18px; }
   .game-result-banner {

@@ -5,7 +5,8 @@ import { hashSeed, shuffleWithState } from "./RNG";
 const DEVELOPER_SEED = "developer";
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HORDE_OPENING_LIBRARY = ["graf_harvest", "graf_harvest", "goblin_token_1_1_red", "rundvelt_hordemaster"];
+const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
+const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
 const DEVELOPER_STARTING_BATTLEFIELD = [
   { definitionId: "forest", amount: 5 },
 ] as const;
@@ -100,7 +101,16 @@ function applyTutorialOpeningHand(seed: string, library: CardInstance[]): CardIn
 function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
   if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
   const { forced, remaining } = forceCardsToFront(library, DEVELOPER_HORDE_OPENING_LIBRARY);
-  return [...forced, ...remaining];
+  const ordered = [...forced, ...remaining];
+  for (let index = 0; index < Math.min(DEVELOPER_HORDE_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
+    if (ordered[index].definitionId !== "graf_harvest") continue;
+    const replacementIndex = ordered.findIndex(
+      (card, candidateIndex) => candidateIndex >= DEVELOPER_HORDE_PROTECTED_OPENING_SIZE && card.definitionId !== "graf_harvest",
+    );
+    if (replacementIndex < 0) break;
+    [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];
+  }
+  return ordered;
 }
 
 function applyTutorialHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
@@ -168,6 +178,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     basePower: definition.power ?? 0,
     baseToughness: definition.toughness ?? 0,
     keywords: definition.keywords ?? [],
+    triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: definition.requiresTargets ?? [],

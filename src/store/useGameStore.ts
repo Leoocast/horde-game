@@ -7,7 +7,7 @@ import { castCard, playLand, activateAbility } from "../engine/GameActions";
 import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
 import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
@@ -26,6 +26,8 @@ type GameStore = {
   pendingTriggeredEffectCount: number;
   pendingTriggeredEffectSourceId?: string;
   hordeAutoTriggerCount: number;
+  surgeTransitionActive: boolean;
+  surgeTransitionShown: boolean;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
@@ -100,6 +102,7 @@ type GameStore = {
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
+  completeSurgeTransition: () => void;
   prepareHordeAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
@@ -255,6 +258,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingTriggeredEffectCount: 0,
   pendingTriggeredEffectSourceId: undefined,
   hordeAutoTriggerCount: 0,
+  surgeTransitionActive: false,
+  surgeTransitionShown: false,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
   specialDeadCardIds: [],
@@ -308,6 +313,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingTriggeredEffectCount: 0,
         pendingTriggeredEffectSourceId: undefined,
         hordeAutoTriggerCount: 0,
+        surgeTransitionActive: false,
+        surgeTransitionShown: false,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
         specialDeadCardIds: [],
@@ -715,8 +722,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHordeMain: () => {
     const state = get();
-    if (discardPauseInProgress(state)) return;
+    if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
     const { game } = state;
+    if (!state.surgeTransitionShown) {
+      const preview = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
+      if (hordeInSurge(preview)) {
+        set({
+          surgeTransitionActive: true,
+          surgeTransitionShown: true,
+          selectedHordeCreatureId: undefined,
+          selectedPlayerCreatureId: undefined,
+          hoveredCardId: undefined,
+          focusedCardId: undefined,
+        });
+        return;
+      }
+    }
     const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
     const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
     const enteredCards = main.horde.battlefield.filter((card) => !previousHordeBattlefieldIds.has(card.instanceId));
@@ -743,6 +764,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeAutoTriggerCount: triggerCards.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
+  },
+  completeSurgeTransition: () => {
+    if (!get().surgeTransitionActive) return;
+    set({ surgeTransitionActive: false });
+    get().runHordeMain();
   },
   prepareHordeAttackers: () => set((state) => (discardPauseInProgress(state) ? {} : { game: prepareHordeAttackers(state.game) })),
   declareBlocker: (blockerId, attackerId) =>
@@ -1028,12 +1054,7 @@ function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
 }
 
 function queuedHordeTriggerMessage(source?: CardInstance): string {
-  if (source?.definitionId === "rundvelt_hordemaster") {
-    return `${source.name} triggers. Horde exiles the top card of its library.`;
-  }
-  if (source?.definitionId === "crow_of_dark_tidings") {
-    return `${source.name} triggers. Horde mills 2 cards.`;
-  }
+  if (source?.triggerMessage) return source.triggerMessage;
   return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
 }
 

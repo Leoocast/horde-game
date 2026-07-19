@@ -20,6 +20,7 @@ export type NewDeckCard = {
   power?: number | null;
   toughness?: number | null;
   keywords?: string[];
+  triggerMessage?: string;
   abilities?: NewDeckAbility[];
   scryfall?: {
     lookupMode?: string;

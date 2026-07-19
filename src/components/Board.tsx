@@ -26,6 +26,7 @@ import { TurnPhaseHud } from "./TurnPhaseHud";
 import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
+import { SurgeTransition } from "./SurgeTransition";
 
 type Props = {
   playerName: string;
@@ -39,6 +40,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
+  const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
@@ -84,6 +87,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack variant={game.winner ? "menu" : "game"} />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
+      {surgeTransitionActive && <SurgeTransition onComplete={completeSurgeTransition} />}
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-horde">

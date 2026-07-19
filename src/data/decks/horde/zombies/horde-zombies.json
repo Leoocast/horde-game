@@ -474,6 +474,7 @@
       "keywords": [
         "FLYING"
       ],
+      "triggerMessage": "Crow of Dark Tidings triggers. Horde mills 2 cards.",
       "effects": [
         {
           "type": "TRIGGERED_ABILITY",

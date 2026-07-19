@@ -68,6 +68,9 @@ export type CardDefinition = {
   power?: number | null;
   toughness?: number | null;
   keywords?: Keyword[];
+  /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
+   * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
+  triggerMessage?: string;
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
   activatedAbilities?: ActivatedAbility[];
@@ -110,6 +113,7 @@ export type CardInstance = {
   basePower: number;
   baseToughness: number;
   keywords: Keyword[];
+  triggerMessage?: string;
   effects: EffectDefinition[];
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
