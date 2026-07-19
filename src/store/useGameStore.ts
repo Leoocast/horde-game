@@ -140,6 +140,7 @@ let effectActivationPulseTimer: number | undefined;
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
+let landPlaySummoningSafetyTimer: number | undefined;
 let hordeAutoTriggerSequenceId = 0;
 
 type HordeAttackAnimation = {
@@ -592,7 +593,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
-      if (playSucceeded) scheduleSummoningAnimationSafetyClear();
+      if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
       return {
         game: next,
         selectedHandId: undefined,
@@ -1033,11 +1034,24 @@ function queuedHordeTriggerMessage(source?: CardInstance): string {
   return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
 }
 
+// Creature casts and land plays both bump the shared summoningAnimationCount, but each used to
+// share one safety-clear timer var: rescheduling it from one call site canceled the other's
+// fallback, and firing it hard-set the count to 0 instead of decrementing — so a land's flight
+// still in flight when a creature was cast could get its own pending decrement wiped out (or
+// vice versa). Give each its own timer and decrement by 1 so they never step on each other.
 function scheduleSummoningAnimationSafetyClear(): void {
   if (summoningAnimationSafetyTimer) window.clearTimeout(summoningAnimationSafetyTimer);
   summoningAnimationSafetyTimer = window.setTimeout(() => {
-    useGameStore.setState({ summoningAnimationCount: 0 });
+    useGameStore.setState((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) }));
     summoningAnimationSafetyTimer = undefined;
+  }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
+}
+
+function scheduleLandPlaySummoningSafetyClear(): void {
+  if (landPlaySummoningSafetyTimer) window.clearTimeout(landPlaySummoningSafetyTimer);
+  landPlaySummoningSafetyTimer = window.setTimeout(() => {
+    useGameStore.setState((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) }));
+    landPlaySummoningSafetyTimer = undefined;
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 

@@ -14,7 +14,7 @@ export function LandPlayAnimator() {
 
   useEffect(() => {
     if (!active || active.materialized) return;
-    const timer = window.setTimeout(() => materialize(active.id), 310);
+    const timer = window.setTimeout(() => materialize(active.id), 200);
     return () => window.clearTimeout(timer);
   }, [active?.id, active?.materialized, materialize]);
 
@@ -72,7 +72,7 @@ function LandFlight({ itemId, definitionId, name, origin, onComplete }: {
         x: deltaX,
         y: deltaY,
       }}
-      transition={{ duration: 0.62, ease: [0.3, 0.72, 0.18, 1] }}
+      transition={{ duration: 0.42, ease: [0.3, 0.72, 0.18, 1] }}
       onAnimationComplete={onComplete}
     >
       <motion.div
@@ -85,7 +85,7 @@ function LandFlight({ itemId, definitionId, name, origin, onComplete }: {
           borderRadius: [7, 12, 50, 999],
           filter: ["brightness(1)", "brightness(1.2) saturate(1.12)", "brightness(1.75) saturate(1.35)", "brightness(2) blur(3px)"],
         }}
-        transition={{ duration: 0.48, times: [0, 0.28, 0.7, 1], ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.33, times: [0, 0.28, 0.7, 1], ease: [0.16, 1, 0.3, 1] }}
       >
         {imageUrl ? <img src={imageUrl} alt={name} draggable={false} /> : <span>{name}</span>}
       </motion.div>
@@ -93,13 +93,13 @@ function LandFlight({ itemId, definitionId, name, origin, onComplete }: {
         className="land-play-orb"
         initial={{ opacity: 0, scale: 0.2 }}
         animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.2, 0.2, 0.78, 1, 1.7] }}
-        transition={{ duration: 0.62, times: [0, 0.3, 0.52, 0.86, 1], ease: "easeOut" }}
+        transition={{ duration: 0.42, times: [0, 0.3, 0.52, 0.86, 1], ease: "easeOut" }}
       />
       <motion.span
         className="land-play-impact"
         initial={{ opacity: 0, scale: 0.2 }}
         animate={{ opacity: [0, 0, 0, 0.92, 0], scale: [0.2, 0.2, 0.2, 0.65, 1.8] }}
-        transition={{ duration: 0.62, times: [0, 0.7, 0.8, 0.9, 1], ease: "easeOut" }}
+        transition={{ duration: 0.42, times: [0, 0.7, 0.8, 0.9, 1], ease: "easeOut" }}
       />
     </motion.div>
   );
