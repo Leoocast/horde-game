@@ -33,6 +33,7 @@ const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 export function Battlefield({ game, side, cards }: Props) {
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
+  const entranceAnimatingIds = useRef<Set<string>>(new Set());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
   const seenBuffEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
@@ -208,6 +209,7 @@ export function Battlefield({ game, side, cards }: Props) {
         if (!visual) continue;
         animatedHordeIds.current.add(card.instanceId);
         seenCardIds.current.add(card.instanceId);
+        entranceAnimatingIds.current.add(card.instanceId);
         visual.style.opacity = "0";
         visual.style.transform = "translateY(-46px) scale(1.55) rotate(-3deg)";
         visual.style.filter = "brightness(1.8) saturate(1.25)";
@@ -235,6 +237,7 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.opacity = "";
           visual.style.transform = "";
           visual.style.filter = "";
+          entranceAnimatingIds.current.delete(card.instanceId);
         };
       }
     }
@@ -246,7 +249,10 @@ export function Battlefield({ game, side, cards }: Props) {
     ];
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
-      if (id) seenCardIds.current.add(id);
+      if (id) {
+        seenCardIds.current.add(id);
+        entranceAnimatingIds.current.add(id);
+      }
       const animation = visual.animate(
         [
           {
@@ -268,6 +274,7 @@ export function Battlefield({ game, side, cards }: Props) {
       );
       animation.onfinish = () => {
         if (side === "player") endSummoningAnimation();
+        if (id) entranceAnimatingIds.current.delete(id);
       };
       visual.removeAttribute("data-summoning");
     }
@@ -286,6 +293,7 @@ export function Battlefield({ game, side, cards }: Props) {
       for (const element of elements) {
         const id = element.dataset.cardLayoutId;
         if (!id) continue;
+        if (entranceAnimatingIds.current.has(id)) continue;
         const previous = previousRects.current.get(id);
         const current = nextRects.get(id);
         if (!previous || !current) continue;
