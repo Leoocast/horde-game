@@ -71,7 +71,6 @@ export function prepareHordeAttackers(game: GameState): GameState {
   next.activeSide = "horde";
   next.phase = "combat";
   const attackers = sortBattlefieldCardsByVisualOrder(
-    next,
     next.horde.battlefield,
     next.horde.battlefield.filter((card) => canAttack(next, card)),
   );
@@ -142,33 +141,36 @@ export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: str
   const attackers = attackerIds
     .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
     .filter((card): card is CardInstance => Boolean(card));
-  return sortBattlefieldCardsByVisualOrder(game, game.player.battlefield, attackers).map((card) => card.instanceId);
+  return sortBattlefieldCardsByVisualOrder(game.player.battlefield, attackers).map((card) => card.instanceId);
 }
 
-function sortBattlefieldCardsByVisualOrder(game: GameState, battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
+function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
   const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+  // Zombie tokens are re-summoned every horde turn and reuse the same handful of
+  // definitionIds, so grouping them by "first time this definitionId ever appeared"
+  // (like non-zombie creatures) yanks later waves back in line with the very first
+  // zombie of that name and attacks out of visual left-to-right order. The board
+  // (Battlefield.tsx groupBattlefieldCopies) groups zombies by arrival wave instead,
+  // which for ordering purposes is equivalent to plain chronological entry order.
   const familyIndex = new Map<string, number>();
-  const visualGroupIndex = new Map<string, number>();
-
   for (const card of battlefield) {
+    if (isZombieToken(card)) continue;
     const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);
-    const groupKey = `${card.definitionId}-${visualStatsKey(game, card)}`;
-    if (!visualGroupIndex.has(groupKey)) visualGroupIndex.set(groupKey, index);
   }
 
+  const orderOf = (card: CardInstance): number => {
+    const own = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    return isZombieToken(card) ? own : (familyIndex.get(card.definitionId) ?? own);
+  };
+
   return [...cards].sort((left, right) => {
-    const familyDelta = (familyIndex.get(left.definitionId) ?? Number.MAX_SAFE_INTEGER) - (familyIndex.get(right.definitionId) ?? Number.MAX_SAFE_INTEGER);
-    if (familyDelta !== 0) return familyDelta;
-    const leftGroup = visualGroupIndex.get(`${left.definitionId}-${visualStatsKey(game, left)}`) ?? Number.MAX_SAFE_INTEGER;
-    const rightGroup = visualGroupIndex.get(`${right.definitionId}-${visualStatsKey(game, right)}`) ?? Number.MAX_SAFE_INTEGER;
-    return leftGroup - rightGroup || (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) - (entryIndex.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER);
+    const orderDelta = orderOf(left) - orderOf(right);
+    if (orderDelta !== 0) return orderDelta;
+    return (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) - (entryIndex.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER);
   });
 }
 
-function visualStatsKey(game: GameState, card: CardInstance): string {
-  const { power, toughness } = getPowerToughness(game, card);
-  const visibleToughness = Math.max(0, toughness - card.damageMarked);
-  const buffed = power > card.basePower || toughness > card.baseToughness;
-  return `${power}/${visibleToughness}-${card.damageMarked > 0 ? "damaged" : "healthy"}-${buffed ? "buffed" : "base"}`;
+function isZombieToken(card: CardInstance): boolean {
+  return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
