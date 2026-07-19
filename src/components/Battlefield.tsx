@@ -11,7 +11,7 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -42,7 +42,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const manaSlotByLandId = useRef<Map<string, number>>(new Map());
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, DOMRect>>(new Map());
-  const previousLayoutSignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const reflowSampleFrame = useRef<number | undefined>(undefined);
   const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
@@ -289,6 +289,9 @@ export function Battlefield({ game, side, cards }: Props) {
           duration: 360,
           delay: (Number(visual.dataset.entryDelay ?? 0) + entranceExtraDelay) * 1000,
           easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          // "both" keeps the card invisible through the delay (e.g. while the row it
+          // just wrapped settles) instead of showing it statically before the entrance.
+          fill: "both",
         },
       );
       animation.onfinish = () => {
@@ -298,27 +301,29 @@ export function Battlefield({ game, side, cards }: Props) {
       visual.removeAttribute("data-summoning");
     }
 
-    const layoutSignature = cards.map((card) => card.instanceId).join("|");
-    const shouldAnimateLayout = previousLayoutSignature.current !== layoutSignature;
-    const nextRects = new Map<string, DOMRect>();
-    const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-card-layout-id]"));
-    for (const element of elements) {
-      const id = element.dataset.cardLayoutId;
-      if (!id) continue;
-      nextRects.set(id, element.getBoundingClientRect());
-    }
+    // Single owner of battlefield position changes: FLIP-animate any element whose rect
+    // jumped since the last sample. Sampled over a short window (not just once per render)
+    // because CSS margin transitions can re-wrap the row mid-flight — the card only jumps
+    // to the other row a few frames AFTER the render that started the transition, when no
+    // new render happens to catch it. Gradual per-frame movement (the transition itself)
+    // stays under the threshold; only genuine row jumps trigger the nudge.
+    const REFLOW_MIN_DELTA_PX = 4;
 
-    if (shouldAnimateLayout) {
-      for (const element of elements) {
+    const observedRoot = root;
+    function sampleReflow() {
+      const seenIds = new Set<string>();
+      for (const element of Array.from(observedRoot.querySelectorAll<HTMLElement>("[data-card-layout-id]"))) {
         const id = element.dataset.cardLayoutId;
         if (!id) continue;
+        seenIds.add(id);
+        const current = element.getBoundingClientRect();
         const previous = previousRects.current.get(id);
-        const current = nextRects.get(id);
-        if (!previous || !current) continue;
+        previousRects.current.set(id, current);
+        if (!previous) continue;
 
         const deltaX = previous.left - current.left;
         const deltaY = previous.top - current.top;
-        if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
+        if (Math.abs(deltaX) < REFLOW_MIN_DELTA_PX && Math.abs(deltaY) < REFLOW_MIN_DELTA_PX) continue;
 
         const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
         if (!visual || visual.style.visibility === "hidden") continue;
@@ -343,14 +348,25 @@ export function Battlefield({ game, side, cards }: Props) {
         reflowAnimation.onfinish = clearReflowAnimation;
         reflowAnimation.oncancel = clearReflowAnimation;
       }
+      for (const id of Array.from(previousRects.current.keys())) {
+        if (!seenIds.has(id)) previousRects.current.delete(id);
+      }
     }
 
-    previousRects.current = nextRects;
-    previousLayoutSignature.current = layoutSignature;
+    const reflowWindowEnd = performance.now() + 450;
+    function reflowSampleLoop() {
+      sampleReflow();
+      reflowSampleFrame.current = performance.now() < reflowWindowEnd ? window.requestAnimationFrame(reflowSampleLoop) : undefined;
+    }
+    sampleReflow();
+    reflowSampleFrame.current = window.requestAnimationFrame(reflowSampleLoop);
+    return () => {
+      if (reflowSampleFrame.current !== undefined) window.cancelAnimationFrame(reflowSampleFrame.current);
+    };
   });
 
   return (
-    <LayoutGroup id={`battlefield-${side}`}>
+    <>
       <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           {others.length > 0 ? (
@@ -361,7 +377,7 @@ export function Battlefield({ game, side, cards }: Props) {
         </div>
       </Zone>
       {side === "player" && createPortal(LandDock(), document.body)}
-    </LayoutGroup>
+    </>
   );
 
   function BattlefieldRow({ cards: rowCards, compact = false, dropTarget }: { cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
@@ -743,13 +759,10 @@ export function Battlefield({ game, side, cards }: Props) {
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
         data-card-layout-id={card.instanceId}
-        layout="position"
-        layoutId={`battlefield-${side}-${card.instanceId}`}
         initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
         transition={{
-          layout: { type: "spring", stiffness: 760, damping: 54, mass: 0.38 },
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
           y: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
