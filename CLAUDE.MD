@@ -91,9 +91,17 @@ src/
       player/
         mono_green_ramp/  deck Alpha 0.0.3 del player
       horde/
-        zombies/          deck actual de la Horda
-        goblins/          deck Goblin disponible en el inspector
+        zombies/          deck activo por defecto de la Horda
+        goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
+    decks.ts              registra los tres decks y expone getPlayerDeck/getHordeDeck por id
     normalizeDeck.ts      adapta el nuevo JSON del deck al engine viejo
+
+scripts/
+  run-engine-tests.mjs    corre tests/engine.test.js via vite ssrLoadModule + node:test
+
+tests/
+  engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
+  engineTestUtils.js      helpers para armar game state de prueba
 ```
 
 ## Estado actual del juego
@@ -268,9 +276,11 @@ Deck actual del player:
 - `src/data/decks/player/mono_green_ramp/mono_green_ramp.json`
 - `src/data/decks/player/mono_green_ramp/mono_green_ramp_images.json`
 
-`src/data/decks.ts` importa:
-- player desde `normalizeDeck(monoGreenRampRaw)`
-- horde desde `src/data/decks/horde/zombies/horde-zombies.json`
+`src/data/decks.ts` registra los tres decks disponibles:
+- player: `normalizeDeck(monoGreenRampRaw)` (`mono_green_ramp`, `DEFAULT_PLAYER_DECK_ID`)
+- horde: `horde-zombies.json` sin normalizar (`horde_zombies`, `DEFAULT_HORDE_DECK_ID`)
+- horde: `normalizeDeck(goblinHordeRaw)` (`goblin_assault_horde`) — **ya es un deck de Horda seleccionable, no solo de inspector**; tiene mas `engineSupportNeeded` sin resolver (target flexible player/criatura/planeswalker, "must attack if able", conteo de goblins atacantes, etc.), asi que varias habilidades de sus cartas legendarias/lords todavia no tienen handler real
+- `getPlayerDeck(id)` / `getHordeDeck(id)` devuelven el deck por id con fallback al default
 
 La nueva estructura de imagenes del deck debe ser la base para el inspector.
 
@@ -553,6 +563,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; falta cerrar varios `engineSupportNeeded` de ese JSON antes de darlo por completo.
 - `Graf Harvest` se fuerza al top de la Horda en developer mode.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
