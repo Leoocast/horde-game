@@ -557,11 +557,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
-        useToastStore.getState().pushToast({
-          title: "Hand limit",
-          message: `Discard ${overflow} card${overflow === 1 ? "" : "s"} before ending your turn.`,
-          tone: "warning",
-        });
         return { handLimitDiscardActive: true, handLimitSelectionId: undefined };
       }
       const next = endPlayerTurn(game);

@@ -622,20 +622,13 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function renderOtherPermanentStacks(permanents: CardInstance[]) {
-    const groups = new Map<string, CardInstance[]>();
-    for (const permanent of permanents) {
-      const group = groups.get(permanent.definitionId);
-      if (group) group.push(permanent);
-      else groups.set(permanent.definitionId, [permanent]);
-    }
-    return Array.from(groups.entries()).map(([definitionId, groupedCards]) => (
+    return permanents.map((card) => (
       <div
-        key={`other-stack-${definitionId}`}
+        key={`other-stack-${card.instanceId}`}
         className="battlefield-copy-stack battlefield-copy-stack-compact other-permanent-stack"
-        data-stacked={groupedCards.length > 1 ? "true" : undefined}
       >
         <AnimatePresence initial={false} mode="popLayout">
-          {groupedCards.map((card, stackIndex) => renderCard(card, true, "other", stackIndex))}
+          {renderCard(card, true, "other", 0)}
         </AnimatePresence>
       </div>
     ));

@@ -5034,8 +5034,10 @@
     position: absolute;
     top: 50%;
     left: clamp(12px, 1.2vw, 24px);
-    display: flex;
+    display: grid;
     max-width: min(28vw, 380px);
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, auto);
     align-items: center;
     gap: 10px;
     transform: translateY(-50%);
@@ -5046,17 +5048,22 @@
   }
 
   .battlefield-other-permanent-slot {
-    height: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * 0.89);
+    --other-permanent-cropped-height: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * 0.89);
+    height: var(--other-permanent-cropped-height);
   }
 
-  .battlefield-other-permanent-slot > .card-visual {
+  .battlefield-other-permanent-slot .battlefield-card-slot-compact {
+    height: var(--other-permanent-cropped-height);
+  }
+
+  .battlefield-other-permanent-slot .card-visual {
     position: absolute;
     inset: auto 0 0;
     min-height: 0;
     height: 100%;
   }
 
-  .battlefield-other-permanent-slot > .card-visual > img {
+  .battlefield-other-permanent-slot .card-visual > img {
     width: 108%;
     max-width: none;
     height: 110%;
