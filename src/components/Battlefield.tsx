@@ -187,6 +187,22 @@ export function Battlefield({ game, side, cards }: Props) {
     const root = boardRef.current;
     if (!root) return;
 
+    // If this render wraps the creature row from N lines to N+1 (or collapses it back),
+    // let the existing cards' reflow-nudge settle before a newly-summoned card's entrance
+    // animation plays, instead of both happening in the same frame.
+    const creatureLayoutElements = Array.from(creatureRowRef.current?.querySelectorAll<HTMLElement>("[data-card-layout-id]") ?? []);
+    const previousCreatureTops: number[] = [];
+    const nextCreatureTops: number[] = [];
+    for (const element of creatureLayoutElements) {
+      const id = element.dataset.cardLayoutId;
+      if (!id) continue;
+      nextCreatureTops.push(element.getBoundingClientRect().top);
+      const previous = previousRects.current.get(id);
+      if (previous) previousCreatureTops.push(previous.top);
+    }
+    const creatureRowCountIncreased = previousCreatureTops.length > 0 && countRowBands(nextCreatureTops) > countRowBands(previousCreatureTops);
+    const rowShiftSettleDelay = creatureRowCountIncreased ? 0.26 : 0;
+
     if (side === "player") {
       const currentAttackers = new Set(game.combat.playerAttackers);
       for (const attackerId of currentAttackers) {
@@ -229,7 +245,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: hordeEntryDelay(card) * 1000,
+            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -250,6 +266,8 @@ export function Battlefield({ game, side, cards }: Props) {
     ];
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
+      const summonedCard = id ? cards.find((item) => item.instanceId === id) : undefined;
+      const entranceExtraDelay = summonedCard?.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0;
       if (id) {
         seenCardIds.current.add(id);
         entranceAnimatingIds.current.add(id);
@@ -269,7 +287,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ],
         {
           duration: 360,
-          delay: Number(visual.dataset.entryDelay ?? 0) * 1000,
+          delay: (Number(visual.dataset.entryDelay ?? 0) + entranceExtraDelay) * 1000,
           easing: "cubic-bezier(0.16, 1, 0.3, 1)",
         },
       );
@@ -725,13 +743,10 @@ export function Battlefield({ game, side, cards }: Props) {
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
         data-card-layout-id={card.instanceId}
-        layout="position"
-        layoutId={`battlefield-${side}-${card.instanceId}`}
         initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
         transition={{
-          layout: { type: "spring", stiffness: 760, damping: 54, mass: 0.38 },
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
           y: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
@@ -1149,4 +1164,20 @@ function animateReadiedShift(element: HTMLElement, forward: boolean): void {
     duration: 220,
     easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
   });
+}
+
+// Groups vertical positions into row "bands" so the creature row's line count can be
+// compared before/after a render (used to tell whether a summon just wrapped the row).
+function countRowBands(tops: number[]): number {
+  if (tops.length === 0) return 0;
+  const sorted = [...tops].sort((a, b) => a - b);
+  let bands = 1;
+  let bandTop = sorted[0];
+  for (const top of sorted.slice(1)) {
+    if (top - bandTop > 16) {
+      bands += 1;
+      bandTop = top;
+    }
+  }
+  return bands;
 }
