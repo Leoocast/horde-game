@@ -743,10 +743,13 @@ export function Battlefield({ game, side, cards }: Props) {
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
         data-card-layout-id={card.instanceId}
+        layout="position"
+        layoutId={`battlefield-${side}-${card.instanceId}`}
         initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
         transition={{
+          layout: { type: "spring", stiffness: 760, damping: 54, mass: 0.38 },
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
           y: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
