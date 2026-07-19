@@ -4057,7 +4057,7 @@
     transition: margin-right 300ms ease-out;
   }
 
-  .battlefield-layout-slot-tapped-creature {
+  .battlefield-layout-slot-creature-clearance {
     margin-right: clamp(6px, 0.55vw, 9px);
   }
 
@@ -7920,12 +7920,12 @@
   --block-order-accent: #66d8ff;
   position: relative;
   display: inline-grid;
-  width: 21px;
+  width: 24px;
   height: 21px;
-  flex: 0 0 21px;
+  flex: 0 0 24px;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--block-order-accent) 74%, #d9f6ff);
-  border-radius: 50%;
+  border-radius: 0;
   background:
     radial-gradient(circle at 36% 28%, rgb(221 247 255 / 0.2), transparent 30%),
     linear-gradient(145deg, color-mix(in srgb, var(--block-order-accent) 42%, #173548), #07151e 72%);
@@ -7934,6 +7934,7 @@
   font-size: 11px;
   font-weight: 950;
   line-height: 1;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
   text-shadow: 0 1px 2px #000, 0 0 6px var(--block-order-accent);
   box-shadow:
     inset 0 1px 0 rgb(234 251 255 / 0.24),

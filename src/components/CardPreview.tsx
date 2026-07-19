@@ -75,6 +75,27 @@ export function CardPreview() {
       const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
       const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, rect.width * 1.5));
       const height = width * (680 / 488);
+      const effectActionOpen = Boolean(observedAnchor.closest(".effect-card-lifted")?.querySelector(".effect-action-button"));
+
+      if (effectActionOpen) {
+        const hasRoomOnLeft = rect.left >= width + HOVER_PREVIEW_GAP + VIEWPORT_PADDING;
+        const availableAbove = Math.max(0, rect.top - HOVER_PREVIEW_GAP - VIEWPORT_PADDING);
+        const previewWidth = hasRoomOnLeft
+          ? width
+          : Math.min(width, Math.max(150, availableAbove * (488 / 680)));
+        const previewHeight = previewWidth * (680 / 488);
+        const desiredLeft = hasRoomOnLeft
+          ? rect.left - previewWidth - HOVER_PREVIEW_GAP
+          : rect.left + (rect.width - previewWidth) / 2;
+        const left = Math.min(window.innerWidth - previewWidth - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
+        const desiredTop = hasRoomOnLeft
+          ? rect.top + (rect.height - previewHeight) / 2
+          : rect.top - previewHeight - HOVER_PREVIEW_GAP;
+        const top = Math.min(window.innerHeight - previewHeight - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredTop));
+        setHoverPosition({ cardId: observedCardId, left, top, width: previewWidth });
+        return;
+      }
+
       const spaceRight = window.innerWidth - rect.right;
       const spaceLeft = rect.left;
       const placeRight = spaceRight >= width + HOVER_PREVIEW_GAP || spaceRight >= spaceLeft;

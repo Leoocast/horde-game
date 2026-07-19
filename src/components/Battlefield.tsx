@@ -11,7 +11,7 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -308,7 +308,7 @@ export function Battlefield({ game, side, cards }: Props) {
   });
 
   return (
-    <>
+    <LayoutGroup id={`battlefield-${side}`}>
       <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           {others.length > 0 ? (
@@ -319,7 +319,7 @@ export function Battlefield({ game, side, cards }: Props) {
         </div>
       </Zone>
       {side === "player" && createPortal(LandDock(), document.body)}
-    </>
+    </LayoutGroup>
   );
 
   function BattlefieldRow({ cards: rowCards, compact = false, dropTarget }: { cards: CardInstance[]; compact?: boolean; dropTarget?: string }) {
@@ -701,6 +701,8 @@ export function Battlefield({ game, side, cards }: Props) {
       <motion.div
         key={`${keyPrefix}-${card.instanceId}`}
         data-card-layout-id={card.instanceId}
+        layout="position"
+        layoutId={`battlefield-${side}-${card.instanceId}`}
         initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
@@ -716,7 +718,7 @@ export function Battlefield({ game, side, cards }: Props) {
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
           card.tapped ? "battlefield-layout-slot-tapped" : "",
-          card.tapped && card.cardTypes.includes("Creature") ? "battlefield-layout-slot-tapped-creature" : "",
+          card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
