@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -38,7 +38,6 @@ export default function App() {
     hordeDeckId: string;
     tutorial: boolean;
   } | null>(null);
-  const firstBattleThemePending = useRef(true);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -110,9 +109,6 @@ export default function App() {
     const revealTimeout = window.setTimeout(() => {
       if (launchTransition.tutorial) {
         playCollection("battleTheme1");
-      } else if (firstBattleThemePending.current) {
-        firstBattleThemePending.current = false;
-        playCollection("battleTheme3");
       } else {
         startBattleMusic(true);
       }
