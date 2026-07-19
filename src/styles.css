@@ -7860,6 +7860,89 @@
   box-shadow: inset 3px 0 0 rgb(210 77 42 / 0.72), inset 0 1px 0 rgb(255 217 171 / 0.12), 0 3px 8px rgb(0 0 0 / 0.5);
 }
 
+.card-state-tag-block {
+  border-color: rgb(112 190 226 / 0.72);
+  background: linear-gradient(135deg, rgb(21 61 78 / 0.97), rgb(8 24 34 / 0.98));
+  color: #bfeeff;
+  text-shadow: 0 1px 2px #000, 0 0 7px rgb(69 191 241 / 0.4);
+  box-shadow:
+    inset 3px 0 0 rgb(62 168 218 / 0.72),
+    inset 0 1px 0 rgb(210 244 255 / 0.12),
+    0 3px 8px rgb(0 0 0 / 0.5);
+}
+
+.card-block-state-tag {
+  --block-order-accent: #66d8ff;
+  display: inline-flex;
+  min-height: 21px;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--block-order-accent) 58%, #78b7cc);
+  background: linear-gradient(135deg, rgb(20 57 73 / 0.98), rgb(7 22 31 / 0.99));
+  color: #bfeeff;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--block-order-accent) 68%, #3288ad),
+    inset 0 1px 0 rgb(218 246 255 / 0.12),
+    0 3px 8px rgb(0 0 0 / 0.52),
+    0 0 7px color-mix(in srgb, var(--block-order-accent) 24%, transparent);
+}
+
+.card-block-state-tag > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px 2px 9px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.15em;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000, 0 0 7px rgb(69 191 241 / 0.34);
+  text-transform: uppercase;
+}
+
+.card-block-state-tag > strong {
+  display: inline-grid;
+  min-width: 20px;
+  place-items: center;
+  border-left: 1px solid color-mix(in srgb, var(--block-order-accent) 48%, rgb(192 235 249 / 0.32));
+  background:
+    radial-gradient(circle at 38% 26%, rgb(230 250 255 / 0.18), transparent 34%),
+    color-mix(in srgb, var(--block-order-accent) 28%, rgb(8 28 39 / 0.98));
+  color: #f2fcff;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000, 0 0 5px var(--block-order-accent);
+  box-shadow: inset 1px 0 0 rgb(230 250 255 / 0.05);
+}
+
+.card-block-order-badge {
+  --block-order-accent: #66d8ff;
+  position: relative;
+  display: inline-grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--block-order-accent) 74%, #d9f6ff);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 28%, rgb(221 247 255 / 0.2), transparent 30%),
+    linear-gradient(145deg, color-mix(in srgb, var(--block-order-accent) 42%, #173548), #07151e 72%);
+  color: #effcff;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000, 0 0 6px var(--block-order-accent);
+  box-shadow:
+    inset 0 1px 0 rgb(234 251 255 / 0.24),
+    inset 0 -3px 6px rgb(0 8 13 / 0.44),
+    0 0 0 2px rgb(3 15 22 / 0.76),
+    0 2px 7px rgb(0 0 0 / 0.56),
+    0 0 8px color-mix(in srgb, var(--block-order-accent) 42%, transparent);
+}
+
 /* Dark stats, with a clearly separate buff state. */
 .card-stat-badge {
   border-color: rgb(179 170 133 / 0.68);
