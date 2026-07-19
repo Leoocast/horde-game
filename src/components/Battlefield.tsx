@@ -293,7 +293,6 @@ export function Battlefield({ game, side, cards }: Props) {
       for (const element of elements) {
         const id = element.dataset.cardLayoutId;
         if (!id) continue;
-        if (entranceAnimatingIds.current.has(id)) continue;
         const previous = previousRects.current.get(id);
         const current = nextRects.get(id);
         if (!previous || !current) continue;
@@ -304,9 +303,14 @@ export function Battlefield({ game, side, cards }: Props) {
 
         const visual = element.querySelector<HTMLElement>("[data-card-slot-id]");
         if (!visual || visual.style.visibility === "hidden") continue;
+        // A card still mid-entrance (see entranceAnimatingIds) already owns a "replace"
+        // animation on this same transform property. Compose the reflow nudge with
+        // "add" so it layers on top instead of cutting the entrance animation short;
+        // settled cards keep the default "replace" reflow slide.
         visual.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
           duration: 360,
           easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          composite: entranceAnimatingIds.current.has(id) ? "add" : "replace",
         });
       }
     }
