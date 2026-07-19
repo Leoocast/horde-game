@@ -369,11 +369,14 @@ export function Battlefield({ game, side, cards }: Props) {
     <>
       <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
-          {others.length > 0 ? (
-            <PermanentBattlefieldRow creatures={creatures} others={others} dropTarget={side === "horde" ? "player-attack" : undefined} />
-          ) : (
-            <BattlefieldRow cards={creatures} dropTarget={side === "horde" ? "player-attack" : undefined} />
-          )}
+          {/* Called as plain functions (not JSX components) on purpose: they're defined
+              inside Battlefield, so as JSX their type identity changes every render and
+              React remounts the whole row subtree — killing in-flight card animations
+              whenever an extra render lands mid-animation (e.g. the overflow state flip
+              on 1<->2 row changes). As calls, their DOM belongs to Battlefield's stable tree. */}
+          {others.length > 0
+            ? PermanentBattlefieldRow({ creatures, others, dropTarget: side === "horde" ? "player-attack" : undefined })
+            : BattlefieldRow({ cards: creatures, dropTarget: side === "horde" ? "player-attack" : undefined })}
         </div>
       </Zone>
       {side === "player" && createPortal(LandDock(), document.body)}
