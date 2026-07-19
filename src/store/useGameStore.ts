@@ -474,15 +474,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoveredCardId: undefined,
       focusedCardId: undefined,
     });
-    if (overflow === 0) {
-      resumeAfterDiscardPause(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide !== "player" || latest.game.phase !== "end") return;
-        latest.endPlayerTurn();
-        const afterTurn = useGameStore.getState();
-        if (afterTurn.game.activeSide === "horde" && afterTurn.game.phase === "horde") afterTurn.runHordeMain();
-      });
-    }
   },
   startSpellTargeting: (handId, x, y) =>
     set((state) =>
@@ -554,7 +545,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return {
         game: next,
         playerAttackDrag: undefined,
-        handLimitDiscardActive: next.activeSide === "player" && next.phase === "end" && playerHandOverflow(next) > 0,
+        // The hand limit is checked when the player explicitly ends the turn,
+        // not merely when combat advances into the end phase.
+        handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
       };
     }),
@@ -701,7 +694,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
-        handLimitDiscardActive: playerHandOverflow(next) > 0,
+        handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
         selectedPlayerCreatureId: undefined,

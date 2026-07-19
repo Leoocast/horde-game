@@ -51,6 +51,7 @@ function parseToxicKeyword(keyword: Keyword): number {
 export function canAttack(game: GameState, card: CardInstance): boolean {
   if (!isCreature(card) || card.tapped) return false;
   if (card.controller === "horde") return true;
+  if (game.horde.library.length === 0) return false;
   return !card.summoningSickness || hasKeyword(game, card, "HASTE");
 }
 

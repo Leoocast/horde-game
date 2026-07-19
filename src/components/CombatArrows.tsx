@@ -91,6 +91,8 @@ export function CombatArrows({ game }: { game: GameState }) {
 
   useEffect(() => {
     let frame = 0;
+    let active = true;
+    let trackUntil = performance.now() + 500;
     const measure = () => {
       const next: Arrow[] = [];
       for (const [attackerId, blockerIds] of Object.entries(game.combat.blockers)) {
@@ -155,20 +157,31 @@ export function CombatArrows({ game }: { game: GameState }) {
         const removed = current.filter((arrow) => !nextIds.has(arrow.id));
         const removedWithFade = removed.filter((arrow) => !arrow.id.startsWith("player-attack-drag-"));
         if (removedWithFade.length > 0) queueExitingArrows(removedWithFade, setExitingArrows, exitTimers.current);
-        return next;
+        return arrowsMatch(current, next) ? current : next;
       });
     };
-    const schedule = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(measure);
+
+    // Cards use a short FLIP transition when another permanent leaves the row.
+    // Follow their rendered positions while that transition runs so locked arrows
+    // do not remain attached to the cards' old layout coordinates.
+    const trackRenderedPositions = () => {
+      if (!active) return;
+      measure();
+      if (performance.now() < trackUntil) frame = window.requestAnimationFrame(trackRenderedPositions);
     };
-    schedule();
-    window.addEventListener("resize", schedule);
-    window.addEventListener("scroll", schedule, true);
-    return () => {
+    const restartTracking = () => {
+      trackUntil = performance.now() + 500;
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", schedule);
-      window.removeEventListener("scroll", schedule, true);
+      frame = window.requestAnimationFrame(trackRenderedPositions);
+    };
+    restartTracking();
+    window.addEventListener("resize", restartTracking);
+    window.addEventListener("scroll", restartTracking, true);
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", restartTracking);
+      window.removeEventListener("scroll", restartTracking, true);
     };
   }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
@@ -280,6 +293,23 @@ function hideArrowIds(arrowIds: Set<string>, setHiddenArrowIds: (updater: (curre
     const next = new Set(current);
     for (const arrowId of arrowIds) next.add(arrowId);
     return next;
+  });
+}
+
+function arrowsMatch(current: Arrow[], next: Arrow[]): boolean {
+  if (current.length !== next.length) return false;
+  return current.every((arrow, index) => {
+    const candidate = next[index];
+    return Boolean(
+      candidate &&
+        arrow.id === candidate.id &&
+        arrow.path === candidate.path &&
+        arrow.tip === candidate.tip &&
+        arrow.startX === candidate.startX &&
+        arrow.startY === candidate.startY &&
+        arrow.tipX === candidate.tipX &&
+        arrow.tipY === candidate.tipY,
+    );
   });
 }
 

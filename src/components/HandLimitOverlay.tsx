@@ -17,8 +17,9 @@ export function HandLimitOverlay({ game }: { game: GameState }) {
       {active && overflow > 0 && (
         <>
           <motion.div className="hand-limit-backdrop fixed inset-0 z-[101]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+          <div className="fixed left-1/2 top-[42%] z-[118] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2">
           <motion.section
-            className="hand-limit-panel old-panel fixed bottom-[12.8rem] left-1/2 z-[118] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 p-4 text-center text-[#eadfbd]"
+            className="hand-limit-panel old-panel w-full p-4 text-center text-[#eadfbd]"
             initial={{ opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.96 }}
@@ -40,6 +41,7 @@ export function HandLimitOverlay({ game }: { game: GameState }) {
               </button>
             </div>
           </motion.section>
+          </div>
         </>
       )}
     </AnimatePresence>
