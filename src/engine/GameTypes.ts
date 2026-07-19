@@ -164,6 +164,8 @@ export type EventItem = {
   type: string;
   sourceId?: string;
   payload?: Record<string, unknown>;
+  /** Limits a deferred event to the controller whose triggers still need to resolve. */
+  triggerController?: Side;
 };
 
 export type GameState = {

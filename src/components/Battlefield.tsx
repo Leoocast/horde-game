@@ -121,6 +121,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
@@ -422,9 +423,7 @@ export function Battlefield({ game, side, cards }: Props) {
             otherPermanents={others.length > 0 ? renderOtherPermanentStacks(others) : undefined}
             otherPermanentsTargetingActive={otherPermanentsTargetingActive}
           >
-            <AnimatePresence initial={false} mode="popLayout">
-              {renderCardStacks(creatures, false, "creature")}
-            </AnimatePresence>
+            {renderCardStacks(creatures, false, "creature")}
           </BattlefieldRowSurface>
         </div>
       </Zone>
@@ -608,15 +607,18 @@ export function Battlefield({ game, side, cards }: Props) {
       battlefieldFamilyOrder.current,
       zombieWaveByCardId.current,
       zombieWaveOrder.current,
+      pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
         className={["battlefield-copy-stack", compact ? "battlefield-copy-stack-compact" : ""].join(" ")}
         data-stacked={group.cards.length > 1 ? "true" : undefined}
       >
-        <AnimatePresence initial={false} mode="popLayout">
-          {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
-        </AnimatePresence>
+        {/* A live card can move from one stat stack to another. Keeping an AnimatePresence
+            inside each stack leaves an exiting duplicate behind while the same card's new
+            reflow/buff animation is already running. The battlefield's FLIP layer owns that
+            movement; death effects are staged before the card is removed from game state. */}
+        {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
       </div>
     ));
   }
@@ -1065,8 +1067,9 @@ function groupBattlefieldCopies(
   familyOrder: Map<string, number>,
   zombieWaveByCardId: Map<string, number>,
   zombieWaveOrder: Map<number, number>,
+  keepSeparateCardIds?: Set<string>,
 ): Array<{ key: string; cards: CardInstance[] }> {
-  const groups = new Map<string, { key: string; cards: CardInstance[]; order: number; suborder: number }>();
+  const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
   const stackZombieTokens = cards.length > 7;
 
   for (const card of cards) {
@@ -1074,8 +1077,10 @@ function groupBattlefieldCopies(
     const stats = cardStatState(game, card);
     const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
     const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
-    const key =
-      zombieToken && !stackZombieTokens
+    const groupingKey =
+      keepSeparateCardIds?.has(card.instanceId)
+        ? `pending-trigger-${card.instanceId}`
+        : zombieToken && !stackZombieTokens
         ? `instance-${card.instanceId}`
         : zombieToken
           ? `zombie-wave-${zombieWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
@@ -1086,18 +1091,27 @@ function groupBattlefieldCopies(
         ? instanceOrder
         : (zombieWaveOrder.get(zombieWaveId) ?? instanceOrder)
       : (familyOrder.get(card.definitionId) ?? instanceOrder);
-    const group = groups.get(key);
+    const group = groups.get(groupingKey);
     if (group) {
       group.cards.push(card);
       group.suborder = Math.min(group.suborder, instanceOrder);
     } else {
-      groups.set(key, { key, cards: [card], order, suborder: instanceOrder });
+      groups.set(groupingKey, { cards: [card], order, suborder: instanceOrder });
     }
   }
 
   return Array.from(groups.values())
     .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
-    .map(({ key, cards: groupedCards }) => ({ key, cards: groupedCards }));
+    .map(({ cards: groupedCards }) => {
+      // The visual grouping criteria can change when a trigger alters a creature's stats.
+      // Anchor the React key to the oldest member instead of those volatile stats; otherwise
+      // a newly-cast base copy can inherit the old group's key while the existing buffed copy
+      // is remounted in a new group, which looks like a brief stack-then-destack jump.
+      const anchor = groupedCards.reduce((oldest, card) =>
+        (cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER) < (cardOrder.get(oldest.instanceId) ?? Number.MAX_SAFE_INTEGER) ? card : oldest,
+      );
+      return { key: `anchor-${anchor.instanceId}`, cards: groupedCards };
+    });
 }
 
 function isZombieToken(card: CardInstance): boolean {

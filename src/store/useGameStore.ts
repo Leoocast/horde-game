@@ -24,6 +24,7 @@ type GameStore = {
   resolvingHordeCombat: boolean;
   summoningAnimationCount: number;
   pendingTriggeredEffectCount: number;
+  pendingTriggeredEffectSourceId?: string;
   hordeAutoTriggerCount: number;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
@@ -252,6 +253,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolvingHordeCombat: false,
   summoningAnimationCount: 0,
   pendingTriggeredEffectCount: 0,
+  pendingTriggeredEffectSourceId: undefined,
   hordeAutoTriggerCount: 0,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
@@ -304,6 +306,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         resolvingHordeCombat: false,
         summoningAnimationCount: 0,
         pendingTriggeredEffectCount: 0,
+        pendingTriggeredEffectSourceId: undefined,
         hordeAutoTriggerCount: 0,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
@@ -376,14 +379,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ counterTargeting }) => ({
       counterTargeting: counterTargeting ? { ...counterTargeting, targetId: undefined } : undefined,
     })),
-  cancelCounterTargeting: () => set((state) => ({ counterTargeting: undefined, pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount })),
+  cancelCounterTargeting: () =>
+    set((state) => ({
+      counterTargeting: undefined,
+      pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount,
+      pendingTriggeredEffectSourceId: state.counterTargeting ? undefined : state.pendingTriggeredEffectSourceId,
+    })),
   confirmCounterTargeting: () =>
     set(({ game, counterTargeting }) => {
       if (!counterTargeting?.targetId) return {};
       const next = structuredClone(game) as GameState;
       const source = findBattlefieldCard(next, counterTargeting.sourceId);
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!source || !target) return { counterTargeting: undefined, pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1) };
+      if (!source || !target) {
+        return {
+          counterTargeting: undefined,
+          pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
+          pendingTriggeredEffectSourceId: undefined,
+        };
+      }
       const previousLife = next.player.life;
       const manualTrigger = findManualEnterTargetTrigger(source);
       if (manualTrigger) {
@@ -411,6 +425,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game: next,
         counterTargeting: undefined,
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
+        pendingTriggeredEffectSourceId: undefined,
         buffAnimationCardIds: [target.instanceId],
         buffAnimationEventId: Date.now(),
         lifeBuffAnimationId: next.player.life > previousLife ? Date.now() : get().lifeBuffAnimationId,
@@ -1223,7 +1238,10 @@ function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDe
 function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
   const latest = useGameStore.getState().game;
   if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
-    useGameStore.setState((state) => ({ pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1) }));
+    useGameStore.setState((state) => ({
+      pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
+      pendingTriggeredEffectSourceId: undefined,
+    }));
     return;
   }
   if (useGameStore.getState().summoningAnimationCount > 0) {
@@ -1456,6 +1474,7 @@ function buildCastCardPatch(state: GameStore, id: string, options?: CastOptions)
     buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
     summoningAnimationCount: startsSummoningAnimation ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
     pendingTriggeredEffectCount: manualTriggeredCard ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
+    pendingTriggeredEffectSourceId: manualTriggeredCard?.instanceId ?? state.pendingTriggeredEffectSourceId,
   };
 }
 
