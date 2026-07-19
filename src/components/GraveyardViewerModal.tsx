@@ -167,7 +167,7 @@ function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index
   );
 }
 
-function GraveyardDetailsModal({
+export function GraveyardDetailsModal({
   game,
   card,
   fontSize,
@@ -179,6 +179,8 @@ function GraveyardDetailsModal({
   onNext,
   position,
   total,
+  contextLabel = "Graveyard card",
+  backdropClassName = "",
 }: {
   game: GameState;
   card: CardInstance;
@@ -191,6 +193,8 @@ function GraveyardDetailsModal({
   onNext?: () => void;
   position: number;
   total: number;
+  contextLabel?: string;
+  backdropClassName?: string;
 }) {
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
@@ -201,7 +205,7 @@ function GraveyardDetailsModal({
   return (
     <div
       data-preserve-card-focus="true"
-      className={["deck-collection-modal-backdrop graveyard-details-backdrop", closing ? "is-closing" : ""].join(" ")}
+      className={["deck-collection-modal-backdrop graveyard-details-backdrop", backdropClassName, closing ? "is-closing" : ""].filter(Boolean).join(" ")}
       onMouseDown={(event) => {
         event.stopPropagation();
         if (event.target === event.currentTarget) onClose();
@@ -231,7 +235,7 @@ function GraveyardDetailsModal({
 
           <div className="deck-collection-modal-info">
             <header className="deck-collection-modal-header">
-              <p>Graveyard card <span>{position} / {total}</span></p>
+              <p>{contextLabel} <span>{position} / {total}</span></p>
               <div><h2>{displayCard.displayName}</h2></div>
               <small>{graveyardTypeLine(displayCard)}</small>
             </header>

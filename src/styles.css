@@ -7754,6 +7754,157 @@
   }
 }
 
+/* Graveyard collection and card details use the pause menu's charcoal,
+   weathered brass and muted teal palette. These rules intentionally live at
+   the end so deck themes cannot tint the shared Chronicle details modal. */
+.deck-collection-modal-backdrop.graveyard-viewer-backdrop,
+.deck-collection-modal-backdrop.graveyard-details-backdrop {
+  --deck-accent: #a49766;
+  --deck-accent-bright: #ded4b5;
+  --deck-accent-soft: rgb(174 151 83 / 0.13);
+  background:
+    radial-gradient(circle at 50% 38%, rgb(50 62 63 / 0.22), transparent 44%),
+    rgb(1 4 5 / 0.9) !important;
+  color: #cfcbb8;
+  -webkit-backdrop-filter: blur(14px) saturate(0.88);
+  backdrop-filter: blur(14px) saturate(0.88);
+}
+
+.deck-collection-modal.graveyard-viewer-modal,
+.deck-collection-modal.graveyard-card-details {
+  border-color: rgb(164 151 101 / 0.42) !important;
+  border-top-color: rgb(208 187 119 / 0.76) !important;
+  background:
+    radial-gradient(circle at 15% 0%, rgb(74 78 66 / 0.12), transparent 36%),
+    linear-gradient(145deg, rgb(23 29 31 / 0.99), rgb(7 12 14 / 0.995)) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(235 220 171 / 0.08),
+    inset 0 -18px 38px rgb(0 0 0 / 0.2),
+    0 36px 90px rgb(0 0 0 / 0.68) !important;
+}
+
+.deck-collection-modal.graveyard-viewer-modal::before,
+.deck-collection-modal.graveyard-card-details::before {
+  background: linear-gradient(180deg, transparent 3%, rgb(129 137 109 / 0.24) 28%, rgb(181 157 91 / 0.42) 72%, transparent 97%);
+  box-shadow: none;
+}
+
+.deck-collection-modal.graveyard-viewer-modal::after,
+.deck-collection-modal.graveyard-card-details::after {
+  background: linear-gradient(90deg, transparent 4%, rgb(123 139 131 / 0.16) 28%, rgb(193 174 111 / 0.26) 52%, rgb(119 134 127 / 0.14) 72%, transparent 96%);
+  box-shadow: none;
+}
+
+.graveyard-viewer-modal .graveyard-viewer-header {
+  border-bottom: 1px solid rgb(151 143 103 / 0.24);
+  background: linear-gradient(180deg, rgb(28 35 36 / 0.78), rgb(12 18 20 / 0.24));
+}
+
+.graveyard-viewer-modal .graveyard-viewer-emblem {
+  border-color: rgb(164 151 101 / 0.42);
+  background: linear-gradient(145deg, rgb(43 50 50 / 0.9), rgb(13 20 21 / 0.98));
+  color: #b09e67;
+  box-shadow: inset 0 1px 0 rgb(235 220 171 / 0.07), 0 10px 22px rgb(0 0 0 / 0.3);
+}
+
+.graveyard-viewer-modal .deck-detail-heading p,
+.graveyard-card-details .deck-collection-modal-header > p {
+  color: #b09e67;
+}
+
+.graveyard-viewer-modal .deck-detail-heading h1,
+.graveyard-card-details .deck-collection-modal-header h2 {
+  color: #ded4b5;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.76);
+}
+
+.graveyard-viewer-modal .deck-detail-counts span,
+.graveyard-card-details .deck-collection-modal-header small,
+.graveyard-card-details .deck-collection-modal-footer {
+  color: #788681;
+}
+
+.graveyard-viewer-modal .graveyard-viewer-collection {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(89 97 83 / 0.08), transparent 42%),
+    linear-gradient(90deg, rgb(5 11 13 / 0.62), rgb(11 17 18 / 0.2));
+}
+
+.graveyard-viewer-modal .graveyard-viewer-card .deck-detail-card-image {
+  border-color: rgb(124 142 137 / 0.34);
+  background: #091012;
+  box-shadow: 4px 7px 0 rgb(18 24 25 / 0.94), 9px 14px 20px rgb(0 0 0 / 0.46);
+}
+
+.graveyard-viewer-modal .graveyard-viewer-card:hover .deck-detail-card-image,
+.graveyard-viewer-modal .graveyard-viewer-card:focus-visible .deck-detail-card-image {
+  border-color: rgb(181 164 101 / 0.72);
+  box-shadow: 4px 7px 0 #252a28, 0 0 0 1px rgb(208 187 119 / 0.12), 0 12px 24px rgb(0 0 0 / 0.54);
+}
+
+.graveyard-viewer-modal .graveyard-viewer-card .deck-detail-card-name { color: #9ba7a1; }
+.graveyard-viewer-modal .graveyard-viewer-card:hover .deck-detail-card-name,
+.graveyard-viewer-modal .graveyard-viewer-card:focus-visible .deck-detail-card-name { color: #ded4b5; }
+
+.graveyard-viewer-modal .graveyard-card-position {
+  border-color: rgb(164 151 101 / 0.55);
+  background: linear-gradient(145deg, #394240, #161e20 72%);
+  color: #dfd5b3;
+  box-shadow: 0 6px 15px rgb(0 0 0 / 0.48), 0 0 12px rgb(174 151 83 / 0.1);
+}
+
+.graveyard-card-details .deck-collection-modal-art-column {
+  border-right-color: rgb(151 143 103 / 0.14);
+  background:
+    radial-gradient(circle at 50% 43%, rgb(83 92 79 / 0.12), transparent 45%),
+    linear-gradient(90deg, rgb(5 11 13 / 0.44), transparent);
+}
+
+.graveyard-card-details .deck-collection-modal-art {
+  border-color: rgb(181 164 101 / 0.58);
+  background: #091012;
+  box-shadow: 9px 13px 0 #1a2121, 0 28px 48px rgb(0 0 0 / 0.62), 0 0 30px rgb(174 151 83 / 0.08);
+}
+
+.graveyard-viewer-modal .deck-collection-modal-close,
+.graveyard-card-details .deck-collection-modal-close,
+.graveyard-card-details .deck-collection-modal-nav {
+  border-color: rgb(132 140 116 / 0.3);
+  background: rgb(18 24 23 / 0.88);
+  color: #a9a887;
+}
+
+.graveyard-viewer-modal .deck-collection-modal-close:hover,
+.graveyard-viewer-modal .deck-collection-modal-close:focus-visible,
+.graveyard-card-details .deck-collection-modal-close:hover,
+.graveyard-card-details .deck-collection-modal-close:focus-visible,
+.graveyard-card-details .deck-collection-modal-nav:hover,
+.graveyard-card-details .deck-collection-modal-nav:focus-visible {
+  border-color: #9e8f59;
+  background: rgb(35 41 38 / 0.94);
+  color: #e2d49b;
+}
+
+.graveyard-card-details .deck-collection-modal-rules {
+  border-color: rgb(124 142 137 / 0.24);
+  background: linear-gradient(145deg, rgb(16 23 24 / 0.72), rgb(6 12 14 / 0.84));
+  scrollbar-color: #766f52 rgb(6 12 14 / 0.84);
+}
+
+.graveyard-card-details .deck-collection-modal-rules p { color: #cfcbb8; }
+
+.graveyard-card-details .keyword-pill {
+  border-color: rgb(139 137 94 / 0.52);
+  background: linear-gradient(180deg, #b5aa7f, #756e50 56%, #474535);
+  color: #111714;
+}
+
+.graveyard-card-details .deck-collection-modal-stats {
+  border-color: #817957;
+  background: linear-gradient(180deg, #d2c8a1, #8b8363);
+  color: #111714;
+}
+
 /* Graveyard surfaces use cold, weathered metal instead of the collection UI's
    brighter gold. Keep the battlefield legible behind the modal. */
 .deck-collection-modal-backdrop.graveyard-viewer-backdrop {
@@ -9101,6 +9252,38 @@
 
 .game-log-match-count.is-visible { color: #b4a66f; }
 
+.game-log-match-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #b4a66f;
+  white-space: nowrap;
+}
+
+.game-log-match-nav span {
+  min-width: 54px;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.game-log-match-nav button {
+  display: flex;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(142 137 96 / 0.36);
+  background: rgb(20 27 25 / 0.75);
+  color: #aaa371;
+}
+
+.game-log-match-nav button:hover:not(:disabled),
+.game-log-match-nav button:focus-visible { border-color: #b39a55; background: rgb(91 75 28 / 0.35); color: #f1d98f; }
+.game-log-match-nav button:disabled { opacity: 0.35; }
+
 .game-log-scroll {
   min-height: 0;
   flex: 1;
@@ -9118,13 +9301,11 @@
 
 .game-log-list li {
   position: relative;
-  display: grid;
-  grid-template-columns: 70px minmax(0, 1fr);
-  gap: 11px;
   border: 1px solid transparent;
   border-bottom-color: rgb(120 137 134 / 0.13);
-  padding: 8px 9px 9px;
+  padding: 0 9px 9px;
   line-height: 1.42;
+  scroll-margin-block: 90px;
   transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
 }
 
@@ -9144,7 +9325,49 @@
   box-shadow: inset 3px 0 0 #c8a847, 0 0 16px rgb(145 112 28 / 0.08);
 }
 
+.game-log-list li.is-active-match {
+  border-color: rgb(230 194 78 / 0.9);
+  background: linear-gradient(90deg, rgb(151 116 27 / 0.34), rgb(105 83 30 / 0.12));
+  box-shadow: inset 3px 0 0 #f0c756, 0 0 18px rgb(181 137 31 / 0.16);
+}
+
 .game-log-list li.is-card-match::before { display: none; }
+
+.game-log-entry-body {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 11px;
+  padding-top: 8px;
+}
+
+.game-log-turn-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -9px 2px;
+  border-top: 1px solid rgb(164 146 89 / 0.28);
+  border-bottom: 1px solid rgb(118 132 127 / 0.16);
+  background: linear-gradient(90deg, rgb(71 67 43 / 0.28), transparent);
+  padding: 6px 9px 5px;
+}
+
+.game-log-turn-divider span {
+  color: #c4b477;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-log-turn-divider i {
+  color: #71817b;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
 
 .game-log-entry-meta {
   display: flex;
@@ -9173,15 +9396,59 @@
 .game-log-kind-draw { border-color: rgb(129 121 78 / 0.5); background: rgb(64 57 27 / 0.4); color: #c9bc7e; }
 .game-log-kind-turn { border-color: rgb(139 120 77 / 0.46); background: rgb(61 49 26 / 0.4); color: #c9af78; }
 
-.game-log-entry-index {
-  color: #596762;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.game-log-entry-text { padding-top: 1px; color: #cfcbb8; }
+
+.game-log-card-link {
+  display: inline;
+  border: 0;
+  border-bottom: 1px dotted rgb(184 161 91 / 0.7);
+  background: transparent;
+  padding: 0;
+  color: #e1d39d;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  cursor: pointer;
 }
 
-.game-log-entry-text { padding-top: 1px; color: #cfcbb8; }
+.game-log-card-link:hover,
+.game-log-card-link:focus-visible {
+  border-bottom-style: solid;
+  outline: none;
+  color: #ffe29a;
+  text-shadow: 0 0 10px rgb(215 177 64 / 0.28);
+}
+
+.game-log-card-preview {
+  position: fixed;
+  z-index: 540;
+  width: 190px;
+  pointer-events: none;
+  border: 1px solid rgb(196 163 77 / 0.72);
+  background: #080c0c;
+  box-shadow: 0 20px 44px rgb(0 0 0 / 0.78), 0 0 20px rgb(165 125 35 / 0.16);
+  animation: game-log-card-preview-in 130ms ease-out both;
+}
+
+.game-log-card-preview img { display: block; width: 100%; aspect-ratio: 488 / 680; object-fit: cover; }
+.game-log-card-preview span {
+  display: block;
+  border-top: 1px solid rgb(163 143 80 / 0.35);
+  padding: 7px 8px;
+  color: #d9cca0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  text-align: center;
+}
+
+.deck-collection-modal-backdrop.game-log-details-backdrop {
+  z-index: 560;
+}
+
+@keyframes game-log-card-preview-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .game-log-list mark,
 .game-log-suggestions mark {
@@ -9214,14 +9481,16 @@
 }
 
 .game-log-panel-title span { color: #746d52; font-family: ui-monospace, monospace; }
-.game-log-panel-search { position: relative; z-index: 3; padding: 9px 9px 5px; }
+.game-log-panel-search { position: relative; z-index: 3; display: grid; gap: 6px; padding: 9px 9px 5px; }
+.game-log-panel-search .game-log-match-nav { justify-content: flex-end; }
 .game-log-panel .game-log-scroll { padding: 5px 8px 9px; }
-.game-log-panel .game-log-list li { grid-template-columns: 61px minmax(0, 1fr); padding-right: 4px; padding-left: 5px; }
+.game-log-panel .game-log-list li { padding-right: 4px; padding-left: 5px; }
+.game-log-panel .game-log-entry-body { grid-template-columns: 61px minmax(0, 1fr); }
 
 @media (max-width: 680px) {
   .game-log-tools { grid-template-columns: 1fr; gap: 6px; }
   .game-log-match-count { padding-left: 2px; }
-  .game-log-list li { grid-template-columns: 62px minmax(0, 1fr); gap: 8px; }
+  .game-log-entry-body { grid-template-columns: 62px minmax(0, 1fr); gap: 8px; }
 }
 
 .game-music-popover {
