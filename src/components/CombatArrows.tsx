@@ -9,7 +9,7 @@ const DEFENSE_ARROW_COLOR = "#66d8ff";
 const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
 const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
-const STACKED_DEFENSE_ARROW_LEFT_INSET_PX = 24;
+const STACKED_ARROW_LEFT_INSET_PX = 24;
 
 type Arrow = {
   id: string;
@@ -103,10 +103,14 @@ export function CombatArrows({ game }: { game: GameState }) {
           const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
           if (!blocker) continue;
           const blockerRect = blocker.getBoundingClientRect();
-          const start = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
+          const blockerIsBehindInStack = isCardBehindInStack(blocker);
+          const start = {
+            x: blockerIsBehindInStack ? blockerRect.left + STACKED_ARROW_LEFT_INSET_PX : blockerRect.left + blockerRect.width / 2,
+            y: blockerRect.top + blockerRect.height * 0.18,
+          };
           const attackerIsBehindInStack = isCardBehindInStack(attacker);
           const end = {
-            x: attackerIsBehindInStack ? attackerRect.left + STACKED_DEFENSE_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
+            x: attackerIsBehindInStack ? attackerRect.left + STACKED_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
             y: attackerRect.top + attackerRect.height * 0.82,
           };
           next.push(makeArrow(arrowId, start, end, DEFENSE_ARROW_COLOR));
@@ -116,7 +120,11 @@ export function CombatArrows({ game }: { game: GameState }) {
         const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockDrag.blockerId}"]`);
         if (blocker) {
           const blockerRect = blocker.getBoundingClientRect();
-          const start = { x: blockerRect.left + blockerRect.width / 2, y: blockerRect.top + blockerRect.height * 0.18 };
+          const blockerIsBehindInStack = isCardBehindInStack(blocker);
+          const start = {
+            x: blockerIsBehindInStack ? blockerRect.left + STACKED_ARROW_LEFT_INSET_PX : blockerRect.left + blockerRect.width / 2,
+            y: blockerRect.top + blockerRect.height * 0.18,
+          };
           const end = { x: blockDrag.x, y: blockDrag.y };
           next.push(makeArrow(`drag-${blockDrag.blockerId}`, start, end, DEFENSE_ARROW_COLOR));
         }

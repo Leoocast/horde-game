@@ -500,7 +500,6 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <div>
           <h1>Prepare the expedition</h1>
         </div>
-        <div className="expedition-step"><span>01</span> Party setup</div>
       </header>
 
       <div className="expedition-body">

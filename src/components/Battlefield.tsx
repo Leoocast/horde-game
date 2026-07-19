@@ -888,7 +888,6 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function getBlockerOrderLabel(blockerId: string, attackerId: string): string | undefined {
     const orderedBlockers = game.combat.blockers[attackerId] ?? [];
-    if (orderedBlockers.length < 2) return undefined;
     const orderIndex = orderedBlockers.indexOf(blockerId);
     return orderIndex >= 0 ? `${orderIndex + 1}` : undefined;
   }
