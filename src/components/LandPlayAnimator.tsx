@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { useCardDetails } from "../utils/cardImages";
 
@@ -8,8 +8,15 @@ const CARD_HEIGHT = 190;
 
 export function LandPlayAnimator() {
   const queue = useGameStore((state) => state.landPlayAnimationQueue);
+  const materialize = useGameStore((state) => state.materializeLandPlayAnimation);
   const complete = useGameStore((state) => state.completeLandPlayAnimation);
   const active = queue[0];
+
+  useEffect(() => {
+    if (!active || active.materialized) return;
+    const timer = window.setTimeout(() => materialize(active.id), 310);
+    return () => window.clearTimeout(timer);
+  }, [active?.id, active?.materialized, materialize]);
 
   if (!active) return null;
 

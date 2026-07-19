@@ -78,7 +78,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   const landPlayAnimationQueue = useGameStore((state) => state.landPlayAnimationQueue);
-  const landPlayAnimationIds = landPlayAnimationQueue.map((item) => item.card.instanceId);
+  const formingLandIds = landPlayAnimationQueue
+    .filter((item) => !item.materialized)
+    .map((item) => item.card.instanceId);
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
   // dragging and are consumed by CombatArrows, not here — same rationale as the
   // targeting selectors above.
@@ -431,7 +433,7 @@ export function Battlefield({ game, side, cards }: Props) {
             const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
             const spent = card.tapped || card.activatedThisTurn;
             const consuming = paidLandIds.has(card.instanceId);
-            const forming = landPlayAnimationIds.includes(card.instanceId);
+            const forming = formingLandIds.includes(card.instanceId);
             const visible = !forming && (smallpoxLandSelectionActive || !spent || consuming);
             const fragmentStyle = {
               left: `${70.5 + Math.cos(angle) * 68}px`,

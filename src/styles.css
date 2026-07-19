@@ -7754,6 +7754,47 @@
   }
 }
 
+/* Graveyard surfaces use cold, weathered metal instead of the collection UI's
+   brighter gold. Keep the battlefield legible behind the modal. */
+.deck-collection-modal-backdrop.graveyard-viewer-backdrop {
+  background:
+    radial-gradient(ellipse at 50% 44%, rgb(43 72 70 / 0.16), transparent 46%),
+    radial-gradient(ellipse at 50% 50%, rgb(3 12 13 / 0.2) 18%, rgb(1 7 9 / 0.58) 100%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(0.82) brightness(0.82);
+  backdrop-filter: blur(4px) saturate(0.82) brightness(0.82);
+}
+
+.deck-collection-modal-backdrop.graveyard-details-backdrop {
+  background:
+    radial-gradient(ellipse at 50% 48%, rgb(35 65 63 / 0.14), transparent 44%),
+    rgb(1 7 9 / 0.62) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(0.8) brightness(0.8);
+  backdrop-filter: blur(5px) saturate(0.8) brightness(0.8);
+}
+
+.deck-collection-modal.graveyard-viewer-modal,
+.deck-collection-modal.graveyard-card-details {
+  border-color: rgb(111 132 126 / 0.34) !important;
+  border-top-color: rgb(151 164 150 / 0.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(221 229 207 / 0.055),
+    inset 0 -18px 38px rgb(0 0 0 / 0.2),
+    0 30px 74px rgb(0 0 0 / 0.58),
+    0 0 0 1px rgb(49 76 73 / 0.08) !important;
+}
+
+.deck-collection-modal.graveyard-viewer-modal::before,
+.deck-collection-modal.graveyard-card-details::before {
+  background: linear-gradient(180deg, transparent 3%, rgb(83 113 108 / 0.28) 28%, rgb(130 139 117 / 0.24) 72%, transparent 97%);
+  box-shadow: none;
+}
+
+.deck-collection-modal.graveyard-viewer-modal::after,
+.deck-collection-modal.graveyard-card-details::after {
+  background: linear-gradient(90deg, transparent 4%, rgb(98 124 118 / 0.18) 30%, rgb(147 151 125 / 0.16) 52%, rgb(82 110 107 / 0.15) 72%, transparent 96%);
+  box-shadow: none;
+}
+
 /* Tactical arrows: fade into color, with the moving rune detail retained. */
 .tactical-arrow-halo {
   stroke-width: 7.5;

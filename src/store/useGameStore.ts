@@ -111,6 +111,7 @@ type GameStore = {
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   completePlayerDiscardAnimation: (id: string) => void;
+  materializeLandPlayAnimation: (id: string) => void;
   completeLandPlayAnimation: (id: string) => void;
   resolveHordeCombat: () => void;
   finishHordeTurn: () => void;
@@ -187,6 +188,7 @@ export type LandPlayAnimationItem = {
   id: string;
   card: CardInstance;
   origin?: { x: number; y: number };
+  materialized?: boolean;
 };
 
 export type BlockDragState = {
@@ -783,6 +785,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   completePlayerDiscardAnimation: (id) =>
     set((state) => ({
       playerDiscardAnimationQueue: state.playerDiscardAnimationQueue.filter((item) => item.id !== id),
+    })),
+  materializeLandPlayAnimation: (id) =>
+    set((state) => ({
+      landPlayAnimationQueue: state.landPlayAnimationQueue.map((item) => item.id === id ? { ...item, materialized: true } : item),
     })),
   completeLandPlayAnimation: (id) =>
     set((state) => ({
