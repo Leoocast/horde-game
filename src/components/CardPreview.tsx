@@ -73,7 +73,8 @@ export function CardPreview() {
         return;
       }
       const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
-      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, rect.width * 1.5));
+      const unscaledCardWidth = observedAnchor.offsetWidth || rect.width;
+      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, unscaledCardWidth * 1.5));
       const height = width * (680 / 488);
       const effectActionOpen = Boolean(observedAnchor.closest(".effect-card-lifted")?.querySelector(".effect-action-button"));
 
@@ -111,11 +112,17 @@ export function CardPreview() {
       frame = window.requestAnimationFrame(measure);
     }
 
+    const settleUntil = performance.now() + 320;
+    function measureUntilSettled() {
+      measure();
+      if (performance.now() < settleUntil) frame = window.requestAnimationFrame(measureUntilSettled);
+    }
+
     const observer = new ResizeObserver(scheduleMeasure);
     observer.observe(observedAnchor);
     window.addEventListener("resize", scheduleMeasure);
     window.addEventListener("scroll", scheduleMeasure, true);
-    scheduleMeasure();
+    frame = window.requestAnimationFrame(measureUntilSettled);
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();

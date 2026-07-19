@@ -70,7 +70,11 @@ export function prepareHordeAttackers(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   next.activeSide = "horde";
   next.phase = "combat";
-  const attackers = next.horde.battlefield.filter((card) => canAttack(next, card));
+  const attackers = sortBattlefieldCardsByVisualOrder(
+    next,
+    next.horde.battlefield,
+    next.horde.battlefield.filter((card) => canAttack(next, card)),
+  );
   next.combat.hordeAttackers = attackers.map((card) => card.instanceId);
   for (const attacker of attackers) attacker.tapped = true;
   log(next, `Horde attacks with ${next.combat.hordeAttackers.length} creature(s).`);
@@ -135,10 +139,36 @@ function log(game: GameState, message: string): GameState {
 }
 
 export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: string[]): string[] {
-  return [...attackerIds].sort((left, right) => battlefieldIndex(game, left) - battlefieldIndex(game, right));
+  const attackers = attackerIds
+    .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
+    .filter((card): card is CardInstance => Boolean(card));
+  return sortBattlefieldCardsByVisualOrder(game, game.player.battlefield, attackers).map((card) => card.instanceId);
 }
 
-function battlefieldIndex(game: GameState, id: string): number {
-  const index = game.player.battlefield.findIndex((card) => card.instanceId === id);
-  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+function sortBattlefieldCardsByVisualOrder(game: GameState, battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
+  const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+  const familyIndex = new Map<string, number>();
+  const visualGroupIndex = new Map<string, number>();
+
+  for (const card of battlefield) {
+    const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
+    if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);
+    const groupKey = `${card.definitionId}-${visualStatsKey(game, card)}`;
+    if (!visualGroupIndex.has(groupKey)) visualGroupIndex.set(groupKey, index);
+  }
+
+  return [...cards].sort((left, right) => {
+    const familyDelta = (familyIndex.get(left.definitionId) ?? Number.MAX_SAFE_INTEGER) - (familyIndex.get(right.definitionId) ?? Number.MAX_SAFE_INTEGER);
+    if (familyDelta !== 0) return familyDelta;
+    const leftGroup = visualGroupIndex.get(`${left.definitionId}-${visualStatsKey(game, left)}`) ?? Number.MAX_SAFE_INTEGER;
+    const rightGroup = visualGroupIndex.get(`${right.definitionId}-${visualStatsKey(game, right)}`) ?? Number.MAX_SAFE_INTEGER;
+    return leftGroup - rightGroup || (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) - (entryIndex.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER);
+  });
+}
+
+function visualStatsKey(game: GameState, card: CardInstance): string {
+  const { power, toughness } = getPowerToughness(game, card);
+  const visibleToughness = Math.max(0, toughness - card.damageMarked);
+  const buffed = power > card.basePower || toughness > card.baseToughness;
+  return `${power}/${visibleToughness}-${card.damageMarked > 0 ? "damaged" : "healthy"}-${buffed ? "buffed" : "base"}`;
 }
