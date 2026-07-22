@@ -9,6 +9,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
+import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
 import { DecksView } from "./DecksView";
 import { LanguageSelector } from "./LanguageSelector";
@@ -399,7 +400,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       )}
       
       {menuScreen !== "setup" && menuScreen !== "chaos" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
-        <div className="mb-0.5">Version: ALPHA 10.0-CHAOS-MODE-UPDATE</div>
+        <div className="mb-0.5">Version: {APP_VERSION}</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>{t("common.developedBy")}</span>
           <Github size={11} className="-mt-[1px]" />

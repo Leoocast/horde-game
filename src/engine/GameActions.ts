@@ -3,7 +3,7 @@ import { drawCards } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
-import { canPay, parseManaCost, payMana, payManaAutomatically } from "./ManaSystem";
+import { canPay, parseManaCost, payMana, payManaAutomatically, storedManaSpace } from "./ManaSystem";
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
@@ -79,6 +79,9 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   const ability = card?.activatedAbilities.find((item) => item.id === abilityId);
   if (!card || !ability) return next;
   if (card.activatedThisTurn) return log(next, `${card.name} has already activated an ability this turn.`);
+  if (card.cardTypes.includes("Creature") && ability.effect.type === "ADD_MANA" && storedManaSpace(next) === 0) {
+    return log(next, "Stored mana is already full.");
+  }
   if (ability.cost?.tap) {
     if (card.tapped) return log(next, `${card.name} is already tapped.`);
     if (card.summoningSickness && card.cardTypes.includes("Creature")) return log(next, `${card.name} has summoning sickness.`);

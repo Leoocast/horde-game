@@ -2,6 +2,7 @@ import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
 export const HORDE_SURGE_TURN = 10;
 export const CHAOS_HORDE_SURGE_TURN = 8;
+export const HORDE_MINI_SURGE_TURN = 6;
 
 export function hordeSurgeTurn(game: GameState): number {
   return game.gameMode === "chaos" ? CHAOS_HORDE_SURGE_TURN : HORDE_SURGE_TURN;

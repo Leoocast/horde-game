@@ -10,6 +10,40 @@ export const emptyManaPool = (): ManaPool => ({
   colorless: 0,
 });
 
+export const STORED_MANA_CAP = 3;
+
+export function storedManaSpace(game: GameState): number {
+  return Math.max(0, STORED_MANA_CAP - game.player.manaPool.colorless - game.player.pendingStoredMana);
+}
+
+export function queueUnusedNormalMana(game: GameState): number {
+  const availableSpace = storedManaSpace(game);
+  if (availableSpace === 0) return 0;
+  const unusedLands = game.player.battlefield.filter(
+    (card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn,
+  ).length;
+  const queued = Math.min(availableSpace, unusedLands);
+  game.player.pendingStoredMana += queued;
+  return queued;
+}
+
+export function releasePendingStoredMana(game: GameState): number {
+  const released = Math.min(
+    game.player.pendingStoredMana,
+    Math.max(0, STORED_MANA_CAP - game.player.manaPool.colorless),
+  );
+  game.player.manaPool.colorless += released;
+  game.player.pendingStoredMana = 0;
+  return released;
+}
+
+export function addStoredMana(game: GameState, amount: number): number {
+  const availableSpace = storedManaSpace(game);
+  const added = Math.min(availableSpace, Math.max(0, amount));
+  game.player.manaPool.colorless += added;
+  return added;
+}
+
 export function parseManaCost(cost = "", xValue = 0): ManaPool {
   const pool = emptyManaPool();
   const symbols = cost.match(/\{[^}]+\}/g) ?? [];
@@ -23,27 +57,28 @@ export function parseManaCost(cost = "", xValue = 0): ManaPool {
 }
 
 export function canPay(pool: ManaPool, cost: ManaPool): boolean {
-  if (pool.green < cost.green || pool.red < cost.red || pool.blue < cost.blue || pool.white < cost.white || pool.black < cost.black) return false;
-  const remaining =
-    pool.green -
-    cost.green +
-    (pool.red - cost.red) +
-    (pool.blue - cost.blue) +
-    (pool.white - cost.white) +
-    (pool.black - cost.black) +
-    pool.colorless;
+  const coloredKeys = ["green", "red", "blue", "white", "black"] as const;
+  const yellowNeededForColoredCosts = coloredKeys.reduce(
+    (total, key) => total + Math.max(0, cost[key] - pool[key]),
+    0,
+  );
+  if (yellowNeededForColoredCosts > pool.colorless) return false;
+  const remaining = coloredKeys.reduce(
+    (total, key) => total + Math.max(0, pool[key] - cost[key]),
+    pool.colorless - yellowNeededForColoredCosts,
+  );
   return remaining >= cost.colorless;
 }
 
 export function payMana(pool: ManaPool, cost: ManaPool): ManaPool {
   const next = { ...pool };
-  next.green -= cost.green;
-  next.red -= cost.red;
-  next.blue -= cost.blue;
-  next.white -= cost.white;
-  next.black -= cost.black;
+  for (const key of ["green", "red", "blue", "white", "black"] as const) {
+    const matchingMana = Math.min(next[key], cost[key]);
+    next[key] -= matchingMana;
+    next.colorless -= cost[key] - matchingMana;
+  }
   let generic = cost.colorless;
-  for (const key of ["colorless", "green", "red", "blue", "white", "black"] as const) {
+  for (const key of ["green", "red", "blue", "white", "black", "colorless"] as const) {
     const paid = Math.min(next[key], generic);
     next[key] -= paid;
     generic -= paid;
@@ -58,14 +93,16 @@ export function addMana(pool: ManaPool, color: Color | string, amount: number): 
 }
 
 export function payManaAutomatically(game: GameState, cost: ManaPool): boolean {
-  if (canPay(game.player.manaPool, cost)) {
-    game.player.manaPool = payMana(game.player.manaPool, cost);
+  const storedMana = game.player.manaPool.colorless;
+  const normalPool = { ...game.player.manaPool, colorless: 0 };
+  if (canPay(normalPool, cost)) {
+    game.player.manaPool = { ...payMana(normalPool, cost), colorless: storedMana };
     return true;
   }
 
   const availableSources = getAutomaticLandManaSources(game);
   const selected: typeof availableSources = [];
-  let simulatedPool = { ...game.player.manaPool };
+  let simulatedPool = normalPool;
 
   for (const source of availableSources) {
     const { produced } = source;
@@ -74,7 +111,8 @@ export function payManaAutomatically(game: GameState, cost: ManaPool): boolean {
     if (canPay(simulatedPool, cost)) break;
   }
 
-  if (!canPay(simulatedPool, cost)) return false;
+  const poolWithStoredMana = { ...simulatedPool, colorless: storedMana };
+  if (!canPay(poolWithStoredMana, cost)) return false;
 
   for (const { card, produced } of selected) {
     card.tapped = true;

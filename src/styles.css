@@ -5196,6 +5196,258 @@
     transform-origin: left bottom;
   }
 
+  .player-mana-core.player-mana-panel {
+    bottom: 1rem;
+    left: 1rem;
+    display: grid;
+    width: 252px;
+    height: auto;
+    min-height: 0;
+    gap: 5px;
+    padding: 8px 10px;
+    overflow: visible;
+    border: 1px solid rgb(159 128 67 / 0.72);
+    border-radius: 3px;
+    background:
+      linear-gradient(180deg, rgb(46 38 26 / 0.98), rgb(15 17 15 / 0.99)),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 6px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 229 157 / 0.12),
+      inset 0 0 18px rgb(0 0 0 / 0.46),
+      0 8px 22px rgb(0 0 0 / 0.56);
+    color: #ead9a8;
+    filter: none;
+    transform: none;
+  }
+
+  .player-mana-panel::before,
+  .player-mana-panel::after {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, rgb(207 169 84 / 0.72), transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  .player-mana-panel::before { left: 4px; }
+  .player-mana-panel::after { right: 4px; }
+
+  .mana-panel-row {
+    display: grid;
+    min-height: 27px;
+    grid-template-columns: 90px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 5px;
+    border: 1px solid rgb(151 127 75 / 0.2);
+    background: rgb(0 0 0 / 0.22);
+  }
+
+  .mana-panel-label {
+    overflow: hidden;
+    color: #d8c89f;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.07em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .mana-panel-pips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .mana-panel-pip {
+    display: block;
+    height: 10px;
+    border: 1px solid rgb(115 112 87 / 0.42);
+    border-radius: 2px;
+    background: rgb(12 18 16 / 0.9);
+    box-shadow: inset 0 0 5px rgb(0 0 0 / 0.72);
+    transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  }
+
+  .mana-panel-pip-normal.is-ready {
+    border-color: rgb(165 229 151 / 0.72);
+    background: linear-gradient(180deg, #a9df8b, #3e9364 58%, #174d45);
+    box-shadow: inset 0 1px 0 rgb(237 255 210 / 0.48), 0 0 8px rgb(73 198 129 / 0.34);
+  }
+
+  .mana-panel-pip-normal.is-spent {
+    border-color: rgb(69 101 83 / 0.42);
+    background: linear-gradient(180deg, #34483d, #172b28);
+    filter: saturate(0.55) brightness(0.68);
+  }
+
+  .mana-panel-pip-stored.is-ready {
+    border-color: rgb(255 218 112 / 0.82);
+    background: linear-gradient(180deg, #ffe29a, #d59236 58%, #7f451e);
+    box-shadow: inset 0 1px 0 rgb(255 251 218 / 0.58), 0 0 9px rgb(239 174 62 / 0.42);
+  }
+
+  .mana-panel-pip.is-empty {
+    opacity: 0.42;
+  }
+
+  .mana-panel-value {
+    color: #f0deb0;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 950;
+    line-height: 1;
+    text-align: right;
+    text-shadow: 0 1px 5px rgb(0 0 0 / 0.8);
+  }
+
+  .mana-panel-value-normal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .mana-panel-bonus {
+    min-width: 24px;
+    padding: 2px 4px;
+    border: 1px solid rgb(142 220 130 / 0.5);
+    border-radius: 2px;
+    background: rgb(47 118 71 / 0.34);
+    color: #baf39c;
+    font-size: 10px;
+    font-style: normal;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 0 8px rgb(83 211 124 / 0.22);
+    animation: mana-panel-bonus-arrive 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mana-panel-row-stored .mana-panel-value {
+    color: #f2c66c;
+  }
+
+  .player-mana-panel .mana-core-target-label {
+    left: 50%;
+    bottom: -17px;
+  }
+
+  @keyframes mana-panel-bonus-arrive {
+    0% { opacity: 0; filter: brightness(2); transform: translateY(4px) scale(0.7); }
+    65% { opacity: 1; transform: translateY(-1px) scale(1.12); }
+    100% { filter: brightness(1); transform: translateY(0) scale(1); }
+  }
+
+  .player-mana-core.player-mana-corner {
+    left: 0;
+    bottom: 0;
+    width: 160px;
+    height: 160px;
+    overflow: visible;
+    filter: drop-shadow(8px -8px 18px rgb(0 0 0 / 0.58));
+    transform: none;
+  }
+
+  .mana-corner-orb,
+  .mana-corner-energy-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .player-mana-corner .mana-core-rings {
+    left: -92px;
+    top: auto;
+    bottom: -92px;
+    width: 184px;
+    height: 184px;
+    transform: none;
+  }
+
+  .player-mana-corner .mana-core-heart {
+    left: -67px;
+    top: auto;
+    bottom: -67px;
+    width: 134px;
+    height: 134px;
+    transform: none;
+    animation: mana-corner-breathe 2.8s ease-in-out infinite;
+  }
+
+  .mana-corner-energy {
+    --mana-consume-x: 0px;
+    --mana-consume-y: 0px;
+    position: absolute;
+    z-index: 6;
+    display: grid;
+    width: 31px;
+    height: 31px;
+    place-items: center;
+    transform: translate(-50%, 50%);
+  }
+
+  .mana-corner-energy .mana-fragment-shell {
+    width: 31px;
+    height: 31px;
+  }
+
+  .mana-corner-energy .mana-fragment-energy {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mana-corner-energy-blue.is-ready .mana-fragment-energy {
+    border-color: rgb(165 226 255 / 0.92);
+    background: radial-gradient(circle at 35% 28%, #effcff, #6dccff 24%, #2777ba 58%, #0c2e5d 80%);
+    box-shadow: inset 0 0 4px rgb(232 252 255 / 0.62), 0 0 8px rgb(90 193 255 / 0.84), 0 0 18px rgb(45 119 224 / 0.56);
+  }
+
+  .mana-corner-energy-yellow.is-ready .mana-fragment-energy {
+    border-color: rgb(255 231 146 / 0.92);
+    background: radial-gradient(circle at 35% 28%, #fffbd2, #ffd66f 24%, #c78428 58%, #4e2810 80%);
+    box-shadow: inset 0 0 4px rgb(255 252 212 / 0.62), 0 0 8px rgb(255 204 91 / 0.84), 0 0 18px rgb(224 139 44 / 0.56);
+    animation: mana-corner-yellow-arrive 460ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mana-corner-energy.is-spent .mana-fragment-energy {
+    border-color: rgb(78 104 123 / 0.38);
+    background: radial-gradient(circle at 35% 28%, #405469, #1c2f43 45%, #091622 82%);
+    box-shadow: inset 0 0 5px rgb(0 0 0 / 0.52);
+    filter: saturate(0.42) brightness(0.68);
+    animation: none;
+  }
+
+  .mana-corner-energy.is-empty {
+    opacity: 0.25;
+  }
+
+  .mana-corner-energy.is-empty .mana-fragment-energy {
+    border-color: rgb(119 121 108 / 0.35);
+    background: radial-gradient(circle, #303834, #121b1b 70%);
+    box-shadow: inset 0 0 5px rgb(0 0 0 / 0.7);
+    animation: none;
+  }
+
+  .player-mana-corner .mana-core-target-label {
+    left: 72px;
+    bottom: 10px;
+  }
+
+  @keyframes mana-corner-breathe {
+    0%, 100% { filter: brightness(0.96) saturate(0.96); transform: scale(0.97); }
+    50% { filter: brightness(1.12) saturate(1.08); transform: scale(1.035); }
+  }
+
+  @keyframes mana-corner-yellow-arrive {
+    0% { opacity: 0; filter: brightness(2.4) blur(3px); transform: scale(0.2); }
+    65% { opacity: 1; filter: brightness(1.55); transform: scale(1.35); }
+    100% { filter: brightness(1); transform: scale(1); }
+  }
+
   .player-mana-core.is-targeting {
     z-index: 110;
   }
@@ -10874,4 +11126,133 @@
   .chaos-rule-grid article {
     animation: none;
   }
+}
+
+.opening-hand-overlay {
+  padding: clamp(12px, 2.5vh, 28px) 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 44%, rgb(92 74 41 / 0.14), transparent 58%),
+    rgb(5 5 4 / 0.3);
+  color: #eadfbf;
+}
+
+.opening-hand-layout {
+  position: relative;
+  display: grid;
+  width: 100vw;
+  max-height: 96vh;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(22px, 3vh, 34px);
+  padding: 8px;
+  transform: translateY(clamp(22px, 4vh, 46px));
+}
+
+.opening-hand-cards {
+  display: flex;
+  width: 100%;
+  height: min(570px, 67vh);
+  min-height: 0;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(5px, 0.7vw, 11px);
+  padding-inline: clamp(22px, 2.5vw, 45px);
+}
+
+.opening-hand-card-entry {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 215px;
+  aspect-ratio: 488 / 680;
+}
+
+.opening-hand-card {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 12px 12px rgb(0 0 0 / 0.58));
+  transform-origin: center;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), filter 180ms ease;
+}
+
+.opening-hand-card-entry:hover {
+  z-index: 3;
+}
+
+.opening-hand-card-entry:hover .opening-hand-card {
+  filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.72));
+  transform: scale(1.85);
+}
+
+.opening-hand-card .card-visual {
+  min-height: 0;
+  border-color: rgb(154 125 68 / 0.42);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.72), 0 12px 22px rgb(0 0 0 / 0.5);
+}
+
+.opening-hand-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.opening-hand-button {
+  display: inline-flex;
+  width: min(205px, 42vw);
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgb(147 117 66 / 0.74);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #342b1d, #17150f);
+  color: #d9c89b;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px rgb(255 233 175 / 0.12), 0 7px 18px rgb(0 0 0 / 0.45);
+  transition: border-color 150ms ease, filter 150ms ease, transform 150ms ease;
+}
+
+.opening-hand-button:hover:not(:disabled),
+.opening-hand-button:focus-visible:not(:disabled) {
+  border-color: #d1ad67;
+  filter: brightness(1.14);
+  transform: translateY(-1px);
+}
+
+.opening-hand-button-accept {
+  order: 2;
+  border-color: rgb(113 155 91 / 0.78);
+  background: linear-gradient(180deg, #35452a, #182116);
+  color: #dfedbd;
+}
+
+.opening-hand-button-mulligan {
+  order: 1;
+}
+
+.opening-hand-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: saturate(0.45);
+}
+
+@media (max-height: 700px) {
+  .opening-hand-overlay { padding-block: 12px; }
+  .opening-hand-layout { gap: 16px; padding-block: 8px; }
+  .opening-hand-cards { height: 380px; }
+  .opening-hand-card-entry { max-width: 145px; }
+  .opening-hand-card-entry:hover .opening-hand-card { transform: scale(1.75); }
+  .opening-hand-button { min-height: 46px; }
+}
+
+@media (max-width: 720px) {
+  .opening-hand-layout { gap: 15px; }
+  .opening-hand-cards { gap: 4px; }
+  .opening-hand-actions { width: 100%; gap: 8px; }
+  .opening-hand-button { min-height: 48px; font-size: 10px; }
 }

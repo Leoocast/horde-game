@@ -1,6 +1,6 @@
 import type { GameState } from "./GameTypes";
 
-export const MAX_PLAYER_LANDS = 5;
+export const MAX_PLAYER_LANDS = 4;
 export const MAX_PLAYER_HAND_SIZE = 7;
 
 export function playerHandOverflow(game: GameState): number {

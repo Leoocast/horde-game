@@ -1,6 +1,7 @@
 import type { GameState, Phase } from "./GameTypes";
 import { checkWinLoss } from "./CombatResolver";
 import { millHorde } from "./EffectResolver";
+import { queueUnusedNormalMana } from "./ManaSystem";
 import { cleanupEndStep, clearPlayerSummoningSickness, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
 
 const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "end"];
@@ -21,6 +22,8 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
 
 export function endPlayerTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
+  const queuedMana = queueUnusedNormalMana(next);
+  if (queuedMana > 0) next.log.unshift(`Player reserves ${queuedMana} unused mana.`);
   cleanupEndStep(next);
   resolveHordePoison(next);
   if (next.winner) return next;

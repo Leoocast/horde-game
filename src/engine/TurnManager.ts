@@ -18,7 +18,7 @@ export function cleanupEndStep(game: GameState): void {
     card.temporaryToughness = 0;
     card.temporaryKeywords = [];
   }
-  game.player.manaPool = emptyManaPool();
+  game.player.manaPool = { ...emptyManaPool(), colorless: game.player.manaPool.colorless };
   game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {} };
 }
 
@@ -31,6 +31,10 @@ export function clearPlayerSummoningSickness(game: GameState): void {
 export function startPlayerTurn(game: GameState): void {
   game.activeSide = "player";
   game.phase = "untap";
+  // Setup can grant consecutive player turns without a Horde turn between them.
+  // A reserve only belongs to the player turn that immediately precedes the Horde,
+  // so an older setup turn must never refill stored mana later.
+  game.player.pendingStoredMana = 0;
   game.player.energyActionUsedThisTurn = false;
   game.turnNumber += 1;
 }

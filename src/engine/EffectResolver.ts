@@ -4,7 +4,7 @@ import { drawCards } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
-import { addMana } from "./ManaSystem";
+import { addMana, addStoredMana } from "./ManaSystem";
 import { randomInt } from "./RNG";
 import { getPowerToughness } from "./StaticEffects";
 import { findPermanent } from "./Targeting";
@@ -40,6 +40,13 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
   }
   if (effect.type === "ADD_MANA") {
     const mana = effect.mana as Record<string, number> | undefined;
+    if (context.side === "player" && context.source?.cardTypes.includes("Creature")) {
+      const manaAmounts = Object.values(mana ?? { G: Number(effect.amount ?? 1) });
+      const amount = manaAmounts.reduce<number>((total, value) => total + Number(value), 0);
+      const added = addStoredMana(game, amount);
+      if (added > 0) game.log.unshift(`${context.source.name} adds ${added} stored mana.`);
+      return;
+    }
     for (const [color, amount] of Object.entries(mana ?? { G: effect.amount ?? 1 })) {
       game.player.manaPool = addMana(game.player.manaPool, color, Number(amount));
     }

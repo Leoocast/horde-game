@@ -117,14 +117,13 @@ export default function App() {
       setScreen("game");
     }, reducedMotion ? 80 : 1050);
     const finishTimeout = window.setTimeout(() => {
-      playSfx("skipNextBattle", { volume: 0.72 });
       setLaunchTransition(null);
     }, reducedMotion ? 180 : 2450);
     return () => {
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
-  }, [launchTransition, playCollection, playSfx, startBattleMusic]);
+  }, [launchTransition, playCollection, startBattleMusic]);
 
   if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
 

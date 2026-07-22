@@ -1,0 +1,1 @@
+export const APP_VERSION = "ALPHA 11.0-REWRITE-UPDATE";

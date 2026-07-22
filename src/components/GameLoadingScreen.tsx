@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Github } from "lucide-react";
 import { useTranslation } from "../i18n/useTranslation";
 import type { LoadingLabel } from "../utils/assetPreloader";
+import { APP_VERSION } from "../version";
 
 type Props = {
   percent: number;
@@ -45,7 +46,7 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
         <small>{t("loading.preparing")}</small>
       </section>
       <footer className="game-loading-credits">
-        <span>Version: ALPHA 10.0-CHAOS-MODE-UPDATE</span>
+        <span>Version: {APP_VERSION}</span>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer">
           <span>{t("common.developedBy")}</span><Github aria-hidden="true" /><strong>Leoocast</strong>
         </a>
