@@ -1,7 +1,8 @@
 import type { AbilityOptions, CastOptions, GameState } from "./GameTypes";
+import { drawCards } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
-import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand } from "./GameRules";
+import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
 import { canPay, parseManaCost, payMana, payManaAutomatically } from "./ManaSystem";
 
 export function playLand(game: GameState, handId: string): GameState {
@@ -10,10 +11,25 @@ export function playLand(game: GameState, handId: string): GameState {
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card || !card.cardTypes.includes("Land")) return log(next, "Choose a land to play.");
   if (!canPlayerPutAnotherLand(next)) return log(next, `Player cannot control more than ${MAX_PLAYER_LANDS} lands.`);
-  if (next.player.landPlayedThisTurn) return log(next, "Player already played a land this turn.");
+  if (next.player.energyActionUsedThisTurn) return log(next, "Player already used their Energy action this turn.");
   moveHandToBattlefield(next, card);
-  next.player.landPlayedThisTurn = true;
+  next.player.energyActionUsedThisTurn = true;
   return log(next, `Player plays ${card.name}.`);
+}
+
+export function recycleEnergy(game: GameState, handId: string): GameState {
+  const next = structuredClone(game) as GameState;
+  const card = next.player.hand.find((item) => item.instanceId === handId);
+  if (!card || !card.cardTypes.includes("Land")) return log(next, "Choose an Energy to recycle.");
+  if (next.setupTurnsRemaining > 0) return log(next, "Energy cannot be recycled during setup.");
+  if (!canPlayerRecycleEnergy(next)) return log(next, "Energy can only be recycled once during your main phase.");
+
+  next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
+  card.zone = "library";
+  next.player.library.push(card);
+  next.player.energyActionUsedThisTurn = true;
+  drawCards(next, "player", 1);
+  return log(next, `Player recycles ${card.name} and draws a card.`);
 }
 
 export function castCard(game: GameState, handId: string, options: CastOptions = {}): GameState {

@@ -1,4 +1,4 @@
-# CLAUDE.MD
+# AGENTS.md
 
 Guia de contexto para otras IAs trabajando en este proyecto.
 

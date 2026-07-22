@@ -5266,6 +5266,114 @@
     position: absolute;
   }
 
+  .energy-recycle-flight {
+    position: fixed;
+    z-index: 132;
+    overflow: hidden;
+    border: 1px solid rgb(188 225 147 / 0.72);
+    border-radius: 7px;
+    background: #102116;
+    box-shadow: 0 14px 34px rgb(0 0 0 / 0.76), 0 0 25px rgb(120 205 118 / 0.36);
+    pointer-events: none;
+    transform-origin: center;
+  }
+
+  .energy-recycle-flight img {
+    width: 100%;
+    height: 100%;
+    user-select: none;
+    object-fit: cover;
+  }
+
+  .energy-recycle-flight > span:not(.energy-recycle-card-sheen) {
+    display: grid;
+    height: 100%;
+    padding: 12px;
+    place-items: center;
+    color: #e8ffd0;
+    font-size: 11px;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .energy-recycle-card-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgb(237 255 203 / 0.2), transparent 38%, rgb(3 20 14 / 0.4));
+    pointer-events: none;
+  }
+
+  .energy-recycle-drag-path-glow,
+  .energy-recycle-drag-path {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .energy-recycle-drag-path-glow {
+    stroke: rgb(73 224 139 / 0.28);
+    stroke-width: 8px;
+    filter: blur(5px);
+  }
+
+  .energy-recycle-drag-path {
+    stroke: #b9e89b;
+    stroke-width: 2px;
+    stroke-dasharray: 7 8;
+    filter: drop-shadow(0 0 5px rgb(104 230 146 / 0.78));
+    animation: energy-recycle-dash 0.7s linear infinite;
+  }
+
+  .energy-recycle-drag-label {
+    position: fixed;
+    display: flex;
+    min-width: 126px;
+    padding: 7px 12px 6px;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgb(190 218 136 / 0.62);
+    border-radius: 3px;
+    background: linear-gradient(180deg, rgb(31 45 27 / 0.96), rgb(8 17 13 / 0.97));
+    box-shadow: inset 0 1px 0 rgb(239 255 193 / 0.12), 0 8px 24px rgb(0 0 0 / 0.62), 0 0 18px rgb(75 197 116 / 0.2);
+    color: #dff5b6;
+    text-align: center;
+    transform: translate(-50%, -50%);
+  }
+
+  .energy-recycle-drag-label strong {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+
+  .energy-recycle-drag-label span {
+    margin-top: 1px;
+    color: #91ad83;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .energy-recycle-target-ring {
+    position: fixed;
+    width: 82px;
+    height: 82px;
+    border: 2px solid rgb(190 235 151 / 0.72);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(132 232 137 / 0.2), transparent 68%);
+    box-shadow: 0 0 20px rgb(90 220 139 / 0.44), inset 0 0 16px rgb(156 239 151 / 0.18);
+    transform: translate(-50%, -50%);
+    animation: energy-recycle-target-pulse 0.86s ease-in-out infinite alternate;
+  }
+
+  @keyframes energy-recycle-dash {
+    to { stroke-dashoffset: -30; }
+  }
+
+  @keyframes energy-recycle-target-pulse {
+    from { opacity: 0.62; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  }
+
   .mana-core-rings,
   .mana-core-heart,
   .mana-core-count {
@@ -6639,11 +6747,6 @@
 .game-turn-hud::before { left: -4px; }
 .game-turn-hud::after { right: -4px; }
 
-.game-turn-hud.is-horde-turn {
-  border-color: rgb(173 83 56 / 0.62);
-  background: linear-gradient(90deg, transparent, rgb(66 24 17 / 0.72) 18%, rgb(66 24 17 / 0.72) 82%, transparent);
-}
-
 .game-turn-owner { color: #879b90; }
 .game-turn-phase {
   min-width: 70px;
@@ -6652,9 +6755,25 @@
   letter-spacing: 0.08em;
 }
 .game-turn-count { color: #9f9877; }
+.game-surge-countdown { overflow: visible; }
+.game-surge-countdown-number {
+  display: inline-flex;
+  min-width: 1.2em;
+  align-items: center;
+  justify-content: center;
+  color: #dfb86f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1;
+  text-shadow: 0 0 9px rgb(230 153 75 / 0.52), 0 2px 8px rgb(0 0 0 / 0.88);
+  transform-origin: center;
+}
+.game-surge-active-label {
+  color: #e28d68;
+  text-shadow: 0 0 9px rgb(213 74 42 / 0.46);
+}
 .game-turn-divider { background: linear-gradient(transparent, rgb(198 178 112 / 0.58), transparent); }
-.game-turn-hud.is-horde-turn .game-turn-owner,
-.game-turn-hud.is-horde-turn .game-turn-phase { color: #e6a27f; }
+.game-turn-hud.is-horde-turn .game-turn-owner { color: #e2836d; }
 
 .game-screen .old-panel,
 .game-screen .old-panel-soft,
@@ -9904,6 +10023,106 @@
 .game-screen .game-result-defeat .game-result-panel {
   animation-duration: 460ms;
   animation-delay: 0ms;
+}
+
+/* One-shot warning shown before the first Horde turn that resolves in Surge. */
+.surge-transition {
+  --result-accent: #a93f2d;
+  --result-accent-bright: #f0a06f;
+  --result-accent-soft: rgb(169 48 31 / 0.34);
+  overflow: hidden;
+  padding: 28px;
+  background: rgb(5 1 1 / 0.9);
+  color: #ead7c8;
+  cursor: wait;
+  isolation: isolate;
+  -webkit-backdrop-filter: blur(10px) saturate(0.65);
+  backdrop-filter: blur(10px) saturate(0.65);
+  animation: surge-transition-life 2600ms cubic-bezier(0.45, 0, 0.22, 1) both;
+}
+
+.surge-transition .game-result-atmosphere {
+  background:
+    radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
+    radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
+  animation: surge-atmosphere-life 2600ms ease-in-out both;
+}
+
+.surge-transition-rift {
+  position: absolute;
+  z-index: -1;
+  top: -20vh;
+  bottom: -20vh;
+  left: 50%;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
+  box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
+  transform: translateX(-50%) rotate(7deg);
+  animation: surge-rift-life 2600ms ease-in-out both;
+}
+
+.surge-transition .game-result-banner {
+  margin-top: 0;
+  animation: surge-banner-life 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both;
+}
+
+.surge-transition .game-result-banner::before {
+  background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.96) 14%, rgb(12 2 2 / 0.99) 50%, rgb(28 5 3 / 0.96) 86%, transparent);
+}
+
+.surge-transition .game-result-banner h1 {
+  color: #ead5c7;
+  text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.52);
+}
+
+.surge-transition-message {
+  margin: 26px 0 0;
+  color: #c99175;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(0.72rem, 1.2vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-shadow: 0 2px 12px #000, 0 0 14px rgb(183 61 38 / 0.42);
+  text-transform: uppercase;
+  animation: surge-message-life 2600ms ease-in-out both;
+}
+
+@keyframes surge-transition-life {
+  0% { opacity: 0; }
+  16%, 76% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes surge-atmosphere-life {
+  0% { opacity: 0; transform: scale(1.12); }
+  24%, 72% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes surge-rift-life {
+  0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+  30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+  100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+}
+
+@keyframes surge-banner-life {
+  0%, 8% { opacity: 0; filter: blur(7px); transform: translateY(15px) scale(0.88); }
+  28%, 72% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+  100% { opacity: 0; filter: blur(8px); transform: translateY(-9px) scale(1.08); }
+}
+
+@keyframes surge-message-life {
+  0%, 24% { opacity: 0; letter-spacing: 0.46em; transform: translateY(8px); }
+  38%, 72% { opacity: 1; letter-spacing: 0.3em; transform: translateY(0); }
+  100% { opacity: 0; letter-spacing: 0.38em; transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surge-transition,
+  .surge-transition * {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
 }
 
 @media (max-width: 640px) {

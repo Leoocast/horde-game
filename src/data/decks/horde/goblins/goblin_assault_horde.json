@@ -211,6 +211,7 @@
       "power": 1,
       "toughness": 1,
       "keywords": [],
+      "triggerMessage": "Rundvelt Hordemaster triggers. Horde exiles the top card of its library.",
       "abilities": [
         {
           "id": "rundvelt_hordemaster_other_goblins_buff",

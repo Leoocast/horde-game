@@ -1,20 +1,20 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
-import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
+import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
-import { castCard, playLand, activateAbility } from "../engine/GameActions";
+import { activateAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
 import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
-import { getPowerToughness } from "../engine/StaticEffects";
-import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
+import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
+import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, millHorde, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggeredSourcesForEvent, triggerConditionMet } from "../engine/EffectResolver";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
-import { playerHandOverflow } from "../engine/GameRules";
+import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
 
 type GameStore = {
   game: GameState;
@@ -26,6 +26,8 @@ type GameStore = {
   pendingTriggeredEffectCount: number;
   pendingTriggeredEffectSourceId?: string;
   hordeAutoTriggerCount: number;
+  surgeTransitionActive: boolean;
+  surgeTransitionShown: boolean;
   hordeCombatVisualDamage?: Record<string, number>;
   hordeCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
@@ -33,6 +35,8 @@ type GameStore = {
   hordeMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
   landPlayAnimationQueue: LandPlayAnimationItem[];
+  energyRecycleAnimation?: EnergyRecycleAnimation;
+  energyRecycleDragActive: boolean;
   handLimitDiscardActive: boolean;
   handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -60,7 +64,7 @@ type GameStore = {
   seed: string;
   playerDeckId: string;
   hordeDeckId: string;
-  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string) => void;
+  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode) => void;
   setSeed: (seed: string) => void;
   acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
@@ -90,6 +94,9 @@ type GameStore = {
   advancePhase: (phase?: Phase) => void;
   endPlayerTurn: () => void;
   playLand: (id: string) => void;
+  startEnergyRecycle: (id: string, origin: { x: number; y: number }) => void;
+  setEnergyRecycleDragActive: (active: boolean) => void;
+  completeEnergyRecycleAnimation: () => void;
   castCard: (id: string, options?: CastOptions) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
@@ -100,6 +107,7 @@ type GameStore = {
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
+  completeSurgeTransition: () => void;
   prepareHordeAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
@@ -194,6 +202,12 @@ export type LandPlayAnimationItem = {
   materialized?: boolean;
 };
 
+export type EnergyRecycleAnimation = {
+  id: string;
+  card: CardInstance;
+  origin: { x: number; y: number };
+};
+
 export type BlockDragState = {
   blockerId: string;
   startX: number;
@@ -255,6 +269,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingTriggeredEffectCount: 0,
   pendingTriggeredEffectSourceId: undefined,
   hordeAutoTriggerCount: 0,
+  surgeTransitionActive: false,
+  surgeTransitionShown: false,
   hordeCombatVisualDamage: undefined,
   hordeCombatDeadCardIds: [],
   specialDeadCardIds: [],
@@ -262,6 +278,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
   landPlayAnimationQueue: [],
+  energyRecycleAnimation: undefined,
+  energyRecycleDragActive: false,
   handLimitDiscardActive: false,
   handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
@@ -281,11 +299,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty) =>
     set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
-      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
+      useAudioStore.getState().setMusicVariant("battle");
+      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty);
       return {
         game: next,
         gameSessionId: state.gameSessionId + 1,
@@ -308,6 +327,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingTriggeredEffectCount: 0,
         pendingTriggeredEffectSourceId: undefined,
         hordeAutoTriggerCount: 0,
+        surgeTransitionActive: false,
+        surgeTransitionShown: false,
         hordeCombatVisualDamage: undefined,
         hordeCombatDeadCardIds: [],
         specialDeadCardIds: [],
@@ -315,6 +336,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillPreviewCards: [],
         playerDiscardAnimationQueue: [],
         landPlayAnimationQueue: [],
+        energyRecycleAnimation: undefined,
+        energyRecycleDragActive: false,
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
@@ -335,6 +358,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSeed: (seed) => {
     persistSeed(seed);
     set({ seed });
+  },
+  setEnergyRecycleDragActive: (active) => {
+    if (get().energyRecycleDragActive === active) return;
+    set({ energyRecycleDragActive: active });
   },
   acknowledgeTutorialStep: (stepId) => set({ tutorialAcknowledgedStepId: stepId }),
   selectHand: (id) => set({ selectedHandId: id }),
@@ -553,7 +580,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -568,7 +595,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -611,6 +638,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
               origin: animationOrigin,
             }]
           : state.landPlayAnimationQueue,
+      };
+    }),
+  startEnergyRecycle: (id, origin) =>
+    set((state) => {
+      if (combatResolutionInProgress(state) || state.energyRecycleAnimation) return {};
+      if (state.pendingTriggeredEffectCount > 0) {
+        showActionToast("Resolve the triggered effect before playing another card.");
+        return {};
+      }
+      const card = state.game.player.hand.find((item) => item.instanceId === id);
+      if (!card?.cardTypes.includes("Land")) return {};
+      if (!canPlayerRecycleEnergy(state.game)) {
+        showActionToast(
+          state.game.setupTurnsRemaining > 0
+            ? "Energy cannot be recycled during setup."
+            : "You already used your Energy action this turn.",
+        );
+        return {};
+      }
+      useAudioStore.getState().playSfx("playLand", { volume: 0.62 });
+      return {
+        energyRecycleAnimation: {
+          id: `energy-recycle-${card.instanceId}-${Date.now()}`,
+          card,
+          origin,
+        },
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+        activeEffectCardId: undefined,
+      };
+    }),
+  completeEnergyRecycleAnimation: () =>
+    set((state) => {
+      const active = state.energyRecycleAnimation;
+      if (!active) return {};
+      const next = recycleEnergy(state.game, active.card.instanceId);
+      const succeeded = !next.player.hand.some((card) => card.instanceId === active.card.instanceId);
+      if (succeeded) useAudioStore.getState().playSfx("drawOne", { volume: 0.84 });
+      else showActionToast(next.log[0]);
+      return {
+        game: next,
+        energyRecycleAnimation: undefined,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
       };
     }),
   castCard: (id, options) =>
@@ -715,8 +788,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHordeMain: () => {
     const state = get();
-    if (discardPauseInProgress(state)) return;
+    if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
     const { game } = state;
+    if (!state.surgeTransitionShown) {
+      const preview = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
+      if (hordeInSurge(preview)) {
+        set({
+          surgeTransitionActive: true,
+          surgeTransitionShown: true,
+          selectedHordeCreatureId: undefined,
+          selectedPlayerCreatureId: undefined,
+          hoveredCardId: undefined,
+          focusedCardId: undefined,
+        });
+        return;
+      }
+    }
     const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
     const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
     const enteredCards = main.horde.battlefield.filter((card) => !previousHordeBattlefieldIds.has(card.instanceId));
@@ -743,6 +830,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hordeAutoTriggerCount: triggerCards.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
+  },
+  completeSurgeTransition: () => {
+    if (!get().surgeTransitionActive) return;
+    set({ surgeTransitionActive: false });
+    get().runHordeMain();
   },
   prepareHordeAttackers: () => set((state) => (discardPauseInProgress(state) ? {} : { game: prepareHordeAttackers(state.game) })),
   declareBlocker: (blockerId, attackerId) =>
@@ -885,7 +977,7 @@ function persistSeed(seed: string): void {
 }
 
 function combatResolutionInProgress(state: GameStore): boolean {
-  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || discardPauseInProgress(state));
+  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || state.energyRecycleAnimation || discardPauseInProgress(state));
 }
 
 function discardPauseInProgress(state: GameStore): boolean {
@@ -1028,12 +1120,7 @@ function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
 }
 
 function queuedHordeTriggerMessage(source?: CardInstance): string {
-  if (source?.definitionId === "rundvelt_hordemaster") {
-    return `${source.name} triggers. Horde exiles the top card of its library.`;
-  }
-  if (source?.definitionId === "crow_of_dark_tidings") {
-    return `${source.name} triggers. Horde mills 2 cards.`;
-  }
+  if (source?.triggerMessage) return source.triggerMessage;
   return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
 }
 
@@ -1596,15 +1683,6 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     focusedCardId: undefined,
     spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
   };
-}
-
-function findManualEnterTargetTrigger(card: GameState["player"]["hand"][number] | GameState["player"]["battlefield"][number] | undefined): EffectDefinition | undefined {
-  return card?.effects.find(
-    (effect) =>
-      effect.type === "TRIGGERED_ABILITY" &&
-      effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
-      effectNeedsManualTarget(effect.effect),
-  );
 }
 
 function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {

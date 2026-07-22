@@ -1,16 +1,17 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
-import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand } from "../engine/GameRules";
+import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
+const ENERGY_RECYCLE_SCREEN_RATIO = 0.72;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
 const handCardMotion: Variants = {
@@ -50,6 +51,7 @@ export function Hand({ game }: { game: GameState }) {
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const energyRecycleAnimation = useGameStore((state) => state.energyRecycleAnimation);
   const handLimitDiscardActive = useGameStore((state) => state.handLimitDiscardActive);
   const handLimitSelectionId = useGameStore((state) => state.handLimitSelectionId);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
@@ -58,6 +60,8 @@ export function Hand({ game }: { game: GameState }) {
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
+  const startEnergyRecycle = useGameStore((state) => state.startEnergyRecycle);
+  const setEnergyRecycleDragActive = useGameStore((state) => state.setEnergyRecycleDragActive);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
@@ -65,6 +69,7 @@ export function Hand({ game }: { game: GameState }) {
   const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const [draggingCardId, setDraggingCardId] = useState<string | undefined>();
+  const [energyRecycleHint, setEnergyRecycleHint] = useState<EnergyRecycleHint>();
   const handRegionRef = useRef<HTMLDivElement>(null);
   const handCardsRef = useRef<HTMLDivElement>(null);
   const innerCardRefs = useRef(new Map<string, HTMLDivElement>());
@@ -74,6 +79,8 @@ export function Hand({ game }: { game: GameState }) {
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
   const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
+
+  useEffect(() => () => setEnergyRecycleDragActive(false), [setEnergyRecycleDragActive]);
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -152,6 +159,22 @@ export function Hand({ game }: { game: GameState }) {
     y.set(pointerY - center.y);
   }
 
+  function updateCardDrag(card: CardInstance, pointerX: number, pointerY: number) {
+    updateCenterGrabDrag(card.instanceId, pointerX, pointerY);
+    const inRecycleZone =
+      card.cardTypes.includes("Land") &&
+      isEnergyRecyclable(game, card, pendingTriggeredEffectCount) &&
+      pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
+      pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO;
+    if (!inRecycleZone) {
+      setEnergyRecycleHint(undefined);
+      setEnergyRecycleDragActive(false);
+      return;
+    }
+    setEnergyRecycleHint({ pointer: { x: pointerX, y: pointerY }, target: readEnergyRecycleTarget() });
+    setEnergyRecycleDragActive(true);
+  }
+
   function playCard(card: CardInstance) {
     if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
@@ -168,9 +191,19 @@ export function Hand({ game }: { game: GameState }) {
     setFocusedCardId(undefined);
     selectHand(undefined);
     setDraggingCardId(undefined);
+    setEnergyRecycleHint(undefined);
+    setEnergyRecycleDragActive(false);
     dragOriginCenters.current.delete(card.instanceId);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
     const releasedInPlayZone = info.point.y <= playZoneY;
+    const releasedInRecycleZone =
+      releasedInPlayZone &&
+      info.point.x >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
+      isEnergyRecyclable(game, card, pendingTriggeredEffectCount);
+    if (releasedInRecycleZone) {
+      startEnergyRecycle(card.instanceId, { x: info.point.x, y: info.point.y });
+      return;
+    }
     const shouldPlay = releasedInPlayZone && playable;
     if (shouldPlay) {
       playCard(card);
@@ -200,6 +233,7 @@ export function Hand({ game }: { game: GameState }) {
       playerDiscardAnimating ||
       hordeAttackAnimating ||
       playerAttackAnimating ||
+      energyRecycleAnimation ||
       pendingTriggeredEffectCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,
@@ -232,8 +266,14 @@ export function Hand({ game }: { game: GameState }) {
 
   return (
     <>
-      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
-        <div className="hand-atmosphere pointer-events-none absolute inset-x-0 bottom-0 h-40" />
+      {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} />}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
+        <div className="hand-atmosphere absolute inset-0" />
+      </div>
+      <section className={[
+        "pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
+        draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]",
+      ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
             ref={handCardsRef}
@@ -244,13 +284,14 @@ export function Hand({ game }: { game: GameState }) {
           >
             {game.player.hand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
+            const energyRecyclable = isEnergyRecyclable(game, card, pendingTriggeredEffectCount);
             const discardTargetable = smallpoxSelectionKind === "discard" && !smallpoxSelectionTargetId;
             const discardTargetLocked = smallpoxSelectionKind === "discard" && smallpoxSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
-            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable);
+            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable || energyRecyclable);
             const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
@@ -285,7 +326,7 @@ export function Hand({ game }: { game: GameState }) {
                   setHoveredHandId(undefined);
                   setDraggingCardId(card.instanceId);
                 }}
-                onDrag={(_, info) => updateCenterGrabDrag(card.instanceId, info.point.x, info.point.y)}
+                onDrag={(_, info) => updateCardDrag(card, info.point.x, info.point.y)}
                 onDragEnd={(_, info) => finishDrag(card, playable, info)}
                 onPointerUpCapture={(event) => {
                   if (suppressedClickId !== card.instanceId) return;
@@ -307,6 +348,7 @@ export function Hand({ game }: { game: GameState }) {
                     "hand-card",
                     isHeld ? "hand-card-hovered" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
+                    energyRecycleAnimation?.card.instanceId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
                     discardTargetLocked ? "counter-target-locked-card" : "",
                     handLimitTargetable ? "counter-targetable-card hand-limit-targetable" : "",
@@ -372,9 +414,13 @@ export function Hand({ game }: { game: GameState }) {
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
-  if (card.cardTypes.includes("Land")) return !game.player.landPlayedThisTurn && canPlayerPutAnotherLand(game);
+  if (card.cardTypes.includes("Land")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
+}
+
+function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
+  return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("Land") && canPlayerRecycleEnergy(game);
 }
 
 function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): string {
@@ -386,11 +432,50 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
   }
   if (card.cardTypes.includes("Land")) {
     if (!canPlayerPutAnotherLand(game)) return `You cannot control more than ${MAX_PLAYER_LANDS} lands.`;
-    if (game.player.landPlayedThisTurn) return "You already played a land this turn.";
+    if (game.player.energyActionUsedThisTurn) return "You already used your Energy action this turn.";
     return "This land cannot be played right now.";
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return `No valid target sequence for ${card.displayName}.`;
   return `Not enough available mana to cast ${card.displayName}.`;
+}
+
+type EnergyRecycleHint = {
+  pointer: { x: number; y: number };
+  target: { x: number; y: number };
+};
+
+function EnergyRecycleDragHint({ hint }: { hint: EnergyRecycleHint }) {
+  const controlX = Math.max(hint.pointer.x, hint.target.x) + 34;
+  const controlY = Math.min(hint.pointer.y, hint.target.y) - 44;
+  const path = `M ${hint.pointer.x} ${hint.pointer.y} Q ${controlX} ${controlY} ${hint.target.x} ${hint.target.y}`;
+  const labelX = (hint.pointer.x + hint.target.x) / 2;
+  const labelY = (hint.pointer.y + hint.target.y) / 2 - 28;
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[116]" aria-hidden="true">
+      <svg className="absolute inset-0 h-full w-full overflow-visible">
+        <defs>
+          <marker id="energy-recycle-arrowhead" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+            <path d="M 0 0 L 9 4.5 L 0 9 z" fill="#b9e89b" />
+          </marker>
+        </defs>
+        <path className="energy-recycle-drag-path-glow" d={path} />
+        <path className="energy-recycle-drag-path" d={path} markerEnd="url(#energy-recycle-arrowhead)" />
+      </svg>
+      <div className="energy-recycle-drag-label" style={{ left: labelX, top: labelY }}>
+        <strong>RECICLAR</strong>
+        <span>Al fondo · Roba 1</span>
+      </div>
+      <span className="energy-recycle-target-ring" style={{ left: hint.target.x, top: hint.target.y }} />
+    </div>
+  );
+}
+
+function readEnergyRecycleTarget(): { x: number; y: number } {
+  const rect = document.querySelector<HTMLElement>("[data-energy-recycle-target='true']")?.getBoundingClientRect();
+  return rect
+    ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+    : { x: window.innerWidth - 72, y: window.innerHeight - 64 };
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {

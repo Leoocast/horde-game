@@ -206,6 +206,7 @@ export function DuelHud({ game }: { game: GameState }) {
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
+  const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
@@ -265,8 +266,16 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               ))}
             </div>
           </div>
-          <div
+          <motion.div
             data-player-life-panel="true"
+            data-energy-recycle-target="true"
+            className="energy-recycle-life-target"
+            initial={false}
+            animate={{ scale: energyRecycleDragActive ? 1.045 : 1 }}
+            transition={{ type: "spring", stiffness: 430, damping: 27, mass: 0.55 }}
+            style={{ transformOrigin: "bottom right" }}
+          >
+          <div
             className={[
               "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
@@ -291,6 +300,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               <Heart size={24} />
             </div>
           </div>
+          </motion.div>
           <GameTooltip content="View graveyard" side="top" className="player-graveyard-host">
             <button
               data-player-discard-target="true"

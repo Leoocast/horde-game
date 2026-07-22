@@ -1,4 +1,5 @@
 export type Side = "player" | "horde";
+export type DifficultyMode = "easy" | "normal" | "hard";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
 export type Color = "G" | "R" | "U" | "W" | "B" | "C";
@@ -68,6 +69,9 @@ export type CardDefinition = {
   power?: number | null;
   toughness?: number | null;
   keywords?: Keyword[];
+  /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
+   * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
+  triggerMessage?: string;
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
   activatedAbilities?: ActivatedAbility[];
@@ -110,6 +114,7 @@ export type CardInstance = {
   basePower: number;
   baseToughness: number;
   keywords: Keyword[];
+  triggerMessage?: string;
   effects: EffectDefinition[];
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
@@ -139,7 +144,7 @@ export type PlayerState = {
   graveyard: CardInstance[];
   exile: CardInstance[];
   manaPool: ManaPool;
-  landPlayedThisTurn: boolean;
+  energyActionUsedThisTurn: boolean;
 };
 
 export type HordeState = {
@@ -170,11 +175,13 @@ export type EventItem = {
 
 export type GameState = {
   seed: string;
+  difficulty: DifficultyMode;
   currentRandomState: number;
   hordeDeckOrderHash?: string;
   activeSide: Side;
   phase: Phase;
   turnNumber: number;
+  hordeTurnNumber: number;
   setupTurnsRemaining: number;
   setupCompletePendingHorde: boolean;
   player: PlayerState;

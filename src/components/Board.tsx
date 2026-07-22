@@ -3,6 +3,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
+import { hordeInSurge } from "../engine/StaticEffects";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
@@ -18,6 +19,7 @@ import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { LandPlayAnimator } from "./LandPlayAnimator";
+import { EnergyRecycleAnimator } from "./EnergyRecycleAnimator";
 import { SmallpoxSelectionOverlay } from "./SmallpoxSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
@@ -26,6 +28,7 @@ import { TurnPhaseHud } from "./TurnPhaseHud";
 import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
+import { SurgeTransition } from "./SurgeTransition";
 
 type Props = {
   playerName: string;
@@ -39,15 +42,19 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
+  const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
+  const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
+  const surgeReached = surgeTransitionShown || hordeInSurge(game);
 
   useEffect(() => {
-    if (game.player.life <= 10) setMusicVariant("climax");
-  }, [game.player.life, setMusicVariant]);
+    if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
+  }, [game.player.life, setMusicVariant, surgeReached]);
 
   useEffect(() => {
     if (game.winner === "player") playCollection("winTheme");
@@ -73,6 +80,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <HordeMillAnimator />
       <PlayerDiscardAnimator />
       <LandPlayAnimator />
+      <EnergyRecycleAnimator />
       <HandLimitOverlay game={game} />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
@@ -84,6 +92,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack variant={game.winner ? "menu" : "game"} />
       <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
+      {surgeTransitionActive && <SurgeTransition onComplete={completeSurgeTransition} />}
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-horde">

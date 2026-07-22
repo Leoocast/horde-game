@@ -1,6 +1,6 @@
 import type { GameState } from "./GameTypes";
 
-export const MAX_PLAYER_LANDS = 8;
+export const MAX_PLAYER_LANDS = 5;
 export const MAX_PLAYER_HAND_SIZE = 7;
 
 export function playerHandOverflow(game: GameState): number {
@@ -13,4 +13,14 @@ export function playerLandCount(game: GameState): number {
 
 export function canPlayerPutAnotherLand(game: GameState): boolean {
   return playerLandCount(game) < MAX_PLAYER_LANDS;
+}
+
+export function canPlayerRecycleEnergy(game: GameState): boolean {
+  return (
+    !game.winner &&
+    game.setupTurnsRemaining === 0 &&
+    game.activeSide === "player" &&
+    game.phase === "main" &&
+    !game.player.energyActionUsedThisTurn
+  );
 }

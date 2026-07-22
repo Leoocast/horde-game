@@ -359,6 +359,15 @@ export function effectNeedsManualTarget(effect: unknown): boolean {
   return false;
 }
 
+export function findManualEnterTargetTrigger(card?: CardInstance): EffectDefinition | undefined {
+  return card?.effects.find(
+    (effect) =>
+      effect.type === "TRIGGERED_ABILITY" &&
+      effect.trigger === "CREATURE_ENTERS_BATTLEFIELD" &&
+      effectNeedsManualTarget(effect.effect),
+  );
+}
+
 function discardPlayer(game: GameState, amount: number): void {
   for (let i = 0; i < amount; i += 1) {
     if (game.player.hand.length === 0) break;

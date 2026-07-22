@@ -1,6 +1,7 @@
 import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Swords, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import type { DifficultyMode } from "../engine/GameTypes";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
@@ -8,8 +9,6 @@ import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStore
 import { AudioControls } from "./AudioControls";
 import { DecksView } from "./DecksView";
 import { ToastStack } from "./ToastStack";
-
-export type DifficultyMode = "easy" | "normal" | "hard";
 
 type Props = {
   decks: InspectableDeck[];
