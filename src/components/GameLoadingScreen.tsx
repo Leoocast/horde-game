@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Github } from "lucide-react";
+import { useTranslation } from "../i18n/useTranslation";
+import type { LoadingLabel } from "../utils/assetPreloader";
 
 type Props = {
   percent: number;
-  label: string;
+  label: LoadingLabel;
   leaving?: boolean;
 };
 
 export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
+  const t = useTranslation();
   const [displayPercent, setDisplayPercent] = useState(0);
 
   useEffect(() => {
@@ -15,7 +18,7 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
   }, [percent]);
 
   return (
-    <main className={`game-loading-screen ${leaving ? "is-leaving" : ""}`} aria-label="Loading Hostfall">
+    <main className={`game-loading-screen ${leaving ? "is-leaving" : ""}`} aria-label={t("loading.aria")}>
       <div className="game-loading-embers" aria-hidden="true">
         {Array.from({ length: 22 }, (_, index) => (
           <i
@@ -29,22 +32,22 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
         ))}
       </div>
       <section className="game-loading-content">
-        <p>Chronicles of the Shattered Realms</p>
+        <p>{t("menu.kicker")}</p>
         <h1>Hostfall</h1>
         <div className="game-loading-divider" aria-hidden="true"><span /><b>◆</b><span /></div>
         <div className="game-loading-status" aria-live="polite">
-          <span>{label}</span>
+          <span>{t(label === "opening" ? "loading.opening" : label === "sfx" ? "loading.sfx" : label === "music" ? "loading.music" : "loading.ready")}</span>
           <strong>{displayPercent}%</strong>
         </div>
         <div className="game-loading-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>
           <i style={{ width: `${displayPercent}%` }} />
         </div>
-        <small>Preparing images &amp; audio</small>
+        <small>{t("loading.preparing")}</small>
       </section>
       <footer className="game-loading-credits">
         <span>Version: ALPHA 10.0-CHAOS-MODE-UPDATE</span>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer">
-          <span>Developed by</span><Github aria-hidden="true" /><strong>Leoocast</strong>
+          <span>{t("common.developedBy")}</span><Github aria-hidden="true" /><strong>Leoocast</strong>
         </a>
       </footer>
     </main>

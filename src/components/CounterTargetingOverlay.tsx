@@ -2,13 +2,18 @@ import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const ARROW_COLOR = "#4ade80";
 
 export function CounterTargetingOverlay({ game }: { game: GameState }) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
   const updatePointer = useGameStore((state) => state.updateCounterTargetPointer);
   const deselectTarget = useGameStore((state) => state.deselectCounterTarget);
@@ -127,7 +132,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           <Card game={game} card={source} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness hideStats />
         </div>
         <div className="counter-target-preview old-panel-soft">
-          <span className="text-[#d6b879]">{target ? target.displayName : "No target selected"}</span>
+          <span className="text-[#d6b879]">{target ? localizedCardName(target, language) : t("target.noSelection")}</span>
           <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.toughness}` : "--/--"}</strong>
         </div>
         <div className="counter-target-actions">
@@ -135,12 +140,12 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             data-audio-click="valid"
             className="counter-target-button counter-target-cancel"
             onClick={locked ? deselectTarget : cancelTargeting}
-            title={locked ? "Deselect target" : "Cancel card"}
-            aria-label={locked ? "Deselect target" : "Cancel card"}
+            title={locked ? t("target.deselect") : t("target.cancelCard")}
+            aria-label={locked ? t("target.deselect") : t("target.cancelCard")}
           >
-            {locked ? <X size={22} /> : "Cancel"}
+            {locked ? <X size={22} /> : t("common.cancel")}
           </button>
-          <button data-audio-click={locked ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!locked} onClick={confirmTargeting} title="Confirm">
+          <button data-audio-click={locked ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!locked} onClick={confirmTargeting} title={t("common.confirm")}>
             <Check size={24} />
           </button>
         </div>

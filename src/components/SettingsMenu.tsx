@@ -1,10 +1,12 @@
 import { AlertTriangle, Copy, Crown, Home, RefreshCcw, RefreshCw, Settings, Skull, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
+import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
+import { LanguageSelector } from "./LanguageSelector";
 import { ZoneDrawer } from "./ZoneDrawer";
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
+  const t = useTranslation();
   const game = useGameStore((state) => state.game);
   const seed = useGameStore((state) => state.seed);
   const setSeed = useGameStore((state) => state.setSeed);
@@ -52,9 +55,9 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
   async function copySeed() {
     try {
       await navigator.clipboard.writeText(effectiveSeed);
-      pushToast({ title: "Seed copied", message: effectiveSeed, tone: "success" });
+      pushToast({ title: t("toast.seedCopied"), message: effectiveSeed, tone: "success" });
     } catch {
-      pushToast({ title: "Could not copy seed", message: effectiveSeed, tone: "warning" });
+      pushToast({ title: t("toast.seedCopyFailed"), message: effectiveSeed, tone: "warning" });
     }
   }
 
@@ -73,7 +76,7 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
 
   return (
     <>
-      <button className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={() => setOpen(true)} title="Settings" aria-label="Open settings">
+      <button className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={() => setOpen(true)} title={t("menu.settings")} aria-label={t("settings.open")}>
         <Settings size={18} />
       </button>
 
@@ -82,36 +85,37 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
           <section className={["game-settings-modal old-panel flex max-h-[min(860px,calc(100vh-40px))] w-[min(1040px,calc(100vw-40px))] flex-col overflow-hidden", modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
             <header className="game-settings-modal-header flex items-center justify-between gap-5 px-7 py-5">
               <div>
-                <div className="game-dialog-kicker">Battle configuration</div>
-                <h2 id="battle-settings-title">Settings &amp; Chronicle</h2>
+                <div className="game-dialog-kicker">{t("settings.battleConfiguration")}</div>
+                <h2 id="battle-settings-title">{t("settings.battleTitle")}</h2>
               </div>
-              <button className="game-header-button flex h-10 w-10 items-center justify-center" type="button" onClick={() => setOpen(false)} title="Close settings" aria-label="Close settings">
+              <button className="game-header-button flex h-10 w-10 items-center justify-center" type="button" onClick={() => setOpen(false)} title={t("settings.close")} aria-label={t("settings.close")}>
                 <X size={19} />
               </button>
             </header>
 
             <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-5 overflow-hidden p-5">
               <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
+                <LanguageSelector variant="panel" />
                 <AudioControls />
 
                 <section className="old-panel-soft p-4">
-                  <div className="game-settings-section-title">Battle seed</div>
+                  <div className="game-settings-section-title">{t("settings.battleSeed")}</div>
                   <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-2">
-                    <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none" aria-label="Battle seed" />
-                    <button className="icon-button h-10 w-10" type="button" onClick={copySeed} title="Copy seed" aria-label="Copy seed"><Copy size={16} /></button>
-                    <button className="icon-button h-10 w-10" type="button" onClick={openRestartConfirmation} title="Restart battle" aria-label="Restart battle"><RefreshCcw size={16} /></button>
+                    <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none" aria-label={t("settings.battleSeed")} />
+                    <button className="icon-button h-10 w-10" type="button" onClick={copySeed} title={t("settings.copySeed")} aria-label={t("settings.copySeed")}><Copy size={16} /></button>
+                    <button className="icon-button h-10 w-10" type="button" onClick={openRestartConfirmation} title={t("settings.restartBattle")} aria-label={t("settings.restartBattle")}><RefreshCcw size={16} /></button>
                   </div>
-                  <div className="game-settings-rng mt-3">RNG state <span>{game.currentRandomState.toString(16)}</span></div>
+                  <div className="game-settings-rng mt-3">{t("settings.rngState")} <span>{game.currentRandomState.toString(16)}</span></div>
                 </section>
 
                 <ZoneDrawer game={game} />
 
                 {isDeveloperMode && (
                   <section className="old-panel-soft p-4">
-                    <div className="game-settings-section-title">Developer options</div>
+                    <div className="game-settings-section-title">{t("settings.developerOptions")}</div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("horde")}><Skull size={14} /> Lose</button>
-                      <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> Win</button>
+                      <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("horde")}><Skull size={14} /> {t("settings.lose")}</button>
+                      <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> {t("settings.win")}</button>
                     </div>
                   </section>
                 )}
@@ -126,9 +130,9 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
 
             <footer className="game-settings-modal-footer flex items-center justify-between gap-4 px-5 py-4">
               {onReturnToMenu && (
-                <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> Return to menu</button>
+                <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> {t("settings.returnMenu")}</button>
               )}
-              <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>Close</button>
+              <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>{t("common.close")}</button>
             </footer>
           </section>
         </div>
@@ -140,21 +144,21 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
             <div className="flex items-start gap-3">
               <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
               <div>
-                <div className="game-dialog-kicker">Rewrite this chronicle</div>
-                <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">Restart battle?</h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">Current progress will be lost.</p>
+                <div className="game-dialog-kicker">{t("settings.rewriteChronicle")}</div>
+                <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t("settings.restartQuestion")}</h2>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t("settings.currentProgressLost")}</p>
               </div>
             </div>
             <div className="mt-5 border border-[#687571]/35 bg-[#070d0f]/65 p-4">
-              <div className="game-settings-section-title">New seed</div>
+              <div className="game-settings-section-title">{t("settings.newSeed")}</div>
               <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
                 <input value={restartSeed} onChange={(event) => setRestartSeed(event.target.value)} className="game-seed-input h-10 min-w-0 px-3 text-sm outline-none" />
-                <button className="icon-button h-10 w-10" type="button" onClick={() => setRestartSeed(generateRandomSeed())} title="Generate seed"><RefreshCw size={16} /></button>
+                <button className="icon-button h-10 w-10" type="button" onClick={() => setRestartSeed(generateRandomSeed())} title={t("settings.generateSeed")}><RefreshCw size={16} /></button>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowRestartConfirmation(false)}>Cancel</button>
-              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={restartGame}><RefreshCcw size={16} /> Restart</button>
+              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowRestartConfirmation(false)}>{t("common.cancel")}</button>
+              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={restartGame}><RefreshCcw size={16} /> {t("common.restart")}</button>
             </div>
           </section>
         </div>

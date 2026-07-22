@@ -2,7 +2,10 @@ import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState, TargetRequirement } from "../engine/GameTypes";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
+import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
@@ -10,6 +13,8 @@ const FRIENDLY_ARROW = "#4ade80";
 const ENEMY_ARROW = "#f04438";
 
 export function SpellTargetingOverlay({ game }: { game: GameState }) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const spellTargeting = useGameStore((state) => state.spellTargeting);
   const updatePointer = useGameStore((state) => state.updateSpellTargetPointer);
   const lockTarget = useGameStore((state) => state.lockSpellTarget);
@@ -118,7 +123,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   if (!spellTargeting || !spell || !activeReq || !followEnd) return null;
 
   const followArrow = makeTargetArrow(start, followEnd);
-  const currentLabel = activeReq.controller === "SELF" ? "Choose ally creature" : "Choose enemy creature";
+  const currentLabel = activeReq.controller === "SELF" ? t("target.chooseAlly") : t("target.chooseEnemy");
   const lockedArrows = requirements
     .map((req) => {
       const end = lockedEnds[req.id];
@@ -177,20 +182,20 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           <Card game={game} card={spell} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness hideStats />
         </div>
         <div className="counter-target-preview old-panel-soft">
-          <span className="text-[#d6b879]">{complete ? "Ready to cast" : currentLabel}</span>
-          <strong className={activeReq.controller === "SELF" ? "text-[#91f58f]" : "text-[#ffcf8a]"}>{activeTarget ? activeTarget.displayName : "No target selected"}</strong>
+          <span className="text-[#d6b879]">{complete ? t("target.ready") : currentLabel}</span>
+          <strong className={activeReq.controller === "SELF" ? "text-[#91f58f]" : "text-[#ffcf8a]"}>{activeTarget ? localizedCardName(activeTarget, language) : t("target.noSelection")}</strong>
         </div>
         <div className="counter-target-actions">
           <button
             data-audio-click="valid"
             className="counter-target-button counter-target-cancel"
             onClick={hasAnyTarget ? deselectTarget : cancelTargeting}
-            title={hasAnyTarget ? "Deselect target" : "Cancel card"}
-            aria-label={hasAnyTarget ? "Deselect target" : "Cancel card"}
+            title={hasAnyTarget ? t("target.deselect") : t("target.cancelCard")}
+            aria-label={hasAnyTarget ? t("target.deselect") : t("target.cancelCard")}
           >
-            {hasAnyTarget ? <X size={22} /> : "Cancel"}
+            {hasAnyTarget ? <X size={22} /> : t("common.cancel")}
           </button>
-          <button data-audio-click={complete ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!complete} onClick={confirmTargeting} title="Confirm">
+          <button data-audio-click={complete ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!complete} onClick={confirmTargeting} title={t("common.confirm")}>
             <Check size={24} />
           </button>
         </div>

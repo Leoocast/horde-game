@@ -203,6 +203,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     definitionId: definition.id,
     name: definition.name,
     displayName: definition.name,
+    displayNameEs: definition.displayNameEs,
     owner: side,
     controller: side,
     zone: "library",

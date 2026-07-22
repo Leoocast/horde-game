@@ -1,8 +1,11 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { Heart, Swords } from "lucide-react";
 
 type Props = {
@@ -39,6 +42,8 @@ type Props = {
 };
 
 export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStatState(game, card, visualDamageMarked);
@@ -52,7 +57,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
-  const { imageUrl } = useCardDetails(card.definitionId);
+  const { imageUrl, displayName } = useCardDetails(card.definitionId);
+  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const highResImageUrl = toHighResImageUrl(imageUrl) ?? imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
@@ -131,9 +137,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       ].join(" ")}
     >
       {displayImageUrl ? (
-        <img src={displayImageUrl} alt={card.name} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
+        <img src={displayImageUrl} alt={localizedName} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{card.displayName}</div>
+        <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
       )}
       {sharpImageOverlay && highResImageUrl && (
         <div className="card-sharp-image-overlay" aria-hidden="true">
@@ -150,19 +156,19 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
-          {attacking && <span className="card-state-tag card-state-tag-attack">Atk</span>}
+          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
+          {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? (
             <span
               className="card-block-state-tag"
               aria-label={`Blocking, order ${linkLabel}`}
               style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
             >
-              <span>Blk</span>
+              <span>{t("card.blocking")}</span>
               <strong>{linkLabel}</strong>
             </span>
           ) : blocking ? (
-            <span className="card-state-tag card-state-tag-block">Blk</span>
+            <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : linkLabel ? (
             <span
               className="card-block-order-badge"

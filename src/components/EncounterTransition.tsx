@@ -1,5 +1,6 @@
 import { Swords } from "lucide-react";
 import type { GameMode } from "../engine/GameTypes";
+import { useTranslation } from "../i18n/useTranslation";
 
 type Props = {
   playerName: string;
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function EncounterTransition({ playerName, hordeName, hordeDeckId, gameMode }: Props) {
+  const t = useTranslation();
   const tone = gameMode === "chaos" ? "chaos" : hordeDeckId.includes("goblin") ? "goblins" : "undead";
 
   return (
@@ -16,7 +18,7 @@ export function EncounterTransition({ playerName, hordeName, hordeDeckId, gameMo
       <div className="encounter-transition-vignette" />
       <div className="encounter-transition-rift" />
       <div className="encounter-transition-content">
-        <p>{gameMode === "chaos" ? "The chronicle fractures" : "The chronicle begins"}</p>
+        <p>{gameMode === "chaos" ? t("encounter.chaos") : t("encounter.standard")}</p>
         <div className="encounter-transition-matchup">
           <strong className="encounter-transition-name encounter-transition-name-player">{playerName}</strong>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>

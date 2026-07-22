@@ -1,12 +1,15 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo } from "react";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useCardDetails } from "../utils/cardImages";
 
 const CARD_WIDTH = 136;
 const CARD_HEIGHT = 190;
 
 export function LandPlayAnimator() {
+  const language = useLanguageStore((state) => state.language);
   const queue = useGameStore((state) => state.landPlayAnimationQueue);
   const materialize = useGameStore((state) => state.materializeLandPlayAnimation);
   const complete = useGameStore((state) => state.completeLandPlayAnimation);
@@ -25,7 +28,7 @@ export function LandPlayAnimator() {
       key={active.id}
       itemId={active.id}
       definitionId={active.card.definitionId}
-      name={active.card.displayName}
+      name={localizedCardName(active.card, language)}
       origin={active.origin}
       onComplete={() => complete(active.id)}
     />

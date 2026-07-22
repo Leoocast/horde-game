@@ -3,27 +3,29 @@ import type { MusicCollectionId } from "../audio/musicManifest";
 
 const CRITICAL_MUSIC: MusicCollectionId[] = ["mainMenuTheme", "winTheme", "lossTheme", "battleTheme1", "battleTheme3"];
 
+export type LoadingLabel = "opening" | "sfx" | "music" | "ready";
+
 type ProgressUpdate = {
   completed: number;
   total: number;
   percent: number;
-  label: string;
+  label: LoadingLabel;
 };
 
 // Image preloading (bundled art + deck card artwork) is disabled for now: it was
 // blocking the loading screen and delaying game start. Images load lazily as cards
 // render instead. Sound preload stays, since it's cheap and audio pops if skipped.
 export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => void): Promise<void> {
-  const mediaTasks: Array<{ label: string; run: () => Promise<void>; timeoutMs?: number }> = [
-    { label: "Tuning sound effects", run: () => audioEngine.preloadSfx() },
-    { label: "Preparing the first songs", run: () => audioEngine.preloadMusic(CRITICAL_MUSIC), timeoutMs: 60000 },
+  const mediaTasks: Array<{ label: LoadingLabel; run: () => Promise<void>; timeoutMs?: number }> = [
+    { label: "sfx", run: () => audioEngine.preloadSfx() },
+    { label: "music", run: () => audioEngine.preloadMusic(CRITICAL_MUSIC), timeoutMs: 60000 },
   ];
 
   let completed = 0;
   const total = Math.max(mediaTasks.length, 1);
-  onProgress({ completed, total, percent: 0, label: "Opening the ancient gates" });
+  onProgress({ completed, total, percent: 0, label: "opening" });
 
-  const finishTask = async (task: { label: string; run: () => Promise<void>; timeoutMs?: number }) => {
+  const finishTask = async (task: { label: LoadingLabel; run: () => Promise<void>; timeoutMs?: number }) => {
     try {
       await withTimeout(task.run(), task.timeoutMs ?? 15000);
     } catch {

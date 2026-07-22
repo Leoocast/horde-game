@@ -4,9 +4,11 @@ import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 
 export function PhaseOrb({ game }: { game: GameState }) {
+  const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -27,8 +29,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
-  const defendBlockedReason = getDefendBlockedReason(game);
-  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount);
+  const defendBlockedReason = getDefendBlockedReason(game, t);
+  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount, t);
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason) || tutorialAwaitingContinue;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
@@ -57,7 +59,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
     finishPlayerCombat,
     resolveHordeCombat,
     finishHordeTurn,
-  });
+  }, t);
   const orbTooltip = targetingActive ? undefined : actionBlockedReason;
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
@@ -89,20 +91,20 @@ export function PhaseOrb({ game }: { game: GameState }) {
         {(showAttackAll || showCancelAttack || showCancelDefense) && (
           <div className="game-phase-secondary">
             {showAttackAll && (
-              <GameTooltip content="Sends every available creature to attack." className="game-phase-secondary-tooltip">
+              <GameTooltip content={t("orb.allTooltip")} className="game-phase-secondary-tooltip">
                 <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-all">
-                  <Swords size={17} /> <span>All</span>
+                  <Swords size={17} /> <span>{t("orb.all")}</span>
                 </button>
               </GameTooltip>
             )}
             {showCancelDefense && (
-              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title="Cancel blocks">
-                <X size={17} /> <span>Cancel</span>
+              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title={t("orb.cancelBlocks")}>
+                <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}
             {showCancelAttack && (
-              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title="Cancel attackers">
-                <X size={17} /> <span>Cancel</span>
+              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title={t("orb.cancelAttackers")}>
+                <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}
           </div>
@@ -125,45 +127,46 @@ function getOrbState(
     resolveHordeCombat: () => void;
     finishHordeTurn: () => void;
   },
+  t: ReturnType<typeof useTranslation>,
 ) {
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
     const hasBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
-    return { label: hasBlocks ? "Defend" : "No Defend", Icon: Shield, action: actions.resolveHordeCombat, tone: "defend" as const };
+    return { label: hasBlocks ? t("orb.defend") : t("orb.noDefend"), Icon: Shield, action: actions.resolveHordeCombat, tone: "defend" as const };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
-    return { label: "Horde Turn", Icon: FastForward, action: actions.runHordeMain, tone: "horde" as const };
+    return { label: t("turn.horde"), Icon: FastForward, action: actions.runHordeMain, tone: "horde" as const };
   }
   if (game.activeSide === "horde") {
-    return { label: "My Turn", Icon: Check, action: actions.finishHordeTurn, tone: "main" as const };
+    return { label: t("orb.myTurn"), Icon: Check, action: actions.finishHordeTurn, tone: "main" as const };
   }
   if (game.setupTurnsRemaining > 0) {
     if (game.setupTurnsRemaining === 1) {
-      return { label: "End Turn", Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const };
+      return { label: t("orb.endTurn"), Icon: Check, action: actions.finishSetupAndRunHorde, tone: "horde" as const };
     }
-    return { label: "Next Turn", Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const };
+    return { label: t("orb.nextTurn"), Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const };
   }
   if (game.setupCompletePendingHorde) {
-    return { label: "End Turn", Icon: Check, action: actions.runHordeMain, tone: "horde" as const };
+    return { label: t("orb.endTurn"), Icon: Check, action: actions.runHordeMain, tone: "horde" as const };
   }
   if (game.phase === "combat" && game.combat.playerAttackers.length > 0) {
-    return { label: "Confirm", Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
+    return { label: t("common.confirm"), Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: "No Attack", Icon: Check, action: actions.goToEndStep, tone: "main" as const };
+    return { label: t("orb.noAttack"), Icon: Check, action: actions.goToEndStep, tone: "main" as const };
   }
   if (game.phase === "end") {
-    return { label: "End Turn", Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };
+    return { label: t("orb.endTurn"), Icon: Check, action: actions.finishPlayerTurnAndRunHorde, tone: "horde" as const };
   }
-  return { label: "To Battle", Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
+  return { label: t("orb.toBattle"), Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
 }
 
-function getDefendBlockedReason(game: GameState): string | undefined {
+function getDefendBlockedReason(game: GameState, t: ReturnType<typeof useTranslation>): string | undefined {
   if (game.activeSide !== "horde" || game.combat.hordeAttackers.length === 0) return undefined;
   for (const attackerId of game.combat.hordeAttackers) {
     const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
     if (!attacker || !hasKeyword(game, attacker, "MENACE")) continue;
     const blockerCount = game.combat.blockers[attackerId]?.length ?? 0;
-    if (blockerCount === 1) return "Menace requires two or more blockers.";
+    if (blockerCount === 1) return t("orb.menaceBlocked");
   }
   return undefined;
 }
@@ -172,9 +175,9 @@ function hasAvailableAttackers(game: GameState): boolean {
   return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }
 
-function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number, hordeAutoTriggerCount: number): string | undefined {
-  if (hordeAutoTriggerCount > 0) return "Horde is resolving triggered effects.";
-  if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before continuing.";
-  if (summoningAnimationCount > 0) return "Wait for the summon animation to finish.";
+function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number, hordeAutoTriggerCount: number, t: ReturnType<typeof useTranslation>): string | undefined {
+  if (hordeAutoTriggerCount > 0) return t("orb.hordeResolving");
+  if (pendingTriggeredEffectCount > 0) return t("orb.resolveTrigger");
+  if (summoningAnimationCount > 0) return t("orb.waitSummon");
   return undefined;
 }

@@ -1,6 +1,9 @@
 import { Archive, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
@@ -17,6 +20,7 @@ type Props = {
 type DetailsTransition = "idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous";
 
 export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
+  const t = useTranslation();
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const detailsIndex = Math.max(0, cards.findIndex((card) => card.instanceId === detailsCardId));
@@ -93,15 +97,15 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
             <Archive size={22} strokeWidth={2.2} />
           </div>
           <div className="deck-detail-heading">
-            <p>Graveyard collection</p>
+            <p>{t("graveyard.collection")}</p>
             <h1 id="graveyard-viewer-title">{title}</h1>
           </div>
           <div className="deck-detail-tools graveyard-viewer-tools">
             <div className="deck-detail-counts">
-              <span><strong>{cards.length}</strong> cards</span>
+              <span><strong>{cards.length}</strong> {t("common.cards")}</span>
             </div>
           </div>
-          <button className="deck-collection-modal-close" type="button" title="Close graveyard" aria-label="Close graveyard" onClick={closeViewer}>
+          <button className="deck-collection-modal-close" type="button" title={t("common.close")} aria-label={t("common.close")} onClick={closeViewer}>
             <X size={20} />
           </button>
         </header>
@@ -109,7 +113,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
         {cards.length === 0 ? (
           <div className="graveyard-viewer-empty">
             <Archive size={34} strokeWidth={1.5} />
-            This graveyard is empty.
+            {t("graveyard.empty")}
           </div>
         ) : (
           <div className="graveyard-viewer-collection">
@@ -144,25 +148,27 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
 }
 
 function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index: number; onClick: () => void }) {
+  const language = useLanguageStore((state) => state.language);
   const details = useCardDetails(card.definitionId);
+  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
 
   return (
     <button
       className="deck-detail-card graveyard-viewer-card"
       onClick={onClick}
-      title={card.displayName}
+      title={displayName}
     >
       <div className="deck-detail-card-frame">
         <span className="graveyard-card-position" aria-hidden="true">{index + 1}</span>
         <div className="deck-detail-card-image">
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={card.displayName} draggable={false} />
+            <img src={details.imageUrl} alt={displayName} draggable={false} />
           ) : (
-            <div className="graveyard-card-missing">{card.displayName}</div>
+            <div className="graveyard-card-missing">{displayName}</div>
           )}
         </div>
       </div>
-      <div className="deck-detail-card-name">{card.displayName}</div>
+      <div className="deck-detail-card-name">{displayName}</div>
     </button>
   );
 }
@@ -179,7 +185,7 @@ export function GraveyardDetailsModal({
   onNext,
   position,
   total,
-  contextLabel = "Graveyard card",
+  contextLabel,
   backdropClassName = "",
 }: {
   game: GameState;
@@ -196,8 +202,11 @@ export function GraveyardDetailsModal({
   contextLabel?: string;
   backdropClassName?: string;
 }) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
+  const displayName = language === "es" ? displayCard.displayNameEs || details.displayName || localizedCardName(displayCard, language) : localizedCardName(displayCard, language);
   const keywords = cardKeywords(game, displayCard);
   const stats = cardStats(game, displayCard);
   const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(displayCard));
@@ -211,23 +220,23 @@ export function GraveyardDetailsModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="deck-collection-modal graveyard-card-details" role="dialog" aria-modal="true" aria-label={`${displayCard.displayName} details`}>
-        <button className="deck-collection-modal-close" type="button" onClick={onClose} title="Close details">
+      <section className="deck-collection-modal graveyard-card-details" role="dialog" aria-modal="true" aria-label={`${displayName} details`}>
+        <button className="deck-collection-modal-close" type="button" onClick={onClose} title={t("common.closeDetails")}>
           <X size={20} />
         </button>
 
         <div className={`deck-collection-modal-content is-${transition}`}>
           <div className="deck-collection-modal-art-column">
             {onPrevious && (
-              <button className="deck-collection-modal-nav is-previous" type="button" onClick={onPrevious} title="Previous graveyard card">
+              <button className="deck-collection-modal-nav is-previous" type="button" onClick={onPrevious} title={t("common.previousCard")}>
                 <ChevronLeft size={24} />
               </button>
             )}
             <div className="deck-collection-modal-art">
-              {details.imageUrl ? <img src={details.imageUrl} alt={displayCard.displayName} draggable={false} /> : <div className="graveyard-card-missing">{displayCard.displayName}</div>}
+              {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <div className="graveyard-card-missing">{displayName}</div>}
             </div>
             {onNext && (
-              <button className="deck-collection-modal-nav is-next" type="button" onClick={onNext} title="Next graveyard card">
+              <button className="deck-collection-modal-nav is-next" type="button" onClick={onNext} title={t("common.nextCard")}>
                 <ChevronRight size={24} />
               </button>
             )}
@@ -235,9 +244,9 @@ export function GraveyardDetailsModal({
 
           <div className="deck-collection-modal-info">
             <header className="deck-collection-modal-header">
-              <p>{contextLabel} <span>{position} / {total}</span></p>
-              <div><h2>{displayCard.displayName}</h2></div>
-              <small>{graveyardTypeLine(displayCard)}</small>
+              <p>{contextLabel ?? t("graveyard.card")} <span>{position} / {total}</span></p>
+              <div><h2>{displayName}</h2></div>
+              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(displayCard, language)}</small>
             </header>
 
             {(keywords || stats) && (
@@ -252,7 +261,7 @@ export function GraveyardDetailsModal({
             </div>
 
             <footer className="deck-collection-modal-footer">
-              <span>Text size</span>
+              <span>{t("common.textSize")}</span>
               <button disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))}>-</button>
               <input className="game-range" type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
               <button disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))}>+</button>
@@ -263,10 +272,6 @@ export function GraveyardDetailsModal({
       </section>
     </div>
   );
-}
-
-function graveyardTypeLine(card: CardInstance): string {
-  return [...card.cardTypes, card.subtypes.length ? `- ${card.subtypes.join(" ")}` : ""].filter(Boolean).join(" ");
 }
 
 function graveyardDisplayCard(card: CardInstance): CardInstance {

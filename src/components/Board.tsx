@@ -4,6 +4,7 @@ import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { hordeInSurge } from "../engine/StaticEffects";
+import { useTranslation } from "../i18n/useTranslation";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
@@ -38,6 +39,7 @@ type Props = {
 };
 
 export function Board({ playerName, setupTurns, encounterEntering = false, onReturnToMenu }: Props) {
+  const t = useTranslation();
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
@@ -116,21 +118,21 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <div className="game-dialog-kicker">Leave the battlefield</div>
+                <div className="game-dialog-kicker">{t("game.leaveBattlefield")}</div>
                 <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  Return home?
+                  {t("game.returnHomeQuestion")}
                 </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">Your current game progress will be lost.</p>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t("game.progressLost")}</p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowHomeConfirmation(false)}>
-                Cancel
+                {t("common.cancel")}
               </button>
               <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
                 <Home size={16} />
-                Return home
+                {t("game.returnHome")}
               </button>
             </div>
           </section>

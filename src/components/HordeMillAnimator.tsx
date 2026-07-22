@@ -2,12 +2,15 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo } from "react";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useCardDetails } from "../utils/cardImages";
 
 const CARD_WIDTH = 172;
 const CARD_HEIGHT = 240;
 
 export function HordeMillAnimator() {
+  const language = useLanguageStore((state) => state.language);
   const queue = useGameStore((state) => state.hordeMillAnimationQueue);
   const complete = useGameStore((state) => state.completeHordeMillAnimation);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -23,7 +26,7 @@ export function HordeMillAnimator() {
   return (
     <>
       <div data-audio-click="off" className="fixed inset-0 z-[89]" />
-      <HordeMillCard key={active.id} itemId={active.id} definitionId={active.card.definitionId} name={active.card.displayName} onComplete={() => complete(active.id)} />
+      <HordeMillCard key={active.id} itemId={active.id} definitionId={active.card.definitionId} name={localizedCardName(active.card, language)} onComplete={() => complete(active.id)} />
     </>
   );
 }

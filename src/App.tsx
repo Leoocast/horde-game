@@ -11,7 +11,7 @@ import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
-import { preloadGameAssets } from "./utils/assetPreloader";
+import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -25,7 +25,7 @@ export default function App() {
   const [bootRevision, setBootRevision] = useState(0);
   const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
   const [loadingLeaving, setLoadingLeaving] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState({ percent: 0, label: "Opening the ancient gates" });
+  const [loadingProgress, setLoadingProgress] = useState<{ percent: number; label: LoadingLabel }>({ percent: 0, label: "opening" });
   const [requestInitialName, setRequestInitialName] = useState(() => !hasCompletedOnboarding());
   const [setupTurns, setSetupTurns] = useState(3);
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
@@ -78,7 +78,7 @@ export default function App() {
     const startedAt = Date.now();
     setLoading(true);
     setLoadingLeaving(false);
-    setLoadingProgress({ percent: 0, label: "Opening the ancient gates" });
+    setLoadingProgress({ percent: 0, label: "opening" });
     void preloadGameAssets((progress) => {
       if (active) setLoadingProgress({ percent: progress.percent, label: progress.label });
     }).then(() => {
@@ -86,7 +86,7 @@ export default function App() {
       const remaining = Math.max(0, 1050 - (Date.now() - startedAt));
       window.setTimeout(() => {
         if (!active) return;
-        setLoadingProgress({ percent: 100, label: "The chronicle awaits" });
+        setLoadingProgress({ percent: 100, label: "ready" });
         setRequestInitialName(!hasCompletedOnboarding());
         setPlayerName(readStoredPlayerName());
         setLoading(false);
@@ -220,7 +220,7 @@ export default function App() {
           }}
         />
         {transitionOverlay}
-        {loadingLeaving && <GameLoadingScreen percent={100} label="The chronicle awaits" leaving />}
+        {loadingLeaving && <GameLoadingScreen percent={100} label="ready" leaving />}
       </>
     );
   }
