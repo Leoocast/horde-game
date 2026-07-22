@@ -920,7 +920,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     attackEvents.forEach((event, index) => {
       const startAt = index * HORDE_ATTACK_ANIMATION_MS;
       window.setTimeout(() => {
-        useAudioStore.getState().playSfx(event.blockerDies ? "defend" : "attack", { volume: 0.75 });
+        // The zombie's attack cue should never be replaced by the block impact.
+        // When a blocker dies, layer the defend cue instead of dropping attack.wav.
+        useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+        if (event.blockerDies) useAudioStore.getState().playSfx("defend", { volume: 0.68 });
         set({
           hordeCombatVisualDamage: nextVisualDamage(event),
           hordeAttackAnimation: {

@@ -73,7 +73,12 @@ class AudioEngine {
   playSfx(id: SfxId, options: PlayOptions = {}) {
     if (!this.settings.enabled) return;
     const pool = this.getSfxPool(id);
-    const instance = pool.find((audio) => audio.paused || audio.ended) ?? createAudio(sfxManifest[id]);
+    // `paused` is not a reliable ownership signal while a freshly requested
+    // HTMLAudioElement is still starting. Two SFX fired in the same frame could
+    // therefore grab the same element and the second reset the first before it
+    // became audible. Keep voices reserved until their play finishes/fails.
+    const instance = pool.find((audio) => !this.activeSfx.has(audio)) ?? createAudio(sfxManifest[id]);
+    if (!pool.includes(instance)) pool.push(instance);
     instance.pause();
     instance.currentTime = 0;
     instance.volume = clamp01(volumeToGain(this.settings.sfxVolume) * (options.volume ?? 1));
