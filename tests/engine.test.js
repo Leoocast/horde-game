@@ -86,6 +86,7 @@ test("Chaos starts immediately with one real energy and draws two on later turns
   const game = createInitialGame(chaosPlayerDeck, chaosHordeDeck, "chaos-opening", 4, "normal", "chaos");
 
   assert.equal(game.gameMode, "chaos");
+  assert.equal(game.player.life, 35);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 1);
   assert.equal(game.player.hand.length, 7);
