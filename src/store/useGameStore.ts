@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createInitialGame } from "../engine/GameState";
+import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameMode, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
@@ -68,6 +68,8 @@ type GameStore = {
   hordeDeckId: string;
   reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
   setSeed: (seed: string) => void;
+  acceptOpeningHand: () => void;
+  mulliganOpeningHand: () => void;
   acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
   selectPlayerCreature: (id?: string) => void;
@@ -361,6 +363,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistSeed(seed);
     set({ seed });
   },
+  acceptOpeningHand: () =>
+    set(({ game }) => ({
+      game: acceptOpeningHand(game),
+      selectedHandId: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
+    })),
+  mulliganOpeningHand: () =>
+    set(({ game }) => {
+      const next = mulliganOpeningHand(game);
+      if (next.mulligansTaken !== game.mulligansTaken) useAudioStore.getState().playSfx("draw");
+      return {
+        game: next,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+      };
+    }),
   setEnergyRecycleDragActive: (active) => {
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });

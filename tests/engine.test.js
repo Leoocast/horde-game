@@ -6,7 +6,7 @@ import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engin
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
-import { createInitialGame, expandDeck } from "../src/engine/GameState";
+import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
 import { finishHordeTurn, runHordeMain } from "../src/engine/HordeController";
 import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
@@ -36,6 +36,43 @@ test("every expanded card copy has a unique instance id", () => {
   const ids = cards.map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
+});
+
+test("mulligans redraw one fewer card deterministically down to one", () => {
+  const first = createInitialGame(playerDeck, hordeDeck, "mulligan-seed", 3);
+  const second = createInitialGame(playerDeck, hordeDeck, "mulligan-seed", 3);
+  const initialCardTotal = first.player.hand.length + first.player.library.length + first.player.battlefield.length;
+
+  assert.equal(first.openingHandAccepted, false);
+  assert.equal(first.player.hand.length, 7);
+
+  let firstResult = first;
+  let secondResult = second;
+  for (const expectedSize of [6, 5, 4, 3, 2, 1]) {
+    firstResult = mulliganOpeningHand(firstResult);
+    secondResult = mulliganOpeningHand(secondResult);
+    assert.equal(firstResult.player.hand.length, expectedSize);
+    assert.deepEqual(
+      firstResult.player.hand.map((card) => card.instanceId),
+      secondResult.player.hand.map((card) => card.instanceId),
+    );
+    assert.equal(firstResult.player.hand.length + firstResult.player.library.length + firstResult.player.battlefield.length, initialCardTotal);
+  }
+
+  const atMinimum = mulliganOpeningHand(firstResult);
+  assert.equal(atMinimum.player.hand.length, 1);
+  assert.equal(atMinimum.mulligansTaken, 6);
+});
+
+test("accepting an opening hand closes mulligan while tutorial skips it", () => {
+  const game = createInitialGame(playerDeck, hordeDeck, "keep-opening", 3);
+  const accepted = acceptOpeningHand(game);
+  const blockedMulligan = mulliganOpeningHand(accepted);
+  const tutorial = createInitialGame(playerDeck, hordeDeck, "tutorial", 3);
+
+  assert.equal(accepted.openingHandAccepted, true);
+  assert.deepEqual(blockedMulligan.player.hand.map((card) => card.instanceId), accepted.player.hand.map((card) => card.instanceId));
+  assert.equal(tutorial.openingHandAccepted, true);
 });
 
 test("Chaos removes other permanents but keeps creatures, energy, instants, and sorceries", () => {

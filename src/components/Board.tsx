@@ -13,6 +13,7 @@ import { CounterTargetingOverlay } from "./CounterTargetingOverlay";
 import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { Hand } from "./Hand";
 import { HandLimitOverlay } from "./HandLimitOverlay";
+import { OpeningHandOverlay } from "./OpeningHandOverlay";
 import { HordeAttackAnimator } from "./HordeAttackAnimator";
 import { HordeMillAnimator } from "./HordeMillAnimator";
 import { PhaseBanner } from "./PhaseBanner";
@@ -50,6 +51,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
+  const playSfx = useAudioStore((state) => state.playSfx);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hordeInSurge(game);
@@ -63,17 +65,22 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
     else if (game.winner === "horde") playCollection("lossTheme");
   }, [game.winner, playCollection]);
 
+  useEffect(() => {
+    if (!game.openingHandAccepted || encounterEntering) return;
+    playSfx("skipNextBattle", { volume: 0.72 });
+  }, [encounterEntering, game.openingHandAccepted, playSfx]);
+
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
       <BattlefieldFireflies chaos={game.gameMode === "chaos"} />
       <AppHeader
-        left={<TurnPhaseHud game={game} />}
+        left={game.openingHandAccepted ? <TurnPhaseHud game={game} /> : undefined}
         setupTurns={setupTurns}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} suspended={encounterEntering} />
-      <PhaseOrb game={game} />
+      <PhaseBanner game={game} suspended={encounterEntering || !game.openingHandAccepted} />
+      {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
       <SmallpoxSelectionOverlay game={game} />
@@ -105,7 +112,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
           </div>
         </section>
       </div>
-      <Hand game={game} />
+      {game.openingHandAccepted && <Hand game={game} />}
+      <OpeningHandOverlay game={game} />
 
       {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
       {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}

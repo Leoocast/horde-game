@@ -11127,3 +11127,132 @@
     animation: none;
   }
 }
+
+.opening-hand-overlay {
+  padding: clamp(12px, 2.5vh, 28px) 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 44%, rgb(92 74 41 / 0.14), transparent 58%),
+    rgb(5 5 4 / 0.3);
+  color: #eadfbf;
+}
+
+.opening-hand-layout {
+  position: relative;
+  display: grid;
+  width: 100vw;
+  max-height: 96vh;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(22px, 3vh, 34px);
+  padding: 8px;
+  transform: translateY(clamp(22px, 4vh, 46px));
+}
+
+.opening-hand-cards {
+  display: flex;
+  width: 100%;
+  height: min(570px, 67vh);
+  min-height: 0;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(5px, 0.7vw, 11px);
+  padding-inline: clamp(22px, 2.5vw, 45px);
+}
+
+.opening-hand-card-entry {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 215px;
+  aspect-ratio: 488 / 680;
+}
+
+.opening-hand-card {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 12px 12px rgb(0 0 0 / 0.58));
+  transform-origin: center;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), filter 180ms ease;
+}
+
+.opening-hand-card-entry:hover {
+  z-index: 3;
+}
+
+.opening-hand-card-entry:hover .opening-hand-card {
+  filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.72));
+  transform: scale(1.85);
+}
+
+.opening-hand-card .card-visual {
+  min-height: 0;
+  border-color: rgb(154 125 68 / 0.42);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.72), 0 12px 22px rgb(0 0 0 / 0.5);
+}
+
+.opening-hand-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.opening-hand-button {
+  display: inline-flex;
+  width: min(205px, 42vw);
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgb(147 117 66 / 0.74);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #342b1d, #17150f);
+  color: #d9c89b;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px rgb(255 233 175 / 0.12), 0 7px 18px rgb(0 0 0 / 0.45);
+  transition: border-color 150ms ease, filter 150ms ease, transform 150ms ease;
+}
+
+.opening-hand-button:hover:not(:disabled),
+.opening-hand-button:focus-visible:not(:disabled) {
+  border-color: #d1ad67;
+  filter: brightness(1.14);
+  transform: translateY(-1px);
+}
+
+.opening-hand-button-accept {
+  order: 2;
+  border-color: rgb(113 155 91 / 0.78);
+  background: linear-gradient(180deg, #35452a, #182116);
+  color: #dfedbd;
+}
+
+.opening-hand-button-mulligan {
+  order: 1;
+}
+
+.opening-hand-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: saturate(0.45);
+}
+
+@media (max-height: 700px) {
+  .opening-hand-overlay { padding-block: 12px; }
+  .opening-hand-layout { gap: 16px; padding-block: 8px; }
+  .opening-hand-cards { height: 380px; }
+  .opening-hand-card-entry { max-width: 145px; }
+  .opening-hand-card-entry:hover .opening-hand-card { transform: scale(1.75); }
+  .opening-hand-button { min-height: 46px; }
+}
+
+@media (max-width: 720px) {
+  .opening-hand-layout { gap: 15px; }
+  .opening-hand-cards { gap: 4px; }
+  .opening-hand-actions { width: 100%; gap: 8px; }
+  .opening-hand-button { min-height: 48px; font-size: 10px; }
+}

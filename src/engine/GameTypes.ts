@@ -190,6 +190,8 @@ export type GameState = {
   hordeTurnNumber: number;
   setupTurnsRemaining: number;
   setupCompletePendingHorde: boolean;
+  openingHandAccepted: boolean;
+  mulligansTaken: number;
   player: PlayerState;
   horde: HordeState;
   combat: CombatState;

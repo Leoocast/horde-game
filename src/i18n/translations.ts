@@ -362,6 +362,9 @@ const english = {
   "result.copySeed": "Copy seed",
   "result.regenerateSeed": "Regenerate seed",
   "result.restartTutorial": "Restart Tutorial",
+  "mulligan.title": "Opening hand",
+  "mulligan.accept": "Keep",
+  "mulligan.action": "Rewrite",
   "surge.title": "Surge",
   "surge.message": "The Horde is unleashed",
 } as const;
@@ -728,6 +731,9 @@ const spanish: Record<TranslationKey, string> = {
   "result.copySeed": "Copiar semilla",
   "result.regenerateSeed": "Regenerar semilla",
   "result.restartTutorial": "Reiniciar tutorial",
+  "mulligan.title": "Mano inicial",
+  "mulligan.accept": "Conservar",
+  "mulligan.action": "Reescribir",
   "surge.title": "Oleada",
   "surge.message": "La Horda ha sido desatada",
 };

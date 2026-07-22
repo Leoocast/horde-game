@@ -71,6 +71,9 @@ export function createInitialGame(
     hordeTurnNumber: 0,
     setupTurnsRemaining: effectiveSetupTurns,
     setupCompletePendingHorde: false,
+    // The tutorial depends on a fixed scripted opening and starts immediately.
+    openingHandAccepted: seed.trim().toLowerCase() === TUTORIAL_SEED,
+    mulligansTaken: 0,
     player: {
       life: seed.trim().toLowerCase() === DEVELOPER_SEED
         ? 999
@@ -105,6 +108,31 @@ export function createInitialGame(
   drawCards(game, "player", openingHandSize);
   game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${effectiveSetupTurns}. Mode: ${gameMode}.`);
   return game;
+}
+
+export function acceptOpeningHand(game: GameState): GameState {
+  const next = structuredClone(game) as GameState;
+  if (next.openingHandAccepted) return next;
+  next.openingHandAccepted = true;
+  next.log.unshift(`Player keeps an opening hand of ${next.player.hand.length} card(s).`);
+  return next;
+}
+
+export function mulliganOpeningHand(game: GameState): GameState {
+  const next = structuredClone(game) as GameState;
+  if (next.openingHandAccepted || next.player.hand.length <= 1) return next;
+
+  const nextHandSize = next.player.hand.length - 1;
+  const returnedCards = next.player.hand;
+  for (const card of returnedCards) card.zone = "library";
+  const shuffled = shuffleWithState([...returnedCards, ...next.player.library], next.currentRandomState);
+  next.currentRandomState = shuffled.randomState;
+  next.player.hand = [];
+  next.player.library = shuffled.items;
+  drawCards(next, "player", nextHandSize);
+  next.mulligansTaken += 1;
+  next.log.unshift(`Player takes mulligan ${next.mulligansTaken} and draws ${nextHandSize} card(s).`);
+  return next;
 }
 
 function forceCardsToFront(library: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
