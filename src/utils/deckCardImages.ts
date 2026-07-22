@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DeckImageManifest, NewDeckCard } from "../data/deckCatalog";
 import type { AppLanguage } from "../i18n/translations";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { fetchScryfallJson, localizedScryfallPayload } from "./scryfall";
+import { fetchScryfallCardJson } from "./scryfall";
 
 export type DeckCardDetails = {
   imageUrl?: string;
@@ -58,28 +58,24 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
   const existing = pending.get(cacheId);
   if (existing) return existing;
 
-  const request = fetchScryfallJson(buildScryfallUrl(lookup, card))
-    .then(async (payload) => {
+  const request = fetchScryfallCardJson(buildScryfallUrl(lookup, card), language)
+    .then((payload) => {
       const cardPayload = readSearchResult(payload, lookup.pick) ?? payload;
-      const localizedPayload = await localizedScryfallPayload(cardPayload, language);
       const details: DeckCardDetails = {
-        language: readPath(localizedPayload, "lang"),
+        language: readPath(cardPayload, "lang"),
         imageUrl:
-          readPath(localizedPayload, "image_uris.normal") ??
-          readPath(localizedPayload, "image_uris.large") ??
-          readPath(localizedPayload, "card_faces[0].image_uris.normal") ??
-          readPath(localizedPayload, "card_faces[0].image_uris.large") ??
-          readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
-          readPath(cardPayload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
+          readPath(cardPayload, "image_uris.large") ??
+          readPath(cardPayload, "card_faces[0].image_uris.large") ??
           readPath(cardPayload, lookup.fallbackImagePath ?? card.scryfall?.fallbackImagePath ?? "image_uris.large") ??
           readPath(cardPayload, "image_uris.normal") ??
-          readPath(cardPayload, "image_uris.large") ??
           readPath(cardPayload, "card_faces[0].image_uris.normal") ??
-          readPath(cardPayload, "card_faces[0].image_uris.large"),
-        displayName: readPrintedName(localizedPayload),
-        typeLine: readPrintedTypeLine(localizedPayload),
-        oracleText: readOracleText(localizedPayload),
-        flavorText: readFlavorText(localizedPayload),
+          readPath(cardPayload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
+          readPath(payload, "data[0].image_uris.large") ??
+          readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal"),
+        displayName: readPrintedName(cardPayload),
+        typeLine: readPrintedTypeLine(cardPayload),
+        oracleText: readOracleText(cardPayload),
+        flavorText: readFlavorText(cardPayload),
       };
       if (!details.imageUrl) throw new Error("Card lookup returned no image");
       writeCachedDetails(cacheId, details);
@@ -156,7 +152,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v6:${cacheId}`;
+  return `horde-deck-card-details:v7:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {
