@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunshower Druid — Hostfall Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@500;600;700&display=swap');
+
+        :root {
+            --gold-light: #ead9a8;
+            --gold-main: #b8a26b;
+            --gold-line: rgba(184, 162, 107, 0.45);
+            --gold-faint: rgba(184, 162, 107, 0.18);
+            --gold-glow: rgba(214, 184, 118, 0.16);
+            --ink: #0e0f0d;
+            --panel: rgba(12, 12, 10, 0.66);
+            --text-bright: #efece1;
+            --text-dim: #9a9a8e;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 30%, #17180f 0%, #0b0c0a 70%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 56px;
+            min-height: 100vh;
+            margin: 0;
+            padding: 48px 32px;
+            box-sizing: border-box;
+            font-family: 'Lora', serif;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 64px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .card-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            perspective: 1400px;
+        }
+
+        .slot-label {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-main);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Zona de detección ESTÁTICA (preview): no se inclina, así el hover nunca se pierde */
+        .card-hit {
+            width: 400px;
+            height: 580px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card-scene {
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        /* Preview: vuelve suave al dejar de apuntar */
+        .card-scene.preview {
+            transition: transform 0.15s ease-out;
+        }
+
+        /* Jugable: se agarra */
+        .card-scene.playable {
+            cursor: grab;
+        }
+
+        .card-scene.playable.returning {
+            transition: transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-scene.playable.dragging {
+            cursor: grabbing;
+        }
+
+        /* Flotación idle: respira suave mientras sostienes la carta jugable */
+        .card-scene.idle .card {
+            animation: floaty 3.2s ease-in-out infinite;
+        }
+
+        @keyframes floaty {
+            0% {
+                transform: translateY(0) rotateZ(0deg);
+            }
+
+            25% {
+                transform: translateY(-5px) rotateZ(-0.5deg);
+            }
+
+            50% {
+                transform: translateY(0) rotateZ(0deg);
+            }
+
+            75% {
+                transform: translateY(-5px) rotateZ(0.5deg);
+            }
+
+            100% {
+                transform: translateY(0) rotateZ(0deg);
+            }
+        }
+
+        .card {
+            width: 400px;
+            height: 580px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9),
+                0 0 0 1px rgba(184, 162, 107, 0.15);
+            background-color: #14150f;
+            background-image: url('image.png');
+            background-size: cover;
+            background-position: center 20%;
+        }
+
+        /* --- Capas holográficas (solo en la preview, vía --mx / --my) --- */
+        .holo {
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            mix-blend-mode: color-dodge;
+        }
+
+        /* Reflejo especular dorado, amplio y sutil, sin borde duro */
+        .holo-glare {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 320px at var(--mx, 50%) var(--my, 50%),
+                    rgba(255, 245, 215, 0.09) 0%,
+                    rgba(245, 228, 185, 0.04) 30%,
+                    rgba(234, 217, 168, 0.012) 55%,
+                    transparent 80%);
+        }
+
+        /* Reflejo iridiscente dorado, apenas perceptible, ligado al cursor sin corte */
+        .holo-foil {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 460px at var(--mx, 50%) var(--my, 50%),
+                    rgba(255, 250, 220, 0.05) 0%,
+                    rgba(234, 217, 168, 0.03) 22%,
+                    rgba(184, 162, 107, 0.015) 45%,
+                    transparent 70%);
+        }
+
+        .card-hit.hovering .holo {
+            opacity: 1;
+        }
+
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                    rgba(13, 13, 11, 0.94) 0%,
+                    rgba(13, 13, 11, 0.42) 16%,
+                    rgba(13, 13, 11, 0) 32%,
+                    rgba(13, 13, 11, 0) 42%,
+                    rgba(12, 12, 10, 0.78) 60%,
+                    rgba(11, 11, 9, 0.97) 74%,
+                    rgba(10, 10, 8, 1) 100%);
+            z-index: 1;
+        }
+
+        /* Viñeta cálida para dar profundidad e integrar con el dorado */
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 38%, transparent 55%, rgba(28, 20, 8, 0.6) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .inner-border {
+            position: absolute;
+            inset: 8px;
+            border-radius: 6px;
+            padding: 1px;
+            background: linear-gradient(150deg,
+                    var(--gold-light) 0%,
+                    var(--gold-main) 28%,
+                    rgba(120, 106, 68, 0.4) 52%,
+                    var(--gold-main) 74%,
+                    var(--gold-light) 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* Resplandor cálido interior en los bordes del marco */
+        .frame-glow {
+            position: absolute;
+            inset: 8px;
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 2;
+            box-shadow: inset 0 0 22px var(--gold-glow);
+        }
+
+        .inner-border-2 {
+            position: absolute;
+            inset: 12px;
+            border: 1px solid var(--gold-faint);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* --- Ornamentos de esquina: rombo anclado con trazo en L, solo diagonal --- */
+        .corner {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .corner::before {
+            content: "";
+            position: absolute;
+            top: 3.5px;
+            left: 3.5px;
+            width: 6px;
+            height: 6px;
+            background: var(--gold-main);
+            border-radius: 1.5px;
+            transform: rotate(45deg);
+        }
+
+        .corner::after {
+            content: "";
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 15px;
+            height: 15px;
+            border-top: 1px solid var(--gold-line);
+            border-left: 1px solid var(--gold-line);
+            border-top-left-radius: 4px;
+        }
+
+        .corner.tl {
+            top: 3px;
+            left: 3px;
+        }
+
+        .corner.br {
+            bottom: 3px;
+            right: 3px;
+            transform: rotate(180deg);
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 26px 24px 24px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Botón ROMBO con la gota */
+        .type-icon {
+            width: 34px;
+            height: 34px;
+            margin: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 35% 30%, #23241a, #121309);
+            border: 1px solid var(--gold-line);
+            transform: rotate(45deg);
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 2px rgba(234, 217, 168, 0.15),
+                0 3px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .type-icon svg {
+            width: 18px;
+            height: 18px;
+            transform: rotate(-45deg);
+            fill: var(--gold-light);
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+        }
+
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            margin: 0 12px;
+            position: relative;
+        }
+
+        /* TÍTULO ARRIBA */
+        .title {
+            position: relative;
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-shadow: 1px 2px 5px rgba(0, 0, 0, 0.95),
+                0 0 18px rgba(214, 184, 118, 0.28);
+        }
+
+        /* SUBTÍTULO (tipo de criatura): flotando arriba del cuadro, visible */
+        .subtype {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 1), 0 0 8px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Costo REDONDO */
+        .cost {
+            width: 38px;
+            height: 38px;
+            background: radial-gradient(circle at 35% 30%, #24251b, #16170f);
+            border: 1px solid var(--gold-line);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7),
+                inset 0 0 6px rgba(234, 217, 168, 0.12);
+        }
+
+        .cost span {
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .divider {
+            display: block;
+            margin: 0 auto 12px;
+        }
+
+        /* Panel de texto con radio en el borde */
+        .text-box {
+            text-align: left;
+            background: var(--panel);
+            border: 1px solid var(--gold-faint);
+            border-radius: 8px;
+            padding: 13px 15px;
+            box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .effect {
+            font-family: 'Lora', serif;
+            color: var(--text-bright);
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .flavor {
+            font-family: 'Lora', serif;
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 12px;
+            line-height: 1.55;
+            margin: 8px 0 0;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+        }
+
+        .credits {
+            color: rgba(154, 154, 142, 0.55);
+            font-size: 8.5px;
+            font-family: 'Lora', serif;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Bloque unificado de stats: solo números (Atk / Def) */
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--panel);
+            border: 1px solid var(--gold-line);
+            border-radius: 4px;
+            padding: 5px 14px;
+        }
+
+        .stats .value {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .stats .sep {
+            color: var(--gold-main);
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        /* ===================== TOKEN (en campo) — REDISEÑO 2 =====================
+           Tamaño total 212 × 189 px (ratio 0.89), SIN borde negro: el marco
+           dorado va al borde exterior y todo el espacio es útil. Muestra
+           nombre (arriba) y tipo (abajo). Los stats son una cápsula sobrepuesta
+           a la derecha, como en la carta grande, que sobresale por encima de la
+           banda de tipo y es más alta que ella. */
+        .tok {
+            width: 212px;
+            height: 189px;
+            border-radius: 11px;
+            position: relative;
+            background-color: #14150f;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.9);
+            font-family: 'Lora', serif;
+        }
+
+        /* Marco dorado en el borde EXTERIOR (sin borde negro debajo) */
+        .tok-frame {
+            position: absolute;
+            inset: 0;
+            border-radius: 11px;
+            padding: 2px;
+            background: linear-gradient(150deg,
+                    var(--gold-light) 0%,
+                    var(--gold-main) 30%,
+                    rgba(120, 106, 68, 0.4) 52%,
+                    var(--gold-main) 72%,
+                    var(--gold-light) 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .tok-inner {
+            position: absolute;
+            inset: 2px;
+            border-radius: 9px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Arte de fondo; el texto va en bandas sólidas, nunca suelto encima */
+        .tok-art {
+            position: absolute;
+            inset: 0;
+            background-color: #14150f;
+            background-image: url('image.png');
+            background-size: cover;
+            background-position: center 28%;
+            z-index: 0;
+        }
+
+        /* Banda superior: nombre. */
+        .tok-name {
+            position: relative;
+            z-index: 2;
+            padding: 7px 12px;
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid var(--gold-line);
+        }
+
+        .tok-spacer {
+            flex: 1;
+        }
+
+        /* Banda inferior: TIPO a la izquierda. La cápsula de stats se sobrepone
+           por encima (position:absolute), así que reservamos espacio a su derecha. */
+        /* Variante C: sin banda inferior. El arte llega hasta abajo; un
+           degradado oscuro sutil en la zona baja asienta la cápsula de stats
+           sobre el arte sin necesidad de una banda sólida. */
+        .tok-typeband {
+            display: none;
+        }
+
+        .tok-inner::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 56px;
+            background: linear-gradient(180deg, transparent, rgba(10, 18, 10, 0.7));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Cápsula de stats SOBREPUESTA: anclada abajo-derecha, sobresale
+           ligeramente por encima de la banda de tipo, como en la carta grande. */
+        .tok-stats {
+            position: absolute;
+            right: 8px;
+            bottom: 7px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.8),
+                inset 0 1px 2px rgba(255, 255, 255, 0.2);
+        }
+
+        .tok-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tok-stat svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.2;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+        }
+
+        .tok-stat .num {
+            font-family: 'Cinzel', serif;
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .tok-stat-sep {
+            width: 1px;
+            height: 18px;
+        }
+
+        /* ---------- VARIANTE DARK ---------- */
+        .tok-dark .tok-name {
+            background: linear-gradient(180deg, rgba(10, 10, 8, 0.97), rgba(11, 11, 9, 0.9));
+            color: var(--gold-light);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
+        }
+
+        .tok-dark .tok-typeband {
+            background: linear-gradient(180deg, rgba(11, 11, 9, 0.92), rgba(10, 10, 8, 0.97));
+        }
+
+        .tok-dark .tok-type {
+            color: var(--gold-light);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
+        }
+
+        .tok-dark .tok-stats {
+            background: radial-gradient(circle at 40% 30%, #1c1d14, #0d0e09);
+            border: 1px solid var(--gold-main);
+        }
+
+        .tok-dark .tok-atk svg {
+            stroke: var(--gold-light);
+        }
+
+        .tok-dark .tok-atk .num {
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
+        }
+
+        .tok-dark .tok-def svg {
+            stroke: #e26d6d;
+            fill: #d84f4f;
+        }
+
+        .tok-dark .tok-def .num {
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
+        }
+
+        .tok-dark .tok-stat-sep {
+            background: rgba(234, 217, 168, 0.4);
+        }
+
+        /* ---------- VARIANTE LIGHT ---------- */
+        .tok-light .tok-name {
+            background: linear-gradient(180deg, #2d5233, #20401f);
+            color: #f2f5e8;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+        }
+
+        .tok-light .tok-typeband {
+            background: linear-gradient(180deg, #24422b, #1c3623);
+        }
+
+        .tok-light .tok-type {
+            color: #eae4cf;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Cápsula VERDE (coherente con las bandas del light), números claros */
+        .tok-light .tok-stats {
+            background: radial-gradient(circle at 40% 30%, #2f5836, #1c3623);
+            border: 1px solid #6f9d63;
+        }
+
+        .tok-light .tok-atk svg {
+            stroke: #eef3e6;
+        }
+
+        .tok-light .tok-atk .num {
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .tok-light .tok-def svg {
+            stroke: #ff9a86;
+            fill: #e8654f;
+        }
+
+        .tok-light .tok-def .num {
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .tok-light .tok-stat-sep {
+            background: rgba(234, 240, 210, 0.35);
+        }
+
+        /* ===================== CARTA 4: JUGABLE LEGIBLE (formato de mano 320×446) ===================== */
+        /*
+           Objetivo de legibilidad:
+           - Título anclado ARRIBA, pegado al marco (no flotando en el centro).
+           - Arte ocupa la mitad superior con una "ventana" definida por hairline dorado.
+           - Barra de tipo (subtype) justo bajo el arte, como banda separadora.
+           - Cuadro de texto compacto en la mitad inferior, con jerarquía efecto/flavor clara.
+           - Stats SOBREPUESTOS en la esquina inferior derecha, montados sobre el cuadro de texto.
+           Escalable a impresión física: proporciones y márgenes en unidades relativas al tamaño.
+        */
+        .lc {
+            width: 320px;
+            height: 446px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            background: #0c0d09;
+            /* borde exterior negro tipo carta física */
+            border: 4px solid #080906;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.9),
+                0 0 0 1px rgba(184, 162, 107, 0.22);
+            font-family: 'Lora', serif;
+        }
+
+        /* Marco dorado interno unificado (mismo lenguaje que las otras cartas) */
+        .lc-frame {
+            position: absolute;
+            inset: 5px;
+            border-radius: 8px;
+            padding: 1px;
+            background: linear-gradient(150deg,
+                    var(--gold-light) 0%,
+                    var(--gold-main) 30%,
+                    rgba(120, 106, 68, 0.4) 52%,
+                    var(--gold-main) 72%,
+                    var(--gold-light) 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        .lc-inner {
+            position: absolute;
+            inset: 5px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- CABECERA: verde sólido con título light, alineado a la izquierda.
+               Sin círculo de tipo; solo título + costo. La cabecera comparte el
+               verde con la banda de tipo para una identidad de color unificada. */
+        .lc-head {
+            position: relative;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #2d5233, #20401f);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+        }
+
+        .lc-title {
+            flex: 1;
+            text-align: left;
+            font-family: 'Cinzel', serif;
+            color: #f2f5e8;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1.05;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.75);
+        }
+
+        .lc-cost {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            background: radial-gradient(circle at 35% 30%, #e6d29a, #b89b52);
+            border: 1px solid rgba(255, 244, 210, 0.6);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+        }
+
+        .lc-cost span {
+            color: #2a230f;
+            /* Fuente más legible para la cifra: geométrica y de trazo parejo,
+               en lugar de la serif decorativa del título. */
+            font-family: 'Oswald', 'Cinzel', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* --- CABECERA DARK: la carta oscura conserva su cabecera original
+               (fondo negro translúcido, título dorado). El header verde y el
+               costo dorado de arriba son la base que usa la carta clara. --- */
+        .lc:not(.lc-light) .lc-head {
+            background: linear-gradient(180deg, rgba(10, 10, 8, 0.96) 0%, rgba(11, 11, 9, 0.78) 100%);
+            border-bottom: 1px solid var(--gold-line);
+        }
+
+        .lc:not(.lc-light) .lc-title {
+            color: var(--gold-light);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 1);
+        }
+
+        .lc:not(.lc-light) .lc-cost {
+            background: radial-gradient(circle at 35% 30%, #e6d29a, #b89b52);
+            border: 1px solid rgba(255, 244, 210, 0.6);
+        }
+
+        .lc:not(.lc-light) .lc-cost span {
+            color: #2a230f;
+        }
+
+        /* --- VENTANA DE ARTE: mitad superior, altura fija para dejar espacio de texto --- */
+        .lc-art {
+            position: relative;
+            height: 176px;
+            flex-shrink: 0;
+            background-color: #14150f;
+            background-image: url('image.png');
+            background-size: cover;
+            background-position: center 20%;
+            border-bottom: 1px solid var(--gold-line);
+        }
+
+        /* leve viñeta inferior del arte para fundir con la banda de tipo */
+        .lc-art::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10, 10, 8, 0) 55%, rgba(10, 10, 8, 0.75) 100%);
+        }
+
+        /* --- BANDA DE TIPO: separador claro entre arte y texto --- */
+        .lc-typeband {
+            position: relative;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px 12px;
+            background: linear-gradient(180deg, rgba(12, 12, 10, 0.96), rgba(10, 10, 8, 0.96));
+            border-bottom: 1px solid var(--gold-faint);
+        }
+
+        .lc-typeband .lc-subtype {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
+        }
+
+        /* --- CAJA DE TEXTO: llena el resto, fondo sólido para máxima legibilidad --- */
+        .lc-body {
+            position: relative;
+            flex: 1;
+            background: linear-gradient(180deg, #131410 0%, #0f100c 100%);
+            padding: 12px 14px 14px;
+            box-sizing: border-box;
+        }
+
+        .lc-effect {
+            font-family: 'Lora', serif;
+            color: #f3f0e6;
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* separador fino entre efecto y flavor */
+        .lc-rule {
+            /* clear:none — la regla también fluye junto a los stats si aplica */
+            height: 1px;
+            margin: 9px 0;
+            background: linear-gradient(90deg, var(--gold-line), transparent);
+        }
+
+        .lc-flavor {
+            font-family: 'Lora', serif;
+            color: #8f8f82;
+            font-style: italic;
+            font-size: 11.5px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .lc-credits {
+            position: absolute;
+            left: 14px;
+            bottom: 9px;
+            color: rgba(154, 154, 142, 0.5);
+            font-size: 7.5px;
+            font-family: 'Lora', serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Espaciador flotante alineado ABAJO-derecha: reserva el hueco de la
+           cápsula solo en la parte inferior del texto. Las líneas de arriba usan
+           todo el ancho; las de abajo (a la altura de los stats) lo envuelven.
+           El truco: float:right + shape-outside con un rectángulo cuya parte
+           superior es transparente al texto, y altura reservada solo abajo. */
+        .lc-stats-flow {
+            float: right;
+            width: 74px;
+            /* alto reservado del hueco a la derecha, en la zona baja del texto */
+            height: 100%;
+            /* shape-outside: solo el cuadro inferior-derecho empuja el texto */
+            shape-outside: inset(calc(100% - 42px) 0 0 0 round 8px);
+            shape-margin: 9px;
+            margin-left: 0;
+        }
+
+        /* --- STATS: cápsula real, anclada abajo-derecha por encima del texto --- */
+        .lc-stats {
+            position: absolute;
+            right: 11px;
+            bottom: 11px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 6px 13px;
+            background: radial-gradient(circle at 40% 30%, #1c1d14, #0d0e09);
+            border: 1px solid var(--gold-main);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85),
+                inset 0 1px 2px rgba(234, 217, 168, 0.18),
+                0 0 0 1px rgba(0, 0, 0, 0.5);
+        }
+
+        .lc-stats .lc-atk,
+        .lc-stats .lc-def {
+            font-family: 'Cinzel', serif;
+            font-size: 19px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .lc-stats .lc-atk {
+            color: var(--gold-light);
+        }
+
+        .lc-stats .lc-def {
+            color: #e8b6a0;
+        }
+
+        .lc-stats .lc-sep {
+            color: var(--gold-main);
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        /* ============================================================
+           VARIANTE CLARA (.lc-light): caja de texto light con acento
+           verde, al estilo de la carta física de referencia. El marco
+           dorado, el arte y la cabecera se conservan; solo cambia la
+           mitad inferior para máxima legibilidad sobre fondo claro.
+           ============================================================ */
+
+        /* Banda de tipo: verde profundo con texto crema, hace de puente
+           entre el arte y la caja clara. */
+        .lc-light .lc-typeband {
+            background: linear-gradient(180deg, #24422b, #1c3623);
+            border-bottom: 1px solid rgba(120, 96, 54, 0.5);
+        }
+
+        .lc-light .lc-typeband .lc-subtype {
+            color: #eae4cf;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+        }
+
+        /* Caja de texto: crema con un tinte verde muy sutil, textura de
+           degradado suave para que no se vea plano. */
+        .lc-light .lc-body {
+            background: linear-gradient(180deg, #f3f1e2 0%, #e8ecd6 100%);
+            border-top: 1px solid rgba(120, 96, 54, 0.35);
+        }
+
+        /* Efecto: tinta casi negra con leve calidez para leer cómodo. */
+        .lc-light .lc-effect {
+            color: #1c2118;
+            font-weight: 500;
+        }
+
+        /* Regla verde en lugar de dorada. */
+        .lc-light .lc-rule {
+            background: linear-gradient(90deg, rgba(58, 106, 63, 0.55), transparent);
+        }
+
+        /* Flavor: verde-gris apagado, cursiva, se distingue del efecto. */
+        .lc-light .lc-flavor {
+            color: #4c5647;
+        }
+
+        /* Créditos: verde apagado, discretos sobre el crema. */
+        .lc-light .lc-credits {
+            color: rgba(60, 74, 55, 0.6);
+        }
+
+        /* Stats: cápsula clara con borde verde y números oscuros, para
+           que resalten sobre el fondo crema. */
+        .lc-light .lc-stats {
+            background: radial-gradient(circle at 40% 30%, #ffffff, #e4e9d3);
+            border: 1px solid #6f7d4f;
+            box-shadow: 0 3px 9px rgba(30, 40, 24, 0.35),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .lc-light .lc-stats .lc-atk {
+            color: #2a3320;
+        }
+
+        .lc-light .lc-stats .lc-def {
+            color: #8a3b2f;
+        }
+
+        .lc-light .lc-stats .lc-sep {
+            color: #6f7d4f;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===================== FILA 1: cartas de mano (dark + light) ===================== -->
+    <div class="row">
+
+        <!-- CARTA DARK -->
+        <div class="card-slot">
+            <div class="slot-label">En mano — oscura</div>
+            <div class="lc">
+                <div class="lc-frame"></div>
+
+                <div class="lc-inner">
+                    <div class="lc-head">
+                        <div class="lc-title">Sunshower Druid</div>
+                        <div class="lc-cost"><span>1</span></div>
+                    </div>
+
+                    <div class="lc-art"></div>
+
+                    <div class="lc-typeband">
+                        <div class="lc-subtype">Creature — Frog Druid</div>
+                    </div>
+
+                    <div class="lc-body">
+                        <div class="lc-stats-flow" aria-hidden="true"></div>
+
+                        <p class="lc-effect">When Sunshower Druid enters, put a +1/+1 counter on target creature and you
+                            gain 1 life.</p>
+                        <div class="lc-rule"></div>
+                        <p class="lc-flavor">Apprentice augurs begin their studies by predicting where the rain will
+                            fall.</p>
+                        <div class="lc-credits">HFA1 — Dean Spencer</div>
+
+                        <div class="lc-stats">
+                            <span class="lc-atk">0</span>
+                            <span class="lc-sep">/</span>
+                            <span class="lc-def">2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARTA LIGHT -->
+        <div class="card-slot">
+            <div class="slot-label">En mano — clara</div>
+            <div class="lc lc-light">
+                <div class="lc-frame"></div>
+
+                <div class="lc-inner">
+                    <div class="lc-head">
+                        <div class="lc-title">Sunshower Druid</div>
+                        <div class="lc-cost"><span>1</span></div>
+                    </div>
+
+                    <div class="lc-art"></div>
+
+                    <div class="lc-typeband">
+                        <div class="lc-subtype">Creature — Frog Druid</div>
+                    </div>
+
+                    <div class="lc-body">
+                        <div class="lc-stats-flow" aria-hidden="true"></div>
+
+                        <p class="lc-effect">When Sunshower Druid enters, put a +1/+1 counter on target creature and you
+                            gain 1 life.</p>
+                        <div class="lc-rule"></div>
+                        <p class="lc-flavor">Apprentice augurs begin their studies by predicting where the rain will
+                            fall.</p>
+                        <div class="lc-credits">HFA1 — Dean Spencer</div>
+
+                        <div class="lc-stats">
+                            <span class="lc-atk">0</span>
+                            <span class="lc-sep">/</span>
+                            <span class="lc-def">2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /FILA 1 -->
+
+    <!-- ===================== FILA 2: tokens (dark + light) ===================== -->
+    <div class="row">
+
+        <!-- TOKEN DARK -->
+        <div class="card-slot">
+            <div class="slot-label">Token — oscuro</div>
+            <div class="tok tok-dark">
+                <div class="tok-art"></div>
+                <div class="tok-frame"></div>
+                <div class="tok-inner">
+                    <div class="tok-name">Sunshower Druid</div>
+                    <div class="tok-spacer"></div>
+                </div>
+                <!-- Cápsula de stats sobrepuesta (fuera del inner para sobresalir) -->
+                <div class="tok-stats">
+                    <div class="tok-stat tok-atk">
+                        <i data-lucide="swords"></i>
+                        <span class="num">0</span>
+                    </div>
+                    <div class="tok-stat-sep"></div>
+                    <div class="tok-stat tok-def">
+                        <i data-lucide="heart"></i>
+                        <span class="num">2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOKEN LIGHT -->
+        <div class="card-slot">
+            <div class="slot-label">Token — claro</div>
+            <div class="tok tok-light">
+                <div class="tok-art"></div>
+                <div class="tok-frame"></div>
+                <div class="tok-inner">
+                    <div class="tok-name">Sunshower Druid</div>
+                    <div class="tok-spacer"></div>
+                </div>
+                <!-- Cápsula de stats sobrepuesta (fuera del inner para sobresalir) -->
+                <div class="tok-stats">
+                    <div class="tok-stat tok-atk">
+                        <i data-lucide="swords"></i>
+                        <span class="num">0</span>
+                    </div>
+                    <div class="tok-stat-sep"></div>
+                    <div class="tok-stat tok-def">
+                        <i data-lucide="heart"></i>
+                        <span class="num">2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /FILA 2 -->
+
+    <!-- Lucide icons (CDN, versión vanilla) -->
+    <script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+    <script>
+        if (window.lucide) lucide.createIcons();
+    </script>
+
+</body>
+
+</html>

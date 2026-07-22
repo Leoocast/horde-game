@@ -30,7 +30,7 @@ export default function App() {
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
-  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "decks">("home");
+  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "decks">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
@@ -158,18 +158,18 @@ export default function App() {
             setInspectorDeckId(deckId);
             setScreen("deckInspector");
           }}
-          onViewDeck={() => {
+          onViewDeck={(returnScreen = "setup") => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("setup");
+            setMenuReturnScreen(returnScreen);
             setInspectorDeckId(selectedDeckId);
             setScreen("deckInspector");
           }}
           hordeDecks={hordeInspectableDecks}
           selectedHordeDeckId={selectedHordeDeckId}
           onSelectHordeDeck={setSelectedHordeDeckId}
-          onViewHordeDeck={() => {
+          onViewHordeDeck={(returnScreen = "setup") => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("setup");
+            setMenuReturnScreen(returnScreen);
             setInspectorDeckId(selectedHordeDeckId);
             setScreen("deckInspector");
           }}
@@ -201,6 +201,7 @@ export default function App() {
               isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
               isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
               options.mode,
+              options.gameMode,
             );
             setLaunchTransition({
               playerName: options.playerName,

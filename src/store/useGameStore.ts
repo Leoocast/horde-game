@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
-import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
+import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameMode, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
@@ -64,7 +64,7 @@ type GameStore = {
   seed: string;
   playerDeckId: string;
   hordeDeckId: string;
-  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode) => void;
+  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
   setSeed: (seed: string) => void;
   acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
@@ -299,12 +299,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty) =>
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) =>
     set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
-      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty);
+      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty, gameMode);
       return {
         game: next,
         gameSessionId: state.gameSessionId + 1,
@@ -1716,10 +1716,33 @@ function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       const blockerStats = getPowerToughness(game, blocker, deadBuffSourceIds);
       if (isVisuallyDead(blocker, blockerStats.toughness, damageById, deathtouchById)) continue;
 
-      const attackerDamageMarked = visualDamage(attacker, damageById) + blockerStats.power;
-      const blockerDamageMarked = visualDamage(blocker, damageById) + attackerStats.power;
-      if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
-      if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
+      const attackerFirstStrike = hasKeyword(game, attacker, "FIRST_STRIKE");
+      const blockerFirstStrike = hasKeyword(game, blocker, "FIRST_STRIKE");
+      let attackerDamageMarked = visualDamage(attacker, damageById);
+      let blockerDamageMarked = visualDamage(blocker, damageById);
+
+      if (attackerFirstStrike && !blockerFirstStrike) {
+        blockerDamageMarked += attackerStats.power;
+        if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
+        damageById.set(blocker.instanceId, blockerDamageMarked);
+        if (!isVisuallyDead(blocker, blockerStats.toughness, damageById, deathtouchById)) {
+          attackerDamageMarked += blockerStats.power;
+          if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
+        }
+      } else if (blockerFirstStrike && !attackerFirstStrike) {
+        attackerDamageMarked += blockerStats.power;
+        if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
+        damageById.set(attacker.instanceId, attackerDamageMarked);
+        if (!isVisuallyDead(attacker, attackerStats.toughness, damageById, deathtouchById)) {
+          blockerDamageMarked += attackerStats.power;
+          if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
+        }
+      } else {
+        attackerDamageMarked += blockerStats.power;
+        blockerDamageMarked += attackerStats.power;
+        if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
+        if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
+      }
       damageById.set(attacker.instanceId, attackerDamageMarked);
       damageById.set(blocker.instanceId, blockerDamageMarked);
 

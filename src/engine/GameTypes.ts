@@ -1,5 +1,6 @@
 export type Side = "player" | "horde";
 export type DifficultyMode = "easy" | "normal" | "hard";
+export type GameMode = "standard" | "chaos";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
 export type Color = "G" | "R" | "U" | "W" | "B" | "C";
@@ -114,6 +115,7 @@ export type CardInstance = {
   basePower: number;
   baseToughness: number;
   keywords: Keyword[];
+  chaosKeywords: Keyword[];
   triggerMessage?: string;
   effects: EffectDefinition[];
   activatedAbilities: ActivatedAbility[];
@@ -176,6 +178,8 @@ export type EventItem = {
 export type GameState = {
   seed: string;
   difficulty: DifficultyMode;
+  gameMode: GameMode;
+  chaosMutations: Record<Side, Record<string, Keyword[]>>;
   currentRandomState: number;
   hordeDeckOrderHash?: string;
   activeSide: Side;

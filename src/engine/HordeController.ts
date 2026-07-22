@@ -2,7 +2,7 @@ import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { prepareHordeAttackers } from "./CombatResolver";
-import { HORDE_SURGE_TURN, hordeInSurge } from "./StaticEffects";
+import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
 
 type HordeMainOptions = {
@@ -20,7 +20,7 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   next.log.unshift("Horde untaps.");
   revealNormal(next, options);
   if (hordeInSurge(next)) {
-    next.log.unshift(wasInSurge ? "Horde Surge reveals 2 extra cards." : `Horde enters Surge on turn ${HORDE_SURGE_TURN} and reveals 2 extra cards.`);
+    next.log.unshift(wasInSurge ? "Horde Surge reveals 2 extra cards." : `Horde enters Surge on turn ${hordeSurgeTurn(next)} and reveals 2 extra cards.`);
     revealAndPlay(next, 2, options);
   }
   if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);

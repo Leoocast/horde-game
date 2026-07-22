@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import { hordeDeck, playerDeck } from "../src/data/decks";
 import { castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
-import { resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
+import { resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
 import { createInitialGame, expandDeck } from "../src/engine/GameState";
 import { runHordeMain } from "../src/engine/HordeController";
@@ -34,6 +35,111 @@ test("every expanded card copy has a unique instance id", () => {
   const ids = cards.map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
+});
+
+test("Chaos removes other permanents but keeps creatures, energy, instants, and sorceries", () => {
+  const deck = {
+    id: "chaos-filter",
+    name: "Chaos Filter",
+    side: "player",
+    deckSize: 7,
+    cards: [
+      { id: "creature", name: "Creature", cardTypes: ["Creature"], keywords: ["REACH"] },
+      { id: "energy", name: "Energy", cardTypes: ["Land"] },
+      { id: "instant", name: "Instant", cardTypes: ["Instant"] },
+      { id: "sorcery", name: "Sorcery", cardTypes: ["Sorcery"] },
+      { id: "enchantment", name: "Enchantment", cardTypes: ["Enchantment"] },
+      { id: "artifact", name: "Artifact", cardTypes: ["Artifact"] },
+      { id: "planeswalker", name: "Planeswalker", cardTypes: ["Planeswalker"] },
+    ],
+  };
+
+  const prepared = prepareChaosDeck(deck);
+
+  assert.deepEqual(prepared.cards.map((card) => card.id), ["creature", "energy", "instant", "sorcery"]);
+  assert.equal(prepared.deckSize, 4);
+});
+
+test("Chaos starts immediately with one real energy and draws two on later turns", () => {
+  const chaosPlayerDeck = {
+    id: "chaos-player",
+    name: "Chaos Player",
+    side: "player",
+    deckSize: 16,
+    cards: [
+      { id: "chaos_forest", name: "Chaos Forest", quantity: 8, cardTypes: ["Land"] },
+      { id: "chaos_reacher", name: "Chaos Reacher", quantity: 4, cardTypes: ["Creature"], keywords: ["REACH"], power: 2, toughness: 2 },
+      { id: "chaos_touch", name: "Chaos Touch", quantity: 4, cardTypes: ["Creature"], keywords: ["DEATHTOUCH"], power: 1, toughness: 1 },
+    ],
+  };
+  const chaosHordeDeck = {
+    id: "chaos-horde",
+    name: "Chaos Horde",
+    side: "horde",
+    deckSize: 3,
+    cards: [
+      { id: "chaos_zombie", name: "Chaos Zombie", quantity: 2, isToken: true, cardTypes: ["Creature"], keywords: ["MENACE"], power: 2, toughness: 2 },
+      { id: "chaos_harvest", name: "Chaos Harvest", cardTypes: ["Enchantment"], effects: [{ type: "STATIC_GRANT_KEYWORD", keyword: "MENACE" }] },
+    ],
+  };
+
+  const game = createInitialGame(chaosPlayerDeck, chaosHordeDeck, "chaos-opening", 4, "normal", "chaos");
+
+  assert.equal(game.gameMode, "chaos");
+  assert.equal(game.setupTurnsRemaining, 0);
+  assert.equal(game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 1);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(game.player.library.length, 8);
+  assert.equal(game.horde.library.some((card) => card.definitionId === "chaos_harvest"), false);
+
+  performPlayerDraw(game);
+  assert.equal(game.player.hand.length, 9);
+  assert.equal(game.player.library.length, 6);
+});
+
+test("Chaos mutations are deterministic, replace printed keywords, and are shared by every copy", () => {
+  const first = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
+  const second = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
+
+  assert.deepEqual(first.chaosMutations, second.chaosMutations);
+  for (const side of ["player", "horde"]) {
+    const cards = [...first[side].library, ...(side === "player" ? first.player.hand : []), ...first[side].battlefield];
+    for (const card of cards.filter((item) => item.cardTypes.includes("Creature"))) {
+      assert.deepEqual(card.keywords, first.chaosMutations[side][card.definitionId]);
+      assert.deepEqual(card.chaosKeywords, card.keywords);
+      assert.equal(new Set(card.keywords).size, card.keywords.length);
+      assert.ok(card.keywords.length >= 1);
+    }
+  }
+});
+
+test("Chaos never includes the Horde's implicit Haste in its mutation pool", () => {
+  const deck = {
+    id: "haste-pool",
+    name: "Haste Pool",
+    side: "horde",
+    deckSize: 2,
+    cards: [
+      { id: "hasty", name: "Hasty", cardTypes: ["Creature"], keywords: ["HASTE"] },
+      { id: "menacing", name: "Menacing", cardTypes: ["Creature"], keywords: ["MENACE"] },
+    ],
+  };
+
+  assert.deepEqual(chaosKeywordPool(deck), ["MENACE"]);
+});
+
+test("First strike mutations deal combat damage before a normal blocker can answer", () => {
+  const game = createTestGame("first-strike-combat");
+  const attacker = addCard(game, customCard("first_striker", "horde", { keywords: ["FIRST_STRIKE"], power: 2, toughness: 2 }));
+  const blocker = addCard(game, customCard("normal_blocker", "player", { power: 2, toughness: 2 }));
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+
+  const result = resolveHordeCombat(game);
+
+  assert.equal(result.player.graveyard.some((card) => card.instanceId === blocker.instanceId), true);
+  assert.equal(result.horde.battlefield.some((card) => card.instanceId === attacker.instanceId), true);
+  assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
 test("the player deck has 39 cards including 15 energies", () => {
@@ -359,5 +465,15 @@ test("Surge depends only on reaching the tenth Horde turn", () => {
   assert.equal(hordeInSurge(game), false);
 
   game.hordeTurnNumber = 10;
+  assert.equal(hordeInSurge(game), true);
+});
+
+test("Chaos Surge begins on the eighth Horde turn", () => {
+  const game = createTestGame("chaos-surge-clock");
+  game.gameMode = "chaos";
+  game.hordeTurnNumber = 7;
+  assert.equal(hordeInSurge(game), false);
+
+  game.hordeTurnNumber = 8;
   assert.equal(hordeInSurge(game), true);
 });

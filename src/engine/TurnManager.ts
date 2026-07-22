@@ -44,7 +44,9 @@ export function startPlayerTurnReady(game: GameState): void {
 }
 
 export function performPlayerDraw(game: GameState): void {
-  const drawAmount = game.setupTurnsRemaining > 0
+  const drawAmount = game.gameMode === "chaos"
+    ? 2
+    : game.setupTurnsRemaining > 0
     ? 1
     : game.difficulty === "easy" || game.player.hand.length === 0
       ? 2

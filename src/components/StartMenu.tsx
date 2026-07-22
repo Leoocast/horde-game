@@ -1,7 +1,7 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
-import type { DifficultyMode } from "../engine/GameTypes";
+import type { DifficultyMode, GameMode } from "../engine/GameTypes";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
@@ -15,17 +15,17 @@ type Props = {
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
   onOpenDeck: (deckId: string) => void;
-  onViewDeck: () => void;
+  onViewDeck: (returnScreen?: "setup" | "chaos") => void;
   hordeDecks: InspectableDeck[];
   selectedHordeDeckId: string;
   onSelectHordeDeck: (deckId: string) => void;
-  onViewHordeDeck: () => void;
-  initialScreen?: "home" | "setup" | "decks" | "settings";
+  onViewHordeDeck: (returnScreen?: "setup" | "chaos") => void;
+  initialScreen?: "home" | "setup" | "chaos" | "decks" | "settings";
   preserveMusicOnMount?: boolean;
   requestInitialName?: boolean;
   onNameSaved?: (name: string) => void;
   onRestartFirstTime?: () => void;
-  onStart: (options: { playerName: string; mode: DifficultyMode; setupTurns: number; seed: string }) => void;
+  onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = [
@@ -49,7 +49,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [nameDraft, setNameDraft] = useState(requestInitialName ? "" : playerName);
   const [nameRequired, setNameRequired] = useState(requestInitialName);
   const [clearingCache, setClearingCache] = useState(false);
-  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "decks" | "settings">(initialScreen);
+  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "chaos" | "decks" | "settings">(initialScreen);
   const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -92,7 +92,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       if (showTutorialConfirm || showDeveloperWarning) return;
       if (menuScreen === "home") return;
       event.preventDefault();
-      if (menuScreen === "setup") setSetupClosing(true);
+      if (menuScreen === "setup" || menuScreen === "chaos") setSetupClosing(true);
       else closeMenuPanel();
     };
     window.addEventListener("keydown", onKeyDown);
@@ -166,8 +166,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     setLaunching(true);
     onStart({
       playerName: playerName.trim() || "Chronicler",
-      mode,
-      setupTurns: selectedMode.setupTurns,
+      mode: menuScreen === "chaos" ? "normal" : mode,
+      gameMode: menuScreen === "chaos" ? "chaos" : "standard",
+      setupTurns: menuScreen === "chaos" ? 0 : selectedMode.setupTurns,
       seed: effectiveSeed.trim() || generateRandomSeed(),
     });
   }
@@ -198,9 +199,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" ? "expedition-active" : ""}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
       <MenuFireflies />
-      {menuScreen !== "setup" ? (
+      {menuScreen !== "setup" && menuScreen !== "chaos" ? (
         <div className="main-menu-stage">
         {menuScreen === "home" && (
           <div className="main-menu-chronicler" aria-label="Chronicler profile">
@@ -225,6 +226,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
               <span className="main-menu-entry-mark" />
               <span>Play</span>
+            </button>
+            <button className="main-menu-entry main-menu-entry-chaos group" type="button" onClick={() => setMenuScreen("chaos")}>
+              <span className="main-menu-entry-mark" />
+              <span><strong>Chaos Mode</strong><small>Mutated battle</small></span>
+              <Dices size={18} aria-hidden="true" />
             </button>
             <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("decks"); }}>
               <span className="main-menu-entry-mark" />
@@ -323,12 +329,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           playerDecks={decks}
           selectedPlayerDeckId={selectedDeckId}
           onSelectPlayerDeck={onSelectDeck}
-          onInspectPlayerDeck={onViewDeck}
+          onInspectPlayerDeck={() => onViewDeck(menuScreen === "chaos" ? "chaos" : "setup")}
           hordeDeck={selectedHordeDeck}
           hordeDecks={hordeDecks}
           selectedHordeDeckId={selectedHordeDeckId}
           onSelectHordeDeck={onSelectHordeDeck}
-          onInspectHordeDeck={onViewHordeDeck}
+          onInspectHordeDeck={() => onViewHordeDeck(menuScreen === "chaos" ? "chaos" : "setup")}
+          chaos={menuScreen === "chaos"}
           mode={mode}
           onModeChange={changeDifficulty}
           selectedMode={selectedMode}
@@ -375,7 +382,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         />
       )}
       
-      {menuScreen !== "setup" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
+      {menuScreen !== "setup" && menuScreen !== "chaos" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: ALPHA 8.0-HOSTFALL-UPDATE</div>
         <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>Developed by</span>
@@ -462,6 +469,7 @@ function fireflyStyle(index: number): React.CSSProperties {
 }
 
 type ExpeditionSetupProps = {
+  chaos: boolean;
   playerDeck?: InspectableDeck;
   playerDecks: InspectableDeck[];
   selectedPlayerDeckId: string;
@@ -491,13 +499,15 @@ type ExpeditionSetupProps = {
 
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   return (
-    <section className={`expedition-setup ${props.closing ? "is-closing" : ""}`} aria-label="Prepare expedition">
+    <section className={`expedition-setup ${props.chaos ? "chaos-setup" : ""} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? "Prepare Chaos battle" : "Prepare expedition"}>
+      {props.chaos && <ChaosSigils />}
       <header className="expedition-header">
         <button className="expedition-back" type="button" onClick={props.onBack}>
           <ArrowLeft size={17} /> Main menu
         </button>
         <div>
-          <h1>Prepare the expedition</h1>
+          {props.chaos && <p className="chaos-header-kicker">The laws are breaking</p>}
+          <h1>{props.chaos ? "Invoke Chaos" : "Prepare the expedition"}</h1>
         </div>
       </header>
 
@@ -526,20 +536,24 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           />
         </div>
 
-        <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
-          <div className="expedition-section-heading">
-            <div><p>Choose your fate</p><h2 id="difficulty-heading">Difficulty</h2></div>
-            <HordeAwakening turns={props.selectedMode.setupTurns} />
-          </div>
-          <div className="expedition-mode-grid">
-            {modes.map((item) => (
-              <button key={item.id} data-difficulty={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
-                <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
-                <span><strong>{item.label}</strong></span>
-              </button>
-            ))}
-          </div>
-        </section>
+        {props.chaos ? (
+          <ChaosRules />
+        ) : (
+          <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
+            <div className="expedition-section-heading">
+              <div><p>Choose your fate</p><h2 id="difficulty-heading">Difficulty</h2></div>
+              <HordeAwakening turns={props.selectedMode.setupTurns} />
+            </div>
+            <div className="expedition-mode-grid">
+              {modes.map((item) => (
+                <button key={item.id} data-difficulty={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
+                  <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
+                  <span><strong>{item.label}</strong></span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
           <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
@@ -566,11 +580,44 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
 
       <footer className="expedition-footer">
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          <span><small>Begin the</small> Expedition</span><Play size={29} />
+          <span><small>{props.chaos ? "Shatter the rules" : "Begin the"}</small>{props.chaos ? "Unleash Chaos" : "Expedition"}</span>{props.chaos ? <Dices size={29} /> : <Play size={29} />}
         </button>
       </footer>
 
     </section>
+  );
+}
+
+function ChaosRules() {
+  const rules = [
+    { value: "2", label: "Cards drawn", detail: "Each turn" },
+    { value: "0", label: "Preparation", detail: "The Horde waits for no one" },
+    { value: "VIII", label: "Surge", detail: "Horde turn" },
+    { value: "?", label: "Mutations", detail: "Every creature changes" },
+  ];
+  return (
+    <section className="chaos-rules" aria-labelledby="chaos-rules-heading">
+      <div className="expedition-section-heading chaos-rules-heading">
+        <div><p>Rules of the rupture</p><h2 id="chaos-rules-heading">Chaos effects</h2></div>
+        <div className="chaos-energy-seal"><Sparkles size={16} /><span>Begin with</span><strong>1</strong><span>Energy</span></div>
+      </div>
+      <div className="chaos-rule-grid">
+        {rules.map((rule, index) => (
+          <article key={rule.label} style={{ "--chaos-index": index } as React.CSSProperties}>
+            <span>{rule.value}</span>
+            <div><strong>{rule.label}</strong><small>{rule.detail}</small></div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ChaosSigils() {
+  return (
+    <div className="chaos-sigils" aria-hidden="true">
+      <span>◇</span><span>✦</span><span>△</span><span>✧</span><span>◈</span><span>✦</span>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { GameState } from "../engine/GameTypes";
-import { HORDE_SURGE_TURN } from "../engine/StaticEffects";
+import { hordeSurgeTurn } from "../engine/StaticEffects";
 
 export function TurnPhaseHud({ game }: { game: GameState }) {
   const hordeReady = game.activeSide === "horde" && game.phase === "horde" && game.combat.hordeAttackers.length === 0;
@@ -8,7 +8,7 @@ export function TurnPhaseHud({ game }: { game: GameState }) {
   const setupActive = game.activeSide === "player" && game.setupTurnsRemaining > 0;
   const phase = setupActive ? "Setup" : hordeReady ? "End" : game.phase === "horde" ? "Main" : game.phase;
   const hordeTurn = game.activeSide === "horde" && !hordeReady;
-  const turnsUntilSurge = Math.max(0, HORDE_SURGE_TURN - game.hordeTurnNumber);
+  const turnsUntilSurge = Math.max(0, hordeSurgeTurn(game) - game.hordeTurnNumber);
   return (
     <div
       className={[

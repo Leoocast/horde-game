@@ -1,6 +1,11 @@
 import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
 export const HORDE_SURGE_TURN = 10;
+export const CHAOS_HORDE_SURGE_TURN = 8;
+
+export function hordeSurgeTurn(game: GameState): number {
+  return game.gameMode === "chaos" ? CHAOS_HORDE_SURGE_TURN : HORDE_SURGE_TURN;
+}
 
 export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: CardInstance): boolean {
   if (!filter) return true;
@@ -63,5 +68,5 @@ export function getPowerToughness(
 }
 
 export function hordeInSurge(game: GameState): boolean {
-  return game.hordeTurnNumber >= HORDE_SURGE_TURN;
+  return game.hordeTurnNumber >= hordeSurgeTurn(game);
 }

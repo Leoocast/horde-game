@@ -1,6 +1,7 @@
-import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameState, Side } from "./GameTypes";
+import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
 import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
+import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 
 const DEVELOPER_SEED = "developer";
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
@@ -30,9 +31,19 @@ export function createInitialGame(
   seed = "hostfall-seed",
   setupTurns = 4,
   difficulty: DifficultyMode = "normal",
+  gameMode: GameMode = "standard",
 ): GameState {
-  const playerCards = expandDeck(playerDeck, "player");
-  const hordeCards = expandDeck(hordeDeck, "horde");
+  const activePlayerDeck = gameMode === "chaos" ? prepareChaosDeck(playerDeck) : playerDeck;
+  const activeHordeDeck = gameMode === "chaos" ? prepareChaosDeck(hordeDeck) : hordeDeck;
+  const chaosMutations = gameMode === "chaos"
+    ? {
+        player: buildChaosMutations(activePlayerDeck, "player", seed),
+        horde: buildChaosMutations(activeHordeDeck, "horde", seed),
+      }
+    : { player: {}, horde: {} };
+  const playerCards = expandDeck(activePlayerDeck, "player", chaosMutations.player);
+  const hordeCards = expandDeck(activeHordeDeck, "horde", chaosMutations.horde);
+  const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
@@ -44,13 +55,15 @@ export function createInitialGame(
   const game: GameState = {
     seed,
     difficulty,
+    gameMode,
+    chaosMutations,
     currentRandomState: randomState,
     hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
     hordeTurnNumber: 0,
-    setupTurnsRemaining: setupTurns,
+    setupTurnsRemaining: effectiveSetupTurns,
     setupCompletePendingHorde: false,
     player: {
       life: seed.trim().toLowerCase() === DEVELOPER_SEED ? 999 : 30,
@@ -74,11 +87,12 @@ export function createInitialGame(
     log: [],
   };
 
+  applyChaosStartingEnergy(game);
   applyDeveloperStartingBattlefield(game);
   applyTutorialStartingBattlefield(game);
   const openingHandSize = seed.trim().toLowerCase() === DEVELOPER_SEED ? DEVELOPER_OPENING_HAND.length + DEVELOPER_RANDOM_OPENING_CARDS : 7;
   drawCards(game, "player", openingHandSize);
-  game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${setupTurns}.`);
+  game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${effectiveSetupTurns}. Mode: ${gameMode}.`);
   return game;
 }
 
@@ -152,18 +166,27 @@ function applyTutorialStartingBattlefield(game: GameState): void {
   placeOnBattlefield(game, TUTORIAL_STARTING_BATTLEFIELD);
 }
 
-export function expandDeck(deck: DeckList, side: Side): CardInstance[] {
+function applyChaosStartingEnergy(game: GameState): void {
+  if (game.gameMode !== "chaos") return;
+  const normalizedSeed = game.seed.trim().toLowerCase();
+  if (normalizedSeed === DEVELOPER_SEED || normalizedSeed === TUTORIAL_SEED) return;
+  placeOnBattlefield(game, [{ definitionId: game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId ?? "", amount: 1 }]);
+}
+
+export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Keyword[]> = {}): CardInstance[] {
   const allDefinitions = [...(deck.cards ?? [])];
   return allDefinitions.flatMap((definition) =>
-    Array.from({ length: definition.quantity ?? 1 }, (_, copyIndex) => createCardInstance(definition, side, `${side}-${definition.id}-${copyIndex}`)),
+    Array.from({ length: definition.quantity ?? 1 }, (_, copyIndex) =>
+      createCardInstance(definition, side, `${side}-${definition.id}-${copyIndex}`, chaosMutations[definition.id]),
+    ),
   );
 }
 
-export function createToken(definition: CardDefinition, side: Side, suffix: string): CardInstance {
-  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`);
+export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosKeywords?: Keyword[]): CardInstance {
+  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosKeywords);
 }
 
-export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string): CardInstance {
+export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosKeywords?: Keyword[]): CardInstance {
   const chosenColor = definition.asEnters?.find((entry) => entry.storeAs === "chosenColor")?.defaultForThisDeck;
   const counters: Record<string, number> = {};
   for (const counter of definition.entersWithCounters ?? []) {
@@ -185,7 +208,8 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     subtypes: definition.subtypes ?? [],
     basePower: definition.power ?? 0,
     baseToughness: definition.toughness ?? 0,
-    keywords: definition.keywords ?? [],
+    keywords: chaosKeywords ? [...chaosKeywords] : definition.keywords ?? [],
+    chaosKeywords: chaosKeywords ? [...chaosKeywords] : [],
     triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
     activatedAbilities: definition.activatedAbilities ?? [],
