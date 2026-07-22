@@ -9,7 +9,7 @@ import { createInitialGame, expandDeck } from "../src/engine/GameState";
 import { runHordeMain } from "../src/engine/HordeController";
 import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
-import { getPowerToughness } from "../src/engine/StaticEffects";
+import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { performPlayerDraw } from "../src/engine/TurnManager";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
@@ -55,7 +55,7 @@ test("the player draws one card normally after setup", () => {
   assert.deepEqual(game.player.library.map((card) => card.definitionId), ["leave_in_library"]);
 });
 
-test("the player draws two after setup only when the turn starts with an empty hand", () => {
+test("the player draws two after setup when the turn starts with an empty hand", () => {
   const game = createTestGame();
   addCard(game, customCard("empty_hand_draw_1", "player", { zone: "library" }), "player", "library");
   addCard(game, customCard("empty_hand_draw_2", "player", { zone: "library" }), "player", "library");
@@ -320,6 +320,7 @@ test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () 
   assert.deepEqual(normalResult.horde.library.map((card) => card.definitionId), ["normal_unrevealed"]);
 
   const surge = createTestGame("surge-reveal");
+  surge.hordeTurnNumber = 9;
   for (let index = 0; index < 5; index += 1) {
     addCard(surge, customCard(`surge_token_${index}`, "horde", { zone: "library", isToken: true }), "horde", "library");
   }
@@ -328,6 +329,21 @@ test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () 
   }
 
   const surgeResult = runHordeMain(surge);
+  assert.equal(surge.hordeTurnNumber, 9);
+  assert.equal(surgeResult.hordeTurnNumber, 10);
   assert.equal(surgeResult.horde.battlefield.length, 5);
   assert.equal(surgeResult.horde.library.length, 0);
+});
+
+test("Surge depends only on reaching the tenth Horde turn", () => {
+  const game = createTestGame("surge-clock");
+  game.hordeTurnNumber = 9;
+  for (let index = 0; index < 20; index += 1) {
+    addCard(game, customCard(`surge_clock_grave_${index}`, "horde", { zone: "graveyard" }), "horde", "graveyard");
+  }
+
+  assert.equal(hordeInSurge(game), false);
+
+  game.hordeTurnNumber = 10;
+  assert.equal(hordeInSurge(game), true);
 });

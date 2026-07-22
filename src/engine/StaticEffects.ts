@@ -1,5 +1,7 @@
 import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
+export const HORDE_SURGE_TURN = 10;
+
 export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: CardInstance): boolean {
   if (!filter) return true;
   if (filter.excludeSelf && source && source.instanceId === card.instanceId) return false;
@@ -61,6 +63,5 @@ export function getPowerToughness(
 }
 
 export function hordeInSurge(game: GameState): boolean {
-  if (game.seed.trim().toLowerCase() === "developer") return game.horde.library.length <= 40;
-  return game.horde.graveyard.length + game.horde.exile.length > game.horde.library.length;
+  return game.hordeTurnNumber >= HORDE_SURGE_TURN;
 }

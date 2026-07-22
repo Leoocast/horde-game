@@ -179,6 +179,7 @@ export type GameState = {
   activeSide: Side;
   phase: Phase;
   turnNumber: number;
+  hordeTurnNumber: number;
   setupTurnsRemaining: number;
   setupCompletePendingHorde: boolean;
   player: PlayerState;

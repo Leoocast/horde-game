@@ -6747,11 +6747,6 @@
 .game-turn-hud::before { left: -4px; }
 .game-turn-hud::after { right: -4px; }
 
-.game-turn-hud.is-horde-turn {
-  border-color: rgb(173 83 56 / 0.62);
-  background: linear-gradient(90deg, transparent, rgb(66 24 17 / 0.72) 18%, rgb(66 24 17 / 0.72) 82%, transparent);
-}
-
 .game-turn-owner { color: #879b90; }
 .game-turn-phase {
   min-width: 70px;
@@ -6760,9 +6755,25 @@
   letter-spacing: 0.08em;
 }
 .game-turn-count { color: #9f9877; }
+.game-surge-countdown { overflow: visible; }
+.game-surge-countdown-number {
+  display: inline-flex;
+  min-width: 1.2em;
+  align-items: center;
+  justify-content: center;
+  color: #dfb86f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1;
+  text-shadow: 0 0 9px rgb(230 153 75 / 0.52), 0 2px 8px rgb(0 0 0 / 0.88);
+  transform-origin: center;
+}
+.game-surge-active-label {
+  color: #e28d68;
+  text-shadow: 0 0 9px rgb(213 74 42 / 0.46);
+}
 .game-turn-divider { background: linear-gradient(transparent, rgb(198 178 112 / 0.58), transparent); }
-.game-turn-hud.is-horde-turn .game-turn-owner,
-.game-turn-hud.is-horde-turn .game-turn-phase { color: #e6a27f; }
+.game-turn-hud.is-horde-turn .game-turn-owner { color: #e2836d; }
 
 .game-screen .old-panel,
 .game-screen .old-panel-soft,

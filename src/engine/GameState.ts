@@ -42,6 +42,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
+    hordeTurnNumber: 0,
     setupTurnsRemaining: setupTurns,
     setupCompletePendingHorde: false,
     player: {
