@@ -5,6 +5,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { AudioControls } from "./AudioControls";
 import { GameLog } from "./GameLog";
+import { LanguageSelector } from "./LanguageSelector";
 import { ZoneDrawer } from "./ZoneDrawer";
 
 type Props = {
@@ -92,6 +93,7 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
 
             <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-5 overflow-hidden p-5">
               <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
+                <LanguageSelector variant="panel" />
                 <AudioControls />
 
                 <section className="old-panel-soft p-4">

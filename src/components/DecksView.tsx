@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 
@@ -18,13 +19,14 @@ const KEY_CARD_IDS: Record<string, string> = {
 };
 
 export function DecksView({ collection, decks, onOpenDeck, onBack, closing = false }: Props) {
-  const title = collection === "chronicles" ? "Chronicles" : "Hosts";
-  const description = collection === "chronicles" ? "Decks carried by the Chronicler." : "Hordes that rise against you.";
+  const t = useTranslation();
+  const title = collection === "chronicles" ? t("menu.chronicles") : t("menu.hosts");
+  const description = collection === "chronicles" ? t("decks.chroniclesDescription") : t("decks.hostsDescription");
 
   return (
     <section className={`main-settings-screen decks-panel ${closing ? "is-closing" : ""}`} aria-label={title}>
       <header className="main-settings-header">
-        <button className="menu-screen-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back</button>
+        <button className="menu-screen-back" type="button" onClick={onBack}><ArrowLeft size={16} /> {t("common.back")}</button>
         <h2>{title}</h2>
         <span>{description}</span>
       </header>
@@ -41,6 +43,7 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
 }
 
 function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => void }) {
+  const t = useTranslation();
   const keyCard = findKeyCard(deck);
   const details = useDeckCardDetails(deck.id, keyCard, deck.images);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -56,7 +59,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
       onFocus={(event) => {
         if (!event.currentTarget.matches(":hover")) playHoverSound();
       }}
-      aria-label={`Open ${deck.label}`}
+      aria-label={t("decks.open", { deck: deck.label })}
     >
       <span className="deck-key-card-stage">
         <span className="deck-key-card-depth deck-key-card-depth-back" aria-hidden="true" />
@@ -66,7 +69,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
             <img src={details.imageUrl} alt={keyCard?.name ?? deck.label} draggable={false} />
           ) : (
             <span className="deck-key-card-fallback">
-              <small>Key Card</small>
+              <small>{t("decks.keyCard")}</small>
               <strong>{keyCard?.name ?? deck.label}</strong>
             </span>
           )}

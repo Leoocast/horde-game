@@ -8562,6 +8562,48 @@
   background: linear-gradient(90deg, rgb(128 73 34 / 0.08), transparent);
 }
 
+.main-settings-language-section {
+  margin-top: 0 !important;
+}
+
+.language-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  width: min(100%, 390px);
+  padding: 4px;
+  border: 1px solid rgb(143 106 54 / 0.56);
+  background: rgb(3 10 10 / 0.72);
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 0.48);
+}
+
+.language-selector-option {
+  min-height: 40px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  color: #8d9a94;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.language-selector-option:hover,
+.language-selector-option:focus-visible {
+  color: #e6d5a8;
+  border-color: rgb(143 106 54 / 0.5);
+  outline: none;
+}
+
+.language-selector-option.is-selected {
+  border-color: rgb(205 160 82 / 0.78);
+  color: #f3ddb0;
+  background: linear-gradient(180deg, rgb(111 78 35 / 0.42), rgb(42 30 18 / 0.54));
+  box-shadow: inset 0 0 14px rgb(197 144 61 / 0.1), 0 0 12px rgb(177 124 43 / 0.08);
+}
+
 /* Opening chronicle */
 .game-loading-screen {
   position: fixed;
