@@ -65,10 +65,16 @@ export function useCardImage(definitionId: string): string | undefined {
 }
 
 const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;
+const SCRYFALL_IMAGE_VARIANT_PATTERN = /\/(small|normal|large|png|art_crop|border_crop)\//;
 
 export function toHighResImageUrl(imageUrl: string | undefined): string | undefined {
   if (!imageUrl) return imageUrl;
   return imageUrl.replace(SCRYFALL_RESOLUTION_PATTERN, "/large/");
+}
+
+export function toArtCropImageUrl(imageUrl: string | undefined): string | undefined {
+  if (!imageUrl) return imageUrl;
+  return imageUrl.replace(SCRYFALL_IMAGE_VARIANT_PATTERN, "/art_crop/");
 }
 
 async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails | null> {
