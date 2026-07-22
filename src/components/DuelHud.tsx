@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { isTutorialOverlayActive } from "../engine/Tutorial";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
@@ -16,6 +18,7 @@ const SMALLPOX_KIND_LABEL: Record<string, string> = {
 };
 
 export function DuelHud({ game }: { game: GameState }) {
+  const language = useLanguageStore((state) => state.language);
   const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
   const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
   const smallpoxCard = useGameStore((state) => state.smallpoxCard);
@@ -100,7 +103,7 @@ export function DuelHud({ game }: { game: GameState }) {
                   {smallpoxSelectionKind === "sacrifice-land" && smallpoxSelectionTargetId
                     ? "Energy selected"
                     : smallpoxTarget
-                      ? smallpoxTarget.displayName
+                      ? localizedCardName(smallpoxTarget, language)
                       : "No target selected"}
                 </span>
                 <div className="counter-target-actions">

@@ -1,5 +1,7 @@
 import { Archive } from "lucide-react";
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
+import { localizedCardName } from "../i18n/cardLocalization";
+import { useLanguageStore } from "../store/useLanguageStore";
 
 export function ZoneDrawer({ game }: { game: GameState }) {
   return (
@@ -34,13 +36,14 @@ function ZoneSide({ game, side }: { game: GameState; side: Side }) {
 }
 
 function ZoneMetric({ label, count, top }: { label: string; count: number; top?: CardInstance }) {
+  const language = useLanguageStore((state) => state.language);
   return (
     <div className="game-zone-metric p-2.5">
       <div className="flex items-center justify-between gap-2">
         <span>{label}</span>
         <strong>{count}</strong>
       </div>
-      {top && <div className="game-zone-top mt-1 truncate text-[11px]">{top.displayName}</div>}
+      {top && <div className="game-zone-top mt-1 truncate text-[11px]">{localizedCardName(top, language)}</div>}
     </div>
   );
 }

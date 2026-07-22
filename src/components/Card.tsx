@@ -1,8 +1,10 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { Heart, Swords } from "lucide-react";
 
 type Props = {
@@ -39,6 +41,7 @@ type Props = {
 };
 
 export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
+  const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const stats = cardStatState(game, card, visualDamageMarked);
@@ -52,7 +55,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
-  const { imageUrl } = useCardDetails(card.definitionId);
+  const { imageUrl, displayName } = useCardDetails(card.definitionId);
+  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const highResImageUrl = toHighResImageUrl(imageUrl) ?? imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
@@ -131,9 +135,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       ].join(" ")}
     >
       {displayImageUrl ? (
-        <img src={displayImageUrl} alt={card.name} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
+        <img src={displayImageUrl} alt={localizedName} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{card.displayName}</div>
+        <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
       )}
       {sharpImageOverlay && highResImageUrl && (
         <div className="card-sharp-image-overlay" aria-hidden="true">

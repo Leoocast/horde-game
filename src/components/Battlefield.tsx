@@ -4,7 +4,9 @@ import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "..
 import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
 import { renderCardText } from "../utils/cardTextSymbols";
@@ -78,6 +80,7 @@ function BattlefieldRowSurface({
 }
 
 export function Battlefield({ game, side, cards }: Props) {
+  const language = useLanguageStore((state) => state.language);
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
@@ -507,8 +510,8 @@ export function Battlefield({ game, side, cards }: Props) {
               <motion.button
                 key={card.instanceId}
                 type="button"
-                aria-label={`${card.displayName}${card.tapped ? ", tapped" : ", available"}`}
-                title={card.displayName}
+                aria-label={`${localizedCardName(card, language)}${card.tapped ? ", tapped" : ", available"}`}
+                title={localizedCardName(card, language)}
                 disabled
                 className={[
                   "mana-fragment",

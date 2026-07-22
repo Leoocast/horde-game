@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useCardDetails } from "../utils/cardImages";
 
 const CARD_WIDTH = 156;
 const CARD_HEIGHT = 218;
 
 export function PlayerDiscardAnimator() {
+  const language = useLanguageStore((state) => state.language);
   const queue = useGameStore((state) => state.playerDiscardAnimationQueue);
   const complete = useGameStore((state) => state.completePlayerDiscardAnimation);
   const active = queue[0];
@@ -20,7 +23,7 @@ export function PlayerDiscardAnimator() {
         key={active.id}
         itemId={active.id}
         definitionId={active.card.definitionId}
-        name={active.card.displayName}
+        name={localizedCardName(active.card, language)}
         origin={active.origin}
         onComplete={() => complete(active.id)}
       />

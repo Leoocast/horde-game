@@ -1,7 +1,9 @@
 import { ArrowLeft } from "lucide-react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 
 type Props = {
@@ -44,8 +46,10 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
 
 function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => void }) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const keyCard = findKeyCard(deck);
   const details = useDeckCardDetails(deck.id, keyCard, deck.images);
+  const cardName = language === "es" ? keyCard?.displayNameEs || details.displayName || localizedCardName(keyCard, language) : localizedCardName(keyCard, language);
   const playSfx = useAudioStore((state) => state.playSfx);
 
   const playHoverSound = () => playSfx("drawOne", { volume: 0.56 });
@@ -66,11 +70,11 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
         <span className="deck-key-card-depth deck-key-card-depth-mid" aria-hidden="true" />
         <span className="deck-key-card-face">
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={keyCard?.name ?? deck.label} draggable={false} />
+            <img src={details.imageUrl} alt={cardName || deck.label} draggable={false} />
           ) : (
             <span className="deck-key-card-fallback">
               <small>{t("decks.keyCard")}</small>
-              <strong>{keyCard?.name ?? deck.label}</strong>
+              <strong>{cardName || deck.label}</strong>
             </span>
           )}
           <span className="deck-key-card-sheen" aria-hidden="true" />

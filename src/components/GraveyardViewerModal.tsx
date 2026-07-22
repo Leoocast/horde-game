@@ -1,6 +1,8 @@
 import { Archive, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
@@ -144,25 +146,27 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
 }
 
 function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index: number; onClick: () => void }) {
+  const language = useLanguageStore((state) => state.language);
   const details = useCardDetails(card.definitionId);
+  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
 
   return (
     <button
       className="deck-detail-card graveyard-viewer-card"
       onClick={onClick}
-      title={card.displayName}
+      title={displayName}
     >
       <div className="deck-detail-card-frame">
         <span className="graveyard-card-position" aria-hidden="true">{index + 1}</span>
         <div className="deck-detail-card-image">
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={card.displayName} draggable={false} />
+            <img src={details.imageUrl} alt={displayName} draggable={false} />
           ) : (
-            <div className="graveyard-card-missing">{card.displayName}</div>
+            <div className="graveyard-card-missing">{displayName}</div>
           )}
         </div>
       </div>
-      <div className="deck-detail-card-name">{card.displayName}</div>
+      <div className="deck-detail-card-name">{displayName}</div>
     </button>
   );
 }
@@ -196,8 +200,10 @@ export function GraveyardDetailsModal({
   contextLabel?: string;
   backdropClassName?: string;
 }) {
+  const language = useLanguageStore((state) => state.language);
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
+  const displayName = language === "es" ? displayCard.displayNameEs || details.displayName || localizedCardName(displayCard, language) : localizedCardName(displayCard, language);
   const keywords = cardKeywords(game, displayCard);
   const stats = cardStats(game, displayCard);
   const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(displayCard));
@@ -211,7 +217,7 @@ export function GraveyardDetailsModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="deck-collection-modal graveyard-card-details" role="dialog" aria-modal="true" aria-label={`${displayCard.displayName} details`}>
+      <section className="deck-collection-modal graveyard-card-details" role="dialog" aria-modal="true" aria-label={`${displayName} details`}>
         <button className="deck-collection-modal-close" type="button" onClick={onClose} title="Close details">
           <X size={20} />
         </button>
@@ -224,7 +230,7 @@ export function GraveyardDetailsModal({
               </button>
             )}
             <div className="deck-collection-modal-art">
-              {details.imageUrl ? <img src={details.imageUrl} alt={displayCard.displayName} draggable={false} /> : <div className="graveyard-card-missing">{displayCard.displayName}</div>}
+              {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <div className="graveyard-card-missing">{displayName}</div>}
             </div>
             {onNext && (
               <button className="deck-collection-modal-nav is-next" type="button" onClick={onNext} title="Next graveyard card">
@@ -236,8 +242,8 @@ export function GraveyardDetailsModal({
           <div className="deck-collection-modal-info">
             <header className="deck-collection-modal-header">
               <p>{contextLabel} <span>{position} / {total}</span></p>
-              <div><h2>{displayCard.displayName}</h2></div>
-              <small>{graveyardTypeLine(displayCard)}</small>
+              <div><h2>{displayName}</h2></div>
+              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(displayCard, language)}</small>
             </header>
 
             {(keywords || stats) && (
@@ -263,10 +269,6 @@ export function GraveyardDetailsModal({
       </section>
     </div>
   );
-}
-
-function graveyardTypeLine(card: CardInstance): string {
-  return [...card.cardTypes, card.subtypes.length ? `- ${card.subtypes.join(" ")}` : ""].filter(Boolean).join(" ");
 }
 
 function graveyardDisplayCard(card: CardInstance): CardInstance {

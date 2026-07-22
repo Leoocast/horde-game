@@ -2,9 +2,12 @@ import { Check, Hand } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MAX_PLAYER_HAND_SIZE, playerHandOverflow } from "../engine/GameRules";
 import type { GameState } from "../engine/GameTypes";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 
 export function HandLimitOverlay({ game }: { game: GameState }) {
+  const language = useLanguageStore((state) => state.language);
   const active = useGameStore((state) => state.handLimitDiscardActive);
   const selectedId = useGameStore((state) => state.handLimitSelectionId);
   const selectDiscard = useGameStore((state) => state.selectHandLimitDiscard);
@@ -34,7 +37,7 @@ export function HandLimitOverlay({ game }: { game: GameState }) {
             <p className="mt-2 text-sm text-[#a9aaa0]">Choose {overflow} card{overflow === 1 ? "" : "s"} from your hand before ending the turn.</p>
             <div className="mt-3 flex items-center gap-2">
               <button className="counter-target-button counter-target-cancel" type="button" disabled={!selectedId} onClick={() => selectDiscard(undefined)}>
-                {selected ? selected.displayName : "Choose a card"}
+                {selected ? localizedCardName(selected, language) : "Choose a card"}
               </button>
               <button className="counter-target-button counter-target-confirm !flex-none !px-5" type="button" disabled={!selectedId} onClick={confirmDiscard} title="Discard selected card">
                 <Check size={20} /> Discard

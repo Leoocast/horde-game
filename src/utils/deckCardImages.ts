@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DeckImageManifest, NewDeckCard } from "../data/deckCatalog";
+import type { AppLanguage } from "../i18n/translations";
+import { useLanguageStore } from "../store/useLanguageStore";
+import { fetchScryfallJson, localizedScryfallPayload } from "./scryfall";
 
 export type DeckCardDetails = {
   imageUrl?: string;
+  language?: string;
+  displayName?: string;
+  typeLine?: string;
   oracleText?: string;
   flavorText?: string;
 };
@@ -11,7 +17,8 @@ const memoryCache = new Map<string, DeckCardDetails | null>();
 const pending = new Map<string, Promise<DeckCardDetails | null>>();
 
 export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined, manifest: DeckImageManifest): DeckCardDetails {
-  const cacheId = useMemo(() => (card ? `${deckId}:${card.id}` : ""), [card, deckId]);
+  const language = useLanguageStore((state) => state.language);
+  const cacheId = useMemo(() => (card ? `${language}:${deckId}:${card.id}` : ""), [card, deckId, language]);
   const [details, setDetails] = useState<DeckCardDetails>(() => readCachedDetails(cacheId) ?? {});
 
   useEffect(() => {
@@ -20,26 +27,26 @@ export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined
       return;
     }
     let active = true;
-    resolveDeckCardDetails(deckId, card, manifest).then((loaded) => {
+    resolveDeckCardDetails(deckId, card, manifest, language).then((loaded) => {
       if (active) setDetails(loaded ?? {});
     });
     return () => {
       active = false;
     };
-  }, [cacheId, card, deckId, manifest]);
+  }, [cacheId, card, deckId, language, manifest]);
 
   return details;
 }
 
-export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest): Promise<DeckCardDetails | null> {
-  const cacheId = `${deckId}:${card.id}`;
+export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, manifest: DeckImageManifest, language: AppLanguage = "en"): Promise<DeckCardDetails | null> {
+  const cacheId = `${language}:${deckId}:${card.id}`;
   const lookup = manifest.cards[card.id];
   if (!lookup) {
     writeCachedDetails(cacheId, null);
     return null;
   }
 
-  if (lookup.imageUrl) {
+  if (lookup.imageUrl && language === "en") {
     const direct = { imageUrl: lookup.imageUrl };
     writeCachedDetails(cacheId, direct);
     return direct;
@@ -51,11 +58,17 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
   const existing = pending.get(cacheId);
   if (existing) return existing;
 
-  const request = fetchCardJson(buildScryfallUrl(lookup, card))
-    .then((payload) => {
+  const request = fetchScryfallJson(buildScryfallUrl(lookup, card))
+    .then(async (payload) => {
       const cardPayload = readSearchResult(payload, lookup.pick) ?? payload;
+      const localizedPayload = await localizedScryfallPayload(cardPayload, language);
       const details: DeckCardDetails = {
+        language: readPath(localizedPayload, "lang"),
         imageUrl:
+          readPath(localizedPayload, "image_uris.normal") ??
+          readPath(localizedPayload, "image_uris.large") ??
+          readPath(localizedPayload, "card_faces[0].image_uris.normal") ??
+          readPath(localizedPayload, "card_faces[0].image_uris.large") ??
           readPath(payload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.imagePath ?? card.scryfall?.imagePath ?? "image_uris.normal") ??
           readPath(cardPayload, lookup.fallbackImagePath ?? card.scryfall?.fallbackImagePath ?? "image_uris.large") ??
@@ -63,8 +76,10 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
           readPath(cardPayload, "image_uris.large") ??
           readPath(cardPayload, "card_faces[0].image_uris.normal") ??
           readPath(cardPayload, "card_faces[0].image_uris.large"),
-        oracleText: readOracleText(cardPayload),
-        flavorText: readFlavorText(cardPayload),
+        displayName: readPrintedName(localizedPayload),
+        typeLine: readPrintedTypeLine(localizedPayload),
+        oracleText: readOracleText(localizedPayload),
+        flavorText: readFlavorText(localizedPayload),
       };
       if (!details.imageUrl) throw new Error("Card lookup returned no image");
       writeCachedDetails(cacheId, details);
@@ -90,13 +105,21 @@ function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewD
 }
 
 function readOracleText(payload: unknown): string | undefined {
-  const faceText = readPath(payload, "card_faces[0].oracle_text");
-  const text = readPath(payload, "oracle_text");
+  const faceText = readPath(payload, "card_faces[0].printed_text") ?? readPath(payload, "card_faces[0].oracle_text");
+  const text = readPath(payload, "printed_text") ?? readPath(payload, "oracle_text");
   return text ?? faceText;
 }
 
 function readFlavorText(payload: unknown): string | undefined {
   return readPath(payload, "flavor_text") ?? readPath(payload, "card_faces[0].flavor_text");
+}
+
+function readPrintedName(payload: unknown): string | undefined {
+  return readPath(payload, "printed_name") ?? readPath(payload, "card_faces[0].printed_name") ?? readPath(payload, "name") ?? readPath(payload, "card_faces[0].name");
+}
+
+function readPrintedTypeLine(payload: unknown): string | undefined {
+  return readPath(payload, "printed_type_line") ?? readPath(payload, "card_faces[0].printed_type_line") ?? readPath(payload, "type_line") ?? readPath(payload, "card_faces[0].type_line");
 }
 
 function readSearchResult(payload: unknown, pick = 0): unknown {
@@ -126,22 +149,6 @@ function readCachedDetails(cacheId: string): DeckCardDetails | null | undefined 
   return undefined;
 }
 
-async function fetchCardJson(url: string, attempt = 0): Promise<unknown> {
-  try {
-    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-cache" });
-    if (!response.ok) throw new Error(`Card lookup failed: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    if (attempt >= 2) throw error;
-    await delay(650 * (attempt + 1));
-    return fetchCardJson(url, attempt + 1);
-  }
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-}
-
 function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): void {
   memoryCache.set(cacheId, details);
   if (typeof window === "undefined") return;
@@ -149,7 +156,7 @@ function writeCachedDetails(cacheId: string, details: DeckCardDetails | null): v
 }
 
 function cacheKey(cacheId: string): string {
-  return `horde-deck-card-details:v5:${cacheId}`;
+  return `horde-deck-card-details:v6:${cacheId}`;
 }
 
 function readPath(source: unknown, path: string): string | undefined {

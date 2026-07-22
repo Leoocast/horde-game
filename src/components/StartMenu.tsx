@@ -2,8 +2,10 @@ import { AlertTriangle, ArrowLeft, Construction, Copy, Dices, Eye, Feather, Gith
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
@@ -671,14 +673,16 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   onInspect: () => void;
 }) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const keyCard = deck ? findSetupKeyCard(deck) : undefined;
   const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
+  const keyCardName = language === "es" ? keyCard?.displayNameEs || details.displayName || localizedCardName(keyCard, language) : localizedCardName(keyCard, language);
   return (
     <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
       <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button></div>
       <div className="expedition-deck-feature">
         <div className="expedition-deck-art">
-          {details.imageUrl ? <img src={details.imageUrl} alt={keyCard?.name ?? deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
+          {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
         </div>
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>

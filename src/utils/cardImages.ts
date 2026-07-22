@@ -3,6 +3,9 @@ import imageLookupsRaw from "../../cardImageLookups.json";
 import goblinHordeImagesRaw from "../data/decks/horde/goblins/goblin_assault_horde_images_definition.json";
 import monoGreenRampImagesRaw from "../data/decks/player/mono_green_ramp/mono_green_ramp_images.json";
 import type { DeckImageManifest } from "../data/deckCatalog";
+import { useLanguageStore } from "../store/useLanguageStore";
+import type { AppLanguage } from "../i18n/translations";
+import { fetchScryfallJson, localizedScryfallPayload } from "./scryfall";
 
 type LookupEntry = {
   id: string;
@@ -17,6 +20,9 @@ type ImageLookups = {
 
 export type CardRemoteDetails = {
   imageUrl?: string;
+  language?: string;
+  displayName?: string;
+  typeLine?: string;
   oracleText?: string;
   flavorText?: string;
 };
@@ -43,19 +49,21 @@ const memoryCache = new Map<string, CardRemoteDetails | null>();
 const pending = new Map<string, Promise<CardRemoteDetails | null>>();
 
 export function useCardDetails(definitionId: string): CardRemoteDetails {
-  const [details, setDetails] = useState<CardRemoteDetails>(() => readDirectDetails(definitionId) ?? readCachedDetails(definitionId) ?? {});
+  const language = useLanguageStore((state) => state.language);
+  const cacheId = `${language}:${definitionId}`;
+  const [details, setDetails] = useState<CardRemoteDetails>(() => readDirectDetails(definitionId, language) ?? readCachedDetails(cacheId) ?? {});
 
   useEffect(() => {
     let active = true;
     // Do not display the previous card's image while a new definition is loading.
-    setDetails(readDirectDetails(definitionId) ?? readCachedDetails(definitionId) ?? {});
-    loadCardDetails(definitionId).then((loaded) => {
+    setDetails(readDirectDetails(definitionId, language) ?? readCachedDetails(cacheId) ?? {});
+    loadCardDetails(definitionId, language).then((loaded) => {
       if (active) setDetails(loaded ?? {});
     });
     return () => {
       active = false;
     };
-  }, [definitionId]);
+  }, [cacheId, definitionId, language]);
 
   return details;
 }
@@ -77,26 +85,33 @@ export function toArtCropImageUrl(imageUrl: string | undefined): string | undefi
   return imageUrl.replace(SCRYFALL_IMAGE_VARIANT_PATTERN, "/art_crop/");
 }
 
-async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails | null> {
-  const directDetails = readDirectDetails(definitionId);
+async function loadCardDetails(definitionId: string, language: AppLanguage): Promise<CardRemoteDetails | null> {
+  const cacheId = `${language}:${definitionId}`;
+  const directDetails = readDirectDetails(definitionId, language);
   if (directDetails) return directDetails;
 
-  const cached = readCachedDetails(definitionId);
+  const cached = readCachedDetails(cacheId);
   if (cached !== undefined) return cached;
   const lookup = lookupById.get(definitionId);
   if (!lookup) {
-    memoryCache.set(definitionId, null);
+    memoryCache.set(cacheId, null);
     return null;
   }
 
-  const existing = pending.get(definitionId);
+  const existing = pending.get(cacheId);
   if (existing) return existing;
 
-  const request = fetchCardJson(lookup.lookup_url)
-    .then((payload) => {
+  const request = fetchScryfallJson(lookup.lookup_url)
+    .then(async (payload) => {
       const cardPayload = readSearchResult(payload) ?? payload;
+      const localizedPayload = await localizedScryfallPayload(cardPayload, language);
       const details: CardRemoteDetails = {
+        language: readPath(localizedPayload, "lang"),
         imageUrl:
+          readPath(localizedPayload, "image_uris.normal") ??
+          readPath(localizedPayload, "image_uris.large") ??
+          readPath(localizedPayload, "card_faces[0].image_uris.normal") ??
+          readPath(localizedPayload, "card_faces[0].image_uris.large") ??
           readPath(payload, lookup.image_path) ??
           readPath(cardPayload, "image_uris.normal") ??
           readPath(cardPayload, "image_uris.large") ??
@@ -106,30 +121,33 @@ async function loadCardDetails(definitionId: string): Promise<CardRemoteDetails 
           readPath(payload, "image_uris.large") ??
           readPath(payload, "card_faces[0].image_uris.normal") ??
           readPath(payload, "card_faces[0].image_uris.large"),
-        oracleText: readOracleText(cardPayload),
-        flavorText: readFlavorText(cardPayload),
+        displayName: readPrintedName(localizedPayload),
+        typeLine: readPrintedTypeLine(localizedPayload),
+        oracleText: readOracleText(localizedPayload),
+        flavorText: readFlavorText(localizedPayload),
       };
       if (!details.imageUrl) throw new Error("Card lookup returned no image");
-      writeCachedDetails(definitionId, details);
+      writeCachedDetails(cacheId, details);
       return details;
     })
     .catch(() => null)
     .finally(() => {
-      pending.delete(definitionId);
+      pending.delete(cacheId);
     });
 
-  pending.set(definitionId, request);
+  pending.set(cacheId, request);
   return request;
 }
 
-function readDirectDetails(definitionId: string): CardRemoteDetails | undefined {
+function readDirectDetails(definitionId: string, language: AppLanguage): CardRemoteDetails | undefined {
+  if (language !== "en") return undefined;
   const directDetails = directDetailsById.get(definitionId);
-  if (directDetails) memoryCache.set(definitionId, directDetails);
+  if (directDetails) memoryCache.set(`${language}:${definitionId}`, directDetails);
   return directDetails;
 }
 
 function readOracleText(payload: unknown): string | undefined {
-  return readPath(payload, "oracle_text") ?? readPath(payload, "card_faces[0].oracle_text");
+  return readPath(payload, "printed_text") ?? readPath(payload, "card_faces[0].printed_text") ?? readPath(payload, "oracle_text") ?? readPath(payload, "card_faces[0].oracle_text");
 }
 
 function readFlavorText(payload: unknown): string | undefined {
@@ -142,50 +160,42 @@ function readSearchResult(payload: unknown): unknown {
   return Array.isArray(data) ? data[0] : undefined;
 }
 
-function readCachedDetails(definitionId: string): CardRemoteDetails | null | undefined {
-  if (memoryCache.has(definitionId)) return memoryCache.get(definitionId);
+function readPrintedName(payload: unknown): string | undefined {
+  return readPath(payload, "printed_name") ?? readPath(payload, "card_faces[0].printed_name") ?? readPath(payload, "name") ?? readPath(payload, "card_faces[0].name");
+}
+
+function readPrintedTypeLine(payload: unknown): string | undefined {
+  return readPath(payload, "printed_type_line") ?? readPath(payload, "card_faces[0].printed_type_line") ?? readPath(payload, "type_line") ?? readPath(payload, "card_faces[0].type_line");
+}
+
+function readCachedDetails(cacheId: string): CardRemoteDetails | null | undefined {
+  if (memoryCache.has(cacheId)) return memoryCache.get(cacheId);
   if (typeof window === "undefined") return undefined;
-  const stored = window.localStorage.getItem(cacheKey(definitionId));
+  const stored = window.localStorage.getItem(cacheKey(cacheId));
   if (stored === "__missing__") {
-    memoryCache.set(definitionId, null);
+    memoryCache.set(cacheId, null);
     return null;
   }
   if (stored) {
     const parsed = JSON.parse(stored) as CardRemoteDetails;
     if (!parsed.imageUrl) {
-      window.localStorage.removeItem(cacheKey(definitionId));
+      window.localStorage.removeItem(cacheKey(cacheId));
       return undefined;
     }
-    memoryCache.set(definitionId, parsed);
+    memoryCache.set(cacheId, parsed);
     return parsed;
   }
   return undefined;
 }
 
-function writeCachedDetails(definitionId: string, details: CardRemoteDetails | null): void {
-  memoryCache.set(definitionId, details);
+function writeCachedDetails(cacheId: string, details: CardRemoteDetails | null): void {
+  memoryCache.set(cacheId, details);
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(cacheKey(definitionId), details ? JSON.stringify(details) : "__missing__");
+  window.localStorage.setItem(cacheKey(cacheId), details ? JSON.stringify(details) : "__missing__");
 }
 
-function cacheKey(definitionId: string): string {
-  return `horde-card-details:v6:${definitionId}`;
-}
-
-async function fetchCardJson(url: string, attempt = 0): Promise<unknown> {
-  try {
-    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-cache" });
-    if (!response.ok) throw new Error(`Card lookup failed: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    if (attempt >= 2) throw error;
-    await delay(650 * (attempt + 1));
-    return fetchCardJson(url, attempt + 1);
-  }
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+function cacheKey(cacheId: string): string {
+  return `horde-card-details:v7:${cacheId}`;
 }
 
 function newDeckImageLookups(manifest: DeckImageManifest): LookupEntry[] {

@@ -1,10 +1,11 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
+import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
-import { typeLine } from "../utils/cardText";
 import { cardKeywords } from "../utils/selectors";
 import { GameTooltip } from "./GameTooltip";
 
@@ -21,6 +22,7 @@ type HoverPreviewPosition = {
 };
 
 export function CardPreview() {
+  const language = useLanguageStore((state) => state.language);
   const game = useGameStore((state) => state.game);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
   const focusedCardId = useGameStore((state) => state.focusedCardId);
@@ -153,6 +155,7 @@ export function CardPreview() {
 
   const keywords = cardKeywords(game, card);
   const imageUrl = toHighResImageUrl(details.imageUrl) ?? details.imageUrl;
+  const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
   if (focusedCardId) {
     return (
@@ -163,7 +166,7 @@ export function CardPreview() {
           onContextMenu={(event) => event.preventDefault()}
         >
           <div data-preserve-card-focus="true" data-card-preview-locked="true" className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
-            <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
+            <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -182,7 +185,7 @@ export function CardPreview() {
 
   return (
     <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverStyle}>
-      <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
+      <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
     </div>
   );
 }
@@ -200,6 +203,8 @@ export function CardDetailsModal({
   onNext,
   previousLabel = "Previous card",
   nextLabel = "Next card",
+  displayName,
+  typeLineText,
 }: {
   card: CardInstance;
   imageUrl?: string;
@@ -213,7 +218,11 @@ export function CardDetailsModal({
   onNext?: () => void;
   previousLabel?: string;
   nextLabel?: string;
+  displayName?: string;
+  typeLineText?: string;
 }) {
+  const language = useLanguageStore((state) => state.language);
+  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : displayName ?? localizedCardName(card, language);
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
       <div className="relative flex w-[min(1320px,calc(100vw-48px))] items-center justify-center">
@@ -230,16 +239,16 @@ export function CardDetailsModal({
         <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1160px,calc(100vw-12rem))] overflow-hidden p-5 shadow-2xl shadow-black/70">
         <div className="min-h-0">
           {imageUrl ? (
-            <img src={imageUrl} alt={card.name} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
+            <img src={imageUrl} alt={localizedName} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
           ) : (
-            <div className="flex aspect-[488/680] w-full items-center justify-center rounded-md border-2 border-[#b88945] bg-[#1b120b] p-4 text-center text-lg font-bold text-[#d6b879]">{card.displayName}</div>
+            <div className="flex aspect-[488/680] w-full items-center justify-center rounded-md border-2 border-[#b88945] bg-[#1b120b] p-4 text-center text-lg font-bold text-[#d6b879]">{localizedName}</div>
           )}
         </div>
         <div className="flex min-h-0 flex-col">
           <div className="flex items-start justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
             <div>
-              <h2 className="old-title text-3xl font-black leading-tight">{card.displayName}</h2>
-              <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLine(card)}</p>
+              <h2 className="old-title text-3xl font-black leading-tight">{localizedName}</h2>
+              <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLineText ?? localizedTypeLine(card, language)}</p>
             </div>
             <button className="icon-button h-9 w-9" title="Close details" onClick={onClose}>
               <X size={18} />
@@ -273,14 +282,15 @@ export function CardDetailsModal({
 }
 
 export function KeywordPills({ keywords, compact = false }: { keywords: string; compact?: boolean }) {
+  const language = useLanguageStore((state) => state.language);
   return (
     <div className="flex flex-wrap gap-2">
       {keywords.split(",").map((keyword) => {
         const clean = keyword.trim();
         if (!clean) return null;
         return (
-          <GameTooltip key={clean} content={keywordTooltip(clean)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(clean)}</span>
+          <GameTooltip key={clean} content={localizedKeywordTooltip(clean, language)}>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(localizedKeywordLabel(clean, language))}</span>
           </GameTooltip>
         );
       })}
@@ -289,6 +299,7 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
 }
 
 function KeywordExplanations({ keywords, chaos = false }: { keywords: string; chaos?: boolean }) {
+  const language = useLanguageStore((state) => state.language);
   const entries = keywords
     .split(",")
     .map((keyword) => keyword.trim())
@@ -300,8 +311,8 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(keyword)}</div>
-          <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{keywordTooltip(keyword)}</p>
+          <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(localizedKeywordLabel(keyword, language))}</div>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedKeywordTooltip(keyword, language)}</p>
         </div>
       ))}
     </div>
@@ -316,21 +327,6 @@ function renderKeywordLabel(keyword: string) {
       TOXIC <span className="toxic-keyword-badge">{toxic[1]}</span>
     </>
   );
-}
-
-function keywordTooltip(keyword: string): string {
-  const text = keyword.trim();
-  const upper = text.toUpperCase();
-  if (upper === "FLYING") return "Can only be blocked by creatures with flying or reach.";
-  if (upper === "REACH") return "Can block creatures with flying.";
-  if (upper === "VIGILANCE") return "Attacking does not tap this creature.";
-  if (upper === "MENACE") return "This creature can only be blocked by two or more creatures.";
-  if (upper === "DEATHTOUCH") return "Any damage this creature deals to another creature is lethal.";
-  if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
-  if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
-  if (upper === "SKULK") return "Can't be blocked by creatures with greater power.";
-  if (upper.startsWith("TOXIC")) return "When this creature deals combat damage to the Horde, it adds poison counters.";
-  return "Keyword ability.";
 }
 
 function findCard(game: ReturnType<typeof useGameStore.getState>["game"], id: string): CardInstance | undefined {

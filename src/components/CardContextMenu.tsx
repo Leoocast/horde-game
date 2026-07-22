@@ -2,6 +2,7 @@ import { Info, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
 import { effectSummary } from "../utils/cardText";
@@ -12,6 +13,7 @@ const MENU_WIDTH = 220;
 const MENU_PADDING = 12;
 
 export function CardContextMenu() {
+  const language = useLanguageStore((state) => state.language);
   const game = useGameStore((state) => state.game);
   const menu = useGameStore((state) => state.cardContextMenu);
   const closeMenu = useGameStore((state) => state.closeCardContextMenu);
@@ -62,6 +64,8 @@ export function CardContextMenu() {
       <CardDetailsModal
         card={detailsCard}
         imageUrl={details.imageUrl}
+        displayName={details.displayName}
+        typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
         keywords={keywords}
         stats={stats}
         text={detailsText}
@@ -113,6 +117,8 @@ export function CardContextMenu() {
         <CardDetailsModal
           card={detailsCard}
           imageUrl={details.imageUrl}
+          displayName={details.displayName}
+          typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
           keywords={keywords}
           stats={stats}
           text={detailsText}

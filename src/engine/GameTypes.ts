@@ -103,6 +103,7 @@ export type CardInstance = {
   definitionId: string;
   name: string;
   displayName: string;
+  displayNameEs?: string;
   owner: Side;
   controller: Side;
   zone: ZoneName;

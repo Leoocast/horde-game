@@ -2,13 +2,16 @@ import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
+import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
 const ARROW_COLOR = "#4ade80";
 
 export function CounterTargetingOverlay({ game }: { game: GameState }) {
+  const language = useLanguageStore((state) => state.language);
   const counterTargeting = useGameStore((state) => state.counterTargeting);
   const updatePointer = useGameStore((state) => state.updateCounterTargetPointer);
   const deselectTarget = useGameStore((state) => state.deselectCounterTarget);
@@ -127,7 +130,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           <Card game={game} card={source} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness hideStats />
         </div>
         <div className="counter-target-preview old-panel-soft">
-          <span className="text-[#d6b879]">{target ? target.displayName : "No target selected"}</span>
+          <span className="text-[#d6b879]">{target ? localizedCardName(target, language) : "No target selected"}</span>
           <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.toughness}` : "--/--"}</strong>
         </div>
         <div className="counter-target-actions">
