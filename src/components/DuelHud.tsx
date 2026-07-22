@@ -267,6 +267,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           </div>
           <div
             data-player-life-panel="true"
+            data-energy-recycle-target="true"
             className={[
               "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",

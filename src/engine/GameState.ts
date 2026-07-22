@@ -52,7 +52,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
       graveyard: [],
       exile: [],
       manaPool: emptyManaPool(),
-      landPlayedThisTurn: false,
+      energyActionUsedThisTurn: false,
     },
     horde: {
       library: hordeLibrary,

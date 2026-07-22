@@ -1,11 +1,11 @@
 {
   "schemaVersion": "0.2.0",
-  "id": "mono_green_ramp_40",
-  "name": "Mono-Green Ramp 40",
+  "id": "mono_green_ramp_39",
+  "name": "Mono-Green Ramp 39",
   "format": "casual",
   "side": "PLAYER",
   "standardCheckedAt": null,
-  "deckSize": 40,
+  "deckSize": 39,
   "colors": [
     "G"
   ],
@@ -743,7 +743,7 @@
       "id": "forest",
       "name": "Forest",
       "displayNameEs": "Bosque",
-      "quantity": 17,
+      "quantity": 15,
       "setCode": "FDN",
       "collectorNumber": null,
       "needsVerification": true,

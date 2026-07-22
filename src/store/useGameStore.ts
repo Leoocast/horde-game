@@ -3,7 +3,7 @@ import { createInitialGame } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
-import { castCard, playLand, activateAbility } from "../engine/GameActions";
+import { activateAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
 import { checkWinLoss, declareBlocker, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat, sortPlayerAttackersLeftToRight, togglePlayerAttacker } from "../engine/CombatResolver";
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
@@ -14,7 +14,7 @@ import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
-import { playerHandOverflow } from "../engine/GameRules";
+import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
 
 type GameStore = {
   game: GameState;
@@ -35,6 +35,7 @@ type GameStore = {
   hordeMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
   landPlayAnimationQueue: LandPlayAnimationItem[];
+  energyRecycleAnimation?: EnergyRecycleAnimation;
   handLimitDiscardActive: boolean;
   handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -92,6 +93,8 @@ type GameStore = {
   advancePhase: (phase?: Phase) => void;
   endPlayerTurn: () => void;
   playLand: (id: string) => void;
+  startEnergyRecycle: (id: string, origin: { x: number; y: number }) => void;
+  completeEnergyRecycleAnimation: () => void;
   castCard: (id: string, options?: CastOptions) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
@@ -197,6 +200,12 @@ export type LandPlayAnimationItem = {
   materialized?: boolean;
 };
 
+export type EnergyRecycleAnimation = {
+  id: string;
+  card: CardInstance;
+  origin: { x: number; y: number };
+};
+
 export type BlockDragState = {
   blockerId: string;
   startX: number;
@@ -267,6 +276,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
   landPlayAnimationQueue: [],
+  energyRecycleAnimation: undefined,
   handLimitDiscardActive: false,
   handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
@@ -290,6 +300,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
+      useAudioStore.getState().setMusicVariant("battle");
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
       return {
         game: next,
@@ -322,6 +333,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillPreviewCards: [],
         playerDiscardAnimationQueue: [],
         landPlayAnimationQueue: [],
+        energyRecycleAnimation: undefined,
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
@@ -560,7 +572,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -575,7 +587,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -618,6 +630,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
               origin: animationOrigin,
             }]
           : state.landPlayAnimationQueue,
+      };
+    }),
+  startEnergyRecycle: (id, origin) =>
+    set((state) => {
+      if (combatResolutionInProgress(state) || state.energyRecycleAnimation) return {};
+      if (state.pendingTriggeredEffectCount > 0) {
+        showActionToast("Resolve the triggered effect before playing another card.");
+        return {};
+      }
+      const card = state.game.player.hand.find((item) => item.instanceId === id);
+      if (!card?.cardTypes.includes("Land")) return {};
+      if (!canPlayerRecycleEnergy(state.game)) {
+        showActionToast(
+          state.game.setupTurnsRemaining > 0
+            ? "Energy cannot be recycled during setup."
+            : "You already used your Energy action this turn.",
+        );
+        return {};
+      }
+      useAudioStore.getState().playSfx("playLand", { volume: 0.62 });
+      return {
+        energyRecycleAnimation: {
+          id: `energy-recycle-${card.instanceId}-${Date.now()}`,
+          card,
+          origin,
+        },
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+        activeEffectCardId: undefined,
+      };
+    }),
+  completeEnergyRecycleAnimation: () =>
+    set((state) => {
+      const active = state.energyRecycleAnimation;
+      if (!active) return {};
+      const next = recycleEnergy(state.game, active.card.instanceId);
+      const succeeded = !next.player.hand.some((card) => card.instanceId === active.card.instanceId);
+      if (succeeded) useAudioStore.getState().playSfx("drawOne", { volume: 0.84 });
+      else showActionToast(next.log[0]);
+      return {
+        game: next,
+        energyRecycleAnimation: undefined,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
       };
     }),
   castCard: (id, options) =>
@@ -911,7 +969,7 @@ function persistSeed(seed: string): void {
 }
 
 function combatResolutionInProgress(state: GameStore): boolean {
-  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || discardPauseInProgress(state));
+  return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.resolvingHordeCombat || state.energyRecycleAnimation || discardPauseInProgress(state));
 }
 
 function discardPauseInProgress(state: GameStore): boolean {

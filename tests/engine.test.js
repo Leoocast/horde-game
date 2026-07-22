@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { hordeDeck, playerDeck } from "../src/data/decks";
-import { castCard } from "../src/engine/GameActions";
+import { castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
 import { createInitialGame, expandDeck } from "../src/engine/GameState";
@@ -11,6 +11,7 @@ import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
+import { performPlayerDraw } from "../src/engine/TurnManager";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("same seed produces the same player and Horde deck order", () => {
@@ -33,6 +34,93 @@ test("every expanded card copy has a unique instance id", () => {
   const ids = cards.map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
+});
+
+test("the player deck has 39 cards including 15 energies", () => {
+  const cards = expandDeck(playerDeck, "player");
+
+  assert.equal(cards.length, 39);
+  assert.equal(cards.filter((card) => card.cardTypes.includes("Land")).length, 15);
+});
+
+test("the player draws one card normally after setup", () => {
+  const game = createTestGame();
+  addCard(game, customCard("held_card", "player", { zone: "hand" }), "player", "hand");
+  addCard(game, customCard("draw_one", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("leave_in_library", "player", { zone: "library" }), "player", "library");
+
+  performPlayerDraw(game);
+
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["held_card", "draw_one"]);
+  assert.deepEqual(game.player.library.map((card) => card.definitionId), ["leave_in_library"]);
+});
+
+test("the player draws two after setup only when the turn starts with an empty hand", () => {
+  const game = createTestGame();
+  addCard(game, customCard("empty_hand_draw_1", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("empty_hand_draw_2", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("empty_hand_stays_in_deck", "player", { zone: "library" }), "player", "library");
+
+  performPlayerDraw(game);
+
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["empty_hand_draw_1", "empty_hand_draw_2"]);
+  assert.deepEqual(game.player.library.map((card) => card.definitionId), ["empty_hand_stays_in_deck"]);
+});
+
+test("an empty hand still draws only one during setup", () => {
+  const game = createTestGame();
+  game.setupTurnsRemaining = 1;
+  addCard(game, customCard("setup_draw", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("setup_stays_in_deck", "player", { zone: "library" }), "player", "library");
+
+  performPlayerDraw(game);
+
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["setup_draw"]);
+  assert.deepEqual(game.player.library.map((card) => card.definitionId), ["setup_stays_in_deck"]);
+});
+
+test("recycling puts an energy on the bottom, draws one, and uses the Energy action", () => {
+  const game = createTestGame();
+  const energy = addCard(game, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  const nextDraw = addCard(game, customCard("recycle_draw", "player", { zone: "library" }), "player", "library");
+
+  const result = recycleEnergy(game, energy.instanceId);
+
+  assert.equal(result.player.hand.some((card) => card.instanceId === energy.instanceId), false);
+  assert.equal(result.player.hand.some((card) => card.instanceId === nextDraw.instanceId), true);
+  assert.equal(result.player.library.at(-1)?.instanceId, energy.instanceId);
+  assert.equal(result.player.energyActionUsedThisTurn, true);
+});
+
+test("playing or recycling an energy consumes the same once-per-turn action", () => {
+  const game = createTestGame();
+  const playedEnergy = addCard(game, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  const blockedRecycle = addCard(game, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  addCard(game, customCard("would_be_drawn", "player", { zone: "library" }), "player", "library");
+
+  const afterPlay = playLand(game, playedEnergy.instanceId);
+  const afterBlockedRecycle = recycleEnergy(afterPlay, blockedRecycle.instanceId);
+
+  assert.equal(afterPlay.player.energyActionUsedThisTurn, true);
+  assert.equal(afterBlockedRecycle.player.hand.some((card) => card.instanceId === blockedRecycle.instanceId), true);
+  assert.equal(afterBlockedRecycle.player.library.some((card) => card.definitionId === "would_be_drawn"), true);
+});
+
+test("energy cannot be recycled during setup and no more than five can be in play", () => {
+  const setupGame = createTestGame();
+  setupGame.setupTurnsRemaining = 1;
+  const setupEnergy = addCard(setupGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  const blockedDuringSetup = recycleEnergy(setupGame, setupEnergy.instanceId);
+
+  assert.equal(blockedDuringSetup.player.hand.some((card) => card.instanceId === setupEnergy.instanceId), true);
+
+  const cappedGame = createTestGame();
+  addForests(cappedGame, 5);
+  const sixthEnergy = addCard(cappedGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  const blockedAtCap = playLand(cappedGame, sixthEnergy.instanceId);
+
+  assert.equal(blockedAtCap.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 5);
+  assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === sixthEnergy.instanceId), true);
 });
 
 test("automatic payment taps lands but never mana creatures", () => {

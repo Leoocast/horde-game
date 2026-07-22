@@ -143,7 +143,7 @@ export type PlayerState = {
   graveyard: CardInstance[];
   exile: CardInstance[];
   manaPool: ManaPool;
-  landPlayedThisTurn: boolean;
+  energyActionUsedThisTurn: boolean;
 };
 
 export type HordeState = {

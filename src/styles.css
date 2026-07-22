@@ -5266,6 +5266,114 @@
     position: absolute;
   }
 
+  .energy-recycle-flight {
+    position: fixed;
+    z-index: 132;
+    overflow: hidden;
+    border: 1px solid rgb(188 225 147 / 0.72);
+    border-radius: 7px;
+    background: #102116;
+    box-shadow: 0 14px 34px rgb(0 0 0 / 0.76), 0 0 25px rgb(120 205 118 / 0.36);
+    pointer-events: none;
+    transform-origin: center;
+  }
+
+  .energy-recycle-flight img {
+    width: 100%;
+    height: 100%;
+    user-select: none;
+    object-fit: cover;
+  }
+
+  .energy-recycle-flight > span:not(.energy-recycle-card-sheen) {
+    display: grid;
+    height: 100%;
+    padding: 12px;
+    place-items: center;
+    color: #e8ffd0;
+    font-size: 11px;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .energy-recycle-card-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgb(237 255 203 / 0.2), transparent 38%, rgb(3 20 14 / 0.4));
+    pointer-events: none;
+  }
+
+  .energy-recycle-drag-path-glow,
+  .energy-recycle-drag-path {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .energy-recycle-drag-path-glow {
+    stroke: rgb(73 224 139 / 0.28);
+    stroke-width: 8px;
+    filter: blur(5px);
+  }
+
+  .energy-recycle-drag-path {
+    stroke: #b9e89b;
+    stroke-width: 2px;
+    stroke-dasharray: 7 8;
+    filter: drop-shadow(0 0 5px rgb(104 230 146 / 0.78));
+    animation: energy-recycle-dash 0.7s linear infinite;
+  }
+
+  .energy-recycle-drag-label {
+    position: fixed;
+    display: flex;
+    min-width: 126px;
+    padding: 7px 12px 6px;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgb(190 218 136 / 0.62);
+    border-radius: 3px;
+    background: linear-gradient(180deg, rgb(31 45 27 / 0.96), rgb(8 17 13 / 0.97));
+    box-shadow: inset 0 1px 0 rgb(239 255 193 / 0.12), 0 8px 24px rgb(0 0 0 / 0.62), 0 0 18px rgb(75 197 116 / 0.2);
+    color: #dff5b6;
+    text-align: center;
+    transform: translate(-50%, -50%);
+  }
+
+  .energy-recycle-drag-label strong {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+
+  .energy-recycle-drag-label span {
+    margin-top: 1px;
+    color: #91ad83;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .energy-recycle-target-ring {
+    position: fixed;
+    width: 82px;
+    height: 82px;
+    border: 2px solid rgb(190 235 151 / 0.72);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(132 232 137 / 0.2), transparent 68%);
+    box-shadow: 0 0 20px rgb(90 220 139 / 0.44), inset 0 0 16px rgb(156 239 151 / 0.18);
+    transform: translate(-50%, -50%);
+    animation: energy-recycle-target-pulse 0.86s ease-in-out infinite alternate;
+  }
+
+  @keyframes energy-recycle-dash {
+    to { stroke-dashoffset: -30; }
+  }
+
+  @keyframes energy-recycle-target-pulse {
+    from { opacity: 0.62; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  }
+
   .mana-core-rings,
   .mana-core-heart,
   .mana-core-count {

@@ -87,7 +87,7 @@ export type InspectableDeck = {
 export const playerInspectableDecks: InspectableDeck[] = [
   {
     id: "mono_green_ramp",
-    label: "Mono-Green Ramp 40",
+    label: "Mono-Green Ramp 39",
     deck: monoGreenRampRaw as NewDeckList,
     images: monoGreenRampImagesRaw as DeckImageManifest,
   },
