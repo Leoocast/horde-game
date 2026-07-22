@@ -10564,8 +10564,58 @@
 }
 
 .chaos-active .menu-fireflies span {
-  background: #d7a0bd;
-  box-shadow: 0 0 7px 2px rgb(208 111 161 / 0.5), 0 0 18px 5px rgb(116 57 91 / 0.22);
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.game-battlefield-fireflies.is-chaos span,
+.game-battlefield-fireflies.is-chaos span:nth-child(3n) {
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.chaos-active .menu-fireflies span::before,
+.game-battlefield-fireflies.is-chaos span::before {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #d987bb;
+  content: "\25C7";
+  font-family: "Segoe UI Symbol", Georgia, serif;
+  font-size: 13px;
+  line-height: 1;
+  text-shadow: 0 0 4px rgb(213 91 165 / 0.7), 0 0 8px rgb(126 47 96 / 0.36);
+}
+
+.chaos-active .menu-fireflies span:nth-child(4n + 1)::before,
+.game-battlefield-fireflies.is-chaos span:nth-child(4n + 1)::before {
+  content: "\16C9";
+  font-size: 16px;
+}
+
+.chaos-active .menu-fireflies span:nth-child(4n + 2)::before,
+.game-battlefield-fireflies.is-chaos span:nth-child(4n + 2)::before {
+  content: "\25A1";
+  font-size: 11px;
+}
+
+.chaos-active .menu-fireflies span:nth-child(4n + 3)::before,
+.game-battlefield-fireflies.is-chaos span:nth-child(4n + 3)::before {
+  content: "\2726";
+  font-size: 12px;
+}
+
+.chaos-active .menu-fireflies span:nth-child(4n)::before,
+.game-battlefield-fireflies.is-chaos span:nth-child(4n)::before {
+  content: "\16B1";
+  font-size: 16px;
 }
 
 .chaos-setup {
