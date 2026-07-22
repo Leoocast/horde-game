@@ -200,6 +200,7 @@ export default function App() {
               options.setupTurns,
               isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
               isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
+              options.mode,
             );
             setLaunchTransition({
               playerName: options.playerName,

@@ -1,4 +1,4 @@
-import type { CardDefinition, CardInstance, DeckList, GameState, Side } from "./GameTypes";
+import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameState, Side } from "./GameTypes";
 import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 
@@ -24,7 +24,13 @@ const TUTORIAL_STARTING_BATTLEFIELD = [
   { definitionId: "ichorspit_basilisk", amount: 1 },
 ] as const;
 
-export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, seed = "hostfall-seed", setupTurns = 4): GameState {
+export function createInitialGame(
+  playerDeck: DeckList,
+  hordeDeck: DeckList,
+  seed = "hostfall-seed",
+  setupTurns = 4,
+  difficulty: DifficultyMode = "normal",
+): GameState {
   const playerCards = expandDeck(playerDeck, "player");
   const hordeCards = expandDeck(hordeDeck, "horde");
   let randomState = hashSeed(seed);
@@ -37,6 +43,7 @@ export function createInitialGame(playerDeck: DeckList, hordeDeck: DeckList, see
 
   const game: GameState = {
     seed,
+    difficulty,
     currentRandomState: randomState,
     hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),
     activeSide: "player",

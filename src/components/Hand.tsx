@@ -7,7 +7,7 @@ import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinu
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
@@ -61,6 +61,7 @@ export function Hand({ game }: { game: GameState }) {
   const castCard = useGameStore((state) => state.castCard);
   const playLand = useGameStore((state) => state.playLand);
   const startEnergyRecycle = useGameStore((state) => state.startEnergyRecycle);
+  const setEnergyRecycleDragActive = useGameStore((state) => state.setEnergyRecycleDragActive);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
   const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
@@ -78,6 +79,8 @@ export function Hand({ game }: { game: GameState }) {
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
   const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
+
+  useEffect(() => () => setEnergyRecycleDragActive(false), [setEnergyRecycleDragActive]);
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -165,9 +168,11 @@ export function Hand({ game }: { game: GameState }) {
       pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO;
     if (!inRecycleZone) {
       setEnergyRecycleHint(undefined);
+      setEnergyRecycleDragActive(false);
       return;
     }
     setEnergyRecycleHint({ pointer: { x: pointerX, y: pointerY }, target: readEnergyRecycleTarget() });
+    setEnergyRecycleDragActive(true);
   }
 
   function playCard(card: CardInstance) {
@@ -187,6 +192,7 @@ export function Hand({ game }: { game: GameState }) {
     selectHand(undefined);
     setDraggingCardId(undefined);
     setEnergyRecycleHint(undefined);
+    setEnergyRecycleDragActive(false);
     dragOriginCenters.current.delete(card.instanceId);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
     const releasedInPlayZone = info.point.y <= playZoneY;
@@ -261,8 +267,13 @@ export function Hand({ game }: { game: GameState }) {
   return (
     <>
       {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} />}
-      <section className={["pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible", smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]"].join(" ")}>
-        <div className="hand-atmosphere pointer-events-none absolute inset-x-0 bottom-0 h-40" />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
+        <div className="hand-atmosphere absolute inset-0" />
+      </div>
+      <section className={[
+        "pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
+        draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]",
+      ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
             ref={handCardsRef}

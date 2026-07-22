@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createInitialGame } from "../engine/GameState";
-import type { AbilityOptions, CardInstance, CastOptions, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
+import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
@@ -36,6 +36,7 @@ type GameStore = {
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
   landPlayAnimationQueue: LandPlayAnimationItem[];
   energyRecycleAnimation?: EnergyRecycleAnimation;
+  energyRecycleDragActive: boolean;
   handLimitDiscardActive: boolean;
   handLimitSelectionId?: string;
   autoPaidLandAnimation?: AutoPaidLandAnimation;
@@ -63,7 +64,7 @@ type GameStore = {
   seed: string;
   playerDeckId: string;
   hordeDeckId: string;
-  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string) => void;
+  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode) => void;
   setSeed: (seed: string) => void;
   acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
@@ -94,6 +95,7 @@ type GameStore = {
   endPlayerTurn: () => void;
   playLand: (id: string) => void;
   startEnergyRecycle: (id: string, origin: { x: number; y: number }) => void;
+  setEnergyRecycleDragActive: (active: boolean) => void;
   completeEnergyRecycleAnimation: () => void;
   castCard: (id: string, options?: CastOptions) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
@@ -277,6 +279,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerDiscardAnimationQueue: [],
   landPlayAnimationQueue: [],
   energyRecycleAnimation: undefined,
+  energyRecycleDragActive: false,
   handLimitDiscardActive: false,
   handLimitSelectionId: undefined,
   autoPaidLandAnimation: undefined,
@@ -296,12 +299,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId) =>
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty) =>
     set((state) => {
       hordeAutoTriggerSequenceId += 1;
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
-      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns);
+      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty);
       return {
         game: next,
         gameSessionId: state.gameSessionId + 1,
@@ -334,6 +337,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerDiscardAnimationQueue: [],
         landPlayAnimationQueue: [],
         energyRecycleAnimation: undefined,
+        energyRecycleDragActive: false,
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         autoPaidLandAnimation: undefined,
@@ -354,6 +358,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSeed: (seed) => {
     persistSeed(seed);
     set({ seed });
+  },
+  setEnergyRecycleDragActive: (active) => {
+    if (get().energyRecycleDragActive === active) return;
+    set({ energyRecycleDragActive: active });
   },
   acknowledgeTutorialStep: (stepId) => set({ tutorialAcknowledgedStepId: stepId }),
   selectHand: (id) => set({ selectedHandId: id }),

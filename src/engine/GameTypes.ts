@@ -1,4 +1,5 @@
 export type Side = "player" | "horde";
+export type DifficultyMode = "easy" | "normal" | "hard";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
 export type Color = "G" | "R" | "U" | "W" | "B" | "C";
@@ -174,6 +175,7 @@ export type EventItem = {
 
 export type GameState = {
   seed: string;
+  difficulty: DifficultyMode;
   currentRandomState: number;
   hordeDeckOrderHash?: string;
   activeSide: Side;

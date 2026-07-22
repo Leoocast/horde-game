@@ -55,6 +55,20 @@ test("the player draws one card normally after setup", () => {
   assert.deepEqual(game.player.library.map((card) => card.definitionId), ["leave_in_library"]);
 });
 
+test("easy mode draws two cards every turn after setup", () => {
+  const game = createTestGame();
+  game.difficulty = "easy";
+  addCard(game, customCard("held_card", "player", { zone: "hand" }), "player", "hand");
+  addCard(game, customCard("easy_draw_1", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("easy_draw_2", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("easy_stays_in_deck", "player", { zone: "library" }), "player", "library");
+
+  performPlayerDraw(game);
+
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["held_card", "easy_draw_1", "easy_draw_2"]);
+  assert.deepEqual(game.player.library.map((card) => card.definitionId), ["easy_stays_in_deck"]);
+});
+
 test("the player draws two after setup when the turn starts with an empty hand", () => {
   const game = createTestGame();
   addCard(game, customCard("empty_hand_draw_1", "player", { zone: "library" }), "player", "library");
