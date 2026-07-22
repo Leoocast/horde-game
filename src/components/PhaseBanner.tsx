@@ -45,7 +45,7 @@ export function PhaseBanner({ game, suspended = false }: { game: GameState; susp
 
   return (
     <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[98] flex items-center justify-center">
-      <div className={["phase-banner", TONE_CLASS[visiblePhase.tone]].join(" ")} key={visiblePhase.key}>
+      <div className={["phase-banner", TONE_CLASS[visiblePhase.tone], game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} key={visiblePhase.key}>
         <span className="phase-banner-line phase-banner-line-left" />
         <span className="phase-banner-crest"><visiblePhase.Icon size={22} strokeWidth={1.65} /></span>
         <span className="phase-banner-copy">

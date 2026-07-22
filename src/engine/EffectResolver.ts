@@ -317,7 +317,12 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
   const found = findCardDefinition(tokenId);
   if (!found) return;
   for (let i = 0; i < Number(effect.amount ?? 1); i += 1) {
-    const token = createToken(found, controller, `${game.turnNumber}-${game[controller].battlefield.length}-${i}`);
+    const token = createToken(
+      found,
+      controller,
+      `${game.turnNumber}-${game[controller].battlefield.length}-${i}`,
+      game.gameMode === "chaos" ? game.chaosMutations[controller][found.id] : undefined,
+    );
     token.zone = "battlefield";
     token.summoningSickness = controller === "player";
     game[controller].battlefield.push(token);

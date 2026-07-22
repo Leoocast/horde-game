@@ -23,7 +23,7 @@ export function cardStatState(game: GameState, card: CardInstance, visualDamageM
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
   return getKeywords(game, card)
-    .filter((keyword) => keyword !== "TRAMPLE" && (keyword !== "HASTE" || card.controller === "horde"))
+    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller === "horde"))
     .map(formatKeyword)
     .join(", ");
 }
@@ -43,6 +43,7 @@ export function zoneCount(game: GameState, side: Side, zone: "library" | "hand" 
 
 export function gameStatus(game: GameState): string {
   if (game.winner) return `${game.winner === "player" ? "Player" : "Horde"} wins`;
+  if (game.gameMode === "chaos") return hordeInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
   if (game.setupTurnsRemaining > 0) return `Setup: ${game.setupTurnsRemaining} player turn(s) remain`;
   return hordeInSurge(game) ? "Horde Surge active" : "Normal alternation";
 }

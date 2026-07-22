@@ -4,8 +4,8 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 
 type Props = {
-  playerDecks: InspectableDeck[];
-  hordeDecks: InspectableDeck[];
+  collection: "chronicles" | "hosts";
+  decks: InspectableDeck[];
   onOpenDeck: (deckId: string) => void;
   onBack: () => void;
   closing?: boolean;
@@ -17,32 +17,24 @@ const KEY_CARD_IDS: Record<string, string> = {
   goblin_assault_horde: "goblin_token_1_1_red",
 };
 
-export function DecksView({ playerDecks, hordeDecks, onOpenDeck, onBack, closing = false }: Props) {
+export function DecksView({ collection, decks, onOpenDeck, onBack, closing = false }: Props) {
+  const title = collection === "chronicles" ? "Chronicles" : "Hosts";
+  const description = collection === "chronicles" ? "Decks carried by the Chronicler." : "Hordes that rise against you.";
+
   return (
-    <section className={`main-settings-screen decks-panel ${closing ? "is-closing" : ""}`} aria-label="Decks">
+    <section className={`main-settings-screen decks-panel ${closing ? "is-closing" : ""}`} aria-label={title}>
       <header className="main-settings-header">
         <button className="menu-screen-back" type="button" onClick={onBack}><ArrowLeft size={16} /> Back</button>
-        <h2>Decks</h2>
+        <h2>{title}</h2>
+        <span>{description}</span>
       </header>
 
-      <div className="decks-content">
-        <DeckSection title="Chronicles" decks={playerDecks} onOpenDeck={onOpenDeck} />
-        <DeckSection title="Hosts" decks={hordeDecks} onOpenDeck={onOpenDeck} />
-      </div>
-    </section>
-  );
-}
-
-function DeckSection({ title, decks, onOpenDeck }: { title: string; decks: InspectableDeck[]; onOpenDeck: (deckId: string) => void }) {
-  return (
-    <section className="decks-section" aria-labelledby={`decks-${title.toLowerCase()}`}>
-      <div className="decks-section-heading">
-        <h2 id={`decks-${title.toLowerCase()}`}>{title}</h2>
-      </div>
-      <div className="decks-card-row">
-        {decks.map((deck) => (
-          <DeckKeyCard key={deck.id} deck={deck} onOpen={() => onOpenDeck(deck.id)} />
-        ))}
+      <div className="decks-content decks-content-single">
+        <div className="decks-card-row">
+          {decks.map((deck) => (
+            <DeckKeyCard key={deck.id} deck={deck} onOpen={() => onOpenDeck(deck.id)} />
+          ))}
+        </div>
       </div>
     </section>
   );

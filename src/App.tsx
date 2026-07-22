@@ -7,6 +7,7 @@ import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
+import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
@@ -30,12 +31,13 @@ export default function App() {
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
-  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "decks">("home");
+  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
     hordeName: string;
     hordeDeckId: string;
+    gameMode: GameMode;
     tutorial: boolean;
   } | null>(null);
 
@@ -131,6 +133,7 @@ export default function App() {
       playerName={launchTransition.playerName}
       hordeName={launchTransition.hordeName}
       hordeDeckId={launchTransition.hordeDeckId}
+      gameMode={launchTransition.gameMode}
     />
   ) : null;
 
@@ -138,7 +141,11 @@ export default function App() {
     return (
       <>
         <AudioClickListener />
-        <DeckInspector deck={findInspectableDeck(inspectorDeckId)} onBack={() => setScreen("start")} />
+        <DeckInspector
+          deck={findInspectableDeck(inspectorDeckId)}
+          backLabel={menuReturnScreen === "chronicles" ? "Chronicles" : menuReturnScreen === "hosts" ? "Hosts" : menuReturnScreen === "chaos" ? "Chaos" : "Play"}
+          onBack={() => setScreen("start")}
+        />
         {transitionOverlay}
       </>
     );
@@ -154,22 +161,22 @@ export default function App() {
           onSelectDeck={setSelectedDeckId}
           onOpenDeck={(deckId) => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("decks");
+            setMenuReturnScreen(playerInspectableDecks.some((deck) => deck.id === deckId) ? "chronicles" : "hosts");
             setInspectorDeckId(deckId);
             setScreen("deckInspector");
           }}
-          onViewDeck={() => {
+          onViewDeck={(returnScreen = "setup") => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("setup");
+            setMenuReturnScreen(returnScreen);
             setInspectorDeckId(selectedDeckId);
             setScreen("deckInspector");
           }}
           hordeDecks={hordeInspectableDecks}
           selectedHordeDeckId={selectedHordeDeckId}
           onSelectHordeDeck={setSelectedHordeDeckId}
-          onViewHordeDeck={() => {
+          onViewHordeDeck={(returnScreen = "setup") => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("setup");
+            setMenuReturnScreen(returnScreen);
             setInspectorDeckId(selectedHordeDeckId);
             setScreen("deckInspector");
           }}
@@ -201,11 +208,13 @@ export default function App() {
               isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
               isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
               options.mode,
+              options.gameMode,
             );
             setLaunchTransition({
               playerName: options.playerName,
               hordeName: hordeInspectableDecks.find((deck) => deck.id === selectedHordeDeckId)?.deck.name ?? "The Horde",
               hordeDeckId: selectedHordeDeckId,
+              gameMode: options.gameMode,
               tutorial: isTutorial,
             });
           }}

@@ -101,13 +101,26 @@ export function resolveHordeCombat(game: GameState, options: { deferTriggeredEve
       continue;
     }
     const attackerStats = getPowerToughness(next, attacker);
-    let attackerDamage = attacker.damageMarked;
     for (const blocker of blockers) {
       const blockerStats = getPowerToughness(next, blocker);
-      dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
-      dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
-      attackerDamage += blockerStats.power;
-      if (hasKeyword(next, blocker, "DEATHTOUCH") || attackerDamage >= attackerStats.toughness) break;
+      const attackerFirstStrike = hasKeyword(next, attacker, "FIRST_STRIKE");
+      const blockerFirstStrike = hasKeyword(next, blocker, "FIRST_STRIKE");
+
+      if (attackerFirstStrike && !blockerFirstStrike) {
+        dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
+        if (!creatureHasLethalDamage(next, blocker)) {
+          dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
+        }
+      } else if (blockerFirstStrike && !attackerFirstStrike) {
+        dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
+        if (!creatureHasLethalDamage(next, attacker)) {
+          dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
+        }
+      } else {
+        dealDamageToCreature(next, blocker, attackerStats.power, hasKeyword(next, attacker, "DEATHTOUCH"));
+        dealDamageToCreature(next, attacker, blockerStats.power, hasKeyword(next, blocker, "DEATHTOUCH"));
+      }
+      if (creatureHasLethalDamage(next, attacker)) break;
     }
     destroyMarkedCreatures(next);
   }
@@ -124,6 +137,10 @@ export function resolveHordeCombat(game: GameState, options: { deferTriggeredEve
   next.combat.hordeAttackers = [];
   next.combat.blockers = {};
   return next;
+}
+
+function creatureHasLethalDamage(game: GameState, card: CardInstance): boolean {
+  return card.deathtouchDamage || card.damageMarked >= getPowerToughness(game, card).toughness;
 }
 
 export function checkWinLoss(game: GameState): void {
