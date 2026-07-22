@@ -20,13 +20,16 @@ type Props = {
   selectedHordeDeckId: string;
   onSelectHordeDeck: (deckId: string) => void;
   onViewHordeDeck: (returnScreen?: "setup" | "chaos") => void;
-  initialScreen?: "home" | "setup" | "chaos" | "decks" | "settings";
+  initialScreen?: MenuScreen;
   preserveMusicOnMount?: boolean;
   requestInitialName?: boolean;
   onNameSaved?: (name: string) => void;
   onRestartFirstTime?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
+
+type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "settings";
+type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "settings">;
 
 const modes: Array<{ id: DifficultyMode; label: string; setupTurns: number }> = [
   { id: "easy", label: "Adventurer", setupTurns: 4 },
@@ -49,8 +52,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [nameDraft, setNameDraft] = useState(requestInitialName ? "" : playerName);
   const [nameRequired, setNameRequired] = useState(requestInitialName);
   const [clearingCache, setClearingCache] = useState(false);
-  const [menuScreen, setMenuScreen] = useState<"home" | "setup" | "chaos" | "decks" | "settings">(initialScreen);
-  const [closingMenuScreen, setClosingMenuScreen] = useState<"decks" | "settings" | undefined>();
+  const [menuScreen, setMenuScreen] = useState<MenuScreen>(initialScreen);
+  const [closingMenuScreen, setClosingMenuScreen] = useState<ClosingMenuScreen | undefined>();
   const startMenuMusic = useAudioStore((state) => state.startMenuMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
@@ -148,7 +151,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function closeMenuPanel() {
-    if (menuScreen === "decks" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
   }
 
   async function copySeed() {
@@ -232,9 +235,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span><strong>Chaos Mode</strong><small>Mutated battle</small></span>
               <Dices size={18} aria-hidden="true" />
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "decks" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("decks"); }}>
+            <button className={`main-menu-entry group ${menuScreen === "chronicles" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("chronicles"); }}>
               <span className="main-menu-entry-mark" />
-              <span>Decks</span>
+              <span>Chronicles</span>
+            </button>
+            <button className={`main-menu-entry group ${menuScreen === "hosts" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("hosts"); }}>
+              <span className="main-menu-entry-mark" />
+              <span>Hosts</span>
             </button>
             <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
               <span className="main-menu-entry-mark" />
@@ -319,8 +326,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             </div>
           </section>
         )}
-        {menuScreen === "decks" && (
-          <DecksView playerDecks={decks} hordeDecks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "decks"} />
+        {menuScreen === "chronicles" && (
+          <DecksView collection="chronicles" decks={decks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "chronicles"} />
+        )}
+        {menuScreen === "hosts" && (
+          <DecksView collection="hosts" decks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
         )}
         </div>
       ) : (

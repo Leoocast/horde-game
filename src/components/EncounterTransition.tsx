@@ -16,7 +16,7 @@ export function EncounterTransition({ playerName, hordeName, hordeDeckId, gameMo
       <div className="encounter-transition-vignette" />
       <div className="encounter-transition-rift" />
       <div className="encounter-transition-content">
-        <p>The chronicle begins</p>
+        <p>{gameMode === "chaos" ? "The chronicle fractures" : "The chronicle begins"}</p>
         <div className="encounter-transition-matchup">
           <strong className="encounter-transition-name encounter-transition-name-player">{playerName}</strong>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>

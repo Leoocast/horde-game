@@ -1585,33 +1585,6 @@
     animation: deck-detail-header-open 160ms ease-out both;
   }
 
-  .deck-detail-back {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: fit-content;
-    min-width: 118px;
-    min-height: 46px;
-    border: 1px solid transparent;
-    background: rgb(116 134 122 / 0.035);
-    padding: 0 16px;
-    color: #8e9b93;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    transition: color 160ms ease, transform 160ms ease;
-  }
-
-  .deck-detail-back:hover,
-  .deck-detail-back:focus-visible {
-    border-color: rgb(150 138 96 / 0.28);
-    background: rgb(94 112 100 / 0.11);
-    color: #efe4c5;
-    outline: none;
-    transform: translateX(-3px);
-  }
-
   .deck-detail-heading {
     min-width: 0;
   }

@@ -8,6 +8,7 @@ import { KeywordPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
+  backLabel: string;
   onBack: () => void;
 };
 
@@ -23,7 +24,7 @@ const DEFAULT_DECK_COLUMNS = DECK_COLUMN_OPTIONS[0];
 const DECK_COLUMNS_STORAGE_KEY = "horde-deck-inspector-columns";
 const ENABLE_DECK_CARD_PREVIEW = false;
 
-export function DeckInspector({ deck, onBack }: Props) {
+export function DeckInspector({ deck, backLabel, onBack }: Props) {
   const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
@@ -64,9 +65,9 @@ export function DeckInspector({ deck, onBack }: Props) {
     <main className={`deck-detail-screen main-menu-shell deck-theme-${theme} h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
       <DeckFireflies />
       <header className="deck-detail-header">
-        <button className="deck-detail-back" type="button" onClick={() => setClosing(true)} disabled={closing}>
+        <button className="expedition-back" type="button" onClick={() => setClosing(true)} disabled={closing}>
           <ArrowLeft size={17} />
-          Decks
+          {backLabel}
         </button>
         <div className="deck-detail-heading">
           <p>Deck collection</p>

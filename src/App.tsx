@@ -31,7 +31,7 @@ export default function App() {
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
   const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
-  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "decks">("home");
+  const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
@@ -141,7 +141,11 @@ export default function App() {
     return (
       <>
         <AudioClickListener />
-        <DeckInspector deck={findInspectableDeck(inspectorDeckId)} onBack={() => setScreen("start")} />
+        <DeckInspector
+          deck={findInspectableDeck(inspectorDeckId)}
+          backLabel={menuReturnScreen === "chronicles" ? "Chronicles" : menuReturnScreen === "hosts" ? "Hosts" : menuReturnScreen === "chaos" ? "Chaos" : "Play"}
+          onBack={() => setScreen("start")}
+        />
         {transitionOverlay}
       </>
     );
@@ -157,7 +161,7 @@ export default function App() {
           onSelectDeck={setSelectedDeckId}
           onOpenDeck={(deckId) => {
             setPreserveMenuMusic(true);
-            setMenuReturnScreen("decks");
+            setMenuReturnScreen(playerInspectableDecks.some((deck) => deck.id === deckId) ? "chronicles" : "hosts");
             setInspectorDeckId(deckId);
             setScreen("deckInspector");
           }}
