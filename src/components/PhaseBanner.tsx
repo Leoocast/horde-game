@@ -1,6 +1,7 @@
 import { Moon, Shield, Skull, Sparkles, Swords, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
+import { useTranslation } from "../i18n/useTranslation";
 
 type BannerTone = "main" | "battle" | "defend" | "horde";
 
@@ -24,7 +25,8 @@ const TONE_CLASS: Record<BannerTone, string> = {
 };
 
 export function PhaseBanner({ game, suspended = false }: { game: GameState; suspended?: boolean }) {
-  const phase = useMemo(() => getBannerState(game), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner]);
+  const t = useTranslation();
+  const phase = useMemo(() => getBannerState(game, t), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner, t]);
   const [visiblePhase, setVisiblePhase] = useState<BannerState | undefined>();
 
   useEffect(() => {
@@ -58,27 +60,27 @@ export function PhaseBanner({ game, suspended = false }: { game: GameState; susp
   );
 }
 
-function getBannerState(game: GameState): BannerState | undefined {
+function getBannerState(game: GameState, t: ReturnType<typeof useTranslation>): BannerState | undefined {
   if (game.winner) return undefined;
   if (game.activeSide === "player" && game.phase === "main" && game.setupTurnsRemaining > 0) {
-    if (game.turnNumber === 1) return { key: `setup-main-${game.turnNumber}`, label: "Main Phase", tone: "main", Icon: Sparkles };
-    if (game.setupTurnsRemaining === 1) return { key: `setup-last-extra-${game.turnNumber}`, label: "Last Extra Turn", tone: "main", Icon: Sparkles };
-    return { key: `setup-extra-${game.turnNumber}`, label: "Extra Turn", tone: "main", Icon: Sparkles };
+    if (game.turnNumber === 1) return { key: `setup-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main", Icon: Sparkles };
+    if (game.setupTurnsRemaining === 1) return { key: `setup-last-extra-${game.turnNumber}`, label: t("phase.lastExtraTurn"), tone: "main", Icon: Sparkles };
+    return { key: `setup-extra-${game.turnNumber}`, label: t("phase.extraTurn"), tone: "main", Icon: Sparkles };
   }
   if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
-    return { key: `horde-defend-${game.turnNumber}-${game.combat.hordeAttackers.length}`, label: "Defend Phase", tone: "defend", Icon: Shield };
+    return { key: `horde-defend-${game.turnNumber}-${game.combat.hordeAttackers.length}`, label: t("phase.defendPhase"), tone: "defend", Icon: Shield };
   }
   if (game.activeSide === "player" && game.phase === "main") {
-    return { key: `player-main-${game.turnNumber}`, label: "Main Phase", tone: "main", Icon: Sparkles };
+    return { key: `player-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main", Icon: Sparkles };
   }
   if (game.activeSide === "player" && game.phase === "combat") {
-    return { key: `player-battle-${game.turnNumber}`, label: "Battle Phase", tone: "battle", Icon: Swords };
+    return { key: `player-battle-${game.turnNumber}`, label: t("phase.battlePhase"), tone: "battle", Icon: Swords };
   }
   if (game.activeSide === "horde" && game.phase === "horde") {
-    return { key: `horde-main-${game.turnNumber}`, label: "Horde Phase", tone: "horde", Icon: Skull };
+    return { key: `horde-main-${game.turnNumber}`, label: t("phase.hordePhase"), tone: "horde", Icon: Skull };
   }
   if (game.phase === "end") {
-    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: "End Phase", tone: game.activeSide === "horde" ? "horde" : "main", Icon: Moon };
+    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: t("phase.endPhase"), tone: game.activeSide === "horde" ? "horde" : "main", Icon: Moon };
   }
   return undefined;
 }

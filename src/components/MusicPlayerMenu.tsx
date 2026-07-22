@@ -2,10 +2,12 @@ import { Music, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "luc
 import { useEffect, useRef, useState } from "react";
 import type { MusicCollectionId } from "../audio/musicManifest";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
+import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
 import { VolumePercentInput } from "./VolumePercentInput";
 
 export function MusicPlayerMenu() {
+  const t = useTranslation();
   const [open, setOpen] = useState(false);
   const menuPresence = useAnimatedPresence(open);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,7 +51,7 @@ export function MusicPlayerMenu() {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={toggle} title="Music player">
+      <button ref={buttonRef} className="game-header-button flex h-10 w-10 items-center justify-center transition" onClick={toggle} title={t("music.player")}>
         <Music size={20} />
       </button>
       {menuPresence.mounted && menuPos && (
@@ -58,23 +60,23 @@ export function MusicPlayerMenu() {
             <div className="game-music-now-playing flex items-center gap-3">
               <div className="game-music-now-icon"><Music size={18} /></div>
               <div className="min-w-0">
-                <div className="game-dialog-kicker">Now playing</div>
+                <div className="game-dialog-kicker">{t("music.nowPlaying")}</div>
                 <div className="mt-1 truncate font-serif text-base text-[#e9ddb9]">{musicStatus.label}</div>
-                <div className="game-music-variant">{musicStatus.variant === "climax" ? "Climax sequence" : "Battle sequence"}</div>
+                <div className="game-music-variant">{musicStatus.variant === "climax" ? t("music.climaxSequence") : t("music.battleSequence")}</div>
               </div>
             </div>
 
             <div className="game-music-controls grid grid-cols-4 gap-2">
-              <button className="icon-button h-9 w-full" onClick={playPrevious} title="Previous">
+              <button className="icon-button h-9 w-full" onClick={playPrevious} title={t("music.previous")}>
                 <SkipBack size={16} />
               </button>
-              <button className="icon-button h-9 w-full" onClick={toggleMusicPause} title={musicStatus.playing ? "Pause" : "Play"}>
+              <button className="icon-button h-9 w-full" onClick={toggleMusicPause} title={musicStatus.playing ? t("music.pause") : t("music.play")}>
                 {musicStatus.playing ? <Pause size={16} /> : <Play size={16} />}
               </button>
-              <button className="icon-button h-9 w-full" onClick={playNext} title="Next">
+              <button className="icon-button h-9 w-full" onClick={playNext} title={t("music.next")}>
                 <SkipForward size={16} />
               </button>
-              <button className="icon-button h-9 w-full" onClick={() => setMusicEnabled(!musicEnabled)} title={musicEnabled ? "Mute" : "Unmute"}>
+              <button className="icon-button h-9 w-full" onClick={() => setMusicEnabled(!musicEnabled)} title={musicEnabled ? t("music.mute") : t("music.unmute")}>
                 {musicEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
             </div>
@@ -89,7 +91,7 @@ export function MusicPlayerMenu() {
                 onChange={(event) => setMusicVolume(Number(event.target.value))}
                 className="game-range min-w-0 flex-1"
               />
-              <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel="Music volume percentage" className="game-music-volume-value" />
+              <VolumePercentInput value={musicVolume} onChange={setMusicVolume} ariaLabel={t("audio.musicPercent")} className="game-music-volume-value" />
             </div>
 
             <div className="game-music-playlist old-scrollbar max-h-72 overflow-auto pr-1">
@@ -108,7 +110,7 @@ export function MusicPlayerMenu() {
                 </button>
               ))}
             </div>
-            <div className="game-music-hint">Select a sequence · Double click to play</div>
+            <div className="game-music-hint">{t("music.selectHint")}</div>
           </div>
         </div>
       )}

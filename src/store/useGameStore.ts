@@ -15,6 +15,8 @@ import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
+import { translate, type TranslationKey } from "../i18n/translations";
+import { useLanguageStore } from "./useLanguageStore";
 
 type GameStore = {
   game: GameState;
@@ -506,7 +508,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!handLimitSelectionId || playerHandOverflow(game) <= 0) return;
     const next = structuredClone(game) as GameState;
     discardChosenCard(next, handLimitSelectionId);
-    notifyDiscardEffects(game, next, { title: "Hand limit", tone: "warning" });
+    notifyDiscardEffects(game, next, { title: uiText("toast.handLimit"), tone: "warning" });
     const overflow = playerHandOverflow(next);
     set({
       game: next,
@@ -1010,7 +1012,7 @@ function playDrawOneIfPlayerDrew(previous: GameState, next: GameState) {
 function showActionToast(message?: string) {
   if (!message) return;
   useToastStore.getState().pushToast({
-    title: "Action unavailable",
+    title: uiText("toast.actionUnavailable"),
     message,
     tone: "warning",
   });
@@ -1025,7 +1027,7 @@ function scheduleHordeEnterTriggers(cards: CardInstance[]): void {
       useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
       useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
       useToastStore.getState().pushToast({
-        title: "Horde effect",
+        title: uiText("toast.hordeEffect"),
         message: hordeEnterTriggerMessage(card),
         tone: "horde",
       });
@@ -1090,7 +1092,7 @@ function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
   useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
   for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
   useToastStore.getState().pushToast({
-    title: "Horde effect",
+    title: uiText("toast.hordeEffect"),
     message: queuedHordeTriggerMessage(sources[0]),
     tone: "horde",
   });
@@ -1120,8 +1122,7 @@ function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
 }
 
 function queuedHordeTriggerMessage(source?: CardInstance): string {
-  if (source?.triggerMessage) return source.triggerMessage;
-  return `${source?.name ?? "Horde card"} resolves its triggered effect.`;
+  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : "Horde" });
 }
 
 // Creature casts and land plays both bump the shared summoningAnimationCount, but each used to
@@ -1171,7 +1172,7 @@ function notifyDiscardEffects(previous: GameState, next: GameState, options?: { 
   for (const message of discardLogs) {
     useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
     useToastStore.getState().pushToast({
-      title: options?.title ?? "Horde effect",
+      title: options?.title ?? uiText("toast.hordeEffect"),
       message: message.replace(/^Player\b/, "Chronicler"),
       tone: options?.tone ?? "horde",
     });
@@ -1185,11 +1186,12 @@ function hasEnterBattlefieldTrigger(card: CardInstance): boolean {
 function hordeEnterTriggerMessage(card: CardInstance): string {
   const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD");
   const effect = trigger?.effect as EffectDefinition | undefined;
-  if (effect?.type === "CREATE_TOKEN") return `${card.name} resolves. Horde creates ${Number(effect.amount ?? 1)} token(s).`;
-  if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return `${card.name} resolves. Horde mills ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_DISCARDS") return `${card.name} resolves. Chronicler discards ${Number(effect.amount ?? 1)} card(s).`;
-  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return `${card.name} resolves. Chronicler loses ${Number(effect.amount ?? 1)} life.`;
-  return `${card.name} resolves its triggered effect.`;
+  const cardName = uiCardName(card);
+  if (effect?.type === "CREATE_TOKEN") return uiText("toast.cardCreatesTokens", { card: cardName, count: Number(effect.amount ?? 1) });
+  if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return uiText("toast.cardMills", { card: cardName, count: Number(effect.amount ?? 1) });
+  if (effect?.type === "EACH_OPPONENT_DISCARDS") return uiText("toast.cardDiscards", { card: cardName, count: Number(effect.amount ?? 1) });
+  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return uiText("toast.cardLifeLoss", { card: cardName, count: Number(effect.amount ?? 1) });
+  return uiText("toast.cardTrigger", { card: cardName });
 }
 
 function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMillAnimationItem[] {
@@ -1304,8 +1306,8 @@ function cardCastReactionMessage(card: CardInstance): string {
   const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "CARD_CAST");
   const effect = trigger?.effect as EffectDefinition | undefined;
   const inner = effect?.type === "SEQUENCE" ? ((effect.effects as EffectDefinition[] | undefined)?.find((item) => item.type === "CREATE_TOKEN") ?? effect) : effect;
-  if (inner?.type === "CREATE_TOKEN") return `${card.name} resolves. Horde creates a token.`;
-  return `${card.name} resolves its triggered effect.`;
+  if (inner?.type === "CREATE_TOKEN") return uiText("toast.cardCreatesToken", { card: uiCardName(card) });
+  return uiText("toast.cardTrigger", { card: uiCardName(card) });
 }
 
 const CARD_CAST_REACTION_RESOLVE_MS = 620;
@@ -1357,8 +1359,8 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
   useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
   for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
   useToastStore.getState().pushToast({
-    title: "Horde effect",
-    message: sources.length === 1 ? cardCastReactionMessage(sources[0]) : "Horde resolves its triggered effects.",
+    title: uiText("toast.hordeEffect"),
+    message: sources.length === 1 ? cardCastReactionMessage(sources[0]) : uiText("toast.hordeResolves"),
     tone: "horde",
   });
   window.setTimeout(() => {
@@ -1404,7 +1406,7 @@ function runSmallpoxSequence(card: CardInstance): void {
   });
   useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
   useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: "Horde effect", message: `${card.name} afflicts the Horde.`, tone: "horde" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.afflictsHorde", { card: uiCardName(card) }), tone: "horde" });
   window.setTimeout(() => {
     if (resetEpoch !== hordeAutoTriggerSequenceId) return;
     useGameStore.setState((state) => {
@@ -1448,7 +1450,7 @@ function beginSmallpoxPlayerRound(resetEpoch: number): void {
   const card = useGameStore.getState().smallpoxCard;
   useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: "Horde effect", message: `${card?.name ?? "Smallpox"} turns against you.`, tone: "horde" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "horde" });
   window.setTimeout(() => {
     if (resetEpoch !== hordeAutoTriggerSequenceId) return;
     useGameStore.setState((state) => {
@@ -1786,4 +1788,12 @@ function nextDeadCardIds(event: HordeAttackEvent): string[] {
   if (event.attackerDies) next.add(event.attackerId);
   if (event.blockerDies && event.blockerId) next.add(event.blockerId);
   return [...next];
+}
+
+function uiText(key: TranslationKey, params?: Record<string, string | number>): string {
+  return translate(useLanguageStore.getState().language, key, params);
+}
+
+function uiCardName(card: CardInstance): string {
+  return useLanguageStore.getState().language === "es" ? card.displayNameEs || card.displayName : card.displayName;
 }

@@ -5,6 +5,8 @@ import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
+import { translate } from "../i18n/translations";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -80,6 +82,7 @@ function BattlefieldRowSurface({
 }
 
 export function Battlefield({ game, side, cards }: Props) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
@@ -557,7 +560,7 @@ export function Battlefield({ game, side, cards }: Props) {
             );
           })}
         </AnimatePresence>
-        {smallpoxLandSelectionActive && <div className="mana-core-target-label">Discard one energy</div>}
+        {smallpoxLandSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
     );
   }
@@ -1181,9 +1184,15 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
 }
 
 function showBlockToast(message: string): void {
+  const language = useLanguageStore.getState().language;
+  const localizedMessage = message === "That creature cannot block."
+    ? translate(language, "error.creatureCannotBlock")
+    : message === "Flying attackers need flying or reach to block."
+      ? translate(language, "error.flyingBlock")
+      : message;
   useToastStore.getState().pushToast({
-    title: "Cannot block",
-    message,
+    title: translate(language, "error.cannotBlock"),
+    message: localizedMessage,
     tone: "warning",
   });
 }

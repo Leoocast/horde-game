@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
@@ -201,8 +202,8 @@ export function CardDetailsModal({
   onClose,
   onPrevious,
   onNext,
-  previousLabel = "Previous card",
-  nextLabel = "Next card",
+  previousLabel,
+  nextLabel,
   displayName,
   typeLineText,
 }: {
@@ -221,18 +222,19 @@ export function CardDetailsModal({
   displayName?: string;
   typeLineText?: string;
 }) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : displayName ?? localizedCardName(card, language);
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
       <div className="relative flex w-[min(1320px,calc(100vw-48px))] items-center justify-center">
         {onPrevious && (
-          <button className="old-button absolute left-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel}>
+          <button className="old-button absolute left-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel ?? t("common.previousCard")}>
             <ChevronLeft size={26} />
           </button>
         )}
         {onNext && (
-          <button className="old-button absolute right-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel}>
+          <button className="old-button absolute right-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel ?? t("common.nextCard")}>
             <ChevronRight size={26} />
           </button>
         )}
@@ -250,7 +252,7 @@ export function CardDetailsModal({
               <h2 className="old-title text-3xl font-black leading-tight">{localizedName}</h2>
               <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLineText ?? localizedTypeLine(card, language)}</p>
             </div>
-            <button className="icon-button h-9 w-9" title="Close details" onClick={onClose}>
+            <button className="icon-button h-9 w-9" title={t("common.closeDetails")} onClick={onClose}>
               <X size={18} />
             </button>
           </div>
@@ -258,14 +260,14 @@ export function CardDetailsModal({
             {keywords && <KeywordPills keywords={keywords} />}
             {stats && <span className="preview-stat-pill scale-110">{stats}</span>}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-              <span className="old-title text-base normal-case tracking-normal" title="Font size">
+              <span className="old-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
                 aA
               </span>
-              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))} title="Decrease font size">
+              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))} title={t("common.decreaseFont")}>
                 -
               </button>
               <input type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} className="w-32 accent-[#d6a34c]" />
-              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))} title="Increase font size">
+              <button className="icon-button h-7 w-7 text-sm" disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))} title={t("common.increaseFont")}>
                 +
               </button>
               <span className="w-8 text-right text-[#ffe0a0]">{fontSize}</span>

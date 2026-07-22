@@ -1,12 +1,14 @@
 import { Skull } from "lucide-react";
 import { useEffect } from "react";
 import { useAudioStore } from "../store/useAudioStore";
+import { useTranslation } from "../i18n/useTranslation";
 
 type Props = {
   onComplete: () => void;
 };
 
 export function SurgeTransition({ onComplete }: Props) {
+  const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export function SurgeTransition({ onComplete }: Props) {
       <div className="game-result-banner" aria-hidden="true">
         <span className="game-result-line" />
         <span className="game-result-crest"><Skull size={32} strokeWidth={1.7} /></span>
-        <h1>Surge</h1>
+        <h1>{t("surge.title")}</h1>
         <span className="game-result-line game-result-line-right" />
       </div>
-      <p className="surge-transition-message">The Horde is unleashed</p>
+      <p className="surge-transition-message">{t("surge.message")}</p>
     </div>
   );
 }

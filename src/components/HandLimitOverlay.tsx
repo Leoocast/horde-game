@@ -5,8 +5,10 @@ import type { GameState } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
+import { useTranslation } from "../i18n/useTranslation";
 
 export function HandLimitOverlay({ game }: { game: GameState }) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const active = useGameStore((state) => state.handLimitDiscardActive);
   const selectedId = useGameStore((state) => state.handLimitSelectionId);
@@ -32,15 +34,15 @@ export function HandLimitOverlay({ game }: { game: GameState }) {
             aria-labelledby="hand-limit-title"
           >
             <div className="hand-limit-icon"><Hand size={20} /></div>
-            <p className="game-dialog-kicker">End phase · {game.player.hand.length}/{MAX_PLAYER_HAND_SIZE} cards</p>
-            <h2 id="hand-limit-title" className="old-title mt-1 text-lg uppercase tracking-[0.09em]">Discard down to seven</h2>
-            <p className="mt-2 text-sm text-[#a9aaa0]">Choose {overflow} card{overflow === 1 ? "" : "s"} from your hand before ending the turn.</p>
+            <p className="game-dialog-kicker">{t("hand.endPhaseCount", { current: game.player.hand.length, max: MAX_PLAYER_HAND_SIZE })}</p>
+            <h2 id="hand-limit-title" className="old-title mt-1 text-lg uppercase tracking-[0.09em]">{t("hand.discardToSeven")}</h2>
+            <p className="mt-2 text-sm text-[#a9aaa0]">{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
             <div className="mt-3 flex items-center gap-2">
               <button className="counter-target-button counter-target-cancel" type="button" disabled={!selectedId} onClick={() => selectDiscard(undefined)}>
-                {selected ? localizedCardName(selected, language) : "Choose a card"}
+                {selected ? localizedCardName(selected, language) : t("hand.chooseCard")}
               </button>
-              <button className="counter-target-button counter-target-confirm !flex-none !px-5" type="button" disabled={!selectedId} onClick={confirmDiscard} title="Discard selected card">
-                <Check size={20} /> Discard
+              <button className="counter-target-button counter-target-confirm !flex-none !px-5" type="button" disabled={!selectedId} onClick={confirmDiscard} title={t("hand.discardSelected")}>
+                <Check size={20} /> {t("hand.discard")}
               </button>
             </div>
           </motion.section>

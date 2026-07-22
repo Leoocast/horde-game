@@ -39,7 +39,7 @@ const directDetailsById = new Map<string, CardRemoteDetails>([
   [
     "zombie_token",
     {
-      imageUrl: "https://cards.scryfall.io/normal/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525",
+      imageUrl: "https://cards.scryfall.io/large/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525",
       oracleText: "Token Creature - Zombie\n2/2",
       flavorText: "",
     },
@@ -135,7 +135,6 @@ async function loadCardDetails(definitionId: string, language: AppLanguage): Pro
 }
 
 function readDirectDetails(definitionId: string, language: AppLanguage): CardRemoteDetails | undefined {
-  if (language !== "en") return undefined;
   const directDetails = directDetailsById.get(definitionId);
   if (directDetails) memoryCache.set(`${language}:${definitionId}`, directDetails);
   return directDetails;

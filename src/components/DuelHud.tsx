@@ -5,19 +5,15 @@ import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
 
-const SMALLPOX_KIND_LABEL: Record<string, string> = {
-  discard: "Choose a card to discard",
-  "sacrifice-creature": "Choose a creature to sacrifice",
-  "sacrifice-land": "Choose one energy to discard",
-};
-
 export function DuelHud({ game }: { game: GameState }) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
   const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
@@ -98,18 +94,18 @@ export function DuelHud({ game }: { game: GameState }) {
             </div>
             {smallpoxSelectionActive && (
               <div className="smallpox-selection-panel-inline old-panel-soft">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{SMALLPOX_KIND_LABEL[smallpoxSelectionKind!]}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(smallpoxSelectionKind === "discard" ? "target.discardCard" : smallpoxSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
                 <span className="text-sm text-[#d6b879]">
                   {smallpoxSelectionKind === "sacrifice-land" && smallpoxSelectionTargetId
-                    ? "Energy selected"
+                    ? t("target.energySelected")
                     : smallpoxTarget
                       ? localizedCardName(smallpoxTarget, language)
-                      : "No target selected"}
+                      : t("target.noSelection")}
                 </span>
                 <div className="counter-target-actions">
                   {smallpoxSelectionTargetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title="Cancel">
-                      Cancel
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title={t("common.cancel")}>
+                      {t("common.cancel")}
                     </button>
                   )}
                   <button
@@ -117,7 +113,7 @@ export function DuelHud({ game }: { game: GameState }) {
                     className="counter-target-button counter-target-confirm"
                     disabled={!smallpoxSelectionTargetId}
                     onClick={confirmSmallpoxSelection}
-                    title="Confirm"
+                    title={t("common.confirm")}
                   >
                     <Check size={22} />
                   </button>
@@ -140,7 +136,7 @@ export function DuelHud({ game }: { game: GameState }) {
               <Skull size={24} />
             </div>
             <div className="horde-deck-counter-copy">
-              <div className="old-title horde-deck-counter-title text-xs font-bold uppercase tracking-wide">Horde Deck</div>
+              <div className="old-title horde-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hordeDeck")}</div>
               <div className="horde-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="horde-deck-count text-3xl font-black">{visualHordeLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
@@ -160,21 +156,21 @@ export function DuelHud({ game }: { game: GameState }) {
               </div>
             </div>
             {game.horde.poisonCounters > 0 && (
-              <GameTooltip content={`Poison counters: ${game.horde.poisonCounters} of 3`} side="bottom" className="horde-poison-tooltip">
-                <div className="horde-poison-status" aria-label={`Horde poison counters: ${game.horde.poisonCounters} of 3`}>
+              <GameTooltip content={t("game.poisonCounters", { count: game.horde.poisonCounters })} side="bottom" className="horde-poison-tooltip">
+                <div className="horde-poison-status" aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters })}>
                   <Droplet size={15} fill="currentColor" strokeWidth={2.2} />
                   <span>{game.horde.poisonCounters}</span>
                 </div>
               </GameTooltip>
             )}
           </div>
-          <GameTooltip content="View graveyard" side="bottom" className="horde-deck-graveyard-host">
+          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="horde-deck-graveyard-host">
             <button
               data-horde-mill-target="true"
               data-audio-click="valid"
               className="horde-deck-graveyard flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={`View Horde graveyard, ${visualHordeGraveyardCount} cards`}
+              aria-label={t("game.viewHordeGraveyard", { count: visualHordeGraveyardCount })}
             >
               <Archive size={15} strokeWidth={2.4} />
               <span className="horde-deck-graveyard-count">{visualHordeGraveyardCount}</span>
@@ -190,8 +186,8 @@ export function DuelHud({ game }: { game: GameState }) {
                 exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <GameTooltip content={`${pendingDamage} attack damage ÷ 3 mills ${pendingMill} Horde cards`} side="bottom">
-                  <div className="horde-attack-count" aria-label={`${pendingDamage} attack damage mills ${pendingMill} Horde cards`}>
+                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingMill })} side="bottom">
+                  <div className="horde-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingMill })}>
                     <Swords size={17} strokeWidth={2.3} />
                     <span className="horde-attack-formula">{pendingDamage} / 3 = - {pendingMill}</span>
                   </div>
@@ -201,12 +197,13 @@ export function DuelHud({ game }: { game: GameState }) {
           </AnimatePresence>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title="Horde Graveyard" cards={game.horde.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.hordeGraveyard")} cards={game.horde.graveyard} onClose={() => setGraveyardOpen(false)} />}
     </div>
   );
 }
 
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
+  const t = useTranslation();
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
@@ -218,7 +215,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
-  const phaseSteps = ["Main", "Battle", "End"];
+  const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
 
   useEffect(() => {
     setVisualLife(game.player.life);
@@ -247,7 +244,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         ].join(" ")}
       >
         <div className="player-life-cluster">
-          <div className={["game-phase-progress", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={`Current phase: ${phaseSteps[activePhaseIndex]}`}>
+          <div className={["game-phase-progress", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={t("game.currentPhase", { phase: phaseSteps[activePhaseIndex] })}>
             <div className="game-phase-progress-labels" aria-hidden="true">
               {phaseSteps.map((phase, index) => (
                 <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>
@@ -291,7 +288,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
                 className="old-title player-life-name-input text-xs font-bold uppercase tracking-wide"
                 value={chroniclerName}
                 maxLength={24}
-                aria-label="Chronicler name"
+                aria-label={t("game.chroniclerName")}
                 onChange={(event) => setChroniclerName(event.currentTarget.value)}
                 onFocus={(event) => event.currentTarget.select()}
               />
@@ -304,13 +301,13 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
             </div>
           </div>
           </motion.div>
-          <GameTooltip content="View graveyard" side="top" className="player-graveyard-host">
+          <GameTooltip content={t("game.viewGraveyard")} side="top" className="player-graveyard-host">
             <button
               data-player-discard-target="true"
               data-audio-click="valid"
               className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={`View Chronicler graveyard, ${game.player.graveyard.length} cards`}
+              aria-label={t("game.viewPlayerGraveyard", { count: game.player.graveyard.length })}
             >
               <Archive size={15} strokeWidth={2.4} />
               <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
@@ -318,7 +315,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
           </GameTooltip>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title="Chronicler Graveyard" cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
     </>
   );
 }

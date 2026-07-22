@@ -1,6 +1,7 @@
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
@@ -41,6 +42,7 @@ type Props = {
 };
 
 export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
@@ -154,19 +156,19 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">Tapped</span>}
-          {attacking && <span className="card-state-tag card-state-tag-attack">Atk</span>}
+          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
+          {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? (
             <span
               className="card-block-state-tag"
               aria-label={`Blocking, order ${linkLabel}`}
               style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
             >
-              <span>Blk</span>
+              <span>{t("card.blocking")}</span>
               <strong>{linkLabel}</strong>
             </span>
           ) : blocking ? (
-            <span className="card-state-tag card-state-tag-block">Blk</span>
+            <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : linkLabel ? (
             <span
               className="card-block-order-badge"

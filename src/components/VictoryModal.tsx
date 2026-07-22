@@ -4,6 +4,7 @@ import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { useAudioStore } from "../store/useAudioStore";
+import { useTranslation } from "../i18n/useTranslation";
 
 type Props = {
   game: GameState;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
+  const t = useTranslation();
   const reset = useGameStore((state) => state.reset);
   const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
@@ -31,9 +33,9 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
   async function copySeed() {
     try {
       await navigator.clipboard.writeText(seedInput);
-      pushToast({ title: "Seed copied", message: seedInput, tone: "success" });
+      pushToast({ title: t("toast.seedCopied"), message: seedInput, tone: "success" });
     } catch {
-      pushToast({ title: "Could not copy seed", message: seedInput, tone: "warning" });
+      pushToast({ title: t("toast.seedCopyFailed"), message: seedInput, tone: "warning" });
     }
   }
 
@@ -47,20 +49,20 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
       <div className="game-result-banner" aria-hidden="true">
         <span className="game-result-line" />
         <span className="game-result-crest"><Crown size={32} strokeWidth={1.7} /></span>
-        <h1>Victory</h1>
+        <h1>{t("result.victory")}</h1>
         <span className="game-result-line game-result-line-right" />
       </div>
 
       <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="victory-result-title">
         <span className="game-result-panel-mark" />
         <p id="victory-result-title" className="game-result-message">
-          The Horde has been defeated
+          {t("result.hordeDefeated")}
         </p>
 
         {!isTutorial && (
           <>
             <label className="game-result-seed-label mt-6 block text-left" htmlFor="victory-seed">
-              Chronicle seed
+              {t("result.chronicleSeed")}
             </label>
             <div className="game-result-seed mt-2 flex gap-2">
               <input
@@ -69,10 +71,10 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
                 onChange={(event) => setSeedInput(event.target.value)}
                 className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
               />
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title="Copy seed">
+              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title={t("result.copySeed")}>
                 <Copy size={17} />
               </button>
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title="Regenerate seed">
+              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title={t("result.regenerateSeed")}>
                 <RefreshCw size={17} />
               </button>
             </div>
@@ -85,14 +87,14 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
             onClick={onReturnToMenu}
           >
             <Home size={18} />
-            {isTutorial ? "Home" : "Menu"}
+            {isTutorial ? t("common.home") : t("common.menu")}
           </button>
           <button
             className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
             onClick={restart}
           >
             <RefreshCcw size={18} />
-            {isTutorial ? "Restart Tutorial" : "Restart"}
+            {isTutorial ? t("result.restartTutorial") : t("common.restart")}
           </button>
         </div>
       </section>

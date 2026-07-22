@@ -5,6 +5,7 @@ import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
 import { Card } from "./Card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -33,6 +34,7 @@ const handCardMotion: Variants = {
 };
 
 export function Hand({ game }: { game: GameState }) {
+  const t = useTranslation();
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
@@ -211,8 +213,8 @@ export function Hand({ game }: { game: GameState }) {
     }
     if (releasedInPlayZone && !playable) {
       pushToast({
-        title: "Cannot play card",
-        message: getUnplayableReason(game, card, pendingTriggeredEffectCount),
+        title: t("error.cannotPlay"),
+        message: getUnplayableReason(game, card, pendingTriggeredEffectCount, t),
         tone: "warning",
       });
     }
@@ -266,7 +268,7 @@ export function Hand({ game }: { game: GameState }) {
 
   return (
     <>
-      {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} />}
+      {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} recycleLabel={t("hand.recycle")} hintLabel={t("hand.recycleHint")} />}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
         <div className="hand-atmosphere absolute inset-0" />
       </div>
@@ -423,20 +425,20 @@ function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggere
   return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("Land") && canPlayerRecycleEnergy(game);
 }
 
-function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): string {
-  if (game.winner) return "The game is already over.";
-  if (pendingTriggeredEffectCount > 0) return "Resolve the triggered effect before playing another card.";
+function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount: number, t: ReturnType<typeof useTranslation>): string {
+  if (game.winner) return t("error.gameOver");
+  if (pendingTriggeredEffectCount > 0) return t("error.resolveBeforePlay");
   if (!canPlayCardAtCurrentTiming(game, card)) {
-    if (card.cardTypes.includes("Instant")) return "Instants can be played during your main phase, battle phase, or defense.";
-    return "Cards can only be played during your main phase.";
+    if (card.cardTypes.includes("Instant")) return t("error.instantTiming");
+    return t("error.mainTiming");
   }
   if (card.cardTypes.includes("Land")) {
-    if (!canPlayerPutAnotherLand(game)) return `You cannot control more than ${MAX_PLAYER_LANDS} lands.`;
-    if (game.player.energyActionUsedThisTurn) return "You already used your Energy action this turn.";
-    return "This land cannot be played right now.";
+    if (!canPlayerPutAnotherLand(game)) return t("error.landLimit", { count: MAX_PLAYER_LANDS });
+    if (game.player.energyActionUsedThisTurn) return t("error.energyUsed");
+    return t("error.landUnavailable");
   }
-  if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return `No valid target sequence for ${card.displayName}.`;
-  return `Not enough available mana to cast ${card.displayName}.`;
+  if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return t("error.noTargets", { card: card.displayName });
+  return t("error.notEnoughMana", { card: card.displayName });
 }
 
 type EnergyRecycleHint = {
@@ -444,7 +446,7 @@ type EnergyRecycleHint = {
   target: { x: number; y: number };
 };
 
-function EnergyRecycleDragHint({ hint }: { hint: EnergyRecycleHint }) {
+function EnergyRecycleDragHint({ hint, recycleLabel, hintLabel }: { hint: EnergyRecycleHint; recycleLabel: string; hintLabel: string }) {
   const controlX = Math.max(hint.pointer.x, hint.target.x) + 34;
   const controlY = Math.min(hint.pointer.y, hint.target.y) - 44;
   const path = `M ${hint.pointer.x} ${hint.pointer.y} Q ${controlX} ${controlY} ${hint.target.x} ${hint.target.y}`;
@@ -463,8 +465,8 @@ function EnergyRecycleDragHint({ hint }: { hint: EnergyRecycleHint }) {
         <path className="energy-recycle-drag-path" d={path} markerEnd="url(#energy-recycle-arrowhead)" />
       </svg>
       <div className="energy-recycle-drag-label" style={{ left: labelX, top: labelY }}>
-        <strong>RECICLAR</strong>
-        <span>Al fondo · Roba 1</span>
+        <strong>{recycleLabel}</strong>
+        <span>{hintLabel}</span>
       </div>
       <span className="energy-recycle-target-ring" style={{ left: hint.target.x, top: hint.target.y }} />
     </div>

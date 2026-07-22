@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "luci
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { useTranslation } from "../i18n/useTranslation";
 import type { AppLanguage } from "../i18n/translations";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
@@ -28,6 +29,7 @@ const DECK_COLUMNS_STORAGE_KEY = "horde-deck-inspector-columns";
 const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, backLabel, onBack }: Props) {
+  const t = useTranslation();
   const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
   const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
@@ -73,19 +75,19 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
           {backLabel}
         </button>
         <div className="deck-detail-heading">
-          <p>Deck collection</p>
+          <p>{t("deck.collection")}</p>
           <h1>{deck.deck.name}</h1>
         </div>
         <div className="deck-detail-tools">
           <div className="deck-detail-counts">
-            <span><strong>{cards.length}</strong> unique</span>
-            <span><strong>{cards.reduce((total, copy) => total + copy.quantity, 0)}</strong> cards</span>
+            <span><strong>{cards.length}</strong> {t("common.unique")}</span>
+            <span><strong>{cards.reduce((total, copy) => total + copy.quantity, 0)}</strong> {t("common.cards")}</span>
           </div>
           <div className="deck-detail-zoom">
-            <Search size={15} aria-label="Card zoom" />
-            <button disabled={columnCount === DECK_COLUMN_OPTIONS[0]} onClick={() => setColumnCount((value) => value + 1)} title="Zoom out">−</button>
+            <Search size={15} aria-label={t("deck.cardZoom")} />
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[0]} onClick={() => setColumnCount((value) => value + 1)} title={t("deck.zoomOut")}>−</button>
             <input
-              aria-label={`Card zoom, ${columnCount} columns`}
+              aria-label={t("deck.cardZoomColumns", { count: columnCount })}
               className="game-range"
               type="range"
               min={0}
@@ -94,7 +96,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
               value={zoomLevel}
               onChange={(event) => setColumnCount(DECK_COLUMN_OPTIONS[Number(event.target.value)])}
             />
-            <button disabled={columnCount === DECK_COLUMN_OPTIONS[DECK_COLUMN_OPTIONS.length - 1]} onClick={() => setColumnCount((value) => value - 1)} title="Zoom in">+</button>
+            <button disabled={columnCount === DECK_COLUMN_OPTIONS[DECK_COLUMN_OPTIONS.length - 1]} onClick={() => setColumnCount((value) => value - 1)} title={t("deck.zoomIn")}>+</button>
           </div>
         </div>
       </header>
@@ -196,12 +198,13 @@ function DeckCardTile({
 }
 
 function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: InspectableDeck; card?: NewDeckCard; pinned: boolean; onClearPin: () => void; onDetails: () => void }) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const details = useDeckCardDetails(deck.id, card, deck.images);
   if (!card) {
     return (
       <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
-        Hover a card to inspect it.
+        {t("deck.hoverInspect")}
       </aside>
     );
   }
@@ -214,13 +217,13 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
       <div className="deck-detail-info-header">
         <div>
-          <span className="deck-detail-info-kicker">Selected card</span>
+          <span className="deck-detail-info-kicker">{t("deck.selectedCard")}</span>
           <h2>{displayName}</h2>
           <p>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(card, language)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {pinned && (
-            <button className="deck-detail-close" title="Clear selection" onClick={onClearPin}>
+            <button className="deck-detail-close" title={t("deck.clearSelection")} onClick={onClearPin}>
               <X size={15} />
             </button>
           )}
@@ -242,7 +245,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           </div>
         )}
         <button className="deck-detail-action" onClick={onDetails}>
-          <span>Open details</span>
+          <span>{t("common.openDetails")}</span>
           <Maximize2 size={18} />
         </button>
       </div>
@@ -271,6 +274,7 @@ function DeckInspectorDetailsModal({
   onPrevious: () => void;
   onNext: () => void;
 }) {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
@@ -333,26 +337,26 @@ function DeckInspectorDetailsModal({
       }}
     >
       <section className="deck-collection-modal" role="dialog" aria-modal="true" aria-label={`${displayName} details`}>
-        <button className="deck-collection-modal-close" type="button" onClick={closeModal} title="Close details">
+        <button className="deck-collection-modal-close" type="button" onClick={closeModal} title={t("common.closeDetails")}>
           <X size={20} />
         </button>
 
         <div className={`deck-collection-modal-content is-${transition}`}>
           <div className="deck-collection-modal-art-column">
-            <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title="Previous deck card">
+            <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title={t("common.previousCard")}>
               <ChevronLeft size={24} />
             </button>
             <div className="deck-collection-modal-art">
               {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <MissingCardArt card={card} />}
             </div>
-            <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title="Next deck card">
+            <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title={t("common.nextCard")}>
               <ChevronRight size={24} />
             </button>
           </div>
 
           <div className="deck-collection-modal-info">
             <header className="deck-collection-modal-header">
-              <p>Card details <span>{position} / {total}</span></p>
+              <p>{t("deck.cardDetails")} <span>{position} / {total}</span></p>
               <div>
                 <h2>{displayName}</h2>
               </div>
@@ -371,7 +375,7 @@ function DeckInspectorDetailsModal({
             </div>
 
             <footer className="deck-collection-modal-footer">
-              <span>Text size</span>
+              <span>{t("common.textSize")}</span>
               <button disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))}>−</button>
               <input className="game-range" type="range" min={16} max={30} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
               <button disabled={fontSize >= 30} onClick={() => setFontSize(Math.min(30, fontSize + 1))}>+</button>
