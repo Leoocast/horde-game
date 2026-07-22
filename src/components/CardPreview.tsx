@@ -165,7 +165,11 @@ export function CardPreview() {
           <div data-preserve-card-focus="true" data-card-preview-locked="true" className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
             <img src={imageUrl} alt={card.name} className="card-preview-cropped-image" draggable={false} />
           </div>
-          {keywords && <div data-preserve-card-focus="true" data-card-preview-locked="true"><KeywordExplanations keywords={keywords} /></div>}
+          {keywords && (
+            <div data-preserve-card-focus="true" data-card-preview-locked="true">
+              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} />
+            </div>
+          )}
         </aside>
       </>
     );
@@ -284,7 +288,7 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
   );
 }
 
-function KeywordExplanations({ keywords }: { keywords: string }) {
+function KeywordExplanations({ keywords, chaos = false }: { keywords: string; chaos?: boolean }) {
   const entries = keywords
     .split(",")
     .map((keyword) => keyword.trim())
@@ -293,7 +297,7 @@ function KeywordExplanations({ keywords }: { keywords: string }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex w-[min(260px,20vw)] flex-col gap-2">
+    <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
           <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(keyword)}</div>
@@ -324,6 +328,7 @@ function keywordTooltip(keyword: string): string {
   if (upper === "DEATHTOUCH") return "Any damage this creature deals to another creature is lethal.";
   if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
   if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
+  if (upper === "SKULK") return "Can't be blocked by creatures with greater power.";
   if (upper.startsWith("TOXIC")) return "When this creature deals combat damage to the Horde, it adds poison counters.";
   return "Keyword ability.";
 }

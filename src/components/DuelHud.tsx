@@ -244,7 +244,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         ].join(" ")}
       >
         <div className="player-life-cluster">
-          <div className="game-phase-progress" aria-label={`Current phase: ${phaseSteps[activePhaseIndex]}`}>
+          <div className={["game-phase-progress", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={`Current phase: ${phaseSteps[activePhaseIndex]}`}>
             <div className="game-phase-progress-labels" aria-hidden="true">
               {phaseSteps.map((phase, index) => (
                 <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>

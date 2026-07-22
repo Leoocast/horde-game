@@ -1,13 +1,15 @@
 import { Swords } from "lucide-react";
+import type { GameMode } from "../engine/GameTypes";
 
 type Props = {
   playerName: string;
   hordeName: string;
   hordeDeckId: string;
+  gameMode: GameMode;
 };
 
-export function EncounterTransition({ playerName, hordeName, hordeDeckId }: Props) {
-  const tone = hordeDeckId.includes("goblin") ? "goblins" : "undead";
+export function EncounterTransition({ playerName, hordeName, hordeDeckId, gameMode }: Props) {
+  const tone = gameMode === "chaos" ? "chaos" : hordeDeckId.includes("goblin") ? "goblins" : "undead";
 
   return (
     <div className={`encounter-transition is-${tone}`} role="status" aria-live="polite" data-audio-click="off">

@@ -70,7 +70,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <div className={["game-phase-orb fixed right-4 top-[46%] -translate-y-1/2", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}>
+      <div className={["game-phase-orb fixed right-4 top-[46%] -translate-y-1/2", game.gameMode === "chaos" ? "is-chaos" : "", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}>
         <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)}>
           <button
             data-audio-click="off"

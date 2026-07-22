@@ -1014,6 +1014,12 @@
     --encounter-accent-bright: #efb56e;
   }
 
+  .encounter-transition.is-chaos {
+    --encounter-accent: #a94f8c;
+    --encounter-accent-bright: #f0b9df;
+    background: rgb(13 3 12 / 0.99);
+  }
+
   .encounter-transition-vignette {
     position: absolute;
     z-index: -1;
@@ -1042,6 +1048,18 @@
     right: 0;
     transform-origin: right center;
     animation-name: encounter-curtain-right;
+  }
+
+  .encounter-transition.is-chaos .encounter-transition-vignette::before,
+  .encounter-transition.is-chaos .encounter-transition-vignette::after {
+    background:
+      linear-gradient(105deg, rgb(31 8 27 / 0.99), rgb(8 2 9 / 0.995)),
+      repeating-linear-gradient(90deg, transparent 0 23px, rgb(240 168 213 / 0.04) 24px);
+  }
+
+  .encounter-transition.is-chaos .encounter-transition-name-horde,
+  .encounter-transition.is-chaos .encounter-transition-versus {
+    color: #d9a3c7;
   }
 
   .encounter-transition-content {
@@ -3567,6 +3585,13 @@
     --phase-accent: #9d6753;
     --phase-accent-bright: #d5a184;
     --phase-accent-soft: rgb(143 64 45 / 0.28);
+  }
+
+  .phase-banner.is-chaos.phase-banner-battle,
+  .phase-banner.is-chaos.phase-banner-horde {
+    --phase-accent: #bd629c;
+    --phase-accent-bright: #efb5d9;
+    --phase-accent-soft: rgb(185 68 143 / 0.3);
   }
 
   @media (max-width: 700px) {
@@ -7311,6 +7336,17 @@
     0 0 30px rgb(224 91 26 / 0.34) !important;
 }
 
+.game-phase-orb.is-chaos .game-phase-button[data-tone="horde"],
+.game-phase-orb.is-chaos .game-phase-button[data-tone="default"] {
+  border-color: rgb(222 126 190 / 0.86) !important;
+  background: linear-gradient(110deg, #8d3d75, #461b3b 66%, #6c2b59) !important;
+  box-shadow:
+    inset 0 0 0 4px rgb(42 8 32 / 0.34),
+    inset 0 1px 0 rgb(255 211 239 / 0.25),
+    0 18px 40px rgb(0 0 0 / 0.54),
+    0 0 32px rgb(196 65 151 / 0.38) !important;
+}
+
 .game-phase-button[data-tone="confirm"] {
   border-color: rgb(191 215 100 / 0.84) !important;
   background: linear-gradient(110deg, #5f8b2e, #29471c 66%, #436b25) !important;
@@ -7450,6 +7486,34 @@
 .game-phase-progress-labels .is-active {
   color: #ffc27b;
   text-shadow: 0 0 9px rgb(239 104 35 / 0.82);
+}
+
+.game-phase-progress.is-chaos .game-phase-progress-line {
+  background: linear-gradient(90deg, transparent, rgb(204 91 166 / 0.72) 12%, #e78abe 50%, rgb(204 91 166 / 0.72) 88%, transparent);
+  box-shadow: 0 0 8px rgb(196 57 145 / 0.42);
+}
+
+.game-phase-progress.is-chaos .game-phase-progress-diamond {
+  border-color: rgb(205 105 172 / 0.78);
+  background: #28101f;
+  box-shadow: inset 0 0 3px rgb(255 182 228 / 0.14), 0 0 5px rgb(187 47 133 / 0.24);
+}
+
+.game-phase-progress.is-chaos .game-phase-progress-step.is-complete .game-phase-progress-diamond {
+  background: #913667;
+  box-shadow: inset 0 0 4px rgb(255 205 237 / 0.3), 0 0 8px rgb(201 64 150 / 0.4);
+}
+
+.game-phase-progress.is-chaos .game-phase-progress-step.is-active .game-phase-progress-diamond {
+  border-color: #ffc7e9;
+  background: linear-gradient(135deg, #f5b4dc, #b93f87 70%);
+  box-shadow: 0 0 0 3px rgb(218 91 173 / 0.18), 0 0 13px #d75fa9, 0 0 24px rgb(190 48 137 / 0.68);
+}
+
+.game-phase-progress.is-chaos .game-phase-progress-labels { color: rgb(205 135 183 / 0.66); }
+.game-phase-progress.is-chaos .game-phase-progress-labels .is-active {
+  color: #f2abd6;
+  text-shadow: 0 0 9px rgb(211 67 157 / 0.84);
 }
 
 @keyframes game-phase-diamond-pulse {
@@ -10328,6 +10392,12 @@
   text-transform: uppercase;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 5px 12px rgb(0 0 0 / 0.28), 0 0 10px var(--deck-accent-soft, rgb(91 142 84 / 0.15));
   clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.card-preview-keyword-explanations.is-chaos {
+  --deck-accent: #b95091;
+  --deck-accent-bright: #f3b8dc;
+  --deck-accent-soft: rgb(190 57 143 / 0.24);
 }
 
 .card-keyword-badge-ally {

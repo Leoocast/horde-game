@@ -68,6 +68,6 @@ export function blockRestrictionReason(game: GameState, blocker: CardInstance, a
   const attackerKeywords = getKeywords(game, attacker);
   const blockerKeywords = getKeywords(game, blocker);
   if (attackerKeywords.includes("FLYING") && !blockerKeywords.includes("FLYING") && !blockerKeywords.includes("REACH")) return "Flying attackers need flying or reach to block.";
-  if (attackerKeywords.includes("SKULK") && blocker.basePower + (blocker.counters["+1/+1"] ?? 0) > attacker.basePower + (attacker.counters["+1/+1"] ?? 0)) return "Skulk can only be blocked by lower-power creatures.";
+  if (attackerKeywords.includes("SKULK") && blocker.basePower + (blocker.counters["+1/+1"] ?? 0) > attacker.basePower + (attacker.counters["+1/+1"] ?? 0)) return "Skulk cannot be blocked by creatures with greater power.";
   return undefined;
 }
