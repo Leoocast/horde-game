@@ -2,16 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { hordeDeck, playerDeck } from "../src/data/decks";
-import { castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
+import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
 import { createInitialGame, expandDeck } from "../src/engine/GameState";
-import { runHordeMain } from "../src/engine/HordeController";
+import { finishHordeTurn, runHordeMain } from "../src/engine/HordeController";
 import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
+import { queueUnusedNormalMana, releasePendingStoredMana } from "../src/engine/ManaSystem";
 import { performPlayerDraw } from "../src/engine/TurnManager";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
@@ -60,7 +61,7 @@ test("Chaos removes other permanents but keeps creatures, energy, instants, and 
   assert.equal(prepared.deckSize, 4);
 });
 
-test("Chaos starts immediately with one real energy and draws two on later turns", () => {
+test("Chaos starts with one energy and no stored mana", () => {
   const chaosPlayerDeck = {
     id: "chaos-player",
     name: "Chaos Player",
@@ -89,6 +90,7 @@ test("Chaos starts immediately with one real energy and draws two on later turns
   assert.equal(game.player.life, 35);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 1);
+  assert.equal(game.player.manaPool.colorless, 0);
   assert.equal(game.player.hand.length, 7);
   assert.equal(game.player.library.length, 8);
   assert.equal(game.horde.library.some((card) => card.definitionId === "chaos_harvest"), false);
@@ -143,11 +145,93 @@ test("First strike mutations deal combat damage before a normal blocker can answ
   assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("the player deck has 39 cards including 15 energies", () => {
-  const cards = expandDeck(playerDeck, "player");
+test("standard games keep nine energy cards in the player deck", () => {
+  const game = createInitialGame(playerDeck, hordeDeck, "no-lands", 3);
+  const cards = [...game.player.hand, ...game.player.library, ...game.player.battlefield];
 
-  assert.equal(cards.length, 39);
-  assert.equal(cards.filter((card) => card.cardTypes.includes("Land")).length, 15);
+  assert.equal(cards.length, 33);
+  assert.equal(cards.filter((card) => card.cardTypes.includes("Land")).length, 9);
+});
+
+test("unused normal mana stays pending until the Horde turn ends", () => {
+  const game = createTestGame();
+  const lands = addForests(game, 5);
+  lands[0].tapped = true;
+
+  assert.equal(queueUnusedNormalMana(game), 3);
+  assert.equal(game.player.pendingStoredMana, 3);
+  assert.equal(game.player.manaPool.colorless, 0);
+  assert.equal(queueUnusedNormalMana(game), 0);
+  assert.equal(releasePendingStoredMana(game), 3);
+  assert.equal(game.player.pendingStoredMana, 0);
+  assert.equal(game.player.manaPool.colorless, 3);
+});
+
+test("spent lands do not become stored mana", () => {
+  const game = createTestGame();
+  const lands = addForests(game, 3);
+  for (const land of lands) {
+    land.tapped = true;
+    land.activatedThisTurn = true;
+  }
+
+  const hordeTurn = endPlayerTurn(game);
+  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+
+  assert.equal(hordeTurn.player.pendingStoredMana, 0);
+  assert.equal(nextPlayerTurn.player.manaPool.colorless, 0);
+});
+
+test("unused mana from an earlier setup turn does not refill yellow mana", () => {
+  const game = createInitialGame(playerDeck, hordeDeck, "setup-reserve", 2);
+  const lands = addForests(game, 3);
+
+  const finalSetupTurn = endPlayerTurn(game);
+  assert.equal(finalSetupTurn.setupTurnsRemaining, 1);
+  assert.equal(finalSetupTurn.player.pendingStoredMana, 0);
+
+  for (const land of lands) {
+    const currentLand = finalSetupTurn.player.battlefield.find((card) => card.instanceId === land.instanceId);
+    currentLand.tapped = true;
+    currentLand.activatedThisTurn = true;
+  }
+  const hordeTurn = endPlayerTurn(finalSetupTurn);
+  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+
+  assert.equal(hordeTurn.player.pendingStoredMana, 0);
+  assert.equal(nextPlayerTurn.player.manaPool.colorless, 0);
+});
+
+test("Llanowar and Druid fill stored mana immediately, then pending land mana appears after the Horde", () => {
+  const game = createTestGame();
+  addForests(game, 1);
+  const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player"));
+  const druid = addCard(game, cardFromDeck("druid_of_the_cowl", "player"));
+  const afterLlanowar = activateAbility(game, llanowar.instanceId, "llanowar_elves_add_green");
+  const afterAbilities = activateAbility(afterLlanowar, druid.instanceId, "druid_of_the_cowl_add_green");
+
+  const hordeTurn = endPlayerTurn(afterAbilities);
+  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+
+  assert.equal(afterAbilities.player.manaPool.colorless, 2);
+  assert.equal(afterAbilities.player.battlefield.find((card) => card.instanceId === llanowar.instanceId)?.tapped, true);
+  assert.equal(afterAbilities.player.battlefield.find((card) => card.instanceId === druid.instanceId)?.tapped, true);
+  assert.equal(hordeTurn.player.manaPool.colorless, 2);
+  assert.equal(hordeTurn.player.pendingStoredMana, 1);
+  assert.equal(nextPlayerTurn.player.pendingStoredMana, 0);
+  assert.equal(nextPlayerTurn.player.manaPool.colorless, 3);
+});
+
+test("stored yellow mana can pay a colored creature cost", () => {
+  const game = createTestGame();
+  game.player.manaPool.colorless = 1;
+  const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player", "hand"), "player", "hand");
+
+  const result = castCard(game, llanowar.instanceId);
+
+  assert.equal(result.player.hand.some((card) => card.instanceId === llanowar.instanceId), false);
+  assert.equal(result.player.battlefield.some((card) => card.instanceId === llanowar.instanceId), true);
+  assert.equal(result.player.manaPool.colorless, 0);
 });
 
 test("the player draws one card normally after setup", () => {
@@ -227,7 +311,7 @@ test("playing or recycling an energy consumes the same once-per-turn action", ()
   assert.equal(afterBlockedRecycle.player.library.some((card) => card.definitionId === "would_be_drawn"), true);
 });
 
-test("energy cannot be recycled during setup and no more than five can be in play", () => {
+test("energy cannot be recycled during setup and no more than four can be in play", () => {
   const setupGame = createTestGame();
   setupGame.setupTurnsRemaining = 1;
   const setupEnergy = addCard(setupGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
@@ -236,17 +320,18 @@ test("energy cannot be recycled during setup and no more than five can be in pla
   assert.equal(blockedDuringSetup.player.hand.some((card) => card.instanceId === setupEnergy.instanceId), true);
 
   const cappedGame = createTestGame();
-  addForests(cappedGame, 5);
-  const sixthEnergy = addCard(cappedGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
-  const blockedAtCap = playLand(cappedGame, sixthEnergy.instanceId);
+  addForests(cappedGame, 4);
+  const fifthEnergy = addCard(cappedGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
+  const blockedAtCap = playLand(cappedGame, fifthEnergy.instanceId);
 
-  assert.equal(blockedAtCap.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 5);
-  assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === sixthEnergy.instanceId), true);
+  assert.equal(blockedAtCap.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 4);
+  assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === fifthEnergy.instanceId), true);
 });
 
-test("automatic payment taps lands but never mana creatures", () => {
+test("automatic payment spends normal land mana before stored yellow mana", () => {
   const game = createTestGame();
-  const lands = addForests(game, 3);
+  game.player.manaPool.colorless = 3;
+  const [land] = addForests(game, 1);
   const manaCreature = addCard(game, cardFromDeck("llanowar_elves", "player"));
   const spell = addCard(
     game,
@@ -262,7 +347,7 @@ test("automatic payment taps lands but never mana creatures", () => {
   const result = castCard(game, spell.instanceId);
 
   assert.equal(result.player.graveyard.some((card) => card.instanceId === spell.instanceId), true);
-  assert.equal(lands.every((land) => result.player.battlefield.find((card) => card.instanceId === land.instanceId)?.tapped), true);
+  assert.equal(result.player.battlefield.find((card) => card.instanceId === land.instanceId)?.tapped, true);
   assert.equal(result.player.battlefield.find((card) => card.instanceId === manaCreature.instanceId)?.tapped, false);
   assert.deepEqual(result.player.manaPool, {
     green: 0,
@@ -270,7 +355,7 @@ test("automatic payment taps lands but never mana creatures", () => {
     blue: 0,
     white: 0,
     black: 0,
-    colorless: 0,
+    colorless: 1,
   });
 });
 
@@ -454,6 +539,32 @@ test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () 
   assert.equal(surgeResult.hordeTurnNumber, 10);
   assert.equal(surgeResult.horde.battlefield.length, 5);
   assert.equal(surgeResult.horde.library.length, 0);
+});
+
+test("Horde turn six has a one-card Mini Surge", () => {
+  const miniSurge = createTestGame("mini-surge-reveal");
+  miniSurge.hordeTurnNumber = 5;
+  for (let index = 0; index < 4; index += 1) {
+    addCard(miniSurge, customCard(`mini_surge_token_${index}`, "horde", { zone: "library", isToken: true }), "horde", "library");
+  }
+
+  const miniSurgeResult = runHordeMain(miniSurge);
+
+  assert.equal(miniSurgeResult.hordeTurnNumber, 6);
+  assert.equal(miniSurgeResult.horde.battlefield.length, 4);
+  assert.equal(miniSurgeResult.horde.library.length, 0);
+  assert.equal(miniSurgeResult.log.some((entry) => entry.includes("Mini Surge")), true);
+
+  const followingTurn = createTestGame("after-mini-surge-reveal");
+  followingTurn.hordeTurnNumber = 6;
+  for (let index = 0; index < 4; index += 1) {
+    addCard(followingTurn, customCard(`after_mini_surge_token_${index}`, "horde", { zone: "library", isToken: true }), "horde", "library");
+  }
+
+  const followingResult = runHordeMain(followingTurn);
+  assert.equal(followingResult.hordeTurnNumber, 7);
+  assert.equal(followingResult.horde.battlefield.length, 3);
+  assert.equal(followingResult.horde.library.length, 1);
 });
 
 test("Surge depends only on reaching the tenth Horde turn", () => {

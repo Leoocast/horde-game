@@ -3,8 +3,8 @@ import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/K
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
+import { STORED_MANA_CAP } from "../engine/ManaSystem";
 import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
-import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { translate } from "../i18n/translations";
 import { useGameStore } from "../store/useGameStore";
@@ -30,7 +30,6 @@ const BLOCK_DRAG_THRESHOLD_PX = 9;
 const PLAYER_ATTACK_DRAG_THRESHOLD_PX = 9;
 const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
-const BONUS_MANA_ORBIT_SLOTS = 8;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
@@ -83,7 +82,6 @@ function BattlefieldRowSurface({
 
 export function Battlefield({ game, side, cards }: Props) {
   const t = useTranslation();
-  const language = useLanguageStore((state) => state.language);
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   const animatedHordeIds = useRef<Set<string>>(new Set());
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
@@ -91,7 +89,6 @@ export function Battlefield({ game, side, cards }: Props) {
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
   const landDockRef = useRef<HTMLElement>(null);
-  const manaSlotByLandId = useRef<Map<string, number>>(new Map());
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, { left: number; top: number }>>(new Map());
   const reflowSampleFrame = useRef<number | undefined>(undefined);
@@ -132,10 +129,6 @@ export function Battlefield({ game, side, cards }: Props) {
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
-  const landPlayAnimationQueue = useGameStore((state) => state.landPlayAnimationQueue);
-  const formingLandIds = landPlayAnimationQueue
-    .filter((item) => !item.materialized)
-    .map((item) => item.card.instanceId);
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
   // dragging and are consumed by CombatArrows, not here — same rationale as the
   // targeting selectors above.
@@ -441,22 +434,12 @@ export function Battlefield({ game, side, cards }: Props) {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
     const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
-    const floatingManaCount = Object.values(game.player.manaPool).reduce((total, amount) => total + amount, 0);
-    const availableResourceCount = availableLandCount + floatingManaCount;
-    const paidLandIds = new Set(autoPaidLandAnimation?.ids ?? []);
+    const storedManaCount = game.player.manaPool.colorless;
     const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
     const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
-    const activeLandIds = new Set(lands.map((card) => card.instanceId));
-    for (const id of manaSlotByLandId.current.keys()) {
-      if (!activeLandIds.has(id)) manaSlotByLandId.current.delete(id);
-    }
-    const usedManaSlots = new Set(manaSlotByLandId.current.values());
-    for (const card of lands) {
-      if (manaSlotByLandId.current.has(card.instanceId)) continue;
-      const freeSlot = Array.from({ length: MAX_PLAYER_LANDS }, (_, slot) => slot).find((slot) => !usedManaSlots.has(slot)) ?? usedManaSlots.size;
-      manaSlotByLandId.current.set(card.instanceId, freeSlot);
-      usedManaSlots.add(freeSlot);
-    }
+    // Render from the highest socket downward so both mana tracks fill top-to-bottom.
+    const normalManaArcAngles = [75, 57, 39, 21];
+    const storedManaArcAngles = [70, 45, 20];
 
     return (
       <aside
@@ -466,9 +449,10 @@ export function Battlefield({ game, side, cards }: Props) {
         data-audio-click={canSelectManaCore ? "valid" : undefined}
         role={canSelectManaCore ? "button" : undefined}
         tabIndex={canSelectManaCore ? 0 : undefined}
-        aria-label={`${availableResourceCount} mana available from ${landCount} lands`}
+        aria-label={`${t("game.normalMana")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedMana")}: ${storedManaCount} of ${STORED_MANA_CAP}.`}
         className={[
           "player-mana-core",
+          "player-mana-corner",
           game.activeSide === "player" ? "is-player-turn" : "",
           smallpoxLandSelectionActive ? "is-targeting" : "",
         ].join(" ")}
@@ -482,84 +466,41 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       >
-        <div className="mana-core-rings" aria-hidden="true">
-          <span className="mana-core-ring mana-core-ring-outer" />
-          <span className="mana-core-ring mana-core-ring-inner" />
+        <div className="mana-corner-orb" aria-hidden="true">
+          <div className="mana-core-rings">
+            <span className="mana-core-ring mana-core-ring-outer" />
+            <span className="mana-core-ring mana-core-ring-inner" />
+          </div>
+          <div className="mana-core-heart"><span className="mana-core-heart-light" /></div>
         </div>
-        <div className="mana-core-heart" aria-hidden="true">
-          <span className="mana-core-heart-light" />
-        </div>
-        <div className="mana-core-count" aria-hidden="true">
-          <strong>{availableResourceCount}</strong>
-          <span>/{landCount}</span>
-        </div>
-        <AnimatePresence initial={false}>
-          {lands.map((card) => {
-            const stableSlot = manaSlotByLandId.current.get(card.instanceId) ?? 0;
-            const angle = -Math.PI / 2 + (Math.PI * 2 * stableSlot) / MAX_PLAYER_LANDS;
-            const spent = card.tapped || card.activatedThisTurn;
-            const consuming = paidLandIds.has(card.instanceId);
-            const forming = formingLandIds.includes(card.instanceId);
-            const visible = !forming && (smallpoxLandSelectionActive || !spent || consuming);
-            const fragmentStyle = {
-              left: `${70.5 + Math.cos(angle) * 68}px`,
-              top: `${59.5 + Math.sin(angle) * 68}px`,
-              "--mana-fragment-delay": `${stableSlot * 55}ms`,
-              "--mana-consume-x": `${Math.cos(angle) * -68}px`,
-              "--mana-consume-y": `${Math.sin(angle) * -68}px`,
-            } as CSSProperties;
-
+        <div className="mana-corner-energy-layer" aria-hidden="true">
+          {normalManaArcAngles.map((angle, index) => {
+            const radians = (angle * Math.PI) / 180;
+            const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
             return (
-              <motion.button
-                key={card.instanceId}
-                type="button"
-                aria-label={`${localizedCardName(card, language)}${card.tapped ? ", tapped" : ", available"}`}
-                title={localizedCardName(card, language)}
-                disabled
-                className={[
-                  "mana-fragment",
-                  spent ? "is-spent" : "is-available",
-                  consuming ? "is-consuming" : "",
-                ].join(" ")}
-                style={fragmentStyle}
-                initial={{ opacity: 0, scale: 0.15 }}
-                animate={{ opacity: visible ? (spent && !consuming ? 0.42 : 1) : 0, scale: visible ? 1 : 0.15 }}
-                exit={{ opacity: 0, scale: paidLandIds.has(card.instanceId) ? 1.8 : 0.12, filter: "blur(5px) brightness(1.8)" }}
-                transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+              <span
+                key={`normal-mana-${index}-${state}`}
+                className={`mana-corner-energy mana-corner-energy-blue ${state}`}
+                style={{ left: `${Math.cos(radians) * 108}px`, bottom: `${Math.sin(radians) * 108}px` }}
               >
-                <span className="mana-fragment-shell" aria-hidden="true">
-                  <span className="mana-fragment-energy" />
-                </span>
-              </motion.button>
+                <span className="mana-fragment-shell"><span className="mana-fragment-energy" /></span>
+              </span>
             );
           })}
-          {Array.from({ length: floatingManaCount }, (_, index) => {
-            const angle = -Math.PI / 2 + (Math.PI * 2 * index) / BONUS_MANA_ORBIT_SLOTS;
-            const bonusStyle = {
-              left: `${70.5 + Math.cos(angle) * 48}px`,
-              top: `${59.5 + Math.sin(angle) * 48}px`,
-              "--mana-fragment-delay": `${index * 70}ms`,
-              "--mana-consume-x": `${Math.cos(angle) * -48}px`,
-              "--mana-consume-y": `${Math.sin(angle) * -48}px`,
-            } as CSSProperties;
-
+          {storedManaArcAngles.map((angle, index) => {
+            const radians = (angle * Math.PI) / 180;
+            const state = index < storedManaCount ? "is-ready" : "is-empty";
             return (
-              <motion.span
-                key={`bonus-mana-${index}`}
-                className="mana-fragment mana-fragment-bonus"
-                style={bonusStyle}
-                initial={{ opacity: 0, scale: 0.12 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.08, filter: "blur(4px) brightness(2)" }}
-                transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              <span
+                key={`stored-mana-${index}-${state}`}
+                className={`mana-corner-energy mana-corner-energy-yellow ${state}`}
+                style={{ left: `${Math.cos(radians) * 138}px`, bottom: `${Math.sin(radians) * 138}px` }}
               >
-                <span className="mana-fragment-shell" aria-hidden="true">
-                  <span className="mana-fragment-energy" />
-                </span>
-              </motion.span>
+                <span className="mana-fragment-shell"><span className="mana-fragment-energy" /></span>
+              </span>
             );
           })}
-        </AnimatePresence>
+        </div>
         {smallpoxLandSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
     );

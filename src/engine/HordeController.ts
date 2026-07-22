@@ -2,8 +2,9 @@ import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { prepareHordeAttackers } from "./CombatResolver";
-import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
+import { HORDE_MINI_SURGE_TURN, hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
+import { releasePendingStoredMana } from "./ManaSystem";
 
 type HordeMainOptions = {
   deferEnterBattlefieldTriggers?: boolean;
@@ -19,6 +20,10 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   untapSide(next, "horde");
   next.log.unshift("Horde untaps.");
   revealNormal(next, options);
+  if (next.hordeTurnNumber === HORDE_MINI_SURGE_TURN) {
+    next.log.unshift(`Horde Mini Surge on turn ${HORDE_MINI_SURGE_TURN} reveals 1 extra card.`);
+    revealAndPlay(next, 1, options);
+  }
   if (hordeInSurge(next)) {
     next.log.unshift(wasInSurge ? "Horde Surge reveals 2 extra cards." : `Horde enters Surge on turn ${hordeSurgeTurn(next)} and reveals 2 extra cards.`);
     revealAndPlay(next, 2, options);
@@ -37,7 +42,9 @@ export function finishHordeTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
   untapSide(next, "horde");
+  const releasedMana = releasePendingStoredMana(next);
   startPlayerTurnReady(next);
+  if (releasedMana > 0) next.log.unshift(`Player gains ${releasedMana} stored mana.`);
   next.log.unshift("Horde turn ends.");
   return next;
 }

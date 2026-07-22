@@ -147,6 +147,7 @@ export type PlayerState = {
   graveyard: CardInstance[];
   exile: CardInstance[];
   manaPool: ManaPool;
+  pendingStoredMana: number;
   energyActionUsedThisTurn: boolean;
 };
 
