@@ -3836,6 +3836,10 @@
     box-shadow: 0 0 8px rgb(90 190 255 / 0.94);
   }
 
+  .card-actionable-gem-outside.card-defense-gem-horde-target {
+    left: 0;
+  }
+
   .card-target-gem {
     border-color: rgb(244 214 105 / 0.98);
     background: linear-gradient(145deg, #76601d, #352a0e 72%);
@@ -4352,6 +4356,102 @@
       filter 220ms ease;
   }
 
+  .battlefield-card-flying {
+    --flying-idle-duration: 4s;
+    --flying-idle-delay: 0ms;
+    --flying-idle-drift: 1.5px;
+    will-change: translate;
+  }
+
+  .battlefield-card-flying-idle {
+    animation: battlefield-flying-idle var(--flying-idle-duration) ease-in-out var(--flying-idle-delay) infinite;
+  }
+
+  .battlefield-flight-shadow,
+  .battlefield-flight-wisp {
+    position: absolute;
+    z-index: -2;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .battlefield-flight-shadow {
+    left: 14%;
+    right: 14%;
+    bottom: -15px;
+    height: 15px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgb(3 8 12 / 0.58), rgb(3 8 12 / 0.18) 54%, transparent 76%);
+    filter: blur(3px);
+    transform-origin: center;
+    transition: opacity 180ms ease-out;
+  }
+
+  .battlefield-flight-wisp {
+    left: 17%;
+    bottom: -4px;
+    width: 62%;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgb(170 210 218 / 0.12) 22%, rgb(214 235 232 / 0.48) 54%, transparent);
+    filter: blur(0.6px) drop-shadow(0 0 4px rgb(130 190 205 / 0.3));
+    transform: translateX(-10px) skewX(-18deg);
+  }
+
+  .battlefield-card-flying-idle > .battlefield-flight-shadow {
+    animation: battlefield-flying-shadow var(--flying-idle-duration) ease-in-out var(--flying-idle-delay) infinite;
+  }
+
+  .battlefield-card-flying-idle > .battlefield-flight-wisp {
+    animation: battlefield-flying-wisp var(--flying-idle-duration) ease-in-out var(--flying-idle-delay) infinite;
+  }
+
+  @keyframes battlefield-flying-idle {
+    0%,
+    100% {
+      translate: 0 -1px;
+    }
+    46% {
+      translate: var(--flying-idle-drift) -5px;
+    }
+    72% {
+      translate: 0 -3px;
+    }
+  }
+
+  @keyframes battlefield-flying-shadow {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: translateY(1px) scaleX(1);
+    }
+    46% {
+      opacity: 0.12;
+      transform: translateY(5px) scaleX(0.8);
+    }
+    72% {
+      opacity: 0.17;
+      transform: translateY(3px) scaleX(0.9);
+    }
+  }
+
+  @keyframes battlefield-flying-wisp {
+    0%,
+    12%,
+    62%,
+    100% {
+      opacity: 0;
+      transform: translateX(-10px) skewX(-18deg);
+    }
+    25% {
+      opacity: 0.32;
+    }
+    42% {
+      opacity: 0;
+      transform: translateX(12px) translateY(-2px) skewX(-18deg);
+    }
+  }
+
   .battlefield-card-depth {
     --battlefield-depth-glow: 0 0 0 rgb(0 0 0 / 0);
     position: absolute;
@@ -4376,6 +4476,22 @@
     inset: 0;
     transform: translate(3px, 1px) rotate(4deg);
     transform-origin: center center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .battlefield-card-flying-idle,
+    .battlefield-card-flying-idle > .battlefield-flight-shadow,
+    .battlefield-card-flying-idle > .battlefield-flight-wisp {
+      animation: none !important;
+    }
+
+    .battlefield-card-flying-idle {
+      translate: 0 -2px;
+    }
+
+    .battlefield-card-flying-idle > .battlefield-flight-shadow {
+      opacity: 0.18;
+    }
   }
 
   .battlefield-card-selected > .battlefield-card-depth {

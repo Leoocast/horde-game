@@ -1,5 +1,5 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
-import { blockRestrictionReason, canAttack, canBlockAttacker } from "../engine/Keywords";
+import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
@@ -107,6 +107,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
+  const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
+  const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
+  const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -700,6 +703,20 @@ export function Battlefield({ game, side, cards }: Props) {
         spellTargetLocked ||
         tutorialTargetable,
     );
+    const isFlying = card.cardTypes.includes("Creature") && hasKeyword(game, card, "FLYING");
+    const combatAnimationActive =
+      playerAttackAnimationId === card.instanceId ||
+      hordeAttackAnimationAttackerId === card.instanceId ||
+      hordeAttackAnimationBlockerId === card.instanceId;
+    const flyingIdleActive = Boolean(
+      isFlying &&
+        !newlyArrived &&
+        !combatAnimationActive &&
+        !interactionElevated &&
+        !visuallyDead &&
+        !speciallyDead &&
+        !resolvingHordeCombat,
+    );
 
     return (
       <motion.div
@@ -728,8 +745,11 @@ export function Battlefield({ game, side, cards }: Props) {
         data-card-slot-id={card.instanceId}
         data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
         data-entry-delay={0}
+        style={isFlying ? flyingIdleVariables(card.instanceId) : undefined}
         className={[
           compact ? "battlefield-card-slot-compact" : "battlefield-card-slot",
+          isFlying ? "battlefield-card-flying" : "",
+          flyingIdleActive ? "battlefield-card-flying-idle" : "",
           isOtherPermanent ? "battlefield-other-permanent-slot" : "",
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
@@ -751,6 +771,8 @@ export function Battlefield({ game, side, cards }: Props) {
           tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
+      {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
+      {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
       {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
       {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
@@ -836,6 +858,7 @@ export function Battlefield({ game, side, cards }: Props) {
           className={[
             "card-actionable-gem card-actionable-gem-outside",
             actionGemTone,
+            dragDefenseTargetable ? "card-defense-gem-horde-target" : "",
           ].join(" ")}
           aria-hidden="true"
         />
@@ -1063,6 +1086,19 @@ function groupBattlefieldCopies(
 
 function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+}
+
+function flyingIdleVariables(instanceId: string): CSSProperties {
+  let hash = 0;
+  for (const character of instanceId) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  const duration = 3600 + (hash % 900);
+  const delay = -(hash % duration);
+  const drift = hash % 2 === 0 ? 1.5 : -1.5;
+  return {
+    "--flying-idle-duration": `${duration}ms`,
+    "--flying-idle-delay": `${delay}ms`,
+    "--flying-idle-drift": `${drift}px`,
+  } as CSSProperties;
 }
 
 function counterBuffedStats(game: GameState, card: CardInstance): string {
