@@ -19,11 +19,13 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
   const pushToast = useToastStore((state) => state.pushToast);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playCollection = useAudioStore((state) => state.playCollection);
+  const resetSfx = useAudioStore((state) => state.resetSfx);
   const [seedInput, setSeedInput] = useState(game.seed);
   const isTutorial = game.seed.trim().toLowerCase() === "tutorial";
 
   function restart() {
     const nextSeed = seedInput.trim() || game.seed;
+    resetSfx();
     setSeed(nextSeed);
     reset(nextSeed, setupTurns);
     if (nextSeed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");

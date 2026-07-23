@@ -29,6 +29,7 @@ type AudioStore = {
   stopMusic: () => void;
   preload: () => void;
   stopAllSfx: () => void;
+  resetSfx: () => void;
 };
 
 export const useAudioStore = create<AudioStore>()(
@@ -115,6 +116,10 @@ export const useAudioStore = create<AudioStore>()(
         void audioEngine.preloadSfx();
       },
       stopAllSfx: () => audioEngine.stopAllSfx(),
+      resetSfx: () => {
+        audioEngine.resetSfx();
+        void audioEngine.preloadSfx().catch(() => undefined);
+      },
     }),
     {
       name: "horde-audio-settings",

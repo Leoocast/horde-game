@@ -137,6 +137,12 @@ test("Chaos starts with one energy and no stored mana", () => {
   assert.equal(game.player.library.length, 6);
 });
 
+test("standard games start the player at 50 life", () => {
+  const game = createInitialGame(playerDeck, hordeDeck, "standard-life", 4, "normal", "standard");
+
+  assert.equal(game.player.life, 50);
+});
+
 test("Chaos mutations are deterministic, replace printed keywords, and are shared by every copy", () => {
   const first = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
   const second = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
@@ -615,6 +621,24 @@ test("Surge depends only on reaching the tenth Horde turn", () => {
 
   game.hordeTurnNumber = 10;
   assert.equal(hordeInSurge(game), true);
+});
+
+test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
+  const game = createTestGame("surge-zombie-power");
+  const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
+  const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, toughness: 2 }));
+  const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
+
+  game.hordeTurnNumber = 6;
+  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 2, toughness: 2 });
+
+  game.hordeTurnNumber = 10;
+  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 3, toughness: 2 });
+  assert.deepEqual(getPowerToughness(game, hordeNonZombie), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerToughness(game, playerZombie), { power: 2, toughness: 2 });
+
+  game.hordeTurnNumber = 12;
+  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 3, toughness: 2 });
 });
 
 test("Chaos Surge begins on the eighth Horde turn", () => {

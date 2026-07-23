@@ -105,6 +105,17 @@ class AudioEngine {
     this.activeSfx.clear();
   }
 
+  resetSfx() {
+    this.stopAllSfx();
+    for (const pool of this.sfxCache.values()) {
+      for (const sound of pool) {
+        sound.pause();
+        sound.currentTime = 0;
+      }
+    }
+    this.sfxCache.clear();
+  }
+
   startRandomBattleTheme(forceNew = false) {
     const isBattleTheme = this.currentCollectionId && battleThemeIds.includes(this.currentCollectionId);
     if (!forceNew && this.music && isBattleTheme) {

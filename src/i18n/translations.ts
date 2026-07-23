@@ -366,7 +366,7 @@ const english = {
   "mulligan.accept": "Keep",
   "mulligan.action": "Rewrite",
   "surge.title": "Surge",
-  "surge.message": "The Horde is unleashed",
+  "surge.message": "The Horde is unleashed — Zombies gain +1 attack",
 } as const;
 
 export type TranslationKey = keyof typeof english;
@@ -735,7 +735,7 @@ const spanish: Record<TranslationKey, string> = {
   "mulligan.accept": "Conservar",
   "mulligan.action": "Reescribir",
   "surge.title": "Oleada",
-  "surge.message": "La Horda ha sido desatada",
+  "surge.message": "La Horda ha sido desatada — los Zombies ganan +1 de ataque",
 };
 
 const translations: Record<AppLanguage, Record<TranslationKey, string>> = {

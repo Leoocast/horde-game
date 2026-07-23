@@ -23,7 +23,7 @@ export function cardStatState(game: GameState, card: CardInstance, visualDamageM
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
   return getKeywords(game, card)
-    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller === "horde"))
+    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller !== "horde"))
     .map(formatKeyword)
     .join(", ");
 }

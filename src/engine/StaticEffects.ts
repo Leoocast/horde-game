@@ -3,6 +3,7 @@ import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 export const HORDE_SURGE_TURN = 10;
 export const CHAOS_HORDE_SURGE_TURN = 8;
 export const HORDE_MINI_SURGE_TURN = 6;
+export const HORDE_SURGE_ZOMBIE_POWER_BONUS = 1;
 
 export function hordeSurgeTurn(game: GameState): number {
   return game.gameMode === "chaos" ? CHAOS_HORDE_SURGE_TURN : HORDE_SURGE_TURN;
@@ -44,6 +45,15 @@ export function getPowerToughness(
 ): { power: number; toughness: number } {
   let power = card.basePower + (card.counters["+1/+1"] ?? 0) + card.temporaryPower;
   let toughness = card.baseToughness + (card.counters["+1/+1"] ?? 0) + card.temporaryToughness;
+
+  if (
+    hordeInSurge(game) &&
+    card.controller === "horde" &&
+    card.cardTypes.includes("Creature") &&
+    card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie")
+  ) {
+    power += HORDE_SURGE_ZOMBIE_POWER_BONUS;
+  }
 
   for (const source of [...game.player.battlefield, ...game.horde.battlefield]) {
     if (excludedBuffSourceIds?.has(source.instanceId)) continue;

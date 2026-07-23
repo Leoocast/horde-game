@@ -4,7 +4,7 @@ import { hashSeed, shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 
 const DEVELOPER_SEED = "developer";
-const STANDARD_STARTING_LIFE = 40;
+const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
 const PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
