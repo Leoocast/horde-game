@@ -12,7 +12,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
-const ENERGY_RECYCLE_SCREEN_RATIO = 0.72;
+const ENERGY_RECYCLE_SCREEN_RATIO = 0.78;
+const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
 const handCardMotion: Variants = {
@@ -77,6 +78,7 @@ export function Hand({ game }: { game: GameState }) {
   const innerCardRefs = useRef(new Map<string, HTMLDivElement>());
   const dragMotionValues = useRef(new Map<string, { x: MotionValue<number>; y: MotionValue<number> }>());
   const dragOriginCenters = useRef(new Map<string, { x: number; y: number }>());
+  const dragStartPointers = useRef(new Map<string, { x: number; y: number }>());
   const [handStackMargin, setHandStackMargin] = useState(0);
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
   const handSize = game.player.hand.length;
@@ -148,6 +150,7 @@ export function Hand({ game }: { game: GameState }) {
     const rect = el.getBoundingClientRect();
     const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     dragOriginCenters.current.set(cardId, center);
+    dragStartPointers.current.set(cardId, { x: pointerX, y: pointerY });
     const { x, y } = getDragMotionValues(cardId);
     x.set(pointerX - center.x);
     y.set(pointerY - center.y);
@@ -163,11 +166,7 @@ export function Hand({ game }: { game: GameState }) {
 
   function updateCardDrag(card: CardInstance, pointerX: number, pointerY: number) {
     updateCenterGrabDrag(card.instanceId, pointerX, pointerY);
-    const inRecycleZone =
-      card.cardTypes.includes("Land") &&
-      isEnergyRecyclable(game, card, pendingTriggeredEffectCount) &&
-      pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
-      pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO;
+    const inRecycleZone = isInEnergyRecycleZone(card, pointerX, pointerY);
     if (!inRecycleZone) {
       setEnergyRecycleHint(undefined);
       setEnergyRecycleDragActive(false);
@@ -175,6 +174,17 @@ export function Hand({ game }: { game: GameState }) {
     }
     setEnergyRecycleHint({ pointer: { x: pointerX, y: pointerY }, target: readEnergyRecycleTarget() });
     setEnergyRecycleDragActive(true);
+  }
+
+  function isInEnergyRecycleZone(card: CardInstance, pointerX: number, pointerY: number): boolean {
+    const dragStart = dragStartPointers.current.get(card.instanceId);
+    return (
+      card.cardTypes.includes("Land") &&
+      isEnergyRecyclable(game, card, pendingTriggeredEffectCount) &&
+      pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
+      pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
+      Boolean(dragStart && pointerX - dragStart.x >= ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG)
+    );
   }
 
   function playCard(card: CardInstance) {
@@ -195,13 +205,11 @@ export function Hand({ game }: { game: GameState }) {
     setDraggingCardId(undefined);
     setEnergyRecycleHint(undefined);
     setEnergyRecycleDragActive(false);
+    const releasedInRecycleZone = isInEnergyRecycleZone(card, info.point.x, info.point.y);
     dragOriginCenters.current.delete(card.instanceId);
+    dragStartPointers.current.delete(card.instanceId);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
     const releasedInPlayZone = info.point.y <= playZoneY;
-    const releasedInRecycleZone =
-      releasedInPlayZone &&
-      info.point.x >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
-      isEnergyRecyclable(game, card, pendingTriggeredEffectCount);
     if (releasedInRecycleZone) {
       startEnergyRecycle(card.instanceId, { x: info.point.x, y: info.point.y });
       return;

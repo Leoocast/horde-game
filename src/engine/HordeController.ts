@@ -25,7 +25,11 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
     revealAndPlay(next, 1, options);
   }
   if (hordeInSurge(next)) {
-    next.log.unshift(wasInSurge ? "Horde Surge reveals 2 extra cards." : `Horde enters Surge on turn ${hordeSurgeTurn(next)} and reveals 2 extra cards.`);
+    next.log.unshift(
+      wasInSurge
+        ? "Horde Surge reveals 2 extra cards. Horde Zombies have +1/+0."
+        : `Horde enters Surge on turn ${hordeSurgeTurn(next)}, reveals 2 extra cards, and its Zombies get +1/+0 from now on.`,
+    );
     revealAndPlay(next, 2, options);
   }
   if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
