@@ -33,6 +33,26 @@ const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 
+type EnergyChangeSource = "card" | "land" | "turn";
+
+type EnergyTrackTransition = {
+  direction: "gain" | "spend";
+  eventId: number;
+  from: number;
+  source: EnergyChangeSource;
+  to: number;
+};
+
+type EnergyVisualSnapshot = {
+  activeSide: Side;
+  available: number;
+  landCount: number;
+  phase: GameState["phase"];
+  seed: string;
+  stored: number;
+  turnNumber: number;
+};
+
 type BattlefieldRowSurfaceProps = {
   cardsEmpty: boolean;
   compact?: boolean;
@@ -158,11 +178,94 @@ export function Battlefield({ game, side, cards }: Props) {
   const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
   const lands = cards.filter((card) => card.cardTypes.includes("Land"));
   const others = cards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
+  const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+  const storedManaCount = game.player.manaPool.colorless;
+  const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
+  const energyTransitionSequence = useRef(0);
+  const energyTransitionTimer = useRef<number | undefined>(undefined);
+  const [energyTransitions, setEnergyTransitions] = useState<{
+    normal?: EnergyTrackTransition;
+    stored?: EnergyTrackTransition;
+  }>({});
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
+
+  useLayoutEffect(() => {
+    if (side !== "player") return;
+    const current: EnergyVisualSnapshot = {
+      activeSide: game.activeSide,
+      available: availableLandCount,
+      landCount: lands.length,
+      phase: game.phase,
+      seed: game.seed,
+      stored: storedManaCount,
+      turnNumber: game.turnNumber,
+    };
+    const previous = previousEnergyVisual.current;
+    previousEnergyVisual.current = current;
+
+    if (!previous || previous.seed !== current.seed) {
+      if (energyTransitionTimer.current) window.clearTimeout(energyTransitionTimer.current);
+      setEnergyTransitions({});
+      return;
+    }
+
+    const turnRefresh =
+      current.turnNumber > previous.turnNumber ||
+      (current.phase === "untap" && previous.phase !== "untap") ||
+      (current.activeSide === "player" && previous.activeSide !== "player");
+    const nextTransitions: { normal?: EnergyTrackTransition; stored?: EnergyTrackTransition } = {};
+
+    if (current.available !== previous.available) {
+      nextTransitions.normal = {
+        direction: current.available > previous.available ? "gain" : "spend",
+        eventId: ++energyTransitionSequence.current,
+        from: previous.available,
+        source: current.available > previous.available
+          ? turnRefresh
+            ? "turn"
+            : current.landCount > previous.landCount
+              ? "land"
+              : "card"
+          : "card",
+        to: current.available,
+      };
+    }
+
+    if (current.stored !== previous.stored) {
+      nextTransitions.stored = {
+        direction: current.stored > previous.stored ? "gain" : "spend",
+        eventId: ++energyTransitionSequence.current,
+        from: previous.stored,
+        source: current.stored > previous.stored && turnRefresh ? "turn" : "card",
+        to: current.stored,
+      };
+    }
+
+    if (!nextTransitions.normal && !nextTransitions.stored) return;
+    if (energyTransitionTimer.current) window.clearTimeout(energyTransitionTimer.current);
+    setEnergyTransitions(nextTransitions);
+    energyTransitionTimer.current = window.setTimeout(() => {
+      setEnergyTransitions({});
+      energyTransitionTimer.current = undefined;
+    }, 1400);
+  }, [
+    availableLandCount,
+    game.activeSide,
+    game.phase,
+    game.seed,
+    game.turnNumber,
+    lands.length,
+    side,
+    storedManaCount,
+  ]);
+
+  useLayoutEffect(() => () => {
+    if (energyTransitionTimer.current) window.clearTimeout(energyTransitionTimer.current);
+  }, []);
 
   useLayoutEffect(() => {
     const row = creatureRowRef.current;
@@ -436,8 +539,6 @@ export function Battlefield({ game, side, cards }: Props) {
   function LandDock() {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
-    const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
-    const storedManaCount = game.player.manaPool.colorless;
     const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
     const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
     const normalManaSlots = Array.from({ length: 4 });
@@ -468,29 +569,66 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       >
-        <div className="mana-corner-orb" aria-hidden="true">
-          <div className="mana-core-rings">
-            <span className="mana-core-ring mana-core-ring-outer" />
-            <span className="mana-core-ring mana-core-ring-inner" />
-          </div>
-          <div className="mana-core-heart"><span className="mana-core-heart-light" /></div>
-        </div>
         <div className="mana-corner-energy-layer" aria-hidden="true">
-          <div className="mana-energy-track mana-energy-track-blue">
-            {normalManaSlots.map((_, index) => {
-              const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
+          <div
+            className="mana-energy-track mana-energy-track-yellow"
+            data-energy-track="stored"
+          >
+            {energyTransitions.stored && (
+              <span
+                key={`stored-wave-${energyTransitions.stored.eventId}`}
+                className={`mana-energy-sweep energy-${energyTransitions.stored.direction} energy-source-${energyTransitions.stored.source}`}
+              />
+            )}
+            {storedManaSlots.map((_, index) => {
+              const state = index < storedManaCount ? "is-ready" : "is-empty";
+              const transition = energyTransitions.stored;
+              const changing = energySlotIsChanging(transition, index);
               return (
-                <span key={`normal-mana-${index}-${state}`} className={`mana-alchemy-socket mana-alchemy-socket-blue ${state}`}>
+                <span
+                  key={`stored-mana-${index}-${state}-${changing ? transition?.eventId : "stable"}`}
+                  className={[
+                    "mana-alchemy-socket",
+                    "mana-alchemy-socket-yellow",
+                    state,
+                    changing && transition ? `is-energy-${transition.direction} energy-source-${transition.source}` : "",
+                  ].join(" ")}
+                  data-energy-kind="stored"
+                  data-energy-state={state.replace("is-", "")}
+                  style={changing && transition ? { "--energy-step": energyTransitionStep(transition, index) } as CSSProperties : undefined}
+                >
                   <span className="mana-alchemy-orb"><span className="mana-alchemy-liquid" /></span>
                 </span>
               );
             })}
           </div>
-          <div className="mana-energy-track mana-energy-track-yellow">
-            {storedManaSlots.map((_, index) => {
-              const state = index < storedManaCount ? "is-ready" : "is-empty";
+          <div
+            className="mana-energy-track mana-energy-track-blue"
+            data-energy-track="normal"
+          >
+            {energyTransitions.normal && (
+              <span
+                key={`normal-wave-${energyTransitions.normal.eventId}`}
+                className={`mana-energy-sweep energy-${energyTransitions.normal.direction} energy-source-${energyTransitions.normal.source}`}
+              />
+            )}
+            {normalManaSlots.map((_, index) => {
+              const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
+              const transition = energyTransitions.normal;
+              const changing = energySlotIsChanging(transition, index);
               return (
-                <span key={`stored-mana-${index}-${state}`} className={`mana-alchemy-socket mana-alchemy-socket-yellow ${state}`}>
+                <span
+                  key={`normal-mana-${index}-${state}-${changing ? transition?.eventId : "stable"}`}
+                  className={[
+                    "mana-alchemy-socket",
+                    "mana-alchemy-socket-blue",
+                    state,
+                    changing && transition ? `is-energy-${transition.direction} energy-source-${transition.source}` : "",
+                  ].join(" ")}
+                  data-energy-kind="normal"
+                  data-energy-state={state.replace("is-", "")}
+                  style={changing && transition ? { "--energy-step": energyTransitionStep(transition, index) } as CSSProperties : undefined}
+                >
                   <span className="mana-alchemy-orb"><span className="mana-alchemy-liquid" /></span>
                 </span>
               );
@@ -1192,4 +1330,15 @@ function countRowBands(tops: number[]): number {
     }
   }
   return bands;
+}
+
+function energySlotIsChanging(transition: EnergyTrackTransition | undefined, index: number): boolean {
+  if (!transition) return false;
+  const lower = Math.min(transition.from, transition.to);
+  const upper = Math.max(transition.from, transition.to);
+  return index >= lower && index < upper;
+}
+
+function energyTransitionStep(transition: EnergyTrackTransition, index: number): number {
+  return transition.direction === "gain" ? index - transition.from : transition.from - index - 1;
 }

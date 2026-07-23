@@ -109,10 +109,13 @@ function LandFlight({ itemId, definitionId, name, origin, onComplete }: {
 }
 
 function readLandPlayPath(capturedOrigin?: { x: number; y: number }): { origin: { x: number; y: number }; target: { x: number; y: number } } {
-  const targetRect = document.querySelector<HTMLElement>("[data-player-mana-core='true']")?.getBoundingClientRect();
+  const targetRect =
+    document.querySelector<HTMLElement>("[data-energy-kind='normal'][data-energy-state='empty']")?.getBoundingClientRect() ??
+    document.querySelector<HTMLElement>("[data-energy-track='normal']")?.getBoundingClientRect() ??
+    document.querySelector<HTMLElement>("[data-player-mana-core='true']")?.getBoundingClientRect();
   const origin = capturedOrigin ?? { x: window.innerWidth / 2, y: window.innerHeight - 120 };
   const target = targetRect
-    ? { x: targetRect.left + targetRect.width * 0.466, y: targetRect.top + targetRect.height * 0.48 }
+    ? { x: targetRect.left + targetRect.width / 2, y: targetRect.top + targetRect.height / 2 }
     : { x: 142, y: window.innerHeight - 96 };
   return { origin, target };
 }

@@ -5468,7 +5468,6 @@
     transform: none;
   }
 
-  .mana-corner-orb,
   .mana-corner-energy-layer {
     position: absolute;
     inset: 0;
@@ -5476,33 +5475,48 @@
   }
 
   .mana-corner-energy-layer {
-    width: 280px;
+    isolation: isolate;
+    width: 212px;
     overflow: visible;
   }
 
-  .player-mana-corner .mana-core-rings {
-    left: -92px;
-    top: auto;
-    bottom: -92px;
-    width: 184px;
-    height: 184px;
-    transform: none;
+  .mana-corner-energy-layer::before {
+    position: absolute;
+    left: 6px;
+    bottom: 8px;
+    z-index: 0;
+    width: 188px;
+    height: 108px;
+    border: 1px solid rgb(131 143 126 / 0.28);
+    border-left-color: rgb(163 145 94 / 0.55);
+    border-radius: 2px;
+    background:
+      linear-gradient(90deg, rgb(111 124 128 / 0.1), transparent 74%),
+      radial-gradient(circle at 14% 18%, rgb(163 145 94 / 0.08), transparent 38%),
+      linear-gradient(135deg, rgb(12 23 22 / 0.95), rgb(4 11 11 / 0.97));
+    box-shadow:
+      inset 3px 0 0 rgb(139 116 67 / 0.12),
+      inset 0 1px 0 rgb(216 201 159 / 0.055),
+      0 12px 28px rgb(0 0 0 / 0.38);
+    content: "";
   }
 
-  .player-mana-corner .mana-core-heart {
-    left: -67px;
-    top: auto;
-    bottom: -67px;
-    width: 134px;
-    height: 134px;
-    transform: none;
-    animation: mana-corner-breathe 2.8s ease-in-out infinite;
+  .mana-corner-energy-layer::after {
+    position: absolute;
+    left: 6px;
+    bottom: 115px;
+    z-index: 1;
+    width: 112px;
+    height: 1px;
+    background: linear-gradient(90deg, #8b7443, rgb(139 116 67 / 0.28) 52%, transparent);
+    box-shadow: 0 1px 7px rgb(185 164 106 / 0.12);
+    content: "";
   }
 
   .mana-energy-track {
     position: absolute;
     z-index: 6;
-    left: 76px;
+    left: 18px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -5510,69 +5524,85 @@
 
   .mana-energy-track::before {
     position: absolute;
-    left: -17px;
-    right: -13px;
+    left: -11px;
+    right: -9px;
     top: 50%;
     z-index: -1;
-    height: 3px;
-    border-radius: 50%;
-    background: linear-gradient(90deg, rgb(57 46 32 / 0.16), rgb(111 91 57 / 0.78) 18%, rgb(35 30 24 / 0.92) 86%, transparent);
+    height: 1px;
+    background: linear-gradient(90deg, rgb(163 145 94 / 0.72), rgb(145 154 157 / 0.2) 22%, rgb(145 154 157 / 0.1) 84%, transparent);
     box-shadow:
-      0 -1px 0 rgb(205 173 103 / 0.2),
-      0 2px 1px rgb(0 0 0 / 0.72);
+      0 -1px 0 rgb(216 201 159 / 0.035),
+      0 2px 5px rgb(0 0 0 / 0.42);
     content: "";
   }
 
+  .mana-energy-track::after {
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border: 1px solid #877849;
+    background: #1a2225;
+    box-shadow: 0 0 8px rgb(185 164 106 / 0.12);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
   .mana-energy-track-blue {
-    bottom: 63px;
+    bottom: 20px;
   }
 
   .mana-energy-track-yellow {
-    left: 86px;
-    bottom: 21px;
+    bottom: 64px;
   }
 
   .mana-alchemy-socket {
     position: relative;
+    z-index: 1;
     display: grid;
     width: 35px;
     height: 37px;
     flex: 0 0 35px;
     place-items: center;
-    filter: drop-shadow(0 5px 3px rgb(0 0 0 / 0.72));
+    filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.48));
   }
 
   .mana-alchemy-socket::before {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 26px;
-    height: 26px;
-    border: 3px solid #6f512d;
-    border-radius: 6px;
+    width: 31px;
+    height: 31px;
+    border: 1px solid rgb(131 143 126 / 0.42);
+    border-radius: 50%;
     background:
-      linear-gradient(145deg, rgb(191 148 77 / 0.72), rgb(64 45 25 / 0.96) 43%, rgb(22 18 14 / 0.98)),
-      #362819;
+      radial-gradient(circle, rgb(8 17 17 / 0.96) 0 52%, transparent 54%),
+      linear-gradient(145deg, #55635d, #253330 42%, #0b1515 78%);
     box-shadow:
-      inset 1px 1px 0 rgb(255 222 153 / 0.24),
-      inset -2px -2px 2px rgb(0 0 0 / 0.66),
-      0 0 0 1px rgb(20 14 9 / 0.88);
+      inset 0 0 0 2px rgb(5 11 11 / 0.86),
+      inset 1px 1px 0 rgb(216 201 159 / 0.08),
+      0 0 0 1px rgb(3 8 8 / 0.88),
+      0 4px 7px rgb(0 0 0 / 0.46);
     content: "";
-    transform: translate(-50%, -50%) rotate(45deg);
+    transform: translate(-50%, -50%);
   }
 
   .mana-alchemy-socket::after {
     position: absolute;
     left: 50%;
-    bottom: 1px;
-    width: 19px;
-    height: 5px;
+    top: 50%;
+    z-index: 0;
+    width: 27px;
+    height: 27px;
+    border: 1px solid rgb(4 10 10 / 0.9);
     border-radius: 50%;
-    background: rgb(5 5 4 / 0.72);
-    box-shadow: 0 2px 4px rgb(0 0 0 / 0.7);
+    box-shadow:
+      inset 0 2px 5px rgb(0 0 0 / 0.72),
+      inset 0 -1px 0 rgb(216 201 159 / 0.045);
     content: "";
     pointer-events: none;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
   }
 
   .mana-alchemy-orb {
@@ -5582,13 +5612,13 @@
     width: 25px;
     height: 25px;
     overflow: hidden;
-    border: 1px solid rgb(164 187 192 / 0.52);
+    border: 1px solid rgb(137 160 158 / 0.48);
     border-radius: 50%;
-    background: radial-gradient(circle at 38% 30%, #3b4b55, #15242d 48%, #071018 82%);
+    background: radial-gradient(circle at 38% 30%, #536763, #243b39 48%, #091716 82%);
     box-shadow:
-      inset 2px 2px 3px rgb(226 246 255 / 0.16),
-      inset -4px -5px 7px rgb(0 0 0 / 0.68),
-      0 0 0 1px rgb(7 11 12 / 0.8);
+      inset 2px 2px 3px rgb(224 235 224 / 0.12),
+      inset -4px -5px 7px rgb(0 0 0 / 0.62),
+      0 0 0 1px rgb(5 12 12 / 0.84);
     transition: opacity 180ms ease, transform 220ms ease;
   }
 
@@ -5600,8 +5630,8 @@
     width: 7px;
     height: 4px;
     border-radius: 50%;
-    background: rgb(245 254 255 / 0.76);
-    box-shadow: 0 0 4px rgb(235 253 255 / 0.58);
+    background: rgb(240 235 207 / 0.64);
+    box-shadow: 0 0 4px rgb(216 201 159 / 0.36);
     content: "";
     filter: blur(0.2px);
     transform: rotate(-28deg);
@@ -5627,83 +5657,144 @@
   }
 
   .mana-alchemy-socket-blue.is-ready {
-    filter: drop-shadow(0 5px 3px rgb(0 0 0 / 0.72)) drop-shadow(0 0 8px rgb(46 151 236 / 0.62));
+    filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.52)) drop-shadow(0 0 7px rgb(93 139 143 / 0.4));
   }
 
   .mana-alchemy-socket-blue.is-ready .mana-alchemy-orb {
-    border-color: rgb(185 232 255 / 0.82);
-    background: radial-gradient(circle at 36% 28%, #e8fbff, #70ccff 22%, #247bc1 55%, #092c5b 82%);
+    border-color: rgb(165 197 196 / 0.72);
+    background: radial-gradient(circle at 36% 28%, #e0ebe1, #88a9aa 23%, #426b70 56%, #102d31 82%);
     box-shadow:
-      inset 2px 2px 4px rgb(238 252 255 / 0.7),
-      inset -5px -6px 8px rgb(3 24 58 / 0.7),
-      0 0 7px rgb(92 201 255 / 0.82),
-      0 0 15px rgb(38 115 226 / 0.58);
+      inset 2px 2px 4px rgb(235 240 222 / 0.48),
+      inset -5px -6px 8px rgb(5 31 34 / 0.72),
+      0 0 7px rgb(116 163 163 / 0.48),
+      0 0 14px rgb(66 107 112 / 0.34);
     animation: mana-alchemy-orb-blue-idle 2.4s ease-in-out infinite;
   }
 
   .mana-alchemy-socket-blue.is-ready .mana-alchemy-liquid {
     background:
-      conic-gradient(from 20deg, rgb(228 251 255 / 0.88), rgb(55 169 239 / 0.14), rgb(126 222 255 / 0.82), rgb(11 72 164 / 0.18), rgb(228 251 255 / 0.88));
-    box-shadow: inset 0 0 7px rgb(218 248 255 / 0.46);
+      conic-gradient(from 20deg, rgb(224 235 225 / 0.74), rgb(83 125 128 / 0.12), rgb(151 184 178 / 0.68), rgb(31 75 78 / 0.18), rgb(224 235 225 / 0.74));
+    box-shadow: inset 0 0 7px rgb(216 226 207 / 0.26);
     animation: mana-alchemy-liquid-swirl 4.2s linear infinite;
   }
 
   .mana-alchemy-socket-blue.is-spent .mana-alchemy-orb {
-    border-color: rgb(72 104 124 / 0.42);
-    background: radial-gradient(circle at 38% 30%, #405767, #1a2d3a 46%, #07131e 82%);
+    border-color: rgb(87 111 108 / 0.38);
+    background: radial-gradient(circle at 38% 30%, #435b57, #1b312f 46%, #091817 82%);
     box-shadow:
-      inset 2px 2px 3px rgb(173 211 226 / 0.12),
+      inset 2px 2px 3px rgb(190 207 190 / 0.09),
       inset -4px -5px 7px rgb(0 0 0 / 0.72),
-      0 0 0 1px rgb(6 12 16 / 0.84);
-    filter: saturate(0.48) brightness(0.72);
+      0 0 0 1px rgb(5 12 12 / 0.84);
+    filter: saturate(0.38) brightness(0.66);
   }
 
   .mana-alchemy-socket-blue.is-spent .mana-alchemy-liquid {
-    background: radial-gradient(ellipse at 45% 64%, rgb(74 105 119 / 0.42), transparent 68%);
+    background: radial-gradient(ellipse at 45% 64%, rgb(77 105 98 / 0.36), transparent 68%);
     opacity: 0.52;
     animation: mana-alchemy-smoke-drift 5s ease-in-out infinite;
   }
 
   .mana-alchemy-socket-yellow.is-ready {
-    filter: drop-shadow(0 5px 3px rgb(0 0 0 / 0.72)) drop-shadow(0 0 9px rgb(224 151 39 / 0.68));
-    animation: mana-alchemy-yellow-arrive 460ms cubic-bezier(0.16, 1, 0.3, 1);
+    filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.52)) drop-shadow(0 0 8px rgb(185 164 106 / 0.44));
   }
 
   .mana-alchemy-socket-yellow.is-ready .mana-alchemy-orb {
-    border-color: rgb(255 228 143 / 0.86);
-    background: radial-gradient(circle at 36% 28%, #fffbd4, #ffd56b 22%, #c47b22 55%, #4b220b 82%);
+    border-color: rgb(216 201 159 / 0.76);
+    background: radial-gradient(circle at 36% 28%, #f0e5c4, #c7b579 23%, #8b7443 56%, #312718 82%);
     box-shadow:
-      inset 2px 2px 4px rgb(255 251 216 / 0.72),
-      inset -5px -6px 8px rgb(67 27 4 / 0.72),
-      0 0 8px rgb(255 202 84 / 0.86),
-      0 0 16px rgb(208 117 27 / 0.62);
+      inset 2px 2px 4px rgb(244 235 204 / 0.56),
+      inset -5px -6px 8px rgb(47 36 20 / 0.74),
+      0 0 7px rgb(185 164 106 / 0.56),
+      0 0 15px rgb(139 116 67 / 0.38);
     animation: mana-alchemy-orb-yellow-idle 2.6s ease-in-out infinite;
   }
 
   .mana-alchemy-socket-yellow.is-ready .mana-alchemy-liquid {
     background:
-      conic-gradient(from 20deg, rgb(255 251 208 / 0.9), rgb(225 140 29 / 0.14), rgb(255 219 103 / 0.84), rgb(139 64 13 / 0.18), rgb(255 251 208 / 0.9));
-    box-shadow: inset 0 0 7px rgb(255 244 191 / 0.5);
+      conic-gradient(from 20deg, rgb(240 229 196 / 0.82), rgb(139 116 67 / 0.12), rgb(211 192 137 / 0.72), rgb(91 72 40 / 0.18), rgb(240 229 196 / 0.82));
+    box-shadow: inset 0 0 7px rgb(240 229 196 / 0.32);
     animation: mana-alchemy-liquid-swirl 4.6s linear infinite reverse;
   }
 
   .mana-alchemy-socket.is-empty {
-    filter: saturate(0.52) brightness(0.7) drop-shadow(0 4px 3px rgb(0 0 0 / 0.7));
+    filter: saturate(0.38) brightness(0.62) drop-shadow(0 4px 4px rgb(0 0 0 / 0.52));
   }
 
   .mana-alchemy-socket.is-empty .mana-alchemy-orb {
+    opacity: 0.12;
+    transform: scale(0.7);
+  }
+
+  .mana-energy-sweep {
+    position: absolute;
+    z-index: 0;
+    top: 2px;
+    bottom: 2px;
+    left: -8px;
+    width: calc(100% + 16px);
+    border-radius: 50%;
     opacity: 0;
-    transform: scale(0.38);
+    pointer-events: none;
+  }
+
+  .mana-energy-sweep.energy-gain.energy-source-turn {
+    background: linear-gradient(90deg, transparent, rgb(216 201 159 / 0.16) 38%, rgb(112 153 145 / 0.28) 52%, transparent 78%);
+    box-shadow: 0 0 18px rgb(112 153 145 / 0.18);
+    animation: mana-energy-turn-sweep 820ms ease-out both;
+  }
+
+  .mana-energy-sweep.energy-gain.energy-source-card,
+  .mana-energy-sweep.energy-gain.energy-source-land {
+    background: radial-gradient(circle at 28% 50%, rgb(216 201 159 / 0.28), rgb(139 116 67 / 0.08) 34%, transparent 68%);
+    animation: mana-energy-card-flash 680ms ease-out both;
+  }
+
+  .mana-energy-sweep.energy-gain.energy-source-land {
+    animation-delay: 280ms;
+  }
+
+  .mana-energy-sweep.energy-spend {
+    background: linear-gradient(90deg, rgb(185 164 106 / 0.18), transparent 68%);
+    animation: mana-energy-spend-trail 560ms ease-out both;
+  }
+
+  .mana-alchemy-socket.is-energy-gain {
+    animation: mana-energy-socket-charge 660ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--energy-step, 0) * 80ms);
+  }
+
+  .mana-alchemy-socket.is-energy-gain.energy-source-turn {
+    animation-name: mana-energy-socket-turn-charge;
+    animation-delay: calc(var(--energy-step, 0) * 100ms);
+  }
+
+  .mana-alchemy-socket.is-energy-gain.energy-source-land {
+    animation-delay: calc(280ms + var(--energy-step, 0) * 80ms);
+  }
+
+  .mana-alchemy-socket.is-energy-gain .mana-alchemy-orb {
+    animation: mana-energy-orb-charge 660ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: inherit;
+  }
+
+  .mana-alchemy-socket.is-energy-spend {
+    animation: mana-energy-socket-spend 560ms ease-out both;
+    animation-delay: calc(var(--energy-step, 0) * 55ms);
+  }
+
+  .mana-alchemy-socket-blue.is-energy-spend .mana-alchemy-orb {
+    animation: mana-energy-orb-spend-blue 560ms ease-out both;
+    animation-delay: inherit;
+  }
+
+  .mana-alchemy-socket-yellow.is-energy-spend .mana-alchemy-orb {
+    animation: mana-energy-orb-spend-yellow 560ms ease-out both;
+    animation-delay: inherit;
   }
 
   .player-mana-corner .mana-core-target-label {
     left: 72px;
     bottom: 10px;
-  }
-
-  @keyframes mana-corner-breathe {
-    0%, 100% { filter: brightness(0.96) saturate(0.96); transform: scale(0.97); }
-    50% { filter: brightness(1.12) saturate(1.08); transform: scale(1.035); }
   }
 
   @keyframes mana-alchemy-orb-blue-idle {
@@ -5725,10 +5816,69 @@
     50% { opacity: 0.58; transform: translate(2px, -1px) scale(1.08); }
   }
 
-  @keyframes mana-alchemy-yellow-arrive {
-    0% { opacity: 0; filter: brightness(2.4) blur(3px); transform: translateX(-7px) scale(0.55); }
-    65% { opacity: 1; filter: brightness(1.55); transform: translateX(1px) scale(1.12); }
-    100% { filter: brightness(1); transform: translateX(0) scale(1); }
+  @keyframes mana-energy-turn-sweep {
+    0% { opacity: 0; transform: translateX(-26px) scaleX(0.18); }
+    38% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(34px) scaleX(1); }
+  }
+
+  @keyframes mana-energy-card-flash {
+    0% { opacity: 0; filter: brightness(1); transform: scale(0.72); }
+    42% { opacity: 1; filter: brightness(1.7); transform: scale(1.08); }
+    100% { opacity: 0; filter: brightness(1); transform: scale(1.2); }
+  }
+
+  @keyframes mana-energy-spend-trail {
+    0% { opacity: 0; transform: translateX(-8px) scaleX(0.35); }
+    32% { opacity: 0.9; }
+    100% { opacity: 0; transform: translateX(36px) scaleX(1.08); }
+  }
+
+  @keyframes mana-energy-socket-charge {
+    0% { opacity: 0.35; transform: translateY(5px) scale(0.72); }
+    58% { opacity: 1; transform: translateY(-2px) scale(1.13); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes mana-energy-socket-turn-charge {
+    0% { opacity: 0.34; transform: translateX(-5px) scale(0.78); }
+    54% { opacity: 1; transform: translateX(1px) scale(1.1); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @keyframes mana-energy-orb-charge {
+    0% { opacity: 0; filter: brightness(2.2) blur(3px); transform: scale(0.22); }
+    46% { opacity: 1; filter: brightness(1.75) blur(0); transform: scale(1.18); }
+    100% { opacity: 1; filter: brightness(1); transform: scale(1); }
+  }
+
+  @keyframes mana-energy-socket-spend {
+    0% { transform: translateX(0) scale(1); }
+    44% { transform: translateX(3px) scale(0.9); }
+    100% { transform: translateX(0) scale(1); }
+  }
+
+  @keyframes mana-energy-orb-spend-blue {
+    0% { opacity: 1; filter: brightness(1.6) saturate(1.05); transform: translateX(0) scale(1.04); }
+    54% { opacity: 0.28; filter: brightness(1.3) saturate(0.7) blur(1px); transform: translateX(8px) scale(0.62); }
+    100% { opacity: 1; filter: brightness(0.66) saturate(0.38); transform: translateX(0) scale(1); }
+  }
+
+  @keyframes mana-energy-orb-spend-yellow {
+    0% { opacity: 1; filter: brightness(1.7) saturate(1.04); transform: translateX(0) scale(1.04); }
+    55% { opacity: 0.34; filter: brightness(1.3) blur(1px); transform: translateX(8px) scale(0.58); }
+    100% { opacity: 0.12; filter: brightness(0.62) saturate(0.38) blur(1px); transform: translateX(0) scale(0.7); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mana-energy-sweep,
+    .mana-alchemy-socket.is-energy-gain,
+    .mana-alchemy-socket.is-energy-gain .mana-alchemy-orb,
+    .mana-alchemy-socket.is-energy-spend,
+    .mana-alchemy-socket.is-energy-spend .mana-alchemy-orb {
+      animation-delay: 0ms;
+      animation-duration: 1ms;
+    }
   }
 
   .player-mana-core.is-targeting {
@@ -5746,9 +5896,9 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    border: 1px solid rgb(177 227 151 / 0.82);
-    background: #102116;
-    box-shadow: 0 12px 28px rgb(0 0 0 / 0.72), 0 0 22px rgb(87 211 119 / 0.34);
+    border: 1px solid rgb(163 145 94 / 0.76);
+    background: #0c1817;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 0.72), 0 0 22px rgb(112 153 145 / 0.26);
     transform-origin: center;
   }
 
@@ -5779,10 +5929,10 @@
     width: 34px;
     height: 34px;
     margin: -17px 0 0 -17px;
-    border: 1px solid rgb(213 255 185 / 0.9);
+    border: 1px solid rgb(216 201 159 / 0.78);
     border-radius: 50%;
-    background: radial-gradient(circle at 34% 28%, #f5ffd7, #79e28b 22%, #229c78 54%, #082d31 78%);
-    box-shadow: inset 0 0 8px rgb(240 255 219 / 0.52), 0 0 13px #79e899, 0 0 30px rgb(47 205 153 / 0.78);
+    background: radial-gradient(circle at 34% 28%, #f0e5c4, #9db5aa 23%, #527d7b 54%, #102d31 79%);
+    box-shadow: inset 0 0 8px rgb(240 229 196 / 0.4), 0 0 13px rgb(132 171 162 / 0.68), 0 0 30px rgb(82 125 123 / 0.54);
   }
 
   .land-play-impact {
@@ -5790,9 +5940,9 @@
     width: 76px;
     height: 76px;
     margin: -38px 0 0 -38px;
-    border: 2px solid rgb(198 255 175 / 0.74);
-    background: radial-gradient(circle, rgb(200 255 166 / 0.5), rgb(57 205 142 / 0.12) 48%, transparent 70%);
-    box-shadow: 0 0 24px rgb(105 239 150 / 0.6);
+    border: 1px solid rgb(185 164 106 / 0.7);
+    background: radial-gradient(circle, rgb(216 201 159 / 0.38), rgb(82 125 123 / 0.14) 48%, transparent 70%);
+    box-shadow: 0 0 24px rgb(112 153 145 / 0.42);
   }
 
   .land-play-flight .land-play-impact {
