@@ -440,9 +440,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const storedManaCount = game.player.manaPool.colorless;
     const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
     const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
-    // Render from the highest socket downward so both mana tracks fill top-to-bottom.
-    const normalManaArcAngles = [75, 57, 39, 21];
-    const storedManaArcAngles = [70, 45, 20];
+    const normalManaSlots = Array.from({ length: 4 });
+    const storedManaSlots = Array.from({ length: 3 });
 
     return (
       <aside
@@ -477,32 +476,26 @@ export function Battlefield({ game, side, cards }: Props) {
           <div className="mana-core-heart"><span className="mana-core-heart-light" /></div>
         </div>
         <div className="mana-corner-energy-layer" aria-hidden="true">
-          {normalManaArcAngles.map((angle, index) => {
-            const radians = (angle * Math.PI) / 180;
-            const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
-            return (
-              <span
-                key={`normal-mana-${index}-${state}`}
-                className={`mana-corner-energy mana-corner-energy-blue ${state}`}
-                style={{ left: `${Math.cos(radians) * 108}px`, bottom: `${Math.sin(radians) * 108}px` }}
-              >
-                <span className="mana-fragment-shell"><span className="mana-fragment-energy" /></span>
-              </span>
-            );
-          })}
-          {storedManaArcAngles.map((angle, index) => {
-            const radians = (angle * Math.PI) / 180;
-            const state = index < storedManaCount ? "is-ready" : "is-empty";
-            return (
-              <span
-                key={`stored-mana-${index}-${state}`}
-                className={`mana-corner-energy mana-corner-energy-yellow ${state}`}
-                style={{ left: `${Math.cos(radians) * 138}px`, bottom: `${Math.sin(radians) * 138}px` }}
-              >
-                <span className="mana-fragment-shell"><span className="mana-fragment-energy" /></span>
-              </span>
-            );
-          })}
+          <div className="mana-energy-track mana-energy-track-blue">
+            {normalManaSlots.map((_, index) => {
+              const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
+              return (
+                <span key={`normal-mana-${index}-${state}`} className={`mana-alchemy-socket mana-alchemy-socket-blue ${state}`}>
+                  <span className="mana-alchemy-orb"><span className="mana-alchemy-liquid" /></span>
+                </span>
+              );
+            })}
+          </div>
+          <div className="mana-energy-track mana-energy-track-yellow">
+            {storedManaSlots.map((_, index) => {
+              const state = index < storedManaCount ? "is-ready" : "is-empty";
+              return (
+                <span key={`stored-mana-${index}-${state}`} className={`mana-alchemy-socket mana-alchemy-socket-yellow ${state}`}>
+                  <span className="mana-alchemy-orb"><span className="mana-alchemy-liquid" /></span>
+                </span>
+              );
+            })}
+          </div>
         </div>
         {smallpoxLandSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
