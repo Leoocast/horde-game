@@ -64,7 +64,7 @@ export function resolvePlayerCombat(game: GameState): GameState {
     hordeDamage += power;
     if (power > 0) poisonCounters += getToxicAmount(next, attacker);
   }
-  const cardsToMill = Math.floor(hordeDamage / 3);
+  const cardsToMill = Math.floor(hordeDamage / next.hordeRules.damagePerMill);
   if (hordeDamage > 0) log(next, `Player deals ${hordeDamage} damage to Horde.`);
   if (poisonCounters > 0) {
     next.horde.poisonCounters += poisonCounters;
@@ -89,6 +89,7 @@ export function beginHordeCombat(game: GameState, options: { deferTriggeredEvent
 export function declareHordeAttackers(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
   const attackers = sortBattlefieldCardsByVisualOrder(
+    next,
     next.horde.battlefield,
     next.horde.battlefield.filter((card) => canAttack(next, card)),
   );
@@ -106,6 +107,7 @@ export function declareHordeAttackers(game: GameState, options: { deferTriggered
   });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
   next.combat.hordeAttackers = sortBattlefieldCardsByVisualOrder(
+    next,
     next.horde.battlefield,
     next.combat.hordeAttackers
       .map((id) => next.horde.battlefield.find((card) => card.instanceId === id))
@@ -267,25 +269,25 @@ export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: str
   const attackers = attackerIds
     .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
     .filter((card): card is CardInstance => Boolean(card));
-  return sortBattlefieldCardsByVisualOrder(game.player.battlefield, attackers).map((card) => card.instanceId);
+  return sortBattlefieldCardsByVisualOrder(game, game.player.battlefield, attackers).map((card) => card.instanceId);
 }
 
-function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
+function sortBattlefieldCardsByVisualOrder(game: GameState, battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
   const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
   // Horde swarm tokens are re-summoned throughout the encounter and reuse the same
-  // definitionIds. The board groups Zombie and Goblin tokens by arrival wave so a
-  // later wave stays where it entered instead of jumping back into the first stack.
-  // For attack ordering, that visual wave order is equivalent to chronological entry.
+  // definitionIds. The board groups swarm tokens (per-deck subtypes in hordeRules) by
+  // arrival wave so a later wave stays where it entered instead of jumping back into
+  // the first stack. For attack ordering, that visual wave order equals entry order.
   const familyIndex = new Map<string, number>();
   for (const card of battlefield) {
-    if (isEntryWaveToken(card)) continue;
+    if (isEntryWaveToken(game, card)) continue;
     const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);
   }
 
   const orderOf = (card: CardInstance): number => {
     const own = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
-    return isEntryWaveToken(card) ? own : (familyIndex.get(card.definitionId) ?? own);
+    return isEntryWaveToken(game, card) ? own : (familyIndex.get(card.definitionId) ?? own);
   };
 
   return [...cards].sort((left, right) => {
@@ -295,10 +297,9 @@ function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: C
   });
 }
 
-function isEntryWaveToken(card: CardInstance): boolean {
+function isEntryWaveToken(game: GameState, card: CardInstance): boolean {
   if (!card.isToken) return false;
-  return card.subtypes.some((subtype) => {
-    const normalized = subtype.toLowerCase();
-    return normalized === "zombie" || (card.controller === "horde" && normalized === "goblin");
-  });
+  return card.subtypes.some((subtype) =>
+    game.hordeRules.swarmTokenSubtypes.some((swarmSubtype) => swarmSubtype.toLowerCase() === subtype.toLowerCase()),
+  );
 }

@@ -1,5 +1,4 @@
 import type { CardInstance, Color, GameState, ManaPool } from "./GameTypes";
-import { getPowerToughness } from "./StaticEffects";
 
 export const emptyManaPool = (): ManaPool => ({
   green: 0,
@@ -134,21 +133,9 @@ export function canPayWithAutomaticMana(game: GameState, cost: ManaPool): boolea
   return false;
 }
 
-function dynamicManaAmount(game: GameState, card: CardInstance): number {
-  if (card.definitionId === "elvish_archdruid") {
-    return game.player.battlefield.filter((item) => item.cardTypes.includes("Creature") && item.subtypes.includes("Elf")).length;
-  }
-  return getPowerToughness(game, card).power;
-}
-
-function getAutomaticMana(game: GameState, card: CardInstance): { color: Color | string; amount: number } | undefined {
-  const ability = card.activatedAbilities.find(
-    (item) => item.cost?.tap && (item.effect.type === "ADD_MANA" || item.effect.type === "ADD_MANA_DYNAMIC"),
-  );
+function getAutomaticMana(_game: GameState, card: CardInstance): { color: Color | string; amount: number } | undefined {
+  const ability = card.activatedAbilities.find((item) => item.cost?.tap && item.effect.type === "ADD_MANA");
   if (!ability?.cost?.tap) return undefined;
-  if (ability.effect.type === "ADD_MANA_DYNAMIC") {
-    return { color: String(ability.effect.manaColor ?? "G"), amount: dynamicManaAmount(game, card) };
-  }
   const mana = ability.effect.mana as Record<string, number> | undefined;
   const entry = mana ? Object.entries(mana)[0] : undefined;
   const color = entry?.[0] === "chosenColor" ? card.chosenColor ?? "G" : entry?.[0] ?? "G";

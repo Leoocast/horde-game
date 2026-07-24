@@ -96,6 +96,33 @@ export type DeckList = {
   deckSize: number;
   cards: CardDefinition[];
   tokens?: CardDefinition[];
+  /** Raw per-deck horde rules from the deck JSON; parsed by buildHordeRules at game start. */
+  rulesProfile?: Record<string, unknown>;
+};
+
+/** Per-deck Horde behavior. Defaults (HordeRules.ts) reproduce the classic Zombie-mode rules;
+ *  a horde deck overrides them from its JSON `rulesProfile` — never from code. */
+export type HordeRulesProfile = {
+  /** Cards revealed on a normal Horde turn. */
+  revealCount: number;
+  /** Stop the normal reveal early when a non-token card is revealed. */
+  stopOnNonToken: boolean;
+  /** One-time extra reveals on this Horde turn (0 disables). */
+  miniSurgeTurn: number;
+  miniSurgeExtraReveals: number;
+  /** Permanent surge from this Horde turn on. */
+  surgeTurn: number;
+  surgeTurnChaos: number;
+  surgeExtraReveals: number;
+  /** Optional stat bonus while in surge, e.g. the Zombie deck's +1/+0 to Zombies. */
+  surgeBonus?: { power: number; toughness: number; subtypes: string[] };
+  /** Combat damage the player must deal to mill one Horde card. */
+  damagePerMill: number;
+  /** Poison counters consumed to mill one Horde card at end of turn. */
+  poisonPerMill: number;
+  hordeCreaturesHaveHaste: boolean;
+  /** Token subtypes grouped/ordered by arrival wave (board layout and attack order). */
+  swarmTokenSubtypes: string[];
 };
 
 export type CardInstance = {
@@ -181,6 +208,7 @@ export type GameState = {
   seed: string;
   difficulty: DifficultyMode;
   gameMode: GameMode;
+  hordeRules: HordeRulesProfile;
   chaosMutations: Record<Side, Record<string, Keyword[]>>;
   currentRandomState: number;
   hordeDeckOrderHash?: string;

@@ -109,7 +109,7 @@ function moveHandToBattlefield(game: GameState, card: { instanceId: string; zone
 }
 
 function applyVariableCounters(card: import("./GameTypes").CardInstance): void {
-  if (!card.variableCost && card.definitionId !== "wildwood_scourge") return;
+  if (!card.variableCost) return;
   card.counters["+1/+1"] = (card.counters["+1/+1"] ?? 0) + (card.xValuePaid ?? 0);
 }
 

@@ -9,6 +9,7 @@ export function normalizeDeck(rawDeck: NewDeckList): DeckList {
     deckSize: rawDeck.deckSize ?? rawDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
     cards: rawDeck.cards.map(normalizeCard),
     tokens: rawDeck.tokens?.map(normalizeCard),
+    rulesProfile: rawDeck.rulesProfile,
   };
 }
 

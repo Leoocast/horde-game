@@ -105,7 +105,8 @@ src/
     deckLint.ts           lint de decks: valida cada habilidad contra el vocabulario del engine
 
   engine/
-    effectVocabulary.ts   listas espejo de los tipos que el engine implementa (efectos, triggers, condiciones, customHandlers)
+    effectVocabulary.ts   vocabulario del engine para el lint; los effect types derivan del registro de EffectResolver
+    HordeRules.ts         DEFAULT_HORDE_RULES + buildHordeRules: reglas por deck de horda (reveal, surge, mill, haste, swarm)
 
 scripts/
   run-engine-tests.mjs    corre tests/engine.test.js + tests/deckLint.test.js via vite ssrLoadModule + node:test
@@ -281,8 +282,10 @@ Keywords:
 Ya NO existe formato viejo ni JSONs legacy (`player_deck.json`, `horde_deck.json` y `cardImageLookups.json` fueron eliminados). Los tres decks usan el mismo esquema authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
-- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo; su `rulesProfile` esta en el JSON pero el engine todavia NO lo lee (pendiente de fase de reglas-como-data)
+- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
 - horde: `goblin_assault_horde` — seleccionable; sus habilidades de lords sin handler estan marcadas `engineSupport: "pending"`
+
+Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
 
 `src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una linea `register(label, raw, images)`. De ahi derivan el deck del engine, el inspector (`deckCatalog.ts`) y los lookups de imagenes (`cardImages.ts`). Cada deck lleva su manifest de imagenes junto al JSON.
 
@@ -572,7 +575,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`). Al agregar un tipo de efecto/trigger/condicion nuevo al engine, actualizar `src/engine/effectVocabulary.ts` o el lint fallara.
+- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`).
+- `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
+- Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
+- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`) mas los del tutorial/developer seed.
+- Fix de stacking en combate: durante `resolvingHordeCombat`, `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) en vez de colapsar por definitionId — cartas con stats distintos nunca se fusionan visualmente.
 - `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
 - `Graf Harvest` se fuerza al top de la Horda en developer mode.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.

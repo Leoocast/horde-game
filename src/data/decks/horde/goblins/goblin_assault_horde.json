@@ -11,25 +11,20 @@
   ],
   "archetype": "horde",
   "gamePlan": "Abrumar con fichas de Trasgo, señores tribales, creación de fichas y daño directo al atacar o sacrificar Trasgos.",
-  "hordeHasNoLifeTotal": true,
-  "hordeHasNoHand": true,
-  "hordeCastsRevealedCardsForFree": true,
-  "hordeCreaturesHaveHaste": true,
-  "hordeTokensPersistAcrossZones": true,
-  "damageToHordeRule": {
-    "type": "MILL_PER_DAMAGE_CHUNK",
-    "damagePerCard": 3,
-    "rounding": "floor"
-  },
-  "assaultRevealRule": {
-    "stopWhenCardsPlayedEquals": 3,
-    "stopWhenNonTokenCardPlayed": true
-  },
-  "surgeRule": {
-    "condition": {
-      "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
-    },
-    "additionalCardsAfterNormalReveal": 2
+  "rulesProfile": {
+    "revealCount": 3,
+    "stopOnNonToken": true,
+    "miniSurgeTurn": 6,
+    "miniSurgeExtraReveals": 1,
+    "surgeTurn": 10,
+    "surgeTurnChaos": 8,
+    "surgeExtraReveals": 2,
+    "damagePerMill": 3,
+    "poisonPerMill": 3,
+    "hordeCreaturesHaveHaste": true,
+    "swarmTokenSubtypes": [
+      "Goblin"
+    ]
   },
   "tokens": [
     {
@@ -1321,14 +1316,6 @@
       "id": "divide_damage_among_multiple_targets",
       "usedBy": [
         "mogg_mob_sacrifice_divided_damage"
-      ]
-    },
-    {
-      "id": "horde_reveal_and_persistent_token_zone_rules",
-      "usedBy": [
-        "assaultRevealRule",
-        "surgeRule",
-        "hordeTokensPersistAcrossZones"
       ]
     }
   ]

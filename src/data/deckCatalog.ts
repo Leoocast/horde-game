@@ -57,6 +57,7 @@ export type NewDeckList = {
   name: string;
   side?: string;
   deckSize?: number;
+  rulesProfile?: Record<string, unknown>;
   cards: NewDeckCard[];
   tokens?: NewDeckCard[];
   [key: string]: unknown;

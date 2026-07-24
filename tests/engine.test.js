@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { hordeDeck, playerDeck } from "../src/data/decks";
+import { getHordeDeck, hordeDeck, playerDeck } from "../src/data/decks";
+import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
@@ -1025,6 +1026,8 @@ test("Surge depends only on reaching the tenth Horde turn", () => {
 
 test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
   const game = createTestGame("surge-zombie-power");
+  // The surge bonus is deck data, not an engine rule: it comes from the zombie deck's profile.
+  game.hordeRules = buildHordeRules(hordeDeck.rulesProfile);
   const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
   const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, toughness: 2 }));
   const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
@@ -1039,6 +1042,16 @@ test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
 
   game.hordeTurnNumber = 12;
   assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 3, toughness: 2 });
+});
+
+test("the surge stat bonus is per-deck: the goblin horde gets none", () => {
+  const game = createTestGame("surge-goblin-power");
+  game.hordeRules = buildHordeRules(getHordeDeck("goblin_assault_horde").rulesProfile);
+  const goblin = addCard(game, customCard("surge_goblin", "horde", { subtypes: ["Goblin"], power: 2, toughness: 2 }));
+
+  game.hordeTurnNumber = 10;
+  assert.equal(hordeInSurge(game), true);
+  assert.deepEqual(getPowerToughness(game, goblin), { power: 2, toughness: 2 });
 });
 
 test("Chaos Surge begins on the eighth Horde turn", () => {

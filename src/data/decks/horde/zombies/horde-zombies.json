@@ -6,35 +6,26 @@
   "side": "horde",
   "deckSize": 50,
   "rulesProfile": {
-    "hordeHasNoLifeTotal": true,
-    "hordeHasNoHand": true,
-    "hordeCastsRevealedCardsForFree": true,
+    "revealCount": 3,
+    "stopOnNonToken": true,
+    "miniSurgeTurn": 6,
+    "miniSurgeExtraReveals": 1,
+    "surgeTurn": 10,
+    "surgeTurnChaos": 8,
+    "surgeExtraReveals": 2,
+    "surgeBonus": {
+      "power": 1,
+      "toughness": 0,
+      "subtypes": [
+        "Zombie"
+      ]
+    },
+    "damagePerMill": 3,
+    "poisonPerMill": 3,
     "hordeCreaturesHaveHaste": true,
-    "hordeTokensPersistAcrossZones": true,
-    "damageToHordeRule": {
-      "type": "MILL_PER_DAMAGE_CHUNK",
-      "damagePerCard": 3,
-      "rounding": "floor"
-    },
-    "assaultRevealRule": {
-      "stopWhenCardsPlayedEquals": 3,
-      "stopWhenNonTokenCardPlayed": true
-    },
-    "surgeRule": {
-      "condition": {
-        "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
-      },
-      "additionalCardsAfterNormalReveal": 2
-    },
-    "hordeManaRule": {
-      "enabled": true,
-      "description": "Horde creatures may tap for mana only when a directive or effect requires payment.",
-      "creatureManaAbility": {
-        "tap": true,
-        "produces": "ANY_COLOR",
-        "amount": "MANA_VALUE"
-      }
-    }
+    "swarmTokenSubtypes": [
+      "Zombie"
+    ]
   },
   "cards": [
     {

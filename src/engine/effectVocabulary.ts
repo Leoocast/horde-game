@@ -6,47 +6,11 @@
 // Each set mirrors one concrete function. When you add a case there, add it here — the lint
 // exists precisely to complain when the two drift apart.
 
-/** Mirrors the if-chain in EffectResolver.resolveEffect, plus the wrapper/static types it
- *  deliberately skips (they are consumed by StaticEffects/Keywords/resolveTriggeredEvent),
- *  plus ADD_MANA_DYNAMIC which only ManaSystem.getAutomaticMana understands. */
-export const RESOLVABLE_EFFECT_TYPES = new Set([
-  "TRIGGERED_ABILITY",
-  "STATIC_BUFF",
-  "STATIC_GRANT_KEYWORD",
-  "STATIC_CONDITIONAL_BUFF",
-  "STATIC_CONDITIONAL_GRANT_KEYWORD",
-  "SEQUENCE",
-  "CONDITIONAL",
-  "CHOOSE",
-  "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD",
-  "ADD_MANA",
-  "ADD_MANA_DYNAMIC",
-  "DRAW_CARD",
-  "CREATE_TOKEN",
-  "DEAL_DAMAGE_TO_OPPONENT",
-  "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
-  "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES",
-  "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
-  "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
-  "PUMP_SELF_PER_ATTACKER_MATCHING",
-  "PUMP_GROUP_UNTIL_END_OF_TURN",
-  "PUT_COUNTER",
-  "REMOVE_COUNTER",
-  "GAIN_LIFE",
-  "PUMP_UNTIL_END_OF_TURN",
-  "GRANT_KEYWORD_UNTIL_END_OF_TURN",
-  "DEAL_DAMAGE_FROM_SOURCE_POWER",
-  "DEAL_DAMAGE",
-  "FIGHT_SIMULTANEOUS",
-  "DESTROY",
-  "DESTROY_TARGET",
-  "DISTRIBUTE_COUNTERS",
-  "DOUBLE_COUNTERS_ON_TARGETS",
-  "MILL_SELF",
-  "MILL_HORDE",
-  "EACH_OPPONENT_DISCARDS",
-  "EACH_OPPONENT_LOSES_LIFE",
-]);
+import { registeredEffectTypes } from "./EffectResolver";
+
+/** Derived directly from EffectResolver's handler registry — the registry keys ARE the
+ *  vocabulary, so adding a handler there automatically makes the type legal in deck JSONs. */
+export const RESOLVABLE_EFFECT_TYPES = registeredEffectTypes();
 
 /** Events cards can react to. Mirrors what `enqueue` callers emit and what
  *  EffectResolver.triggeredSourcesForEvent / resolveTriggeredEvent dispatch on. */

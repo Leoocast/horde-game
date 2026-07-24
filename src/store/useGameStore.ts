@@ -21,7 +21,7 @@ import {
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
-import { destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, millHorde, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggerConditionMet } from "../engine/EffectResolver";
+import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, hasEffectPresentation, millHorde, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggerConditionMet } from "../engine/EffectResolver";
 import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticAuras, type StaticAura, type StaticAuraSnapshot } from "../engine/StaticAuras";
 import { drainEventQueue, enqueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
@@ -1658,10 +1658,12 @@ function hordeEnterTriggerMessage(card: CardInstance): string {
   const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD");
   const effect = trigger?.effect as EffectDefinition | undefined;
   const cardName = uiCardName(card);
-  if (effect?.type === "CREATE_TOKEN") return uiText("toast.cardCreatesTokens", { card: cardName, count: Number(effect.amount ?? 1) });
-  if (effect?.type === "MILL_SELF" || effect?.type === "MILL_HORDE") return uiText("toast.cardMills", { card: cardName, count: Number(effect.amount ?? 1) });
-  if (effect?.type === "EACH_OPPONENT_DISCARDS") return uiText("toast.cardDiscards", { card: cardName, count: Number(effect.amount ?? 1) });
-  if (effect?.type === "EACH_OPPONENT_LOSES_LIFE") return uiText("toast.cardLifeLoss", { card: cardName, count: Number(effect.amount ?? 1) });
+  const announcement = effect ? EFFECT_ANNOUNCEMENTS[String(effect.type)] : undefined;
+  const count = Number(effect?.amount ?? 1);
+  if (announcement === "createsTokens") return uiText("toast.cardCreatesTokens", { card: cardName, count });
+  if (announcement === "mills") return uiText("toast.cardMills", { card: cardName, count });
+  if (announcement === "discards") return uiText("toast.cardDiscards", { card: cardName, count });
+  if (announcement === "lifeLoss") return uiText("toast.cardLifeLoss", { card: cardName, count });
   return uiText("toast.cardTrigger", { card: cardName });
 }
 
@@ -1690,7 +1692,7 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
     const attacker = game.player.battlefield.find((card) => card.instanceId === attackerId);
     if (!attacker) return;
     totalDamage += getPowerToughness(game, attacker).power;
-    const nextMill = Math.floor(totalDamage / 3);
+    const nextMill = Math.floor(totalDamage / game.hordeRules.damagePerMill);
     const newMill = nextMill - previousMill;
     previousMill = nextMill;
     for (let index = 0; index < newMill; index += 1) {
@@ -1732,30 +1734,6 @@ function findMarkedCreatureIds(game: GameState): string[] {
     .map((card) => card.instanceId);
 }
 
-function isFightEffect(effect: unknown): boolean {
-  if (!effect || typeof effect !== "object") return false;
-  const data = effect as Record<string, unknown>;
-  if (data.type === "FIGHT_SIMULTANEOUS") return true;
-  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isFightEffect);
-  return false;
-}
-
-function isSourceDamageEffect(effect: unknown): boolean {
-  if (!effect || typeof effect !== "object") return false;
-  const data = effect as Record<string, unknown>;
-  if (data.type === "DEAL_DAMAGE" || data.type === "DEAL_DAMAGE_FROM_SOURCE_POWER") return true;
-  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isSourceDamageEffect);
-  return false;
-}
-
-function isDestroyEffect(effect: unknown): boolean {
-  if (!effect || typeof effect !== "object") return false;
-  const data = effect as Record<string, unknown>;
-  if (data.type === "DESTROY" || data.type === "DESTROY_TARGET") return true;
-  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some(isDestroyEffect);
-  return false;
-}
-
 function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
   return Boolean(card && findManualEnterTargetTrigger(card));
 }
@@ -1776,8 +1754,10 @@ function findCardCastReactionSources(game: GameState, card: CardInstance): CardI
 function cardCastReactionMessage(card: CardInstance): string {
   const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "CARD_CAST");
   const effect = trigger?.effect as EffectDefinition | undefined;
-  const inner = effect?.type === "SEQUENCE" ? ((effect.effects as EffectDefinition[] | undefined)?.find((item) => item.type === "CREATE_TOKEN") ?? effect) : effect;
-  if (inner?.type === "CREATE_TOKEN") return uiText("toast.cardCreatesToken", { card: uiCardName(card) });
+  const inner = effect?.type === "SEQUENCE"
+    ? ((effect.effects as EffectDefinition[] | undefined)?.find((item) => EFFECT_ANNOUNCEMENTS[String(item.type)] === "createsTokens") ?? effect)
+    : effect;
+  if (inner && EFFECT_ANNOUNCEMENTS[String(inner.type)] === "createsTokens") return uiText("toast.cardCreatesToken", { card: uiCardName(card) });
   return uiText("toast.cardTrigger", { card: uiCardName(card) });
 }
 
@@ -2046,9 +2026,9 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const enemyId = String(spellTargeting.targets.opponentCreature ?? spellTargeting.targets.damageTarget ?? "");
   const targets = { ...spellTargeting.targets };
   const handId = spellTargeting.handId;
-  const isFightSpell = Boolean(friendlyId && enemyId && card.effects.some(isFightEffect));
-  const isSourceDamageSpell = Boolean(friendlyId && enemyId && card.effects.some(isSourceDamageEffect));
-  const isDestroySpell = card.effects.some(isDestroyEffect);
+  const isFightSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "fight"));
+  const isSourceDamageSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "sourceDamage"));
+  const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (latest: GameState) => {
     const previousLog = latest.log[0];
