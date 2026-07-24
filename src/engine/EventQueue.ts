@@ -17,6 +17,16 @@ export function enqueue(game: GameState, event: Omit<EventItem, "id">): void {
   });
 }
 
+/** Resolves exactly one queued event. Returns false when the queue was already empty.
+ *  Kept separate from `drainEventQueue` on purpose: that one parks deferred events until the whole
+ *  drain is over, which a single step cannot do without re-processing them immediately. */
+export function drainNextEvent(game: GameState): boolean {
+  const event = game.eventQueue.shift();
+  if (!event) return false;
+  resolveTriggeredEvent(game, event);
+  return true;
+}
+
 // `deferController` resolves every triggered source EXCEPT that side's, re-queuing any event
 // that still has a trigger for the deferred side so it can be drained later. Used so a player
 // cast can apply its own reactive triggers (e.g. Beast-Kin's self-buff) immediately while the

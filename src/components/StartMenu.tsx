@@ -30,6 +30,8 @@ type Props = {
   requestInitialName?: boolean;
   onNameSaved?: (name: string) => void;
   onRestartFirstTime?: () => void;
+  /** Only provided in development builds; the menu entry does not exist without it. */
+  onOpenPlayground?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -42,7 +44,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -229,6 +231,12 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
             <h1 className="main-menu-title">Hostfall</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
+            {onOpenPlayground && (
+              <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
+                <Construction size={15} aria-hidden="true" />
+                <span>Playground</span>
+              </button>
+            )}
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>

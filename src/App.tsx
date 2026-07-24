@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -10,8 +10,13 @@ import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
+import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
+
+// Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
+// statically eliminated, so the chunk is still emitted — production simply never requests it.
+const PlaygroundScreen = lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })));
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -20,7 +25,7 @@ export default function App() {
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
-  const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
+  const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground">("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
   const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
@@ -136,6 +141,21 @@ export default function App() {
     />
   ) : null;
 
+  if (screen === "playground" && IS_DEV) {
+    return (
+      <Suspense fallback={<GameLoadingScreen percent={100} label="ready" />}>
+        <AudioClickListener />
+        <PlaygroundScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (screen === "deckInspector") {
     return (
       <>
@@ -186,6 +206,10 @@ export default function App() {
             setPlayerName(name);
             setRequestInitialName(false);
           }}
+          onOpenPlayground={IS_DEV ? () => {
+            stopMusic();
+            setScreen("playground");
+          } : undefined}
           onRestartFirstTime={() => {
             setScreen("start");
             setMenuReturnScreen("home");

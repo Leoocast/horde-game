@@ -111,6 +111,8 @@ export type GameStore = {
   playerDeckId: string;
   hordeDeckId: string;
   reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
+  /** Plants an already-built GameState (Playground scenarios). Same store cleanup as `reset`. */
+  loadScenario: (game: GameState, deckIds: { playerDeckId: string; hordeDeckId: string }) => void;
   setSeed: (seed: string) => void;
   acceptOpeningHand: () => void;
   mulliganOpeningHand: () => void;
@@ -295,6 +297,62 @@ export type SpellFightAnimationState = {
   eventId: number;
 };
 
+/** Every piece of presentation state that must NOT survive into a new game. It lives outside
+ *  `GameState` (animation queues, targeting, selections), so anything that swaps the game in has to
+ *  clear it here — otherwise callbacks and beats from the previous match land on the new board. */
+function createCleanUiState(): Partial<GameStore> {
+  return {
+    tutorialAcknowledgedStepId: undefined,
+    selectedHandId: undefined,
+    selectedPlayerCreatureId: undefined,
+    selectedHordeCreatureId: undefined,
+    activeEffectCardId: undefined,
+    closingEffectCardId: undefined,
+    activatingEffectCardId: undefined,
+    hoveredCardId: undefined,
+    focusedCardId: undefined,
+    hordeAttackAnimation: undefined,
+    burnAnimation: undefined,
+    burnImpactCardId: undefined,
+    burnImpactEventId: undefined,
+    deathRevealCard: undefined,
+    pendingStaticAuras: [],
+    heldStaticAuraBonuses: {},
+    playerAttackAnimation: undefined,
+    resolvingHordeCombat: false,
+    summoningAnimationCount: 0,
+    pendingTriggeredEffectCount: 0,
+    pendingTriggeredEffectSourceId: undefined,
+    hordeAutoTriggerCount: 0,
+    surgeTransitionActive: false,
+    surgeTransitionShown: false,
+    hordeCombatVisualDamage: undefined,
+    hordeCombatDeadCardIds: [],
+    specialDeadCardIds: [],
+    hordeMillAnimationQueue: [],
+    hordeMillPreviewCards: [],
+    playerDiscardAnimationQueue: [],
+    landPlayAnimationQueue: [],
+    energyRecycleAnimation: undefined,
+    energyRecycleDragActive: false,
+    handLimitDiscardActive: false,
+    handLimitSelectionId: undefined,
+    autoPaidLandAnimation: undefined,
+    blockDrag: undefined,
+    playerAttackDrag: undefined,
+    cardContextMenu: undefined,
+    counterTargeting: undefined,
+    smallpoxCard: undefined,
+    smallpoxSelection: undefined,
+    spellTargeting: undefined,
+    spellFightAnimation: undefined,
+    pendingSpellHandId: undefined,
+    buffAnimationCardIds: [],
+    buffAnimationEventId: undefined,
+    lifeBuffAnimationId: undefined,
+  };
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 3),
   gameSessionId: 0,
@@ -348,59 +406,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       useAudioStore.getState().setMusicVariant("battle");
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty, gameMode);
       return {
+        ...createCleanUiState(),
         game: next,
         gameSessionId: state.gameSessionId + 1,
         seed,
         playerDeckId,
         hordeDeckId,
-        tutorialAcknowledgedStepId: undefined,
-        selectedHandId: undefined,
-        selectedPlayerCreatureId: undefined,
-        selectedHordeCreatureId: undefined,
-        activeEffectCardId: undefined,
-        closingEffectCardId: undefined,
-        activatingEffectCardId: undefined,
-        hoveredCardId: undefined,
-        focusedCardId: undefined,
-        hordeAttackAnimation: undefined,
-        burnAnimation: undefined,
-        burnImpactCardId: undefined,
-        burnImpactEventId: undefined,
-        deathRevealCard: undefined,
-        pendingStaticAuras: [],
-        heldStaticAuraBonuses: {},
-        playerAttackAnimation: undefined,
-        resolvingHordeCombat: false,
-        summoningAnimationCount: 0,
-        pendingTriggeredEffectCount: 0,
-        pendingTriggeredEffectSourceId: undefined,
-        hordeAutoTriggerCount: 0,
-        surgeTransitionActive: false,
-        surgeTransitionShown: false,
-        hordeCombatVisualDamage: undefined,
-        hordeCombatDeadCardIds: [],
-        specialDeadCardIds: [],
-        hordeMillAnimationQueue: [],
-        hordeMillPreviewCards: [],
-        playerDiscardAnimationQueue: [],
-        landPlayAnimationQueue: [],
-        energyRecycleAnimation: undefined,
-        energyRecycleDragActive: false,
-        handLimitDiscardActive: false,
-        handLimitSelectionId: undefined,
-        autoPaidLandAnimation: undefined,
-        blockDrag: undefined,
-        playerAttackDrag: undefined,
-        cardContextMenu: undefined,
-        counterTargeting: undefined,
-        smallpoxCard: undefined,
-        smallpoxSelection: undefined,
-        spellTargeting: undefined,
-        spellFightAnimation: undefined,
-        pendingSpellHandId: undefined,
-        buffAnimationCardIds: [],
-        buffAnimationEventId: undefined,
-        lifeBuffAnimationId: undefined,
+      };
+    }),
+  loadScenario: (game, deckIds) =>
+    set((state) => {
+      resetHordeSequence();
+      useAudioStore.getState().setMusicVariant("battle");
+      return {
+        ...createCleanUiState(),
+        game,
+        gameSessionId: state.gameSessionId + 1,
+        seed: game.seed,
+        playerDeckId: deckIds.playerDeckId,
+        hordeDeckId: deckIds.hordeDeckId,
       };
     }),
   setSeed: (seed) => {
