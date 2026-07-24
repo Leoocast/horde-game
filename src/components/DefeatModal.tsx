@@ -28,7 +28,7 @@ export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
     resetSfx();
     setSeed(nextSeed);
     reset(nextSeed, setupTurns);
-    if (nextSeed.trim().toLowerCase() === "tutorial") playCollection("battleTheme1");
+    if (nextSeed.trim().toLowerCase() === "tutorial") playCollection("zombiesBattle1");
     else startBattleMusic(true);
   }
 

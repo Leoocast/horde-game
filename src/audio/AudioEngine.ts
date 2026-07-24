@@ -1,5 +1,5 @@
 import { sfxManifest, type SfxId } from "./soundManifest";
-import { battleThemeIds, musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
+import { battleThemeIds, menuThemeIds, musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
 
 type AudioSettings = {
   enabled: boolean;
@@ -127,6 +127,17 @@ class AudioEngine {
     return this.playCollection(id, "battle");
   }
 
+  startRandomMenuTheme(forceNew = false) {
+    const isMenuTheme = this.currentCollectionId && menuThemeIds.includes(this.currentCollectionId);
+    if (!forceNew && this.music && isMenuTheme) {
+      this.resumeMusic();
+      return this.getStatus();
+    }
+
+    const id = menuThemeIds[Math.floor(Math.random() * menuThemeIds.length)];
+    return this.playCollection(id, "battle");
+  }
+
   playCollection(id: MusicCollectionId, variant: MusicVariant = this.currentVariant) {
     if (this.currentCollectionId === id && this.currentVariant === variant && this.music) {
       this.pausedByUser = false;
@@ -225,7 +236,7 @@ class AudioEngine {
     const key = musicKey(id, variant);
     const music = this.preparedMusic.get(key) ?? createAudio(musicCollections[id][variant]);
     this.preparedMusic.delete(key);
-    music.loop = true;
+    music.loop = musicCollections[id].loop !== false;
     music.volume = volumeToGain(this.settings.musicVolume);
     try {
       music.currentTime = Math.max(0, startAt);

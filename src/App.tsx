@@ -110,7 +110,7 @@ export default function App() {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealTimeout = window.setTimeout(() => {
       if (launchTransition.tutorial) {
-        playCollection("battleTheme1");
+        playCollection("zombiesBattle1");
       } else {
         startBattleMusic(true);
       }
