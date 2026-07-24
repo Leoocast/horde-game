@@ -129,6 +129,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
+  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
   const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
   const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
@@ -182,9 +183,11 @@ export function Battlefield({ game, side, cards }: Props) {
 
   // Combat casualties leave game state the instant their impact lands, so their triggers can
   // resolve in sequence. Removing them from the row right then would re-center every survivor
-  // mid-sequence. Keep their slot as a dead-looking ghost until the whole combat is over, then
-  // let them all leave at once.
-  const displayedCards = holdCombatCasualties(cards, resolvingHordeCombat, combatCasualties, previousCards, battlefieldCardOrder);
+  // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
+  // let them all leave at once. This covers both animated Horde combat and the Horde's own
+  // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
+  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0;
+  const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
   const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
   const lands = displayedCards.filter((card) => card.cardTypes.includes("Land"));
@@ -1292,13 +1295,13 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
  */
 function holdCombatCasualties(
   cards: CardInstance[],
-  resolvingHordeCombat: boolean,
+  holdCasualties: boolean,
   casualties: RefObject<Map<string, CardInstance>>,
   previousCards: RefObject<CardInstance[]>,
   cardOrder: RefObject<Map<string, number>>,
 ): CardInstance[] {
   const liveIds = new Set(cards.map((card) => card.instanceId));
-  if (resolvingHordeCombat) {
+  if (holdCasualties) {
     for (const card of previousCards.current) {
       if (!liveIds.has(card.instanceId) && !casualties.current.has(card.instanceId)) {
         casualties.current.set(card.instanceId, card);
