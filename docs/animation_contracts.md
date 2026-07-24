@@ -46,10 +46,14 @@ Data contract:
 
 Resolution order:
 
-1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness.
-2. A layered fireball — heat halo, trailing streak aimed along the flight heading, flickering flame licks, white-hot core — travels from the source card to the target card.
-3. On impact, damage is committed in the engine.
-4. The target flashes with the burn shader (`.burn-card-scorch-flash`), a spark burst fires, and a heavy condensed damage number rises.
+The visual is a faithful port of the reference in `assets/examples/Fireball/fireball.html`, adapted from that scene's fixed horizontal shot to arbitrary source→target geometry. One CSS master clock drives it: `--burn-duration` (1100ms), with the projectile launching at 20% and impact at 58%. The store's `BURN_IMPACT_MS` (638) and `BURN_ANIMATION_MS` (1220) track that clock.
+
+1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness. A charge build-up (`.burn-charge`: swelling glow, distorting ring, spinning arc, inrushing sparks) plays at the source, and a random cast whoosh (`fireballCastSfx`) fires as the projectile ignites.
+2. A multi-layer morphing fireball (`.burn-fireball-body`) with an attached comet trail (ribbons + streaks) travels from the source card to the target card. The ball squash and trail ride the travel heading (`--burn-angle`), and JS-spawned trace sparks bleed off its real path.
+3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and a random hit sound (`fireballHitSfx`) plays.
+4. A layered impact anchored on the target fires: a void implosion, a morphing molten core, two shock rings, a ring of JS-spawned embers, lingering smoke puffs, and a radial screen flash. The effects (inside `.burn-world`) get a short impact shake; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
+
+The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `debris` classes are **not** ported — they exist in its CSS but never appear in its DOM, so they never render.
 5. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
 6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 

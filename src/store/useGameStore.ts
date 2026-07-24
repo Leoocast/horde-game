@@ -27,6 +27,7 @@ import { drainEventQueue, enqueue } from "../engine/EventQueue";
 import { targetCandidates, weakestCreature } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
+import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useToastStore } from "./useToastStore";
 import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
 import { translate, type TranslationKey } from "../i18n/translations";
@@ -168,8 +169,10 @@ const BUFF_ANIMATION_MS = 1120;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const HORDE_ENTER_TRIGGER_START_MS = 680;
 const HORDE_ENTER_TRIGGER_RESOLVE_MS = 430;
-const BURN_IMPACT_MS = 500;
-const BURN_ANIMATION_MS = 1180;
+// Matches the fireball's CSS master clock (--burn-duration 1100ms, impact at 58%). The window
+// runs a touch past the duration so the rising damage number finishes before the layer clears.
+const BURN_IMPACT_MS = 638;
+const BURN_ANIMATION_MS = 1220;
 // Lead-in matches HORDE_ENTER_TRIGGER_START_MS's intent: let a card that just landed finish its
 // summon pop before its aura pulse animates the same transform on the same slot.
 const STATIC_AURA_LEAD_IN_MS = 420;
@@ -1411,6 +1414,10 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
   return battlefieldChanged;
 }
 
+function pickRandom(ids: SfxId[]): SfxId {
+  return ids[Math.floor(Math.random() * ids.length)];
+}
+
 const burnBeatHandler: HordeBeatHandler = {
   id: "burn",
   claims: (event) => event.type === "BURN_DAMAGE",
@@ -1428,10 +1435,13 @@ const burnBeatHandler: HordeBeatHandler = {
     // No activation pulse here: the source already flashed gold on the beat that queued this
     // burn, and firing it twice for one effect reads as the card triggering again. It still
     // lunges — `.burn-source-casting` moves it without the gold.
+    // The whoosh fires as the fireball ignites; a fresh voice each time so back-to-back burns
+    // never loop the same clip.
+    useAudioStore.getState().playSfx(pickRandom(fireballCastSfx), { volume: 0.7 });
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+      useAudioStore.getState().playSfx(pickRandom(fireballHitSfx), { volume: 0.78 });
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
       useGameStore.setState({ burnImpactCardId: targetId, burnImpactEventId: Date.now() });

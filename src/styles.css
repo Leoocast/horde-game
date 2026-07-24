@@ -5376,124 +5376,344 @@
     z-index: 190;
     pointer-events: none;
     overflow: hidden;
+    /* Single master clock, mirrors assets/examples/Fireball. Impact lands at 58%. */
+    --burn-duration: 1100ms;
   }
 
-  /* The fireball is a stack: a wide heat halo, a trailing streak aimed along the flight
-     heading (--burn-angle), flickering flame licks, and a white-hot core on top. One
-     radial-gradient never reads as fire; the layered version does. */
-  .burn-projectile {
+  /* Wrapper so the impact shake jolts the effects without shaking the board behind them. */
+  .burn-world {
+    position: absolute;
+    inset: 0;
+    animation: burn-shake var(--burn-duration) linear both;
+  }
+
+  /* ---------- Charge build-up at the source ---------- */
+  .burn-charge {
     position: absolute;
     left: var(--burn-start-x);
     top: var(--burn-start-y);
-    width: 30px;
-    height: 30px;
+    width: 142px;
+    height: 142px;
     transform: translate(-50%, -50%);
-    /* Delayed so the thrower gets a wind-up; the shortened flight still lands on BURN_IMPACT_MS. */
-    animation: burn-projectile-flight 380ms 120ms cubic-bezier(0.34, 0.06, 0.66, 0.96) both;
   }
 
-  .burn-projectile-trail {
+  .burn-charge-glow {
+    position: absolute;
+    inset: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0 10%, rgba(255, 202, 90, 0.8) 20%, rgba(255, 60, 0, 0.18) 44%, transparent 72%);
+    filter: blur(7px);
+    opacity: 0;
+    transform: scale(0);
+    animation: burn-cast-glow var(--burn-duration) ease-out both;
+  }
+
+  .burn-charge-distortion {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(255, 210, 130, 0.4);
+    border-radius: 47% 53% 42% 58% / 56% 43% 57% 44%;
+    filter: blur(0.7px);
+    opacity: 0;
+    transform: scale(0.7);
+    animation: burn-cast-distortion var(--burn-duration) ease-out both;
+  }
+
+  .burn-charge-arc {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    opacity: 1;
+    pointer-events: none;
+    animation: burn-cast-arc var(--burn-duration) linear both;
+  }
+
+  .burn-charge-arc::before,
+  .burn-charge-arc::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border-top: 2px solid rgba(255, 220, 135, 0.65);
+    border-right: 1px solid rgba(255, 160, 70, 0.28);
+    border-left: 0;
+    border-bottom: 0;
+    filter: blur(0.3px);
+  }
+
+  .burn-charge-arc::before { transform: rotate(15deg) scale(1.02); }
+  .burn-charge-arc::after { transform: rotate(205deg) scale(0.88); opacity: 0.7; }
+
+  .burn-charge-particle {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 96px;
-    height: 17px;
-    border-radius: 999px 40% 40% 999px;
-    background: linear-gradient(
-      270deg,
-      rgb(255 226 129 / 0.92) 0%,
-      rgb(255 128 27 / 0.72) 26%,
-      rgb(198 40 10 / 0.34) 60%,
-      transparent 100%
-    );
-    filter: blur(3px);
-    transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg));
-    transform-origin: 100% 50%;
-    animation: burn-trail-waver 150ms ease-in-out infinite alternate;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: rgba(255, 225, 145, 0.95);
+    box-shadow: 0 0 8px rgba(255, 175, 60, 0.85), 0 0 14px rgba(255, 65, 0, 0.45);
+    opacity: 0;
+    animation: burn-cast-particle var(--burn-duration) ease-in both;
   }
 
-  .burn-projectile-flame {
-    position: absolute;
-    inset: -14px;
-    transform: rotate(var(--burn-angle, 0deg));
-  }
-
-  .burn-projectile-flame > i {
-    position: absolute;
-    border-radius: 60% 40% 55% 45%;
-    background: radial-gradient(circle, rgb(255 205 78 / 0.95), rgb(238 74 14 / 0.5) 52%, transparent 74%);
-    animation: burn-ember-flicker 170ms ease-in-out infinite alternate;
-  }
-
-  .burn-projectile-flame > i:nth-child(1) { inset: 4px 22px 4px -6px; }
-  .burn-projectile-flame > i:nth-child(2) { inset: -4px 26px 12px 2px; animation-delay: -85ms; }
-  .burn-projectile-flame > i:nth-child(3) { inset: 12px 24px -4px 0; animation-delay: -130ms; }
-
-  .burn-projectile-core {
+  /* ---------- Trace sparks (JS spawned) ---------- */
+  .burn-trace-layer {
     position: absolute;
     inset: 0;
-    border-radius: 999px;
-    background:
-      radial-gradient(circle at 40% 34%, #fffdf0 0 14%, #ffe89a 26%, #ffb02e 46%, #ff5a10 68%, #9d1608 84%, transparent 86%);
-    box-shadow:
-      0 0 10px #fff3bd,
-      0 0 26px rgb(255 132 28 / 0.95),
-      0 0 58px rgb(190 34 8 / 0.7);
-    animation: burn-core-pulse 130ms ease-in-out infinite alternate;
+    z-index: 7;
+    pointer-events: none;
   }
 
-  .burn-impact-ring {
+  .burn-trace-particle {
     position: absolute;
-    left: var(--burn-end-x);
-    top: var(--burn-end-y);
-    width: 108px;
-    height: 108px;
-    border: 4px solid rgb(255 138 51 / 0.9);
-    border-radius: 999px;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    box-shadow: 0 0 calc(var(--size) * 1.5) #ffcf83, 0 0 calc(var(--size) * 3) #ff3b00, 0 0 calc(var(--size) * 6) #a11100;
+    mix-blend-mode: screen;
+    animation: burn-trace-life var(--life, 300ms) ease-out forwards;
+  }
+
+  /* ---------- Fireball projectile + attached trail ---------- */
+  .burn-fireball {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 124px;
+    height: 78px;
+    z-index: 10;
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.15);
-    box-shadow: 0 0 24px #ff681c, inset 0 0 26px rgb(255 205 91 / 0.78);
-    animation: burn-impact-burst 540ms 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform: translate(-50%, -50%) scale(0.05);
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.52)) drop-shadow(0 0 20px rgba(203, 33, 1, 0.56));
+    animation: burn-fireball-flight var(--burn-duration) ease-in both;
   }
 
-  .burn-impact-ring > i {
+  .burn-trail {
     position: absolute;
-    inset: 24%;
-    border-radius: 999px;
-    background: radial-gradient(circle, #fff3a6, #ff6a1a 42%, rgb(126 12 7 / 0.7) 68%, transparent 70%);
-    box-shadow: 0 0 34px #ff3b12;
+    right: 48px;
+    top: 50%;
+    width: 210px;
+    height: 64px;
+    transform: translateY(-50%);
+    transform-origin: right center;
+    z-index: 0;
   }
 
-  .burn-impact-sparks {
+  .burn-trail-ribbon,
+  .burn-trail-streak {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    opacity: 0;
+    transform-origin: right center;
+    mix-blend-mode: screen;
+    animation: burn-trail var(--burn-duration) linear both;
+  }
+
+  .burn-trail-ribbon {
+    width: var(--w);
+    height: var(--h);
+    border-radius: 88% 14% 24% 88% / 66% 38% 62% 34%;
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(20, 0, 3, 0.86) 12%,
+        rgba(96, 5, 3, 0.88) 33%,
+        rgba(215, 37, 2, 0.96) 64%,
+        rgba(255, 142, 44, 0.98) 84%,
+        rgba(255, 239, 188, 0.9) 95%,
+        transparent 100%);
+    filter: blur(var(--blur));
+  }
+
+  .burn-trail-ribbon::before {
+    content: "";
+    position: absolute;
+    inset: 24% 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255, 52, 4, 0.2) 22%, rgba(255, 171, 66, 0.74) 68%, #fff4d9 92%, transparent);
+    filter: blur(1px);
+    animation: burn-filament 70ms ease-in-out infinite alternate;
+  }
+
+  .burn-trail-streak {
+    width: var(--w);
+    height: var(--h);
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255, 45, 2, 0.75) 48%, rgba(255, 213, 125, 0.98) 88%, transparent);
+    box-shadow: 0 0 7px rgba(255, 53, 4, 0.5);
+    filter: blur(var(--blur));
+  }
+
+  .burn-fireball-body {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 72px;
+    height: 58px;
+    transform: translateY(-50%);
+    isolation: isolate;
+    z-index: 3;
+  }
+
+  .burn-ball-outer,
+  .burn-ball-mid,
+  .burn-ball-core,
+  .burn-ball-hotspot,
+  .burn-ball-shadow {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .burn-ball-outer {
+    inset: 0;
+    border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%;
+    background: radial-gradient(circle at 66% 46%,
+        #fff9e6 0 5%,
+        #ffc267 12%,
+        #f9550d 31%,
+        #a71404 48%,
+        #390006 63%,
+        rgba(0, 0, 0, 0.76) 73%,
+        transparent 84%);
+    filter: blur(1.8px);
+    animation: burn-blob-one 85ms ease-in-out infinite alternate, burn-outer-flicker 65ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-mid {
+    inset: 5px 6px 6px 9px;
+    border-radius: 56% 44% 47% 53% / 45% 59% 41% 55%;
+    background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(116, 9, 1, 0.74) 68%, transparent 82%);
+    filter: blur(1px);
+    mix-blend-mode: screen;
+    animation: burn-blob-two 65ms ease-in-out infinite alternate, burn-mid-flicker 58ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-core {
+    inset: 13px 13px 13px 21px;
+    border-radius: 49% 51% 42% 58% / 58% 44% 56% 42%;
+    background: radial-gradient(circle at 62% 46%, #fff 0 18%, #fff0c9 36%, #ffb04e 66%, rgba(255, 63, 7, 0.12) 100%);
+    filter: blur(0.65px);
+    mix-blend-mode: screen;
+    animation: burn-blob-three 55ms ease-in-out infinite alternate, burn-ball-core-pulse 72ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-hotspot {
+    inset: 18px 14px 18px 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0 45%, rgba(255, 245, 216, 0.72) 70%, transparent);
+    filter: blur(2.5px);
+    animation: burn-hotspot 46ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-shadow {
+    inset: -4px;
+    border-radius: 50%;
+    background: repeating-linear-gradient(145deg, rgba(0, 0, 0, 0.11) 0 3px, rgba(255, 255, 255, 0.025) 3px 6px);
+    mix-blend-mode: multiply;
+    opacity: 0.55;
+  }
+
+  /* ---------- Layered impact anchored on the target ---------- */
+  .burn-impact {
     position: absolute;
     left: var(--burn-end-x);
     top: var(--burn-end-y);
-    width: 0;
-    height: 0;
+    width: 1px;
+    height: 1px;
+    z-index: 13;
+    pointer-events: none;
   }
 
-  .burn-impact-sparks > i {
+  .burn-impact-core {
     position: absolute;
     left: 0;
     top: 0;
-    width: 5px;
-    height: 5px;
-    margin: -2.5px 0 0 -2.5px;
-    border-radius: 999px;
-    background: radial-gradient(circle, #fff5c8, #ff8a1f 55%, transparent 72%);
-    box-shadow: 0 0 8px #ff7a17;
+    width: 174px;
+    height: 174px;
+    border-radius: 50%;
     opacity: 0;
-    animation: burn-spark-fly 520ms 500ms cubic-bezier(0.18, 0.9, 0.36, 1) both;
+    transform: translate(-50%, -50%) scale(0.02);
+    background: radial-gradient(circle,
+        #fff 0 4%,
+        #fff4d0 8%,
+        #ffc066 19%,
+        #ff6317 36%,
+        rgba(182, 19, 1, 0.88) 54%,
+        rgba(25, 0, 4, 0.75) 69%,
+        transparent 82%);
+    filter: blur(4px) drop-shadow(0 0 28px rgba(255, 86, 12, 0.6)) drop-shadow(0 0 62px rgba(185, 16, 0, 0.3));
+    mix-blend-mode: screen;
+    animation: burn-impact-core var(--burn-duration) linear both;
   }
 
-  .burn-impact-sparks > i:nth-child(even) { animation-duration: 600ms; width: 4px; height: 4px; }
+  .burn-void-disc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 156px;
+    height: 156px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+    background: radial-gradient(circle, #000 0 34%, rgba(42, 0, 5, 0.98) 48%, rgba(230, 32, 3, 0.9) 62%, rgba(255, 142, 55, 0.45) 68%, transparent 77%);
+    box-shadow: 0 0 0 3px rgba(255, 91, 35, 0.6), 0 0 56px rgba(184, 11, 0, 0.66);
+    filter: blur(1px);
+    animation: burn-void-implosion var(--burn-duration) linear both;
+  }
 
-  /* Condensed heavy face: a damage number has to read instantly at a glance, which the
-     body serif never did at this size. */
+  .burn-shock-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--size);
+    height: var(--size);
+    border: var(--border-size) solid rgba(255, 155, 72, 0.76);
+    border-radius: 52% 48% 56% 44% / 47% 61% 39% 53%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.02);
+    box-shadow: 0 0 14px rgba(255, 52, 2, 0.35), inset 0 0 10px rgba(255, 78, 3, 0.2);
+    filter: blur(var(--ring-blur));
+  }
+
+  .burn-shock-ring.one { animation: burn-ring-one var(--burn-duration) linear both; }
+  .burn-shock-ring.two { animation: burn-ring-two var(--burn-duration) linear both; }
+
+  .burn-impact-smoke {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 88px;
+    height: 70px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1);
+    background: radial-gradient(circle at 50% 62%, rgba(117, 30, 17, 0.62), rgba(35, 14, 16, 0.78) 44%, rgba(9, 7, 10, 0.44) 68%, transparent 78%);
+    filter: blur(12px);
+    animation: burn-impact-smoke var(--burn-duration) linear both;
+  }
+
+  /* Radial flash keyed on the impact point, above the world (not shaken). */
+  .burn-screen-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    animation: burn-screen-flash var(--burn-duration) linear both;
+  }
+
+  /* Condensed heavy face: a damage number has to read instantly at a glance. */
   .burn-damage-number {
     position: absolute;
     left: var(--burn-end-x);
     top: var(--burn-end-y);
+    z-index: 21;
     opacity: 0;
     color: #ffeeb4;
     font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Franklin Gothic Heavy", sans-serif;
@@ -5509,7 +5729,7 @@
       0 0 12px #ffbf46,
       0 0 30px #ff4b16;
     transform: translate(-50%, -20%) scale(0.55);
-    animation: burn-damage-rise 620ms 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: burn-damage-rise 560ms 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
@@ -5557,39 +5777,177 @@
     border-radius: 999px;
     background: radial-gradient(circle, rgb(82 73 66 / 0.62), rgb(31 27 25 / 0.32) 52%, transparent 72%);
     filter: blur(2px);
-    animation: burn-smoke-rise 2.4s ease-out infinite;
+    animation: burn-card-smoke-rise 2.4s ease-out infinite;
   }
 
   .burn-card-smoke > i:nth-child(2) { left: 36%; animation-delay: -0.8s; animation-duration: 2.8s; }
   .burn-card-smoke > i:nth-child(3) { left: 61%; animation-delay: -1.65s; animation-duration: 2.55s; }
 
-  @keyframes burn-projectile-flight {
-    /* Ignites at the thrower's hand before it travels, so the throw has a source. */
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.16); }
-    9% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
-    68% { transform: translate(calc(-50% + var(--burn-mid-x)), calc(-50% + var(--burn-mid-y))) scale(1.15); }
-    100% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) scale(0.86); }
+  @keyframes burn-shake {
+    0%, 57.99%, 100% { transform: translate(0, 0) rotate(0); }
+    58% { transform: translate(-14px, 8px) rotate(-0.8deg); }
+    59% { transform: translate(13px, -8px) rotate(0.72deg); }
+    60% { transform: translate(-9px, -5px) rotate(-0.45deg); }
+    61% { transform: translate(7px, 4px) rotate(0.32deg); }
+    63% { transform: translate(-4px, 2px) rotate(-0.16deg); }
+    65% { transform: translate(2px, -1px); }
+    68% { transform: translate(0, 0); }
   }
 
-  @keyframes burn-ember-flicker {
-    from { opacity: 0.42; transform: scale(0.74) rotate(-6deg); }
-    to { opacity: 0.95; transform: scale(1.22) rotate(7deg); }
+  @keyframes burn-cast-glow {
+    0% { opacity: 0; transform: scale(0.05); }
+    5% { opacity: 0.85; transform: scale(0.55); }
+    13% { opacity: 1; transform: scale(1.18); }
+    18% { opacity: 0.92; transform: scale(0.88); }
+    20% { opacity: 0; transform: scale(0.2); }
+    100% { opacity: 0; }
   }
 
-  @keyframes burn-core-pulse {
-    from { transform: scale(0.92); }
-    to { transform: scale(1.08); }
+  @keyframes burn-cast-distortion {
+    0% { opacity: 0; transform: scale(0.7) rotate(0); }
+    5% { opacity: 0.65; }
+    17% { opacity: 1; transform: scale(1.08) rotate(180deg); }
+    20% { opacity: 0; transform: scale(0.25) rotate(220deg); }
+    100% { opacity: 0; }
   }
 
-  @keyframes burn-trail-waver {
-    from { opacity: 0.66; transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg)) scaleY(0.78); }
-    to { opacity: 1; transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg)) scaleY(1.12); }
+  @keyframes burn-cast-arc {
+    0% { opacity: 0; transform: scale(0.5) rotate(0); }
+    5% { opacity: 0.8; }
+    18% { opacity: 1; transform: scale(1) rotate(240deg); }
+    20% { opacity: 0; transform: scale(0.2) rotate(280deg); }
+    100% { opacity: 0; }
   }
 
-  @keyframes burn-spark-fly {
-    0% { opacity: 0; transform: rotate(var(--burn-spark-angle, 0deg)) translateX(4px) scale(0.6); }
-    16% { opacity: 1; }
-    100% { opacity: 0; transform: rotate(var(--burn-spark-angle, 0deg)) translateX(74px) scale(0.35); }
+  @keyframes burn-cast-particle {
+    0%, 2% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateX(var(--r)) scale(0.1); }
+    8% { opacity: 1; }
+    18% { opacity: 0.95; transform: translate(-50%, -50%) rotate(calc(var(--a) + 140deg)) translateX(12px) scale(1.2); }
+    20% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+    100% { opacity: 0; }
+  }
+
+  /* Travel is driven by translate along (--burn-dx, --burn-dy) so the ball flies from the
+     caster to the target at any angle; the ball squash + trail ride the heading via
+     rotate(--burn-angle). Fractions 0.369 / 0.738 match the reference's 34% / 48% frames. */
+  @keyframes burn-fireball-flight {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.04); }
+    5% { opacity: 0.45; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.22); }
+    13% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.82); }
+    18% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(1); }
+    20% { transform: translate(-50%, -50%) rotate(var(--burn-angle)) scaleX(1.18) scaleY(0.88); }
+    34% { transform: translate(calc(-50% + 0.369 * var(--burn-dx)), calc(-58% + 0.369 * var(--burn-dy))) rotate(calc(var(--burn-angle) - 1.8deg)) scaleX(1.34) scaleY(0.78); }
+    48% { transform: translate(calc(-50% + 0.738 * var(--burn-dx)), calc(-44% + 0.738 * var(--burn-dy))) rotate(calc(var(--burn-angle) + 1.4deg)) scaleX(1.3) scaleY(0.8); }
+    57.95% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(1.42) scaleY(0.73); filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.55)) drop-shadow(0 0 22px rgba(205, 31, 0, 0.62)); }
+    58% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(0.22) scaleY(1.65); filter: brightness(2.4); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)); }
+  }
+
+  @keyframes burn-trail {
+    0%, 17% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.55); }
+    20% { opacity: 0.92; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.68) scaleY(0.9); }
+    31%, 50% { opacity: var(--o, 0.95); transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(1) scaleY(1); }
+    57% { opacity: 0.4; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.6) scaleY(0.7); }
+    58%, 100% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.2); }
+  }
+
+  @keyframes burn-trace-life {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    60% { opacity: 0.8; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.1); filter: blur(2px); }
+  }
+
+  @keyframes burn-impact-core {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); border-radius: 50%; }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); border-radius: 45% 55% 42% 58% / 55% 45% 58% 42%; filter: blur(2px) brightness(2.4); }
+    59% { opacity: 1; transform: translate(-50%, -50%) scale(0.65, 1.35) rotate(-15deg); border-radius: 75% 25% 88% 12% / 25% 85% 15% 75%; filter: blur(4px) brightness(1.2); }
+    60% { opacity: 0.96; transform: translate(-50%, -50%) scale(1.25, 0.65) rotate(12deg); border-radius: 22% 78% 25% 75% / 78% 22% 85% 15%; }
+    66% { opacity: 0.58; transform: translate(-50%, -50%) scale(0.95, 1.25) rotate(-8deg); border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%; }
+    74% { opacity: 0; transform: translate(-50%, -50%) scale(1.5, 1.1) rotate(5deg); border-radius: 35% 65% 40% 60% / 65% 35% 60% 40%; filter: blur(9px); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-void-implosion {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(1.55); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.08); filter: brightness(2); }
+    59% { opacity: 0.98; transform: translate(-50%, -50%) scale(0.03); }
+    61% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.1); }
+    65% { opacity: 0.25; transform: translate(-50%, -50%) scale(1.45); }
+    75% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-ring-one {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.12); }
+    62% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.25); }
+    68% { opacity: 0.22; transform: translate(-50%, -50%) scale(2); }
+    76% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-ring-two {
+    0%, 58.5% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    59% { opacity: 0.86; transform: translate(-50%, -50%) scale(0.18); }
+    63% { opacity: 0.54; transform: translate(-50%, -50%) scale(1.4); }
+    69% { opacity: 0.12; transform: translate(-50%, -50%) scale(2.2); }
+    78% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-impact-smoke {
+    0%, 59% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1); }
+    62% { opacity: 0.7; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(var(--s)); }
+    70% { opacity: 0.4; transform: translate(calc(-50% + var(--x) + var(--drift)), calc(-50% + var(--y) - 44px)) scale(var(--s2)); }
+    82% { opacity: 0; transform: translate(calc(-50% + var(--x) + var(--drift2)), calc(-50% + var(--y) - 96px)) scale(var(--s3)); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 255, 0.88), rgba(255, 128, 50, 0.2) 24%, transparent 48%); }
+    59% { opacity: 0.22; }
+    62%, 100% { opacity: 0; }
+  }
+
+  @keyframes burn-filament {
+    from { opacity: 0.68; transform: translateY(-2px) scaleY(0.78); }
+    to { opacity: 1; transform: translateY(2px) scaleY(1.08); }
+  }
+
+  @keyframes burn-blob-one {
+    from { border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%; transform: rotate(-12deg) scale(1.05, 0.85); }
+    to { border-radius: 56% 44% 30% 70% / 46% 78% 22% 54%; transform: rotate(15deg) scale(0.9, 1.15); }
+  }
+
+  @keyframes burn-blob-two {
+    from { border-radius: 56% 44% 47% 53% / 25% 79% 21% 75%; transform: rotate(10deg) scale(0.85, 1.15); }
+    to { border-radius: 25% 75% 78% 22% / 57% 43% 76% 24%; transform: rotate(-14deg) scale(1.18, 0.82); }
+  }
+
+  @keyframes burn-blob-three {
+    from { border-radius: 39% 61% 32% 68% / 68% 34% 66% 32%; transform: scale(0.88, 1.15) rotate(5deg); }
+    to { border-radius: 78% 22% 74% 26% / 23% 79% 21% 77%; transform: scale(1.18, 0.82) rotate(-8deg); }
+  }
+
+  @keyframes burn-outer-flicker {
+    from { opacity: 0.84; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-mid-flicker {
+    from { opacity: 0.76; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-ball-core-pulse {
+    from { filter: blur(0.65px) brightness(0.92); }
+    to { filter: blur(1.1px) brightness(1.18); }
+  }
+
+  @keyframes burn-hotspot {
+    from { opacity: 0.7; transform: scale(0.86); }
+    to { opacity: 1; transform: scale(1.16); }
   }
 
   @keyframes burn-scorch-flash {
@@ -5604,13 +5962,6 @@
     to { opacity: 1; }
   }
 
-  @keyframes burn-impact-burst {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.12); filter: brightness(2); }
-    22% { opacity: 1; }
-    58% { opacity: 0.86; transform: translate(-50%, -50%) scale(1.08); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); filter: brightness(0.72); }
-  }
-
   @keyframes burn-damage-rise {
     0% { opacity: 0; transform: translate(-50%, -10%) scale(0.5); }
     20% { opacity: 1; transform: translate(-50%, -42%) scale(1.2); }
@@ -5618,7 +5969,7 @@
     100% { opacity: 0; transform: translate(-50%, -155%) scale(0.9); }
   }
 
-  @keyframes burn-smoke-rise {
+  @keyframes burn-card-smoke-rise {
     0% { opacity: 0; transform: translate(-50%, 8px) scale(0.42); }
     22% { opacity: 0.46; }
     68% { opacity: 0.24; }
