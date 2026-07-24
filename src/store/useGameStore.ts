@@ -175,10 +175,14 @@ const BURN_ANIMATION_MS = 1180;
 const STATIC_AURA_LEAD_IN_MS = 420;
 const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
 const STATIC_AURA_BEAT_MS = STATIC_AURA_LEAD_IN_MS + 1080;
-// The reveal mounts on the same frame the combat impact commits and the row reflows, and its
-// framer-motion entrance lost that race. Let the board finish moving first.
-const DEATH_REVEAL_LEAD_IN_MS = 300;
-const DEATH_REVEAL_ENTER_MS = 460;
+// The reveal mounts on the same frame the combat impact commits and the row reflows; a short
+// lead-in lets the board finish moving first. Kept tight — the whole beat has to read as a
+// reaction to the death, not as a pause before one.
+const DEATH_REVEAL_LEAD_IN_MS = 160;
+// Matches the CSS entrance (.horde-death-reveal-enter), so the activation pulse fires the
+// instant the card has settled rather than after a dead beat.
+const DEATH_REVEAL_ENTER_MS = 280;
+const DEATH_REVEAL_HOLD_MS = 300;
 const DEATH_REVEAL_EXIT_MS = 380;
 // A card entering or leaving the battlefield re-centers the row, and Battlefield FLIP-animates
 // that move over 360ms. A beat that changed the board waits it out, so the next attacker never
@@ -1505,12 +1509,12 @@ const deathRevealBeatHandler: HordeBeatHandler = {
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       useGameStore.setState({ deathRevealCard: undefined });
-    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + HORDE_ENTER_TRIGGER_RESOLVE_MS);
+    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS);
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       window.setTimeout(() => done(), resolve() ? BOARD_SETTLE_MS : 220);
-    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + HORDE_ENTER_TRIGGER_RESOLVE_MS + DEATH_REVEAL_EXIT_MS);
+    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS + DEATH_REVEAL_EXIT_MS);
   },
 };
 

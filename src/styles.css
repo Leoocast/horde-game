@@ -4988,22 +4988,21 @@
 
   /* A card presented next to its graveyard while its dies-trigger resolves: drained of colour
      and lit from below, so it never reads as something still in play. */
-  /* Transform and transition are deliberately cleared: the framer-motion host owns every
-     transform here. Inheriting `.horde-special-card`'s own `transform` + `transition: transform`
-     meant a CSS transition and a JS animation drove nested transforms on the same mount, which
-     is what made this entrance stutter. Smallpox never hit it because it mounts with
-     `initial={false}` and has no entrance to collide with.
-     The filter is also kept to one drop-shadow: two of them re-rasterise the whole card every
-     frame while the host is scaling. */
+  /* No `filter` at all, on purpose. Any filter forces this subtree — a 13rem card plus its
+     image — to be rasterised on its own, and that cost lands on the first frame of the entrance,
+     which is where the hitch was. `box-shadow` gives the depth against the card's own rounded
+     rect for a fraction of the work, and the ember glow below carries the "dying" read.
+     Transform and transition are cleared too: the entrance layer above owns every transform, and
+     inheriting `.horde-special-card`'s own pair drove nested transforms on the same mount. */
   .horde-special-card-dying {
     position: relative;
     width: 13rem;
     transform: none;
     transition: none;
-    filter:
-      drop-shadow(0 10px 16px rgb(0 0 0 / 0.62))
-      saturate(0.55)
-      brightness(0.86);
+    /* Explicit: `.horde-special-card` sets its own drop-shadow, which would come straight back. */
+    filter: none;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 16px rgb(0 0 0 / 0.62);
   }
 
   .horde-special-card-dying::after {
@@ -7878,7 +7877,7 @@
   width: 100%;
   justify-content: center;
   will-change: transform, opacity;
-  animation: horde-death-reveal-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: horde-death-reveal-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes horde-death-reveal-in {

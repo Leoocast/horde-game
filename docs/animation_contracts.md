@@ -85,5 +85,9 @@ A card that triggers on its own death has no battlefield slot left to pulse.
 
 - Claimed generically: any dies-trigger whose first pending source is no longer on the battlefield.
 - Side matters. The **left** of the Horde panel is the graveyard side — that is where the deck's graveyard button lives — so a dying card is presented there (`horde-death-reveal-host`) and exits into it. The **right** (`horde-special-card-host`) stays reserved for spells and reveals still resolving, such as Smallpox.
-- The card is drained of colour and lit from below (`horde-special-card-dying`), so it never reads as still in play.
+- The card is shown at full colour with an ember glow from below (`horde-special-card-dying`). Its position beside the graveyard and its exit into it already say it is dying; a desaturating filter was tried and removed.
 - Strict order: reveal in, activation pulse, card leaves for the graveyard, **then** the effect resolves. Resolving while the reveal is still on screen made whatever the effect puts onto the battlefield land mid-animation and stutter it.
+- The entrance is a **CSS keyframe**, not framer-motion. This card mounts on the same frame the store commits a combat impact and the whole battlefield re-renders, so a main-thread JS animation loses that race every time. Framer-motion keeps only the exit, because `AnimatePresence` has to own unmount. Smallpox dodged the whole problem by mounting with `initial={false}`.
+- The dying card carries **no `filter` at all** — `filter: none` has to be set explicitly, because `.horde-special-card` supplies its own `drop-shadow`. Any filter forces this subtree, a 13rem card plus its image, to be rasterised on its own, and that cost lands on the first frame of the entrance. `box-shadow` gives the same depth against the card's rounded rect for a fraction of the work.
+
+Beat timings live as constants at the top of `useGameStore.ts` (`DEATH_REVEAL_*`), tuned so the activation reads as a reaction to the death rather than a pause before one.
