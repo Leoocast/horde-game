@@ -12552,20 +12552,24 @@ body:has(.playground-dock) .player-mana-core {
 .playground-launch-button {
   display: inline-flex;
   min-height: 34px;
+  min-width: 0;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 0 12px;
+  gap: 6px;
+  padding: 0 8px;
   border: 1px solid rgba(196, 158, 84, 0.38);
   background: rgba(24, 25, 20, 0.9);
   color: #d9cfa8;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
+
+.playground-launch-button svg { flex: 0 0 auto; }
 
 .playground-launch-button:hover:not(:disabled) { border-color: rgba(224, 190, 116, 0.72); color: #f6e6b8; }
 .playground-launch-button:disabled { cursor: not-allowed; opacity: 0.38; }
@@ -12584,7 +12588,7 @@ body:has(.playground-dock) .player-mana-core {
 }
 
 .playground-tab {
-  padding: 9px 4px;
+  padding: 9px 2px;
   border-right: 1px solid rgba(196, 158, 84, 0.16);
   background: transparent;
   color: #938d76;
@@ -12656,6 +12660,44 @@ body:has(.playground-dock) .player-mana-core {
 
 .playground-hint > strong,
 .playground-note > strong { color: #b9ad86; font-weight: 700; }
+
+/* Lab vs real game. Not a launch control: it chooses which set of fields is on screen, because the
+   two have almost nothing in common and showing both made the lab look like a misconfigured match. */
+.playground-modeswitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  border: 1px solid rgba(196, 158, 84, 0.24);
+  padding: 3px;
+  background: rgba(10, 11, 9, 0.6);
+}
+
+.playground-modeswitch-button {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #837e69;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-modeswitch-button:hover { color: #cbc3a6; }
+.playground-modeswitch-button.is-active { background: rgba(120, 92, 38, 0.5); color: #f6e6b8; }
+
+/* Separates two ways of doing related things inside one group — "play it" above, "just put it
+   there" below — without promoting the second to a group of its own. */
+.playground-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: rgba(196, 158, 84, 0.2);
+}
 
 .playground-section-title {
   font-size: 11px;
@@ -12890,6 +12932,18 @@ body:has(.playground-dock) .player-mana-core {
   color: #f2e7c3;
   font-size: 11px;
   text-align: center;
+}
+
+/* The board list is a readout, not a form: the count is text, not an editable box. */
+.playground-zone-amount.is-static {
+  display: inline-flex;
+  width: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  border: 0;
+  background: none;
+  color: #7f7a66;
+  font-weight: 800;
 }
 
 .playground-zone-name { flex: 1 1 auto; overflow: hidden; color: #e4ddc2; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }

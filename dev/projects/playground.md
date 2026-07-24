@@ -115,18 +115,70 @@ El escenario configura lo mismo con dos campos (`energy`, `storedEnergy`), ambos
 topes del engine. Las tierras que el escenario liste en `playerBattlefield` cuentan contra el tope:
 el campo `energy` solo rellena el hueco que quede.
 
-### Iniciar una partida normal
+### Lab y partida son dos cosas, no dos botones
+
+El dock tiene un `mode` (`"board" | "game"`) y la pestana Setup muestra **solo** los campos del modo
+activo. Un lab no tiene dificultad, ni selector de decks, ni setup turns, ni mano inicial: nada de
+eso significa nada en un banco de pruebas, y tenerlo a la vista hacia que el laboratorio pareciera
+una partida mal configurada. Lanzar cualquiera de los dos fija el modo, y el switch de arriba de
+Setup lo cambia sin lanzar.
+
+El lab muestra: nombre, estado inicial (turno/fase/lado, vida, poison, energia, energia guardada),
+el contenido del tablero en vivo y los guardados. La partida muestra: seed, decks, dificultad, modo
+de juego y setup turns.
+
+**Jugar una carta de Horda no corre un turno de Horda.** Antes lo hacia — jugar un token de Goblin
+en el lab desencadenaba el turno entero de la horda de zombies cargada: destapaba, revelaba tres
+cartas suyas y atacaba. `revealHordeCardFromTop` en `HordeController.ts` revela y juega **una** carta
+del tope por el mismo camino que usa el turno (`revealAndPlayOne`: ETB, triggers, parking de
+Smallpox) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
+que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de Smallpox) pero no arranca
+combate. Hay test que verifica que el turno de Horda no avanza, la fase no cambia y no se declaran
+atacantes.
+
+### Un solo lugar para lanzar
 
 El playground existe para saltar directo a un estado, pero a veces el bug solo aparece en una
-partida de verdad. La barra de lanzamiento tiene dos modos y ambos son reproducibles desde su propia
-definicion:
+partida de verdad. La barra de lanzamiento — bajo el header, **fuera de las pestanas y sin duplicado
+dentro de ninguna** — tiene los dos modos, ambos reproducibles desde su propia definicion:
 
-- **Scenario**: `loadScenario(buildScenarioGame(...))`, tablero armado a mano, sin mano inicial.
-- **Match**: el `reset()` del store — el mismo que llama el menu principal — con la seed, los decks,
-  la dificultad y el modo del formulario, mas sus setup turns. Mano inicial, mulligans y todo.
+- **Build board**: `loadScenario(buildScenarioGame(...))`, tablero armado a mano, sin mano inicial.
+- **Play game**: el `reset()` del store — el mismo que llama el menu principal — con la seed, los
+  decks, la dificultad y el modo del formulario, mas sus setup turns. Mano inicial, mulligans y todo.
+- **Restart**: relanza el que este vivo, sea cual sea.
 
-`Restart` reproduce el que este vivo. La barra vive bajo el header, fuera de las pestanas: lanzar es
-lo primero que se quiere y lo ultimo que deberia haber que buscar.
+Hubo una version con el boton de partida repetido dentro de la pestana Setup ademas de la barra.
+Parecian dos features distintas. Un solo lugar.
+
+### No hay borrador: el tablero es el escenario
+
+Habia dos representaciones en paralelo: un `draft` con sus `zones` editables y el juego vivo. "Place
+now" tocaba uno y "Add to scenario" el otro, la lista de zonas nunca reflejaba lo que se ponia en el
+campo, y Save guardaba el borrador — o sea, algo distinto de lo que estabas mirando.
+
+Ahora hay un solo estado. Las cartas se ponen en el juego vivo, la pestana Setup muestra el
+contenido del tablero **en vivo y de solo lectura**, y `snapshotScenario(game, base)` lee ese juego
+de vuelta a una `ScenarioDefinition` cuando se guarda. Hay test de ida y vuelta: fotografiar un
+tablero y reconstruirlo devuelve las mismas zonas. Las librerias no se fotografian a proposito — un
+escenario es una posicion inicial, no un save state.
+
+Ojo con las tierras: viajan como entradas normales de `playerBattlefield`, asi que el snapshot pone
+`energy: 0` o al recargar apareceria un segundo juego de tierras encima.
+
+### Jugar una carta = jugarla de verdad
+
+La pestana Cards tiene un boton **Play** que hace lo que dice, ruteado por lado:
+
+- Carta del player: entra a la mano y se castea por el camino normal (coste cubierto). Si pide
+  targets se abre el overlay real.
+- Carta de la Horda: va al tope de la libreria de la Horda y corre el turno de la Horda. Es la
+  **unica** forma en que una carta de Horda entra en juego en este modo — no hay un "castear" de
+  Horda que imitar.
+
+Debajo, separado, queda el "ponlo directo en" para armar tableros: silencioso, sin coste ni
+triggers. Las zonas ofrecidas dependen de la carta (`destinationsFor`): un sorcery no ofrece
+battlefield y la Horda no ofrece mano. Antes se podia dejar Smallpox en el campo de la Horda, un
+estado al que el juego no puede llegar nunca.
 
 ### loadScenario
 
@@ -175,10 +227,12 @@ cartas en libreria, poison counters, `hordeTurnNumber` y si esta en surge.
 
 ### Agregar cartas
 
-Dos acciones distintas porque son dos necesidades distintas:
+Dos acciones distintas porque son dos necesidades distintas (ver "Jugar una carta = jugarla de
+verdad" arriba):
 
-- **Colocar**: la carta entra silenciosa. Para armar un board de partida sin disparar medio deck.
-- **Resolver**: la carta entra por el flujo completo — ETB, triggers, beats, animacion.
+- **Play**: la carta entra por el flujo completo — cast o revelado de Horda, ETB, triggers, beats,
+  animacion.
+- **Ponlo directo en**: la carta entra silenciosa. Para armar un board sin disparar medio deck.
 
 Los `instanceId` los genera el playground con su propio contador de sufijos
 (`playground-<side>-<defId>-<n>`), verificando contra las zonas existentes hasta encontrar uno libre:
@@ -194,10 +248,11 @@ React recibia keys duplicadas y dejaba nodos fantasma en la lista de resultados.
 - **Jugar sin coste**: inyectar en el pool exactamente el mana que pide la carta y llamar al
   `castCard` normal. No un flag de bypass — asi el cast pasa por el mismo cost-check, timing,
   targeting y triggers que en partida.
-- **Destruir**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
-  reales. **Enviar al cementerio** es otra cosa a proposito: movimiento crudo de zona, sin muerte y
-  sin triggers. Hay test que los distingue con Pashalik Mons (destruir una ficha de Goblin quema una
-  criatura del jugador; moverla al cementerio no).
+- **Kill it**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
+  reales. **Remove it** es otra cosa a proposito: movimiento crudo de zona, sin muerte y sin
+  triggers. **Wipe** (`clearBattlefield`) es lo mismo por lado entero. Hay test que los distingue
+  con Pashalik Mons (destruir una ficha de Goblin quema una criatura del jugador; moverla al
+  cementerio o barrer el campo no).
 - **Jugar sin coste**: `grantManaForCard` sube el pool exactamente al coste impreso y despues corre
   el `castCard` normal. Si la carta pide targets se abre el `SpellTargetingOverlay` de verdad, la
   misma rama que usa `Hand.tsx`.
@@ -264,29 +319,35 @@ El JSON exportado sirve tal cual como fixture para `tests/engine.test.js`.
       fuera del nav, solo con `IS_DEV` (`onOpenPlayground` opcional: sin la prop no se puede
       renderizar). Pantalla `lazy()` en `App.tsx`. `src/playground/PlaygroundScreen.tsx` =
       `<Board>` real + dock izquierdo colapsable (F2 o boton), barra de lanzamiento fija y pestanas
-      Setup / Cards / Actions / Flow / Saved, renglon de estado al pie. Al montar carga
+      Setup / Cards / Board / Actions / Flow, renglon de estado al pie. Al montar carga
       `BLANK_SCENARIO` para no heredar la partida que tuviera el store.
-- [x] **Fase 3 — Configurar e inspeccionar.** `panels/ScenarioPanel.tsx` (identidad, decks,
-      dificultad, modo, turno/fase/lado, vida, energia + energia guardada, poison, y lista editable
-      de zonas), `panels/CardsPanel.tsx` (buscador por nombre/ID + filtro por deck, con "Place now" a
-      juego vivo y "Add to scenario" al draft), `cardCatalog.ts` (derivado de `DECK_REGISTRY`) y la
-      tira `LiveState` siempre visible (turno, fase, lado, vida, energia, guardada, libreria de
+- [x] **Fase 3 — Configurar e inspeccionar.** `panels/ScenarioPanel.tsx` (Identity: nombre, seed,
+      decks, dificultad, modo, setup turns y Save/Import con la lista de guardados; Starting state:
+      turno/fase/lado, vida, poison, energia + energia guardada; y `BoardContents`, el contenido del
+      tablero en vivo de solo lectura), `panels/CardsPanel.tsx` (buscador por nombre/ID + filtro por
+      deck, boton Play y destinos validos por carta), `cardCatalog.ts` (derivado de `DECK_REGISTRY`)
+      y la tira `LiveState` siempre visible (turno, fase, lado, vida, energia, guardada, libreria de
       Horda, poison, `eventQueue`, beats en vuelo; el ganador es un renglon aparte que solo sale
-      cuando lo hay). Marca de draft sucio cuando el formulario cambio despues de iniciar: Restart
-      reproduce lo iniciado, Scenario adopta las ediciones.
+      cuando lo hay). Marca de sucio cuando el formulario cambio despues de lanzar: Restart reproduce
+      lo lanzado, Build board adopta las ediciones.
 - [x] **Fase 4 — Controles rapidos.** `playground/actions.ts` (funciones puras sobre `GameState`,
-      todas escriben `lastActionResult`) + `panels/ActionsPanel.tsx`, agrupado por tema (Turn flow /
-      Energy / Cards / Event queue / Selection). Lanzar vive en la barra fija; aqui: avanzar fase,
-      avanzar turno, turno de Horda, resolver siguiente evento, resolver todos, robar, las cuatro
-      acciones de energia, jugar carta, jugar sin coste, destruir, enviar al cementerio. La seleccion
-      sale del store (`selectedHandId` / `selectedPlayerCreatureId` / `selectedHordeCreatureId`), o
-      sea que se elige la carta clickeandola en el tablero real.
+      todas escriben `lastActionResult`) + `panels/ActionsPanel.tsx`, con solo dos grupos: **Turn
+      flow** (fase, turno, turno de Horda, robar) y **Energy** (add source, refill, +1 stored, drain
+      all) con su medidor de pips. Se quito el grupo de Event queue: es contabilidad interna del
+      engine y no significaba nada mirandola. Quitar cartas del tablero vive en su propia pestana
+      `panels/BoardPanel.tsx`: la seleccion sale del store (`selectedHandId` /
+      `selectedPlayerCreatureId` / `selectedHordeCreatureId`), o sea que se elige la carta
+      clickeandola en el tablero real, y de ahi salen **Kill it** (`destroyPermanent`, muerte real
+      con sus triggers), **Remove it** (movimiento crudo de zona, sin muerte) y el wipe por lado
+      (`clearBattlefield`, silencioso: limpiar la mesa entre pruebas no puede disparar doce
+      triggers). Hay test que distingue los tres con Pashalik Mons.
 - [x] **Fase 5 — Timeline: grabar y reproducir.** `timeline.ts` (`TimelineStep`, `executeStep`,
       `describeStep`, `isPlaygroundBusy`, `isWaitingForInput`), `panels/TimelinePanel.tsx` (toggle de
       grabacion, lista de pasos con borrar, Step / Auto / Stop) y el driver de reproduccion en
       `PlaygroundScreen`. Los paneles ya no llaman acciones directamente: todo pasa por `dispatch`.
-- [x] **Fase 6 — Persistencia.** `scenarioStorage.ts` + `panels/LibraryPanel.tsx` (Save, Import,
-      y por entrada Load / Export / Delete) en su propia pestana `Saved`.
+- [x] **Fase 6 — Persistencia.** `scenarioStorage.ts` + Save / Import / Load / Export / Delete
+      dentro del grupo Identity de la pestana Setup. Save fotografia el tablero vivo con
+      `snapshotScenario`, no un borrador.
 
 ## Siguientes pasos
 

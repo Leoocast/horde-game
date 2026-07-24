@@ -128,6 +128,21 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
   return succeed(next, `Playground moves ${card.name} to the graveyard.`);
 }
 
+/**
+ * Sweeps a side's permanents off the board with no deaths and no triggers — the lab equivalent of
+ * clearing the table. Deliberately not `destroyPermanent`: wiping a board to set up the next test
+ * should not fire six death triggers on the way out.
+ */
+export function clearBattlefield(game: GameState, side: Side): PlaygroundActionResult {
+  const next = structuredClone(game) as GameState;
+  const removed = next[side].battlefield;
+  if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Horde" : "player"} board is already empty.`);
+  for (const card of removed) card.zone = "graveyard";
+  next[side].graveyard.push(...removed);
+  next[side].battlefield = [];
+  return succeed(next, `Playground clears ${removed.length} permanent(s) from the ${side} board.`);
+}
+
 export function resolveNextEvent(game: GameState): PlaygroundActionResult {
   if (game.eventQueue.length === 0) return fail(game, "The event queue is empty.");
   const next = structuredClone(game) as GameState;

@@ -18,7 +18,7 @@ import {
   togglePlayerAttacker,
   type HordeAttackEvent,
 } from "../engine/CombatResolver";
-import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
+import { finishHordeTurn, revealHordeCardFromTop, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, hasEffectPresentation, resolveEffect, triggerConditionMet } from "../engine/EffectResolver";
@@ -157,6 +157,9 @@ export type GameStore = {
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
+  /** Playground only: one Horde card enters from the top of its library, with its beats, without
+   *  running a Horde turn. */
+  resolveHordeCardFromTop: () => void;
   completeSurgeTransition: () => void;
   prepareHordeAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
@@ -910,6 +913,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else {
       startHordeCombatSequence();
     }
+  },
+  /**
+   * Playground only. Same beats as `runHordeMain` — enter triggers, static aura capture, mill
+   * animations, the Smallpox hand-off — but for exactly one card and without starting combat.
+   * Playing a single Goblin token in the lab used to run a whole Zombie Horde turn, which is not
+   * what "play this card" means anywhere.
+   */
+  resolveHordeCardFromTop: () => {
+    const state = get();
+    const { game } = state;
+    const previousIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
+    const next = revealHordeCardFromTop(game, { deferEnterBattlefieldTriggers: true });
+    if (next.lastActionResult?.ok === false) {
+      set({ game: next });
+      return;
+    }
+    const entered = next.horde.battlefield.filter((card) => !previousIds.has(card.instanceId));
+    const triggerCards = entered.filter(hasEnterBattlefieldTrigger);
+    const pendingCard = next.horde.pendingCard;
+
+    if (entered.length > 0) useAudioStore.getState().playSfx("draw");
+    set({
+      game: next,
+      selectedHordeCreatureId: undefined,
+      selectedPlayerCreatureId: undefined,
+      hordeAutoTriggerCount: triggerCards.length,
+      hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
+    });
+    // Before any frame renders the new permanent: hold back the buffs it just granted so the
+    // announcement beat still has something to reveal.
+    captureStaticAuraBeats();
+    if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
+    if (pendingCard) runSmallpoxSequence(pendingCard);
   },
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;

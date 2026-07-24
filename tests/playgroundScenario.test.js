@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, validateScenario } from "../src/playground/scenario";
+import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, snapshotScenario, validateScenario } from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
 import { runHordeMain } from "../src/engine/HordeController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
@@ -175,6 +175,31 @@ test("placing an unknown card fails with a reason instead of doing nothing", () 
   assert.equal(game.lastActionResult.ok, false);
   assert.match(game.lastActionResult.reason, /not_a_real_card/);
   assert.equal(game.player.hand.length, 0);
+});
+
+test("snapshotting a live board and rebuilding it reproduces the same zones", () => {
+  // This is what Save relies on: the thing stored is the board you are looking at, so placing a
+  // card and saving can never disagree the way a separate draft did.
+  let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
+  game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth", amount: 2 });
+  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token", amount: 3 });
+  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game.player.life = 31;
+  game.horde.poisonCounters = 4;
+
+  const rebuilt = buildScenarioGame(snapshotScenario(game, BLANK_SCENARIO));
+
+  const zoneIds = (cards) => cards.map((card) => card.definitionId).sort();
+  assert.deepEqual(zoneIds(rebuilt.player.hand), zoneIds(game.player.hand));
+  assert.deepEqual(zoneIds(rebuilt.player.battlefield), zoneIds(game.player.battlefield));
+  assert.deepEqual(zoneIds(rebuilt.player.graveyard), zoneIds(game.player.graveyard));
+  assert.deepEqual(zoneIds(rebuilt.horde.battlefield), zoneIds(game.horde.battlefield));
+  assert.equal(rebuilt.player.life, 31);
+  assert.equal(rebuilt.horde.poisonCounters, 4);
+  assert.equal(rebuilt.player.manaPool.colorless, 1);
+
+  // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
+  assert.equal(rebuilt.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 2);
 });
 
 test("a valid scenario reports no problems", () => {

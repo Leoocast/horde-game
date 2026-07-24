@@ -50,6 +50,26 @@ export function runFullHordeTurn(game: GameState): GameState {
   return next;
 }
 
+/**
+ * Reveals and plays exactly ONE card off the top of the Horde library, through the same path the
+ * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No untap, no reveal count,
+ * no surge, no combat: this is a single card entering play, not a turn.
+ *
+ * Only the Playground needs it. A match never plays one Horde card in isolation, but a lab does:
+ * putting a card on the board to look at it must not drag a whole Horde turn along with it.
+ */
+export function revealHordeCardFromTop(game: GameState, options: HordeMainOptions = {}): GameState {
+  const next = structuredClone(game) as GameState;
+  if (next.horde.library.length === 0) {
+    next.lastActionResult = { ok: false, reason: "The Horde library is empty." };
+    return next;
+  }
+  revealAndPlayOne(next, options);
+  if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
+  next.lastActionResult = { ok: true };
+  return next;
+}
+
 export function finishHordeTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);

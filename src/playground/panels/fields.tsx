@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -17,6 +17,12 @@ export function TextField({ label, value, onChange }: { label: string; value: st
   );
 }
 
+/**
+ * Clamping on every keystroke made the field impossible to edit: deleting the last digit left an
+ * empty string, which was immediately rewritten as `min`, so backspace never got you to a clean
+ * field. The typed text is kept as-is while the field has focus and only committed — clamped — when
+ * it parses. Leaving it empty falls back to `min` on blur.
+ */
 export function NumberField({
   label,
   value,
@@ -30,17 +36,35 @@ export function NumberField({
   max?: number;
   onChange: (value: number) => void;
 }) {
+  const [text, setText] = useState(String(value));
+
+  // Follow the outside world when it changes the value behind our back (loading a scenario, a
+  // clamp applied elsewhere) — but not while the user is mid-edit on this very field.
+  useEffect(() => {
+    setText((current) => (Number(current) === value ? current : String(value)));
+  }, [value]);
+
+  const clamp = (raw: number) => Math.min(max ?? Number.POSITIVE_INFINITY, Math.max(min, raw));
+
   return (
     <Field label={label}>
       <input
         type="number"
         min={min}
         max={max}
-        value={value}
+        value={text}
         onChange={(event) => {
-          const parsed = Number(event.target.value);
-          const clamped = Number.isFinite(parsed) ? Math.max(min, parsed) : min;
-          onChange(max === undefined ? clamped : Math.min(max, clamped));
+          const raw = event.target.value;
+          setText(raw);
+          if (raw.trim() === "") return;
+          const parsed = Number(raw);
+          if (Number.isFinite(parsed)) onChange(clamp(parsed));
+        }}
+        onBlur={() => {
+          const parsed = Number(text);
+          const settled = text.trim() === "" || !Number.isFinite(parsed) ? min : clamp(parsed);
+          setText(String(settled));
+          onChange(settled);
         }}
       />
     </Field>

@@ -5,8 +5,8 @@ import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { STORED_MANA_CAP } from "../engine/ManaSystem";
 import { useGameStore } from "../store/useGameStore";
 import { ActionsPanel } from "./panels/ActionsPanel";
+import { BoardPanel } from "./panels/BoardPanel";
 import { CardsPanel } from "./panels/CardsPanel";
-import { LibraryPanel } from "./panels/LibraryPanel";
 import { ScenarioPanel } from "./panels/ScenarioPanel";
 import { TimelinePanel } from "./panels/TimelinePanel";
 import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } from "./timeline";
@@ -22,30 +22,29 @@ import {
   BLANK_SCENARIO,
   buildScenarioGame,
   cloneScenario,
+  snapshotScenario,
   validateScenario,
-  type ScenarioCard,
   type ScenarioDefinition,
-  type ScenarioZoneKey,
 } from "./scenario";
 
-type PlaygroundTab = "scenario" | "cards" | "actions" | "timeline" | "saved";
+type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
 
 const TABS: Array<{ id: PlaygroundTab; label: string }> = [
   { id: "scenario", label: "Setup" },
   { id: "cards", label: "Cards" },
+  { id: "board", label: "Board" },
   { id: "actions", label: "Actions" },
   { id: "timeline", label: "Flow" },
-  { id: "saved", label: "Saved" },
 ];
 
 type Status = { tone: "idle" | "ok" | "error"; message: string };
 
-/** What is currently on the board. A scenario is a hand-built state; a match is an ordinary game
- *  started the way the main menu starts one. Restart replays whichever one is live, so both stay
- *  reproducible from what launched them. */
+/** What is currently on the board — and the only place launching happens. "Build board" drops you
+ *  straight into a hand-made state; "Play game" is an ordinary match, the same call the main menu
+ *  makes. Restart replays whichever one is live, so both stay reproducible from what launched them. */
 type Launch =
-  | { kind: "scenario"; definition: ScenarioDefinition }
-  | { kind: "match"; definition: ScenarioDefinition; setupTurns: number };
+  | { kind: "board"; definition: ScenarioDefinition }
+  | { kind: "game"; definition: ScenarioDefinition; setupTurns: number };
 
 const REPLAY_POLL_MS = 120;
 const REPLAY_STEP_GAP_MS = 220;
@@ -58,10 +57,13 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   /** The launch captured when the board was started. Restart rebuilds from THIS, never from the
    *  draft, so editing the form after starting can't silently change what restart reproduces. */
   const [launch, setLaunch] = useState<Launch | undefined>();
-  const [matchSetupTurns, setMatchSetupTurns] = useState(3);
+  /** Which of the two things this dock is set up for. The Setup tab shows only the fields that
+   *  apply: a lab has no difficulty and no deck picker, because nothing in it is a match. */
+  const [mode, setMode] = useState<Launch["kind"]>("board");
+  const [setupTurns, setSetupTurns] = useState(3);
   const [dockOpen, setDockOpen] = useState(true);
   const [tab, setTab] = useState<PlaygroundTab>("scenario");
-  const [status, setStatus] = useState<Status>({ tone: "idle", message: "No scenario started yet." });
+  const [status, setStatus] = useState<Status>({ tone: "idle", message: "Nothing launched yet." });
   const [steps, setSteps] = useState<TimelineStep[]>([]);
   const [recording, setRecording] = useState(true);
   const [replayCursor, setReplayCursor] = useState<number | undefined>();
@@ -69,11 +71,11 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   const [library, setLibrary] = useState<StoredScenario[]>(() => listStoredScenarios());
   const startedRef = useRef(false);
 
-  const startedFrom = launch?.kind === "scenario" ? launch.definition : undefined;
-  const boardSetupTurns = launch?.kind === "match" ? launch.setupTurns : 0;
+  const startedFrom = launch?.kind === "board" ? launch.definition : undefined;
+  const boardSetupTurns = launch?.kind === "game" ? launch.setupTurns : 0;
 
-  const start = useCallback(
-    (definition: ScenarioDefinition, verb: "started" | "restarted") => {
+  const buildBoard = useCallback(
+    (definition: ScenarioDefinition, verb: "built" | "rebuilt") => {
       const problems = validateScenario(definition);
       if (problems.length > 0) {
         setStatus({ tone: "error", message: problems.join(" ") });
@@ -84,39 +86,34 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
         playerDeckId: snapshot.playerDeckId,
         hordeDeckId: snapshot.hordeDeckId,
       });
-      setLaunch({ kind: "scenario", definition: snapshot });
-      setStatus({ tone: "ok", message: `Scenario "${snapshot.name}" ${verb} with seed "${snapshot.seed}".` });
+      setLaunch({ kind: "board", definition: snapshot });
+      setMode("board");
+      setStatus({ tone: "ok", message: `Lab board "${snapshot.name}" ${verb}.` });
     },
     [loadScenario],
   );
 
-  /** An ordinary game — same call the main menu makes, so opening hand, mulligans and setup turns
-   *  all happen for real. The dock stays on top of it. */
-  const startMatch = useCallback(
-    (definition: ScenarioDefinition, setupTurns: number, verb: "started" | "restarted") => {
+  /** An ordinary game — the same `reset` the main menu calls, so opening hand, mulligans and setup
+   *  turns all happen for real. The dock stays on top of it. */
+  const playGame = useCallback(
+    (definition: ScenarioDefinition, turns: number, verb: "started" | "restarted") => {
       const snapshot = cloneScenario(definition);
-      resetGame(
-        snapshot.seed,
-        setupTurns,
-        snapshot.playerDeckId,
-        snapshot.hordeDeckId,
-        snapshot.difficulty,
-        snapshot.gameMode,
-      );
-      setLaunch({ kind: "match", definition: snapshot, setupTurns });
+      resetGame(snapshot.seed, turns, snapshot.playerDeckId, snapshot.hordeDeckId, snapshot.difficulty, snapshot.gameMode);
+      setLaunch({ kind: "game", definition: snapshot, setupTurns: turns });
+      setMode("game");
       setReplayCursor(undefined);
       setAutoPlaying(false);
-      setStatus({ tone: "ok", message: `Match ${verb} with seed "${snapshot.seed}" and ${setupTurns} setup turn(s).` });
+      setStatus({ tone: "ok", message: `Game ${verb} with seed "${snapshot.seed}" and ${turns} setup turn(s).` });
     },
     [resetGame],
   );
 
-  // A blank scenario on mount: the screen must never show whatever match the store happened to hold.
+  // A blank board on mount: the screen must never show whatever match the store happened to hold.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    start(draft, "started");
-  }, [draft, start]);
+    buildBoard(draft, "built");
+  }, [draft, buildBoard]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -128,12 +125,10 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  function addToScenario(zone: ScenarioZoneKey, entry: ScenarioCard) {
-    setDraft((current) => ({
-      ...current,
-      zones: { ...current.zones, [zone]: [...(current.zones[zone] ?? []), entry] },
-    }));
-    setStatus({ tone: "ok", message: `${entry.amount ?? 1}× ${entry.definitionId} added to the ${zone} draft. Start to apply.` });
+  function relaunch(verb: "rebuilt" | "restarted") {
+    if (!launch) return;
+    if (launch.kind === "game") playGame(launch.definition, launch.setupTurns, "restarted");
+    else buildBoard(launch.definition, verb === "restarted" ? "rebuilt" : verb);
   }
 
   /** Single entry point for every playground action: run it, report it, and record it unless a
@@ -149,13 +144,12 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     return outcome;
   }
 
-  /** Replay always rebuilds first. Both launch kinds are deterministic from their own definition —
-   *  a scenario from `buildScenarioGame`, a match from the seed — so the steps land on the same
-   *  board they were recorded against either way. */
+  /** Replay always relaunches first. Both launch kinds are deterministic from their own definition —
+   *  a board from `buildScenarioGame`, a game from its seed — so the steps land on the same state
+   *  they were recorded against either way. */
   function beginReplay(auto: boolean) {
     if (!launch || steps.length === 0) return;
-    if (launch.kind === "match") startMatch(launch.definition, launch.setupTurns, "restarted");
-    else start(launch.definition, "restarted");
+    relaunch("restarted");
     setReplayCursor(0);
     setAutoPlaying(auto);
   }
@@ -223,25 +217,29 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     runStepAt(replayCursor);
   }
 
+  /** Saves the board that is on screen, not the form. Placing a card used to update a draft the
+   *  board knew nothing about, so what you saw and what you saved were two different things. */
   function saveToLibrary() {
-    const saved = saveStoredScenario(draft, steps);
+    const snapshot = snapshotScenario(useGameStore.getState().game, draft);
+    setDraft(snapshot);
+    const saved = saveStoredScenario(snapshot, steps);
     setLibrary(listStoredScenarios());
-    setStatus({ tone: "ok", message: `Saved "${saved.name}" with ${steps.length} step(s).` });
+    setStatus({ tone: "ok", message: `Saved "${saved.name}" as it stands, with ${steps.length} step(s).` });
   }
 
-  /** Loading brings the flow with the scenario and starts it: a flow without its starting state is
+  /** Loading brings the flow with the board and rebuilds it: a flow without its starting state is
    *  not reproducible, so the two always travel together. */
   function loadFromLibrary(entry: StoredScenario) {
     setDraft(entry.definition);
     setSteps(entry.steps);
     stopReplay();
-    start(entry.definition, "started");
+    buildBoard(entry.definition, "built");
   }
 
   function deleteFromLibrary(id: string) {
     deleteStoredScenario(id);
     setLibrary(listStoredScenarios());
-    setStatus({ tone: "ok", message: "Scenario deleted." });
+    setStatus({ tone: "ok", message: "Saved board deleted." });
   }
 
   function exportEntry(entry: StoredScenario) {
@@ -264,7 +262,7 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
       setDraft(entry.definition);
       setSteps(entry.steps);
       stopReplay();
-      start(entry.definition, "started");
+      buildBoard(entry.definition, "built");
       setStatus({ tone: "ok", message: `Imported "${entry.name}" with ${entry.steps.length} step(s).` });
     });
   }
@@ -296,36 +294,33 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
             </div>
           </header>
 
-          {/* Always visible: launching is the one thing you want without hunting through a tab. */}
+          {/* The only place launching happens, and it is always visible. It used to be duplicated
+              inside the Setup tab, which made the two look like different features. */}
           <div className="playground-launch" role="group" aria-label="Launch">
             <button
-              className={`playground-launch-button ${launch?.kind === "scenario" ? "is-active" : ""}`}
+              className={`playground-launch-button ${launch?.kind === "board" ? "is-active" : ""}`}
               type="button"
-              title="Build the board from the Setup tab, no opening hand"
-              onClick={() => start(draft, "started")}
+              title="Jump straight to the state in Setup: no opening hand, no setup turns"
+              onClick={() => buildBoard(draft, "built")}
             >
               <FlaskConical size={14} />
-              <span>Scenario</span>
+              <span>Build board</span>
             </button>
             <button
-              className={`playground-launch-button ${launch?.kind === "match" ? "is-active" : ""}`}
+              className={`playground-launch-button ${launch?.kind === "game" ? "is-active" : ""}`}
               type="button"
-              title="Start an ordinary game with the seed and decks from the Setup tab"
-              onClick={() => startMatch(draft, matchSetupTurns, "started")}
+              title="Play an ordinary match with the seed and decks from Setup"
+              onClick={() => playGame(draft, setupTurns, "started")}
             >
               <Swords size={14} />
-              <span>Match</span>
+              <span>Play game</span>
             </button>
             <button
-              className="playground-launch-button is-restart"
+              className="playground-launch-button"
               type="button"
               disabled={!launch}
-              title="Replay whatever is on the board from its own definition"
-              onClick={() => {
-                if (!launch) return;
-                if (launch.kind === "match") startMatch(launch.definition, launch.setupTurns, "restarted");
-                else start(launch.definition, "restarted");
-              }}
+              title="Relaunch whatever is live from its own definition"
+              onClick={() => relaunch("restarted")}
             >
               <RotateCcw size={14} />
               <span>Restart</span>
@@ -351,17 +346,14 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
             {tab === "scenario" && (
               <ScenarioPanel
                 draft={draft}
+                mode={mode}
                 startedFrom={startedFrom}
                 dirty={Boolean(startedFrom) && JSON.stringify(draft) !== JSON.stringify(startedFrom)}
-                matchSetupTurns={matchSetupTurns}
+                setupTurns={setupTurns}
+                library={library}
+                onChangeMode={setMode}
                 onChange={setDraft}
-                onChangeMatchSetupTurns={setMatchSetupTurns}
-                onStartMatch={() => startMatch(draft, matchSetupTurns, "started")}
-              />
-            )}
-            {tab === "saved" && (
-              <LibraryPanel
-                entries={library}
+                onChangeSetupTurns={setSetupTurns}
                 onSave={saveToLibrary}
                 onLoad={loadFromLibrary}
                 onDelete={deleteFromLibrary}
@@ -369,15 +361,11 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
                 onImport={importFile}
               />
             )}
-            {tab === "cards" && (
-              <CardsPanel
-                onAddToScenario={addToScenario}
-                onPlaceNow={(zone, entry) => dispatch({ kind: "place", zone, entry })}
-              />
+            {tab === "cards" && <CardsPanel onDispatch={dispatch} />}
+            {tab === "board" && (
+              <BoardPanel onDispatch={dispatch} onInvalid={(reason) => setStatus({ tone: "error", message: reason })} />
             )}
-            {tab === "actions" && (
-              <ActionsPanel onDispatch={dispatch} onInvalid={(reason) => setStatus({ tone: "error", message: reason })} />
-            )}
+            {tab === "actions" && <ActionsPanel onDispatch={dispatch} />}
             {tab === "timeline" && (
               <TimelinePanel
                 steps={steps}

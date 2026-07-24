@@ -98,15 +98,70 @@ export const BLANK_SCENARIO: ScenarioDefinition = {
   hordeTurnNumber: 0,
   phase: "main",
   activeSide: "player",
-  // Full energy by default: a blank board you cannot cast anything from is not a useful starting
-  // point for testing a card.
-  player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
+  // Full energy by default, sources and reserve both: a blank board you cannot cast anything from
+  // is not a useful starting point for testing a card.
+  player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: STORED_MANA_CAP },
   horde: { poisonCounters: 0 },
   zones: {},
 };
 
 export function cloneScenario(definition: ScenarioDefinition): ScenarioDefinition {
   return structuredClone(definition);
+}
+
+/**
+ * Reads a live game back into a scenario definition. This is what "Save" stores, and it is the
+ * reason there is no separate draft of zones to keep in sync: the board on screen IS the scenario.
+ * You place cards, you look at them, you save what you are looking at.
+ *
+ * Libraries are deliberately not captured — a scenario is a starting position, not a save state, and
+ * the library is whatever the deck holds minus what the scenario places.
+ */
+export function snapshotScenario(game: GameState, base: ScenarioDefinition): ScenarioDefinition {
+  return {
+    ...cloneScenario(base),
+    turnNumber: game.turnNumber,
+    hordeTurnNumber: game.hordeTurnNumber,
+    phase: game.phase,
+    activeSide: game.activeSide,
+    player: {
+      life: game.player.life,
+      // Lands are captured as ordinary battlefield entries below (tapped state included), so the
+      // top-up field has to stay at zero or a reload would add a second set of them.
+      energy: 0,
+      storedEnergy: Math.min(game.player.manaPool.colorless, STORED_MANA_CAP),
+    },
+    horde: { poisonCounters: game.horde.poisonCounters },
+    zones: {
+      playerHand: groupCards(game.player.hand),
+      playerBattlefield: groupCards(game.player.battlefield),
+      playerGraveyard: groupCards(game.player.graveyard),
+      playerExile: groupCards(game.player.exile),
+      hordeBattlefield: groupCards(game.horde.battlefield),
+      hordeGraveyard: groupCards(game.horde.graveyard),
+      hordeExile: groupCards(game.horde.exile),
+    },
+  };
+}
+
+/** Identical cards collapse into one entry with an amount — "3× Forest (tapped)", not three lines. */
+function groupCards(cards: CardInstance[]): ScenarioCard[] {
+  const groups = new Map<string, ScenarioCard>();
+  for (const card of cards) {
+    const key = `${card.definitionId}:${card.tapped ? "t" : ""}:${card.damageMarked ?? 0}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.amount = (existing.amount ?? 1) + 1;
+      continue;
+    }
+    groups.set(key, {
+      definitionId: card.definitionId,
+      amount: 1,
+      ...(card.tapped ? { tapped: true } : {}),
+      ...(card.damageMarked ? { damageMarked: card.damageMarked } : {}),
+    });
+  }
+  return [...groups.values()];
 }
 
 /** Problems the UI should surface before starting. `buildScenarioGame` silently skips whatever

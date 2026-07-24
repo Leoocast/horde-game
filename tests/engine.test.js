@@ -10,7 +10,7 @@ import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger,
 import { drainEventQueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
-import { finishHordeTurn, runHordeMain } from "../src/engine/HordeController";
+import { finishHordeTurn, revealHordeCardFromTop, runHordeMain } from "../src/engine/HordeController";
 import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
@@ -1052,6 +1052,41 @@ test("the surge stat bonus is per-deck: the goblin horde gets none", () => {
   game.hordeTurnNumber = 10;
   assert.equal(hordeInSurge(game), true);
   assert.deepEqual(getPowerToughness(game, goblin), { power: 2, toughness: 2 });
+});
+
+test("revealing one Horde card plays that card and nothing else", () => {
+  // The Playground's "play this card" for the Horde. Running a Horde turn instead would untap,
+  // reveal up to three of the loaded deck's own cards and advance the clock — so playing a single
+  // Goblin token would drag a whole Zombie turn along with it.
+  const game = createTestGame("horde-single-reveal");
+  // Three in the library: a turn would reveal all three, a single reveal takes exactly one.
+  for (let index = 0; index < 3; index += 1) {
+    addCard(game, customCard(`horde_stack_${index}`, "horde", { zone: "library", isToken: true }), "horde", "library");
+  }
+  const before = { turn: game.hordeTurnNumber, phase: game.phase, side: game.activeSide };
+  const libraryBefore = game.horde.library.length;
+  const top = game.horde.library[0];
+
+  const next = revealHordeCardFromTop(game);
+
+  assert.equal(next.lastActionResult.ok, true);
+  assert.equal(next.horde.library.length, libraryBefore - 1, "exactly one card left the library");
+  assert.equal(next.hordeTurnNumber, before.turn, "a single reveal is not a turn");
+  assert.equal(next.phase, before.phase);
+  assert.equal(next.activeSide, before.side);
+  assert.equal(next.combat.hordeAttackers.length, 0, "nothing is declared as an attacker");
+  // The card itself really entered, through the Horde's own play path.
+  const landed = [...next.horde.battlefield, ...next.horde.graveyard].some((card) => card.instanceId === top.instanceId);
+  assert.ok(landed, `${top.name} should have entered play or gone to the graveyard`);
+});
+
+test("revealing from an empty Horde library reports a reason instead of doing nothing", () => {
+  const game = createTestGame("horde-single-reveal-empty");
+  game.horde.library = [];
+
+  const next = revealHordeCardFromTop(game);
+  assert.equal(next.lastActionResult.ok, false);
+  assert.match(next.lastActionResult.reason, /library is empty/i);
 });
 
 test("Chaos Surge begins on the eighth Horde turn", () => {

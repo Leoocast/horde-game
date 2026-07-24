@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   addEnergySource,
   addStoredEnergy,
+  clearBattlefield,
   destroyCard,
   drainEnergy,
   drawPlayerCard,
@@ -128,6 +129,33 @@ test("destroy runs death triggers and to-graveyard does not", () => {
   assert.equal(moved.game.horde.graveyard.at(-1).definitionId, "goblin_token_1_1_red");
   assert.equal(moved.game.player.battlefield.length, 1);
   assert.equal(moved.game.eventQueue.length, 0);
+});
+
+test("wiping a board is silent: nothing dies, so nothing triggers", () => {
+  // Same Pashalik Mons setup as above. Destroying a Goblin burns a player creature; clearing the
+  // table has to leave that creature alone, or tidying up between tests would change the test.
+  const game = buildScenarioGame(
+    scenario({
+      hordeDeckId: "goblin_assault_horde",
+      player: { life: 50, energy: 0, storedEnergy: 0 },
+      zones: {
+        hordeBattlefield: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
+        playerBattlefield: [{ definitionId: "llanowar_elves" }],
+      },
+    }),
+  );
+
+  const wiped = clearBattlefield(game, "horde");
+  assert.equal(wiped.ok, true);
+  assert.equal(wiped.game.horde.battlefield.length, 0);
+  assert.equal(wiped.game.horde.graveyard.length, 2);
+  assert.ok(wiped.game.horde.graveyard.every((card) => card.zone === "graveyard"));
+  assert.equal(wiped.game.player.battlefield.length, 1, "no death trigger ever fired");
+  assert.equal(wiped.game.eventQueue.length, 0);
+
+  const again = clearBattlefield(wiped.game, "horde");
+  assert.equal(again.ok, false);
+  assert.match(again.reason, /already empty/i);
 });
 
 test("events resolve one at a time or all at once, and an empty queue says so", () => {

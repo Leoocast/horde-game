@@ -1,7 +1,9 @@
+import type { GameState, Side } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import {
   addEnergySource,
   addStoredEnergy,
+  clearBattlefield,
   destroyCard,
   drainEnergy,
   drawPlayerCard,
@@ -34,9 +36,14 @@ export type TimelineStep =
   | { kind: "addStoredEnergy" }
   | { kind: "drainEnergy" }
   | { kind: "place"; zone: ScenarioZoneKey; entry: ScenarioCard }
+  /** Pick a card from the catalog and let it happen for real: a player card goes to hand and casts
+   *  through the normal path, a Horde card goes on top of the Horde library and the Horde plays it
+   *  on its turn. There is no third way to put a card into play — that is the whole point. */
+  | { kind: "playCard"; definitionId: string; cardName: string; side: Side }
   | { kind: "play"; handId: string; cardName: string; free: boolean }
   | { kind: "destroy"; cardId: string; cardName: string }
-  | { kind: "toGraveyard"; cardId: string; cardName: string };
+  | { kind: "toGraveyard"; cardId: string; cardName: string }
+  | { kind: "clearBattlefield"; side: Side };
 
 export type StepOutcome = { ok: boolean; reason?: string; message?: string };
 
@@ -52,10 +59,12 @@ export function describeStep(step: TimelineStep): string {
     case "refillEnergy": return "Refill energy";
     case "addStoredEnergy": return "Store energy";
     case "drainEnergy": return "Drain energy";
-    case "place": return `Place ${step.entry.amount ?? 1}× ${step.entry.definitionId} → ${step.zone}`;
+    case "place": return `Put ${step.entry.amount ?? 1}× ${step.entry.definitionId} → ${step.zone}`;
+    case "playCard": return `Play ${step.cardName}`;
     case "play": return `${step.free ? "Play free" : "Play"} ${step.cardName}`;
     case "destroy": return `Destroy ${step.cardName}`;
     case "toGraveyard": return `To graveyard: ${step.cardName}`;
+    case "clearBattlefield": return `Clear ${step.side} board`;
     // A flow saved before a step kind was renamed still lists it; say so instead of rendering blank.
     default: return `Unknown step "${(step as { kind: string }).kind}"`;
   }
@@ -90,15 +99,56 @@ export function executeStep(step: TimelineStep): StepOutcome {
       return applyToGame(drainEnergy);
     case "place":
       return applyPlacement(step.zone, step.entry);
+    case "playCard":
+      return playFromCatalog(step);
     case "destroy":
       return applyToGame((game) => destroyCard(game, step.cardId));
     case "toGraveyard":
       return applyToGame((game) => sendCardToGraveyard(game, step.cardId));
+    case "clearBattlefield":
+      return applyToGame((game) => clearBattlefield(game, step.side));
     case "play":
       return playCard(step);
     default:
       return { ok: false, reason: `Unknown step "${(step as { kind: string }).kind}" — it was recorded by an older build.` };
   }
+}
+
+/**
+ * "Play this card", routed by whose card it is. Neither branch invents a path: the player's card
+ * lands in hand and goes through the same cast the Hand does, and the Horde's card goes on top of
+ * its library and is revealed by the Horde's own turn — which is the only way a Horde card ever
+ * enters play in this game. That is why a sorcery like Smallpox cannot be "placed" on a
+ * battlefield: nothing in the game does that, so the playground doesn't offer it.
+ */
+function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): StepOutcome {
+  const store = useGameStore.getState();
+
+  if (step.side === "horde") {
+    // Staged on top and revealed as a single card. Running a whole Horde turn instead would untap,
+    // reveal the loaded deck's own cards and swing — playing one Goblin token would drag a Zombie
+    // turn along with it, which is not what "play this card" means.
+    const staged = addScenarioCard(store.game, "hordeLibraryTop", { definitionId: step.definitionId });
+    if (!staged.lastActionResult?.ok) {
+      return { ok: false, reason: staged.lastActionResult?.reason ?? "Could not stage that card." };
+    }
+    useGameStore.setState({ game: staged });
+    store.resolveHordeCardFromTop();
+    return readEngineOutcome(`${step.cardName} enters for the Horde.`);
+  }
+
+  const withCard = addScenarioCard(store.game, "playerHand", { definitionId: step.definitionId });
+  if (!withCard.lastActionResult?.ok) {
+    return { ok: false, reason: withCard.lastActionResult?.reason ?? "Could not put that card in hand." };
+  }
+  const handId = lastHandId(withCard, step.definitionId);
+  if (!handId) return { ok: false, reason: `${step.cardName} did not reach the hand.` };
+  useGameStore.setState({ game: withCard });
+  return playCard({ kind: "play", handId, cardName: step.cardName, free: true });
+}
+
+function lastHandId(game: GameState, definitionId: string): string | undefined {
+  return [...game.player.hand].reverse().find((card) => card.definitionId === definitionId)?.instanceId;
 }
 
 function playCard(step: Extract<TimelineStep, { kind: "play" }>): StepOutcome {
