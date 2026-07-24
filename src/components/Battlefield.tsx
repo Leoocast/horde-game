@@ -117,14 +117,14 @@ export function Battlefield({ game, side, cards }: Props) {
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
   const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
-  const zombieWaveByCardId = useRef<Map<string, number>>(new Map());
-  const zombieWaveOrder = useRef<Map<number, number>>(new Map());
+  const swarmWaveByCardId = useRef<Map<string, number>>(new Map());
+  const swarmWaveOrder = useRef<Map<number, number>>(new Map());
   const combatCasualties = useRef<Map<string, CardInstance>>(new Map());
   const previousCards = useRef<CardInstance[]>(cards);
   const nextBattlefieldOrder = useRef(0);
-  const nextZombieWaveId = useRef(0);
-  const currentZombieEntryWaveId = useRef<number | undefined>(undefined);
-  const currentZombieEntryWaveTurn = useRef<number | undefined>(undefined);
+  const nextSwarmWaveId = useRef(0);
+  const currentSwarmEntryWaveId = useRef<number | undefined>(undefined);
+  const currentSwarmEntryWaveTurn = useRef<number | undefined>(undefined);
   const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
@@ -671,12 +671,12 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const definitionId of battlefieldFamilyOrder.current.keys()) {
       if (!activeDefinitionIds.has(definitionId)) battlefieldFamilyOrder.current.delete(definitionId);
     }
-    for (const instanceId of zombieWaveByCardId.current.keys()) {
-      if (!activeCardIds.has(instanceId)) zombieWaveByCardId.current.delete(instanceId);
+    for (const instanceId of swarmWaveByCardId.current.keys()) {
+      if (!activeCardIds.has(instanceId)) swarmWaveByCardId.current.delete(instanceId);
     }
-    const activeZombieWaveIds = new Set(zombieWaveByCardId.current.values());
-    for (const waveId of zombieWaveOrder.current.keys()) {
-      if (!activeZombieWaveIds.has(waveId)) zombieWaveOrder.current.delete(waveId);
+    const activeSwarmWaveIds = new Set(swarmWaveByCardId.current.values());
+    for (const waveId of swarmWaveOrder.current.keys()) {
+      if (!activeSwarmWaveIds.has(waveId)) swarmWaveOrder.current.delete(waveId);
     }
 
     for (const card of rowCards) {
@@ -685,17 +685,17 @@ export function Battlefield({ game, side, cards }: Props) {
         battlefieldCardOrder.current.set(card.instanceId, entryOrder);
         nextBattlefieldOrder.current += 1;
 
-        if (isZombieToken(card)) {
-          if (currentZombieEntryWaveId.current === undefined || currentZombieEntryWaveTurn.current !== game.turnNumber) {
-            currentZombieEntryWaveId.current = nextZombieWaveId.current;
-            nextZombieWaveId.current += 1;
-            currentZombieEntryWaveTurn.current = game.turnNumber;
-            zombieWaveOrder.current.set(currentZombieEntryWaveId.current, entryOrder);
+        if (isSwarmToken(card)) {
+          if (currentSwarmEntryWaveId.current === undefined || currentSwarmEntryWaveTurn.current !== game.turnNumber) {
+            currentSwarmEntryWaveId.current = nextSwarmWaveId.current;
+            nextSwarmWaveId.current += 1;
+            currentSwarmEntryWaveTurn.current = game.turnNumber;
+            swarmWaveOrder.current.set(currentSwarmEntryWaveId.current, entryOrder);
           }
-          zombieWaveByCardId.current.set(card.instanceId, currentZombieEntryWaveId.current);
+          swarmWaveByCardId.current.set(card.instanceId, currentSwarmEntryWaveId.current);
         } else {
-          currentZombieEntryWaveId.current = undefined;
-          currentZombieEntryWaveTurn.current = undefined;
+          currentSwarmEntryWaveId.current = undefined;
+          currentSwarmEntryWaveTurn.current = undefined;
         }
       }
       if (!battlefieldFamilyOrder.current.has(card.definitionId)) {
@@ -708,8 +708,8 @@ export function Battlefield({ game, side, cards }: Props) {
       rowCards,
       battlefieldCardOrder.current,
       battlefieldFamilyOrder.current,
-      zombieWaveByCardId.current,
-      zombieWaveOrder.current,
+      swarmWaveByCardId.current,
+      swarmWaveOrder.current,
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
       resolvingHordeCombat,
     ).map((group) => (
@@ -1200,8 +1200,8 @@ function groupBattlefieldCopies(
   cards: CardInstance[],
   cardOrder: Map<string, number>,
   familyOrder: Map<string, number>,
-  zombieWaveByCardId: Map<string, number>,
-  zombieWaveOrder: Map<number, number>,
+  swarmWaveByCardId: Map<string, number>,
+  swarmWaveOrder: Map<number, number>,
   keepSeparateCardIds?: Set<string>,
   // Stats move constantly while combat resolves: a dying lord drops its static buff off every
   // creature it covered. Grouping by stats then would re-key and remount whole stacks mid-
@@ -1214,24 +1214,26 @@ function groupBattlefieldCopies(
 
   for (const card of cards) {
     const zombieToken = isZombieToken(card);
+    const goblinToken = isGoblinToken(card);
+    const swarmToken = zombieToken || goblinToken;
     const stats = cardStatState(game, card);
     const visualStatsKey = stableGrouping
       ? "stable"
       : `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
-    const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
+    const swarmWaveId = swarmWaveByCardId.get(card.instanceId);
     const groupingKey =
       keepSeparateCardIds?.has(card.instanceId)
         ? `pending-trigger-${card.instanceId}`
         : zombieToken && !stackZombieTokens
         ? `instance-${card.instanceId}`
-        : zombieToken
-          ? `zombie-wave-${zombieWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
+        : swarmToken
+          ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
           : `copy-${card.definitionId}-${visualStatsKey}`;
     const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
-    const order = zombieToken
-      ? zombieWaveId === undefined
+    const order = swarmToken
+      ? swarmWaveId === undefined
         ? instanceOrder
-        : (zombieWaveOrder.get(zombieWaveId) ?? instanceOrder)
+        : (swarmWaveOrder.get(swarmWaveId) ?? instanceOrder)
       : (familyOrder.get(card.definitionId) ?? instanceOrder);
     const group = groups.get(groupingKey);
     if (group) {
@@ -1258,6 +1260,16 @@ function groupBattlefieldCopies(
 
 function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+}
+
+function isGoblinToken(card: CardInstance): boolean {
+  return card.controller === "horde"
+    && card.isToken
+    && card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin");
+}
+
+function isSwarmToken(card: CardInstance): boolean {
+  return isZombieToken(card) || isGoblinToken(card);
 }
 
 function flyingIdleVariables(instanceId: string): CSSProperties {

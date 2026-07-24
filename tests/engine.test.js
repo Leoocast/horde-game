@@ -660,6 +660,21 @@ test("Goblin Rabblemaster creates its combat token before Horde attackers are de
   assert.equal(tokens[0].tapped, true);
 });
 
+test("Goblin token waves attack in chronological visual order", () => {
+  const game = createTestGame("goblin-wave-attack-order");
+  const firstWave = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const creatureBetweenWaves = addCard(game, customCard("between_goblin_waves", "horde", { subtypes: ["Goblin"] }));
+  const secondWave = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  const result = prepareHordeAttackers(game);
+
+  assert.deepEqual(result.combat.hordeAttackers, [
+    firstWave.instanceId,
+    creatureBetweenWaves.instanceId,
+    secondWave.instanceId,
+  ]);
+});
+
 test("Goblin Rabblemaster counts every other attacking Goblin after attack tokens enter", () => {
   const game = createTestGame("rabblemaster-attack-buff");
   const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "horde"));

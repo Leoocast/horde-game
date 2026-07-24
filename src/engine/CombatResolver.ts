@@ -272,22 +272,20 @@ export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: str
 
 function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
   const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
-  // Zombie tokens are re-summoned every horde turn and reuse the same handful of
-  // definitionIds, so grouping them by "first time this definitionId ever appeared"
-  // (like non-zombie creatures) yanks later waves back in line with the very first
-  // zombie of that name and attacks out of visual left-to-right order. The board
-  // (Battlefield.tsx groupBattlefieldCopies) groups zombies by arrival wave instead,
-  // which for ordering purposes is equivalent to plain chronological entry order.
+  // Horde swarm tokens are re-summoned throughout the encounter and reuse the same
+  // definitionIds. The board groups Zombie and Goblin tokens by arrival wave so a
+  // later wave stays where it entered instead of jumping back into the first stack.
+  // For attack ordering, that visual wave order is equivalent to chronological entry.
   const familyIndex = new Map<string, number>();
   for (const card of battlefield) {
-    if (isZombieToken(card)) continue;
+    if (isEntryWaveToken(card)) continue;
     const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);
   }
 
   const orderOf = (card: CardInstance): number => {
     const own = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
-    return isZombieToken(card) ? own : (familyIndex.get(card.definitionId) ?? own);
+    return isEntryWaveToken(card) ? own : (familyIndex.get(card.definitionId) ?? own);
   };
 
   return [...cards].sort((left, right) => {
@@ -297,6 +295,10 @@ function sortBattlefieldCardsByVisualOrder(battlefield: CardInstance[], cards: C
   });
 }
 
-function isZombieToken(card: CardInstance): boolean {
-  return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+function isEntryWaveToken(card: CardInstance): boolean {
+  if (!card.isToken) return false;
+  return card.subtypes.some((subtype) => {
+    const normalized = subtype.toLowerCase();
+    return normalized === "zombie" || (card.controller === "horde" && normalized === "goblin");
+  });
 }
