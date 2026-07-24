@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import imageLookupsRaw from "../../cardImageLookups.json";
-import goblinHordeImagesRaw from "../data/decks/horde/goblins/goblin_assault_horde_images_definition.json";
-import monoGreenRampImagesRaw from "../data/decks/player/mono_green_ramp/mono_green_ramp_images.json";
+import { DECK_REGISTRY } from "../data/decks";
 import type { DeckImageManifest } from "../data/deckCatalog";
 import { useLanguageStore } from "../store/useLanguageStore";
 import type { AppLanguage } from "../i18n/translations";
@@ -14,10 +12,6 @@ type LookupEntry = {
   image_path: string;
 };
 
-type ImageLookups = {
-  hordeZombieDeck: LookupEntry[];
-};
-
 export type CardRemoteDetails = {
   imageUrl?: string;
   language?: string;
@@ -27,13 +21,8 @@ export type CardRemoteDetails = {
   flavorText?: string;
 };
 
-const imageLookups = imageLookupsRaw as ImageLookups;
 const lookupById = new Map<string, LookupEntry>(
-  [
-    ...imageLookups.hordeZombieDeck,
-    ...newDeckImageLookups(monoGreenRampImagesRaw as DeckImageManifest),
-    ...newDeckImageLookups(goblinHordeImagesRaw as DeckImageManifest),
-  ].map((entry) => [entry.id, entry]),
+  DECK_REGISTRY.flatMap((entry) => newDeckImageLookups(entry.images)).map((entry) => [entry.id, entry]),
 );
 const directDetailsById = new Map<string, CardRemoteDetails>([
   [
@@ -199,7 +188,8 @@ function newDeckImageLookups(manifest: DeckImageManifest): LookupEntry[] {
     return {
       id,
       name: exact,
-      lookup_url: `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`,
+      // Manifests may pin the exact lookup URL (e.g. token searches); otherwise build one.
+      lookup_url: entry.lookupUrl ?? `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`,
       image_path: entry.imagePath ?? "data[0].image_uris.normal",
     };
   });

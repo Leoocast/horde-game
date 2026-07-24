@@ -33,6 +33,12 @@ Tests deterministas del engine:
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
 ```
 
+Deck lint (valida los JSON de decks contra el vocabulario real del engine y reporta cartas WIP):
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\lint-decks.mjs
+```
+
 Build completo:
 
 ```powershell
@@ -89,18 +95,25 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck Alpha 0.0.3 del player
+        mono_green_ramp/  deck Alpha 0.0.3 del player (JSON + manifest de imagenes)
       horde/
-        zombies/          deck activo por defecto de la Horda
+        zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
-    decks.ts              registra los tres decks y expone getPlayerDeck/getHordeDeck por id
-    normalizeDeck.ts      adapta el nuevo JSON del deck al engine viejo
+    decks.ts              DECK_REGISTRY: unico punto de registro; agregar deck = una linea register(...)
+    deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
+    normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
+    deckLint.ts           lint de decks: valida cada habilidad contra el vocabulario del engine
+
+  engine/
+    effectVocabulary.ts   listas espejo de los tipos que el engine implementa (efectos, triggers, condiciones, customHandlers)
 
 scripts/
-  run-engine-tests.mjs    corre tests/engine.test.js via vite ssrLoadModule + node:test
+  run-engine-tests.mjs    corre tests/engine.test.js + tests/deckLint.test.js via vite ssrLoadModule + node:test
+  lint-decks.mjs          corre el deck lint standalone con reporte por deck (ready/vanilla/WIP)
 
 tests/
   engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
+  deckLint.test.js        el lint como test: un hueco silencioso en un deck JSON rompe la suite
   engineTestUtils.js      helpers para armar game state de prueba
 ```
 
@@ -265,24 +278,20 @@ Keywords:
 
 ## Decks e imagenes
 
-Deck viejo MVP:
-- `player_deck.json`
-- `horde_deck.json`
-- `cardImageLookups.json`
+Ya NO existe formato viejo ni JSONs legacy (`player_deck.json`, `horde_deck.json` y `cardImageLookups.json` fueron eliminados). Los tres decks usan el mismo esquema authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
-Estos estan deprecated para el player Alpha.
+- player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
+- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo; su `rulesProfile` esta en el JSON pero el engine todavia NO lo lee (pendiente de fase de reglas-como-data)
+- horde: `goblin_assault_horde` — seleccionable; sus habilidades de lords sin handler estan marcadas `engineSupport: "pending"`
 
-Deck actual del player:
-- `src/data/decks/player/mono_green_ramp/mono_green_ramp.json`
-- `src/data/decks/player/mono_green_ramp/mono_green_ramp_images.json`
+`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una linea `register(label, raw, images)`. De ahi derivan el deck del engine, el inspector (`deckCatalog.ts`) y los lookups de imagenes (`cardImages.ts`). Cada deck lleva su manifest de imagenes junto al JSON.
 
-`src/data/decks.ts` registra los tres decks disponibles:
-- player: `normalizeDeck(monoGreenRampRaw)` (`mono_green_ramp`, `DEFAULT_PLAYER_DECK_ID`)
-- horde: `horde-zombies.json` sin normalizar (`horde_zombies`, `DEFAULT_HORDE_DECK_ID`)
-- horde: `normalizeDeck(goblinHordeRaw)` (`goblin_assault_horde`) — **ya es un deck de Horda seleccionable, no solo de inspector**; tiene mas `engineSupportNeeded` sin resolver (target flexible player/criatura/planeswalker, "must attack if able", conteo de goblins atacantes, etc.), asi que varias habilidades de sus cartas legendarias/lords todavia no tienen handler real
-- `getPlayerDeck(id)` / `getHordeDeck(id)` devuelven el deck por id con fallback al default
+Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
+- `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".
+- `"ignored"`: deliberadamente no implementada en este modo (p.ej. dar HASTE a la Horda).
+- `"custom"`: resuelta por un camino bespoke fuera del resolver generico (p.ej. Smallpox).
 
-La nueva estructura de imagenes del deck debe ser la base para el inspector.
+Sin marcador = la habilidad debe validar completa contra el vocabulario del engine, o el lint (y la suite de tests) fallan. Nunca dejar que una carta "no haga nada" en silencio.
 
 ## Cartas / efectos ya tratados
 
@@ -563,7 +572,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; falta cerrar varios `engineSupportNeeded` de ese JSON antes de darlo por completo.
+- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`). Al agregar un tipo de efecto/trigger/condicion nuevo al engine, actualizar `src/engine/effectVocabulary.ts` o el lint fallara.
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
 - `Graf Harvest` se fuerza al top de la Horda en developer mode.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.

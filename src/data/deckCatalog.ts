@@ -1,17 +1,12 @@
 import type { Color } from "../engine/GameTypes";
-import type { DeckList } from "../engine/GameTypes";
-import goblinHordeRaw from "./decks/horde/goblins/goblin_assault_horde.json";
-import goblinHordeImagesRaw from "./decks/horde/goblins/goblin_assault_horde_images_definition.json";
-import hordeDeckRaw from "./decks/horde/zombies/horde-zombies.json";
-import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
-import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
-import cardImageLookupsRaw from "../../cardImageLookups.json";
+import { DECK_REGISTRY } from "./decks";
 
 export type NewDeckCard = {
   id: string;
   name: string;
   displayNameEs?: string;
   quantity?: number;
+  isToken?: boolean;
   manaCost?: string;
   manaValue?: number;
   colors?: Color[];
@@ -21,6 +16,13 @@ export type NewDeckCard = {
   toughness?: number | null;
   keywords?: string[];
   triggerMessage?: string;
+  entersTapped?: boolean;
+  entersWithCounters?: Array<{ counterType: string; amount?: number }>;
+  flags?: Record<string, boolean>;
+  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
+  attachTo?: { targetRef: string };
+  variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
+  requiresDistribution?: { counterType: string; totalAmount: number; eachTargetMinimum?: number };
   abilities?: NewDeckAbility[];
   scryfall?: {
     lookupMode?: string;
@@ -31,13 +33,21 @@ export type NewDeckCard = {
   [key: string]: unknown;
 };
 
+/** Marks an ability the engine does not run generically.
+ *  - "pending": not implemented yet; the normalizer skips it and deck lint reports it as WIP.
+ *  - "ignored": deliberately not implemented for this game mode (e.g. haste grants for the Horde).
+ *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Smallpox). */
+export type AbilityEngineSupport = "pending" | "ignored" | "custom";
+
 export type NewDeckAbility = {
   id?: string;
   kind?: string;
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
   targets?: unknown[];
+  conditions?: Array<Record<string, unknown>>;
   effects?: Array<Record<string, unknown>>;
+  engineSupport?: AbilityEngineSupport;
   [key: string]: unknown;
 };
 
@@ -84,29 +94,13 @@ export type InspectableDeck = {
   images: DeckImageManifest;
 };
 
-export const playerInspectableDecks: InspectableDeck[] = [
-  {
-    id: "mono_green_ramp",
-    label: "Mono-Green Ramp 39",
-    deck: monoGreenRampRaw as NewDeckList,
-    images: monoGreenRampImagesRaw as DeckImageManifest,
-  },
-];
+function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
+  return { id: entry.deck.id, label: entry.label, deck: entry.raw, images: entry.images };
+}
 
-export const hordeInspectableDecks: InspectableDeck[] = [
-  {
-    id: "horde_zombies",
-    label: "Zombie Horde 50",
-    deck: hordeDeckToInspectable(hordeDeckRaw as DeckList),
-    images: hordeImageManifest(),
-  },
-  {
-    id: "goblin_assault_horde",
-    label: "Goblin Horde 50",
-    deck: goblinHordeRaw as unknown as NewDeckList,
-    images: goblinHordeImagesRaw as DeckImageManifest,
-  },
-];
+export const playerInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "player").map(toInspectable);
+
+export const hordeInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "horde").map(toInspectable);
 
 export const inspectableDecks: InspectableDeck[] = [
   ...playerInspectableDecks,
@@ -115,54 +109,4 @@ export const inspectableDecks: InspectableDeck[] = [
 
 export function findInspectableDeck(id: string): InspectableDeck {
   return inspectableDecks.find((deck) => deck.id === id) ?? inspectableDecks[0];
-}
-
-function hordeDeckToInspectable(deck: DeckList): NewDeckList {
-  return {
-    schemaVersion: "legacy-horde-adapter",
-    id: deck.id,
-    name: deck.name,
-    side: "horde",
-    deckSize: deck.deckSize,
-    cards: deck.cards.map((card) => ({
-      ...card,
-      power: typeof card.power === "number" ? card.power : null,
-      toughness: typeof card.toughness === "number" ? card.toughness : null,
-      abilities: [],
-    })),
-  };
-}
-
-function hordeImageManifest(): DeckImageManifest {
-  const raw = cardImageLookupsRaw as {
-    hordeZombieDeck?: Array<{
-      id: string;
-      name: string;
-      lookup_url: string;
-      image_path: string;
-    }>;
-  };
-  return {
-    schemaVersion: "legacy-horde-image-adapter",
-    provider: "scryfall",
-    cards: Object.fromEntries(
-      (raw.hordeZombieDeck ?? []).map((entry) => {
-        const directImageUrl =
-          entry.id === "zombie_token"
-            ? "https://cards.scryfall.io/normal/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525"
-            : undefined;
-        return [
-          entry.id,
-          {
-          source: "legacyLookupUrl",
-          exact: entry.name,
-          imageUrl: directImageUrl,
-          lookupUrl: entry.lookup_url,
-          imagePath: entry.image_path,
-          fallbackImagePath: "image_uris.large",
-          },
-        ];
-      }),
-    ),
-  };
 }

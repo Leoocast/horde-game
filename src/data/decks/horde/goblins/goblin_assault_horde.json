@@ -177,6 +177,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "hobgoblin_bandit_lord_entered_goblins_damage",
+          "engineSupport": "pending",
           "implementationNote": "Deal damage to damageTarget equal to the number of Goblins that entered the battlefield under this source controller's control this turn."
         }
       ],
@@ -310,6 +311,8 @@
           },
           "targets": [],
           "conditions": [],
+          "engineSupport": "pending",
+          "implementationNote": "Needs multi-effect activated abilities and group pump from an activation; both effects are dead in the current engine.",
           "effects": [
             {
               "type": "MODIFY_STATS",
@@ -644,6 +647,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "goblin_rabblemaster_force_other_goblins_attack",
+          "engineSupport": "pending",
           "implementationNote": "Other Goblin creatures controlled by the source controller attack each combat if able while this source is on the battlefield."
         },
         {
@@ -794,6 +798,7 @@
           "kind": "ACTIVATED",
           "zone": "BATTLEFIELD",
           "speed": "INSTANT",
+          "engineSupport": "pending",
           "cost": {
             "sacrificeSelf": true
           },

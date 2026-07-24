@@ -13,6 +13,9 @@ export function normalizeDeck(rawDeck: NewDeckList): DeckList {
 }
 
 function normalizeCard(card: NewDeckCard): CardDefinition {
+  // Abilities flagged with `engineSupport` (pending/ignored/custom) never reach the engine:
+  // they stay in the JSON as data, deck lint reports them, and nothing half-runs.
+  const abilities = (card.abilities ?? []).filter((ability) => !ability.engineSupport);
   return {
     id: card.id,
     name: card.name,
@@ -27,15 +30,22 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     power: card.power,
     toughness: card.toughness,
     triggerMessage: card.triggerMessage,
-    keywords: normalizeKeywords(card),
-    activatedAbilities: normalizeActivatedAbilities(card.abilities ?? []),
-    effects: normalizeEffects(card.abilities ?? []),
-    requiresTargets: normalizeTargets(card.abilities ?? []),
+    entersTapped: card.entersTapped,
+    entersWithCounters: card.entersWithCounters,
+    flags: card.flags,
+    asEnters: card.asEnters,
+    attachTo: card.attachTo,
+    variableCost: card.variableCost,
+    requiresDistribution: card.requiresDistribution,
+    keywords: normalizeKeywords(card, abilities),
+    activatedAbilities: normalizeActivatedAbilities(abilities),
+    effects: normalizeEffects(abilities),
+    requiresTargets: normalizeTargets(abilities),
   };
 }
 
-function normalizeKeywords(card: NewDeckCard): Keyword[] {
-  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(card.abilities ?? [])];
+function normalizeKeywords(card: NewDeckCard, abilities: NewDeckAbility[]): Keyword[] {
+  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(abilities)];
 }
 
 function extractStaticKeywordAbilities(abilities: NewDeckAbility[]): Keyword[] {
@@ -82,6 +92,16 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
     const effect = rawEffect as EffectDefinition;
     const scope = effect.scope && typeof effect.scope === "object" ? (effect.scope as Record<string, unknown>) : undefined;
     if (effect.type === "MODIFY_STATS" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      if (effect.condition) {
+        normalized.push({
+          type: "STATIC_CONDITIONAL_BUFF",
+          condition: effect.condition,
+          target: effect.target ?? "SELF",
+          power: effect.power ?? 0,
+          toughness: effect.toughness ?? 0,
+        });
+        continue;
+      }
       normalized.push({
         type: "STATIC_BUFF",
         controller: scope?.controller ?? "SELF",
@@ -92,6 +112,15 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
       continue;
     }
     if (effect.type === "GRANT_KEYWORD" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      if (effect.condition) {
+        normalized.push({
+          type: "STATIC_CONDITIONAL_GRANT_KEYWORD",
+          condition: effect.condition,
+          target: effect.target ?? "SELF",
+          keyword: effect.keyword,
+        });
+        continue;
+      }
       normalized.push({
         type: "STATIC_GRANT_KEYWORD",
         controller: scope?.controller ?? "SELF",
@@ -197,23 +226,29 @@ function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | 
   if (ability.trigger?.event === "ATTACK_DECLARED" && ability.trigger?.source === "SELF") {
     normalized.push({ type: "SOURCE_IS_ATTACKING" });
   }
-  const activePlayer = conditions.find((condition) => condition.type === "ACTIVE_PLAYER_IS");
-  if (activePlayer) {
-    normalized.push({ type: "ACTIVE_PLAYER_IS", player: activePlayer.player });
-  }
-  const eventObjectMatch = conditions.find((condition) => condition.type === "EVENT_OBJECT_MATCHES");
-  if (eventObjectMatch) {
-    const filters = eventObjectMatch.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
-    if (eventObjectMatch.controller === "SELF" && eventObjectMatch.excludeSource && filters?.cardTypes?.includes("Creature")) {
-      normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
-    } else {
-      normalized.push({
-        type: "EVENT_OBJECT_MATCHES",
-        controller: eventObjectMatch.controller,
-        excludeSource: eventObjectMatch.excludeSource,
-        filters,
-      });
+  for (const condition of conditions) {
+    if (condition.type === "ACTIVE_PLAYER_IS") {
+      normalized.push({ type: "ACTIVE_PLAYER_IS", player: condition.player });
+      continue;
     }
+    if (condition.type === "EVENT_OBJECT_MATCHES") {
+      const filters = condition.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
+      if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("Creature")) {
+        normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
+      } else {
+        normalized.push({
+          type: "EVENT_OBJECT_MATCHES",
+          controller: condition.controller,
+          excludeSource: condition.excludeSource,
+          filters,
+        });
+      }
+      continue;
+    }
+    // Every other condition type is already written in the engine's own vocabulary
+    // (CAST_CARD_IS_NON_TOKEN, ANOTHER_CREATURE_YOU_CONTROL_DIED, ...) and passes through
+    // untouched; deck lint verifies the type is one triggerConditionMet actually knows.
+    normalized.push({ ...condition } as EffectDefinition);
   }
   if (normalized.length === 0) return undefined;
   return normalized.length === 1 ? normalized[0] : { type: "ALL_OF", conditions: normalized };

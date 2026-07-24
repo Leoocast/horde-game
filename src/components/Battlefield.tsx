@@ -119,6 +119,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
   const swarmWaveByCardId = useRef<Map<string, number>>(new Map());
   const swarmWaveOrder = useRef<Map<number, number>>(new Map());
+  const battlefieldGroupKeys = useRef<Map<string, string>>(new Map());
   const combatCasualties = useRef<Map<string, CardInstance>>(new Map());
   const previousCards = useRef<CardInstance[]>(cards);
   const nextBattlefieldOrder = useRef(0);
@@ -677,6 +678,9 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const instanceId of swarmWaveByCardId.current.keys()) {
       if (!activeCardIds.has(instanceId)) swarmWaveByCardId.current.delete(instanceId);
     }
+    for (const instanceId of battlefieldGroupKeys.current.keys()) {
+      if (!activeCardIds.has(instanceId)) battlefieldGroupKeys.current.delete(instanceId);
+    }
     const activeSwarmWaveIds = new Set(swarmWaveByCardId.current.values());
     for (const waveId of swarmWaveOrder.current.keys()) {
       if (!activeSwarmWaveIds.has(waveId)) swarmWaveOrder.current.delete(waveId);
@@ -714,6 +718,7 @@ export function Battlefield({ game, side, cards }: Props) {
       swarmWaveByCardId.current,
       swarmWaveOrder.current,
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
+      battlefieldGroupKeys.current,
       resolvingHordeCombat,
     ).map((group) => (
       <div
@@ -1206,10 +1211,13 @@ function groupBattlefieldCopies(
   swarmWaveByCardId: Map<string, number>,
   swarmWaveOrder: Map<number, number>,
   keepSeparateCardIds?: Set<string>,
+  lastGroupKeys?: Map<string, string>,
   // Stats move constantly while combat resolves: a dying lord drops its static buff off every
   // creature it covered. Grouping by stats then would re-key and remount whole stacks mid-
-  // sequence, which reads as the board reorganising itself. Group by identity alone until the
-  // combat is over; the stacks settle once, at the end.
+  // sequence, which reads as the board reorganising itself. While combat resolves, each card
+  // keeps the grouping key it already had (frozen in `lastGroupKeys`): stacks neither merge
+  // nor split mid-sequence — cards with different stats must never collapse into one stack —
+  // and the grouping settles once, at the end.
   stableGrouping = false,
 ): Array<{ key: string; cards: CardInstance[] }> {
   const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
@@ -1220,18 +1228,19 @@ function groupBattlefieldCopies(
     const goblinToken = isGoblinToken(card);
     const swarmToken = zombieToken || goblinToken;
     const stats = cardStatState(game, card);
-    const visualStatsKey = stableGrouping
-      ? "stable"
-      : `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
+    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
     const swarmWaveId = swarmWaveByCardId.get(card.instanceId);
+    const frozenKey = stableGrouping ? lastGroupKeys?.get(card.instanceId) : undefined;
     const groupingKey =
-      keepSeparateCardIds?.has(card.instanceId)
+      frozenKey ??
+      (keepSeparateCardIds?.has(card.instanceId)
         ? `pending-trigger-${card.instanceId}`
         : zombieToken && !stackZombieTokens
         ? `instance-${card.instanceId}`
         : swarmToken
           ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
-          : `copy-${card.definitionId}-${visualStatsKey}`;
+          : `copy-${card.definitionId}-${visualStatsKey}`);
+    lastGroupKeys?.set(card.instanceId, groupingKey);
     const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     const order = swarmToken
       ? swarmWaveId === undefined
