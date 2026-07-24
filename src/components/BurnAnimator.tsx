@@ -12,7 +12,7 @@ type BurnGeometry = {
 // Master clock mirrors the CSS --burn-duration (1100ms). Flight runs 20%–58%, impact at 58%.
 const IMPACT_AT_MS = 638;
 const FLIGHT_START_MS = 220;
-const EMBER_COUNT = 64;
+const EMBER_COUNT = 32;
 
 // Ported verbatim from the reference (assets/examples/Fireball/fireball.html).
 const CHARGE_PARTICLES = [
@@ -44,6 +44,7 @@ export function BurnAnimator() {
   const burn = useGameStore((state) => state.burnAnimation);
   const [geometry, setGeometry] = useState<BurnGeometry>();
   const projectileRef = useRef<HTMLDivElement>(null);
+  const fireballBodyRef = useRef<HTMLDivElement>(null);
   const traceRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -88,15 +89,16 @@ export function BurnAnimator() {
     const perpY = backX;
 
     const spawnTrace = () => {
-      const projectile = projectileRef.current;
-      if (!projectile) return;
-      const rect = projectile.getBoundingClientRect();
+      const fireballBody = fireballBodyRef.current;
+      if (!fireballBody) return;
+      const rect = fireballBody.getBoundingClientRect();
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
       const size = 2 + Math.random() * 4;
       const life = 260 + Math.random() * 480;
-      // Spawn on the ball itself (it sits at the leading/right side of the projectile box).
-      const x = rect.left + rect.width * (0.58 + Math.random() * 0.36);
+      // Anchor sparks to the visible fireball body instead of biasing them toward the right side
+      // of the wider projectile/trail box. This stays centered at every flight angle.
+      const x = rect.left + rect.width * (0.35 + Math.random() * 0.3);
       const y = rect.top + rect.height * (0.3 + Math.random() * 0.4);
       particle.style.left = `${x}px`;
       particle.style.top = `${y}px`;
@@ -139,7 +141,7 @@ export function BurnAnimator() {
         return;
       }
       if (elapsed >= FLIGHT_START_MS && now - lastSpawn > 8) {
-        const bursts = 4 + Math.floor(Math.random() * 3);
+        const bursts = 2 + Math.floor(Math.random() * 2);
         for (let i = 0; i < bursts; i++) spawnTrace();
         lastSpawn = now;
       }
@@ -206,7 +208,7 @@ export function BurnAnimator() {
               />
             ))}
           </div>
-          <div className="burn-fireball-body">
+          <div ref={fireballBodyRef} className="burn-fireball-body">
             <div className="burn-ball-outer" />
             <div className="burn-ball-mid" />
             <div className="burn-ball-core" />
