@@ -1316,7 +1316,16 @@ function holdCombatCasualties(
   previousCards.current = cards;
   if (casualties.current.size === 0) return cards;
   const ghosts = [...casualties.current.values()].filter((card) => !liveIds.has(card.instanceId));
-  return ghosts.length > 0 ? [...cards, ...ghosts] : cards;
+  if (ghosts.length === 0) return cards;
+  // Order matters, not just presence. Copies in a stack are laid out by DOM order (each slot
+  // after the first carries a negative margin) and overlap by --copy-stack-index, so appending a
+  // ghost sent a casualty from the middle of the stack to its end and shifted every copy behind
+  // it. Re-sorting by entry order puts the held slot back exactly where the card stood.
+  return [...cards, ...ghosts].sort(
+    (left, right) =>
+      (cardOrder.current.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) -
+      (cardOrder.current.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER),
+  );
 }
 
 function counterBuffedStats(game: GameState, card: CardInstance): string {
