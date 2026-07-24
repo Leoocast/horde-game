@@ -21,19 +21,40 @@ import {
 import { finishHordeTurn, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
 import { canAttack, hasKeyword } from "../engine/Keywords";
 import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
-import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, hasEffectPresentation, millHorde, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers, triggerConditionMet } from "../engine/EffectResolver";
-import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticAuras, type StaticAura, type StaticAuraSnapshot } from "../engine/StaticAuras";
-import { drainEventQueue, enqueue } from "../engine/EventQueue";
-import { targetCandidates, weakestCreature } from "../engine/Targeting";
+import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, hasEffectPresentation, resolveEffect, triggerConditionMet } from "../engine/EffectResolver";
+import { type StaticAura } from "../engine/StaticAuras";
+import { drainEventQueue } from "../engine/EventQueue";
+import { targetCandidates } from "../engine/Targeting";
 import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
-import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useToastStore } from "./useToastStore";
 import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
-import { translate, type TranslationKey } from "../i18n/translations";
-import { useLanguageStore } from "./useLanguageStore";
+import {
+  captureStaticAuraBeats,
+  hasEnterBattlefieldTrigger,
+  resetHordeSequence,
+  scheduleHordeEnterTriggers,
+  scheduleQueuedHordeTriggers,
+  startHordeCombatSequence,
+} from "./hordeBeats";
+import { advanceSmallpoxSequence, runSmallpoxSequence } from "./smallpoxSequence";
+import {
+  appendHordeMillAnimations,
+  discardPauseInProgress,
+  findBattlefieldCard,
+  flashAutoPaidLands,
+  monsterSfx,
+  notifyDiscardEffects,
+  playDrawOneIfPlayerDrew,
+  resumeAfterDiscardPause,
+  showActionToast,
+  startBuffBeat,
+  startLifeBuffBeat,
+  uiCardName,
+  uiText,
+} from "./presentationEffects";
 
-type GameStore = {
+export type GameStore = {
   game: GameState;
   gameSessionId: number;
   hordeAttackAnimation?: HordeAttackAnimation;
@@ -164,44 +185,11 @@ const HORDE_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
 const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
-const AUTO_PAID_LAND_FLASH_MS = 900;
-const BUFF_ANIMATION_MS = 1120;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
-const HORDE_ENTER_TRIGGER_START_MS = 680;
-const HORDE_ENTER_TRIGGER_RESOLVE_MS = 430;
-// Matches the fireball's CSS master clock (--burn-duration 1100ms, impact at 58%). The window
-// runs a touch past the duration so the rising damage number finishes before the layer clears.
-const BURN_IMPACT_MS = 638;
-const BURN_ANIMATION_MS = 1220;
-// Lead-in matches HORDE_ENTER_TRIGGER_START_MS's intent: let a card that just landed finish its
-// summon pop before its aura pulse animates the same transform on the same slot.
-const STATIC_AURA_LEAD_IN_MS = 420;
-const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
-const STATIC_AURA_BEAT_MS = STATIC_AURA_LEAD_IN_MS + 1080;
-// The reveal mounts on the same frame the combat impact commits and the row reflows; a short
-// lead-in lets the board finish moving first. Kept tight — the whole beat has to read as a
-// reaction to the death, not as a pause before one.
-const DEATH_REVEAL_LEAD_IN_MS = 120;
-// Matches the CSS entrance (.horde-death-reveal-enter), so the activation pulse fires the
-// instant the card has settled rather than after a dead beat.
-const DEATH_REVEAL_ENTER_MS = 280;
-const DEATH_REVEAL_HOLD_MS = 300;
-const DEATH_REVEAL_EXIT_MS = 380;
-// A card entering or leaving the battlefield re-centers the row, and Battlefield FLIP-animates
-// that move over 360ms. A beat that changed the board waits it out, so the next attacker never
-// charges across a row that is still sliding into place.
-const BOARD_SETTLE_MS = 560;
-let autoPaidLandFlashTimer: number | undefined;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
-let buffAnimationTimer: number | undefined;
-let lifeBuffAnimationTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
 let landPlaySummoningSafetyTimer: number | undefined;
-let hordeAutoTriggerSequenceId = 0;
-// Coverage of every Horde static ability as of the last announced beat. Diffed, not recomputed
-// from scratch, so a lord only re-announces itself when it starts buffing someone new.
-let hordeStaticAuraSnapshot: StaticAuraSnapshot = {};
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -355,8 +343,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) =>
     set((state) => {
-      hordeAutoTriggerSequenceId += 1;
-      hordeStaticAuraSnapshot = {};
+      resetHordeSequence();
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty, gameMode);
@@ -517,24 +504,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         });
       }
       useAudioStore.getState().playSfx("buff", { volume: 0.82 });
-      if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-      if (lifeBuffAnimationTimer) window.clearTimeout(lifeBuffAnimationTimer);
-      buffAnimationTimer = window.setTimeout(() => {
-        useGameStore.setState({ buffAnimationCardIds: [] });
-        buffAnimationTimer = undefined;
-      }, BUFF_ANIMATION_MS);
-      lifeBuffAnimationTimer = window.setTimeout(() => {
-        useGameStore.setState({ lifeBuffAnimationId: undefined });
-        lifeBuffAnimationTimer = undefined;
-      }, BUFF_ANIMATION_MS);
+      const lifeBeat = startLifeBuffBeat();
       return {
         game: next,
         counterTargeting: undefined,
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
         pendingTriggeredEffectSourceId: undefined,
-        buffAnimationCardIds: [target.instanceId],
-        buffAnimationEventId: Date.now(),
-        lifeBuffAnimationId: next.player.life > previousLife ? Date.now() : get().lifeBuffAnimationId,
+        ...startBuffBeat([target.instanceId]),
+        lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
     }),
   updateSmallpoxSelectionPointer: (x, y) =>
@@ -624,17 +601,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const targets = { ...spellTargeting.targets, [req.id]: targetId };
       const nextStep = spellTargeting.stepIndex + 1;
       useAudioStore.getState().playSfx(nextStep >= card.requiresTargets.length ? "playLand" : "buff", { volume: 0.68 });
-      if (req.controller === "SELF") {
-        if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-        buffAnimationTimer = window.setTimeout(() => {
-          useGameStore.setState({ buffAnimationCardIds: [] });
-          buffAnimationTimer = undefined;
-        }, BUFF_ANIMATION_MS);
-      }
+      const buffBeat = req.controller === "SELF" ? startBuffBeat([targetId]) : undefined;
       return {
         spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets },
-        buffAnimationCardIds: req.controller === "SELF" ? [targetId] : get().buffAnimationCardIds,
-        buffAnimationEventId: req.controller === "SELF" ? Date.now() : get().buffAnimationEventId,
+        ...(buffBeat ?? {}),
       };
     }),
   deselectSpellTarget: () =>
@@ -697,11 +667,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const animationOrigin = handCardRect
         ? { x: handCardRect.left + handCardRect.width / 2, y: handCardRect.top + handCardRect.height / 2 }
         : undefined;
-      const previousLog = game.log[0];
       const next = playLand(game, id);
-      const playSucceeded = Boolean(card?.cardTypes.includes("Land") && !next.player.hand.some((item) => item.instanceId === id));
+      const playSucceeded = next.lastActionResult?.ok === true;
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
-      else if (card && next.log[0] !== previousLog) showActionToast(next.log[0]);
+      else if (card) showActionToast(next.lastActionResult?.reason);
       if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
       return {
         game: next,
@@ -754,9 +723,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const active = state.energyRecycleAnimation;
       if (!active) return {};
       const next = recycleEnergy(state.game, active.card.instanceId);
-      const succeeded = !next.player.hand.some((card) => card.instanceId === active.card.instanceId);
+      const succeeded = next.lastActionResult?.ok === true;
       if (succeeded) useAudioStore.getState().playSfx("drawOne", { volume: 0.84 });
-      else showActionToast(next.log[0]);
+      else showActionToast(next.lastActionResult?.reason);
       return {
         game: next,
         energyRecycleAnimation: undefined,
@@ -929,12 +898,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
-      const previousLog = game.log[0];
       const wasBlocking = Object.values(game.combat.blockers).some((ids) => ids.includes(blockerId));
       const next = declareBlocker(game, blockerId, attackerId);
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
-      else if (!isBlockingTarget && next.log[0] !== previousLog && !next.log[0]?.includes("stops blocking")) showActionToast(next.log[0]);
+      else if (next.lastActionResult?.ok === false) showActionToast(next.lastActionResult.reason);
       return { game: next, blockDrag: undefined };
     }),
   cancelBlocks: () =>
@@ -1103,499 +1071,6 @@ function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(state.playerAttackAnimation || state.hordeAttackAnimation || state.burnAnimation || state.resolvingHordeCombat || state.energyRecycleAnimation || discardPauseInProgress(state));
 }
 
-function discardPauseInProgress(state: GameStore): boolean {
-  return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
-}
-
-function resumeAfterDiscardPause(onReady: () => void): void {
-  const check = () => {
-    if (discardPauseInProgress(useGameStore.getState())) {
-      window.setTimeout(check, 120);
-      return;
-    }
-    onReady();
-  };
-  window.setTimeout(check, 120);
-}
-
-function monsterSfx(card: GameState["player"]["hand"][number]) {
-  if (card.basePower > 4 || card.baseToughness > 4) return "playMonsterHeavy" as const;
-  if (card.effects.length > 0 || card.activatedAbilities.length > 0 || card.requiresTargets.length > 0) return "playMonsterEffect" as const;
-  return "playMonster" as const;
-}
-
-function playDrawOneIfPlayerDrew(previous: GameState, next: GameState) {
-  if (next.player.hand.length > previous.player.hand.length && next.player.library.length < previous.player.library.length) {
-    useAudioStore.getState().playSfx("drawOne");
-  }
-}
-
-function showActionToast(message?: string) {
-  if (!message) return;
-  useToastStore.getState().pushToast({
-    title: uiText("toast.actionUnavailable"),
-    message,
-    tone: "warning",
-  });
-}
-
-function scheduleHordeEnterTriggers(cards: CardInstance[], onComplete?: () => void): void {
-  const sequenceId = ++hordeAutoTriggerSequenceId;
-  const runNext = (index: number) => {
-    if (sequenceId !== hordeAutoTriggerSequenceId) return;
-    const card = cards[index];
-    if (!card) {
-      useGameStore.setState({ hordeAutoTriggerCount: 0 });
-      onComplete?.();
-      return;
-    }
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-      useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-      useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
-        message: hordeEnterTriggerMessage(card),
-        tone: "horde",
-      });
-    }, HORDE_ENTER_TRIGGER_START_MS);
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useGameStore.setState((state) => {
-        const previous = state.game;
-        const next = structuredClone(previous) as GameState;
-        const source = next.horde.battlefield.find((item) => item.instanceId === card.instanceId);
-        if (source) {
-          runEnterBattlefieldTriggers(next, source);
-        }
-        notifyDiscardEffects(previous, next);
-        return {
-          game: next,
-          hordeAutoTriggerCount: 1,
-          hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
-        };
-      });
-      // Enter triggers can create creatures (Beetleback Chief, Siege-Gang). Hold their aura
-      // buffs in the same tick they appear, so they are never drawn already buffed either.
-      captureStaticAuraBeats();
-      window.setTimeout(() => {
-        if (sequenceId === hordeAutoTriggerSequenceId) {
-          scheduleQueuedHordeTriggers(() => runNext(index + 1));
-        }
-      }, 180);
-    }, HORDE_ENTER_TRIGGER_START_MS + HORDE_ENTER_TRIGGER_RESOLVE_MS);
-  };
-  runNext(0);
-}
-
-function startHordeCombatSequence(): void {
-  captureStaticAuraBeats();
-  flushStaticAuraBeats();
-  const begun = beginHordeCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
-  useGameStore.setState({ game: begun });
-  scheduleQueuedHordeTriggers(() => {
-    const declared = declareHordeAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
-    useGameStore.setState({ game: declared });
-    // Attack triggers can add creatures (Krenko, General Kreat), so re-check aura coverage
-    // once they settled instead of before they existed.
-    scheduleQueuedHordeTriggers(() => {
-      captureStaticAuraBeats();
-      flushStaticAuraBeats();
-      scheduleQueuedHordeTriggers();
-    });
-  });
-}
-
-// Static aura announcements are two-phase on purpose.
-//
-// Capture runs the moment the Horde's summons land: it records which auras started covering new
-// creatures and holds their stat bonus back in `heldStaticAuraBonuses`, so those creatures are
-// drawn UNBUFFED from the very frame they appear. Flush queues the beats afterwards, once the
-// summon sequence is over. Without the split the creatures would render already buffed and the
-// beat meant to explain the buff would have nothing left to show.
-function captureStaticAuraBeats(): void {
-  const auras = collectStaticAuras(useGameStore.getState().game, "horde");
-  const announced = newlyCoveredAuras(auras, hordeStaticAuraSnapshot);
-  hordeStaticAuraSnapshot = snapshotStaticAuras(auras);
-  if (announced.length === 0) return;
-  useGameStore.setState((state) => {
-    const pending = [...state.pendingStaticAuras];
-    for (const aura of announced) {
-      const existing = pending.findIndex((item) => item.key === aura.key);
-      if (existing === -1) {
-        pending.push(aura);
-        continue;
-      }
-      const merged = new Set([...pending[existing].affectedIds, ...aura.affectedIds]);
-      pending[existing] = { ...pending[existing], affectedIds: [...merged] };
-    }
-    return { pendingStaticAuras: pending, heldStaticAuraBonuses: heldAuraBonuses(pending) };
-  });
-}
-
-function flushStaticAuraBeats(): void {
-  const pending = useGameStore.getState().pendingStaticAuras;
-  if (pending.length === 0) return;
-  useGameStore.setState((state) => {
-    const next = structuredClone(state.game) as GameState;
-    for (const aura of pending) {
-      const alreadyQueued = next.eventQueue.some(
-        (event) => event.type === "STATIC_AURA_ONLINE" && event.payload?.auraKey === aura.key,
-      );
-      if (alreadyQueued) continue;
-      enqueue(next, {
-        type: "STATIC_AURA_ONLINE",
-        sourceId: aura.sourceId,
-        payload: {
-          auraKey: aura.key,
-          affectedIds: aura.affectedIds,
-          power: aura.power,
-          toughness: aura.toughness,
-          keyword: aura.keyword,
-        },
-      });
-    }
-    return { game: next };
-  });
-}
-
-/** Lets the held stat bonus land, at the same instant the beat plays its buff lines. */
-function releaseStaticAura(auraKey: string): void {
-  useGameStore.setState((state) => {
-    const pending = state.pendingStaticAuras.filter((aura) => aura.key !== auraKey);
-    if (pending.length === state.pendingStaticAuras.length) return {};
-    return { pendingStaticAuras: pending, heldStaticAuraBonuses: heldAuraBonuses(pending) };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Horde presentation beats
-//
-// Every Horde reaction plays as one "beat": exactly one card acting at a time, board locked,
-// engine state committed at the moment the animation says it lands. `scheduleQueuedHordeTriggers`
-// walks `game.eventQueue` and hands the first claimed event to the handler that owns its look;
-// the handler calls `done()` when its animation is over and the queue moves on.
-//
-// Adding a new Horde effect = push a handler here. The runner never learns a card name, and two
-// effects reacting to the same death (Rundvelt + Pashalik) get one beat EACH instead of firing
-// on top of each other, because a claimed event resolves one source per beat.
-// ---------------------------------------------------------------------------
-
-type HordeBeatContext = {
-  event: EventItem;
-  /** Horde-controlled sources of `event` that still owe a reaction; act on the first one. */
-  sources: CardInstance[];
-  sequenceId: number;
-  /** Commits this beat's engine effect. Call once, at the moment the animation lands. Returns
-   *  true when the battlefield changed, i.e. the row is about to reflow. */
-  resolve: () => boolean;
-  /** Hands control back to the queue so the next beat can start. */
-  done: () => void;
-};
-
-type HordeBeatHandler = {
-  id: string;
-  /** Claiming parks the queue on this event so the beat plays before anything else resolves. */
-  claims: (event: EventItem, sources: CardInstance[], game: GameState) => boolean;
-  run: (context: HordeBeatContext) => void;
-};
-
-function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
-  if (discardPauseInProgress(useGameStore.getState())) {
-    window.setTimeout(() => scheduleQueuedHordeTriggers(onComplete), 120);
-    return;
-  }
-  const sequenceId = hordeAutoTriggerSequenceId;
-  let event: EventItem | undefined;
-  let sources: CardInstance[] = [];
-  let handler: HordeBeatHandler | undefined;
-
-  useGameStore.setState((state) => {
-    const previous = state.game;
-    const next = structuredClone(previous) as GameState;
-    while (next.eventQueue.length > 0) {
-      const candidate = next.eventQueue[0];
-      const candidateSources = pendingTriggerSources(next, candidate).filter((source) => source.controller === "horde");
-      const claimed = HORDE_BEAT_HANDLERS.find((item) => item.claims(candidate, candidateSources, next));
-      if (claimed) {
-        event = candidate;
-        sources = candidateSources;
-        handler = claimed;
-        break;
-      }
-      next.eventQueue.shift();
-      resolveTriggeredEvent(next, candidate);
-    }
-    if (!event) checkWinLoss(next);
-    return {
-      game: next,
-      hordeAutoTriggerCount: event ? 1 : 0,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
-    };
-  });
-
-  const claimedEvent = event;
-  const claimedHandler = handler;
-  if (!claimedEvent || !claimedHandler) {
-    onComplete?.();
-    return;
-  }
-  // The row's reflow starts when the board changes, i.e. at resolve() — not when the beat's own
-  // animation happens to end. Measuring the settle from the end made a beat whose animation
-  // already outlasted the reflow (the burn resolves at 500ms and runs to 1180ms) sit through a
-  // second full settle of dead air. Only ever wait for what is actually left.
-  let boardChangedAt: number | undefined;
-  claimedHandler.run({
-    event: claimedEvent,
-    sources,
-    sequenceId,
-    resolve: () => {
-      const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
-      if (changed) boardChangedAt = performance.now();
-      return changed;
-    },
-    done: () => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
-      const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
-      if (remaining === 0) {
-        scheduleQueuedHordeTriggers(onComplete);
-        return;
-      }
-      window.setTimeout(() => {
-        if (sequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
-      }, remaining);
-    },
-  });
-}
-
-// Commits one beat's engine effect. With `sourceId`, only that card's triggers resolve and the
-// event stays queued for the remaining reactors; without it, the event is fully consumed.
-// Reports whether the battlefield gained or lost a card, so the caller knows to wait for the
-// row's reflow before starting the next beat.
-function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
-  let battlefieldChanged = false;
-  useGameStore.setState((state) => {
-    const previous = state.game;
-    const next = structuredClone(previous) as GameState;
-    const queued = next.eventQueue.find((item) => item.id === event.id);
-    if (!queued) return {};
-    const knownEventIds = new Set(next.eventQueue.map((item) => item.id));
-    if (sourceId) {
-      resolveTriggeredEvent(next, queued, undefined, sourceId);
-      if (pendingTriggerSources(next, queued).length === 0) {
-        next.eventQueue = next.eventQueue.filter((item) => item.id !== event.id);
-      }
-    } else {
-      next.eventQueue = next.eventQueue.filter((item) => item.id !== event.id);
-      resolveTriggeredEvent(next, queued);
-    }
-    // A beat finishes what it started before the queue moves on. Pashalik's trigger does not
-    // deal damage directly, it queues a BURN_DAMAGE event; appended at the tail, that fireball
-    // played AFTER Rundvelt's reveal had already resolved, so one card's effect was split in
-    // half around another card's. Anything a beat spawned jumps ahead of the reactors still
-    // waiting on the parent event.
-    const spawned = next.eventQueue.filter((item) => !knownEventIds.has(item.id));
-    if (spawned.length > 0) {
-      next.eventQueue = [...spawned, ...next.eventQueue.filter((item) => knownEventIds.has(item.id))];
-    }
-    const summoned = next.horde.battlefield.find((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
-    if (summoned) useAudioStore.getState().playSfx(monsterSfx(summoned));
-    battlefieldChanged =
-      next.horde.battlefield.length !== previous.horde.battlefield.length ||
-      next.player.battlefield.length !== previous.player.battlefield.length;
-    notifyDiscardEffects(previous, next);
-    return {
-      game: next,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
-    };
-  });
-  return battlefieldChanged;
-}
-
-function pickRandom(ids: SfxId[]): SfxId {
-  return ids[Math.floor(Math.random() * ids.length)];
-}
-
-const burnBeatHandler: HordeBeatHandler = {
-  id: "burn",
-  claims: (event) => event.type === "BURN_DAMAGE",
-  run: ({ event, sequenceId, resolve, done }) => {
-    const targetId = String(event.payload?.targetId ?? "");
-    if (!targetId) {
-      resolve();
-      done();
-      return;
-    }
-    useGameStore.setState({
-      burnAnimation: { id: event.id, sourceId: event.sourceId, targetId, amount: Number(event.payload?.amount ?? 0) },
-      hordeAutoTriggerCount: 1,
-    });
-    // No activation pulse here: the source already flashed gold on the beat that queued this
-    // burn, and firing it twice for one effect reads as the card triggering again. It still
-    // lunges — `.burn-source-casting` moves it without the gold.
-    // The whoosh fires as the fireball ignites; a fresh voice each time so back-to-back burns
-    // never loop the same clip.
-    useAudioStore.getState().playSfx(pickRandom(fireballCastSfx), { volume: 0.7 });
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx(pickRandom(fireballHitSfx), { volume: 0.78 });
-      // The scorch shader is keyed off the impact, not the projectile, so the card only
-      // reddens once the fireball actually reaches it.
-      useGameStore.setState({ burnImpactCardId: targetId, burnImpactEventId: Date.now() });
-      resolve();
-    }, BURN_IMPACT_MS);
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      // Leave hordeAutoTriggerCount alone: the runner sets it for the next beat, and clearing
-      // it here would unblock the board for one frame between beats.
-      useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined });
-      done();
-    }, BURN_ANIMATION_MS);
-  },
-};
-
-const staticAuraBeatHandler: HordeBeatHandler = {
-  id: "static-aura",
-  claims: (event) => event.type === "STATIC_AURA_ONLINE",
-  run: ({ event, sequenceId, resolve, done }) => {
-    const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
-    const auraKey = String(event.payload?.auraKey ?? "");
-    const source = event.sourceId ? findBattlefieldCard(useGameStore.getState().game, event.sourceId) : undefined;
-    if (!source || affectedIds.length === 0) {
-      releaseStaticAura(auraKey);
-      resolve();
-      done();
-      return;
-    }
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.78 });
-      useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
-      useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
-        message: staticAuraBeatMessage(source, event),
-        tone: "horde",
-      });
-    }, STATIC_AURA_LEAD_IN_MS);
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("buff", { volume: 0.7 });
-      if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-      buffAnimationTimer = window.setTimeout(() => {
-        useGameStore.setState({ buffAnimationCardIds: [] });
-        buffAnimationTimer = undefined;
-      }, BUFF_ANIMATION_MS);
-      // Same frame: the withheld stats land exactly as the buff lines rise.
-      releaseStaticAura(auraKey);
-      useGameStore.setState({ buffAnimationCardIds: affectedIds, buffAnimationEventId: Date.now() });
-      resolve();
-    }, STATIC_AURA_PULSE_MS);
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      done();
-    }, STATIC_AURA_BEAT_MS);
-  },
-};
-
-// A card that triggers on its own death has no battlefield slot left to pulse, so present it
-// beside its graveyard first. Generic: any dies-trigger whose source already left play.
-const deathRevealBeatHandler: HordeBeatHandler = {
-  id: "death-reveal",
-  claims: (_event, sources, game) =>
-    Boolean(sources[0] && !game.horde.battlefield.some((card) => card.instanceId === sources[0].instanceId)),
-  run: ({ sources, sequenceId, resolve, done }) => {
-    const source = sources[0];
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useGameStore.setState({ deathRevealCard: source });
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-      useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
-        message: queuedHordeTriggerMessage(source),
-        tone: "horde",
-      });
-    }, DEATH_REVEAL_LEAD_IN_MS);
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
-    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS);
-
-    // Strict order: reveal, activate, card leaves for the graveyard, and only THEN the effect
-    // resolves. Resolving while the reveal is still on screen made whatever the effect puts on
-    // the battlefield land mid-animation and stutter it.
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useGameStore.setState({ deathRevealCard: undefined });
-    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS);
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      resolve();
-      done();
-    }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS + DEATH_REVEAL_EXIT_MS);
-  },
-};
-
-const triggerPulseBeatHandler: HordeBeatHandler = {
-  id: "trigger-pulse",
-  claims: (_event, sources) => sources.length > 0,
-  run: ({ sources, sequenceId, resolve, done }) => {
-    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-    useGameStore.getState().triggerEffectActivationPulse(sources[0].instanceId);
-    useToastStore.getState().pushToast({
-      title: uiText("toast.hordeEffect"),
-      message: queuedHordeTriggerMessage(sources[0]),
-      tone: "horde",
-    });
-
-    window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      resolve();
-      window.setTimeout(() => done(), 180);
-    }, HORDE_ENTER_TRIGGER_RESOLVE_MS);
-  },
-};
-
-// Order matters: the first handler that claims an event owns its presentation.
-const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
-  burnBeatHandler,
-  staticAuraBeatHandler,
-  deathRevealBeatHandler,
-  triggerPulseBeatHandler,
-];
-
-function staticAuraBeatMessage(source: CardInstance, event: EventItem): string {
-  const cardName = uiCardName(source);
-  const count = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.length : 0;
-  const keyword = typeof event.payload?.keyword === "string" ? event.payload.keyword : undefined;
-  if (keyword) return uiText("toast.staticAuraKeyword", { card: cardName, keyword: keywordLabel(keyword), count });
-  const power = Number(event.payload?.power ?? 0);
-  const toughness = Number(event.payload?.toughness ?? 0);
-  return uiText("toast.staticAuraBuff", {
-    card: cardName,
-    bonus: `${power >= 0 ? "+" : ""}${power}/${toughness >= 0 ? "+" : ""}${toughness}`,
-    count,
-  });
-}
-
-function keywordLabel(keyword: string): string {
-  return keyword.replace(/_/g, " ").toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());
-}
-
-function queuedHordeTriggerMessage(source?: CardInstance): string {
-  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : "Horde" });
-}
-
 // Creature casts and land plays both bump the shared summoningAnimationCount, but each used to
 // share one safety-clear timer var: rescheduling it from one call site canceled the other's
 // fallback, and firing it hard-set the count to 0 instead of decrementing — so a land's flight
@@ -1617,72 +1092,6 @@ function scheduleLandPlaySummoningSafetyClear(): void {
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 
-function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "horde" }): void {
-  const newLogCount = Math.max(0, next.log.length - previous.log.length);
-  const discardLogs = next.log.slice(0, newLogCount).filter((message) => message.startsWith("Player discards "));
-  const previousPlayerGraveyardIds = new Set(previous.player.graveyard.map((card) => card.instanceId));
-  const discardedCards = next.player.graveyard.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
-  if (discardedCards.length > 0) {
-    const origins = new Map(
-      discardedCards.map((card) => {
-        const rect = document.querySelector<HTMLElement>(`[data-hand-card-id="${card.instanceId}"]`)?.getBoundingClientRect();
-        return [card.instanceId, rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : undefined] as const;
-      }),
-    );
-    useGameStore.setState((state) => ({
-      playerDiscardAnimationQueue: [
-        ...state.playerDiscardAnimationQueue,
-        ...discardedCards.map((card) => ({
-          id: `player-discard-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          card,
-          origin: origins.get(card.instanceId),
-        })),
-      ],
-    }));
-  }
-  for (const message of discardLogs) {
-    useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
-    useToastStore.getState().pushToast({
-      title: options?.title ?? uiText("toast.hordeEffect"),
-      message: message.replace(/^Player\b/, "Chronicler"),
-      tone: options?.tone ?? "horde",
-    });
-  }
-}
-
-function hasEnterBattlefieldTrigger(card: CardInstance): boolean {
-  return card.effects.some((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD" && !effectNeedsManualTarget(effect.effect));
-}
-
-function hordeEnterTriggerMessage(card: CardInstance): string {
-  const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD");
-  const effect = trigger?.effect as EffectDefinition | undefined;
-  const cardName = uiCardName(card);
-  const announcement = effect ? EFFECT_ANNOUNCEMENTS[String(effect.type)] : undefined;
-  const count = Number(effect?.amount ?? 1);
-  if (announcement === "createsTokens") return uiText("toast.cardCreatesTokens", { card: cardName, count });
-  if (announcement === "mills") return uiText("toast.cardMills", { card: cardName, count });
-  if (announcement === "discards") return uiText("toast.cardDiscards", { card: cardName, count });
-  if (announcement === "lifeLoss") return uiText("toast.cardLifeLoss", { card: cardName, count });
-  return uiText("toast.cardTrigger", { card: cardName });
-}
-
-function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMillAnimationItem[] {
-  const previousLibraryIds = new Set(previous.horde.library.map((card) => card.instanceId));
-  return next.horde.graveyard
-    .filter((card) => previousLibraryIds.has(card.instanceId))
-    .map((card) => ({
-      id: `horde-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      card,
-      preview: false,
-    }));
-}
-
-function appendHordeMillAnimations(state: GameStore, previous: GameState, next: GameState): HordeMillAnimationItem[] {
-  const milled = hordeMillAnimationsFrom(previous, next);
-  return milled.length > 0 ? [...state.hordeMillAnimationQueue, ...milled] : state.hordeMillAnimationQueue;
-}
-
 function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> {
   const previews: Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> = [];
   let totalDamage = 0;
@@ -1702,10 +1111,6 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
   });
 
   return previews;
-}
-
-function findBattlefieldCard(game: GameState, id: string) {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
 }
 
 function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): string[] {
@@ -1820,14 +1225,8 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       const next = structuredClone(previous) as GameState;
       drainEventQueue(next);
       const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(previous, next);
-      if (triggeredBuffCardIds.length > 0) {
-        useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-        if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-        buffAnimationTimer = window.setTimeout(() => {
-          useGameStore.setState({ buffAnimationCardIds: [] });
-          buffAnimationTimer = undefined;
-        }, BUFF_ANIMATION_MS);
-      }
+      if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+      const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
       const newHordeCreatures = next.horde.battlefield.filter((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
       if (newHordeCreatures.length > 0) useAudioStore.getState().playSfx(monsterSfx(newHordeCreatures[0]));
       notifyDiscardEffects(previous, next);
@@ -1835,164 +1234,30 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
         game: next,
         hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
         hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
-        buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
-        buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
+        ...(buffBeat ?? {}),
       };
     });
     if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
   }, CARD_CAST_REACTION_RESOLVE_MS);
 }
 
-// Smallpox: revealed by the Horde but parked unresolved by HordeController (see `pendingCard`)
-// because it needs a bespoke, multi-step, player-interactive resolution — first the Horde afflicts
-// itself (mill 1, sacrifice its weakest creature), then it turns on the player (lose 1 life, choose
-// a card to discard, choose a creature to sacrifice, choose a land to sacrifice). Everything here is
-// sequential and blocks the board via `hordeAutoTriggerCount`, same as other Horde reactions.
-function runSmallpoxSequence(card: CardInstance): void {
-  const resetEpoch = hordeAutoTriggerSequenceId;
-  useGameStore.setState((state) => {
-    const next = structuredClone(state.game) as GameState;
-    next.horde.pendingCard = undefined;
-    return { game: next, smallpoxCard: card, hordeAutoTriggerCount: state.hordeAutoTriggerCount + 1 };
-  });
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-  useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.afflictsHorde", { card: uiCardName(card) }), tone: "horde" });
-  window.setTimeout(() => {
-    if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-    useGameStore.setState((state) => {
-      const previous = state.game;
-      const next = structuredClone(previous) as GameState;
-      millHorde(next, 1);
-      return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next) };
-    });
-    window.setTimeout(() => {
-      if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-      let sacrificedId: string | undefined;
-      useGameStore.setState((state) => {
-        const next = structuredClone(state.game) as GameState;
-        sacrificedId = weakestCreature(next, "horde")?.instanceId;
-        return { game: next };
-      });
-      if (!sacrificedId) {
-        window.setTimeout(() => beginSmallpoxPlayerRound(resetEpoch), 200);
-        return;
-      }
-      useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
-      useAudioStore.getState().playSfx("attack", { volume: 0.72 });
-      window.setTimeout(() => {
-        if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-        useGameStore.setState((state) => {
-          const next = structuredClone(state.game) as GameState;
-          const target = next.horde.battlefield.find((item) => item.instanceId === sacrificedId);
-          if (target) destroyPermanent(next, target);
-          return { game: next, specialDeadCardIds: [] };
-        });
-        scheduleQueuedHordeTriggers(() => {
-          window.setTimeout(() => beginSmallpoxPlayerRound(resetEpoch), 320);
-        });
-      }, 260);
-    }, 650);
-  }, 700);
-}
-
-function beginSmallpoxPlayerRound(resetEpoch: number): void {
-  if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-  const card = useGameStore.getState().smallpoxCard;
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-  if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "horde" });
-  window.setTimeout(() => {
-    if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-    useGameStore.setState((state) => {
-      const next = structuredClone(state.game) as GameState;
-      next.player.life -= 1;
-      next.log.unshift("Player loses 1 life.");
-      return { game: next };
-    });
-    window.setTimeout(() => {
-      if (resetEpoch !== hordeAutoTriggerSequenceId) return;
-      if (useGameStore.getState().game.player.hand.length > 0) startSmallpoxSelectionStep("discard");
-      else advanceSmallpoxSequence("after-discard");
-    }, 480);
-  }, 700);
-}
-
-function startSmallpoxSelectionStep(kind: SmallpoxSelectionState["kind"]): void {
-  useGameStore.setState({
-    smallpoxSelection: { kind, targetId: undefined, x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 },
-  });
-}
-
-function advanceSmallpoxSequence(from: "after-discard" | "after-sacrifice-creature" | "after-sacrifice-land"): void {
-  const game = useGameStore.getState().game;
-  if (from === "after-discard") {
-    const hasCreature = game.player.battlefield.some((card) => card.cardTypes.includes("Creature"));
-    if (hasCreature) startSmallpoxSelectionStep("sacrifice-creature");
-    else advanceSmallpoxSequence("after-sacrifice-creature");
-    return;
-  }
-  if (from === "after-sacrifice-creature") {
-    const hasLand = game.player.battlefield.some((card) => card.cardTypes.includes("Land"));
-    if (hasLand) startSmallpoxSelectionStep("sacrifice-land");
-    else advanceSmallpoxSequence("after-sacrifice-land");
-    return;
-  }
-  finishSmallpoxSequence();
-}
-
-function finishSmallpoxSequence(): void {
-  useGameStore.setState((state) => {
-    const previous = state.game;
-    const next = structuredClone(previous) as GameState;
-    const card = state.smallpoxCard;
-    if (card) {
-      card.zone = "graveyard";
-      next.horde.graveyard.push(card);
-      next.log.unshift(`${card.name} goes to the Horde graveyard.`);
-      useAudioStore.getState().playSfx("draw");
-    }
-    return {
-      game: next,
-      smallpoxCard: undefined,
-      hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
-    };
-  });
-  startHordeCombatSequence();
-}
-
 function buildCastCardPatch(state: GameStore, id: string, options?: CastOptions): Partial<GameStore> {
   const { game } = state;
   const card = game.player.hand.find((item) => item.instanceId === id);
   const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
-  const previousLog = game.log[0];
   const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
   const reactionSources = card ? findCardCastReactionSources(game, card) : [];
   const next = castCard(game, id, { ...options, deferReactiveTriggers: reactionSources.length > 0 });
-  const castSucceeded = Boolean(card && !next.player.hand.some((item) => item.instanceId === id));
+  const castSucceeded = next.lastActionResult?.ok === true;
   const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(game, next);
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
-  else if (card && !castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
-  if (triggeredBuffCardIds.length > 0) {
-    useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-    if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-    buffAnimationTimer = window.setTimeout(() => {
-      useGameStore.setState({ buffAnimationCardIds: [] });
-      buffAnimationTimer = undefined;
-    }, BUFF_ANIMATION_MS);
-  }
+  else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
+  if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+  const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
   const autoPaidLandIds = castSucceeded
     ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
-  const autoPaidLandAnimation = autoPaidLandIds.length > 0 ? { ids: autoPaidLandIds, eventId: Date.now() } : undefined;
-  if (autoPaidLandAnimation) {
-    if (autoPaidLandFlashTimer) window.clearTimeout(autoPaidLandFlashTimer);
-    autoPaidLandFlashTimer = window.setTimeout(() => {
-      useGameStore.setState({ autoPaidLandAnimation: undefined });
-      autoPaidLandFlashTimer = undefined;
-    }, AUTO_PAID_LAND_FLASH_MS);
-  }
+  const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
   const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
   const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery"));
   if (startsSummoningAnimation) scheduleSummoningAnimationSafetyClear();
@@ -2009,8 +1274,7 @@ function buildCastCardPatch(state: GameStore, id: string, options?: CastOptions)
     activeEffectCardId: undefined,
     hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     autoPaidLandAnimation,
-    buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : state.buffAnimationCardIds,
-    buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : state.buffAnimationEventId,
+    ...(buffBeat ?? {}),
     summoningAnimationCount: startsSummoningAnimation ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,
     pendingTriggeredEffectCount: manualTriggeredCard ? state.pendingTriggeredEffectCount + 1 : state.pendingTriggeredEffectCount,
     pendingTriggeredEffectSourceId: manualTriggeredCard?.instanceId ?? state.pendingTriggeredEffectSourceId,
@@ -2031,32 +1295,18 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (latest: GameState) => {
-    const previousLog = latest.log[0];
     const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, { targets, deferReactiveTriggers: reactionSources.length > 0 });
-    const castSucceeded = !next.player.hand.some((item) => item.instanceId === handId);
-    if (!castSucceeded && next.log[0] !== previousLog) showActionToast(next.log[0]);
+    const castSucceeded = next.lastActionResult?.ok === true;
+    if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(latest, next);
-    if (triggeredBuffCardIds.length > 0) {
-      useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-      if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
-      buffAnimationTimer = window.setTimeout(() => {
-        useGameStore.setState({ buffAnimationCardIds: [] });
-        buffAnimationTimer = undefined;
-      }, BUFF_ANIMATION_MS);
-    }
+    if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+    const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
     const autoPaidLandIds = castSucceeded
       ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
-    const autoPaidLandAnimation = autoPaidLandIds.length > 0 ? { ids: autoPaidLandIds, eventId: Date.now() } : undefined;
-    if (autoPaidLandAnimation) {
-      if (autoPaidLandFlashTimer) window.clearTimeout(autoPaidLandFlashTimer);
-      autoPaidLandFlashTimer = window.setTimeout(() => {
-        useGameStore.setState({ autoPaidLandAnimation: undefined });
-        autoPaidLandFlashTimer = undefined;
-      }, AUTO_PAID_LAND_FLASH_MS);
-    }
+    const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
     if (castSucceeded && reactionSources.length > 0) scheduleCardCastReaction(reactionSources, undefined);
     return {
       game: next,
@@ -2065,8 +1315,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       focusedCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
       autoPaidLandAnimation,
-      buffAnimationCardIds: triggeredBuffCardIds.length > 0 ? triggeredBuffCardIds : useGameStore.getState().buffAnimationCardIds,
-      buffAnimationEventId: triggeredBuffCardIds.length > 0 ? Date.now() : useGameStore.getState().buffAnimationEventId,
+      ...(buffBeat ?? {}),
     };
   };
   if (!isFightSpell) {
@@ -2152,10 +1401,3 @@ function nextDeadCardIds(event: HordeAttackEvent): string[] {
   return [...next];
 }
 
-function uiText(key: TranslationKey, params?: Record<string, string | number>): string {
-  return translate(useLanguageStore.getState().language, key, params);
-}
-
-function uiCardName(card: CardInstance): string {
-  return useLanguageStore.getState().language === "es" ? card.displayNameEs || card.displayName : card.displayName;
-}

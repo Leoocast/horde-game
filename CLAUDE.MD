@@ -71,7 +71,10 @@ src/
     StaticEffects.ts      stats y filtros
 
   store/
-    useGameStore.ts       puente UI/engine, animaciones secuenciadas
+    useGameStore.ts       puente UI/engine: acciones, targeting, secuencia de combate del player
+    hordeBeats.ts         sistema de beats de la Horda (handlers, aura estatica, epoch de secuencia)
+    smallpoxSequence.ts   secuencia interactiva bespoke de Smallpox
+    presentationEffects.ts helpers compartidos: uiText/uiCardName, toasts, SFX policy, buff/flash beats, discard/mill diffs
     useAudioStore.ts      SFX y musica
     useToastStore.ts      notificaciones
 
@@ -579,7 +582,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
 - Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
 - Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`) mas los del tutorial/developer seed.
-- Fix de stacking en combate: durante `resolvingHordeCombat`, `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) en vez de colapsar por definitionId — cartas con stats distintos nunca se fusionan visualmente.
+- Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
+- Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
+- `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
 - `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
 - `Graf Harvest` se fuerza al top de la Horda en developer mode.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.

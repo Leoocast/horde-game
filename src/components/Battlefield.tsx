@@ -120,6 +120,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const swarmWaveByCardId = useRef<Map<string, number>>(new Map());
   const swarmWaveOrder = useRef<Map<number, number>>(new Map());
   const battlefieldGroupKeys = useRef<Map<string, string>>(new Map());
+  const battlefieldGroupMeta = useRef<Map<string, GroupMeta>>(new Map());
   const combatCasualties = useRef<Map<string, CardInstance>>(new Map());
   const previousCards = useRef<CardInstance[]>(cards);
   const nextBattlefieldOrder = useRef(0);
@@ -719,7 +720,11 @@ export function Battlefield({ game, side, cards }: Props) {
       swarmWaveOrder.current,
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
       battlefieldGroupKeys.current,
-      resolvingHordeCombat,
+      battlefieldGroupMeta.current,
+      // Freeze grouping for the whole Horde sequence — combat impacts AND trigger/aura beats.
+      // The aura beat window (e.g. Graf Harvest announcing Menace before attackers declare)
+      // regrouped rows mid-turn when it sat outside the frozen span.
+      holdCasualties,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
@@ -1203,6 +1208,8 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 }
 
+type GroupMeta = { order: number; suborder: number; anchorId: string };
+
 function groupBattlefieldCopies(
   game: GameState,
   cards: CardInstance[],
@@ -1212,15 +1219,17 @@ function groupBattlefieldCopies(
   swarmWaveOrder: Map<number, number>,
   keepSeparateCardIds?: Set<string>,
   lastGroupKeys?: Map<string, string>,
+  groupMeta?: Map<string, GroupMeta>,
   // Stats move constantly while combat resolves: a dying lord drops its static buff off every
   // creature it covered. Grouping by stats then would re-key and remount whole stacks mid-
-  // sequence, which reads as the board reorganising itself. While combat resolves, each card
-  // keeps the grouping key it already had (frozen in `lastGroupKeys`): stacks neither merge
-  // nor split mid-sequence — cards with different stats must never collapse into one stack —
-  // and the grouping settles once, at the end.
+  // sequence, which reads as the board reorganising itself. While the Horde sequence runs,
+  // each card keeps the grouping key it already had (frozen in `lastGroupKeys`): stacks
+  // neither merge nor split mid-sequence — cards with different stats must never collapse
+  // into one stack — and the grouping settles once, at the end.
   stableGrouping = false,
 ): Array<{ key: string; cards: CardInstance[] }> {
   const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
+  const groupOfCard = new Map<string, string>();
   const stackZombieTokens = cards.length > 7;
 
   for (const card of cards) {
@@ -1241,6 +1250,7 @@ function groupBattlefieldCopies(
           ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
           : `copy-${card.definitionId}-${visualStatsKey}`);
     lastGroupKeys?.set(card.instanceId, groupingKey);
+    groupOfCard.set(card.instanceId, groupingKey);
     const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     const order = swarmToken
       ? swarmWaveId === undefined
@@ -1256,18 +1266,37 @@ function groupBattlefieldCopies(
     }
   }
 
-  return Array.from(groups.values())
-    .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
-    .map(({ cards: groupedCards }) => {
-      // The visual grouping criteria can change when a trigger alters a creature's stats.
-      // Anchor the React key to the oldest member instead of those volatile stats; otherwise
-      // a newly-cast base copy can inherit the old group's key while the existing buffed copy
-      // is remounted in a new group, which looks like a brief stack-then-destack jump.
-      const anchor = groupedCards.reduce((oldest, card) =>
-        (cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER) < (cardOrder.get(oldest.instanceId) ?? Number.MAX_SAFE_INTEGER) ? card : oldest,
-      );
-      return { key: `anchor-${anchor.instanceId}`, cards: groupedCards };
-    });
+  // A stack keeps the row position and React identity it was born with for as long as it
+  // exists. Recomputing them from the current members meant a death inside a stack could
+  // raise its suborder past a sibling stack (the two swap places) or change its anchor
+  // member (React remounts the stack) — the row must never reorder because something died.
+  const orderedGroups = Array.from(groups.entries()).map(([groupingKey, group]) => {
+    const remembered = groupMeta?.get(groupingKey);
+    const computedAnchor = group.cards.reduce((oldest, card) =>
+      (cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER) < (cardOrder.get(oldest.instanceId) ?? Number.MAX_SAFE_INTEGER) ? card : oldest,
+    );
+    // A dead anchor keeps naming its stack (no collision — it is in no group). An anchor that
+    // MOVED to another stack must be replaced, or two stacks would share one React key.
+    const anchorDefected = remembered && groupOfCard.has(remembered.anchorId) && groupOfCard.get(remembered.anchorId) !== groupingKey;
+    const meta: GroupMeta = remembered && !anchorDefected
+      ? { ...remembered, suborder: Math.min(remembered.suborder, group.suborder) }
+      : {
+          order: remembered?.order ?? group.order,
+          suborder: remembered ? Math.min(remembered.suborder, group.suborder) : group.suborder,
+          anchorId: computedAnchor.instanceId,
+        };
+    groupMeta?.set(groupingKey, meta);
+    return { meta, cards: group.cards };
+  });
+  if (groupMeta) {
+    for (const key of Array.from(groupMeta.keys())) {
+      if (!groups.has(key)) groupMeta.delete(key);
+    }
+  }
+
+  return orderedGroups
+    .sort((left, right) => left.meta.order - right.meta.order || left.meta.suborder - right.meta.suborder)
+    .map(({ meta, cards: groupedCards }) => ({ key: `anchor-${meta.anchorId}`, cards: groupedCards }));
 }
 
 function isZombieToken(card: CardInstance): boolean {

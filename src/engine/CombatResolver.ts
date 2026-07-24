@@ -36,21 +36,28 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
   const next = structuredClone(game) as GameState;
   const blocker = next.player.battlefield.find((card) => card.instanceId === blockerId);
   const attacker = next.horde.battlefield.find((card) => card.instanceId === attackerId);
-  if (!blocker || !attacker) return log(next, "Illegal block.");
+  if (!blocker || !attacker) return failAction(next, "Illegal block.");
   const restriction = blockRestrictionReason(next, blocker, attacker);
-  if (restriction) return log(next, restriction);
+  if (restriction) return failAction(next, restriction);
   const current = next.combat.blockers[attackerId] ?? [];
   if (current.includes(blockerId)) {
     next.combat.blockers[attackerId] = current.filter((id) => id !== blockerId);
+    next.lastActionResult = { ok: true };
     return log(next, `${blocker.name} stops blocking ${attacker.name}.`);
   }
   const alreadyBlocking = Object.entries(next.combat.blockers).find(([otherAttackerId, blockerIds]) => otherAttackerId !== attackerId && blockerIds.includes(blockerId));
   if (alreadyBlocking) {
     const blockedAttacker = next.horde.battlefield.find((card) => card.instanceId === alreadyBlocking[0]);
-    return log(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
+    return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
   }
   next.combat.blockers[attackerId] = [...current, blockerId];
+  next.lastActionResult = { ok: true };
   return log(next, `${blocker.name} blocks ${attacker.name}.`);
+}
+
+function failAction(game: GameState, reason: string): GameState {
+  game.lastActionResult = { ok: false, reason };
+  return log(game, reason);
 }
 
 export function resolvePlayerCombat(game: GameState): GameState {

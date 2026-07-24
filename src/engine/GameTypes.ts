@@ -225,6 +225,9 @@ export type GameState = {
   combat: CombatState;
   eventQueue: EventItem[];
   log: string[];
+  /** Outcome of the most recent player-initiated action. The store reads this instead of
+   *  sniffing log strings; `reason` is the player-facing failure message. */
+  lastActionResult?: { ok: boolean; reason?: string };
   winner?: Side;
 };
 
