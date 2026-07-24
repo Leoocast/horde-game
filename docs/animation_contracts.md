@@ -17,7 +17,7 @@ Three rules make the sequence readable:
 
 A creature killed in combat leaves game state the instant its impact lands, so its triggers can resolve in sequence. `holdCombatCasualties` (`Battlefield.tsx`) keeps its layout slot as an invisible ghost while `resolvingHordeCombat` is true, so survivors never re-center mid-sequence; every casualty leaves together when the combat ends. Grouping also ignores stats during that window, so a dying lord dropping its buff off every creature it covered cannot re-key and remount whole stacks.
 
-A beat that *adds* a permanent (Rundvelt exiling a Goblin onto the battlefield) does reflow the row, and that reflow is worth watching. `resolve()` reports whether the battlefield changed; a beat that changed it waits `BOARD_SETTLE_MS` before `done()`, so the next attacker never charges across a row still sliding into place. A creature arriving while casualties are held takes over the rightmost held slot instead of landing past the gap one left behind.
+A beat that *adds or removes* a permanent reflows the row, and that reflow is worth watching. `resolve()` reports whether the battlefield changed and the runner stamps the time; `done()` then waits only for whatever is **left** of `BOARD_SETTLE_MS` since that moment. Measuring from the end of the beat instead was a real source of dead air: the burn resolves at 500ms and runs to 1180ms, so its reflow was long finished, yet it sat through a second full settle before the next card could act. A creature arriving while casualties are held takes over the rightmost held slot instead of landing past the gap one left behind.
 
 ### Horde attackers commit on arrival
 
@@ -46,7 +46,7 @@ Data contract:
 
 Resolution order:
 
-1. The source card plays its standard effect-activation pulse.
+1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness.
 2. A layered fireball — heat halo, trailing streak aimed along the flight heading, flickering flame licks, white-hot core — travels from the source card to the target card.
 3. On impact, damage is committed in the engine.
 4. The target flashes with the burn shader (`.burn-card-scorch-flash`), a spark burst fires, and a heavy condensed damage number rises.

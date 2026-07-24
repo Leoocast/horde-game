@@ -178,7 +178,7 @@ const STATIC_AURA_BEAT_MS = STATIC_AURA_LEAD_IN_MS + 1080;
 // The reveal mounts on the same frame the combat impact commits and the row reflows; a short
 // lead-in lets the board finish moving first. Kept tight — the whole beat has to read as a
 // reaction to the death, not as a pause before one.
-const DEATH_REVEAL_LEAD_IN_MS = 160;
+const DEATH_REVEAL_LEAD_IN_MS = 120;
 // Matches the CSS entrance (.horde-death-reveal-enter), so the activation pulse fires the
 // instant the card has settled rather than after a dead beat.
 const DEATH_REVEAL_ENTER_MS = 280;
@@ -1338,14 +1338,31 @@ function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
     onComplete?.();
     return;
   }
+  // The row's reflow starts when the board changes, i.e. at resolve() — not when the beat's own
+  // animation happens to end. Measuring the settle from the end made a beat whose animation
+  // already outlasted the reflow (the burn resolves at 500ms and runs to 1180ms) sit through a
+  // second full settle of dead air. Only ever wait for what is actually left.
+  let boardChangedAt: number | undefined;
   claimedHandler.run({
     event: claimedEvent,
     sources,
     sequenceId,
-    resolve: () => resolveBeatEvent(claimedEvent, sources[0]?.instanceId),
+    resolve: () => {
+      const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
+      if (changed) boardChangedAt = performance.now();
+      return changed;
+    },
     done: () => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      scheduleQueuedHordeTriggers(onComplete);
+      const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
+      const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
+      if (remaining === 0) {
+        scheduleQueuedHordeTriggers(onComplete);
+        return;
+      }
+      window.setTimeout(() => {
+        if (sequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
+      }, remaining);
     },
   });
 }
@@ -1404,12 +1421,13 @@ const burnBeatHandler: HordeBeatHandler = {
       done();
       return;
     }
-    let killedTarget = false;
     useGameStore.setState({
       burnAnimation: { id: event.id, sourceId: event.sourceId, targetId, amount: Number(event.payload?.amount ?? 0) },
       hordeAutoTriggerCount: 1,
     });
-    if (event.sourceId) useGameStore.getState().triggerEffectActivationPulse(event.sourceId);
+    // No activation pulse here: the source already flashed gold on the beat that queued this
+    // burn, and firing it twice for one effect reads as the card triggering again. It still
+    // lunges — `.burn-source-casting` moves it without the gold.
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
@@ -1417,7 +1435,7 @@ const burnBeatHandler: HordeBeatHandler = {
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
       useGameStore.setState({ burnImpactCardId: targetId, burnImpactEventId: Date.now() });
-      killedTarget = resolve();
+      resolve();
     }, BURN_IMPACT_MS);
 
     window.setTimeout(() => {
@@ -1425,8 +1443,7 @@ const burnBeatHandler: HordeBeatHandler = {
       // Leave hordeAutoTriggerCount alone: the runner sets it for the next beat, and clearing
       // it here would unblock the board for one frame between beats.
       useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined });
-      if (killedTarget) window.setTimeout(() => done(), BOARD_SETTLE_MS);
-      else done();
+      done();
     }, BURN_ANIMATION_MS);
   },
 };
@@ -1513,7 +1530,8 @@ const deathRevealBeatHandler: HordeBeatHandler = {
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      window.setTimeout(() => done(), resolve() ? BOARD_SETTLE_MS : 220);
+      resolve();
+      done();
     }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS + DEATH_REVEAL_EXIT_MS);
   },
 };
@@ -1532,7 +1550,8 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      window.setTimeout(() => done(), resolve() ? BOARD_SETTLE_MS : 260);
+      resolve();
+      window.setTimeout(() => done(), 180);
     }, HORDE_ENTER_TRIGGER_RESOLVE_MS);
   },
 };

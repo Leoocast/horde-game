@@ -5346,6 +5346,21 @@
     transform-origin: left bottom;
   }
 
+  /* The card throwing the fireball lunges and recoils. Deliberately no gold and no brightness:
+     it already flashed gold on the beat that queued this burn, and repeating that reads as the
+     card triggering a second time. Movement only. */
+  .burn-source-casting {
+    animation: burn-source-cast 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes burn-source-cast {
+    0% { transform: translateY(0) scale(1); }
+    22% { transform: translateY(6px) scale(0.97); }
+    46% { transform: translateY(-9px) scale(1.05); }
+    72% { transform: translateY(2px) scale(0.99); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
   .burn-animation-layer {
     position: fixed;
     inset: 0;

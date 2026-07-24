@@ -149,6 +149,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
@@ -922,6 +923,7 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
           effectActivating ? "effect-card-activating" : "",
+          burnSourceCardId === card.instanceId ? "burn-source-casting" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
           smallpoxTargetable ? "counter-targetable-card" : "",
