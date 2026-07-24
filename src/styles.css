@@ -5496,11 +5496,13 @@
     position: absolute;
     right: 48px;
     top: 50%;
-    width: 210px;
+    width: 150px;
     height: 64px;
     transform: translateY(-50%);
     transform-origin: right center;
     z-index: 0;
+    /* The tail whips instead of sitting rigid behind the ball. */
+    animation: burn-trail-whip 120ms ease-in-out infinite alternate;
   }
 
   .burn-trail-ribbon,
@@ -5581,7 +5583,7 @@
         #390006 63%,
         rgba(0, 0, 0, 0.76) 73%,
         transparent 84%);
-    filter: blur(1.8px);
+    filter: blur(3.6px);
     animation: burn-blob-one 85ms ease-in-out infinite alternate, burn-outer-flicker 65ms ease-in-out infinite alternate;
   }
 
@@ -5589,7 +5591,7 @@
     inset: 5px 6px 6px 9px;
     border-radius: 56% 44% 47% 53% / 45% 59% 41% 55%;
     background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(116, 9, 1, 0.74) 68%, transparent 82%);
-    filter: blur(1px);
+    filter: blur(2.2px);
     mix-blend-mode: screen;
     animation: burn-blob-two 65ms ease-in-out infinite alternate, burn-mid-flicker 58ms ease-in-out infinite alternate;
   }
@@ -5598,7 +5600,7 @@
     inset: 13px 13px 13px 21px;
     border-radius: 49% 51% 42% 58% / 58% 44% 56% 42%;
     background: radial-gradient(circle at 62% 46%, #fff 0 18%, #fff0c9 36%, #ffb04e 66%, rgba(255, 63, 7, 0.12) 100%);
-    filter: blur(0.65px);
+    filter: blur(1.3px);
     mix-blend-mode: screen;
     animation: burn-blob-three 55ms ease-in-out infinite alternate, burn-ball-core-pulse 72ms ease-in-out infinite alternate;
   }
@@ -5913,6 +5915,11 @@
   @keyframes burn-filament {
     from { opacity: 0.68; transform: translateY(-2px) scaleY(0.78); }
     to { opacity: 1; transform: translateY(2px) scaleY(1.08); }
+  }
+
+  @keyframes burn-trail-whip {
+    from { transform: translateY(-56%) rotate(4deg); }
+    to { transform: translateY(-44%) rotate(-4deg); }
   }
 
   @keyframes burn-blob-one {

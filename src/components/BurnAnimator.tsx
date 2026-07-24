@@ -23,13 +23,13 @@ const CHARGE_PARTICLES = [
   { a: 307, r: 40, s: 4 },
 ];
 const TRAIL_RIBBONS = [
-  { w: 140, h: 34, y: 0, r: 0, blur: 4, o: 0.92 },
-  { w: 115, h: 16, y: -18, r: -7, blur: 2, o: 0.92 },
-  { w: 105, h: 14, y: 17, r: 8, blur: 2, o: 0.88 },
+  { w: 96, h: 36, y: 0, r: 0, blur: 7, o: 0.9 },
+  { w: 78, h: 18, y: -18, r: -7, blur: 5, o: 0.9 },
+  { w: 72, h: 16, y: 17, r: 8, blur: 5, o: 0.86 },
 ];
 const TRAIL_STREAKS = [
-  { w: 160, h: 5, y: -6, r: -1, blur: 1, o: 0.95 },
-  { w: 130, h: 3, y: 11, r: 2, blur: 0.4, o: 1 },
+  { w: 108, h: 6, y: -6, r: -1, blur: 3, o: 0.92 },
+  { w: 88, h: 4, y: 11, r: 2, blur: 2.4, o: 0.96 },
 ];
 const IMPACT_SMOKE = [
   { x: -82, y: -20, s: 0.8, drift: -26, s2: 1.08, s3: 1.376, drift2: -39 },
