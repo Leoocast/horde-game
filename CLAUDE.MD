@@ -81,6 +81,8 @@ src/
   components/
     Board.tsx
     Battlefield.tsx       layout principal del campo
+    battlefieldLayout.ts  reglas PURAS de layout del campo: agrupado en stacks, orden de fila y
+                          slots sostenidos durante la secuencia de la Horda (testeado)
     Card.tsx              render visual de carta, badges y hover
     Hand.tsx              mano, drag-to-play
     PhaseOrb.tsx          boton central de accion
@@ -112,14 +114,18 @@ src/
     HordeRules.ts         DEFAULT_HORDE_RULES + buildHordeRules: reglas por deck de horda (reveal, surge, mill, haste, swarm)
 
 scripts/
-  run-engine-tests.mjs    corre tests/engine.test.js + tests/deckLint.test.js via vite ssrLoadModule + node:test
+  run-engine-tests.mjs    corre los tests via vite ssrLoadModule + node:test; agregar un archivo
+                          de test = agregar su ssrLoadModule aca, o no corre nunca
   lint-decks.mjs          corre el deck lint standalone con reporte por deck (ready/vanilla/WIP)
 
 tests/
   engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
   deckLint.test.js        el lint como test: un hueco silencioso en un deck JSON rompe la suite
+  battlefieldLayout.test.js  layout del campo: slots sostenidos y agrupado congelado
   engineTestUtils.js      helpers para armar game state de prueba
 ```
+
+Detalle de testing en `docs/testing.md`.
 
 ## Estado actual del juego
 
@@ -566,6 +572,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 6. No usar parser de texto de Magic.
 7. No reintroducir features viejas de MVP si el usuario las limpio.
 8. Probar con `tsc -b` despues de cambios.
+9. Si una regla visual tiene logica de verdad (que carta va en que stack, que slot se sostiene), sacarla del componente a un modulo puro y testearla. Ver `battlefieldLayout.ts` y `docs/testing.md`.
+10. Al arreglar un bug reproducible en logica pura: escribir el test primero y confirmar que falla contra el codigo viejo antes de aplicar el arreglo.
 
 ## Cosas que el usuario suele preferir
 
@@ -583,6 +591,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
 - Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`) mas los del tutorial/developer seed.
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
+- Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
 - `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
 - `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
