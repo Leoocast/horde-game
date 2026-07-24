@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, snapshotScenario, validateScenario } from "../src/playground/scenario";
+import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, snapshotBoard, snapshotScenario, validateScenario } from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
 import { runHordeMain } from "../src/engine/HordeController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
@@ -200,6 +200,36 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
 
   // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
   assert.equal(rebuilt.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 2);
+});
+
+test("saved boards keep only the hand and battlefields", () => {
+  let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
+  game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth" });
+  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token" });
+  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game.player.life = 12;
+
+  const saved = snapshotBoard(game, BLANK_SCENARIO);
+  const rebuilt = buildScenarioGame(saved);
+
+  assert.equal(rebuilt.player.hand.some((card) => card.definitionId === "giant_growth"), true);
+  assert.equal(rebuilt.horde.battlefield.some((card) => card.definitionId === "zombie_token"), true);
+  assert.equal(rebuilt.player.graveyard.length, 0);
+  assert.equal(rebuilt.player.life, BLANK_SCENARIO.player.life);
+  assert.equal(rebuilt.player.manaPool.colorless, 0);
+});
+
+test("Horde library queues preserve their authored top-to-bottom order", () => {
+  const game = buildScenarioGame(scenario({
+    zones: {
+      hordeLibraryTop: [
+        { definitionId: "graf_harvest" },
+        { definitionId: "zombie_token" },
+      ],
+    },
+  }));
+
+  assert.deepEqual(game.horde.library.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
 });
 
 test("a valid scenario reports no problems", () => {

@@ -1,19 +1,24 @@
-import { Circle, Pause, Play, SkipForward, Trash2, X } from "lucide-react";
+import { Circle, FolderOpen, Pause, Play, Save, SkipForward, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import type { StoredReplay } from "../scenarioStorage";
 import { describeStep, type TimelineStep } from "../timeline";
 
 type Props = {
   steps: TimelineStep[];
   recording: boolean;
-  /** Index of the step replay will run next; undefined when no replay session is active. */
   cursor?: number;
   autoPlaying: boolean;
   canReplay: boolean;
+  replays: StoredReplay[];
   onToggleRecording: () => void;
   onRemoveStep: (index: number) => void;
   onClear: () => void;
   onStepOnce: () => void;
   onToggleAuto: () => void;
   onStopReplay: () => void;
+  onSaveReplay: (name: string) => void;
+  onLoadReplay: (replay: StoredReplay) => void;
+  onDeleteReplay: (id: string) => void;
 };
 
 export function TimelinePanel({
@@ -22,17 +27,60 @@ export function TimelinePanel({
   cursor,
   autoPlaying,
   canReplay,
+  replays,
   onToggleRecording,
   onRemoveStep,
   onClear,
   onStepOnce,
   onToggleAuto,
   onStopReplay,
+  onSaveReplay,
+  onLoadReplay,
+  onDeleteReplay,
 }: Props) {
   const replaying = cursor !== undefined;
+  const [name, setName] = useState("Untitled replay");
 
   return (
     <div className="playground-panel">
+      <section className="playground-group">
+        <header className="playground-group-head">
+          <span className="playground-group-title">Saved replays</span>
+          <span className="playground-group-badge">{replays.length} stored</span>
+        </header>
+        <div className="playground-save-row">
+          <input className="playground-search" aria-label="Replay name" value={name} onChange={(event) => setName(event.target.value)} />
+          <button
+            className="playground-button is-primary"
+            type="button"
+            disabled={!name.trim() || steps.length === 0}
+            onClick={() => onSaveReplay(name.trim())}
+          >
+            <Save size={13} /> Save
+          </button>
+        </div>
+        {replays.length > 0 && (
+          <ul className="playground-library-list">
+            {replays.map((replay) => (
+              <li key={replay.id} className="playground-library-entry">
+                <div className="playground-library-info">
+                  <strong>{replay.name}</strong>
+                  <span>{replay.steps.length} step{replay.steps.length === 1 ? "" : "s"}</span>
+                </div>
+                <div className="playground-library-actions">
+                  <button className="playground-compact-button" type="button" onClick={() => onLoadReplay(replay)}>
+                    <FolderOpen size={12} /> Load
+                  </button>
+                  <button className="playground-icon-button" type="button" title="Delete replay" onClick={() => onDeleteReplay(replay.id)}>
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="playground-group">
         <header className="playground-group-head">
           <span className="playground-group-title">Record</span>
@@ -46,16 +94,12 @@ export function TimelinePanel({
             <Trash2 size={13} /> Clear
           </button>
         </div>
-        <p className="playground-hint">
-          Every action taken from this dock is recorded. Dragging a card on the board is not — that
-          still has to be done by hand on each run.
-        </p>
       </section>
 
       <section className="playground-group">
         <header className="playground-group-head">
           <span className="playground-group-title">Replay</span>
-          {replaying && <span className="playground-group-badge">{(cursor ?? 0)}/{steps.length}</span>}
+          {replaying && <span className="playground-group-badge">{cursor ?? 0}/{steps.length}</span>}
         </header>
         <div className="playground-button-row">
           <button className="playground-button" type="button" onClick={onStepOnce} disabled={!canReplay || autoPlaying}>
@@ -70,10 +114,6 @@ export function TimelinePanel({
             </button>
           )}
         </div>
-        <p className="playground-hint">
-          Replay restarts whatever is on the board from its own definition and runs the steps in
-          order, waiting for each one's animations. Nothing is recorded while replaying.
-        </p>
       </section>
 
       <section className="playground-group">
@@ -82,7 +122,7 @@ export function TimelinePanel({
           <span className="playground-group-badge">{steps.length} recorded</span>
         </header>
         {steps.length === 0 ? (
-          <p className="playground-note">Nothing recorded yet.</p>
+          <div className="playground-empty">Nothing recorded yet.</div>
         ) : (
           <ol className="playground-steps">
             {steps.map((step, index) => (

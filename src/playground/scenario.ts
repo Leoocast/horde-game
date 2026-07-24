@@ -114,8 +114,8 @@ export function cloneScenario(definition: ScenarioDefinition): ScenarioDefinitio
  * reason there is no separate draft of zones to keep in sync: the board on screen IS the scenario.
  * You place cards, you look at them, you save what you are looking at.
  *
- * Libraries are deliberately not captured — a scenario is a starting position, not a save state, and
- * the library is whatever the deck holds minus what the scenario places.
+ * Libraries are deliberately not captured — a scenario is a starting position, not a save state,
+ * and the library is whatever the deck holds minus what the scenario places.
  */
 export function snapshotScenario(game: GameState, base: ScenarioDefinition): ScenarioDefinition {
   return {
@@ -140,6 +140,25 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
       hordeBattlefield: groupCards(game.horde.battlefield),
       hordeGraveyard: groupCards(game.horde.graveyard),
       hordeExile: groupCards(game.horde.exile),
+    },
+  };
+}
+
+/** Board-library snapshots deliberately keep only the player's hand and both battlefields. */
+export function snapshotBoard(game: GameState, base: ScenarioDefinition): ScenarioDefinition {
+  const snapshot = snapshotScenario(game, base);
+  return {
+    ...snapshot,
+    turnNumber: 1,
+    hordeTurnNumber: 0,
+    phase: "main",
+    activeSide: "player",
+    player: { life: BLANK_SCENARIO.player.life, energy: 0, storedEnergy: 0 },
+    horde: { poisonCounters: 0 },
+    zones: {
+      playerHand: snapshot.zones.playerHand,
+      playerBattlefield: snapshot.zones.playerBattlefield,
+      hordeBattlefield: snapshot.zones.hordeBattlefield,
     },
   };
 }
@@ -299,7 +318,10 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
   // can't be pulled twice; within a zone, the listed order is the resulting order.
   const zones = zoneEntries(scenario).sort(([a], [b]) => Number(a.endsWith("LibraryTop")) - Number(b.endsWith("LibraryTop")));
   for (const [zone, entries] of zones) {
-    for (const entry of entries) {
+    // Library placement uses unshift. Reverse the authored queue so [A, B, C] is still revealed
+    // as A, then B, then C.
+    const orderedEntries = zone.endsWith("LibraryTop") ? [...entries].reverse() : entries;
+    for (const entry of orderedEntries) {
       for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
         const card = takeCard(game, ZONE_SIDES[zone], entry.definitionId, counter);
         if (!card) continue;

@@ -21,7 +21,7 @@ export function ActionsPanel({ onDispatch }: Props) {
 
   return (
     <div className="playground-panel">
-      <Group title="Turn flow" hint="The same calls the phase orb and the Horde's turn make — nothing here skips a step.">
+      <Group title="Turn flow">
         <div className="playground-button-row">
           <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "advancePhase" })}>
             <ChevronRight size={14} /> Next phase
@@ -43,7 +43,6 @@ export function ActionsPanel({ onDispatch }: Props) {
       <Group
         title="Energy"
         badge={`${available}/${sources} ready · ${stored}/${STORED_MANA_CAP} stored`}
-        hint={`Energy is an untapped land. Sources cap at ${MAX_PLAYER_LANDS}; the stored reserve caps at ${STORED_MANA_CAP}.`}
       >
         <div className="playground-meter" aria-label={`${available} of ${sources} energy ready`}>
           {Array.from({ length: MAX_PLAYER_LANDS }).map((_, index) => (
@@ -94,7 +93,7 @@ export function ActionsPanel({ onDispatch }: Props) {
   );
 }
 
-function Group({ title, badge, hint, children }: { title: string; badge?: string; hint?: string; children: ReactNode }) {
+function Group({ title, badge, children }: { title: string; badge?: string; children: ReactNode }) {
   return (
     <section className="playground-group">
       <header className="playground-group-head">
@@ -102,7 +101,6 @@ function Group({ title, badge, hint, children }: { title: string; badge?: string
         {badge && <span className="playground-group-badge">{badge}</span>}
       </header>
       {children}
-      {hint && <p className="playground-hint">{hint}</p>}
     </section>
   );
 }
