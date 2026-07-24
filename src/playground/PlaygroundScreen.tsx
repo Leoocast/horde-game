@@ -1,7 +1,8 @@
-import { ChevronRight, Home, PanelLeftClose } from "lucide-react";
+import { ChevronRight, FlaskConical, Home, PanelLeftClose, RotateCcw, Swords } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "../components/Board";
-import type { GameState } from "../engine/GameTypes";
+import { MAX_PLAYER_LANDS } from "../engine/GameRules";
+import { STORED_MANA_CAP } from "../engine/ManaSystem";
 import { useGameStore } from "../store/useGameStore";
 import { ActionsPanel } from "./panels/ActionsPanel";
 import { CardsPanel } from "./panels/CardsPanel";
@@ -27,27 +28,37 @@ import {
   type ScenarioZoneKey,
 } from "./scenario";
 
-type PlaygroundTab = "scenario" | "cards" | "actions" | "timeline";
+type PlaygroundTab = "scenario" | "cards" | "actions" | "timeline" | "saved";
 
 const TABS: Array<{ id: PlaygroundTab; label: string }> = [
-  { id: "scenario", label: "Scenario" },
+  { id: "scenario", label: "Setup" },
   { id: "cards", label: "Cards" },
   { id: "actions", label: "Actions" },
-  { id: "timeline", label: "Timeline" },
+  { id: "timeline", label: "Flow" },
+  { id: "saved", label: "Saved" },
 ];
 
 type Status = { tone: "idle" | "ok" | "error"; message: string };
+
+/** What is currently on the board. A scenario is a hand-built state; a match is an ordinary game
+ *  started the way the main menu starts one. Restart replays whichever one is live, so both stay
+ *  reproducible from what launched them. */
+type Launch =
+  | { kind: "scenario"; definition: ScenarioDefinition }
+  | { kind: "match"; definition: ScenarioDefinition; setupTurns: number };
 
 const REPLAY_POLL_MS = 120;
 const REPLAY_STEP_GAP_MS = 220;
 
 export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => void }) {
   const loadScenario = useGameStore((state) => state.loadScenario);
+  const resetGame = useGameStore((state) => state.reset);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const [draft, setDraft] = useState<ScenarioDefinition>(() => cloneScenario(BLANK_SCENARIO));
-  /** The definition captured when the scenario was started. Restart rebuilds from THIS, never from
-   *  the draft, so editing the form after starting can't silently change what restart reproduces. */
-  const [startedFrom, setStartedFrom] = useState<ScenarioDefinition | undefined>();
+  /** The launch captured when the board was started. Restart rebuilds from THIS, never from the
+   *  draft, so editing the form after starting can't silently change what restart reproduces. */
+  const [launch, setLaunch] = useState<Launch | undefined>();
+  const [matchSetupTurns, setMatchSetupTurns] = useState(3);
   const [dockOpen, setDockOpen] = useState(true);
   const [tab, setTab] = useState<PlaygroundTab>("scenario");
   const [status, setStatus] = useState<Status>({ tone: "idle", message: "No scenario started yet." });
@@ -57,6 +68,9 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   const [autoPlaying, setAutoPlaying] = useState(false);
   const [library, setLibrary] = useState<StoredScenario[]>(() => listStoredScenarios());
   const startedRef = useRef(false);
+
+  const startedFrom = launch?.kind === "scenario" ? launch.definition : undefined;
+  const boardSetupTurns = launch?.kind === "match" ? launch.setupTurns : 0;
 
   const start = useCallback(
     (definition: ScenarioDefinition, verb: "started" | "restarted") => {
@@ -70,10 +84,31 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
         playerDeckId: snapshot.playerDeckId,
         hordeDeckId: snapshot.hordeDeckId,
       });
-      setStartedFrom(snapshot);
+      setLaunch({ kind: "scenario", definition: snapshot });
       setStatus({ tone: "ok", message: `Scenario "${snapshot.name}" ${verb} with seed "${snapshot.seed}".` });
     },
     [loadScenario],
+  );
+
+  /** An ordinary game — same call the main menu makes, so opening hand, mulligans and setup turns
+   *  all happen for real. The dock stays on top of it. */
+  const startMatch = useCallback(
+    (definition: ScenarioDefinition, setupTurns: number, verb: "started" | "restarted") => {
+      const snapshot = cloneScenario(definition);
+      resetGame(
+        snapshot.seed,
+        setupTurns,
+        snapshot.playerDeckId,
+        snapshot.hordeDeckId,
+        snapshot.difficulty,
+        snapshot.gameMode,
+      );
+      setLaunch({ kind: "match", definition: snapshot, setupTurns });
+      setReplayCursor(undefined);
+      setAutoPlaying(false);
+      setStatus({ tone: "ok", message: `Match ${verb} with seed "${snapshot.seed}" and ${setupTurns} setup turn(s).` });
+    },
+    [resetGame],
   );
 
   // A blank scenario on mount: the screen must never show whatever match the store happened to hold.
@@ -114,9 +149,13 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     return outcome;
   }
 
+  /** Replay always rebuilds first. Both launch kinds are deterministic from their own definition —
+   *  a scenario from `buildScenarioGame`, a match from the seed — so the steps land on the same
+   *  board they were recorded against either way. */
   function beginReplay(auto: boolean) {
-    if (!startedFrom || steps.length === 0) return;
-    start(startedFrom, "restarted");
+    if (!launch || steps.length === 0) return;
+    if (launch.kind === "match") startMatch(launch.definition, launch.setupTurns, "restarted");
+    else start(launch.definition, "restarted");
     setReplayCursor(0);
     setAutoPlaying(auto);
   }
@@ -237,11 +276,11 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
           arrows, targeting lines), and insetting its containers would move the battlefield and the
           Horde wave zone — the very layout this screen exists to inspect. */}
       <div className="playground-stage">
-        <Board key={gameSessionId} playerName="Playground" setupTurns={0} onReturnToMenu={onReturnToMenu} />
+        <Board key={gameSessionId} playerName="Playground" setupTurns={boardSetupTurns} onReturnToMenu={onReturnToMenu} />
       </div>
 
       {dockOpen ? (
-        <aside className="playground-dock old-panel" aria-label="Playground tools">
+        <aside className="playground-dock" aria-label="Playground tools">
           <header className="playground-dock-header">
             <div>
               <div className="playground-dock-kicker">Developer</div>
@@ -256,6 +295,42 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
               </button>
             </div>
           </header>
+
+          {/* Always visible: launching is the one thing you want without hunting through a tab. */}
+          <div className="playground-launch" role="group" aria-label="Launch">
+            <button
+              className={`playground-launch-button ${launch?.kind === "scenario" ? "is-active" : ""}`}
+              type="button"
+              title="Build the board from the Setup tab, no opening hand"
+              onClick={() => start(draft, "started")}
+            >
+              <FlaskConical size={14} />
+              <span>Scenario</span>
+            </button>
+            <button
+              className={`playground-launch-button ${launch?.kind === "match" ? "is-active" : ""}`}
+              type="button"
+              title="Start an ordinary game with the seed and decks from the Setup tab"
+              onClick={() => startMatch(draft, matchSetupTurns, "started")}
+            >
+              <Swords size={14} />
+              <span>Match</span>
+            </button>
+            <button
+              className="playground-launch-button is-restart"
+              type="button"
+              disabled={!launch}
+              title="Replay whatever is on the board from its own definition"
+              onClick={() => {
+                if (!launch) return;
+                if (launch.kind === "match") startMatch(launch.definition, launch.setupTurns, "restarted");
+                else start(launch.definition, "restarted");
+              }}
+            >
+              <RotateCcw size={14} />
+              <span>Restart</span>
+            </button>
+          </div>
 
           <LiveState />
 
@@ -274,24 +349,25 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
 
           <div className="playground-dock-body old-scrollbar">
             {tab === "scenario" && (
-              <>
-                <LibraryPanel
-                  entries={library}
-                  onSave={saveToLibrary}
-                  onLoad={loadFromLibrary}
-                  onDelete={deleteFromLibrary}
-                  onExport={exportEntry}
-                  onImport={importFile}
-                />
-                <ScenarioPanel
-                  draft={draft}
-                  startedFrom={startedFrom}
-                  dirty={Boolean(startedFrom) && JSON.stringify(draft) !== JSON.stringify(startedFrom)}
-                  onChange={setDraft}
-                  onStart={() => start(draft, "started")}
-                  onRestart={() => startedFrom && start(startedFrom, "restarted")}
-                />
-              </>
+              <ScenarioPanel
+                draft={draft}
+                startedFrom={startedFrom}
+                dirty={Boolean(startedFrom) && JSON.stringify(draft) !== JSON.stringify(startedFrom)}
+                matchSetupTurns={matchSetupTurns}
+                onChange={setDraft}
+                onChangeMatchSetupTurns={setMatchSetupTurns}
+                onStartMatch={() => startMatch(draft, matchSetupTurns, "started")}
+              />
+            )}
+            {tab === "saved" && (
+              <LibraryPanel
+                entries={library}
+                onSave={saveToLibrary}
+                onLoad={loadFromLibrary}
+                onDelete={deleteFromLibrary}
+                onExport={exportEntry}
+                onImport={importFile}
+              />
             )}
             {tab === "cards" && (
               <CardsPanel
@@ -308,7 +384,7 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
                 recording={recording}
                 cursor={replayCursor}
                 autoPlaying={autoPlaying}
-                canReplay={Boolean(startedFrom) && steps.length > 0}
+                canReplay={Boolean(launch) && steps.length > 0}
                 onToggleRecording={() => setRecording((current) => !current)}
                 onRemoveStep={(index) => setSteps((current) => current.filter((_, position) => position !== index))}
                 onClear={() => {
@@ -336,7 +412,7 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   );
 }
 
-/** The board already shows hands, fields, graveyards, life and mana. This covers what it does not:
+/** The board already shows hands, fields, graveyards, life and energy. This covers what it does not:
  *  the engine's own bookkeeping — event queue and the store's in-flight presentation beats. */
 function LiveState() {
   const game = useGameStore((state) => state.game);
@@ -345,49 +421,38 @@ function LiveState() {
   );
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
 
+  const lands = game.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  const readyEnergy = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+  const busy = resolvingHordeCombat || pendingBeats > 0;
+
   return (
-    <div className="playground-live">
-      <Readout label="Turn" value={`${game.turnNumber} / H${game.hordeTurnNumber}`} />
-      <Readout label="Phase" value={game.phase} />
-      <Readout label="Active" value={game.activeSide} />
-      <Readout label="Life" value={String(game.player.life)} />
-      <Readout label="Mana" value={manaSummary(game)} />
-      <Readout label="Horde lib" value={String(game.horde.library.length)} />
-      <Readout label="Poison" value={String(game.horde.poisonCounters)} />
-      <Readout label="Events" value={String(game.eventQueue.length)} />
-      <Readout label="Beats" value={resolvingHordeCombat ? `${pendingBeats} +combat` : String(pendingBeats)} />
-      <Readout label="Winner" value={game.winner ?? "—"} />
-    </div>
+    <>
+      <div className="playground-live">
+        <Readout label="Turn" value={`${game.turnNumber} · H${game.hordeTurnNumber}`} />
+        <Readout label="Phase" value={game.phase} />
+        <Readout label="Active" value={game.activeSide} tone={game.activeSide === "horde" ? "horde" : undefined} />
+        <Readout label="Life" value={String(game.player.life)} />
+        <Readout label="Energy" value={`${readyEnergy}/${lands.length || MAX_PLAYER_LANDS}`} />
+        <Readout label="Stored" value={`${game.player.manaPool.colorless}/${STORED_MANA_CAP}`} />
+        <Readout label="Horde deck" value={String(game.horde.library.length)} />
+        <Readout label="Poison" value={String(game.horde.poisonCounters)} />
+        <Readout label="Events" value={String(game.eventQueue.length)} tone={game.eventQueue.length > 0 ? "busy" : undefined} />
+        <Readout
+          label="Beats"
+          value={resolvingHordeCombat ? `${pendingBeats}+combat` : String(pendingBeats)}
+          tone={busy ? "busy" : undefined}
+        />
+      </div>
+      {game.winner && <div className="playground-live-winner">Game over — {game.winner} wins</div>}
+    </>
   );
 }
 
-function manaSummary(game: GameState): string {
-  const pool = game.player.manaPool;
-  const parts = [
-    pool.green && `${pool.green}G`,
-    pool.red && `${pool.red}R`,
-    pool.blue && `${pool.blue}U`,
-    pool.white && `${pool.white}W`,
-    pool.black && `${pool.black}B`,
-    pool.colorless && `${pool.colorless}C`,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" ") : "—";
-}
-
-function Readout({ label, value }: { label: string; value: string }) {
+function Readout({ label, value, tone }: { label: string; value: string; tone?: "busy" | "horde" }) {
   return (
-    <div className="playground-readout">
+    <div className={`playground-readout ${tone ? `is-${tone}` : ""}`}>
       <span>{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-function PendingTab({ phase, description }: { phase: string; description: string }) {
-  return (
-    <div className="playground-pending">
-      <strong>{phase}</strong>
-      <span>{description}</span>
     </div>
   );
 }

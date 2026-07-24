@@ -1,15 +1,10 @@
-import type { CardInstance, Color } from "../../engine/GameTypes";
+import { BatteryCharging, ChevronRight, FastForward, Hand, Plus, Skull, SkipForward, Sparkles, Trash2, Zap, ZapOff } from "lucide-react";
+import type { ReactNode } from "react";
+import { MAX_PLAYER_LANDS, playerLandCount } from "../../engine/GameRules";
+import type { CardInstance } from "../../engine/GameTypes";
+import { STORED_MANA_CAP } from "../../engine/ManaSystem";
 import { useGameStore } from "../../store/useGameStore";
 import type { TimelineStep } from "../timeline";
-
-const MANA_BUTTONS: Array<{ color: Color; label: string }> = [
-  { color: "G", label: "G" },
-  { color: "R", label: "R" },
-  { color: "U", label: "U" },
-  { color: "W", label: "W" },
-  { color: "B", label: "B" },
-  { color: "C", label: "C" },
-];
 
 type Props = {
   /** Every action goes through the timeline so it is executed and recorded by the same call. */
@@ -27,6 +22,12 @@ export function ActionsPanel({ onDispatch, onInvalid }: Props) {
   const handCard = game.player.hand.find((card) => card.instanceId === selectedHandId);
   const permanent = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === selectedPermanentId);
 
+  const sources = playerLandCount(game);
+  const available = game.player.battlefield.filter(
+    (card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn,
+  ).length;
+  const stored = game.player.manaPool.colorless;
+
   function playSelected(free: boolean) {
     if (!handCard) {
       onInvalid("Select a card in hand first (click it on the board).");
@@ -36,107 +37,159 @@ export function ActionsPanel({ onDispatch, onInvalid }: Props) {
   }
 
   return (
-    <div className="playground-section">
-      <div className="playground-section-title">Flow</div>
-      <div className="playground-button-row">
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "advancePhase" })}>
-          Advance phase
-        </button>
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "endTurn" })}>
-          Advance turn
-        </button>
-      </div>
-      <div className="playground-button-row">
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hordeTurn" })}>
-          Run Horde turn
-        </button>
-      </div>
+    <div className="playground-panel">
+      <Group title="Turn flow" hint="Moves the real turn structure — the same calls the phase orb makes.">
+        <div className="playground-button-row">
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "advancePhase" })}>
+            <ChevronRight size={14} /> Next phase
+          </button>
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "endTurn" })}>
+            <SkipForward size={14} /> Next turn
+          </button>
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hordeTurn" })}>
+            <Skull size={14} /> Horde turn
+          </button>
+        </div>
+      </Group>
 
-      <div className="playground-section-title">Events ({game.eventQueue.length})</div>
-      <div className="playground-button-row">
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "resolveNextEvent" })}>
-          Resolve next
-        </button>
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "resolveAllEvents" })}>
-          Resolve all
-        </button>
-      </div>
-
-      <div className="playground-section-title">Resources</div>
-      <div className="playground-button-row">
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "draw" })}>
-          Draw card
-        </button>
-        <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "clearMana" })}>
-          Clear mana
-        </button>
-      </div>
-      <div className="playground-mana-row">
-        {MANA_BUTTONS.map((entry) => (
+      <Group
+        title="Energy"
+        badge={`${available}/${sources} ready · ${stored}/${STORED_MANA_CAP} stored`}
+        hint={`Energy is an untapped land. Sources cap at ${MAX_PLAYER_LANDS}; stored energy caps at ${STORED_MANA_CAP}.`}
+      >
+        <div className="playground-meter" aria-label={`${available} of ${sources} energy ready`}>
+          {Array.from({ length: MAX_PLAYER_LANDS }).map((_, index) => (
+            <span
+              key={`source-${index}`}
+              className={`playground-pip ${index < available ? "is-ready" : index < sources ? "is-spent" : "is-empty"}`}
+            />
+          ))}
+          <span className="playground-meter-split" />
+          {Array.from({ length: STORED_MANA_CAP }).map((_, index) => (
+            <span key={`stored-${index}`} className={`playground-pip is-stored ${index < stored ? "is-ready" : "is-empty"}`} />
+          ))}
+        </div>
+        <div className="playground-button-row">
           <button
-            key={entry.color}
+            className="playground-button is-primary"
+            type="button"
+            disabled={sources >= MAX_PLAYER_LANDS}
+            title="Puts one more untapped land on the battlefield"
+            onClick={() => onDispatch({ kind: "addEnergySource" })}
+          >
+            <Plus size={14} /> Add source
+          </button>
+          <button
             className="playground-button"
             type="button"
-            title={`Add one ${entry.label} mana`}
-            onClick={() => onDispatch({ kind: "addMana", color: entry.color })}
+            title="Untaps every land and gives the Energy action back"
+            onClick={() => onDispatch({ kind: "refillEnergy" })}
           >
-            +{entry.label}
+            <BatteryCharging size={14} /> Refill
           </button>
-        ))}
-      </div>
+        </div>
+        <div className="playground-button-row">
+          <button
+            className="playground-button"
+            type="button"
+            disabled={stored >= STORED_MANA_CAP}
+            onClick={() => onDispatch({ kind: "addStoredEnergy" })}
+          >
+            <Zap size={14} /> +1 stored
+          </button>
+          <button className="playground-button" type="button" title="Taps every land and empties the pool" onClick={() => onDispatch({ kind: "drainEnergy" })}>
+            <ZapOff size={14} /> Drain all
+          </button>
+        </div>
+      </Group>
 
-      <div className="playground-section-title">Selection</div>
-      <SelectionLine label="Hand" card={handCard} />
-      <SelectionLine label="Permanent" card={permanent} />
-      <div className="playground-button-row">
-        <button className="playground-button is-primary" type="button" onClick={() => playSelected(false)}>
-          Play card
-        </button>
-        <button className="playground-button" type="button" onClick={() => playSelected(true)}>
-          Play free
-        </button>
-      </div>
-      <div className="playground-button-row">
-        <button
-          className="playground-button"
-          type="button"
-          onClick={() =>
-            permanent
-              ? onDispatch({ kind: "destroy", cardId: permanent.instanceId, cardName: permanent.name })
-              : onInvalid("Select a permanent on the board first.")
-          }
-        >
-          Destroy
-        </button>
-        <button
-          className="playground-button"
-          type="button"
-          onClick={() => {
-            const card = permanent ?? handCard;
-            if (!card) {
-              onInvalid("Select a card on the board or in hand first.");
-              return;
+      <Group title="Cards" hint="Draw comes off the top of the real library.">
+        <div className="playground-button-row">
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "draw" })}>
+            <Hand size={14} /> Draw card
+          </button>
+        </div>
+      </Group>
+
+      <Group title={`Event queue (${game.eventQueue.length})`} hint="Step the engine's own queue to watch a trigger resolve on its own.">
+        <div className="playground-button-row">
+          <button className="playground-button" type="button" disabled={game.eventQueue.length === 0} onClick={() => onDispatch({ kind: "resolveNextEvent" })}>
+            <ChevronRight size={14} /> Resolve next
+          </button>
+          <button className="playground-button" type="button" disabled={game.eventQueue.length === 0} onClick={() => onDispatch({ kind: "resolveAllEvents" })}>
+            <FastForward size={14} /> Resolve all
+          </button>
+        </div>
+      </Group>
+
+      <Group title="Selection" hint="Click a card on the board to select it — these buttons act on that selection.">
+        <SelectionLine label="In hand" card={handCard} />
+        <SelectionLine label="On board" card={permanent} />
+        <div className="playground-button-row">
+          <button className="playground-button is-primary" type="button" disabled={!handCard} onClick={() => playSelected(false)}>
+            <Sparkles size={14} /> Play
+          </button>
+          <button className="playground-button" type="button" disabled={!handCard} onClick={() => playSelected(true)}>
+            <Zap size={14} /> Play free
+          </button>
+        </div>
+        <div className="playground-button-row">
+          <button
+            className="playground-button"
+            type="button"
+            disabled={!permanent}
+            onClick={() =>
+              permanent
+                ? onDispatch({ kind: "destroy", cardId: permanent.instanceId, cardName: permanent.name })
+                : onInvalid("Select a permanent on the board first.")
             }
-            onDispatch({ kind: "toGraveyard", cardId: card.instanceId, cardName: card.name });
-          }}
-        >
-          To graveyard
-        </button>
-      </div>
-      <p className="playground-note">
-        Destroy runs real death triggers; To graveyard is a raw zone move that runs none. Play free
-        tops the pool up to the printed cost and then casts normally — the cost check, timing and
-        targeting all still run.
-      </p>
+          >
+            <Skull size={14} /> Destroy
+          </button>
+          <button
+            className="playground-button"
+            type="button"
+            disabled={!permanent && !handCard}
+            onClick={() => {
+              const card = permanent ?? handCard;
+              if (!card) {
+                onInvalid("Select a card on the board or in hand first.");
+                return;
+              }
+              onDispatch({ kind: "toGraveyard", cardId: card.instanceId, cardName: card.name });
+            }}
+          >
+            <Trash2 size={14} /> To graveyard
+          </button>
+        </div>
+        <p className="playground-note">
+          <strong>Play free</strong> tops the pool up to the printed cost and then casts normally: the
+          cost check, timing and targeting all still run. <strong>Destroy</strong> runs real death
+          triggers; <strong>To graveyard</strong> is a raw zone move that runs none.
+        </p>
+      </Group>
     </div>
+  );
+}
+
+function Group({ title, badge, hint, children }: { title: string; badge?: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="playground-group">
+      <header className="playground-group-head">
+        <span className="playground-group-title">{title}</span>
+        {badge && <span className="playground-group-badge">{badge}</span>}
+      </header>
+      {children}
+      {hint && <p className="playground-hint">{hint}</p>}
+    </section>
   );
 }
 
 function SelectionLine({ label, card }: { label: string; card?: CardInstance }) {
   return (
-    <div className="playground-selection-line">
+    <div className={`playground-selection-line ${card ? "" : "is-empty"}`}>
       <span>{label}</span>
-      <strong>{card ? card.name : "none"}</strong>
+      <strong>{card ? card.name : "nothing selected"}</strong>
     </div>
   );
 }

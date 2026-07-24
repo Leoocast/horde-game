@@ -10,7 +10,7 @@ function storedEntry(overrides = {}) {
     name: "Zombie test",
     savedAt: "2026-07-24T10:00:00.000Z",
     definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hordeBattlefield: [{ definitionId: "zombie_token", amount: 2 }] } },
-    steps: [{ kind: "draw" }, { kind: "addMana", color: "G" }],
+    steps: [{ kind: "draw" }, { kind: "addEnergySource" }],
     ...overrides,
   };
 }

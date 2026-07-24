@@ -15,8 +15,11 @@ export function LibraryPanel({ entries, onSave, onLoad, onDelete, onExport, onIm
   const fileInput = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="playground-section playground-library">
-      <div className="playground-section-title">Library</div>
+    <div className="playground-group">
+      <header className="playground-group-head">
+        <span className="playground-group-title">Saved scenarios</span>
+        <span className="playground-group-badge">{entries.length} stored</span>
+      </header>
       <div className="playground-button-row">
         <button className="playground-button" type="button" onClick={onSave}>
           <Save size={13} /> Save

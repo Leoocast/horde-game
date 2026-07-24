@@ -1,10 +1,13 @@
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, findCardDefinition, getHordeDeck, getPlayerDeck } from "../data/decks";
+import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { createCardInstance, createInitialGame } from "../engine/GameState";
-import type { CardInstance, DifficultyMode, GameMode, GameState, ManaPool, Phase, Side } from "../engine/GameTypes";
-import { emptyManaPool } from "../engine/ManaSystem";
+import type { CardInstance, DifficultyMode, GameMode, GameState, Phase, Side } from "../engine/GameTypes";
+import { STORED_MANA_CAP, emptyManaPool } from "../engine/ManaSystem";
 
-/** Bump when the shape changes in a way older exported JSON can't satisfy. */
-export const SCENARIO_VERSION = 1;
+/** Bump when the shape changes in a way older exported JSON can't satisfy.
+ *  v2 replaced the per-color mana pool with the two resources the game actually has: energy
+ *  sources on the battlefield, and stored energy in the pool. */
+export const SCENARIO_VERSION = 2;
 
 export type ScenarioZoneKey =
   | "playerHand"
@@ -28,6 +31,12 @@ export type ScenarioCard = {
   counters?: Record<string, number>;
 };
 
+/**
+ * The game has ONE resource, shown as energy: untapped lands on the battlefield are available
+ * energy, and the colorless pool is stored energy (capped at `STORED_MANA_CAP`). The engine's
+ * `ManaPool` still carries colors because card costs are printed in Magic symbols, but nothing the
+ * player sees is per-color — so a scenario configures energy, not colors.
+ */
 export type ScenarioDefinition = {
   version: number;
   name: string;
@@ -40,7 +49,13 @@ export type ScenarioDefinition = {
   hordeTurnNumber: number;
   phase: Phase;
   activeSide: Side;
-  player: { life: number; mana: Partial<ManaPool> };
+  player: {
+    life: number;
+    /** Untapped energy sources (lands) on the battlefield, capped at `MAX_PLAYER_LANDS`. */
+    energy: number;
+    /** Stored energy in the pool, capped at `STORED_MANA_CAP`. */
+    storedEnergy: number;
+  };
   horde: { poisonCounters: number };
   zones: Partial<Record<ScenarioZoneKey, ScenarioCard[]>>;
 };
@@ -83,7 +98,9 @@ export const BLANK_SCENARIO: ScenarioDefinition = {
   hordeTurnNumber: 0,
   phase: "main",
   activeSide: "player",
-  player: { life: 50, mana: {} },
+  // Full energy by default: a blank board you cannot cast anything from is not a useful starting
+  // point for testing a card.
+  player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
   horde: { poisonCounters: 0 },
   zones: {},
 };
@@ -136,7 +153,7 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   game.phase = scenario.phase;
   game.activeSide = scenario.activeSide;
   game.player.life = scenario.player.life;
-  game.player.manaPool = { ...emptyManaPool(), ...scenario.player.mana };
+  game.player.manaPool = { ...emptyManaPool(), colorless: clamp(scenario.player.storedEnergy, 0, STORED_MANA_CAP) };
   game.player.pendingStoredMana = 0;
   game.player.energyActionUsedThisTurn = false;
   game.horde.poisonCounters = scenario.horde.poisonCounters;
@@ -147,8 +164,45 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   delete game.lastActionResult;
 
   applyZones(game, scenario);
+  // After the zones: a scenario that lists its own lands already spent part of the land cap, and
+  // the energy field only tops up whatever room is left.
+  placeEnergySources(game, scenario.player.energy);
   game.log = [`Playground scenario "${scenario.name}" loaded with seed "${scenario.seed}".`];
   return game;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(Number.isFinite(value) ? value : min)));
+}
+
+/**
+ * The card this deck uses as an energy source. Energy is "an untapped land", so the playground
+ * never hardcodes Forest: it takes whatever land the player deck actually runs.
+ */
+export function playerEnergyDefinitionId(game: GameState): string | undefined {
+  const zones = [game.player.battlefield, game.player.library, game.player.hand, game.player.graveyard];
+  for (const zone of zones) {
+    const land = zone.find((card) => card.cardTypes.includes("Land"));
+    if (land) return land.definitionId;
+  }
+  return undefined;
+}
+
+/** Puts untapped energy sources on the player's battlefield, never past `MAX_PLAYER_LANDS`.
+ *  Returns how many actually landed so callers can report a real number. */
+export function placeEnergySources(game: GameState, requested: number): number {
+  const definitionId = playerEnergyDefinitionId(game);
+  if (!definitionId) return 0;
+  const room = Math.min(clamp(requested, 0, MAX_PLAYER_LANDS), MAX_PLAYER_LANDS - playerLandCount(game));
+  const counter = { next: 0 };
+  let placed = 0;
+  for (let copy = 0; copy < room; copy += 1) {
+    const card = takeCard(game, "player", definitionId, counter);
+    if (!card) break;
+    placeCard(game, "playerBattlefield", card, { definitionId });
+    placed += 1;
+  }
+  return placed;
 }
 
 function withScenarioDefaults(definition: ScenarioDefinition): ScenarioDefinition {

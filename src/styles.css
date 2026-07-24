@@ -12417,6 +12417,14 @@
 
 /* Playground — developer-only tooling. Deliberately plainer than the game UI: it must never be
    mistaken for a player-facing screen, and it must not compete visually with the board it inspects. */
+/* Held only while the lazy playground chunk resolves. Matches the shell's background so the
+   transition is a single dark frame instead of a loading screen. */
+.playground-chunk-fallback {
+  position: fixed;
+  inset: 0;
+  background: #0b0c0a;
+}
+
 .playground-shell {
   --pg-dock: 460px;
   position: fixed;
@@ -12448,17 +12456,30 @@
   left: 0;
   top: 0;
   bottom: 0;
-  /* Above every game surface, including the ones React portals straight into <body> (the energy
-     core sits bottom-left, exactly under the dock). Tooltips at 10000 are the only thing left
-     above it, and those are transient and follow the pointer. */
+  /* Above every game surface. Tooltips at 10000 are the only thing left above it, and those are
+     transient and follow the pointer. */
   z-index: 9999;
   display: flex;
   width: var(--pg-dock);
   flex-direction: column;
   border-radius: 0;
   border-right: 1px solid rgba(196, 158, 84, 0.34);
+  /* Fully opaque: a translucent panel let the surfaces underneath read straight through the tools. */
+  background: linear-gradient(180deg, #16170f 0%, #101109 100%);
+  box-shadow: 6px 0 28px rgb(0 0 0 / 0.62);
   color: #e4ddc2;
   font-size: 13px;
+}
+
+/* The energy core is portaled straight into <body>, outside the playground's DOM entirely, and it
+   keeps painting over the dock however high the dock's z-index goes — z-index only orders elements
+   that share a stacking context, and these two don't. Since the core sits bottom-left, fully inside
+   the dock's 460px, "behind the dock" and "not drawn" look identical: hide it while the dock is
+   open and the dock's own Energy readout covers the same two numbers. `visibility` rather than
+   `display` so the element keeps its box — the energy-recycle animation measures that rect.
+   Collapsing the dock with F2 unmounts it and the core comes straight back. */
+body:has(.playground-dock) .player-mana-core {
+  visibility: hidden;
 }
 
 .playground-dock-header {
@@ -12517,9 +12538,48 @@
   text-transform: uppercase;
 }
 
+/* Launching is the first thing you want and the last thing you should have to hunt for, so it sits
+   under the header instead of inside a tab. The active launch is marked: "what is on the board" is
+   otherwise invisible once a scenario and a match look alike. */
+.playground-launch {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+}
+
+.playground-launch-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid rgba(196, 158, 84, 0.38);
+  background: rgba(24, 25, 20, 0.9);
+  color: #d9cfa8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.playground-launch-button:hover:not(:disabled) { border-color: rgba(224, 190, 116, 0.72); color: #f6e6b8; }
+.playground-launch-button:disabled { cursor: not-allowed; opacity: 0.38; }
+
+.playground-launch-button.is-active {
+  border-color: rgba(224, 190, 116, 0.78);
+  background: rgba(120, 92, 38, 0.52);
+  color: #f8ecc2;
+}
+
+
 .playground-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border-bottom: 1px solid rgba(196, 158, 84, 0.24);
 }
 
@@ -12546,6 +12606,56 @@
 }
 
 .playground-section { display: flex; flex-direction: column; gap: 10px; }
+
+/* A panel is a stack of self-contained groups. Grouping is the whole readability fix: the old flat
+   run of title/buttons/title/buttons gave no way to tell where one concern ended and the next
+   began, so every control looked equally important. */
+.playground-panel { display: flex; flex-direction: column; gap: 12px; }
+
+.playground-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  border-radius: 4px;
+  padding: 10px 11px 11px;
+  background: rgba(22, 23, 18, 0.55);
+}
+
+.playground-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.playground-group-title {
+  color: #cba55f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.playground-group-badge {
+  color: #8d9a94;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Explains what a control does in the model's own words. Deliberately quieter than a note: it is
+   reference, not a warning. */
+.playground-hint {
+  margin-top: 1px;
+  color: #7f7a66;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.playground-hint > strong,
+.playground-note > strong { color: #b9ad86; font-weight: 700; }
 
 .playground-section-title {
   font-size: 11px;
@@ -12600,26 +12710,37 @@
 .playground-button:hover:not(:disabled) { border-color: rgba(224, 190, 116, 0.7); color: #f6e6b8; }
 .playground-button:disabled { cursor: not-allowed; opacity: 0.4; }
 .playground-button.is-primary { background: rgba(120, 92, 38, 0.5); color: #f6e6b8; }
+.playground-button.is-tall { min-height: 32px; width: 100%; }
+.playground-button svg { flex: 0 0 auto; opacity: 0.85; }
 
 .playground-note { color: #8d9a94; font-size: 12px; line-height: 1.5; }
 
-.playground-pending {
+/* Energy at a glance, in the same shape the board shows it: four source pips, then the stored
+   reserve. Reading a number out of a label is slower than seeing which pips are lit. */
+.playground-meter {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border: 1px dashed rgba(196, 158, 84, 0.3);
-  padding: 10px;
-  color: #8d9a94;
-  font-size: 11px;
-  line-height: 1.45;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0 1px;
 }
 
-.playground-pending > strong {
-  color: #b08a48;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.playground-pip {
+  height: 12px;
+  width: 12px;
+  border: 1px solid rgba(196, 158, 84, 0.34);
+  border-radius: 50%;
+  background: rgba(10, 11, 9, 0.9);
+}
+
+.playground-pip.is-ready { border-color: rgba(126, 190, 224, 0.85); background: rgba(96, 170, 214, 0.72); }
+.playground-pip.is-spent { border-color: rgba(126, 190, 224, 0.32); background: rgba(96, 170, 214, 0.14); }
+.playground-pip.is-stored.is-ready { border-color: rgba(230, 196, 108, 0.9); background: rgba(224, 182, 82, 0.75); }
+
+.playground-meter-split {
+  height: 13px;
+  width: 1px;
+  margin: 0 3px;
+  background: rgba(196, 158, 84, 0.32);
 }
 
 /* Failed actions must always say why: the engine's `lastActionResult.reason` lands here. */
@@ -12680,11 +12801,14 @@
 }
 
 .playground-readout > span {
+  overflow: hidden;
   color: #7f7a66;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .playground-readout > strong {
@@ -12697,6 +12821,21 @@
   white-space: nowrap;
 }
 
+.playground-readout.is-busy > strong { color: #e6c46c; }
+.playground-readout.is-horde > strong { color: #d99a8c; }
+
+/* Only rendered once someone has won: a permanent "—" row would just be noise. */
+.playground-live-winner {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+  background: rgba(70, 26, 22, 0.5);
+  color: #f0c9a6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .playground-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .playground-note.is-warning {
@@ -12705,11 +12844,9 @@
   color: #d8b46a;
 }
 
-.playground-mana-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.playground-mini-input { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 
-.playground-mana-input { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-
-.playground-mana-input > span {
+.playground-mini-input > span {
   color: #938d76;
   font-size: 9px;
   font-weight: 800;
@@ -12717,7 +12854,7 @@
   text-transform: uppercase;
 }
 
-.playground-mana-input input {
+.playground-mini-input input {
   width: 100%;
   height: 26px;
   border: 1px solid rgba(196, 158, 84, 0.32);
@@ -12864,6 +13001,8 @@
   white-space: nowrap;
 }
 
+.playground-selection-line.is-empty > strong { color: #6f6a58; font-weight: 500; font-style: italic; }
+
 .playground-selected.is-skeleton { pointer-events: none; opacity: 0.42; user-select: none; }
 
 .playground-skeleton-bar,
@@ -12913,7 +13052,6 @@
   white-space: nowrap;
 }
 
-.playground-library { border-bottom: 1px solid rgba(196, 158, 84, 0.24); padding-bottom: 12px; margin-bottom: 12px; }
 .playground-file-input { display: none; }
 
 .playground-library-list { display: flex; flex-direction: column; gap: 3px; }

@@ -143,7 +143,10 @@ export default function App() {
 
   if (screen === "playground" && IS_DEV) {
     return (
-      <Suspense fallback={<GameLoadingScreen percent={100} label="ready" />}>
+      // A plain dark hold, not the game's loading screen: the playground chunk resolves in a frame
+      // or two, and flashing the full boot art on the way into a developer tool reads like the game
+      // is starting over.
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
         <AudioClickListener />
         <PlaygroundScreen
           onReturnToMenu={() => {

@@ -4,16 +4,17 @@ import { test } from "node:test";
 import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, validateScenario } from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
 import { runHordeMain } from "../src/engine/HordeController";
+import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
+import { STORED_MANA_CAP } from "../src/engine/ManaSystem";
 
 function scenario(overrides = {}) {
   return { ...BLANK_SCENARIO, ...overrides, zones: { ...BLANK_SCENARIO.zones, ...(overrides.zones ?? {}) } };
 }
 
-test("a blank scenario starts with empty zones and no setup turns", () => {
+test("a blank scenario starts with full energy, empty zones and no setup turns", () => {
   const game = buildScenarioGame(scenario());
 
   assert.equal(game.player.hand.length, 0);
-  assert.equal(game.player.battlefield.length, 0);
   assert.equal(game.horde.battlefield.length, 0);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.openingHandAccepted, true);
@@ -21,12 +22,43 @@ test("a blank scenario starts with empty zones and no setup turns", () => {
   assert.equal(game.activeSide, "player");
   assert.equal(game.eventQueue.length, 0);
   assert.equal(game.winner, undefined);
+
+  // The only permanents on a blank board are its energy sources: a board you cannot cast from is
+  // not a useful place to start testing a card.
+  assert.equal(game.player.battlefield.length, MAX_PLAYER_LANDS);
+  assert.ok(game.player.battlefield.every((card) => card.cardTypes.includes("Land") && !card.tapped));
+});
+
+test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
+  const game = buildScenarioGame(scenario({ player: { life: 50, energy: 99, storedEnergy: 99 } }));
+
+  assert.equal(game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, MAX_PLAYER_LANDS);
+  assert.equal(game.player.manaPool.colorless, STORED_MANA_CAP);
+  // One resource: nothing colored is ever configured or produced.
+  assert.deepEqual(
+    { green: game.player.manaPool.green, red: game.player.manaPool.red, blue: game.player.manaPool.blue },
+    { green: 0, red: 0, blue: 0 },
+  );
+});
+
+test("lands listed in a zone count against the energy field instead of stacking past the cap", () => {
+  const game = buildScenarioGame(
+    scenario({
+      player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
+      zones: { playerBattlefield: [{ definitionId: "forest", amount: 2, tapped: true }] },
+    }),
+  );
+
+  const lands = game.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  assert.equal(lands.length, MAX_PLAYER_LANDS);
+  // The two the scenario asked for keep the state it asked for; the field only tops up the rest.
+  assert.equal(lands.filter((card) => card.tapped).length, 2);
 });
 
 test("zone entries become real card instances in the right zone", () => {
   const game = buildScenarioGame(
     scenario({
-      player: { life: 12, mana: { green: 3 } },
+      player: { life: 12, energy: 0, storedEnergy: 3 },
       horde: { poisonCounters: 2 },
       zones: {
         playerHand: [{ definitionId: "giant_growth" }],
@@ -39,7 +71,7 @@ test("zone entries become real card instances in the right zone", () => {
   );
 
   assert.equal(game.player.life, 12);
-  assert.equal(game.player.manaPool.green, 3);
+  assert.equal(game.player.manaPool.colorless, 3);
   assert.equal(game.horde.poisonCounters, 2);
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["giant_growth"]);
@@ -122,7 +154,7 @@ test("unknown cards are reported by validateScenario, not half-loaded", () => {
 });
 
 test("placing cards into a live game keeps instance ids unique across repeated adds", () => {
-  let game = buildScenarioGame(scenario());
+  let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
   // Forest is in the deck, so the first copies come out of the library; Graf Harvest belongs to the
   // Horde deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {

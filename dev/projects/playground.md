@@ -81,7 +81,7 @@ type ScenarioDefinition = {
   playerDeckId: string;
   hordeDeckId: string;
   seed: string;
-  setup: { life, mana, turnNumber, phase, activeSide, poisonCounters, setupTurnsRemaining, ... };
+  setup: { life, energy, storedEnergy, turnNumber, phase, activeSide, poisonCounters, ... };
   zones: { playerHand: string[]; playerBattlefield: string[]; hordeBattlefield: string[]; ... };
 };
 ```
@@ -91,7 +91,42 @@ type ScenarioDefinition = {
 identico a iniciar.
 
 Defaults del escenario en blanco: `setupTurnsRemaining: 0`, `openingHandAccepted: true`, mano y
-campos vacios, turno 1, fase `main`, `activeSide: "player"`.
+campos vacios, turno 1, fase `main`, `activeSide: "player"` y **energia llena** (`energy:
+MAX_PLAYER_LANDS`): un tablero desde el que no se puede castear nada no sirve para probar una carta.
+
+### Un solo recurso: energia
+
+El juego tiene **un** recurso y se llama energia. En el engine son dos cosas: **tierras destapadas**
+en el campo (energia disponible, pista azul, tope `MAX_PLAYER_LANDS`) y el **pool colorless**
+(energia guardada, pista amarilla, tope `STORED_MANA_CAP`). `ManaPool` sigue teniendo colores porque
+los costes impresos son simbolos de Magic, pero el jugador nunca ve un color.
+
+Por eso el playground **no** expone `+G`/`+R`/`+U`: meter mana verde al pool pagaba cartas sin
+aparecer en ninguna parte del tablero, que es exactamente la queja de "no hay nada que me de mana".
+Las acciones mueven los mismos diales que el juego:
+
+- **Add source**: pone una tierra destapada mas (hasta el tope). La tierra sale del deck del player,
+  no esta hardcodeado Forest.
+- **Refill**: destapa todas las tierras y devuelve la accion de Energia del turno.
+- **+1 stored**: `addStoredMana`, respeta el tope.
+- **Drain all**: tapa todo y vacia el pool.
+
+El escenario configura lo mismo con dos campos (`energy`, `storedEnergy`), ambos clampeados a los
+topes del engine. Las tierras que el escenario liste en `playerBattlefield` cuentan contra el tope:
+el campo `energy` solo rellena el hueco que quede.
+
+### Iniciar una partida normal
+
+El playground existe para saltar directo a un estado, pero a veces el bug solo aparece en una
+partida de verdad. La barra de lanzamiento tiene dos modos y ambos son reproducibles desde su propia
+definicion:
+
+- **Scenario**: `loadScenario(buildScenarioGame(...))`, tablero armado a mano, sin mano inicial.
+- **Match**: el `reset()` del store — el mismo que llama el menu principal — con la seed, los decks,
+  la dificultad y el modo del formulario, mas sus setup turns. Mano inicial, mulligans y todo.
+
+`Restart` reproduce el que este vivo. La barra vive bajo el header, fuera de las pestanas: lanzar es
+lo primero que se quiere y lo ultimo que deberia haber que buscar.
 
 ### loadScenario
 
@@ -116,11 +151,22 @@ Dos intentos previos, los dos malos:
    bien, pero movia el campo de batalla y la zona de oleadas de la Horda — o sea cambiaba el layout
    que el playground existe para inspeccionar. Una carta tiene que estar donde estaria en partida.
 
-Conclusion: el dock tapa la izquierda del campo y ya. El `z-index: 9000` esta por encima de todas las
+Conclusion: el dock tapa la izquierda del campo y ya. El `z-index: 9999` esta por encima de todas las
 superficies del juego (los modales llegan a 560) y por debajo de los tooltips (10000), que son
-transitorios y se anclan a lo que senala el mouse. Ojo con elementos porteados a `body` fuera del
-shell (p.ej. `.player-mana-core`): compiten directamente en el stacking del documento, por eso el
-z-index del dock tiene que ser alto y no un 500 cualquiera.
+transitorios y se anclan a lo que senala el mouse.
+
+**El nucleo de energia es la excepcion y no se arregla con z-index.** `.player-mana-core` esta
+porteado directo a `<body>`, fuera del DOM del playground, y seguia pintandose encima del dock por
+alto que fuera el z-index de este: el z-index solo ordena elementos que comparten stacking context,
+y estos dos no lo comparten. Como el nucleo vive abajo a la izquierda, entero dentro de los 460px
+del dock, "detras del dock" y "no dibujado" se ven igual: mientras el dock esta abierto se oculta
+con `body:has(.playground-dock) .player-mana-core { visibility: hidden }`. `visibility` y no
+`display` para que el elemento conserve su caja — la animacion de reciclado de energia mide ese
+rect. Colapsar con F2 desmonta el dock y el nucleo vuelve solo.
+
+El chunk lazy tampoco cae en `GameLoadingScreen`: entrar a una herramienta de desarrollo mostrando
+el arte de carga del juego parece que la partida arranca de cero. El fallback es un frame oscuro
+(`.playground-chunk-fallback`).
 
 ### Vida de la Horda
 
@@ -145,7 +191,7 @@ React recibia keys duplicadas y dejaba nodos fantasma en la lista de resultados.
 
 ### Cheats que no son cheats
 
-- **Jugar ignorando coste**: inyectar en el pool exactamente el mana que pide la carta y llamar al
+- **Jugar sin coste**: inyectar en el pool exactamente el mana que pide la carta y llamar al
   `castCard` normal. No un flag de bypass — asi el cast pasa por el mismo cost-check, timing,
   targeting y triggers que en partida.
 - **Destruir**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
@@ -217,29 +263,30 @@ El JSON exportado sirve tal cual como fixture para `tests/engine.test.js`.
 - [x] **Fase 2 — Pantalla y acceso.** Boton flotante `Playground` a la derecha del menu principal,
       fuera del nav, solo con `IS_DEV` (`onOpenPlayground` opcional: sin la prop no se puede
       renderizar). Pantalla `lazy()` en `App.tsx`. `src/playground/PlaygroundScreen.tsx` =
-      `<Board>` real + dock izquierdo colapsable (F2 o boton), pestanas Escenario / Cartas /
-      Acciones / Timeline, renglon de estado al pie. Al montar carga `BLANK_SCENARIO` para no
-      heredar la partida que tuviera el store.
+      `<Board>` real + dock izquierdo colapsable (F2 o boton), barra de lanzamiento fija y pestanas
+      Setup / Cards / Actions / Flow / Saved, renglon de estado al pie. Al montar carga
+      `BLANK_SCENARIO` para no heredar la partida que tuviera el store.
 - [x] **Fase 3 — Configurar e inspeccionar.** `panels/ScenarioPanel.tsx` (identidad, decks,
-      dificultad, modo, turno/fase/lado, vida, pool de mana por color, poison, y lista editable de
-      zonas), `panels/CardsPanel.tsx` (buscador por nombre/ID + filtro por deck, con "Place now" a
+      dificultad, modo, turno/fase/lado, vida, energia + energia guardada, poison, y lista editable
+      de zonas), `panels/CardsPanel.tsx` (buscador por nombre/ID + filtro por deck, con "Place now" a
       juego vivo y "Add to scenario" al draft), `cardCatalog.ts` (derivado de `DECK_REGISTRY`) y la
-      tira `LiveState` siempre visible (turno, fase, lado, vida, mana, libreria de Horda, poison,
-      `eventQueue`, beats en vuelo, winner). Marca de draft sucio cuando el formulario cambio
-      despues de iniciar: Reiniciar reproduce lo iniciado, Start adopta las ediciones.
+      tira `LiveState` siempre visible (turno, fase, lado, vida, energia, guardada, libreria de
+      Horda, poison, `eventQueue`, beats en vuelo; el ganador es un renglon aparte que solo sale
+      cuando lo hay). Marca de draft sucio cuando el formulario cambio despues de iniciar: Restart
+      reproduce lo iniciado, Scenario adopta las ediciones.
 - [x] **Fase 4 — Controles rapidos.** `playground/actions.ts` (funciones puras sobre `GameState`,
-      todas escriben `lastActionResult`) + `panels/ActionsPanel.tsx`. Iniciar/Reiniciar viven en la
-      pestana Escenario; el resto aqui: avanzar fase, avanzar turno, turno de Horda, resolver
-      siguiente evento, resolver todos, robar, +1 de mana por color, limpiar mana, jugar carta,
-      jugar sin coste, destruir, enviar al cementerio. La seleccion sale del store
-      (`selectedHandId` / `selectedPlayerCreatureId` / `selectedHordeCreatureId`), o sea que se
-      elige la carta clickeandola en el tablero real.
+      todas escriben `lastActionResult`) + `panels/ActionsPanel.tsx`, agrupado por tema (Turn flow /
+      Energy / Cards / Event queue / Selection). Lanzar vive en la barra fija; aqui: avanzar fase,
+      avanzar turno, turno de Horda, resolver siguiente evento, resolver todos, robar, las cuatro
+      acciones de energia, jugar carta, jugar sin coste, destruir, enviar al cementerio. La seleccion
+      sale del store (`selectedHandId` / `selectedPlayerCreatureId` / `selectedHordeCreatureId`), o
+      sea que se elige la carta clickeandola en el tablero real.
 - [x] **Fase 5 — Timeline: grabar y reproducir.** `timeline.ts` (`TimelineStep`, `executeStep`,
       `describeStep`, `isPlaygroundBusy`, `isWaitingForInput`), `panels/TimelinePanel.tsx` (toggle de
       grabacion, lista de pasos con borrar, Step / Auto / Stop) y el driver de reproduccion en
       `PlaygroundScreen`. Los paneles ya no llaman acciones directamente: todo pasa por `dispatch`.
 - [x] **Fase 6 — Persistencia.** `scenarioStorage.ts` + `panels/LibraryPanel.tsx` (Save, Import,
-      y por entrada Load / Export / Delete) en la pestana Escenario.
+      y por entrada Load / Export / Delete) en su propia pestana `Saved`.
 
 ## Siguientes pasos
 

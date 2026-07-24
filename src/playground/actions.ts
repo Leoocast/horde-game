@@ -1,8 +1,10 @@
 import { destroyPermanent } from "../engine/EffectResolver";
 import { drainEventQueue, drainNextEvent } from "../engine/EventQueue";
+import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { drawCards } from "../engine/GameState";
 import type { CardInstance, Color, GameState, Side, ZoneName } from "../engine/GameTypes";
-import { addMana, emptyManaPool, parseManaCost } from "../engine/ManaSystem";
+import { STORED_MANA_CAP, addMana, addStoredMana, emptyManaPool, parseManaCost } from "../engine/ManaSystem";
+import { placeEnergySources, playerEnergyDefinitionId } from "./scenario";
 
 /**
  * Playground actions on a live game. Every one of them goes through the engine's own helpers, and
@@ -30,17 +32,57 @@ export function drawPlayerCard(game: GameState): PlaygroundActionResult {
   return succeed(next, "Playground draws a card.");
 }
 
-export function addPlayerMana(game: GameState, color: Color, amount = 1): PlaygroundActionResult {
+/**
+ * Energy, not colors. What the player sees as energy is two things in the engine: untapped lands
+ * (available energy) and the colorless pool (stored energy). Adding green mana to the pool would
+ * pay for cards while showing up nowhere on the board, so the playground moves the same dials the
+ * game does.
+ */
+export function addEnergySource(game: GameState, amount = 1): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  next.player.manaPool = addMana(next.player.manaPool, color, amount);
-  return succeed(next, `Playground adds ${amount} ${color} mana.`);
+  if (!playerEnergyDefinitionId(next)) return fail(game, "This deck has no land to use as an energy source.");
+  if (playerLandCount(next) >= MAX_PLAYER_LANDS) {
+    return fail(game, `The player already controls ${MAX_PLAYER_LANDS} energy sources.`);
+  }
+  const placed = placeEnergySources(next, amount);
+  return succeed(next, `Playground adds ${placed} energy source(s).`);
 }
 
-export function clearPlayerMana(game: GameState): PlaygroundActionResult {
+/** Untaps every energy source and hands the Energy action back — a fresh turn's worth of energy
+ *  without advancing the turn. */
+export function refillEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
+  const lands = next.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  if (lands.length === 0) return fail(game, "There are no energy sources to refill. Add one first.");
+  let restored = 0;
+  for (const land of lands) {
+    if (land.tapped || land.activatedThisTurn) restored += 1;
+    land.tapped = false;
+    land.activatedThisTurn = false;
+  }
+  next.player.energyActionUsedThisTurn = false;
+  return succeed(next, `Playground refills ${restored} energy.`);
+}
+
+export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionResult {
+  const next = structuredClone(game) as GameState;
+  const added = addStoredMana(next, amount);
+  if (added === 0) return fail(game, `Stored energy is already at its cap of ${STORED_MANA_CAP}.`);
+  return succeed(next, `Playground stores ${added} energy.`);
+}
+
+/** Spends everything: taps every energy source and empties the pool. The counterpart to refill,
+ *  for testing what a card does with nothing left. */
+export function drainEnergy(game: GameState): PlaygroundActionResult {
+  const next = structuredClone(game) as GameState;
+  for (const card of next.player.battlefield) {
+    if (!card.cardTypes.includes("Land")) continue;
+    card.tapped = true;
+    card.activatedThisTurn = true;
+  }
   next.player.manaPool = emptyManaPool();
   next.player.pendingStoredMana = 0;
-  return succeed(next, "Playground clears the mana pool.");
+  return succeed(next, "Playground drains all energy.");
 }
 
 /**

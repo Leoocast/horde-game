@@ -2,17 +2,21 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  addPlayerMana,
-  clearPlayerMana,
+  addEnergySource,
+  addStoredEnergy,
   destroyCard,
+  drainEnergy,
   drawPlayerCard,
   grantManaForCard,
+  refillEnergy,
   resolveAllEvents,
   resolveNextEvent,
   sendCardToGraveyard,
 } from "../src/playground/actions";
 import { BLANK_SCENARIO, buildScenarioGame } from "../src/playground/scenario";
 import { castCard } from "../src/engine/GameActions";
+import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
+import { STORED_MANA_CAP } from "../src/engine/ManaSystem";
 
 function scenario(overrides = {}) {
   return { ...BLANK_SCENARIO, ...overrides, zones: { ...BLANK_SCENARIO.zones, ...(overrides.zones ?? {}) } };
@@ -28,22 +32,63 @@ test("drawing reports a reason instead of failing silently on an empty library",
   assert.equal(result.game.lastActionResult.ok, false);
 });
 
-test("mana can be added per color and cleared", () => {
-  let game = buildScenarioGame(scenario({ player: { life: 50, mana: { green: 2 } } }));
+test("energy sources are lands on the battlefield and stop at the land cap", () => {
+  let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
+  assert.equal(game.player.battlefield.length, 0);
 
-  game = addPlayerMana(game, "G", 3).game;
-  assert.equal(game.player.manaPool.green, 5);
+  for (let round = 0; round < MAX_PLAYER_LANDS; round += 1) {
+    const result = addEnergySource(game);
+    assert.equal(result.ok, true);
+    game = result.game;
+  }
 
-  game = addPlayerMana(game, "C").game;
-  assert.equal(game.player.manaPool.colorless, 1);
+  const lands = game.player.battlefield;
+  assert.equal(lands.length, MAX_PLAYER_LANDS);
+  assert.ok(lands.every((card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn));
 
-  game = clearPlayerMana(game).game;
-  assert.deepEqual(game.player.manaPool, { green: 0, red: 0, blue: 0, white: 0, black: 0, colorless: 0 });
+  // The cap is the game's, not the playground's: it must refuse with a reason, not silently pile on.
+  const overflow = addEnergySource(game);
+  assert.equal(overflow.ok, false);
+  assert.match(overflow.reason, new RegExp(`${MAX_PLAYER_LANDS} energy sources`));
+  assert.equal(overflow.game.lastActionResult.ok, false);
+});
+
+test("drain taps every source and empties the pool; refill gives it all back", () => {
+  const start = buildScenarioGame(scenario({ player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 2 } }));
+  assert.equal(start.player.manaPool.colorless, 2);
+
+  const drained = drainEnergy(start);
+  assert.equal(drained.ok, true);
+  assert.ok(drained.game.player.battlefield.every((card) => card.tapped));
+  assert.equal(drained.game.player.manaPool.colorless, 0);
+
+  const refilled = refillEnergy(drained.game);
+  assert.equal(refilled.ok, true);
+  assert.ok(refilled.game.player.battlefield.every((card) => !card.tapped && !card.activatedThisTurn));
+  assert.equal(refilled.game.player.energyActionUsedThisTurn, false);
+
+  // Refilling untapped lands is not an error, but with no lands at all there is nothing to refill.
+  const bare = refillEnergy(buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } })));
+  assert.equal(bare.ok, false);
+  assert.match(bare.reason, /no energy sources/i);
+});
+
+test("stored energy respects the engine's cap instead of growing forever", () => {
+  let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
+
+  for (let round = 0; round < STORED_MANA_CAP; round += 1) game = addStoredEnergy(game).game;
+  assert.equal(game.player.manaPool.colorless, STORED_MANA_CAP);
+
+  const overflow = addStoredEnergy(game);
+  assert.equal(overflow.ok, false);
+  assert.match(overflow.reason, /cap/i);
 });
 
 test("play free grants exactly the printed cost and the card then casts through the normal path", () => {
-  // No lands anywhere: the only way this cast can succeed is the granted mana.
-  const start = buildScenarioGame(scenario({ zones: { playerHand: [{ definitionId: "llanowar_elves" }] } }));
+  // No energy anywhere: the only way this cast can succeed is the granted mana.
+  const start = buildScenarioGame(
+    scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "llanowar_elves" }] } }),
+  );
   const handId = start.player.hand[0].instanceId;
 
   const blocked = castCard(start, handId);
@@ -62,6 +107,8 @@ test("play free grants exactly the printed cost and the card then casts through 
 test("destroy runs death triggers and to-graveyard does not", () => {
   const definition = scenario({
     hordeDeckId: "goblin_assault_horde",
+    // No energy sources: the only player permanent is the creature this test is watching die.
+    player: { life: 50, energy: 0, storedEnergy: 0 },
     zones: {
       hordeBattlefield: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
       playerBattlefield: [{ definitionId: "llanowar_elves" }],
@@ -107,17 +154,19 @@ test("the same action sequence over two rebuilds lands on identical states", () 
   // recorded steps has to reproduce the run exactly — including instance ids and RNG position.
   const definition = scenario({
     seed: "replayable",
+    player: { life: 50, energy: 0, storedEnergy: 0 },
     zones: { playerBattlefield: [{ definitionId: "forest", amount: 3 }], hordeBattlefield: [{ definitionId: "zombie_token" }] },
   });
 
   const run = () => {
     let game = buildScenarioGame(definition);
     game = drawPlayerCard(game).game;
-    game = addPlayerMana(game, "G", 2).game;
+    game = addEnergySource(game).game;
+    game = addStoredEnergy(game).game;
     game = drawPlayerCard(game).game;
     const token = game.horde.battlefield[0].instanceId;
     game = destroyCard(game, token).game;
-    return clearPlayerMana(game).game;
+    return drainEnergy(game).game;
   };
 
   assert.deepEqual(run(), run());

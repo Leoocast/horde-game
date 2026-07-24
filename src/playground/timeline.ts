@@ -1,11 +1,12 @@
-import type { Color } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import {
-  addPlayerMana,
-  clearPlayerMana,
+  addEnergySource,
+  addStoredEnergy,
   destroyCard,
+  drainEnergy,
   drawPlayerCard,
   grantManaForCard,
+  refillEnergy,
   resolveAllEvents,
   resolveNextEvent,
   sendCardToGraveyard,
@@ -28,8 +29,10 @@ export type TimelineStep =
   | { kind: "resolveNextEvent" }
   | { kind: "resolveAllEvents" }
   | { kind: "draw" }
-  | { kind: "addMana"; color: Color }
-  | { kind: "clearMana" }
+  | { kind: "addEnergySource" }
+  | { kind: "refillEnergy" }
+  | { kind: "addStoredEnergy" }
+  | { kind: "drainEnergy" }
   | { kind: "place"; zone: ScenarioZoneKey; entry: ScenarioCard }
   | { kind: "play"; handId: string; cardName: string; free: boolean }
   | { kind: "destroy"; cardId: string; cardName: string }
@@ -45,12 +48,16 @@ export function describeStep(step: TimelineStep): string {
     case "resolveNextEvent": return "Resolve next event";
     case "resolveAllEvents": return "Resolve all events";
     case "draw": return "Draw card";
-    case "addMana": return `Add ${step.color} mana`;
-    case "clearMana": return "Clear mana";
+    case "addEnergySource": return "Add energy source";
+    case "refillEnergy": return "Refill energy";
+    case "addStoredEnergy": return "Store energy";
+    case "drainEnergy": return "Drain energy";
     case "place": return `Place ${step.entry.amount ?? 1}× ${step.entry.definitionId} → ${step.zone}`;
     case "play": return `${step.free ? "Play free" : "Play"} ${step.cardName}`;
     case "destroy": return `Destroy ${step.cardName}`;
     case "toGraveyard": return `To graveyard: ${step.cardName}`;
+    // A flow saved before a step kind was renamed still lists it; say so instead of rendering blank.
+    default: return `Unknown step "${(step as { kind: string }).kind}"`;
   }
 }
 
@@ -73,10 +80,14 @@ export function executeStep(step: TimelineStep): StepOutcome {
       return applyToGame(resolveAllEvents);
     case "draw":
       return applyToGame(drawPlayerCard);
-    case "addMana":
-      return applyToGame((game) => addPlayerMana(game, step.color));
-    case "clearMana":
-      return applyToGame(clearPlayerMana);
+    case "addEnergySource":
+      return applyToGame((game) => addEnergySource(game));
+    case "refillEnergy":
+      return applyToGame(refillEnergy);
+    case "addStoredEnergy":
+      return applyToGame((game) => addStoredEnergy(game));
+    case "drainEnergy":
+      return applyToGame(drainEnergy);
     case "place":
       return applyPlacement(step.zone, step.entry);
     case "destroy":
@@ -85,6 +96,8 @@ export function executeStep(step: TimelineStep): StepOutcome {
       return applyToGame((game) => sendCardToGraveyard(game, step.cardId));
     case "play":
       return playCard(step);
+    default:
+      return { ok: false, reason: `Unknown step "${(step as { kind: string }).kind}" — it was recorded by an older build.` };
   }
 }
 

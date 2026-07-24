@@ -21,11 +21,13 @@ export function NumberField({
   label,
   value,
   min = 0,
+  max,
   onChange,
 }: {
   label: string;
   value: number;
   min?: number;
+  max?: number;
   onChange: (value: number) => void;
 }) {
   return (
@@ -33,10 +35,12 @@ export function NumberField({
       <input
         type="number"
         min={min}
+        max={max}
         value={value}
         onChange={(event) => {
           const parsed = Number(event.target.value);
-          onChange(Number.isFinite(parsed) ? Math.max(min, parsed) : min);
+          const clamped = Number.isFinite(parsed) ? Math.max(min, parsed) : min;
+          onChange(max === undefined ? clamped : Math.min(max, clamped));
         }}
       />
     </Field>

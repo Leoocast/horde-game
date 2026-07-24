@@ -90,7 +90,7 @@ export function CardsPanel({ onAddToScenario, onPlaceNow }: Props) {
           </select>
 
           <div className="playground-inline-row">
-            <label className="playground-mana-input">
+            <label className="playground-mini-input">
               <span>×</span>
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Math.max(1, Number(event.target.value) || 1))} />
             </label>
@@ -108,9 +108,10 @@ export function CardsPanel({ onAddToScenario, onPlaceNow }: Props) {
               <Layers size={14} /> Add to scenario
             </button>
           </div>
-          <p className="playground-note">
-            Place now drops the card into the live game without running enter triggers — use it to set
-            a board up. Resolving a card through its real flow is an Actions-tab job.
+          <p className="playground-hint">
+            <strong>Place now</strong> drops the card into the live game without running enter
+            triggers — use it to set a board up. <strong>Add to scenario</strong> queues it for the
+            next Scenario launch. Resolving a card through its real flow is an Actions-tab job.
           </p>
         </div>
       )}
