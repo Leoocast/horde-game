@@ -4986,6 +4986,34 @@
     filter: drop-shadow(0 8px 11px rgb(0 0 0 / 0.48)) saturate(0.88);
   }
 
+  /* A card presented next to its graveyard while its dies-trigger resolves: drained of colour
+     and lit from below, so it never reads as something still in play. */
+  .horde-special-card-dying {
+    position: relative;
+    width: 13rem;
+    transform: scale(0.94);
+    filter:
+      drop-shadow(0 10px 16px rgb(0 0 0 / 0.62))
+      drop-shadow(0 0 14px rgb(150 44 22 / 0.45))
+      saturate(0.55)
+      brightness(0.86);
+  }
+
+  .horde-special-card-dying::after {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    border-radius: 0.7rem;
+    background: radial-gradient(ellipse at 50% 92%, rgb(180 58 26 / 0.4), transparent 66%);
+    pointer-events: none;
+    animation: horde-death-reveal-glow 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes horde-death-reveal-glow {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
+  }
+
   .counter-target-preview {
     display: flex;
     width: min(132%, 340px);
@@ -5310,6 +5338,259 @@
     filter: drop-shadow(0 16px 22px rgb(0 0 0 / 0.5));
     transform: scale(1.28);
     transform-origin: left bottom;
+  }
+
+  .burn-animation-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* The fireball is a stack: a wide heat halo, a trailing streak aimed along the flight
+     heading (--burn-angle), flickering flame licks, and a white-hot core on top. One
+     radial-gradient never reads as fire; the layered version does. */
+  .burn-projectile {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+    animation: burn-projectile-flight 500ms cubic-bezier(0.34, 0.06, 0.66, 0.96) both;
+  }
+
+  .burn-projectile-trail {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 96px;
+    height: 17px;
+    border-radius: 999px 40% 40% 999px;
+    background: linear-gradient(
+      270deg,
+      rgb(255 226 129 / 0.92) 0%,
+      rgb(255 128 27 / 0.72) 26%,
+      rgb(198 40 10 / 0.34) 60%,
+      transparent 100%
+    );
+    filter: blur(3px);
+    transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg));
+    transform-origin: 100% 50%;
+    animation: burn-trail-waver 150ms ease-in-out infinite alternate;
+  }
+
+  .burn-projectile-flame {
+    position: absolute;
+    inset: -14px;
+    transform: rotate(var(--burn-angle, 0deg));
+  }
+
+  .burn-projectile-flame > i {
+    position: absolute;
+    border-radius: 60% 40% 55% 45%;
+    background: radial-gradient(circle, rgb(255 205 78 / 0.95), rgb(238 74 14 / 0.5) 52%, transparent 74%);
+    animation: burn-ember-flicker 170ms ease-in-out infinite alternate;
+  }
+
+  .burn-projectile-flame > i:nth-child(1) { inset: 4px 22px 4px -6px; }
+  .burn-projectile-flame > i:nth-child(2) { inset: -4px 26px 12px 2px; animation-delay: -85ms; }
+  .burn-projectile-flame > i:nth-child(3) { inset: 12px 24px -4px 0; animation-delay: -130ms; }
+
+  .burn-projectile-core {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 40% 34%, #fffdf0 0 14%, #ffe89a 26%, #ffb02e 46%, #ff5a10 68%, #9d1608 84%, transparent 86%);
+    box-shadow:
+      0 0 10px #fff3bd,
+      0 0 26px rgb(255 132 28 / 0.95),
+      0 0 58px rgb(190 34 8 / 0.7);
+    animation: burn-core-pulse 130ms ease-in-out infinite alternate;
+  }
+
+  .burn-impact-ring {
+    position: absolute;
+    left: var(--burn-end-x);
+    top: var(--burn-end-y);
+    width: 108px;
+    height: 108px;
+    border: 4px solid rgb(255 138 51 / 0.9);
+    border-radius: 999px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+    box-shadow: 0 0 24px #ff681c, inset 0 0 26px rgb(255 205 91 / 0.78);
+    animation: burn-impact-burst 540ms 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .burn-impact-ring > i {
+    position: absolute;
+    inset: 24%;
+    border-radius: 999px;
+    background: radial-gradient(circle, #fff3a6, #ff6a1a 42%, rgb(126 12 7 / 0.7) 68%, transparent 70%);
+    box-shadow: 0 0 34px #ff3b12;
+  }
+
+  .burn-impact-sparks {
+    position: absolute;
+    left: var(--burn-end-x);
+    top: var(--burn-end-y);
+    width: 0;
+    height: 0;
+  }
+
+  .burn-impact-sparks > i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px 0 0 -2.5px;
+    border-radius: 999px;
+    background: radial-gradient(circle, #fff5c8, #ff8a1f 55%, transparent 72%);
+    box-shadow: 0 0 8px #ff7a17;
+    opacity: 0;
+    animation: burn-spark-fly 520ms 500ms cubic-bezier(0.18, 0.9, 0.36, 1) both;
+  }
+
+  .burn-impact-sparks > i:nth-child(even) { animation-duration: 600ms; width: 4px; height: 4px; }
+
+  /* Condensed heavy face: a damage number has to read instantly at a glance, which the
+     body serif never did at this size. */
+  .burn-damage-number {
+    position: absolute;
+    left: var(--burn-end-x);
+    top: var(--burn-end-y);
+    opacity: 0;
+    color: #ffeeb4;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Franklin Gothic Heavy", sans-serif;
+    font-size: clamp(38px, 3.8vw, 58px);
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    -webkit-text-stroke: 3px #57110a;
+    paint-order: stroke fill;
+    text-shadow:
+      0 4px 0 #2d0704,
+      0 0 12px #ffbf46,
+      0 0 30px #ff4b16;
+    transform: translate(-50%, -20%) scale(0.55);
+    animation: burn-damage-rise 620ms 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
+     lingers with the smoke until the end step wipes card.flags.burnSmoke. */
+  .burn-card-scorch-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 19;
+    border-radius: 0.375rem;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 45%, rgb(255 232 150 / 0.85), rgb(255 88 20 / 0.72) 38%, rgb(150 20 6 / 0.55) 66%, transparent 78%);
+    mix-blend-mode: hard-light;
+    opacity: 0;
+    animation: burn-scorch-flash 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .burn-card-scorch {
+    position: absolute;
+    inset: 0;
+    z-index: 17;
+    border-radius: 0.375rem;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 58%, rgb(74 22 10 / 0.62), rgb(38 12 7 / 0.34) 52%, transparent 76%),
+      linear-gradient(180deg, transparent 42%, rgb(24 8 5 / 0.42) 100%);
+    mix-blend-mode: multiply;
+    animation: burn-scorch-settle 700ms ease-out both;
+  }
+
+  .burn-card-smoke {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .burn-card-smoke > i {
+    position: absolute;
+    left: 48%;
+    bottom: 42%;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgb(82 73 66 / 0.62), rgb(31 27 25 / 0.32) 52%, transparent 72%);
+    filter: blur(2px);
+    animation: burn-smoke-rise 2.4s ease-out infinite;
+  }
+
+  .burn-card-smoke > i:nth-child(2) { left: 36%; animation-delay: -0.8s; animation-duration: 2.8s; }
+  .burn-card-smoke > i:nth-child(3) { left: 61%; animation-delay: -1.65s; animation-duration: 2.55s; }
+
+  @keyframes burn-projectile-flight {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    10% { opacity: 1; }
+    68% { transform: translate(calc(-50% + var(--burn-mid-x)), calc(-50% + var(--burn-mid-y))) scale(1.18); }
+    100% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) scale(0.82); }
+  }
+
+  @keyframes burn-ember-flicker {
+    from { opacity: 0.42; transform: scale(0.74) rotate(-6deg); }
+    to { opacity: 0.95; transform: scale(1.22) rotate(7deg); }
+  }
+
+  @keyframes burn-core-pulse {
+    from { transform: scale(0.92); }
+    to { transform: scale(1.08); }
+  }
+
+  @keyframes burn-trail-waver {
+    from { opacity: 0.66; transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg)) scaleY(0.78); }
+    to { opacity: 1; transform: translate(-92%, -50%) rotate(var(--burn-angle, 0deg)) scaleY(1.12); }
+  }
+
+  @keyframes burn-spark-fly {
+    0% { opacity: 0; transform: rotate(var(--burn-spark-angle, 0deg)) translateX(4px) scale(0.6); }
+    16% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--burn-spark-angle, 0deg)) translateX(74px) scale(0.35); }
+  }
+
+  @keyframes burn-scorch-flash {
+    0% { opacity: 0; }
+    12% { opacity: 1; }
+    46% { opacity: 0.72; }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-scorch-settle {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-impact-burst {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.12); filter: brightness(2); }
+    22% { opacity: 1; }
+    58% { opacity: 0.86; transform: translate(-50%, -50%) scale(1.08); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); filter: brightness(0.72); }
+  }
+
+  @keyframes burn-damage-rise {
+    0% { opacity: 0; transform: translate(-50%, -10%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -42%) scale(1.2); }
+    66% { opacity: 1; transform: translate(-50%, -105%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -155%) scale(0.9); }
+  }
+
+  @keyframes burn-smoke-rise {
+    0% { opacity: 0; transform: translate(-50%, 8px) scale(0.42); }
+    22% { opacity: 0.46; }
+    68% { opacity: 0.24; }
+    100% { opacity: 0; transform: translate(calc(-50% + 8px), -54px) scale(1.65); }
   }
 
   .player-mana-core.player-mana-panel {
@@ -7568,6 +7849,17 @@
   position: fixed;
   top: 8px;
   left: calc(50% + 164px);
+  z-index: 117;
+  width: 190px;
+}
+
+/* Right of the Horde panel is for spells and reveals still resolving (Smallpox). Left is the
+   graveyard side — that is where the deck's graveyard button lives, so cards presented while a
+   dies-trigger resolves belong here and exit into it. */
+.horde-death-reveal-host {
+  position: fixed;
+  top: 8px;
+  right: calc(50% + 164px);
   z-index: 117;
   width: 190px;
 }

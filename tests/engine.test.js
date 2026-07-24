@@ -4,8 +4,10 @@ import { test } from "node:test";
 import { hordeDeck, playerDeck } from "../src/data/decks";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
-import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
+import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
+import { drainEventQueue } from "../src/engine/EventQueue";
+import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
 import { finishHordeTurn, runHordeMain } from "../src/engine/HordeController";
 import { hasKeyword } from "../src/engine/Keywords";
@@ -582,6 +584,362 @@ test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () 
   assert.equal(surgeResult.hordeTurnNumber, 10);
   assert.equal(surgeResult.horde.battlefield.length, 5);
   assert.equal(surgeResult.horde.library.length, 0);
+});
+
+test("Goblin static lords and War Drums apply only to the intended Horde creatures", () => {
+  const game = createTestGame("goblin-static-effects");
+  const hobgoblin = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
+  const warDrums = addCard(game, cardFromDeck("goblin_war_drums", "horde"));
+  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const nonGoblin = addCard(game, customCard("not_a_goblin", "horde", { power: 2, toughness: 2 }));
+
+  assert.deepEqual(getPowerToughness(game, hobgoblin), { power: 2, toughness: 3 });
+  assert.deepEqual(getPowerToughness(game, goblin), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerToughness(game, nonGoblin), { power: 2, toughness: 2 });
+  assert.equal(hasKeyword(game, goblin, "MENACE"), true);
+  assert.equal(hasKeyword(game, nonGoblin, "MENACE"), true);
+
+  destroyPermanent(game, warDrums);
+  assert.equal(hasKeyword(game, goblin, "MENACE"), false);
+});
+
+test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on entry", () => {
+  const beetlebackGame = createTestGame("beetleback-entry");
+  const beetleback = addCard(beetlebackGame, cardFromDeck("beetleback_chief", "horde"));
+  runEnterBattlefieldTriggers(beetlebackGame, beetleback);
+  drainEventQueue(beetlebackGame);
+  assert.equal(beetlebackGame.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+
+  const siegeGangGame = createTestGame("siege-gang-entry");
+  const siegeGang = addCard(siegeGangGame, cardFromDeck("siege_gang_commander", "horde"));
+  runEnterBattlefieldTriggers(siegeGangGame, siegeGang);
+  drainEventQueue(siegeGangGame);
+  assert.equal(siegeGangGame.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
+});
+
+test("Goblin Surprise chooses the Horde mode with more immediate attack power", () => {
+  const pumpGame = createTestGame("goblin-surprise-pump");
+  const firstGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const secondGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(pumpGame, cardFromDeck("goblin_surprise", "horde", "library"), "horde", "library");
+
+  const pumped = runHordeMain(pumpGame);
+  assert.equal(pumped.horde.battlefield.find((card) => card.instanceId === firstGoblin.instanceId)?.temporaryPower, 2);
+  assert.equal(pumped.horde.battlefield.find((card) => card.instanceId === secondGoblin.instanceId)?.temporaryPower, 2);
+
+  const tokenGame = createTestGame("goblin-surprise-tokens");
+  addCard(tokenGame, cardFromDeck("goblin_surprise", "horde", "library"), "horde", "library");
+
+  const tokenResult = runHordeMain(tokenGame);
+  assert.equal(tokenResult.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+});
+
+test("Volley Veteran damages a chosen opposing creature equal to the Horde's Goblin count", () => {
+  const game = createTestGame("volley-veteran-entry");
+  const fragile = addCard(game, customCard("volley_target", "player", { toughness: 2 }));
+  const sturdy = addCard(game, customCard("volley_survivor", "player", { toughness: 4 }));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const veteran = addCard(game, cardFromDeck("volley_veteran", "horde"));
+
+  runEnterBattlefieldTriggers(game, veteran);
+  drainEventQueue(game);
+
+  assert.equal(game.player.battlefield.some((card) => card.instanceId === fragile.instanceId), false);
+  assert.equal(game.player.battlefield.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 0);
+});
+
+test("Goblin Rabblemaster creates its combat token before Horde attackers are declared", () => {
+  const game = createTestGame("rabblemaster-combat-token");
+  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "horde"));
+
+  const result = prepareHordeAttackers(game);
+  const tokens = result.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red");
+
+  assert.equal(tokens.length, 1);
+  assert.deepEqual(new Set(result.combat.hordeAttackers), new Set([rabblemaster.instanceId, tokens[0].instanceId]));
+  assert.equal(tokens[0].tapped, true);
+});
+
+test("Goblin Rabblemaster counts every other attacking Goblin after attack tokens enter", () => {
+  const game = createTestGame("rabblemaster-attack-buff");
+  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "horde"));
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  const result = prepareHordeAttackers(game);
+  const currentRabblemaster = result.horde.battlefield.find((card) => card.instanceId === rabblemaster.instanceId);
+
+  assert.ok(currentRabblemaster);
+  assert.equal(result.combat.hordeAttackers.length, 5);
+  assert.deepEqual(getPowerToughness(result, currentRabblemaster), { power: 6, toughness: 2 });
+});
+
+test("Battle Cry Goblin creates a tapped attacking token only at six declared power", () => {
+  const belowThreshold = createTestGame("battle-cry-below");
+  addCard(belowThreshold, cardFromDeck("battle_cry_goblin", "horde"));
+  addCard(belowThreshold, customCard("three_power_goblin", "horde", { subtypes: ["Goblin"], power: 3 }));
+
+  const belowResult = prepareHordeAttackers(belowThreshold);
+  assert.equal(belowResult.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
+
+  const threshold = createTestGame("battle-cry-threshold");
+  addCard(threshold, cardFromDeck("battle_cry_goblin", "horde"));
+  addCard(threshold, customCard("four_power_goblin", "horde", { subtypes: ["Goblin"], power: 4 }));
+
+  const thresholdResult = prepareHordeAttackers(threshold);
+  const token = thresholdResult.horde.battlefield.find((card) => card.definitionId === "goblin_token_1_1_red");
+  assert.ok(token);
+  assert.equal(token.tapped, true);
+  assert.equal(thresholdResult.combat.hordeAttackers.includes(token.instanceId), true);
+});
+
+test("General Kreat creates one attacking token and damages the player when it enters", () => {
+  const game = createTestGame("general-kreat-attack");
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  const result = prepareHordeAttackers(game);
+  const goblinTokens = result.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red");
+
+  assert.equal(goblinTokens.length, 2);
+  assert.equal(result.combat.hordeAttackers.length, 3);
+  assert.equal(result.player.life, 29);
+});
+
+test("Raid Bombardment counts only declared attackers with power two or less", () => {
+  const game = createTestGame("raid-bombardment");
+  addCard(game, cardFromDeck("raid_bombardment", "horde"));
+  addCard(game, customCard("small_attacker", "horde", { power: 1 }));
+  addCard(game, customCard("medium_attacker", "horde", { power: 2 }));
+  addCard(game, customCard("large_attacker", "horde", { power: 3 }));
+
+  const result = prepareHordeAttackers(game);
+
+  assert.equal(result.player.life, 28);
+});
+
+test("Krenko grows before creating tokens equal to its new power", () => {
+  const game = createTestGame("krenko-attack");
+  const krenko = addCard(game, cardFromDeck("krenko_tin_street_kingpin", "horde"));
+
+  const result = prepareHordeAttackers(game);
+  const currentKrenko = result.horde.battlefield.find((card) => card.instanceId === krenko.instanceId);
+  const tokens = result.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red");
+
+  assert.equal(currentKrenko?.counters["+1/+1"], 1);
+  assert.deepEqual(getPowerToughness(result, currentKrenko), { power: 2, toughness: 3 });
+  assert.equal(tokens.length, 2);
+  assert.equal(tokens.every((card) => card.tapped && result.combat.hordeAttackers.includes(card.instanceId)), true);
+});
+
+test("Goblin Chainwhirler damages the player and every opposing creature on entry", () => {
+  const game = createTestGame("chainwhirler-entry");
+  const fragile = addCard(game, customCard("fragile_player_creature", "player", { toughness: 1 }));
+  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { toughness: 2 }));
+  const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
+
+  runEnterBattlefieldTriggers(game, chainwhirler);
+  drainEventQueue(game);
+
+  assert.equal(game.player.life, 29);
+  assert.equal(game.player.battlefield.some((card) => card.instanceId === fragile.instanceId), false);
+  assert.equal(game.player.battlefield.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+});
+
+test("Pashalik Mons burns a random opposing creature separately for each Goblin death", () => {
+  const anotherGoblinDies = createTestGame("pashalik-other-dies");
+  addCard(anotherGoblinDies, cardFromDeck("pashalik_mons", "horde"));
+  const burnTarget = addCard(anotherGoblinDies, customCard("pashalik_burn_target", "player", { toughness: 5 }));
+  const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
+  destroyPermanent(anotherGoblinDies, firstGoblin);
+  drainEventQueue(anotherGoblinDies);
+  assert.equal(burnTarget.damageMarked, 1);
+  assert.equal(burnTarget.flags.burnSmoke, true);
+
+  destroyPermanent(anotherGoblinDies, secondGoblin);
+  drainEventQueue(anotherGoblinDies);
+  assert.equal(burnTarget.damageMarked, 2);
+  assert.equal(anotherGoblinDies.player.life, 30);
+
+  const cleaned = advancePhase(anotherGoblinDies, "end");
+  assert.equal(cleaned.player.battlefield.find((card) => card.instanceId === burnTarget.instanceId)?.flags.burnSmoke, undefined);
+});
+
+test("Pashalik resolves a combat death before the next Horde combat event", () => {
+  const game = createTestGame("pashalik-combat-timing");
+  addCard(game, cardFromDeck("pashalik_mons", "horde"));
+  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const blocker = addCard(game, customCard("pashalik_combat_blocker", "player", { power: 3, toughness: 5 }));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [goblin.instanceId];
+  game.combat.blockers = { [goblin.instanceId]: [blocker.instanceId] };
+
+  const [combatEvent] = buildHordeAttackEvents(game);
+  const afterImpact = applyHordeAttackEvent(game, combatEvent);
+
+  assert.equal(afterImpact.horde.battlefield.some((card) => card.instanceId === goblin.instanceId), false);
+  assert.equal(afterImpact.eventQueue.some((event) => event.type === "CREATURE_DIED"), true);
+
+  drainEventQueue(afterImpact);
+  assert.equal(afterImpact.player.battlefield.find((card) => card.instanceId === blocker.instanceId)?.damageMarked, 2);
+});
+
+test("a blocker removed between Horde impacts cannot deal ghost combat damage", () => {
+  const game = createTestGame("goblin-no-ghost-blocker");
+  const attacker = addCard(game, customCard("later_attacker", "horde", { power: 2, toughness: 3 }));
+  const blocker = addCard(game, customCard("burned_future_blocker", "player", { power: 5, toughness: 2 }));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+  const [event] = buildHordeAttackEvents(game);
+
+  destroyPermanent(game, blocker);
+  assert.equal(isHordeAttackEventCurrent(game, event), false);
+
+  const resolved = applyHordeAttackEvent(game, event);
+  assert.equal(resolved.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
+  assert.equal(resolved.player.life, 30);
+});
+
+test("Rundvelt Hordemaster resolves exactly once when it dies", () => {
+  const game = createTestGame("rundvelt-self-dies");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+
+  destroyPermanent(game, rundvelt);
+  drainEventQueue(game);
+
+  assert.equal(game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(game.horde.library.length, 1);
+});
+
+test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", () => {
+  const game = createTestGame("goblin-death-two-reactors");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
+  addCard(game, customCard("player_blocker", "player", { power: 2, toughness: 4 }), "player");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const reactors = pendingTriggerSources(game, death).map((source) => source.instanceId);
+  assert.deepEqual(new Set(reactors), new Set([rundvelt.instanceId, pashalik.instanceId]));
+
+  // Each beat resolves exactly one reactor, so the other still owes its own animation.
+  resolveTriggeredEvent(game, death, undefined, pashalik.instanceId);
+  assert.deepEqual(
+    pendingTriggerSources(game, death).map((source) => source.instanceId),
+    [rundvelt.instanceId],
+  );
+  assert.equal(game.horde.library.length, 1, "Rundvelt must not exile before its own beat");
+
+  resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
+  assert.equal(pendingTriggerSources(game, death).length, 0);
+  assert.equal(game.horde.library.length, 0);
+});
+
+test("a creature that enters because of a death does not react to that death", () => {
+  const game = createTestGame("no-reaction-to-own-summon");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  addCard(game, customCard("player_blocker", "player", { power: 2, toughness: 4 }), "player");
+  // Rundvelt exiles the top card on a Goblin death; that card is Pashalik, who also reacts to
+  // Goblin deaths. Pashalik was not in play when the Goblin died, so it must never react to it.
+  addCard(game, cardFromDeck("pashalik_mons", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+
+  // Mirrors the animated beat loop, which re-derives the reactors after every beat. A plain
+  // drain collects its sources up front and would hide this.
+  resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
+  const pashalik = game.horde.battlefield.find((card) => card.definitionId === "pashalik_mons");
+  assert.ok(pashalik, "Rundvelt must have put Pashalik onto the battlefield");
+  assert.deepEqual(
+    pendingTriggerSources(game, death).map((source) => source.definitionId),
+    [],
+    "Pashalik entered after the death and must not be queued as a reactor",
+  );
+
+  drainEventQueue(game);
+  assert.equal(game.player.battlefield[0].damageMarked, 0, "Pashalik must not burn for the death that summoned it");
+});
+
+test("an effect that queues a follow-up keeps it ahead of the other reactors", () => {
+  const game = createTestGame("spawned-event-priority");
+  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  addCard(game, customCard("burn_target", "player", { power: 1, toughness: 4 }), "player");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const queuedBefore = new Set(game.eventQueue.map((event) => event.id));
+
+  // Pashalik's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
+  // runner puts anything a beat spawned ahead of the reactors still waiting on the parent, so
+  // one card's effect never splits in half around another card's.
+  resolveTriggeredEvent(game, death, undefined, pashalik.instanceId);
+  const spawned = game.eventQueue.filter((event) => !queuedBefore.has(event.id));
+
+  assert.deepEqual(spawned.map((event) => event.type), ["BURN_DAMAGE"]);
+  assert.equal(pendingTriggerSources(game, death).length, 1, "Rundvelt still owes its own beat");
+});
+
+test("a resolved trigger source is never resolved a second time by a bulk drain", () => {
+  const game = createTestGame("trigger-source-resolved-once");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
+  drainEventQueue(game);
+
+  assert.equal(game.horde.library.length, 1);
+});
+
+test("static auras only announce the creatures that newly fell under them", () => {
+  const game = createTestGame("static-aura-coverage");
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  const before = collectStaticAuras(game, "horde");
+  const buff = before.find((aura) => aura.power === 1 && aura.toughness === 1);
+  assert.ok(buff, "Rundvelt's +1/+1 must be visible as a static aura");
+  assert.deepEqual(buff.affectedIds, [first.instanceId]);
+  assert.equal(buff.controller, "horde");
+
+  const snapshot = snapshotStaticAuras(before);
+  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot).length, 0);
+
+  const second = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const announced = newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot);
+  assert.deepEqual(
+    announced.map((aura) => aura.affectedIds),
+    [[second.instanceId]],
+    "only the newly covered Goblin is worth announcing",
+  );
+});
+
+test("a static aura losing a creature is not announced again", () => {
+  const game = createTestGame("static-aura-shrinks");
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const snapshot = snapshotStaticAuras(collectStaticAuras(game, "horde"));
+
+  destroyPermanent(game, first);
+
+  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot).length, 0);
 });
 
 test("Horde turn six has a one-card Mini Surge", () => {

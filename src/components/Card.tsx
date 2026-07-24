@@ -46,7 +46,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
-  const stats = cardStatState(game, card, visualDamageMarked);
+  const heldStaticAuraBonus = useGameStore((state) => state.heldStaticAuraBonuses[card.instanceId]);
+  const stats = cardStatState(game, card, visualDamageMarked, heldStaticAuraBonus);
   const visibleKeywords =
     (card.zone === "battlefield" || card.zone === "hand") && card.cardTypes.includes("Creature")
       ? cardKeywords(game, card)
@@ -56,6 +57,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           .filter(Boolean)
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+  // Horde creatures tap as a rule of the mode, not as a choice the player made, so they never get
+  // the grey "spent" treatment or the Tapped badge. They DO lean, and they lean the moment they
+  // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
+  const usesHordeTappedStyle = card.controller === "horde" && card.cardTypes.includes("Creature");
   const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
   const { imageUrl, displayName } = useCardDetails(card.definitionId);
   const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : localizedCardName(card, language);
@@ -124,8 +129,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       className={[
         "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
-        card.tapped ? "card-tapped" : "",
-        card.tapped && isZombie ? "card-tapped-zombie" : "",
+        card.tapped || (attacking && usesHordeTappedStyle) ? "card-tapped" : "",
+        (card.tapped || attacking) && usesHordeTappedStyle ? "card-tapped-zombie" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
@@ -156,7 +161,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && !isZombie && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
+          {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
           {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? (
             <span

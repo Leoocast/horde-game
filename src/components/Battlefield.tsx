@@ -119,6 +119,8 @@ export function Battlefield({ game, side, cards }: Props) {
   const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
   const zombieWaveByCardId = useRef<Map<string, number>>(new Map());
   const zombieWaveOrder = useRef<Map<number, number>>(new Map());
+  const combatCasualties = useRef<Map<string, CardInstance>>(new Map());
+  const previousCards = useRef<CardInstance[]>(cards);
   const nextBattlefieldOrder = useRef(0);
   const nextZombieWaveId = useRef(0);
   const currentZombieEntryWaveId = useRef<number | undefined>(undefined);
@@ -147,6 +149,8 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
+  const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
@@ -175,9 +179,15 @@ export function Battlefield({ game, side, cards }: Props) {
   const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
 
-  const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
-  const lands = cards.filter((card) => card.cardTypes.includes("Land"));
-  const others = cards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
+  // Combat casualties leave game state the instant their impact lands, so their triggers can
+  // resolve in sequence. Removing them from the row right then would re-center every survivor
+  // mid-sequence. Keep their slot as a dead-looking ghost until the whole combat is over, then
+  // let them all leave at once.
+  const displayedCards = holdCombatCasualties(cards, resolvingHordeCombat, combatCasualties, previousCards, battlefieldCardOrder);
+  const casualtyIds = combatCasualties.current;
+  const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
+  const lands = displayedCards.filter((card) => card.cardTypes.includes("Land"));
+  const others = displayedCards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
   const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
   const storedManaCount = game.player.manaPool.colorless;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
@@ -188,6 +198,17 @@ export function Battlefield({ game, side, cards }: Props) {
     stored?: EnergyTrackTransition;
   }>({});
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+  // The Horde attacks with everything able, every turn. Declaring is a rules step that only runs
+  // after summons and enter triggers, but the board should read as committed from the moment the
+  // creatures land: they arrive already leaning with their attack chevron, and the effects then
+  // play over a board that has stopped moving. Visual only — nothing here declares an attacker.
+  const hordeAttackPending =
+    side === "horde" &&
+    game.activeSide === "horde" &&
+    (game.phase === "horde" || game.phase === "combat") &&
+    game.combat.hordeAttackers.length === 0 &&
+    !resolvingHordeCombat &&
+    !game.winner;
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
@@ -689,6 +710,7 @@ export function Battlefield({ game, side, cards }: Props) {
       zombieWaveByCardId.current,
       zombieWaveOrder.current,
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
+      resolvingHordeCombat,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
@@ -727,7 +749,10 @@ export function Battlefield({ game, side, cards }: Props) {
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
     const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
-    const attacking = game.combat.playerAttackers.includes(card.instanceId) || game.combat.hordeAttackers.includes(card.instanceId);
+    const attacking =
+      game.combat.playerAttackers.includes(card.instanceId) ||
+      game.combat.hordeAttackers.includes(card.instanceId) ||
+      (hordeAttackPending && canAttack(game, card));
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
@@ -760,6 +785,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       tutorialAwaitingContinue ||
+      casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
@@ -797,7 +823,10 @@ export function Battlefield({ game, side, cards }: Props) {
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
         (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk" && legalBlocker) || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
     );
-    const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
+    // A ghost is a card already gone from game state whose slot is held until combat ends. It
+    // must keep reading as dead even after hordeCombatDeadCardIds is cleared for the next impact.
+    const isCombatGhost = casualtyIds.has(card.instanceId);
+    const visuallyDead = isCombatGhost || hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
     const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
@@ -866,7 +895,7 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
-          card.tapped ? "battlefield-layout-slot-tapped" : "",
+          card.tapped || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
           card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
@@ -906,6 +935,9 @@ export function Battlefield({ game, side, cards }: Props) {
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
       {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
+      {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
+      {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
+      {burnImpactCardId === card.instanceId && <span key={`burn-${burnImpactEventId}`} className="burn-card-scorch-flash" aria-hidden="true" />}
       {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}
@@ -1169,6 +1201,11 @@ function groupBattlefieldCopies(
   zombieWaveByCardId: Map<string, number>,
   zombieWaveOrder: Map<number, number>,
   keepSeparateCardIds?: Set<string>,
+  // Stats move constantly while combat resolves: a dying lord drops its static buff off every
+  // creature it covered. Grouping by stats then would re-key and remount whole stacks mid-
+  // sequence, which reads as the board reorganising itself. Group by identity alone until the
+  // combat is over; the stacks settle once, at the end.
+  stableGrouping = false,
 ): Array<{ key: string; cards: CardInstance[] }> {
   const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
   const stackZombieTokens = cards.length > 7;
@@ -1176,7 +1213,9 @@ function groupBattlefieldCopies(
   for (const card of cards) {
     const zombieToken = isZombieToken(card);
     const stats = cardStatState(game, card);
-    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
+    const visualStatsKey = stableGrouping
+      ? "stable"
+      : `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
     const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
     const groupingKey =
       keepSeparateCardIds?.has(card.instanceId)
@@ -1230,6 +1269,52 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
     "--flying-idle-delay": `${delay}ms`,
     "--flying-idle-drift": `${drift}px`,
   } as CSSProperties;
+}
+
+/**
+ * Returns the row's cards with combat casualties still in it while the Horde combat sequence runs.
+ * Refs are read and written during render on purpose: the ghost has to exist in the very first
+ * render after the card left game state, otherwise the row re-centers for one frame.
+ */
+function holdCombatCasualties(
+  cards: CardInstance[],
+  resolvingHordeCombat: boolean,
+  casualties: RefObject<Map<string, CardInstance>>,
+  previousCards: RefObject<CardInstance[]>,
+  cardOrder: RefObject<Map<string, number>>,
+): CardInstance[] {
+  const liveIds = new Set(cards.map((card) => card.instanceId));
+  if (resolvingHordeCombat) {
+    for (const card of previousCards.current) {
+      if (!liveIds.has(card.instanceId) && !casualties.current.has(card.instanceId)) {
+        casualties.current.set(card.instanceId, card);
+      }
+    }
+    // A creature arriving mid-combat takes over a held slot rather than landing past the gap the
+    // casualty left, which read as the card entering after a hole. Rightmost held slot first.
+    for (const card of cards) {
+      if (cardOrder.current.has(card.instanceId)) continue;
+      let recycledId: string | undefined;
+      let recycledOrder = Number.NEGATIVE_INFINITY;
+      for (const ghostId of casualties.current.keys()) {
+        const order = cardOrder.current.get(ghostId);
+        if (order !== undefined && order > recycledOrder) {
+          recycledOrder = order;
+          recycledId = ghostId;
+        }
+      }
+      if (recycledId === undefined) break;
+      casualties.current.delete(recycledId);
+      cardOrder.current.delete(recycledId);
+      cardOrder.current.set(card.instanceId, recycledOrder);
+    }
+  } else if (casualties.current.size > 0) {
+    casualties.current.clear();
+  }
+  previousCards.current = cards;
+  if (casualties.current.size === 0) return cards;
+  const ghosts = [...casualties.current.values()].filter((card) => !liveIds.has(card.instanceId));
+  return ghosts.length > 0 ? [...cards, ...ghosts] : cards;
 }
 
 function counterBuffedStats(game: GameState, card: CardInstance): string {

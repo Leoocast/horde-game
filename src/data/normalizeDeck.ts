@@ -130,24 +130,59 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
     condition: normalizeTriggerCondition(ability),
     effect,
   };
-  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
-    return [
-      normalized,
-      {
-        type: "TRIGGERED_ABILITY",
-        trigger: "THIS_DIES",
-        effect,
-      },
-    ];
-  }
   return [normalized];
 }
 
 function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
-  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
-    return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
+  switch (ability.customHandler) {
+    case "rundvelt_hordemaster_exile_top_if_goblin":
+      return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
+    case "battle_cry_goblin_pack_tactics":
+      return {
+        type: "CONDITIONAL",
+        condition: { type: "ATTACK_TOTAL_POWER_AT_LEAST", amount: 6 },
+        effect: {
+          type: "CREATE_TOKEN",
+          tokenId: "goblin_token_1_1_red",
+          amount: 1,
+          tapped: true,
+          attacking: true,
+        },
+      };
+    case "raid_bombardment_small_attacker_damage":
+      return {
+        type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
+        filter: { maxPower: 2 },
+        amount: 1,
+      };
+    case "goblin_rabblemaster_begin_combat_token":
+      return { type: "CREATE_TOKEN", tokenId: "goblin_token_1_1_red", amount: 1 };
+    case "goblin_rabblemaster_attack_buff":
+      return {
+        type: "PUMP_SELF_PER_ATTACKER_MATCHING",
+        filter: { subtypes: ["Goblin"], excludeSelf: true },
+        power: 1,
+        toughness: 0,
+      };
+    case "general_kreat_goblins_attack_token":
+      return {
+        type: "CONDITIONAL",
+        condition: { type: "DECLARED_ATTACKER_MATCHES", filters: { subtypes: ["Goblin"] } },
+        effect: {
+          type: "CREATE_TOKEN",
+          tokenId: "goblin_token_1_1_red",
+          amount: 1,
+          tapped: true,
+          attacking: true,
+        },
+      };
+    case "general_kreat_damage_each_opponent":
+      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1 };
+    case "goblin_chainwhirler_enter_damage_all":
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1 };
+    default:
+      return undefined;
   }
-  return undefined;
 }
 
 function normalizeTriggerEvent(event: string, triggerSource: string): string | undefined {
@@ -158,23 +193,45 @@ function normalizeTriggerEvent(event: string, triggerSource: string): string | u
 
 function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | undefined {
   const conditions = Array.isArray(ability.conditions) ? (ability.conditions as Array<Record<string, unknown>>) : [];
-  const eventObjectMatch = conditions.find((condition) => condition.type === "EVENT_OBJECT_MATCHES");
-  if (!eventObjectMatch) return undefined;
-  const filters = eventObjectMatch.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
-  if (eventObjectMatch.controller === "SELF" && eventObjectMatch.excludeSource && filters?.cardTypes?.includes("Creature")) {
-    return { type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters };
+  const normalized: EffectDefinition[] = [];
+  if (ability.trigger?.event === "ATTACK_DECLARED" && ability.trigger?.source === "SELF") {
+    normalized.push({ type: "SOURCE_IS_ATTACKING" });
   }
-  return {
-    type: "EVENT_OBJECT_MATCHES",
-    controller: eventObjectMatch.controller,
-    excludeSource: eventObjectMatch.excludeSource,
-    filters,
-  };
+  const activePlayer = conditions.find((condition) => condition.type === "ACTIVE_PLAYER_IS");
+  if (activePlayer) {
+    normalized.push({ type: "ACTIVE_PLAYER_IS", player: activePlayer.player });
+  }
+  const eventObjectMatch = conditions.find((condition) => condition.type === "EVENT_OBJECT_MATCHES");
+  if (eventObjectMatch) {
+    const filters = eventObjectMatch.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
+    if (eventObjectMatch.controller === "SELF" && eventObjectMatch.excludeSource && filters?.cardTypes?.includes("Creature")) {
+      normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
+    } else {
+      normalized.push({
+        type: "EVENT_OBJECT_MATCHES",
+        controller: eventObjectMatch.controller,
+        excludeSource: eventObjectMatch.excludeSource,
+        filters,
+      });
+    }
+  }
+  if (normalized.length === 0) return undefined;
+  return normalized.length === 1 ? normalized[0] : { type: "ALL_OF", conditions: normalized };
 }
 
 function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefined {
   if (!effect) return undefined;
   if (effect.type === "MODIFY_STATS") {
+    const scope = effect.scope && typeof effect.scope === "object" ? effect.scope as Record<string, unknown> : undefined;
+    if (scope) {
+      return {
+        type: "PUMP_GROUP_UNTIL_END_OF_TURN",
+        controller: scope.controller ?? "SELF",
+        filter: scope.filters,
+        power: effect.power ?? 0,
+        toughness: effect.toughness ?? 0,
+      };
+    }
     return {
       type: effect.duration === "END_OF_TURN" ? "PUMP_UNTIL_END_OF_TURN" : "PUMP",
       ...normalizeEffectTarget(effect.target),
@@ -198,6 +255,25 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
       type: "FIGHT_SIMULTANEOUS",
       sourceRef: first?.source ?? second?.target,
       targetRef: first?.target ?? second?.source,
+    };
+  }
+  if (effect.type === "SEQUENCE") {
+    return {
+      ...effect,
+      effects: ((effect.effects as EffectDefinition[] | undefined) ?? [])
+        .map((step) => normalizeEffect(step))
+        .filter(Boolean),
+    };
+  }
+  if (effect.type === "CHOOSE") {
+    return {
+      ...effect,
+      options: ((effect.options as Array<Record<string, unknown>> | undefined) ?? []).map((option) => ({
+        ...option,
+        effects: ((option.effects as EffectDefinition[] | undefined) ?? [])
+          .map((step) => normalizeEffect(step))
+          .filter(Boolean),
+      })),
     };
   }
   return effect;

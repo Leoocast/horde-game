@@ -6,9 +6,21 @@ export function cardStats(game: GameState, card: CardInstance): string {
   return cardStatState(game, card).text;
 }
 
-export function cardStatState(game: GameState, card: CardInstance, visualDamageMarked = 0): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
+/**
+ * `heldBonus` hides a static buff whose announcement beat has not played yet. The engine already
+ * applies static abilities continuously, so without this the creature is drawn already buffed and
+ * the beat that is supposed to explain the buff has nothing left to show.
+ */
+export function cardStatState(
+  game: GameState,
+  card: CardInstance,
+  visualDamageMarked = 0,
+  heldBonus?: { power: number; toughness: number },
+): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
   if (!card.cardTypes.includes("Creature")) return { text: "", damaged: false, buffed: false };
-  const { power, toughness } = getPowerToughness(game, card);
+  const total = getPowerToughness(game, card);
+  const power = total.power - (heldBonus?.power ?? 0);
+  const toughness = total.toughness - (heldBonus?.toughness ?? 0);
   const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
   const visibleToughness = Math.max(0, toughness - damageMarked);
   const buffed = power > card.basePower || toughness > card.baseToughness;

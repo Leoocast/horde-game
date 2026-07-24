@@ -18,6 +18,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
   const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
   const smallpoxCard = useGameStore((state) => state.smallpoxCard);
+  const deathRevealCard = useGameStore((state) => state.deathRevealCard);
   // Primitive selectors: smallpoxSelection.x/y update on every mousemove while the
   // SmallpoxSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
   const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
@@ -64,9 +65,36 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
+        {deathRevealCard && (
+          <motion.div
+            key={`death-reveal-${deathRevealCard.instanceId}`}
+            className="horde-death-reveal-host flex flex-col items-center gap-2"
+            initial={{ opacity: 0, y: 24, scale: 0.7, rotate: -7 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0, transition: { duration: 0.34, ease: [0.16, 1, 0.3, 1] } }}
+            // Exits into the Horde graveyard button, which sits up and to the right of this host.
+            exit={{
+              opacity: [1, 1, 0],
+              x: [0, -6, 168],
+              y: [0, 8, -34],
+              scale: [1, 0.97, 0.34],
+              rotate: [0, -4, -12],
+              transition: { duration: 0.38, times: [0, 0.2, 1], ease: ["easeOut", "easeIn"] },
+            }}
+          >
+            <div
+              data-card-id={deathRevealCard.instanceId}
+              className={[
+                "horde-special-card horde-special-card-dying",
+                activatingEffectCardId === deathRevealCard.instanceId ? "effect-card-activating" : "",
+              ].join(" ")}
+            >
+              <Card game={game} card={deathRevealCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+            </div>
+          </motion.div>
+        )}
         {smallpoxCard && (
           <motion.div
             key={smallpoxCard.instanceId}

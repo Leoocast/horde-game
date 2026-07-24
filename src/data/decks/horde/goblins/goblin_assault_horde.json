@@ -860,24 +860,13 @@
             "event": "ENTERS_BATTLEFIELD",
             "source": "SELF"
           },
-          "targets": [
-            {
-              "id": "targetCreature",
-              "zone": "BATTLEFIELD",
-              "controller": "OPPONENT",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
+          "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "DEAL_DAMAGE",
-              "source": "SELF",
-              "target": "targetCreature",
+              "type": "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+              "targetPolicy": "BEST_LETHAL",
+              "animation": "BURN",
               "amount": {
                 "type": "COUNT_PERMANENTS",
                 "controller": "SELF",
@@ -892,7 +881,8 @@
               },
               "damageKind": "NON_COMBAT"
             }
-          ]
+          ],
+          "implementationNote": "Horde targeting policy chooses a lethal opposing creature when possible, then the highest-value creature."
         }
       ],
       "needsVerification": false,
@@ -1174,6 +1164,8 @@
                   "type": "CREATE_TOKEN",
                   "player": "SELF",
                   "tokenId": "goblin_token_1_1_red",
+                  "tapped": true,
+                  "attacking": true,
                   "amount": {
                     "type": "STAT",
                     "object": "SELF",
@@ -1227,21 +1219,7 @@
           "trigger": {
             "event": "PERMANENT_DIED"
           },
-          "targets": [
-            {
-              "id": "damageTarget",
-              "zone": "ANY",
-              "controller": "ANY",
-              "filters": {
-                "objectTypes": [
-                  "Player",
-                  "Creature",
-                  "Planeswalker",
-                  "Battle"
-                ]
-              }
-            }
-          ],
+          "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
@@ -1260,11 +1238,20 @@
           ],
           "effects": [
             {
-              "type": "DEAL_DAMAGE",
-              "source": "SELF",
-              "target": "damageTarget",
+              "type": "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
               "amount": 1,
-              "damageKind": "NON_COMBAT"
+              "damageKind": "NON_COMBAT",
+              "animation": "BURN",
+              "target": {
+                "zone": "BATTLEFIELD",
+                "controller": "OPPONENT",
+                "selection": "RANDOM",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ]
+                }
+              }
             }
           ]
         },
@@ -1326,47 +1313,9 @@
       ]
     },
     {
-      "id": "attack_group_total_power_and_tapped_attacking_tokens",
-      "usedBy": [
-        "battle_cry_goblin_pack_tactics",
-        "general_kreat_goblins_attack_token"
-      ]
-    },
-    {
-      "id": "defending_player_or_planeswalker_reference",
-      "usedBy": [
-        "raid_bombardment_small_attacker_damage"
-      ]
-    },
-    {
-      "id": "must_attack_if_able_continuous_rule",
-      "usedBy": [
-        "goblin_rabblemaster_other_goblins_must_attack"
-      ]
-    },
-    {
-      "id": "created_token_temporary_haste",
-      "usedBy": [
-        "goblin_rabblemaster_begin_combat_token"
-      ]
-    },
-    {
-      "id": "count_other_attacking_goblins",
-      "usedBy": [
-        "goblin_rabblemaster_attack_buff"
-      ]
-    },
-    {
       "id": "divide_damage_among_multiple_targets",
       "usedBy": [
         "mogg_mob_sacrifice_divided_damage"
-      ]
-    },
-    {
-      "id": "damage_each_opponent_and_controlled_permanents",
-      "usedBy": [
-        "goblin_chainwhirler_enter_damage_all",
-        "general_kreat_other_creature_enters_damage"
       ]
     },
     {

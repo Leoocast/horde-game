@@ -23,12 +23,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
+  const burnAnimating = useGameStore((state) => Boolean(state.burnAnimation));
+  const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating;
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || resolvingHordeCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount, t);
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);

@@ -17,6 +17,7 @@ export function cleanupEndStep(game: GameState): void {
     card.temporaryPower = 0;
     card.temporaryToughness = 0;
     card.temporaryKeywords = [];
+    delete card.flags.burnSmoke;
   }
   game.player.manaPool = { ...emptyManaPool(), colorless: game.player.manaPool.colorless };
   game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {} };
