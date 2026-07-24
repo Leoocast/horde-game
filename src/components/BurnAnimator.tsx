@@ -23,13 +23,13 @@ const CHARGE_PARTICLES = [
   { a: 307, r: 40, s: 4 },
 ];
 const TRAIL_RIBBONS = [
-  { w: 96, h: 36, y: 0, r: 0, blur: 7, o: 0.9 },
-  { w: 78, h: 18, y: -18, r: -7, blur: 5, o: 0.9 },
-  { w: 72, h: 16, y: 17, r: 8, blur: 5, o: 0.86 },
+  { w: 84, h: 18, y: 0, r: 0, blur: 6, o: 0.9 },
+  { w: 68, h: 10, y: -10, r: -7, blur: 4, o: 0.9 },
+  { w: 62, h: 9, y: 10, r: 8, blur: 4, o: 0.86 },
 ];
 const TRAIL_STREAKS = [
-  { w: 108, h: 6, y: -6, r: -1, blur: 3, o: 0.92 },
-  { w: 88, h: 4, y: 11, r: 2, blur: 2.4, o: 0.96 },
+  { w: 94, h: 3, y: -4, r: -1, blur: 2, o: 0.92 },
+  { w: 78, h: 2, y: 7, r: 2, blur: 1.6, o: 0.96 },
 ];
 const IMPACT_SMOKE = [
   { x: -82, y: -20, s: 0.8, drift: -26, s2: 1.08, s3: 1.376, drift2: -39 },
@@ -79,6 +79,14 @@ export function BurnAnimator() {
     let embersSpawned = false;
     const start = performance.now();
 
+    // Sparks fly opposite the ball's heading (backward along the travel vector), with a little
+    // lateral spread — so they always stream off the tail, whatever the shot angle.
+    const travelLen = Math.hypot(geometry.endX - geometry.startX, geometry.endY - geometry.startY) || 1;
+    const backX = -(geometry.endX - geometry.startX) / travelLen;
+    const backY = -(geometry.endY - geometry.startY) / travelLen;
+    const perpX = -backY;
+    const perpY = backX;
+
     const spawnTrace = () => {
       const projectile = projectileRef.current;
       if (!projectile) return;
@@ -87,14 +95,17 @@ export function BurnAnimator() {
       particle.className = "burn-trace-particle";
       const size = 2 + Math.random() * 4;
       const life = 260 + Math.random() * 480;
-      const x = rect.left + rect.width * (0.1 + Math.random() * 0.32);
-      const y = rect.top + rect.height * (0.28 + Math.random() * 0.44);
+      // Spawn on the ball itself (it sits at the leading/right side of the projectile box).
+      const x = rect.left + rect.width * (0.58 + Math.random() * 0.36);
+      const y = rect.top + rect.height * (0.3 + Math.random() * 0.4);
       particle.style.left = `${x}px`;
       particle.style.top = `${y}px`;
       particle.style.setProperty("--size", `${size}px`);
       particle.style.setProperty("--life", `${life}ms`);
-      particle.style.setProperty("--dx", `${-30 - Math.random() * 80}px`);
-      particle.style.setProperty("--dy", `${-10 + Math.random() * 60}px`);
+      const mag = 24 + Math.random() * 68;
+      const spread = (Math.random() - 0.5) * 42;
+      particle.style.setProperty("--dx", `${backX * mag + perpX * spread}px`);
+      particle.style.setProperty("--dy", `${backY * mag + perpY * spread}px`);
       trace.appendChild(particle);
       particle.addEventListener("animationend", () => particle.remove(), { once: true });
     };
@@ -200,7 +211,6 @@ export function BurnAnimator() {
             <div className="burn-ball-mid" />
             <div className="burn-ball-core" />
             <div className="burn-ball-hotspot" />
-            <div className="burn-ball-shadow" />
           </div>
         </div>
 

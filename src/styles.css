@@ -5494,10 +5494,10 @@
 
   .burn-trail {
     position: absolute;
-    right: 48px;
+    right: 32px;
     top: 50%;
-    width: 150px;
-    height: 64px;
+    width: 120px;
+    height: 36px;
     transform: translateY(-50%);
     transform-origin: right center;
     z-index: 0;
@@ -5556,8 +5556,8 @@
     position: absolute;
     right: 0;
     top: 50%;
-    width: 72px;
-    height: 58px;
+    width: 44px;
+    height: 36px;
     transform: translateY(-50%);
     isolation: isolate;
     z-index: 3;
@@ -5566,59 +5566,52 @@
   .burn-ball-outer,
   .burn-ball-mid,
   .burn-ball-core,
-  .burn-ball-hotspot,
-  .burn-ball-shadow {
+  .burn-ball-hotspot {
     position: absolute;
     pointer-events: none;
   }
 
+  /* No black rim: the falloff stays molten (deep red → transparent) so it reads as flame,
+     not a dark sphere. */
   .burn-ball-outer {
     inset: 0;
     border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%;
     background: radial-gradient(circle at 66% 46%,
-        #fff9e6 0 5%,
-        #ffc267 12%,
-        #f9550d 31%,
-        #a71404 48%,
-        #390006 63%,
-        rgba(0, 0, 0, 0.76) 73%,
-        transparent 84%);
-    filter: blur(3.6px);
+        #fff9e6 0 6%,
+        #ffc267 15%,
+        #f9550d 34%,
+        #e23608 52%,
+        #a71404 68%,
+        rgba(140, 16, 3, 0.5) 80%,
+        transparent 92%);
+    filter: blur(2.4px);
     animation: burn-blob-one 85ms ease-in-out infinite alternate, burn-outer-flicker 65ms ease-in-out infinite alternate;
   }
 
   .burn-ball-mid {
-    inset: 5px 6px 6px 9px;
+    inset: 3px 4px 4px 5px;
     border-radius: 56% 44% 47% 53% / 45% 59% 41% 55%;
-    background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(116, 9, 1, 0.74) 68%, transparent 82%);
-    filter: blur(2.2px);
+    background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(160, 22, 2, 0.5) 72%, transparent 88%);
+    filter: blur(1.4px);
     mix-blend-mode: screen;
     animation: burn-blob-two 65ms ease-in-out infinite alternate, burn-mid-flicker 58ms ease-in-out infinite alternate;
   }
 
   .burn-ball-core {
-    inset: 13px 13px 13px 21px;
+    inset: 8px 8px 8px 13px;
     border-radius: 49% 51% 42% 58% / 58% 44% 56% 42%;
     background: radial-gradient(circle at 62% 46%, #fff 0 18%, #fff0c9 36%, #ffb04e 66%, rgba(255, 63, 7, 0.12) 100%);
-    filter: blur(1.3px);
+    filter: blur(0.9px);
     mix-blend-mode: screen;
     animation: burn-blob-three 55ms ease-in-out infinite alternate, burn-ball-core-pulse 72ms ease-in-out infinite alternate;
   }
 
   .burn-ball-hotspot {
-    inset: 18px 14px 18px 30px;
+    inset: 11px 9px 11px 18px;
     border-radius: 50%;
     background: radial-gradient(circle, #fff 0 45%, rgba(255, 245, 216, 0.72) 70%, transparent);
-    filter: blur(2.5px);
+    filter: blur(1.6px);
     animation: burn-hotspot 46ms ease-in-out infinite alternate;
-  }
-
-  .burn-ball-shadow {
-    inset: -4px;
-    border-radius: 50%;
-    background: repeating-linear-gradient(145deg, rgba(0, 0, 0, 0.11) 0 3px, rgba(255, 255, 255, 0.025) 3px 6px);
-    mix-blend-mode: multiply;
-    opacity: 0.55;
   }
 
   /* ---------- Layered impact anchored on the target ---------- */
