@@ -14,7 +14,7 @@ import {
   sendCardToGraveyard,
   type PlaygroundActionResult,
 } from "./actions";
-import { addScenarioCard, type ScenarioCard, type ScenarioZoneKey } from "./scenario";
+import { addScenarioCard, configureExactHordeTurn, stageHordeQueue, type ScenarioCard, type ScenarioZoneKey } from "./scenario";
 
 /**
  * A recorded playground action. This is the whole timeline format — recording is just appending
@@ -28,6 +28,7 @@ export type TimelineStep =
   | { kind: "advancePhase" }
   | { kind: "endTurn" }
   | { kind: "hordeTurn" }
+  | { kind: "hordeTurnExact"; entries?: ScenarioCard[]; count?: number }
   | { kind: "resolveNextEvent" }
   | { kind: "resolveAllEvents" }
   | { kind: "draw" }
@@ -52,6 +53,7 @@ export function describeStep(step: TimelineStep): string {
     case "advancePhase": return "Advance phase";
     case "endTurn": return "Advance turn";
     case "hordeTurn": return "Run Horde turn";
+    case "hordeTurnExact": return `Run Horde turn with exactly ${queuedCardCount(step)} queued card(s)`;
     case "resolveNextEvent": return "Resolve next event";
     case "resolveAllEvents": return "Resolve all events";
     case "draw": return "Draw card";
@@ -83,6 +85,19 @@ export function executeStep(step: TimelineStep): StepOutcome {
     case "hordeTurn":
       store.runHordeMain();
       return readEngineOutcome("Horde turn running.");
+    case "hordeTurnExact": {
+      const originalRules = structuredClone(store.game.hordeRules);
+      const withQueue = step.entries ? stageHordeQueue(store.game, step.entries) : store.game;
+      if (withQueue.lastActionResult?.ok === false) {
+        useGameStore.setState({ game: withQueue });
+        return { ok: false, reason: withQueue.lastActionResult.reason };
+      }
+      const staged = configureExactHordeTurn(withQueue, queuedCardCount(step));
+      useGameStore.setState({ game: staged });
+      store.runHordeMain();
+      useGameStore.setState(({ game }) => ({ game: { ...game, hordeRules: originalRules } }));
+      return readEngineOutcome("Queued Horde turn running.");
+    }
     case "resolveNextEvent":
       return applyToGame(resolveNextEvent);
     case "resolveAllEvents":
@@ -112,6 +127,10 @@ export function executeStep(step: TimelineStep): StepOutcome {
     default:
       return { ok: false, reason: `Unknown step "${(step as { kind: string }).kind}" — it was recorded by an older build.` };
   }
+}
+
+function queuedCardCount(step: Extract<TimelineStep, { kind: "hordeTurnExact" }>): number {
+  return step.entries?.reduce((total, entry) => total + (entry.amount ?? 1), 0) ?? Math.max(0, step.count ?? 0);
 }
 
 /**

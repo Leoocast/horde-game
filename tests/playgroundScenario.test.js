@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { BLANK_SCENARIO, addScenarioCard, buildScenarioGame, snapshotBoard, snapshotScenario, validateScenario } from "../src/playground/scenario";
+import {
+  BLANK_SCENARIO,
+  addScenarioCard,
+  buildScenarioGame,
+  configureExactHordeTurn,
+  snapshotBoard,
+  snapshotScenario,
+  validateScenario,
+} from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
 import { runHordeMain } from "../src/engine/HordeController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
@@ -230,6 +238,23 @@ test("Horde library queues preserve their authored top-to-bottom order", () => {
   }));
 
   assert.deepEqual(game.horde.library.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
+});
+
+test("an exact queued Horde turn reveals duplicates and no extra deck card", () => {
+  const queued = buildScenarioGame(scenario({
+    zones: {
+      hordeLibraryTop: [
+        { definitionId: "graf_harvest" },
+        { definitionId: "graf_harvest" },
+      ],
+    },
+  }));
+  const libraryBefore = queued.horde.library.length;
+
+  const resolved = runHordeMain(configureExactHordeTurn(queued, 2));
+
+  assert.equal(resolved.horde.library.length, libraryBefore - 2);
+  assert.equal(resolved.horde.battlefield.filter((card) => card.definitionId === "graf_harvest").length, 2);
 });
 
 test("a valid scenario reports no problems", () => {

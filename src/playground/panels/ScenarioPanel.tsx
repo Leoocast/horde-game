@@ -1,10 +1,21 @@
-import { GripVertical, Plus, RefreshCw, Skull, X } from "lucide-react";
+import { ArrowDownToLine, GripVertical, Play, Plus, RefreshCw, X } from "lucide-react";
 import { useMemo, useState, type DragEvent } from "react";
+import { hordeInspectableDecks, playerInspectableDecks } from "../../data/deckCatalog";
+import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
 import { searchCatalog } from "../cardCatalog";
 import type { ScenarioCard, ScenarioDefinition } from "../scenario";
-import { TextField } from "./fields";
+import { SelectField, TextField } from "./fields";
 
 const RESULT_LIMIT = 20;
+
+function CardThumb({ definitionId, name }: { definitionId: string; name: string }) {
+  const imageUrl = toArtCropImageUrl(useCardImage(definitionId));
+  return (
+    <span className="playground-thumb" aria-hidden="true">
+      {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="playground-thumb-fallback">{name.slice(0, 1)}</span>}
+    </span>
+  );
+}
 
 type Props = {
   draft: ScenarioDefinition;
@@ -20,8 +31,8 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
   const [draggedIndex, setDraggedIndex] = useState<number>();
   const [dropIndex, setDropIndex] = useState<number>();
   const results = useMemo(
-    () => searchCatalog(query).filter((card) => card.side === "horde").slice(0, RESULT_LIMIT),
-    [query],
+    () => searchCatalog(query, draft.hordeDeckId).filter((card) => card.side === "horde").slice(0, RESULT_LIMIT),
+    [draft.hordeDeckId, query],
   );
 
   function addToQueue(definitionId: string) {
@@ -67,6 +78,20 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
             <RefreshCw size={14} /> Update
           </button>
         </div>
+        <div className="playground-grid-2">
+          <SelectField
+            label="Player deck"
+            value={draft.playerDeckId}
+            options={playerInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
+            onChange={(playerDeckId) => onChange({ ...draft, playerDeckId })}
+          />
+          <SelectField
+            label="Horde deck"
+            value={draft.hordeDeckId}
+            options={hordeInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
+            onChange={(hordeDeckId) => onChange({ ...draft, hordeDeckId })}
+          />
+        </div>
       </section>
 
       <section className="playground-group playground-horde-turn">
@@ -88,6 +113,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                 {results.map((card) => (
                   <li key={card.key}>
                     <button className="playground-result is-compact" type="button" onClick={() => addToQueue(card.definition.id)}>
+                      <CardThumb definitionId={card.definition.id} name={card.definition.name} />
                       <span className="playground-result-text">
                         <span className="playground-result-name">{card.definition.name}</span>
                         <span className="playground-result-id">{card.definition.id}</span>
@@ -101,7 +127,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
             )}
           </div>
           <button className="playground-button is-primary" type="button" onClick={onExecuteHordeTurn}>
-            <Skull size={14} /> Execute
+            <Play size={14} /> Execute
           </button>
         </div>
 
@@ -116,6 +142,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                   key={`${entry.definitionId}-${index}`}
                   className={[
                     "playground-library-entry",
+                    "playground-horde-queue-card",
                     draggedIndex === index ? "is-dragging" : "",
                     dropIndex === index && draggedIndex !== index ? "is-drop-target" : "",
                   ].join(" ")}
@@ -135,6 +162,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                   >
                     <GripVertical size={14} aria-hidden="true" />
                   </span>
+                  <CardThumb definitionId={entry.definitionId} name={card?.definition.name ?? entry.definitionId} />
                   <span className="playground-step-index">{index + 1}</span>
                   <span className="playground-step-label">{card?.definition.name ?? entry.definitionId}</span>
                   <button
@@ -144,6 +172,20 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                     onClick={() => onChangeQueue(queue.filter((_, position) => position !== index))}
                   >
                     <X size={12} />
+                  </button>
+                  <button
+                    className="playground-icon-button"
+                    type="button"
+                    title="Duplicate below"
+                    onClick={() =>
+                      onChangeQueue([
+                        ...queue.slice(0, index + 1),
+                        { ...entry },
+                        ...queue.slice(index + 1),
+                      ])
+                    }
+                  >
+                    <ArrowDownToLine size={12} />
                   </button>
                 </li>
               );

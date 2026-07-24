@@ -318,10 +318,21 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
   // can't be pulled twice; within a zone, the listed order is the resulting order.
   const zones = zoneEntries(scenario).sort(([a], [b]) => Number(a.endsWith("LibraryTop")) - Number(b.endsWith("LibraryTop")));
   for (const [zone, entries] of zones) {
-    // Library placement uses unshift. Reverse the authored queue so [A, B, C] is still revealed
-    // as A, then B, then C.
-    const orderedEntries = zone.endsWith("LibraryTop") ? [...entries].reverse() : entries;
-    for (const entry of orderedEntries) {
+    if (zone.endsWith("LibraryTop")) {
+      const side = ZONE_SIDES[zone];
+      const staged: CardInstance[] = [];
+      for (const entry of entries) {
+        for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
+          const card = takeCard(game, side, entry.definitionId, counter);
+          if (!card) continue;
+          card.zone = "library";
+          staged.push(card);
+        }
+      }
+      game[side].library.unshift(...staged);
+      continue;
+    }
+    for (const entry of entries) {
       for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
         const card = takeCard(game, ZONE_SIDES[zone], entry.definitionId, counter);
         if (!card) continue;
@@ -369,18 +380,63 @@ export function addScenarioCard(game: GameState, zone: ScenarioZoneKey, entry: S
   const side = SCENARIO_ZONE_SIDES[zone];
   const counter = { next: 0 };
   let placed = 0;
+  const staged: CardInstance[] = [];
   for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
     const card = takeCard(next, side, entry.definitionId, counter);
     if (!card) break;
-    placeCard(next, zone, card, entry);
+    if (zone.endsWith("LibraryTop")) {
+      card.zone = "library";
+      staged.push(card);
+    } else {
+      placeCard(next, zone, card, entry);
+    }
     placed += 1;
   }
+  if (staged.length > 0) next[side].library.unshift(...staged);
   if (placed === 0) {
     next.lastActionResult = { ok: false, reason: `Unknown card "${entry.definitionId}".` };
     return next;
   }
   next.lastActionResult = { ok: true };
   next.log.unshift(`Playground places ${placed}x ${entry.definitionId} into ${zone}.`);
+  return next;
+}
+
+/** Stages an authored Horde queue atomically so duplicate definitions become distinct instances. */
+export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameState {
+  const next = structuredClone(game) as GameState;
+  const counter = { next: 0 };
+  const staged: CardInstance[] = [];
+  for (const entry of entries) {
+    for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
+      const card = takeCard(next, "horde", entry.definitionId, counter);
+      if (!card) {
+        next.lastActionResult = { ok: false, reason: `Unknown card "${entry.definitionId}".` };
+        return next;
+      }
+      card.zone = "library";
+      staged.push(card);
+    }
+  }
+  next.horde.library.unshift(...staged);
+  next.lastActionResult = { ok: true };
+  next.log.unshift(`Playground stages ${staged.length} Horde card(s).`);
+  return next;
+}
+
+/** Temporarily overrides only reveal-shaping rules for a hand-authored Playground Horde turn. */
+export function configureExactHordeTurn(game: GameState, count: number): GameState {
+  const next = structuredClone(game) as GameState;
+  next.hordeRules = {
+    ...next.hordeRules,
+    revealCount: Math.max(0, count),
+    stopOnNonToken: false,
+    miniSurgeTurn: Number.MAX_SAFE_INTEGER,
+    miniSurgeExtraReveals: 0,
+    surgeTurn: Number.MAX_SAFE_INTEGER,
+    surgeTurnChaos: Number.MAX_SAFE_INTEGER,
+    surgeExtraReveals: 0,
+  };
   return next;
 }
 

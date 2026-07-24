@@ -109,12 +109,11 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   }
 
   function executeHordeTurn() {
-    // addScenarioCard puts each card on top, so stage the authored queue backwards.
-    for (const entry of [...hordeQueue].reverse()) {
-      const outcome = dispatch({ kind: "place", zone: "hordeLibraryTop", entry });
-      if (!outcome.ok) return;
-    }
-    dispatch({ kind: "hordeTurn" });
+    dispatch(
+      hordeQueue.length > 0
+        ? { kind: "hordeTurnExact", entries: structuredClone(hordeQueue) }
+        : { kind: "hordeTurn" },
+    );
   }
 
   function beginReplay(auto: boolean) {
@@ -210,9 +209,16 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
         reportError(problems.join(" "));
         return;
       }
-      saveStoredBoard(board.definition);
-      setBoards(listStoredBoards());
-      loadBoard(board);
+      // A JSON load is a one-off preview until Build board is pressed. Restart therefore returns
+      // to the previous checkpoint instead of getting silently rebound to the imported file.
+      const definition = cloneScenario(board.definition);
+      setDraft(definition);
+      loadScenario(buildScenarioGame(definition), {
+        playerDeckId: definition.playerDeckId,
+        hordeDeckId: definition.hordeDeckId,
+      });
+      setReplayCursor(undefined);
+      setAutoPlaying(false);
     });
   }
 

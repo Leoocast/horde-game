@@ -13059,7 +13059,10 @@ body:has(.playground-dock) .player-mana-core {
 
 .playground-amount-control {
   display: inline-flex;
+  grid-column: 2;
+  grid-row: 1;
   align-items: center;
+  justify-self: end;
   gap: 5px;
   color: #b08a48;
   font-size: 13px;
@@ -13073,7 +13076,12 @@ body:has(.playground-dock) .player-mana-core {
   background: rgba(12, 13, 11, 0.9);
   color: #f2e7c3;
   font-size: 11px;
-  text-align: center;
+  text-align: right;
+}
+
+.playground-place-controls > .playground-checkbox {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .playground-selected-column .playground-button {
@@ -13285,6 +13293,18 @@ body:has(.playground-dock) .player-mana-core {
 
 .playground-horde-queue .playground-library-entry {
   padding-left: 3px;
+}
+
+.playground-horde-queue-card {
+  min-height: 54px;
+  padding: 5px 6px 5px 3px;
+  background: rgba(18, 19, 16, 0.78);
+}
+
+.playground-horde-queue-card .playground-thumb {
+  height: 42px;
+  width: 42px;
+  flex-basis: 42px;
 }
 
 .playground-horde-queue .playground-icon-button {

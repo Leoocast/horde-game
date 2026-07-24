@@ -52,7 +52,6 @@ function SelectedSkeleton() {
         <span className="playground-skeleton-field" />
       </div>
       <div className="playground-selected-column">
-        <span className="playground-skeleton-bar is-title" />
         <span className="playground-skeleton-field" />
         <div className="playground-inline-row">
           <span className="playground-skeleton-field is-narrow" />
@@ -116,24 +115,27 @@ export function CardsPanel({ onDispatch }: Props) {
           </div>
 
           <div className="playground-selected-column">
-            <div className="playground-field">
-              <span>Or put it straight into</span>
-              <select
-                className="playground-select"
-                value={activeZone ?? ""}
-                onChange={(event) => setZone(event.target.value as ScenarioZoneKey)}
-              >
-                {destinations.map((option) => (
-                  <option key={option.zone} value={option.zone}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className="playground-select"
+              aria-label="Destination"
+              value={activeZone ?? ""}
+              onChange={(event) => setZone(event.target.value as ScenarioZoneKey)}
+            >
+              {destinations.map((option) => (
+                <option key={option.zone} value={option.zone}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <div className="playground-place-controls">
               <label className="playground-amount-control">
-                <span>×</span>
-                <input type="number" min={1} value={amount} onChange={(event) => setAmount(Math.max(1, Number(event.target.value) || 1))} />
+                <input
+                  aria-label="Copies"
+                  type="number"
+                  min={1}
+                  value={amount}
+                  onChange={(event) => setAmount(Math.max(1, Number(event.target.value) || 1))}
+                />
               </label>
               {isPermanent && (
                 <label className="playground-checkbox">
