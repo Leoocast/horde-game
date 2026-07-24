@@ -72,8 +72,13 @@ export function DuelHud({ game }: { game: GameState }) {
           <motion.div
             key={`death-reveal-${deathRevealCard.instanceId}`}
             className="horde-death-reveal-host flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 24, scale: 0.7, rotate: -7 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0, transition: { duration: 0.34, ease: [0.16, 1, 0.3, 1] } }}
+            // The entrance is CSS, not framer-motion. This card mounts in the same frame the
+            // store commits a combat impact and the whole battlefield re-renders, and a
+            // main-thread JS animation loses that race every time. A CSS keyframe on
+            // transform/opacity is handed to the compositor and is immune to it. Only the exit
+            // stays here, because AnimatePresence has to own unmount. Smallpox dodges this by
+            // mounting with initial={false} and having no entrance at all.
+            initial={false}
             // Exits into the Horde graveyard button, which sits up and to the right of this host.
             exit={{
               opacity: [1, 1, 0],
@@ -84,14 +89,18 @@ export function DuelHud({ game }: { game: GameState }) {
               transition: { duration: 0.38, times: [0, 0.2, 1], ease: ["easeOut", "easeIn"] },
             }}
           >
-            <div
-              data-card-id={deathRevealCard.instanceId}
-              className={[
-                "horde-special-card horde-special-card-dying",
-                activatingEffectCardId === deathRevealCard.instanceId ? "effect-card-activating" : "",
-              ].join(" ")}
-            >
-              <Card game={game} card={deathRevealCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+            {/* Dedicated layer for the entrance keyframe: the host owns the exit transform and
+                the card below owns the activation pulse, so nothing shares an animation slot. */}
+            <div className="horde-death-reveal-enter">
+              <div
+                data-card-id={deathRevealCard.instanceId}
+                className={[
+                  "horde-special-card horde-special-card-dying",
+                  activatingEffectCardId === deathRevealCard.instanceId ? "effect-card-activating" : "",
+                ].join(" ")}
+              >
+                <Card game={game} card={deathRevealCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+              </div>
             </div>
           </motion.div>
         )}

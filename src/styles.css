@@ -4988,13 +4988,20 @@
 
   /* A card presented next to its graveyard while its dies-trigger resolves: drained of colour
      and lit from below, so it never reads as something still in play. */
+  /* Transform and transition are deliberately cleared: the framer-motion host owns every
+     transform here. Inheriting `.horde-special-card`'s own `transform` + `transition: transform`
+     meant a CSS transition and a JS animation drove nested transforms on the same mount, which
+     is what made this entrance stutter. Smallpox never hit it because it mounts with
+     `initial={false}` and has no entrance to collide with.
+     The filter is also kept to one drop-shadow: two of them re-rasterise the whole card every
+     frame while the host is scaling. */
   .horde-special-card-dying {
     position: relative;
     width: 13rem;
-    transform: scale(0.94);
+    transform: none;
+    transition: none;
     filter:
       drop-shadow(0 10px 16px rgb(0 0 0 / 0.62))
-      drop-shadow(0 0 14px rgb(150 44 22 / 0.45))
       saturate(0.55)
       brightness(0.86);
   }
@@ -7862,6 +7869,21 @@
   right: calc(50% + 164px);
   z-index: 117;
   width: 190px;
+}
+
+/* Compositor-driven entrance. This mounts on the same frame the store commits a combat impact
+   and the battlefield re-renders, so anything running on the main thread stutters here. */
+.horde-death-reveal-enter {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  will-change: transform, opacity;
+  animation: horde-death-reveal-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes horde-death-reveal-in {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.9); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 .horde-deck-counter {

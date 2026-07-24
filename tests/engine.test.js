@@ -870,6 +870,33 @@ test("a creature that enters because of a death does not react to that death", (
   assert.equal(game.player.battlefield[0].damageMarked, 0, "Pashalik must not burn for the death that summoned it");
 });
 
+test("a creature summoned by an effect still announces its own enter trigger", () => {
+  const game = createTestGame("effect-summon-enter-trigger");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  addCard(game, cardFromDeck("beetleback_chief", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
+
+  const chief = game.horde.battlefield.find((card) => card.definitionId === "beetleback_chief");
+  assert.ok(chief, "Rundvelt must have put Beetleback Chief onto the battlefield");
+  // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
+  // would arriving through the normal Horde reveal.
+  assert.equal(game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
+  const entered = game.eventQueue.find((event) => event.type === "ENTERS_BATTLEFIELD" && event.sourceId === chief.instanceId);
+  assert.ok(entered, "the Chief's enter trigger must be queued for its own beat");
+  assert.deepEqual(
+    pendingTriggerSources(game, entered).map((source) => source.instanceId),
+    [chief.instanceId],
+    "only the card that entered reacts to its own arrival",
+  );
+
+  drainEventQueue(game);
+  assert.equal(game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+});
+
 test("an effect that queues a follow-up keeps it ahead of the other reactors", () => {
   const game = createTestGame("spawned-event-priority");
   const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));

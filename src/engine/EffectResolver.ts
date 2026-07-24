@@ -332,6 +332,16 @@ function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
 }
 
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
+  // Self-scoped: only the card that entered reacts, never every other card with an ETB ability.
+  if (event.type === "ENTERS_BATTLEFIELD") {
+    const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
+    if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
+    return source.effects.some(
+      (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
+    )
+      ? [source]
+      : [];
+  }
   if (event.type === "THIS_DIES") {
     const source = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
@@ -358,10 +368,30 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
   );
 }
 
-export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance, targets?: Record<string, string | string[]>): void {
-  for (const wrapper of card.effects) {
-    if (wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD") {
-      resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
+// `deferSelfTriggers` queues the card's own enters-the-battlefield ability instead of resolving
+// it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
+// Without it, Beetleback Chief exiled onto the battlefield by Rundvelt simply spat out its tokens
+// with no activation of its own, while the same card arriving through the normal Horde reveal
+// (which defers via HordeController) announced itself properly.
+export function runEnterBattlefieldTriggers(
+  game: GameState,
+  card: CardInstance,
+  targets?: Record<string, string | string[]>,
+  options: { deferSelfTriggers?: boolean } = {},
+): void {
+  if (options.deferSelfTriggers) {
+    if (card.effects.some((wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD")) {
+      enqueue(game, {
+        type: "ENTERS_BATTLEFIELD",
+        sourceId: card.instanceId,
+        payload: { controller: card.controller, definitionId: card.definitionId },
+      });
+    }
+  } else {
+    for (const wrapper of card.effects) {
+      if (wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD") {
+        resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
+      }
     }
   }
   enqueue(game, {
@@ -429,7 +459,7 @@ function exileTopGoblinToBattlefield(game: GameState): void {
   card.summoningSickness = false;
   game.horde.battlefield.push(card);
   game.log.unshift(`${card.name} enters the battlefield from exile.`);
-  runEnterBattlefieldTriggers(game, card);
+  runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
 
 export function millHorde(game: GameState, amount: number): void {
@@ -461,7 +491,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     token.summoningSickness = controller === "player";
     token.tapped = Boolean(effect.tapped);
     game[controller].battlefield.push(token);
-    runEnterBattlefieldTriggers(game, token);
+    runEnterBattlefieldTriggers(game, token, undefined, { deferSelfTriggers: true });
     if (effect.attacking && controller === "horde" && game.phase === "combat") {
       token.tapped = true;
       game.combat.hordeAttackers.push(token.instanceId);
