@@ -5634,8 +5634,8 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 174px;
-    height: 174px;
+    width: 116px;
+    height: 116px;
     border-radius: 50%;
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.02);
@@ -5647,7 +5647,7 @@
         rgba(182, 19, 1, 0.88) 54%,
         rgba(25, 0, 4, 0.75) 69%,
         transparent 82%);
-    filter: blur(4px) drop-shadow(0 0 28px rgba(255, 86, 12, 0.6)) drop-shadow(0 0 62px rgba(185, 16, 0, 0.3));
+    filter: blur(3px) drop-shadow(0 0 16px rgba(255, 86, 12, 0.5)) drop-shadow(0 0 34px rgba(185, 16, 0, 0.22));
     mix-blend-mode: screen;
     animation: burn-impact-core var(--burn-duration) linear both;
   }
@@ -5656,13 +5656,13 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 156px;
-    height: 156px;
+    width: 108px;
+    height: 108px;
     border-radius: 50%;
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.5);
     background: radial-gradient(circle, #000 0 34%, rgba(42, 0, 5, 0.98) 48%, rgba(230, 32, 3, 0.9) 62%, rgba(255, 142, 55, 0.45) 68%, transparent 77%);
-    box-shadow: 0 0 0 3px rgba(255, 91, 35, 0.6), 0 0 56px rgba(184, 11, 0, 0.66);
+    box-shadow: 0 0 0 3px rgba(255, 91, 35, 0.6), 0 0 44px rgba(184, 11, 0, 0.6);
     filter: blur(1px);
     animation: burn-void-implosion var(--burn-duration) linear both;
   }

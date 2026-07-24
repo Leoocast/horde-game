@@ -12,7 +12,7 @@ type BurnGeometry = {
 // Master clock mirrors the CSS --burn-duration (1100ms). Flight runs 20%–58%, impact at 58%.
 const IMPACT_AT_MS = 638;
 const FLIGHT_START_MS = 220;
-const EMBER_COUNT = 28;
+const EMBER_COUNT = 64;
 
 // Ported verbatim from the reference (assets/examples/Fireball/fireball.html).
 const CHARGE_PARTICLES = [
@@ -85,10 +85,10 @@ export function BurnAnimator() {
       const rect = projectile.getBoundingClientRect();
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
-      const size = 1.5 + Math.random() * 3.5;
-      const life = 250 + Math.random() * 450;
-      const x = rect.left + rect.width * (0.12 + Math.random() * 0.25);
-      const y = rect.top + rect.height * (0.34 + Math.random() * 0.32);
+      const size = 2 + Math.random() * 4;
+      const life = 260 + Math.random() * 480;
+      const x = rect.left + rect.width * (0.1 + Math.random() * 0.32);
+      const y = rect.top + rect.height * (0.28 + Math.random() * 0.44);
       particle.style.left = `${x}px`;
       particle.style.top = `${y}px`;
       particle.style.setProperty("--size", `${size}px`);
@@ -100,10 +100,11 @@ export function BurnAnimator() {
     };
 
     const spawnEmber = () => {
-      const size = 1.5 + Math.random() * 4.5;
-      const life = 350 + Math.random() * 450;
+      const size = 2.5 + Math.random() * 6;
+      const life = 420 + Math.random() * 560;
       const angle = Math.random() * Math.PI * 2;
-      const dist = 60 + Math.random() * 120;
+      // Wide spread so plenty of embers clear the impact core and read against the dark board.
+      const dist = 40 + Math.random() * 220;
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
       particle.style.left = `${geometry.endX}px`;
@@ -119,17 +120,16 @@ export function BurnAnimator() {
     const tick = (now: number) => {
       if (cancelled) return;
       const elapsed = now - start;
-      if (elapsed >= IMPACT_AT_MS - 200) {
+      if (elapsed >= IMPACT_AT_MS - 30) {
         if (!embersSpawned) {
           embersSpawned = true;
           for (let i = 0; i < EMBER_COUNT; i++) spawnEmber();
         }
         return;
       }
-      if (elapsed >= FLIGHT_START_MS && now - lastSpawn > 12) {
-        spawnTrace();
-        if (Math.random() > 0.3) spawnTrace();
-        if (Math.random() > 0.6) spawnTrace();
+      if (elapsed >= FLIGHT_START_MS && now - lastSpawn > 8) {
+        const bursts = 4 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < bursts; i++) spawnTrace();
         lastSpawn = now;
       }
       frame = requestAnimationFrame(tick);
