@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -38,6 +38,7 @@ export default function App() {
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
+  const playgroundToolsWindowRef = useRef<Window | null>(null);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
     hordeName: string;
@@ -45,6 +46,9 @@ export default function App() {
     gameMode: GameMode;
     tutorial: boolean;
   } | null>(null);
+  const handlePlaygroundToolsWindowChange = useCallback((popup: Window | null) => {
+    playgroundToolsWindowRef.current = popup;
+  }, []);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -149,7 +153,12 @@ export default function App() {
       <Suspense fallback={<div className="playground-chunk-fallback" />}>
         <AudioClickListener />
         <PlaygroundScreen
+          initialToolsWindow={playgroundToolsWindowRef.current}
+          onToolsWindowChange={handlePlaygroundToolsWindowChange}
           onReturnToMenu={() => {
+            const popup = playgroundToolsWindowRef.current;
+            if (popup && !popup.closed) popup.close();
+            playgroundToolsWindowRef.current = null;
             setPreserveMenuMusic(false);
             setMenuReturnScreen("home");
             setScreen("start");
@@ -210,6 +219,11 @@ export default function App() {
             setRequestInitialName(false);
           }}
           onOpenPlayground={IS_DEV ? () => {
+            playgroundToolsWindowRef.current = window.open(
+              "",
+              "hostfall-playground-tools",
+              "popup=yes,width=500,height=900,resizable=yes,scrollbars=no",
+            );
             stopMusic();
             setScreen("playground");
           } : undefined}

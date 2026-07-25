@@ -1,5 +1,6 @@
-import { ChevronRight, FlaskConical, Home, PanelLeftClose, RotateCcw } from "lucide-react";
+import { ExternalLink, FlaskConical, Home, RotateCcw, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Board } from "../components/Board";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
@@ -43,15 +44,25 @@ const TABS: Array<{ id: PlaygroundTab; label: string }> = [
 
 const REPLAY_POLL_MS = 120;
 const REPLAY_STEP_GAP_MS = 220;
+const TOOLS_WINDOW_NAME = "hostfall-playground-tools";
+const TOOLS_WINDOW_FEATURES = "popup=yes,width=500,height=900,resizable=yes,scrollbars=no";
+const TOOLS_ROOT_ID = "playground-tools-root";
+const COPIED_STYLE_ATTRIBUTE = "data-playground-style-copy";
 
-export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => void }) {
+type PlaygroundScreenProps = {
+  onReturnToMenu: () => void;
+  onToolsWindowChange?: (popup: Window | null) => void;
+  /** Opened synchronously by the menu click so popup blockers see a direct user gesture. */
+  initialToolsWindow?: Window | null;
+};
+
+export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialToolsWindow }: PlaygroundScreenProps) {
   const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const pushToast = useToastStore((state) => state.pushToast);
   const [draft, setDraft] = useState<ScenarioDefinition>(() => cloneScenario(BLANK_SCENARIO));
   const [launch, setLaunch] = useState<ScenarioDefinition>();
   const [hordeQueue, setHordeQueue] = useState<ScenarioCard[]>([]);
-  const [dockOpen, setDockOpen] = useState(true);
   const [tab, setTab] = useState<PlaygroundTab>("scenario");
   const [steps, setSteps] = useState<TimelineStep[]>([]);
   const [recording, setRecording] = useState(true);
@@ -59,12 +70,72 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
   const [autoPlaying, setAutoPlaying] = useState(false);
   const [boards, setBoards] = useState<StoredBoard[]>(() => listStoredBoards());
   const [replays, setReplays] = useState<StoredReplay[]>(() => listStoredReplays());
+  const [toolsRoot, setToolsRoot] = useState<HTMLElement | null>(null);
   const startedRef = useRef(false);
+  const toolsWindowRef = useRef<Window | null>(
+    initialToolsWindow && !initialToolsWindow.closed ? initialToolsWindow : null,
+  );
 
   const reportError = useCallback(
     (message: string) => pushToast({ title: "Playground", message, tone: "warning" }),
     [pushToast],
   );
+
+  const attachToolsWindow = useCallback((popup: Window) => {
+    prepareToolsDocument(popup);
+    copyPlaygroundStyles(document, popup.document);
+    toolsWindowRef.current = popup;
+    onToolsWindowChange?.(popup);
+    setToolsRoot(popup.document.getElementById(TOOLS_ROOT_ID));
+    popup.focus();
+  }, [onToolsWindowChange]);
+
+  const openToolsWindow = useCallback(() => {
+    const current = toolsWindowRef.current;
+    if (current && !current.closed) {
+      current.focus();
+      return;
+    }
+    const popup = window.open("", TOOLS_WINDOW_NAME, TOOLS_WINDOW_FEATURES);
+    if (!popup) {
+      reportError("The browser blocked the Playground tools window. Allow popups and try again.");
+      return;
+    }
+    attachToolsWindow(popup);
+  }, [attachToolsWindow, reportError]);
+
+  const closeToolsWindow = useCallback(() => {
+    const popup = toolsWindowRef.current;
+    toolsWindowRef.current = null;
+    onToolsWindowChange?.(null);
+    setToolsRoot(null);
+    if (popup && !popup.closed) popup.close();
+  }, [onToolsWindowChange]);
+
+  useEffect(() => {
+    const popup = toolsWindowRef.current;
+    if (popup && !popup.closed) attachToolsWindow(popup);
+  }, [attachToolsWindow]);
+
+  useEffect(() => {
+    const popup = toolsWindowRef.current;
+    if (!popup || popup.closed) return;
+    const onToolsWindowClosed = () => {
+      toolsWindowRef.current = null;
+      onToolsWindowChange?.(null);
+      setToolsRoot(null);
+    };
+    popup.addEventListener("pagehide", onToolsWindowClosed);
+    return () => popup.removeEventListener("pagehide", onToolsWindowClosed);
+  }, [onToolsWindowChange, toolsRoot]);
+
+  useEffect(() => {
+    const popup = toolsWindowRef.current;
+    if (!popup || popup.closed) return;
+    const observer = new MutationObserver(() => copyPlaygroundStyles(document, popup.document));
+    observer.observe(document.head, { attributes: true, childList: true, characterData: true, subtree: true });
+    return () => observer.disconnect();
+  }, [toolsRoot]);
 
   const buildBoard = useCallback(
     (definition: ScenarioDefinition) => {
@@ -95,11 +166,11 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "F2") return;
       event.preventDefault();
-      setDockOpen((open) => !open);
+      openToolsWindow();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [openToolsWindow]);
 
   function dispatch(step: TimelineStep) {
     const outcome = executeStep(step);
@@ -240,109 +311,136 @@ export function PlaygroundScreen({ onReturnToMenu }: { onReturnToMenu: () => voi
     setReplays(listStoredReplays());
   }
 
+  const tools = (
+    <aside className="playground-dock" aria-label="Playground tools">
+      <header className="playground-dock-header">
+        <div>
+          <div className="playground-dock-kicker">Developer</div>
+          <h2 className="playground-dock-title">Playground</h2>
+        </div>
+        <div className="playground-dock-header-actions">
+          <button className="playground-icon-button" type="button" title="Return to menu" onClick={onReturnToMenu}>
+            <Home size={15} />
+          </button>
+          <button className="playground-icon-button" type="button" title="Close tools window" onClick={closeToolsWindow}>
+            <X size={15} />
+          </button>
+        </div>
+      </header>
+
+      <div className="playground-launch" role="group" aria-label="Board controls">
+        <button className="playground-launch-button is-active" type="button" onClick={() => buildBoard(draft)}>
+          <FlaskConical size={14} />
+          <span>Build board</span>
+        </button>
+        <button className="playground-launch-button" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
+          <RotateCcw size={14} />
+          <span>Restart</span>
+        </button>
+      </div>
+
+      <nav className="playground-tabs" aria-label="Playground sections">
+        {TABS.map((entry) => (
+          <button
+            key={entry.id}
+            className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
+            type="button"
+            onClick={() => setTab(entry.id)}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="playground-dock-body old-scrollbar">
+        {tab === "scenario" && (
+          <ScenarioPanel
+            draft={draft}
+            queue={hordeQueue}
+            onChangeQueue={setHordeQueue}
+            onChange={setDraft}
+            onUpdate={() => buildBoard(draft)}
+            onExecuteHordeTurn={executeHordeTurn}
+          />
+        )}
+        {tab === "cards" && <CardsPanel onDispatch={dispatch} />}
+        {tab === "board" && (
+          <BoardPanel
+            onDispatch={dispatch}
+            onInvalid={reportError}
+            boards={boards}
+            initialName={draft.name}
+            onSaveBoard={saveBoard}
+            onLoadBoard={loadBoard}
+            onExportBoard={exportBoard}
+            onImportBoard={importBoard}
+            onDeleteBoard={removeBoard}
+          />
+        )}
+        {tab === "actions" && <ActionsPanel onDispatch={dispatch} />}
+        {tab === "timeline" && (
+          <TimelinePanel
+            steps={steps}
+            recording={recording}
+            cursor={replayCursor}
+            autoPlaying={autoPlaying}
+            canReplay={Boolean(launch) && steps.length > 0}
+            replays={replays}
+            onToggleRecording={() => setRecording((current) => !current)}
+            onRemoveStep={(index) => setSteps((current) => current.filter((_, position) => position !== index))}
+            onClear={() => {
+              setSteps([]);
+              stopReplay();
+            }}
+            onStepOnce={stepOnce}
+            onToggleAuto={() => (autoPlaying ? setAutoPlaying(false) : beginReplay(true))}
+            onStopReplay={stopReplay}
+            onSaveReplay={saveReplay}
+            onLoadReplay={loadReplay}
+            onDeleteReplay={removeReplay}
+          />
+        )}
+      </div>
+    </aside>
+  );
+
   return (
-    <div className={`playground-shell ${dockOpen ? "is-open" : ""}`}>
+    <div className="playground-shell">
       <div className="playground-stage">
         <Board key={gameSessionId} playerName="Playground" setupTurns={0} onReturnToMenu={onReturnToMenu} />
       </div>
 
-      {dockOpen ? (
-        <aside className="playground-dock" aria-label="Playground tools">
-          <header className="playground-dock-header">
-            <div>
-              <div className="playground-dock-kicker">Developer</div>
-              <h2 className="playground-dock-title">Playground</h2>
-            </div>
-            <div className="playground-dock-header-actions">
-              <button className="playground-icon-button" type="button" title="Return to menu" onClick={onReturnToMenu}>
-                <Home size={15} />
-              </button>
-              <button className="playground-icon-button" type="button" title="Collapse dock (F2)" onClick={() => setDockOpen(false)}>
-                <PanelLeftClose size={15} />
-              </button>
-            </div>
-          </header>
-
-          <div className="playground-launch" role="group" aria-label="Board controls">
-            <button className="playground-launch-button is-active" type="button" onClick={() => buildBoard(draft)}>
-              <FlaskConical size={14} />
-              <span>Build board</span>
-            </button>
-            <button className="playground-launch-button" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
-              <RotateCcw size={14} />
-              <span>Restart</span>
-            </button>
-          </div>
-
-          <nav className="playground-tabs" aria-label="Playground sections">
-            {TABS.map((entry) => (
-              <button
-                key={entry.id}
-                className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
-                type="button"
-                onClick={() => setTab(entry.id)}
-              >
-                {entry.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="playground-dock-body old-scrollbar">
-            {tab === "scenario" && (
-              <ScenarioPanel
-                draft={draft}
-                queue={hordeQueue}
-                onChangeQueue={setHordeQueue}
-                onChange={setDraft}
-                onUpdate={() => buildBoard(draft)}
-                onExecuteHordeTurn={executeHordeTurn}
-              />
-            )}
-            {tab === "cards" && <CardsPanel onDispatch={dispatch} />}
-            {tab === "board" && (
-              <BoardPanel
-                onDispatch={dispatch}
-                onInvalid={reportError}
-                boards={boards}
-                initialName={draft.name}
-                onSaveBoard={saveBoard}
-                onLoadBoard={loadBoard}
-                onExportBoard={exportBoard}
-                onImportBoard={importBoard}
-                onDeleteBoard={removeBoard}
-              />
-            )}
-            {tab === "actions" && <ActionsPanel onDispatch={dispatch} />}
-            {tab === "timeline" && (
-              <TimelinePanel
-                steps={steps}
-                recording={recording}
-                cursor={replayCursor}
-                autoPlaying={autoPlaying}
-                canReplay={Boolean(launch) && steps.length > 0}
-                replays={replays}
-                onToggleRecording={() => setRecording((current) => !current)}
-                onRemoveStep={(index) => setSteps((current) => current.filter((_, position) => position !== index))}
-                onClear={() => {
-                  setSteps([]);
-                  stopReplay();
-                }}
-                onStepOnce={stepOnce}
-                onToggleAuto={() => (autoPlaying ? setAutoPlaying(false) : beginReplay(true))}
-                onStopReplay={stopReplay}
-                onSaveReplay={saveReplay}
-                onLoadReplay={loadReplay}
-                onDeleteReplay={removeReplay}
-              />
-            )}
-          </div>
-        </aside>
-      ) : (
-        <button className="playground-dock-handle" type="button" title="Open playground dock (F2)" onClick={() => setDockOpen(true)}>
-          <ChevronRight size={16} />
-          <span>Playground</span>
+      {toolsRoot ? createPortal(tools, toolsRoot) : (
+        <button className="playground-dock-handle" type="button" title="Open Playground tools (F2)" onClick={openToolsWindow}>
+          <ExternalLink size={16} />
+          <span>Open tools</span>
         </button>
       )}
     </div>
   );
+}
+
+function prepareToolsDocument(popup: Window) {
+  if (!popup.document.getElementById(TOOLS_ROOT_ID)) {
+    popup.document.open();
+    popup.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Hostfall — Playground</title></head><body class="playground-tools-window-body"><div id="${TOOLS_ROOT_ID}"></div></body></html>`);
+    popup.document.close();
+    const base = popup.document.createElement("base");
+    base.href = document.baseURI;
+    popup.document.head.prepend(base);
+  }
+  popup.document.documentElement.lang = document.documentElement.lang;
+  popup.document.body.className = "playground-tools-window-body";
+}
+
+function copyPlaygroundStyles(source: Document, target: Document) {
+  target.head.querySelectorAll(`[${COPIED_STYLE_ATTRIBUTE}]`).forEach((node) => node.remove());
+  source.head.querySelectorAll<HTMLLinkElement | HTMLStyleElement>('link[rel="stylesheet"], style').forEach((node) => {
+    const copy = node.cloneNode(true) as HTMLLinkElement | HTMLStyleElement;
+    copy.setAttribute(COPIED_STYLE_ATTRIBUTE, "true");
+    if (node.tagName === "LINK") {
+      (copy as HTMLLinkElement).href = (node as HTMLLinkElement).href;
+    }
+    target.head.appendChild(copy);
+  });
 }

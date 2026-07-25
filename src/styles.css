@@ -12426,7 +12426,6 @@
 }
 
 .playground-shell {
-  --pg-dock: 460px;
   position: fixed;
   inset: 0;
   height: 100vh;
@@ -12448,9 +12447,8 @@
   overflow: hidden;
 }
 
-/* The dock is a pure overlay: it never displaces the board. Insetting the board's containers moved
-   the battlefield and the Horde wave zone, which changes the very layout the playground exists to
-   inspect — a card must sit where it would sit in a real match. */
+/* The tools are portaled into a separate browser window. They remain in the same React tree, so
+   every panel reads and mutates the board's live Zustand store without copying game state. */
 .playground-dock {
   position: fixed;
   left: 0;
@@ -12460,26 +12458,24 @@
      transient and follow the pointer. */
   z-index: 9999;
   display: flex;
-  width: var(--pg-dock);
+  width: 100vw;
   flex-direction: column;
   border-radius: 0;
-  border-right: 1px solid rgba(196, 158, 84, 0.34);
+  border-right: 0;
   /* Fully opaque: a translucent panel let the surfaces underneath read straight through the tools. */
   background: linear-gradient(180deg, #16170f 0%, #101109 100%);
-  box-shadow: 6px 0 28px rgb(0 0 0 / 0.62);
+  box-shadow: none;
   color: #e4ddc2;
   font-size: 13px;
 }
 
-/* The energy core is portaled straight into <body>, outside the playground's DOM entirely, and it
-   keeps painting over the dock however high the dock's z-index goes — z-index only orders elements
-   that share a stacking context, and these two don't. Since the core sits bottom-left, fully inside
-   the dock's 460px, "behind the dock" and "not drawn" look identical: hide it while the dock is
-   open and the dock's own Energy readout covers the same two numbers. `visibility` rather than
-   `display` so the element keeps its box — the energy-recycle animation measures that rect.
-   Collapsing the dock with F2 unmounts it and the core comes straight back. */
-body:has(.playground-dock) .player-mana-core {
-  visibility: hidden;
+/* The popup receives this body class before the portal mounts. It owns the whole viewport and does
+   not inherit the main document's page geometry. */
+.playground-tools-window-body {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #101109;
 }
 
 .playground-dock-header {

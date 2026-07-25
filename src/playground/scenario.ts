@@ -91,7 +91,7 @@ export const BLANK_SCENARIO: ScenarioDefinition = {
   name: "Blank scenario",
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  seed: "playground",
+  seed: "playground01",
   difficulty: "normal",
   gameMode: "standard",
   turnNumber: 1,
