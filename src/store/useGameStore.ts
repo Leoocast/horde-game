@@ -62,6 +62,7 @@ export type GameStore = {
   burnImpactCardId?: string;
   burnImpactEventId?: number;
   deathRevealCard?: CardInstance;
+  hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
   pendingStaticAuras: StaticAura[];
   /** Stat bonus withheld from each card until its aura's beat plays. Presentation only. */
@@ -319,6 +320,7 @@ function createCleanUiState(): Partial<GameStore> {
     burnImpactCardId: undefined,
     burnImpactEventId: undefined,
     deathRevealCard: undefined,
+    hordeSpellCard: undefined,
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
     playerAttackAnimation: undefined,
@@ -364,6 +366,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   burnImpactCardId: undefined,
   burnImpactEventId: undefined,
   deathRevealCard: undefined,
+  hordeSpellCard: undefined,
   pendingStaticAuras: [],
   heldStaticAuraBonuses: {},
   playerAttackAnimation: undefined,
@@ -944,8 +947,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Before any frame renders the new permanent: hold back the buffs it just granted so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
-    if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
-    if (pendingCard) runSmallpoxSequence(pendingCard);
+    if (pendingCard) {
+      if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
+      runSmallpoxSequence(pendingCard);
+      return;
+    }
+    if (triggerCards.length > 0) {
+      scheduleHordeEnterTriggers(triggerCards, () => scheduleQueuedHordeTriggers());
+    } else {
+      scheduleQueuedHordeTriggers();
+    }
   },
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;
@@ -1104,6 +1115,7 @@ function finishAnimatedHordeCombat(): void {
     burnAnimation: undefined,
     burnImpactCardId: undefined,
     deathRevealCard: undefined,
+    hordeSpellCard: undefined,
     // Failsafe: an aura whose beat never got to play must not keep its buff hidden forever.
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
@@ -1460,4 +1472,3 @@ function nextDeadCardIds(event: HordeAttackEvent): string[] {
   if (event.blockerDies && event.blockerId) next.add(event.blockerId);
   return [...next];
 }
-

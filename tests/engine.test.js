@@ -618,7 +618,7 @@ test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on en
   assert.equal(siegeGangGame.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
 });
 
-test("Goblin Surprise chooses the Horde mode with more immediate attack power", () => {
+test("Goblin Surprise pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
   const firstGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
   const secondGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
@@ -628,11 +628,29 @@ test("Goblin Surprise chooses the Horde mode with more immediate attack power", 
   assert.equal(pumped.horde.battlefield.find((card) => card.instanceId === firstGoblin.instanceId)?.temporaryPower, 2);
   assert.equal(pumped.horde.battlefield.find((card) => card.instanceId === secondGoblin.instanceId)?.temporaryPower, 2);
 
-  const tokenGame = createTestGame("goblin-surprise-tokens");
-  addCard(tokenGame, cardFromDeck("goblin_surprise", "horde", "library"), "horde", "library");
+  const animatedPumpGame = createTestGame("goblin-surprise-animated-pump");
+  const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(animatedPumpGame, cardFromDeck("goblin_surprise", "horde", "library"), "horde", "library");
 
-  const tokenResult = runHordeMain(tokenGame);
-  assert.equal(tokenResult.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+  const pendingPump = runHordeMain(animatedPumpGame, { deferEnterBattlefieldTriggers: true });
+  assert.equal(pendingPump.horde.battlefield.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 0);
+  assert.deepEqual(
+    pendingPump.eventQueue.find((event) => event.type === "HORDE_GROUP_BUFF")?.payload?.affectedIds,
+    [animatedGoblin.instanceId],
+  );
+  drainEventQueue(pendingPump);
+  assert.equal(pendingPump.horde.battlefield.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 2);
+
+  const revealGame = createTestGame("goblin-surprise-reveal");
+  addCard(revealGame, cardFromDeck("goblin_surprise", "horde", "library"), "horde", "library");
+  for (let index = 0; index < 4; index += 1) {
+    addCard(revealGame, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  }
+
+  const revealResult = runHordeMain(revealGame);
+  assert.equal(revealResult.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
+  assert.equal(revealResult.horde.library.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(revealResult.hordeTurnNumber, 1, "the extra reveal is part of the same Horde turn");
 });
 
 test("Volley Veteran damages a chosen opposing creature equal to the Horde's Goblin count", () => {

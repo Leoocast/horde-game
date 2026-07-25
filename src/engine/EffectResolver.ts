@@ -58,6 +58,11 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const option = chooseEffectOption(game, effect, context);
     if (option) resolveEffects(game, (option.effects as EffectDefinition[]) ?? [], context);
   },
+  REVEAL_HORDE_ROUND: (game, _effect, context) => {
+    if (context.side !== "horde") return;
+    game.horde.pendingRevealRounds = (game.horde.pendingRevealRounds ?? 0) + 1;
+    game.log.unshift("Horde effect calls for another normal reveal round.");
+  },
   HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD: (game) => {
     exileTopGoblinToBattlefield(game);
   },
@@ -133,8 +138,22 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const controller = effect.controller === "OPPONENT"
       ? context.side === "player" ? "horde" : "player"
       : context.side;
-    for (const target of game[controller].battlefield) {
-      if (!matchesFilter(target, effect.filter as CardFilter | undefined, context.source)) continue;
+    const targets = game[controller].battlefield.filter((target) =>
+      matchesFilter(target, effect.filter as CardFilter | undefined, context.source)
+    );
+    if (context.side === "horde" && effect.animation === "BUFF" && targets.length > 0) {
+      enqueue(game, {
+        type: "HORDE_GROUP_BUFF",
+        sourceId: context.source?.instanceId,
+        payload: {
+          affectedIds: targets.map((target) => target.instanceId),
+          power: Number(effect.power ?? 0),
+          toughness: Number(effect.toughness ?? 0),
+        },
+      });
+      return;
+    }
+    for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
       target.temporaryToughness += Number(effect.toughness ?? 0);
     }
@@ -305,6 +324,10 @@ export function resolveTriggeredEvent(
   deferController?: "player" | "horde",
   onlySourceId?: string,
 ): boolean {
+  if (event.type === "HORDE_GROUP_BUFF") {
+    resolveHordeGroupBuffEvent(game, event);
+    return false;
+  }
   if (event.type === "BURN_DAMAGE") {
     resolveBurnDamageEvent(game, event);
     return false;
@@ -334,6 +357,19 @@ export function resolveTriggeredEvent(
   }
   if (onlySourceId) markTriggerSourceResolved(event, onlySourceId);
   return deferredAny;
+}
+
+function resolveHordeGroupBuffEvent(game: GameState, event: EventItem): void {
+  const affectedIds = new Set(
+    Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [],
+  );
+  const power = Number(event.payload?.power ?? 0);
+  const toughness = Number(event.payload?.toughness ?? 0);
+  for (const target of game.horde.battlefield) {
+    if (!affectedIds.has(target.instanceId)) continue;
+    target.temporaryPower += power;
+    target.temporaryToughness += toughness;
+  }
 }
 
 // A permanent can only react to what it was already in play to see. `witnessIds` is stamped by

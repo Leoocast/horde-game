@@ -55,7 +55,10 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## Goblin Surprise
 
-- The Horde chooses deterministically between the pump and token modes by immediate attack power.
+- If the Horde controls at least one creature, all of its creatures get +2/+0 until end of turn.
+  The spell is presented beside the Horde deck and the bonus lands with the shared blue buff animation.
+- If the Horde controls no creatures, it immediately performs another normal reveal round. This is
+  part of the same Horde turn and does not add another Mini Surge or Surge reveal.
 
 ## Mogg Mob
 

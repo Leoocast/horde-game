@@ -187,6 +187,9 @@ export type HordeState = {
   /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
   pendingCard?: CardInstance;
+  /** Extra normal reveal rounds requested by a Horde spell. HordeController consumes these
+   * inside the current turn; they never advance the Horde turn counter or add Surge reveals. */
+  pendingRevealRounds?: number;
 };
 
 export type CombatState = {

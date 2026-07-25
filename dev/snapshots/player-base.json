@@ -1,0 +1,58 @@
+{
+  "id": "board-1784952156477-pgd7is",
+  "name": "Player Base",
+  "savedAt": "2026-07-25T04:02:36.477Z",
+  "definition": {
+    "version": 2,
+    "name": "Player Base",
+    "playerDeckId": "mono_green_ramp",
+    "hordeDeckId": "horde_zombies",
+    "seed": "playground01",
+    "difficulty": "normal",
+    "gameMode": "standard",
+    "turnNumber": 1,
+    "hordeTurnNumber": 0,
+    "phase": "main",
+    "activeSide": "player",
+    "player": {
+      "life": 50,
+      "energy": 0,
+      "storedEnergy": 0
+    },
+    "horde": {
+      "poisonCounters": 0
+    },
+    "zones": {
+      "playerHand": [],
+      "playerBattlefield": [
+        {
+          "definitionId": "forest",
+          "amount": 4
+        },
+        {
+          "definitionId": "llanowar_elves",
+          "amount": 1
+        },
+        {
+          "definitionId": "ichorspit_basilisk",
+          "amount": 1
+        },
+        {
+          "definitionId": "druid_of_the_cowl",
+          "amount": 1
+        },
+        {
+          "definitionId": "sunshower_druid",
+          "amount": 3
+        },
+        {
+          "definitionId": "beast_kin_ranger",
+          "amount": 1
+        }
+      ],
+      "hordeBattlefield": []
+    }
+  },
+  "exportedBy": "hostfall-playground-board",
+  "version": 1
+}

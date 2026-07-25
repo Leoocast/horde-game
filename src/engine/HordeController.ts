@@ -33,6 +33,7 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
     );
     revealAndPlay(next, rules.surgeExtraReveals, options);
   }
+  resolveRequestedRevealRounds(next, options);
   if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
   return next;
 }
@@ -65,6 +66,7 @@ export function revealHordeCardFromTop(game: GameState, options: HordeMainOption
     return next;
   }
   revealAndPlayOne(next, options);
+  resolveRequestedRevealRounds(next, options);
   if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
   next.lastActionResult = { ok: true };
   return next;
@@ -97,6 +99,17 @@ function revealAndPlay(game: GameState, amount: number, options: HordeMainOption
   for (let i = 0; i < amount; i += 1) {
     if (game.horde.library.length === 0) break;
     revealAndPlayOne(game, options);
+  }
+}
+
+function resolveRequestedRevealRounds(game: GameState, options: HordeMainOptions): void {
+  while ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.library.length > 0) {
+    game.horde.pendingRevealRounds = Math.max(0, (game.horde.pendingRevealRounds ?? 0) - 1);
+    game.log.unshift("Horde begins an extra reveal round.");
+    revealNormal(game, options);
+  }
+  if ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.library.length === 0) {
+    game.horde.pendingRevealRounds = 0;
   }
 }
 

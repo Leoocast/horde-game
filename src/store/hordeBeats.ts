@@ -44,6 +44,10 @@ const DEATH_REVEAL_LEAD_IN_MS = 120;
 const DEATH_REVEAL_ENTER_MS = 280;
 const DEATH_REVEAL_HOLD_MS = 300;
 const DEATH_REVEAL_EXIT_MS = 380;
+const SPELL_REVEAL_ENTER_MS = 280;
+const SPELL_REVEAL_BUFF_MS = 680;
+const SPELL_REVEAL_HOLD_MS = 1120;
+const SPELL_REVEAL_EXIT_MS = 300;
 // A card entering or leaving the battlefield re-centers the row, and Battlefield FLIP-animates
 // that move over 360ms. A beat that changed the board waits it out, so the next attacker never
 // charges across a row that is still sliding into place.
@@ -442,6 +446,53 @@ const staticAuraBeatHandler: HordeBeatHandler = {
   },
 };
 
+const hordeSpellBuffBeatHandler: HordeBeatHandler = {
+  id: "horde-spell-buff",
+  claims: (event) => event.type === "HORDE_GROUP_BUFF",
+  run: ({ event, sequenceId, resolve, done }) => {
+    const source = event.sourceId
+      ? useGameStore.getState().game.horde.graveyard.find((card) => card.instanceId === event.sourceId)
+      : undefined;
+    const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
+    if (!source || affectedIds.length === 0) {
+      resolve();
+      done();
+      return;
+    }
+
+    useGameStore.setState({ hordeSpellCard: source, hordeAutoTriggerCount: 1 });
+    useAudioStore.getState().playSfx("drawOne", { volume: 0.78 });
+
+    window.setTimeout(() => {
+      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+      useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
+      useToastStore.getState().pushToast({
+        title: uiText("toast.hordeEffect"),
+        message: queuedHordeTriggerMessage(source),
+        tone: "horde",
+      });
+    }, SPELL_REVEAL_ENTER_MS);
+
+    window.setTimeout(() => {
+      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      resolve();
+      useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+      useGameStore.setState(startBuffBeat(affectedIds));
+    }, SPELL_REVEAL_BUFF_MS);
+
+    window.setTimeout(() => {
+      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      useGameStore.setState({ hordeSpellCard: undefined });
+    }, SPELL_REVEAL_HOLD_MS);
+
+    window.setTimeout(() => {
+      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      done();
+    }, SPELL_REVEAL_HOLD_MS + SPELL_REVEAL_EXIT_MS);
+  },
+};
+
 // A card that triggers on its own death has no battlefield slot left to pulse, so present it
 // beside its graveyard first. Generic: any dies-trigger whose source already left play.
 const deathRevealBeatHandler: HordeBeatHandler = {
@@ -508,6 +559,7 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
 const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
   burnBeatHandler,
   staticAuraBeatHandler,
+  hordeSpellBuffBeatHandler,
   deathRevealBeatHandler,
   triggerPulseBeatHandler,
 ];

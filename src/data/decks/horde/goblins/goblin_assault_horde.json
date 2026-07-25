@@ -737,18 +737,16 @@
                       },
                       "power": 2,
                       "toughness": 0,
-                      "duration": "END_OF_TURN"
+                      "duration": "END_OF_TURN",
+                      "animation": "BUFF"
                     }
                   ]
                 },
                 {
-                  "id": "goblin_surprise_tokens",
+                  "id": "goblin_surprise_reveal",
                   "effects": [
                     {
-                      "type": "CREATE_TOKEN",
-                      "player": "SELF",
-                      "tokenId": "goblin_token_1_1_red",
-                      "amount": 2
+                      "type": "REVEAL_HORDE_ROUND"
                     }
                   ]
                 }

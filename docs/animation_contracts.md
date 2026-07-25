@@ -33,8 +33,14 @@ Current handlers:
 | --- | --- | --- |
 | `burn` | `BURN_DAMAGE` | Fireball, see below |
 | `static-aura` | `STATIC_AURA_ONLINE` | Source activation, see below |
+| `horde-spell-buff` | `HORDE_GROUP_BUFF` | Spell reveal beside the Horde deck, then shared buff lines |
 | `death-reveal` | first pending source already left the battlefield | Card presented beside its graveyard, see below |
 | `trigger-pulse` | any pending Horde source | Activation pulse on the source, toast, resolve |
+
+Group buffs from Horde instants are committed on their beat rather than during the synchronous
+reveal. The event snapshots the creatures covered when the spell resolved, presents the spell on
+the right side of the Horde panel, and applies the stat change in the same frame as the blue buff
+lines. Creatures revealed later in the turn are not retroactively included.
 
 ## Burn
 

@@ -266,6 +266,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
         filter: scope.filters,
         power: effect.power ?? 0,
         toughness: effect.toughness ?? 0,
+        animation: effect.animation,
       };
     }
     return {
