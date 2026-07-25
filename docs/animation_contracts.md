@@ -112,6 +112,14 @@ Goblin Chainwhirler uses the same compact volley clock with distinct routes:
 - All hit creature ids are flashed together at resolution, and surviving creatures keep the
   normal scorch/smoke state until end-step cleanup.
 
+### Repeated single Burns to player life
+
+General Kreat does not aggregate its creature-entry triggers. Every other creature entering queues
+one independent Burn toward `[data-player-life-panel]`; each has its own projectile, cast sound,
+hit sound, impact, life reaction, and 1-damage engine resolution before the next trigger begins.
+When General Kreat itself created the entering token, `causeSourceId` marks that causal chain so
+the damage follow-up does not repeat the activation pulse already shown for token creation.
+
 ## Static activation
 
 Static abilities apply continuously, so without a beat the player only ever sees numbers that already changed and has to hunt for the card responsible.

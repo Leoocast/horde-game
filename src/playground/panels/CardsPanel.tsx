@@ -185,7 +185,7 @@ export function CardsPanel({ onDispatch }: Props) {
         </div>
       </div>
 
-      <ul className="playground-results old-scrollbar">
+      <ul className="playground-results">
         {visible.map((card) => (
           <li key={card.key}>
             <button

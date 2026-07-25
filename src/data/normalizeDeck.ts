@@ -197,7 +197,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
         },
       };
     case "general_kreat_damage_each_opponent":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1 };
+      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
     case "goblin_chainwhirler_enter_damage_all":
       return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1, animation: "BURN_VOLLEY" };
     default:

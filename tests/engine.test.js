@@ -792,6 +792,33 @@ test("General Kreat creates one attacking token and damages the player when it e
   assert.equal(result.player.life, 29);
 });
 
+test("General Kreat queues a separate player Burn for each other creature entering", () => {
+  const game = createTestGame("general-kreat-separate-burns");
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
+
+  const resolveCreatureEntry = (definitionId) => {
+    const creature = addCard(game, customCard(definitionId, "horde", { subtypes: ["Goblin"] }));
+    runEnterBattlefieldTriggers(game, creature);
+    const enterEvent = game.eventQueue.shift();
+    assert.equal(enterEvent?.type, "CREATURE_ENTERS_BATTLEFIELD");
+    resolveTriggeredEvent(game, enterEvent);
+    return game.eventQueue.shift();
+  };
+
+  const firstBurn = resolveCreatureEntry("general_kreat_first_arrival");
+  assert.equal(game.player.life, 30);
+  assert.equal(firstBurn?.type, "BURN_VOLLEY_DAMAGE");
+  assert.equal(firstBurn?.payload?.targetPlayer, true);
+  resolveTriggeredEvent(game, firstBurn);
+  assert.equal(game.player.life, 29);
+
+  const secondBurn = resolveCreatureEntry("general_kreat_second_arrival");
+  assert.equal(game.player.life, 29);
+  assert.equal(secondBurn?.type, "BURN_VOLLEY_DAMAGE");
+  resolveTriggeredEvent(game, secondBurn);
+  assert.equal(game.player.life, 28);
+});
+
 test("Raid Bombardment defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
   const raid = addCard(game, cardFromDeck("raid_bombardment", "horde"));

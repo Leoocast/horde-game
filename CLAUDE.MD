@@ -616,6 +616,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
   criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
   en el ultimo.
+- General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
+  tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
+  agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
+  usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

@@ -100,8 +100,13 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## General Kreat, the Boltbringer
 
-- A Goblin attack creates one tapped and attacking Goblin token.
-- Each other Horde creature entering deals 1 damage to the player.
+- When one or more Goblins attack, General Kreat creates exactly one tapped and attacking Goblin
+  token. The trigger is once per attack declaration, not once per attacker.
+- Each other Horde creature entering queues its own 1-damage Burn toward the player's life.
+  Damage triggers are never grouped: two creatures entering produce two complete Burns in order.
+- The token created by General Kreat naturally triggers that second ability. Because the first
+  attack beat already illuminated General Kreat, this self-caused follow-up does not pulse the
+  same card a second time.
 
 ## Krenko, Tin Street Kingpin
 

@@ -86,7 +86,21 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     createTokens(game, effect, context);
   },
   DEAL_DAMAGE_TO_OPPONENT: (game, effect, context) => {
-    dealDamageToOpponent(game, context.side, Number(effect.amount ?? 1));
+    const amount = Number(effect.amount ?? 1);
+    if (effect.animation === "BURN_TO_PLAYER") {
+      enqueue(game, {
+        type: "BURN_VOLLEY_DAMAGE",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds: [],
+          amount,
+        },
+      });
+      return;
+    }
+    dealDamageToOpponent(game, context.side, amount);
   },
   DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT: (game, effect, context) => {
     queueRandomOpponentPermanentDamage(game, effect, context);
@@ -480,14 +494,18 @@ export function runEnterBattlefieldTriggers(
   game: GameState,
   card: CardInstance,
   targets?: Record<string, string | string[]>,
-  options: { deferSelfTriggers?: boolean } = {},
+  options: { deferSelfTriggers?: boolean; causeSourceId?: string } = {},
 ): void {
   if (options.deferSelfTriggers) {
     if (card.effects.some((wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD")) {
       enqueue(game, {
         type: "ENTERS_BATTLEFIELD",
         sourceId: card.instanceId,
-        payload: { controller: card.controller, definitionId: card.definitionId },
+        payload: {
+          controller: card.controller,
+          definitionId: card.definitionId,
+          causeSourceId: options.causeSourceId,
+        },
       });
     }
   } else {
@@ -505,6 +523,7 @@ export function runEnterBattlefieldTriggers(
       definitionId: card.definitionId,
       cardTypes: card.cardTypes,
       subtypes: card.subtypes,
+      causeSourceId: options.causeSourceId,
     },
   });
 }
@@ -596,7 +615,10 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     token.tapped = Boolean(effect.tapped);
     game[controller].battlefield.push(token);
     recordBattlefieldEntry(game, token);
-    runEnterBattlefieldTriggers(game, token, undefined, { deferSelfTriggers: true });
+    runEnterBattlefieldTriggers(game, token, undefined, {
+      deferSelfTriggers: true,
+      causeSourceId: context.source?.instanceId,
+    });
     if (effect.attacking && controller === "horde" && game.phase === "combat") {
       token.tapped = true;
       game.combat.hordeAttackers.push(token.instanceId);

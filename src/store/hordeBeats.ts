@@ -666,9 +666,12 @@ const deathRevealBeatHandler: HordeBeatHandler = {
 const triggerPulseBeatHandler: HordeBeatHandler = {
   id: "trigger-pulse",
   claims: (_event, sources) => sources.length > 0,
-  run: ({ sources, sequenceId, resolve, done }) => {
-    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-    useGameStore.getState().triggerEffectActivationPulse(sources[0].instanceId);
+  run: ({ event, sources, sequenceId, resolve, done }) => {
+    const activationAlreadyShown = event.payload?.causeSourceId === sources[0].instanceId;
+    if (!activationAlreadyShown) {
+      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+      useGameStore.getState().triggerEffectActivationPulse(sources[0].instanceId);
+    }
     useToastStore.getState().pushToast({
       title: uiText("toast.hordeEffect"),
       message: queuedHordeTriggerMessage(sources[0]),
@@ -678,8 +681,8 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       resolve();
-      window.setTimeout(() => done(), 180);
-    }, HORDE_ENTER_TRIGGER_RESOLVE_MS);
+      window.setTimeout(() => done(), activationAlreadyShown ? 60 : 180);
+    }, activationAlreadyShown ? 120 : HORDE_ENTER_TRIGGER_RESOLVE_MS);
   },
 };
 
