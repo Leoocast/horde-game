@@ -423,7 +423,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "raid_bombardment_small_attacker_damage",
-          "implementationNote": "For each creature controlled by the source controller that attacks with power 2 or less, deal 1 damage to the player or planeswalker that creature is attacking."
+          "implementationNote": "PvE adaptation: capture each attacking Goblin with power 2 or less once, then deal the combined damage to the player as a Burn volley after the Horde attack sequence."
         }
       ],
       "needsVerification": false,

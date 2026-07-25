@@ -170,8 +170,10 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
-        filter: { maxPower: 2 },
+        filter: { cardTypes: ["Creature"], subtypes: ["Goblin"], maxPower: 2 },
         amount: 1,
+        deferUntil: "HORDE_ATTACK_SEQUENCE_END",
+        animation: "BURN_VOLLEY_TO_PLAYER",
       };
     case "goblin_rabblemaster_begin_combat_token":
       return { type: "CREATE_TOKEN", tokenId: "goblin_token_1_1_red", amount: 1 };

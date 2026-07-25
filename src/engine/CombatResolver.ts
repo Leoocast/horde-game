@@ -95,8 +95,7 @@ export function beginHordeCombat(game: GameState, options: { deferTriggeredEvent
 
 export function declareHordeAttackers(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
-  const attackers = sortBattlefieldCardsByVisualOrder(
-    next,
+  const attackers = sortCardsByBattlefieldOrder(
     next.horde.battlefield,
     next.horde.battlefield.filter((card) => canAttack(next, card)),
   );
@@ -113,8 +112,7 @@ export function declareHordeAttackers(game: GameState, options: { deferTriggered
     },
   });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
-  next.combat.hordeAttackers = sortBattlefieldCardsByVisualOrder(
-    next,
+  next.combat.hordeAttackers = sortCardsByBattlefieldOrder(
     next.horde.battlefield,
     next.combat.hordeAttackers
       .map((id) => next.horde.battlefield.find((card) => card.instanceId === id))
@@ -240,10 +238,40 @@ export function isHordeAttackEventCurrent(game: GameState, event: HordeAttackEve
 }
 
 export function finishHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
-  const next = structuredClone(game) as GameState;
+  const next = resolvePendingHordeCombatDamageVolleys(game);
   next.combat.hordeAttackers = [];
   next.combat.blockers = {};
   if (!options.deferTriggeredEvents) drainEventQueue(next);
+  checkWinLoss(next);
+  return next;
+}
+
+export function pendingHordeCombatDamageVolley(game: GameState): {
+  sourceId?: string;
+  attackerCount: number;
+  damage: number;
+} | undefined {
+  if (game.combat.pendingDamageVolleys.length === 0) return undefined;
+  return {
+    sourceId: game.combat.pendingDamageVolleys.find((volley) => volley.sourceId)?.sourceId,
+    attackerCount: game.combat.pendingDamageVolleys.reduce((total, volley) => total + volley.attackerIds.length, 0),
+    damage: game.combat.pendingDamageVolleys.reduce(
+      (total, volley) => total + volley.attackerIds.length * volley.amountPerAttacker,
+      0,
+    ),
+  };
+}
+
+/** Commits deferred combat damage at the presentation's impact frame. Kept separate from
+ * `finishHordeCombat` so the store can animate the volley first; non-animated callers still
+ * receive the same rule because `finishHordeCombat` invokes it as a fallback. */
+export function resolvePendingHordeCombatDamageVolleys(game: GameState): GameState {
+  const next = structuredClone(game) as GameState;
+  const pending = pendingHordeCombatDamageVolley(next);
+  next.combat.pendingDamageVolleys = [];
+  if (!pending || pending.damage <= 0) return next;
+  next.player.life -= pending.damage;
+  log(next, `Horde combat volley deals ${pending.damage} damage to Player.`);
   checkWinLoss(next);
   return next;
 }
@@ -277,6 +305,17 @@ export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: str
     .map((id) => game.player.battlefield.find((card) => card.instanceId === id))
     .filter((card): card is CardInstance => Boolean(card));
   return sortBattlefieldCardsByVisualOrder(game, game.player.battlefield, attackers).map((card) => card.instanceId);
+}
+
+/** Horde battlefield insertion order is summon order. Never regroup identical definitions here:
+ * stacking is a visual concern, while combat must preserve the chronology in which cards entered. */
+function sortCardsByBattlefieldOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
+  const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+  return [...cards].sort(
+    (left, right) =>
+      (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) -
+      (entryIndex.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER),
+  );
 }
 
 function sortBattlefieldCardsByVisualOrder(game: GameState, battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {

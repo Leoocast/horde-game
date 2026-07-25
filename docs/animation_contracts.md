@@ -31,6 +31,12 @@ The Horde attacks with everything able, every turn, but declaring is a rules ste
 
 `hordeAttackPending` in `Battlefield.tsx` closes the gap: while the Horde's turn is running and no attackers are declared yet, a Horde creature that `canAttack` is drawn as attacking. Visual only — it declares nothing, and the real declaration changes nothing on screen because the card already looks the part.
 
+Attack resolution order is a rules concern and follows `game.horde.battlefield` insertion order,
+which is summon chronology. It must never be rebuilt from visual families or stack keys. For
+example, four Goblin tokens, then Hobgoblin Bandit Lord, then two later tokens resolve in exactly
+that order. The layout may stack the two token waves, but grouping never moves the second wave in
+front of the lord.
+
 Current handlers:
 
 | Handler | Claims | Presentation |
@@ -39,6 +45,7 @@ Current handlers:
 | `static-aura` | `STATIC_AURA_ONLINE` | Source activation, see below |
 | `horde-group-buff` | `HORDE_GROUP_BUFF` | Shared buff lines; spells also reveal beside the Horde deck |
 | `death-reveal` | first pending source already left the battlefield | Card presented beside its graveyard, see below |
+| `deferred-combat-volley` | an attack trigger whose damage waits for the Horde sequence end | Silent rules capture; its single visible activation happens after the last attack |
 | `trigger-pulse` | any pending Horde source | Activation pulse on the source, toast, resolve |
 
 Group buffs are committed on their beat rather than during synchronous effect resolution. The
@@ -72,6 +79,22 @@ The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `d
 6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
 Use this contract for Pashalik Mons, Volley Veteran, and future Goblin burn effects.
+
+### Burn volley to player life
+
+Raid Bombardment reuses Burn with a different target and timing:
+
+- Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
+  powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
+- After the final Horde attack event and its queued reactions finish, the enchantment supplies its
+  one activation pulse. The store aims Burn at `[data-player-life-panel]` instead of a card slot.
+- One projectile is rendered per contributing attacker up to a visual cap of six, staggered by
+  90ms. This is one compact cast: one source charge, one final impact, and one damage number for
+  the complete amount.
+- The engine commits all pending volley damage at that final impact frame. Non-animated callers
+  resolve the same pending damage from `finishHordeCombat`, so presentation cannot change rules.
+- The player life panel runs its normal damage reaction at impact. Buttons stay blocked until the
+  extended final projectile clock has completed.
 
 ## Static activation
 

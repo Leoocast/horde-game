@@ -210,6 +210,26 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   assert.equal(rebuilt.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 2);
 });
 
+test("saved boards preserve separate token waves around another summon", () => {
+  let game = buildScenarioGame(scenario());
+  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 4 });
+  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "hobgoblin_bandit_lord" });
+  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 2 });
+
+  const saved = snapshotBoard(game, BLANK_SCENARIO);
+  assert.deepEqual(saved.zones.hordeBattlefield, [
+    { definitionId: "goblin_token_1_1_red", amount: 4 },
+    { definitionId: "hobgoblin_bandit_lord", amount: 1 },
+    { definitionId: "goblin_token_1_1_red", amount: 2 },
+  ]);
+
+  const rebuilt = buildScenarioGame(saved);
+  assert.deepEqual(
+    rebuilt.horde.battlefield.map((card) => card.definitionId),
+    game.horde.battlefield.map((card) => card.definitionId),
+  );
+});
+
 test("saved boards keep only the hand and battlefields", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
   game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth" });

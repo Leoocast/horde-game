@@ -98,7 +98,7 @@ export function createInitialGame(
       exile: [],
       poisonCounters: 0,
     },
-    combat: { playerAttackers: [], hordeAttackers: [], blockers: {} },
+    combat: { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] },
     battlefieldEntriesThisTurn: [],
     eventQueue: [],
     log: [],

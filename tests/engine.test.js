@@ -696,16 +696,37 @@ test("Goblin Rabblemaster creates its combat token before Horde attackers are de
 
 test("Goblin token waves attack in chronological visual order", () => {
   const game = createTestGame("goblin-wave-attack-order");
-  const firstWave = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const creatureBetweenWaves = addCard(game, customCard("between_goblin_waves", "horde", { subtypes: ["Goblin"] }));
-  const secondWave = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const firstWave = Array.from(
+    { length: 4 },
+    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "horde")),
+  );
+  const creatureBetweenWaves = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
+  const secondWave = Array.from(
+    { length: 2 },
+    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "horde")),
+  );
 
   const result = prepareHordeAttackers(game);
 
   assert.deepEqual(result.combat.hordeAttackers, [
-    firstWave.instanceId,
+    ...firstWave.map((card) => card.instanceId),
     creatureBetweenWaves.instanceId,
-    secondWave.instanceId,
+    ...secondWave.map((card) => card.instanceId),
+  ]);
+});
+
+test("Horde attackers follow summon order instead of regrouping identical definitions", () => {
+  const game = createTestGame("horde-summon-order");
+  const firstCopy = addCard(game, customCard("repeated_raider", "horde", { subtypes: ["Goblin"] }));
+  const summonedBetween = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
+  const secondCopy = addCard(game, customCard("repeated_raider", "horde", { subtypes: ["Goblin"] }));
+
+  const result = prepareHordeAttackers(game);
+
+  assert.deepEqual(result.combat.hordeAttackers, [
+    firstCopy.instanceId,
+    summonedBetween.instanceId,
+    secondCopy.instanceId,
   ]);
 });
 
@@ -752,16 +773,26 @@ test("General Kreat creates one attacking token and damages the player when it e
   assert.equal(result.player.life, 29);
 });
 
-test("Raid Bombardment counts only declared attackers with power two or less", () => {
+test("Raid Bombardment defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
-  addCard(game, cardFromDeck("raid_bombardment", "horde"));
-  addCard(game, customCard("small_attacker", "horde", { power: 1 }));
-  addCard(game, customCard("medium_attacker", "horde", { power: 2 }));
-  addCard(game, customCard("large_attacker", "horde", { power: 3 }));
+  const raid = addCard(game, cardFromDeck("raid_bombardment", "horde"));
+  const smallGoblin = addCard(game, customCard("small_goblin", "horde", { subtypes: ["Goblin"], power: 1 }));
+  const mediumGoblin = addCard(game, customCard("medium_goblin", "horde", { subtypes: ["Goblin"], power: 2 }));
+  addCard(game, customCard("large_goblin", "horde", { subtypes: ["Goblin"], power: 3 }));
+  addCard(game, customCard("small_non_goblin", "horde", { subtypes: ["Warrior"], power: 1 }));
 
-  const result = prepareHordeAttackers(game);
+  const declared = prepareHordeAttackers(game);
 
-  assert.equal(result.player.life, 28);
+  assert.equal(declared.player.life, 30);
+  assert.deepEqual(declared.combat.pendingDamageVolleys, [{
+    sourceId: raid.instanceId,
+    attackerIds: [smallGoblin.instanceId, mediumGoblin.instanceId],
+    amountPerAttacker: 1,
+  }]);
+
+  const result = resolveHordeCombat(declared);
+  assert.equal(result.player.life, 21);
+  assert.deepEqual(result.combat.pendingDamageVolleys, []);
 });
 
 test("Krenko grows before creating tokens equal to its new power", () => {

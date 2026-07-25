@@ -606,12 +606,47 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
   },
 };
 
+const deferredCombatVolleyHandler: HordeBeatHandler = {
+  id: "deferred-combat-volley",
+  claims: (event, sources) =>
+    event.type === "ATTACK_DECLARED" &&
+    Boolean(sources[0]?.effects.some((wrapper) =>
+      wrapper.type === "TRIGGERED_ABILITY" &&
+      wrapper.trigger === event.type &&
+      isDeferredCombatVolleyEffect(wrapper.effect as EffectDefinition | undefined)
+    )),
+  run: ({ resolve, done }) => {
+    // Capturing the eligible attackers is a bookkeeping step, not the visible activation.
+    // The source gets its single pulse when the accumulated volley fires after the last attack.
+    resolve();
+    done();
+  },
+};
+
+function isDeferredCombatVolleyEffect(effect?: EffectDefinition): boolean {
+  if (!effect) return false;
+  if (
+    effect.type === "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING" &&
+    effect.deferUntil === "HORDE_ATTACK_SEQUENCE_END"
+  ) {
+    return true;
+  }
+  if (effect.type === "SEQUENCE" && Array.isArray(effect.effects)) {
+    return effect.effects.some((item) => isDeferredCombatVolleyEffect(item as EffectDefinition));
+  }
+  if (effect.type === "CONDITIONAL") {
+    return isDeferredCombatVolleyEffect(effect.effect as EffectDefinition | undefined);
+  }
+  return false;
+}
+
 // Order matters: the first handler that claims an event owns its presentation.
 const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
   burnBeatHandler,
   staticAuraBeatHandler,
   hordeGroupBuffBeatHandler,
   deathRevealBeatHandler,
+  deferredCombatVolleyHandler,
   triggerPulseBeatHandler,
 ];
 

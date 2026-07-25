@@ -444,6 +444,8 @@ Durante Battle:
 ### Defensa contra Horda
 
 Durante Defend:
+- la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
+  agrupado visual por copias/stacks nunca puede reordenar el combate
 - seleccion del defensor puede hacerse por click/drag
 - flechas azules de defensor a atacante
 - si una criatura atacante tiene MENACE, defender debe bloquearse si solo hay 1 blocker; el boton muestra tooltip explicando
@@ -605,6 +607,12 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Battle Cry Goblin se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
   hasta fin de turno. Haste y Pack tactics se omiten; el ETB pulsa una vez y el beat de buff no
   vuelve a iluminar la fuente.
+- Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
+  hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
+  rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
+- El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
+  invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
+  layout siga apilando copias iguales.
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.

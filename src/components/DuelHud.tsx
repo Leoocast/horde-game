@@ -270,6 +270,7 @@ export function DuelHud({ game }: { game: GameState }) {
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const t = useTranslation();
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+  const playerBurnImpactEventId = useGameStore((state) => state.playerBurnImpactEventId);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
@@ -279,6 +280,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
+  const lastBurnImpactEventId = useRef<number | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
 
@@ -299,6 +301,18 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
       window.clearTimeout(timeout);
     };
   }, [hordeAttackAnimation]);
+
+  useEffect(() => {
+    if (!playerBurnImpactEventId || playerBurnImpactEventId === lastBurnImpactEventId.current) return;
+    lastBurnImpactEventId.current = playerBurnImpactEventId;
+    setTakingDamage(false);
+    const frame = window.requestAnimationFrame(() => setTakingDamage(true));
+    const timeout = window.setTimeout(() => setTakingDamage(false), 430);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [playerBurnImpactEventId]);
 
   return (
     <>

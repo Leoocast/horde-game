@@ -116,10 +116,29 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING: (game, effect, context) => {
     const attackerIds = declaredAttackerIds(context.event);
-    const maxPower = Number((effect.filter as Record<string, unknown> | undefined)?.maxPower ?? Number.POSITIVE_INFINITY);
+    const filter = effect.filter as (CardFilter & { maxPower?: number }) | undefined;
+    const maxPower = Number(filter?.maxPower ?? Number.POSITIVE_INFINITY);
     const powers = (context.event?.payload?.attackerPowers as Record<string, number> | undefined) ?? {};
-    const matches = attackerIds.filter((id) => Number(powers[id] ?? Number.POSITIVE_INFINITY) <= maxPower).length;
-    if (matches > 0) dealDamageToOpponent(game, context.side, matches * Number(effect.amount ?? 1));
+    const matchingIds = attackerIds.filter((id) => {
+      const attacker = game[context.side].battlefield.find((card) => card.instanceId === id);
+      return Boolean(
+        attacker &&
+        matchesFilter(attacker, filter, context.source) &&
+        Number(powers[id] ?? Number.POSITIVE_INFINITY) <= maxPower
+      );
+    });
+    if (matchingIds.length === 0) return;
+    const amountPerAttacker = Number(effect.amount ?? 1);
+    if (context.side === "horde" && effect.deferUntil === "HORDE_ATTACK_SEQUENCE_END") {
+      game.combat.pendingDamageVolleys.push({
+        sourceId: context.source?.instanceId,
+        attackerIds: matchingIds,
+        amountPerAttacker,
+      });
+      game.log.unshift(`${context.source?.name ?? "Horde"} readies ${matchingIds.length * amountPerAttacker} damage for the end of combat.`);
+      return;
+    }
+    dealDamageToOpponent(game, context.side, matchingIds.length * amountPerAttacker);
   },
   PUMP_SELF_PER_ATTACKER_MATCHING: (game, effect, context) => {
     if (!context.source) return;

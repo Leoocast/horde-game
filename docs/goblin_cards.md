@@ -41,7 +41,13 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## Raid Bombardment
 
-- Each declared attacker with power 2 or less deals 1 damage to the player.
+- PvE adaptation: each attacking Goblin with power 2 or less contributes 1 damage.
+- Eligible attackers are captured once at declaration, so a Goblin with multiple blockers never
+  contributes more than once and still contributes if it dies during its attack.
+- The damage waits until every Horde attack animation has finished. Raid Bombardment then pulses
+  once and launches one compact Burn volley toward the player's life; the impact applies and shows
+  the combined damage rather than playing a full Burn sequence for every Goblin.
+- At most six projectiles are drawn for readability, but the damage number always shows the real total.
 
 ## Beetleback Chief
 

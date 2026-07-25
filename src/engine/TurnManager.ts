@@ -20,7 +20,7 @@ export function cleanupEndStep(game: GameState): void {
     delete card.flags.burnSmoke;
   }
   game.player.manaPool = { ...emptyManaPool(), colorless: game.player.manaPool.colorless };
-  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {} };
+  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
 }
 
 export function clearPlayerSummoningSickness(game: GameState): void {

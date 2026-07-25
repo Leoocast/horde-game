@@ -196,6 +196,13 @@ export type CombatState = {
   playerAttackers: string[];
   hordeAttackers: string[];
   blockers: Record<string, string[]>;
+  /** Damage captured when attackers are declared but deliberately held until the animated Horde
+   * attack sequence ends. Attacker ids make each attacker count once even with multiple blockers. */
+  pendingDamageVolleys: Array<{
+    sourceId?: string;
+    attackerIds: string[];
+    amountPerAttacker: number;
+  }>;
 };
 
 export type EventItem = {

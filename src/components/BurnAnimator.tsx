@@ -55,7 +55,11 @@ export function BurnAnimator() {
     const source = burn.sourceId
       ? document.querySelector<HTMLElement>(`[data-card-slot-id="${burn.sourceId}"]`)
       : undefined;
-    const target = document.querySelector<HTMLElement>(`[data-card-slot-id="${burn.targetId}"]`);
+    const target = burn.targetKind === "playerLife"
+      ? document.querySelector<HTMLElement>('[data-player-life-panel="true"]')
+      : burn.targetId
+        ? document.querySelector<HTMLElement>(`[data-card-slot-id="${burn.targetId}"]`)
+        : undefined;
     if (!target) return;
     const sourceRect = source?.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
@@ -130,10 +134,12 @@ export function BurnAnimator() {
       particle.addEventListener("animationend", () => particle.remove(), { once: true });
     };
 
+    const projectileCount = Math.max(1, Math.min(6, burn.projectileCount ?? 1));
+    const finalProjectileDelay = (projectileCount - 1) * 90;
     const tick = (now: number) => {
       if (cancelled) return;
       const elapsed = now - start;
-      if (elapsed >= IMPACT_AT_MS - 30) {
+      if (elapsed >= IMPACT_AT_MS + finalProjectileDelay - 30) {
         if (!embersSpawned) {
           embersSpawned = true;
           for (let i = 0; i < EMBER_COUNT; i++) spawnEmber();
@@ -161,6 +167,9 @@ export function BurnAnimator() {
   const dy = geometry.endY - geometry.startY;
   // The ball squash and the trail are both aimed along the travel heading.
   const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const projectileCount = Math.max(1, Math.min(6, burn.projectileCount ?? 1));
+  const finalProjectileDelay = (projectileCount - 1) * 90;
+  const impactAnimationStyle = { animationDelay: `${finalProjectileDelay}ms` } as CSSProperties;
   const style = {
     "--burn-start-x": `${geometry.startX}px`,
     "--burn-start-y": `${geometry.startY}px`,
@@ -190,38 +199,49 @@ export function BurnAnimator() {
 
         <div ref={traceRef} className="burn-trace-layer" />
 
-        {/* Multi-layer morphing fireball with attached trail. */}
-        <div ref={projectileRef} className="burn-fireball">
-          <div className="burn-trail">
-            {TRAIL_RIBBONS.map((t, index) => (
-              <i
-                key={index}
-                className="burn-trail-ribbon"
-                style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}` } as CSSProperties}
-              />
-            ))}
-            {TRAIL_STREAKS.map((t, index) => (
-              <i
-                key={index}
-                className="burn-trail-streak"
-                style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}` } as CSSProperties}
-              />
-            ))}
+        {/* One charged cast, followed by a compact staggered volley. The last projectile owns
+            the trace/impact clock; earlier balls remain deliberately close together. */}
+        {Array.from({ length: projectileCount }, (_, projectileIndex) => {
+          const projectileDelay = projectileIndex * 90;
+          return (
+          <div
+            key={projectileIndex}
+            ref={projectileIndex === projectileCount - 1 ? projectileRef : undefined}
+            className="burn-fireball"
+            style={{ animationDelay: `${projectileDelay}ms` }}
+          >
+            <div className="burn-trail">
+              {TRAIL_RIBBONS.map((t, index) => (
+                <i
+                  key={index}
+                  className="burn-trail-ribbon"
+                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
+                />
+              ))}
+              {TRAIL_STREAKS.map((t, index) => (
+                <i
+                  key={index}
+                  className="burn-trail-streak"
+                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
+                />
+              ))}
+            </div>
+            <div ref={projectileIndex === projectileCount - 1 ? fireballBodyRef : undefined} className="burn-fireball-body">
+              <div className="burn-ball-outer" />
+              <div className="burn-ball-mid" />
+              <div className="burn-ball-core" />
+              <div className="burn-ball-hotspot" />
+            </div>
           </div>
-          <div ref={fireballBodyRef} className="burn-fireball-body">
-            <div className="burn-ball-outer" />
-            <div className="burn-ball-mid" />
-            <div className="burn-ball-core" />
-            <div className="burn-ball-hotspot" />
-          </div>
-        </div>
+          );
+        })}
 
         {/* Layered impact anchored on the target card. */}
         <div className="burn-impact">
-          <div className="burn-void-disc" />
-          <div className="burn-impact-core" />
-          <div className="burn-shock-ring one" style={{ "--size": "112px", "--border-size": "7px", "--ring-blur": "1px" } as CSSProperties} />
-          <div className="burn-shock-ring two" style={{ "--size": "92px", "--border-size": "3px", "--ring-blur": "2px" } as CSSProperties} />
+          <div className="burn-void-disc" style={impactAnimationStyle} />
+          <div className="burn-impact-core" style={impactAnimationStyle} />
+          <div className="burn-shock-ring one" style={{ "--size": "112px", "--border-size": "7px", "--ring-blur": "1px", animationDelay: `${finalProjectileDelay}ms` } as CSSProperties} />
+          <div className="burn-shock-ring two" style={{ "--size": "92px", "--border-size": "3px", "--ring-blur": "2px", animationDelay: `${finalProjectileDelay}ms` } as CSSProperties} />
           {IMPACT_SMOKE.map((puff, index) => (
             <i
               key={index}
@@ -234,14 +254,15 @@ export function BurnAnimator() {
                 "--s2": `${puff.s2}`,
                 "--s3": `${puff.s3}`,
                 "--drift2": `${puff.drift2}px`,
+                animationDelay: `${finalProjectileDelay}ms`,
               } as CSSProperties}
             />
           ))}
         </div>
       </div>
 
-      <div className="burn-screen-flash" />
-      <span className="burn-damage-number">-{burn.amount}</span>
+      <div className="burn-screen-flash" style={impactAnimationStyle} />
+      <span className="burn-damage-number" style={{ animationDelay: `${640 + finalProjectileDelay}ms` }}>-{burn.amount}</span>
     </div>,
     document.body,
   );
