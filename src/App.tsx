@@ -13,6 +13,7 @@ import { useGameStore } from "./store/useGameStore";
 import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
+import { openPlaygroundToolsWindow } from "./playground/toolsWindow";
 
 // Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
 // statically eliminated, so the chunk is still emitted — production simply never requests it.
@@ -219,11 +220,7 @@ export default function App() {
             setRequestInitialName(false);
           }}
           onOpenPlayground={IS_DEV ? () => {
-            playgroundToolsWindowRef.current = window.open(
-              "",
-              "hostfall-playground-tools",
-              "popup=yes,width=500,height=900,resizable=yes,scrollbars=no",
-            );
+            playgroundToolsWindowRef.current = openPlaygroundToolsWindow(playgroundToolsWindowRef.current);
             stopMusic();
             setScreen("playground");
           } : undefined}

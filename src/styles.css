@@ -13339,3 +13339,312 @@
   color: #7f7a66;
   font-size: 11px;
 }
+
+/* Detached Playground workbench. The old dock had to be narrow and float over the game; the
+   popup can use a real application layout with persistent navigation and a wider working area. */
+.playground-tools-layout {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: 148px minmax(0, 1fr);
+}
+
+.playground-tools-rail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 1px solid rgba(196, 158, 84, 0.22);
+  background:
+    linear-gradient(180deg, rgba(33, 31, 22, 0.96), rgba(13, 14, 11, 0.98)),
+    #101109;
+}
+
+.playground-tools-brand {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.18);
+}
+
+.playground-tools-brand-mark {
+  display: inline-flex;
+  height: 34px;
+  width: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(210, 172, 91, 0.48);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 105, 42, 0.42), rgba(15, 16, 12, 0.9));
+  color: #dfbd71;
+  box-shadow: inset 0 0 12px rgba(226, 185, 92, 0.12);
+}
+
+.playground-tools-brand .playground-dock-title {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.playground-tools-rail .playground-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  border: 0;
+  padding: 12px 8px;
+}
+
+.playground-tools-rail .playground-tab {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 10px;
+  color: #8e8975;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+
+.playground-tools-rail .playground-tab:last-child { border-right: 1px solid transparent; }
+.playground-tools-rail .playground-tab svg { flex: 0 0 auto; opacity: 0.72; }
+.playground-tools-rail .playground-tab:hover { border-color: rgba(196, 158, 84, 0.18); background: rgba(196, 158, 84, 0.06); }
+.playground-tools-rail .playground-tab.is-active {
+  border-color: rgba(214, 177, 95, 0.34);
+  background: linear-gradient(90deg, rgba(134, 99, 37, 0.52), rgba(85, 64, 29, 0.16));
+  color: #f2e7c3;
+  box-shadow: inset 2px 0 #d1a856;
+}
+.playground-tools-rail .playground-tab.is-active svg { color: #e5bd68; opacity: 1; }
+
+.playground-tools-rail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  border-top: 1px solid rgba(196, 158, 84, 0.18);
+  padding: 9px 8px;
+}
+
+.playground-rail-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  background: rgba(15, 16, 13, 0.74);
+  color: #918b76;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-rail-button:hover { border-color: rgba(224, 190, 116, 0.56); color: #e9ddba; }
+
+.playground-tools-main {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 86% 0%, rgba(143, 105, 38, 0.08), transparent 34%),
+    linear-gradient(180deg, #15160f, #0f100c);
+}
+
+.playground-tools-main .playground-dock-header {
+  min-height: 86px;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(15, 16, 12, 0.62);
+}
+
+.playground-tools-heading { min-width: 0; }
+.playground-tools-heading .playground-dock-title { margin-top: 2px; font-size: 21px; line-height: 1.1; }
+.playground-tools-heading > p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #827d6a;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-tools-main .playground-launch {
+  display: flex;
+  width: min(260px, 44%);
+  flex: 0 0 auto;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+}
+
+.playground-tools-main .playground-launch-button {
+  min-height: 38px;
+  flex: 1 1 0;
+  padding: 0 10px;
+}
+
+.playground-tools-main .playground-live {
+  flex: 0 0 auto;
+  border-bottom-color: rgba(196, 158, 84, 0.2);
+}
+
+.playground-tools-main .playground-readout {
+  min-width: 0;
+  padding: 7px 10px;
+  background: rgba(10, 11, 9, 0.72);
+}
+
+.playground-tools-main .playground-readout > strong { font-size: 13px; }
+
+.playground-tools-main .playground-dock-body {
+  min-height: 0;
+  padding: 16px 18px 20px;
+}
+
+.playground-tools-main .playground-panel {
+  gap: 14px;
+}
+
+.playground-tools-main .playground-group {
+  gap: 10px;
+  border-color: rgba(196, 158, 84, 0.22);
+  padding: 13px 14px 14px;
+  background: rgba(22, 23, 18, 0.64);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.playground-dock-body.is-scenario .playground-panel,
+.playground-dock-body.is-actions .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.9fr) minmax(300px, 1.1fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-board .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(310px, 1.15fr) minmax(230px, 0.85fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-board .playground-panel > .playground-group:first-child {
+  grid-row: span 2;
+}
+
+.playground-dock-body.is-timeline .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(300px, 1.15fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-timeline .playground-panel > .playground-group:last-child {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+.playground-card-browser-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(150px, 0.8fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-card-browser-toolbar .playground-result-count {
+  grid-column: 1 / -1;
+}
+
+.playground-dock-body.is-cards .playground-results {
+  display: grid;
+  max-height: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  overflow: visible;
+}
+
+.playground-dock-body.is-cards .playground-result {
+  min-height: 58px;
+  height: 100%;
+}
+
+.playground-dock-body.is-scenario .playground-horde-queue { max-height: 520px; }
+.playground-dock-body.is-board .playground-library-list,
+.playground-dock-body.is-timeline .playground-library-list,
+.playground-dock-body.is-timeline .playground-steps {
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+@media (max-width: 660px) {
+  .playground-tools-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .playground-tools-rail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(196, 158, 84, 0.22);
+  }
+
+  .playground-tools-brand {
+    min-height: 54px;
+    border: 0;
+    padding: 7px 10px;
+  }
+
+  .playground-tools-brand-mark { height: 30px; width: 30px; flex-basis: 30px; }
+  .playground-tools-brand > div { display: none; }
+
+  .playground-tools-rail .playground-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 6px 4px;
+  }
+
+  .playground-tools-rail .playground-tab {
+    min-height: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .playground-tools-rail .playground-tab > span { display: none; }
+  .playground-tools-rail .playground-tab.is-active { box-shadow: inset 0 -2px #d1a856; }
+
+  .playground-tools-rail-actions {
+    align-self: stretch;
+    border-top: 0;
+    border-left: 1px solid rgba(196, 158, 84, 0.18);
+    padding: 6px;
+  }
+
+  .playground-rail-button { min-height: 20px; width: 30px; }
+  .playground-rail-button > span { display: none; }
+
+  .playground-tools-main .playground-dock-header { min-height: 74px; padding: 10px 12px; }
+  .playground-tools-heading .playground-dock-title { font-size: 18px; }
+  .playground-tools-heading > p { display: none; }
+  .playground-tools-main .playground-launch { width: min(230px, 52%); }
+  .playground-tools-main .playground-launch-button { min-height: 34px; font-size: 9px; }
+  .playground-tools-main .playground-dock-body { padding: 12px; }
+
+  .playground-dock-body.is-scenario .playground-panel,
+  .playground-dock-body.is-actions .playground-panel,
+  .playground-dock-body.is-board .playground-panel,
+  .playground-dock-body.is-timeline .playground-panel {
+    display: flex;
+  }
+
+  .playground-dock-body.is-cards .playground-results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

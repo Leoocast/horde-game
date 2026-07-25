@@ -1,4 +1,17 @@
-import { ExternalLink, FlaskConical, Home, RotateCcw, X } from "lucide-react";
+import {
+  Activity,
+  ExternalLink,
+  FlaskConical,
+  Gamepad2,
+  Home,
+  Layers3,
+  ListVideo,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Board } from "../components/Board";
@@ -31,21 +44,20 @@ import {
   type ScenarioDefinition,
 } from "./scenario";
 import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } from "./timeline";
+import { openPlaygroundToolsWindow, trackToolsWindowBounds } from "./toolsWindow";
 
 type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
 
-const TABS: Array<{ id: PlaygroundTab; label: string }> = [
-  { id: "scenario", label: "Setup" },
-  { id: "cards", label: "Cards" },
-  { id: "board", label: "Board" },
-  { id: "actions", label: "Actions" },
-  { id: "timeline", label: "Replay" },
+const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon: LucideIcon }> = [
+  { id: "scenario", label: "Setup", description: "Seed, decks and Horde queue", icon: SlidersHorizontal },
+  { id: "cards", label: "Cards", description: "Find, play or place cards", icon: Search },
+  { id: "board", label: "Board", description: "Selection and saved states", icon: Layers3 },
+  { id: "actions", label: "Actions", description: "Turn flow and energy", icon: Gamepad2 },
+  { id: "timeline", label: "Replay", description: "Record and replay sequences", icon: ListVideo },
 ];
 
 const REPLAY_POLL_MS = 120;
 const REPLAY_STEP_GAP_MS = 220;
-const TOOLS_WINDOW_NAME = "hostfall-playground-tools";
-const TOOLS_WINDOW_FEATURES = "popup=yes,width=500,height=900,resizable=yes,scrollbars=no";
 const TOOLS_ROOT_ID = "playground-tools-root";
 const COPIED_STYLE_ATTRIBUTE = "data-playground-style-copy";
 
@@ -59,6 +71,7 @@ type PlaygroundScreenProps = {
 export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialToolsWindow }: PlaygroundScreenProps) {
   const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
+  const game = useGameStore((state) => state.game);
   const pushToast = useToastStore((state) => state.pushToast);
   const [draft, setDraft] = useState<ScenarioDefinition>(() => cloneScenario(BLANK_SCENARIO));
   const [launch, setLaunch] = useState<ScenarioDefinition>();
@@ -96,7 +109,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
       current.focus();
       return;
     }
-    const popup = window.open("", TOOLS_WINDOW_NAME, TOOLS_WINDOW_FEATURES);
+    const popup = openPlaygroundToolsWindow(current);
     if (!popup) {
       reportError("The browser blocked the Playground tools window. Allow popups and try again.");
       return;
@@ -135,6 +148,12 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
     const observer = new MutationObserver(() => copyPlaygroundStyles(document, popup.document));
     observer.observe(document.head, { attributes: true, childList: true, characterData: true, subtree: true });
     return () => observer.disconnect();
+  }, [toolsRoot]);
+
+  useEffect(() => {
+    const popup = toolsWindowRef.current;
+    if (!popup || popup.closed) return;
+    return trackToolsWindowBounds(popup);
   }, [toolsRoot]);
 
   const buildBoard = useCallback(
@@ -311,95 +330,129 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
     setReplays(listStoredReplays());
   }
 
+  const activeTab = TABS.find((entry) => entry.id === tab) ?? TABS[0];
+
   const tools = (
     <aside className="playground-dock" aria-label="Playground tools">
-      <header className="playground-dock-header">
-        <div>
-          <div className="playground-dock-kicker">Developer</div>
-          <h2 className="playground-dock-title">Playground</h2>
-        </div>
-        <div className="playground-dock-header-actions">
-          <button className="playground-icon-button" type="button" title="Return to menu" onClick={onReturnToMenu}>
-            <Home size={15} />
-          </button>
-          <button className="playground-icon-button" type="button" title="Close tools window" onClick={closeToolsWindow}>
-            <X size={15} />
-          </button>
-        </div>
-      </header>
+      <div className="playground-tools-layout">
+        <aside className="playground-tools-rail">
+          <div className="playground-tools-brand">
+            <span className="playground-tools-brand-mark"><Activity size={17} /></span>
+            <div>
+              <div className="playground-dock-kicker">Hostfall</div>
+              <div className="playground-dock-title">Lab</div>
+            </div>
+          </div>
 
-      <div className="playground-launch" role="group" aria-label="Board controls">
-        <button className="playground-launch-button is-active" type="button" onClick={() => buildBoard(draft)}>
-          <FlaskConical size={14} />
-          <span>Build board</span>
-        </button>
-        <button className="playground-launch-button" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
-          <RotateCcw size={14} />
-          <span>Restart</span>
-        </button>
-      </div>
+          <nav className="playground-tabs" aria-label="Playground sections">
+            {TABS.map((entry) => {
+              const Icon = entry.icon;
+              return (
+                <button
+                  key={entry.id}
+                  className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
+                  type="button"
+                  title={`${entry.label}: ${entry.description}`}
+                  aria-current={tab === entry.id ? "page" : undefined}
+                  onClick={() => setTab(entry.id)}
+                >
+                  <Icon size={16} />
+                  <span>{entry.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-      <nav className="playground-tabs" aria-label="Playground sections">
-        {TABS.map((entry) => (
-          <button
-            key={entry.id}
-            className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
-            type="button"
-            onClick={() => setTab(entry.id)}
-          >
-            {entry.label}
-          </button>
-        ))}
-      </nav>
+          <div className="playground-tools-rail-actions">
+            <button className="playground-rail-button" type="button" title="Return to main menu" onClick={onReturnToMenu}>
+              <Home size={15} />
+              <span>Menu</span>
+            </button>
+            <button className="playground-rail-button" type="button" title="Close tools window" onClick={closeToolsWindow}>
+              <X size={15} />
+              <span>Close</span>
+            </button>
+          </div>
+        </aside>
 
-      <div className="playground-dock-body old-scrollbar">
-        {tab === "scenario" && (
-          <ScenarioPanel
-            draft={draft}
-            queue={hordeQueue}
-            onChangeQueue={setHordeQueue}
-            onChange={setDraft}
-            onUpdate={() => buildBoard(draft)}
-            onExecuteHordeTurn={executeHordeTurn}
-          />
-        )}
-        {tab === "cards" && <CardsPanel onDispatch={dispatch} />}
-        {tab === "board" && (
-          <BoardPanel
-            onDispatch={dispatch}
-            onInvalid={reportError}
-            boards={boards}
-            initialName={draft.name}
-            onSaveBoard={saveBoard}
-            onLoadBoard={loadBoard}
-            onExportBoard={exportBoard}
-            onImportBoard={importBoard}
-            onDeleteBoard={removeBoard}
-          />
-        )}
-        {tab === "actions" && <ActionsPanel onDispatch={dispatch} />}
-        {tab === "timeline" && (
-          <TimelinePanel
-            steps={steps}
-            recording={recording}
-            cursor={replayCursor}
-            autoPlaying={autoPlaying}
-            canReplay={Boolean(launch) && steps.length > 0}
-            replays={replays}
-            onToggleRecording={() => setRecording((current) => !current)}
-            onRemoveStep={(index) => setSteps((current) => current.filter((_, position) => position !== index))}
-            onClear={() => {
-              setSteps([]);
-              stopReplay();
-            }}
-            onStepOnce={stepOnce}
-            onToggleAuto={() => (autoPlaying ? setAutoPlaying(false) : beginReplay(true))}
-            onStopReplay={stopReplay}
-            onSaveReplay={saveReplay}
-            onLoadReplay={loadReplay}
-            onDeleteReplay={removeReplay}
-          />
-        )}
+        <section className="playground-tools-main">
+          <header className="playground-dock-header">
+            <div className="playground-tools-heading">
+              <div className="playground-dock-kicker">Developer playground</div>
+              <h2 className="playground-dock-title">{activeTab.label}</h2>
+              <p>{activeTab.description}</p>
+            </div>
+
+            <div className="playground-launch" role="group" aria-label="Board controls">
+              <button className="playground-launch-button is-active" type="button" onClick={() => buildBoard(draft)}>
+                <FlaskConical size={14} />
+                <span>Build board</span>
+              </button>
+              <button className="playground-launch-button" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
+                <RotateCcw size={14} />
+                <span>Restart</span>
+              </button>
+            </div>
+          </header>
+
+          <div className="playground-live" aria-label="Live game state">
+            <LiveReadout label="Turn" value={String(game.turnNumber)} />
+            <LiveReadout label="Side" value={game.activeSide} />
+            <LiveReadout label="Phase" value={game.phase} />
+            <LiveReadout label="Hand" value={String(game.player.hand.length)} />
+            <LiveReadout label="Events" value={String(game.eventQueue.length)} busy={game.eventQueue.length > 0} />
+          </div>
+
+          <div className={`playground-dock-body is-${tab} old-scrollbar`}>
+            {tab === "scenario" && (
+              <ScenarioPanel
+                draft={draft}
+                queue={hordeQueue}
+                onChangeQueue={setHordeQueue}
+                onChange={setDraft}
+                onUpdate={() => buildBoard(draft)}
+                onExecuteHordeTurn={executeHordeTurn}
+              />
+            )}
+            {tab === "cards" && <CardsPanel onDispatch={dispatch} />}
+            {tab === "board" && (
+              <BoardPanel
+                onDispatch={dispatch}
+                onInvalid={reportError}
+                boards={boards}
+                initialName={draft.name}
+                onSaveBoard={saveBoard}
+                onLoadBoard={loadBoard}
+                onExportBoard={exportBoard}
+                onImportBoard={importBoard}
+                onDeleteBoard={removeBoard}
+              />
+            )}
+            {tab === "actions" && <ActionsPanel onDispatch={dispatch} />}
+            {tab === "timeline" && (
+              <TimelinePanel
+                steps={steps}
+                recording={recording}
+                cursor={replayCursor}
+                autoPlaying={autoPlaying}
+                canReplay={Boolean(launch) && steps.length > 0}
+                replays={replays}
+                onToggleRecording={() => setRecording((current) => !current)}
+                onRemoveStep={(index) => setSteps((current) => current.filter((_, position) => position !== index))}
+                onClear={() => {
+                  setSteps([]);
+                  stopReplay();
+                }}
+                onStepOnce={stepOnce}
+                onToggleAuto={() => (autoPlaying ? setAutoPlaying(false) : beginReplay(true))}
+                onStopReplay={stopReplay}
+                onSaveReplay={saveReplay}
+                onLoadReplay={loadReplay}
+                onDeleteReplay={removeReplay}
+              />
+            )}
+          </div>
+        </section>
       </div>
     </aside>
   );
@@ -416,6 +469,15 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
           <span>Open tools</span>
         </button>
       )}
+    </div>
+  );
+}
+
+function LiveReadout({ label, value, busy = false }: { label: string; value: string; busy?: boolean }) {
+  return (
+    <div className={`playground-readout ${busy ? "is-busy" : ""}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }

@@ -163,24 +163,26 @@ export function CardsPanel({ onDispatch }: Props) {
         </section>
       )}
 
-      <input
-        className="playground-search"
-        placeholder="Search by name or id"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      <select className="playground-select" value={deckId} onChange={(event) => setDeckId(event.target.value)}>
-        <option value="">All decks</option>
-        {CATALOG_DECKS.map((deck) => (
-          <option key={deck.id} value={deck.id}>
-            {deck.label}
-          </option>
-        ))}
-      </select>
+      <div className="playground-card-browser-toolbar">
+        <input
+          className="playground-search"
+          placeholder="Search by name or id"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <select className="playground-select" value={deckId} onChange={(event) => setDeckId(event.target.value)}>
+          <option value="">All decks</option>
+          {CATALOG_DECKS.map((deck) => (
+            <option key={deck.id} value={deck.id}>
+              {deck.label}
+            </option>
+          ))}
+        </select>
 
-      <div className="playground-result-count">
-        {results.length} card{results.length === 1 ? "" : "s"}
-        {results.length > RESULT_LIMIT ? ` — showing first ${RESULT_LIMIT}` : ""}
+        <div className="playground-result-count">
+          {results.length} card{results.length === 1 ? "" : "s"}
+          {results.length > RESULT_LIMIT ? ` — showing first ${RESULT_LIMIT}` : ""}
+        </div>
       </div>
 
       <ul className="playground-results">
