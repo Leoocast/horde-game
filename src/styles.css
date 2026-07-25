@@ -12967,6 +12967,50 @@
 .playground-search:focus,
 .playground-select:focus { border-color: rgba(224, 190, 116, 0.72); outline: none; }
 
+.playground-clearable-input {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.playground-clearable-input > input {
+  width: 100%;
+  padding-right: 34px;
+}
+
+.playground-search::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.playground-input-clear {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-flex;
+  height: 30px;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #938d76;
+  cursor: pointer;
+  transition: background 130ms ease, color 130ms ease, opacity 100ms ease;
+}
+
+.playground-input-clear[aria-hidden="true"] {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.playground-input-clear:hover,
+.playground-input-clear:focus-visible {
+  background: rgba(120, 92, 38, 0.24);
+  color: #f2e7c3;
+  outline: none;
+}
+
 .playground-result-count { color: #7f7a66; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
 
 .playground-results { display: flex; max-height: 380px; flex-direction: column; gap: 3px; overflow-y: auto; }
@@ -13557,6 +13601,11 @@
 
 .playground-card-browser-toolbar .playground-result-count {
   grid-column: 1 / -1;
+}
+
+.playground-dock-body.is-cards {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 .playground-dock-body.is-cards .playground-results {

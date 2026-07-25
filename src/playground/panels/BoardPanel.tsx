@@ -4,6 +4,7 @@ import type { CardInstance } from "../../engine/GameTypes";
 import { useGameStore } from "../../store/useGameStore";
 import type { StoredBoard } from "../scenarioStorage";
 import type { TimelineStep } from "../timeline";
+import { ClearableInput } from "./fields";
 
 type Props = {
   onDispatch: (step: TimelineStep) => void;
@@ -51,7 +52,7 @@ export function BoardPanel({
           <span className="playground-group-badge">{boards.length} stored</span>
         </header>
         <div className="playground-save-row">
-          <input className="playground-search" aria-label="Board name" value={name} onChange={(event) => setName(event.target.value)} />
+          <ClearableInput className="playground-search" ariaLabel="Board name" value={name} onChange={setName} />
           <button
             className="playground-button is-primary"
             type="button"

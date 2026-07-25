@@ -4,7 +4,7 @@ import { hordeInspectableDecks, playerInspectableDecks } from "../../data/deckCa
 import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
 import { searchCatalog } from "../cardCatalog";
 import type { ScenarioCard, ScenarioDefinition } from "../scenario";
-import { SelectField, TextField } from "./fields";
+import { SearchInput, SelectField, TextField } from "./fields";
 
 const RESULT_LIMIT = 20;
 
@@ -102,11 +102,10 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
 
         <div className="playground-horde-toolbar">
           <div className="playground-horde-search">
-            <input
-              className="playground-search"
+            <SearchInput
               placeholder="Search Horde cards"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={setQuery}
             />
             {query.trim() && (
               <ul className="playground-horde-search-results old-scrollbar">

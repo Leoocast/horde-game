@@ -192,6 +192,7 @@ const SEED_STORAGE_KEY = "horde-game-seed";
 const defaultSeed = readStoredSeed();
 const HORDE_ATTACK_ANIMATION_MS = 500;
 const COMBAT_VOLLEY_LEAD_IN_MS = 360;
+const COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS = 220;
 const COMBAT_VOLLEY_IMPACT_MS = 638;
 const COMBAT_VOLLEY_ANIMATION_MS = 1220;
 const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
@@ -1145,16 +1146,23 @@ function runPendingHordeCombatVolleyOrFinish(): void {
         projectileCount,
       },
     });
-    useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx), { volume: 0.74 });
+    for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {
+      const projectileDelay = projectileIndex * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
+      window.setTimeout(() => {
+        if (sequenceId !== hordeSequenceEpoch()) return;
+        useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx), { volume: 0.64 });
+      }, COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS + projectileDelay);
 
-    window.setTimeout(() => {
-      if (sequenceId !== hordeSequenceEpoch()) return;
-      useAudioStore.getState().playSfx(pickRandomSfx(fireballHitSfx), { volume: 0.82 });
-      useGameStore.setState((current) => ({
-        game: resolvePendingHordeCombatDamageVolleys(current.game),
-        playerBurnImpactEventId: Date.now(),
-      }));
-    }, COMBAT_VOLLEY_IMPACT_MS + volleyDelay);
+      window.setTimeout(() => {
+        if (sequenceId !== hordeSequenceEpoch()) return;
+        useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.72 });
+        if (projectileIndex !== projectileCount - 1) return;
+        useGameStore.setState((current) => ({
+          game: resolvePendingHordeCombatDamageVolleys(current.game),
+          playerBurnImpactEventId: Date.now(),
+        }));
+      }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
+    }
 
     window.setTimeout(() => {
       if (sequenceId !== hordeSequenceEpoch()) return;

@@ -2,6 +2,7 @@ import { Circle, FolderOpen, Pause, Play, Save, SkipForward, Trash2, X } from "l
 import { useState } from "react";
 import type { StoredReplay } from "../scenarioStorage";
 import { describeStep, type TimelineStep } from "../timeline";
+import { ClearableInput } from "./fields";
 
 type Props = {
   steps: TimelineStep[];
@@ -49,7 +50,7 @@ export function TimelinePanel({
           <span className="playground-group-badge">{replays.length} stored</span>
         </header>
         <div className="playground-save-row">
-          <input className="playground-search" aria-label="Replay name" value={name} onChange={(event) => setName(event.target.value)} />
+          <ClearableInput className="playground-search" ariaLabel="Replay name" value={name} onChange={setName} />
           <button
             className="playground-button is-primary"
             type="button"

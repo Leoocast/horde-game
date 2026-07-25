@@ -161,7 +161,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
       const problems = validateScenario(definition);
       if (problems.length > 0) {
         reportError(problems.join(" "));
-        return;
+        return false;
       }
       const snapshot = cloneScenario(definition);
       loadScenario(buildScenarioGame(snapshot), {
@@ -171,6 +171,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
       setLaunch(snapshot);
       setReplayCursor(undefined);
       setAutoPlaying(false);
+      return true;
     },
     [loadScenario, reportError],
   );
@@ -199,6 +200,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
   }
 
   function executeHordeTurn() {
+    if (useGameStore.getState().hordeDeckId !== draft.hordeDeckId && !buildBoard(draft)) return;
     dispatch(
       hordeQueue.length > 0
         ? { kind: "hordeTurnExact", entries: structuredClone(hordeQueue) }
@@ -409,7 +411,10 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
                 draft={draft}
                 queue={hordeQueue}
                 onChangeQueue={setHordeQueue}
-                onChange={setDraft}
+                onChange={(definition) => {
+                  if (definition.hordeDeckId !== draft.hordeDeckId) setHordeQueue([]);
+                  setDraft(definition);
+                }}
                 onUpdate={() => buildBoard(draft)}
                 onExecuteHordeTurn={executeHordeTurn}
               />

@@ -71,7 +71,7 @@ The visual is a faithful port of the reference in `assets/examples/Fireball/fire
 
 1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness. A charge build-up (`.burn-charge`: swelling glow, distorting ring, spinning arc, inrushing sparks) plays at the source, and a random cast whoosh (`fireballCastSfx`) fires as the projectile ignites.
 2. A multi-layer morphing fireball (`.burn-fireball-body`) with an attached comet trail (ribbons + streaks) travels from the source card to the target card. The ball squash and trail ride the travel heading (`--burn-angle`), and JS-spawned trace sparks bleed off its real path.
-3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and a random hit sound (`fireballHitSfx`) plays.
+3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and the canonical hit sound (`fireballHitSfx`) plays.
 4. A layered impact anchored on the target fires: a void implosion, a morphing molten core, two shock rings, a ring of JS-spawned embers, lingering smoke puffs, and a radial screen flash. The effects (inside `.burn-world`) get a short impact shake; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
 
 The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `debris` classes are **not** ported — they exist in its CSS but never appear in its DOM, so they never render.
@@ -89,8 +89,9 @@ Raid Bombardment reuses Burn with a different target and timing:
 - After the final Horde attack event and its queued reactions finish, the enchantment supplies its
   one activation pulse. The store aims Burn at `[data-player-life-panel]` instead of a card slot.
 - One projectile is rendered per contributing attacker up to a visual cap of six, staggered by
-  90ms. This is one compact cast: one source charge, one final impact, and one damage number for
-  the complete amount.
+  90ms. Each visible projectile plays one cast sound when it launches and one hit sound when it
+  arrives; sounds are not layered into a single oversized cue. This remains one compact cast:
+  one source charge, one final visual impact, and one damage number for the complete amount.
 - The engine commits all pending volley damage at that final impact frame. Non-animated callers
   resolve the same pending damage from `finishHordeCombat`, so presentation cannot change rules.
 - The player life panel runs its normal damage reaction at impact. Buttons stay blocked until the

@@ -416,7 +416,7 @@ const burnBeatHandler: HordeBeatHandler = {
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx(pickRandom(fireballHitSfx), { volume: 0.78 });
+      useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.78 });
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
       useGameStore.setState({ burnImpactCardId: targetId, burnImpactEventId: Date.now() });
