@@ -1,6 +1,9 @@
 # Deck Data Format
 
-Deck folders under `src/data/decks/` are the forward-looking card data format.
+Este archivo resume el formato. La guía operativa completa para implementar una carta está en
+[`docs/adding_cards.md`](../../../docs/adding_cards.md).
+
+Deck folders under `src/data/decks/` are the current gameplay card data format.
 
 Each deck should live under its side (`player` or `horde`) and in its own folder:
 
@@ -18,7 +21,7 @@ src/data/decks/
 
 ## Deck JSON
 
-The deck file describes gameplay data. The current target schema is `0.2.0`.
+The deck file describes gameplay data. The current schema is `0.2.0`.
 
 Required top-level fields:
 
@@ -114,26 +117,27 @@ Each card entry should be keyed by card id:
 
 The deck inspector uses this manifest to verify card art. Prefer this file over legacy root-level image lookup files.
 
-## Current Engine Support
+## Runtime actual
 
-The game currently uses the old MVP runtime while the new effect engine is being redesigned.
+Los tres decks registrados usan este esquema en partida, no sólo en el inspector:
 
-Temporarily disabled or deprecated in runtime:
+- `mono_green_ramp`
+- `horde_zombies`
+- `goblin_assault_horde`
 
-- Manual tap-for-mana buttons on permanents.
-- Player counter effects.
-- Player static buffs.
-- Player static keyword grants.
-- Special-case card UI such as New Horizons targeting.
-- Generic activated ability buttons.
+`normalizeDeck` convierte `abilities[]` al modelo runtime. `EffectResolver` contiene el registro
+real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad sin
+`engineSupport` debe sobrevivir completa a la normalización o el lint falla.
 
-Still supported:
+Marcadores admitidos:
 
-- Loading and inspecting new deck folders.
-- Scryfall image lookup through `deck_id_images.json`.
-- Normalizing the Alpha deck into the current runtime deck shape.
-- Basic land auto-payment for casting.
-- Creature combat.
-- Horde turn flow.
+- `pending`: todavía no implementada; se omite del runtime y aparece como WIP.
+- `ignored`: omitida deliberadamente en este modo.
+- `custom`: resuelta por un flujo bespoke existente fuera del resolver genérico.
 
-The current normalizer is intentionally minimal. It keeps the Alpha deck stable in the existing runtime while the full ability/effect engine is redesigned.
+Las limitaciones concretas y el proceso para ampliar efectos, triggers, targets, activaciones y
+presentación están documentados en `docs/adding_cards.md`. El comando
+`node scripts/lint-decks.mjs` es la fuente actual para saber qué cartas siguen WIP.
+
+Los archivos `player_deck.json` y `horde_deck.json` de la raíz no forman parte de este formato y no
+son importados por `src/`.

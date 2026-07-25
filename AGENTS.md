@@ -51,6 +51,7 @@ Verifica por tipos y tests.
 ## Otros documentos
 
 - [`docs/testing.md`](docs/testing.md) — como se verifica, que esta cubierto y que no.
+- [`docs/adding_cards.md`](docs/adding_cards.md) — flujo completo para agregar e implementar cartas.
 - [`docs/animation_contracts.md`](docs/animation_contracts.md) — beats de la Horda, burn, static
   activation, death reveal, y por que el campo debe quedarse quieto entre beats.
 - [`docs/game_modes.md`](docs/game_modes.md) — modos de juego.
@@ -60,5 +61,5 @@ Verifica por tipos y tests.
 ## Deuda conocida
 
 `player_deck.json` y `horde_deck.json` siguen en la raiz del repo pero **ningun archivo de `src/`
-los importa**. Son restos del MVP viejo; `CLAUDE.md` ya los da por eliminados. No los uses como
-referencia. Borrarlos es decision del usuario.
+los importa**. Son restos del MVP viejo; no los uses como referencia. Borrarlos es decision del
+usuario.

@@ -40,10 +40,11 @@ Chaos es un modo separado de la dificultad normal. Tiene su propia entrada **Cha
 - El jugador comienza con su mano normal de 7 cartas y no roba durante el primer turno.
 - El jugador comienza con 35 vidas.
 - Surge comienza en el turno 8 de la Horda.
-- Se conservan las reglas generales de energía: máximo 5 energías y una acción de energía por turno, incluyendo reciclar una energía.
+- Se conservan las reglas generales de energía: máximo 4 energías y una acción de energía por turno, incluyendo reciclar una energía.
 - Se mantiene la mano inicial normal.
 
-La energía inicial se probará con valor 1. Si el primer ataque de la Horda deja muy poco espacio para responder, se puede subir a 2 después de playtesting.
+El valor implementado de energía inicial es 1. Puede subir a 2 más adelante si el playtesting
+demuestra que el primer ataque deja muy poco espacio para responder.
 
 ### Mutación de criaturas
 
@@ -82,7 +83,7 @@ El pool se forma con las keywords impresas originalmente en las criaturas y toke
 - Las cartas eliminadas no aportan keywords al pool de Chaos.
 - Las criaturas que conceden keywords permanecen en el deck y conservan el resto de sus efectos.
 
-### Presentación pendiente
+### Presentación actual
 
 - **Chaos Mode** aparece debajo de **Play** y abre su propio menú.
 - Debe conservar el estilo dark medieval del juego, pero sentirse inestable, extraño y peligroso.

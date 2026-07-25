@@ -2,6 +2,10 @@
 
 Este documento describe un juego de cartas PvE en desarrollo, inspirado en el formato "Horde Magic" de Magic: The Gathering. Es un prototipo jugable (React/TypeScript), no un juego terminado, así que las reglas descritas abajo son las reglas *reales* implementadas hoy, no un diseño aspiracional.
 
+Este es un documento narrativo, no una fuente de implementación. Para implementar cartas consultar
+`docs/adding_cards.md`; ante cualquier diferencia mandan los JSON registrados, el engine y los
+tests.
+
 ## Concepto central
 
 Un jugador humano (el "Player") se enfrenta en solitario a una horda de criaturas controlada por el sistema (la "Horde"). No es un duelo simétrico de Magic: la Horda no tiene mano, no tiene vida, no paga maná de forma normal y no toma decisiones estratégicas — revela cartas de su propio mazo de forma automática y ataca con todo lo que puede. El Player sí juega con las reglas clásicas de Magic (tierras, maná, criaturas, instants, sorceries, combate con bloqueos).
@@ -17,7 +21,11 @@ Bando controlado por la persona. Tiene:
 - **Mana pool** y tierras que se tapean para maná.
 - Juega una tierra por turno, castea criaturas/instants/sorceries según fase, ataca, bloquea, activa habilidades tap.
 
-Mazo actual del Player: **"Mono-Green Ramp"** (verde mono-color, 40 cartas, 17 Forest). Arquetipo: acelerar maná con criaturas que dan maná (dorks), desplegar amenazas verdes grandes con reach/trample, y usar trucos de combate (pump, fight spells) o remoción basada en peleas de criaturas. No hay remoción dura tipo "destroy target creature": todo pasa por combate, pelea (fight) o destruir artifact/enchantment/flying.
+Mazo actual del Player: **"Mono-Green Ramp 39"**. El JSON contiene 39 cartas y 15 Forest; al
+construir una partida estándar, `GameState.ts` limita el deck activo a 9 cartas de energía.
+Arquetipo: acelerar energía con criaturas que la generan, desplegar amenazas verdes grandes con
+reach/trample, y usar trucos de combate, pelea o remoción de artifact/enchantment/flying. No hay
+remoción dura genérica tipo “destroy target creature”.
 
 Curva y piezas clave del mazo actual:
 - Dorks de maná: Llanowar Elves, Druid of the Cowl (tap: agregan {G}).
@@ -38,10 +46,15 @@ Bando automatizado, sin jugador humano detrás. No tiene:
 
 Sí tiene: library, battlefield, graveyard, exile, y un contador de **poison counters** propio (mecánica custom de este modo, no poison de Magic real).
 
-Reglas de comportamiento de la Horda (aplican a cualquier mazo de Horda, no solo zombies):
-- **Reveal automático ("Assault Reveal")**: en su turno, revela hasta 3 cartas de su library y las pone en juego (las castea gratis). Se detiene apenas revela una carta que no sea token.
-- **Surge**: si graveyard + exile de la Horda es mayor que su library, revela 2 cartas extra ese turno (está desesperada, se está quedando sin mazo).
-- **Todas sus criaturas tienen Haste** siempre (regla implícita del modo — por eso Haste no se muestra como badge en la UI para criaturas de Horda).
+El comportamiento de cada Horda viene de `rulesProfile` en su deck. Los dos decks actuales usan:
+
+- **Reveal automático ("Assault Reveal")**: revela hasta 3 cartas y se detiene al revelar una
+  carta no-token.
+- **Mini Surge**: en el turno 6 de la Horda revela 1 carta adicional una sola vez.
+- **Surge**: comienza en el turno 10 de la Horda, o en el 8 en Chaos, y añade 2 revelados por
+  turno. No depende del tamaño del cementerio.
+- **Haste implícito**: sus criaturas pueden atacar al entrar porque ambos perfiles actuales tienen
+  `hordeCreaturesHaveHaste: true`. Por eso Haste no se muestra como badge.
 - **Ataca con todo lo que puede** cada combate suyo — no elige selectivamente.
 - El Player **pierde por vida a 0**; la **Horda "pierde" por quedarse sin amenazas / vaciar su mazo** (mill).
 
@@ -56,16 +69,20 @@ No existe "vida de la Horda". En cambio, el daño de combate que recibe se tradu
 
 ## Mazos de Horda disponibles
 
-Actualmente hay dos mazos de Horda construidos (uno activo en juego, el otro disponible para inspeccionar):
+Actualmente hay dos mazos de Horda seleccionables:
 
-### Zombie Horde (mazo activo, 50 cartas)
+### Zombie Horde (mazo predeterminado y seleccionable, 50 cartas)
 Tema: zombies negros/azules, cementerio, discard, sinergia de graveyard.
 - **Zombie Token** (2/2, x21) y **Zombie Giant Token** (5/5, x4): la carne de cañón de la horda.
-- **Graf Harvest** (Enchantment): da Menace a todos los zombies; tiene una directiva de activación propia de la Horda que exilia criaturas del graveyard para generar más Zombie Tokens; se sacrifica solo si el graveyard no tiene la combinación token+non-token requerida.
-- **Noosegraf Mob** (6/6 con 5 +1/+1 counters iniciales): cada vez que la Horda "castea" (revela) una carta no-token, saca un counter y genera un Zombie Token — se va debilitando a sí misma con el tiempo a cambio de más tokens.
+- **Graf Harvest** (Enchantment): actualmente da Menace a todos los zombies. Su trigger de upkeep y
+  su activación para crear tokens están declarados `engineSupport: "pending"` y no se ejecutan.
+- **Noosegraf Mob** (0/0 con 5 counters +1/+1 iniciales, 5/5 efectivo): cada vez que se castea una
+  carta no-token, saca un counter y genera un Zombie Token.
 - Varias criaturas con "discard forzado al oponente" (Rottenheart Ghoul al morir, Miasmic Mummy al entrar) — adaptadas a "each opponent discards" porque la Horda no tiene mano propia que perder.
 - **Smallpox**: sorcery que castiga fuerte al Player (pierde vida, descarta, sacrifica criatura y tierra).
-- Criaturas voladoras (Blighted Bat, Stitchwing Skaab, Advanced Stitchwing, Crow of Dark Tidings): su habilidad de recursión desde graveyard vía descarte está **ignorada en este MVP** porque la Horda no tiene mano.
+- Criaturas voladoras (Blighted Bat, Stitchwing Skaab, Advanced Stitchwing, Crow of Dark Tidings):
+  la recursión desde graveyard que paga descarte está **ignorada en este modo** porque la Horda no
+  tiene mano.
 - Crow of Dark Tidings: millea a la propia Horda al entrar y al morir (le da velocidad al Player para vaciarla).
 - Cursed Minotaur: Menace nativo.
 - Rancid Rats: Deathtouch + Skulk (no puede ser bloqueada por poder mayor — en este contexto es al revés: son ellos atacando, así que "skulk" afecta cómo el Player puede bloquearlas... revisar en Targeting.ts si hace falta precisión de regla).
@@ -73,7 +90,7 @@ Tema: zombies negros/azules, cementerio, discard, sinergia de graveyard.
 - Gavony Unhallowed: gana +1/+1 counter cada vez que muere otra criatura de la Horda.
 - Diregraf Captain: lord de zombies (+1/+1 a otros zombies) + Deathtouch, y cuando muere un zombie, el Player pierde 1 vida.
 
-### Goblin Assault Horde (mazo disponible en el inspector, no activo aún, 50 cartas)
+### Goblin Assault Horde (mazo seleccionable, 50 cartas)
 Tema: trasgos rojos, generación masiva de tokens, sacrificio, daño directo.
 - **Goblin Token** (1/1 rojo, x25): volumen puro.
 - Varios "lords" que dan +1/+1 a otros goblins (Hobgoblin Bandit Lord, Rundvelt Hordemaster, Goblin Trashmaster).
@@ -83,7 +100,9 @@ Tema: trasgos rojos, generación masiva de tokens, sacrificio, daño directo.
 - Goblin Chainwhirler: daño en área al entrar (1 a Player y a todo lo que controla).
 - Varias legendarias (General Kreat, Krenko, Pashalik Mons) con triggers de generar tokens al atacar o al morir un goblin.
 
-Este mazo tiene más `engineSupportNeeded` sin resolver (target flexible a Player/criatura/planeswalker/battle, "must attack if able", conteo de goblins que atacaron, etc.) — es decir, mecánicamente está menos maduro que el de zombies.
+Este mazo es jugable y seleccionable, pero tiene más habilidades marcadas
+`engineSupport: "pending"` que Zombies. El comando `scripts/lint-decks.mjs` es la fuente vigente de
+esa lista; no se duplica aquí para evitar que vuelva a quedar atrasada.
 
 ## Estética y tono (importante para lore)
 
@@ -95,10 +114,15 @@ Este mazo tiene más `engineSupportNeeded` sin resolver (target flexible a Playe
 
 ## Limitaciones mecánicas actuales (para que el lore no prometa de más)
 
-- Solo dos colores/temas de horda existen: zombies negro/azul (activo) y goblins rojo (en inspector, incompleto). No hay más facciones de horda implementadas todavía.
+- Sólo existen dos Hosts: Zombies negro/azul, predeterminado, y Goblins rojo. Ambos son
+  seleccionables; Goblins conserva varias habilidades WIP declaradas.
 - El Player solo tiene un mazo: mono-verde ramp. No hay otros colores/arquetipos de Player implementados.
-- No hay parser de texto de Magic real ni intención de tenerlo: cada carta nueva se implementa a mano vía JSON + efectos genéricos (`EffectResolver`). Si una carta no tiene una implementación de regla, su habilidad simplemente no funciona en el juego aunque el texto de sabor exista.
-- Varias cartas de zombies renuncian a mecánicas de Magic real porque la Horda no tiene mano (ej. recursión pagando con descarte queda ignorada).
+- No hay parser de texto de Magic real ni intención de tenerlo: cada carta nueva se implementa
+  mediante JSON y efectos genéricos de `EffectResolver`. Una habilidad incompleta debe marcarse
+  `pending`, `ignored` o `custom`; una habilidad sin marcador que no coincide con el vocabulario
+  real hace fallar el deck lint.
+- Varias cartas de zombies renuncian a mecánicas de Magic real porque la Horda no tiene mano (por
+  ejemplo, la recursión que paga descarte está marcada `engineSupport: "ignored"`).
 - La Horda no tiene decisiones tácticas: no elige bloqueos, no elige a quién atacar de forma inteligente, no tiene "IA" — es determinística según reglas fijas (revela hasta 3, ataca con todo).
 - Precisión total de reglas de Magic no es el objetivo: el diseño prioriza que el flujo de juego sea claro y jugable por sobre el rules-accuracy total.
 

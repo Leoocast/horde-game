@@ -2,6 +2,11 @@
 
 This document records the PvE behavior used by the game. Card JSON is the rules source of truth; this file explains intentional deviations from tabletop Magic and the expected presentation.
 
+`engineSupport: "pending"` and “not active in matches” are not identical. A Horde activated
+ability may normalize to a valid engine effect but still have no automated policy that decides
+when to use it. `scripts/lint-decks.mjs` is the source of truth for explicit WIP markers; the notes
+below also call out valid-but-uninvoked Horde activations.
+
 ## Goblin Token
 
 - Copies remain visually stacked by definition and arrival grouping.
@@ -11,7 +16,7 @@ This document records the PvE behavior used by the game. Card JSON is the rules 
 ## Hobgoblin Bandit Lord
 
 - Other Goblins receive the static +1/+1 bonus.
-- Activated burn behavior remains pending a Horde activation policy.
+- Activated burn behavior is explicitly WIP because there is no Horde activation policy.
 
 ## Rundvelt Hordemaster
 
@@ -39,7 +44,8 @@ This document records the PvE behavior used by the game. Card JSON is the rules 
 ## Siege-Gang Commander
 
 - Its entry effect creates three Goblin tokens.
-- Activated sacrifice damage remains pending a Horde activation policy.
+- Its activated sacrifice damage is modeled but is not invoked in matches because the Horde has
+  no generic activation policy.
 
 ## Goblin Rabblemaster
 
@@ -53,7 +59,7 @@ This document records the PvE behavior used by the game. Card JSON is the rules 
 
 ## Mogg Mob
 
-- Divided activated burn remains pending a Horde activation policy.
+- Divided activated burn is explicitly WIP and also needs a Horde activation policy.
 
 ## Volley Veteran
 
@@ -67,7 +73,8 @@ This document records the PvE behavior used by the game. Card JSON is the rules 
 ## Goblin Trashmaster
 
 - Other Goblins receive the static +1/+1 bonus.
-- Activated artifact destruction remains pending a Horde activation policy.
+- Activated artifact destruction is modeled but is not invoked in matches because the Horde has
+  no generic activation policy.
 
 ## General Kreat, the Boltbringer
 
@@ -85,4 +92,5 @@ This document records the PvE behavior used by the game. Card JSON is the rules 
 - Each Goblin death resolves separately at the moment it occurs. Combat does not batch Pashalik triggers until the end.
 - Damage uses the reusable `BURN` animation: source activation pulse, layered fireball travel, burn shader and spark burst on impact, floating damage number, and scorch plus smoke on a surviving target until end-step cleanup.
 - When Pashalik and another card react to the same Goblin death, each gets its own beat; they never resolve simultaneously.
-- Activated token creation remains pending a Horde activation policy.
+- Activated token creation is modeled but is not invoked in matches because the Horde has no
+  generic activation policy.

@@ -100,7 +100,7 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck Alpha 0.0.3 del player (JSON + manifest de imagenes)
+        mono_green_ramp/  deck del player en esquema 0.2.0 (JSON + manifest de imagenes)
       horde/
         zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
@@ -125,7 +125,8 @@ tests/
   engineTestUtils.js      helpers para armar game state de prueba
 ```
 
-Detalle de testing en `docs/testing.md`.
+Detalle de testing en `docs/testing.md`. Para agregar o implementar una carta, seguir
+`docs/adding_cards.md`.
 
 ## Estado actual del juego
 
@@ -176,15 +177,16 @@ Seed especial: `developer`.
 
 En `src/engine/GameState.ts`:
 - `DEVELOPER_SEED = "developer"`
-- player inicia con 50 vida
-- player inicia con 5 Forest en battlefield
-- player opening hand esta controlada por constantes
-- horde opening library puede forzar cartas al top
+- player inicia con 999 vida
+- player inicia con 4 Forest en battlefield
+- player roba 2 Broken Wings forzadas mas 5 cartas aleatorias
+- la Horda fuerza `goblin_token_1_1_red` y `rundvelt_hordemaster` al frente
+- `graf_harvest` se mantiene fuera de esas dos posiciones protegidas
 
 Actualmente se usa para testear rapido:
 - cartas concretas en mano
 - tierras listas en campo
-- `graf_harvest` al top de la Horda para probar permanentes no criatura y Menace
+- una apertura Goblin reproducible para probar triggers y muertes
 
 Si el usuario pide "ponme X en mano/campo en developer", hacerlo en `GameState.ts`, no hackear componentes.
 
@@ -288,7 +290,11 @@ Keywords:
 
 ## Decks e imagenes
 
-Ya NO existe formato viejo ni JSONs legacy (`player_deck.json`, `horde_deck.json` y `cardImageLookups.json` fueron eliminados). Los tres decks usan el mismo esquema authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
+El runtime ya no usa el formato viejo. `player_deck.json` y `horde_deck.json` todavía existen en la
+raíz como restos del MVP, pero ningún archivo de `src/` los importa: no editarlos ni usarlos como
+referencia. `cardImageLookups.json` sí fue eliminado. Los tres decks vigentes usan el mismo esquema
+authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por
+`normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
 - horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
@@ -595,7 +601,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
 - `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
 - `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
-- `Graf Harvest` se fuerza al top de la Horda en developer mode.
+- En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
+  queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
@@ -611,6 +618,7 @@ Leer primero:
 - componente visual especifico involucrado
 
 Si es carta nueva:
+- seguir `docs/adding_cards.md`
 - revisar su JSON en `src/data/decks/player/mono_green_ramp/mono_green_ramp.json` o el deck correspondiente bajo `src/data/decks/horde/`
 - revisar normalizacion en `src/data/normalizeDeck.ts`
 - revisar si ya hay efecto generico en `EffectResolver.ts`
