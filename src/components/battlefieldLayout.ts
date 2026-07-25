@@ -21,6 +21,16 @@ export type CardGroup = { key: string; cards: CardInstance[] };
  */
 export type MutableBox<T> = { current: T };
 
+/** Cards mounted with a loaded board are already committed; only later ids are arrival work. */
+export function createBattlefieldArrivalRegistry(cards: CardInstance[]): Set<string> {
+  return new Set(cards.map((card) => card.instanceId));
+}
+
+/** Pure lookup used before the component claims an id after finding its rendered card slot. */
+export function unregisteredBattlefieldArrivals(cards: CardInstance[], registeredIds: Set<string>): CardInstance[] {
+  return cards.filter((card) => !registeredIds.has(card.instanceId));
+}
+
 export function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }

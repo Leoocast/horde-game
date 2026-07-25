@@ -25,7 +25,9 @@ import {
   uiText,
 } from "./presentationEffects";
 
-const HORDE_ENTER_TRIGGER_START_MS = 680;
+// Arrival orchestration now waits for every Horde entrance animation before presenting effects,
+// so this is only a small readability gap rather than a second summon-length pause.
+const HORDE_ENTER_TRIGGER_START_MS = 80;
 const HORDE_ENTER_TRIGGER_RESOLVE_MS = 430;
 // Matches the fireball's CSS master clock (--burn-duration 1100ms, impact at 58%). The window
 // runs a touch past the duration so the rising damage number finishes before the layer clears.
@@ -33,9 +35,8 @@ const BURN_IMPACT_MS = 638;
 const BURN_ANIMATION_MS = 1220;
 const BURN_PROJECTILE_LAUNCH_MS = 220;
 const BURN_PROJECTILE_GAP_MS = 90;
-// Lead-in matches HORDE_ENTER_TRIGGER_START_MS's intent: let a card that just landed finish its
-// summon pop before its aura pulse animates the same transform on the same slot.
-const STATIC_AURA_LEAD_IN_MS = 420;
+// The entrance is already settled before aura beats begin; retain only a short visual handoff.
+const STATIC_AURA_LEAD_IN_MS = 80;
 const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
 // Once the buff lands, its rising lines can finish underneath the next queued effect. Holding
 // the queue for the full tail made a lord with a second ETB (Hobgoblin Bandit Lord) feel like it
@@ -58,6 +59,7 @@ const SPELL_REVEAL_EXIT_MS = 300;
 // that move over 360ms. A beat that changed the board waits it out, so the next attacker never
 // charges across a row that is still sliding into place.
 const BOARD_SETTLE_MS = 560;
+const HORDE_ENTRY_WAIT_POLL_MS = 40;
 
 let hordeAutoTriggerSequenceId = 0;
 // Coverage of every Horde static ability as of the last announced beat. Diffed, not recomputed
@@ -159,6 +161,13 @@ export function scheduleHordeEnterTriggers(
  * first; a card whose aura already supplied the activation pulse keeps its ETB as a separate beat
  * but does not glow or play the activation sound a second time. */
 export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
+  const waitingSequenceId = hordeAutoTriggerSequenceId;
+  if (useGameStore.getState().summoningAnimationCount > 0) {
+    window.setTimeout(() => {
+      if (waitingSequenceId === hordeAutoTriggerSequenceId) scheduleHordeArrivalEffects(cards, onComplete);
+    }, HORDE_ENTRY_WAIT_POLL_MS);
+    return;
+  }
   const auraSourceIds = [
     ...new Set(useGameStore.getState().pendingStaticAuras.map((aura) => aura.sourceId)),
   ];
@@ -174,6 +183,13 @@ export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: 
 }
 
 export function startHordeCombatSequence(): void {
+  if (useGameStore.getState().summoningAnimationCount > 0) {
+    const waitingSequenceId = hordeAutoTriggerSequenceId;
+    window.setTimeout(() => {
+      if (waitingSequenceId === hordeAutoTriggerSequenceId) startHordeCombatSequence();
+    }, HORDE_ENTRY_WAIT_POLL_MS);
+    return;
+  }
   captureStaticAuraBeats();
   flushStaticAuraBeats();
   const begun = beginHordeCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
@@ -286,6 +302,13 @@ type HordeBeatHandler = {
 };
 
 export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
+  if (useGameStore.getState().summoningAnimationCount > 0) {
+    const waitingSequenceId = hordeAutoTriggerSequenceId;
+    window.setTimeout(() => {
+      if (waitingSequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
+    }, HORDE_ENTRY_WAIT_POLL_MS);
+    return;
+  }
   if (discardPauseInProgress(useGameStore.getState())) {
     window.setTimeout(() => scheduleQueuedHordeTriggers(onComplete), 120);
     return;
@@ -384,14 +407,17 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
     if (spawned.length > 0) {
       next.eventQueue = [...spawned, ...next.eventQueue.filter((item) => knownEventIds.has(item.id))];
     }
-    const summoned = next.horde.battlefield.find((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
-    if (summoned) useAudioStore.getState().playSfx(monsterSfx(summoned));
+    const summoned = next.horde.battlefield.filter(
+      (card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId),
+    );
+    if (summoned[0]) useAudioStore.getState().playSfx(monsterSfx(summoned[0]));
     battlefieldChanged =
       next.horde.battlefield.length !== previous.horde.battlefield.length ||
       next.player.battlefield.length !== previous.player.battlefield.length;
     notifyDiscardEffects(previous, next);
     return {
       game: next,
+      summoningAnimationCount: state.summoningAnimationCount + summoned.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
     };
   });

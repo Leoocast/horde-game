@@ -620,6 +620,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
+- Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
+  individual del Playground y los beats que crean permanentes incrementan
+  `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
+  reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
+  que el primer Execute no vuelva a animar permanentes viejos.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

@@ -917,6 +917,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedHordeCreatureId: undefined,
         selectedPlayerCreatureId: undefined,
         hordeAutoTriggerCount: triggerCards.length,
+        summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
         hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
@@ -929,6 +930,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedHordeCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
       hordeAutoTriggerCount: triggerCards.length,
+      summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
     });
     // Before any frame renders the new creatures: hold back the buffs they just gained so the
@@ -961,6 +963,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedHordeCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
       hordeAutoTriggerCount: triggerCards.length,
+      summoningAnimationCount: state.summoningAnimationCount + entered.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
     // Before any frame renders the new permanent: hold back the buffs it just granted so the
@@ -1387,6 +1390,7 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       return {
         game: next,
         hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
+        summoningAnimationCount: state.summoningAnimationCount + newHordeCreatures.length,
         hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
         ...(buffBeat ?? {}),
       };

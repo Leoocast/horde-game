@@ -15,7 +15,14 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
-import { groupBattlefieldCopies, holdCombatCasualties, isSwarmToken, type GroupMeta } from "./battlefieldLayout";
+import {
+  createBattlefieldArrivalRegistry,
+  groupBattlefieldCopies,
+  holdCombatCasualties,
+  isSwarmToken,
+  unregisteredBattlefieldArrivals,
+  type GroupMeta,
+} from "./battlefieldLayout";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -104,7 +111,10 @@ function BattlefieldRowSurface({
 export function Battlefield({ game, side, cards }: Props) {
   const t = useTranslation();
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
-  const animatedHordeIds = useRef<Set<string>>(new Set());
+  // Cards already present when this Battlefield mounts belong to the loaded board, not to the
+  // next arrival wave. Starting empty made the first Horde summon replay every existing card's
+  // entrance animation.
+  const animatedHordeIds = useRef<Set<string>>(createBattlefieldArrivalRegistry(cards));
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
   const activeReflowAnimations = useRef<Map<string, Animation>>(new Map());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
@@ -385,8 +395,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
     const currentHordeEntrySignature = cards.map((card) => card.instanceId).join("|");
     if (side === "horde" && currentHordeEntrySignature !== previousHordeEntrySignature.current) {
-      for (const card of cards) {
-        if (animatedHordeIds.current.has(card.instanceId)) continue;
+      for (const card of unregisteredBattlefieldArrivals(cards, animatedHordeIds.current)) {
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
         animatedHordeIds.current.add(card.instanceId);
@@ -419,6 +428,7 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.opacity = "";
           visual.style.transform = "";
           visual.style.filter = "";
+          endSummoningAnimation();
           // fill:"both" is only needed through the entrance delay. Release the finished
           // WAAPI effect so later CSS effects (for example Sunshower's activation pulse)
           // can own transform/filter on this slot again.

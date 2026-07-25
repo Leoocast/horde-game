@@ -31,6 +31,13 @@ The Horde attacks with everything able, every turn, but declaring is a rules ste
 
 `hordeAttackPending` in `Battlefield.tsx` closes the gap: while the Horde's turn is running and no attackers are declared yet, a Horde creature that `canAttack` is drawn as attacking. Visual only — it declares nothing, and the real declaration changes nothing on screen because the card already looks the part.
 
+Horde entrances are also real queue work. Every newly committed permanent increments
+`summoningAnimationCount`; `Battlefield` decrements it only when that permanent's WAAPI entrance
+finishes. Arrival effects, queued reaction beats, and `startHordeCombatSequence` all wait for the
+counter to reach zero. Their lead-ins are therefore short handoffs, not duplicate summon delays.
+`animatedHordeIds` starts with the cards present when the battlefield mounts, so loading a board
+and executing its first Horde turn never replays the entrances of existing permanents.
+
 Attack resolution order is a rules concern and follows `game.horde.battlefield` insertion order,
 which is summon chronology. It must never be rebuilt from visual families or stack keys. For
 example, four Goblin tokens, then Hobgoblin Bandit Lord, then two later tokens resolve in exactly
