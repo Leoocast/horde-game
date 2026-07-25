@@ -64,6 +64,7 @@ export type GameStore = {
   hordeAttackAnimation?: HordeAttackAnimation;
   burnAnimation?: BurnAnimationState;
   burnImpactCardId?: string;
+  burnImpactCardIds: string[];
   burnImpactEventId?: number;
   playerBurnImpactEventId?: number;
   deathRevealCard?: CardInstance;
@@ -259,8 +260,14 @@ export type BurnAnimationState = {
   sourceId?: string;
   targetId?: string;
   targetKind?: "card" | "playerLife";
+  targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
+};
+
+export type BurnAnimationTarget = {
+  targetId?: string;
+  targetKind: "card" | "playerLife";
 };
 
 export type BlockDragState = {
@@ -331,6 +338,7 @@ function createCleanUiState(): Partial<GameStore> {
     hordeAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
+    burnImpactCardIds: [],
     burnImpactEventId: undefined,
     playerBurnImpactEventId: undefined,
     deathRevealCard: undefined,
@@ -378,6 +386,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeAttackAnimation: undefined,
   burnAnimation: undefined,
   burnImpactCardId: undefined,
+  burnImpactCardIds: [],
   burnImpactEventId: undefined,
   playerBurnImpactEventId: undefined,
   deathRevealCard: undefined,
@@ -1182,6 +1191,7 @@ function finishAnimatedHordeCombat(): void {
     hordeAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
+    burnImpactCardIds: [],
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
     // Failsafe: an aura whose beat never got to play must not keep its buff hidden forever.

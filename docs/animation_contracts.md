@@ -97,6 +97,21 @@ Raid Bombardment reuses Burn with a different target and timing:
 - The player life panel runs its normal damage reaction at impact. Buttons stay blocked until the
   extended final projectile clock has completed.
 
+### Burn volley to multiple targets
+
+Goblin Chainwhirler uses the same compact volley clock with distinct routes:
+
+- Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
+  never pulses it again.
+- The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
+  receives that target list and calculates one source-to-target geometry for each projectile.
+- Projectiles launch 90ms apart. Each one plays a singular cast sound at launch and the canonical
+  singular hit sound at its own impact; every target gets its own impact effect and `-1` number.
+- The stagger is presentation only. Player life and all still-present creatures take damage
+  simultaneously when the final projectile lands, followed by one marked-damage cleanup.
+- All hit creature ids are flashed together at resolution, and surviving creatures keep the
+  normal scorch/smoke state until end-step cleanup.
+
 ## Static activation
 
 Static abilities apply continuously, so without a beat the player only ever sees numbers that already changed and has to hunt for the card responsible.
@@ -120,6 +135,11 @@ Resolution order:
 1. Lead-in, so a card that just landed finishes its summon pop before the same slot animates again.
 2. The granting card plays its effect-activation pulse, with a toast naming the bonus and how many creatures it covers.
 3. The withheld stats land as the newly covered creatures show the same blue rising buff lines a player buff uses (`buff-rise-lines-blue`). A warm tone was tried and rejected: `.buff-rise-lines` blends with `mix-blend-mode: screen`, so ember colours wash out completely against Goblin artwork.
+
+The rising lines may finish while the next beat begins. If the same permanent also has an ETB
+effect, the aura has already supplied its activation pulse: the ETB uses a short 160ms handoff
+instead of another summon-length pause, then immediately presents any follow-up event such as
+Hobgoblin Bandit Lord's Burn.
 
 ## Death reveal
 

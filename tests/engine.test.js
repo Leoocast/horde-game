@@ -191,6 +191,25 @@ test("First strike mutations deal combat damage before a normal blocker can answ
   assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
+test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first strike", () => {
+  const resolveDuel = (toughness) => {
+    const game = createTestGame(`chainwhirler-first-strike-${toughness}`);
+    const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
+    const blocker = addCard(game, customCard(`blocker_4_${toughness}`, "player", { power: 4, toughness }));
+    game.combat.hordeAttackers = [chainwhirler.instanceId];
+    game.combat.blockers = { [chainwhirler.instanceId]: [blocker.instanceId] };
+    return { result: resolveHordeCombat(game), chainwhirler, blocker };
+  };
+
+  const versusFourThree = resolveDuel(3);
+  assert.equal(versusFourThree.result.horde.battlefield.some((card) => card.instanceId === versusFourThree.chainwhirler.instanceId), true);
+  assert.equal(versusFourThree.result.player.graveyard.some((card) => card.instanceId === versusFourThree.blocker.instanceId), true);
+
+  const versusFourFour = resolveDuel(4);
+  assert.equal(versusFourFour.result.horde.graveyard.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
+  assert.equal(versusFourFour.result.player.battlefield.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
+});
+
 test("standard games keep nine energy cards in the player deck", () => {
   const game = createInitialGame(playerDeck, hordeDeck, "no-lands", 3);
   const cards = [...game.player.hand, ...game.player.library, ...game.player.battlefield];
@@ -809,13 +828,25 @@ test("Krenko grows before creating tokens equal to its new power", () => {
   assert.equal(tokens.every((card) => card.tapped && result.combat.hordeAttackers.includes(card.instanceId)), true);
 });
 
-test("Goblin Chainwhirler damages the player and every opposing creature on entry", () => {
+test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and opposing creatures", () => {
   const game = createTestGame("chainwhirler-entry");
   const fragile = addCard(game, customCard("fragile_player_creature", "player", { toughness: 1 }));
   const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { toughness: 2 }));
   const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
 
-  runEnterBattlefieldTriggers(game, chainwhirler);
+  runEnterBattlefieldTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
+  const enterEvent = game.eventQueue.shift();
+  assert.ok(enterEvent);
+  resolveTriggeredEvent(game, enterEvent);
+
+  assert.equal(game.player.life, 30);
+  assert.equal(fragile.damageMarked, 0);
+  assert.equal(sturdy.damageMarked, 0);
+  const volleyEvent = game.eventQueue.find((event) => event.type === "BURN_VOLLEY_DAMAGE");
+  assert.ok(volleyEvent);
+  assert.equal(volleyEvent.payload?.targetPlayer, true);
+  assert.deepEqual(volleyEvent.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
+
   drainEventQueue(game);
 
   assert.equal(game.player.life, 29);

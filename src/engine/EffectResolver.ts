@@ -94,9 +94,26 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES: (game, effect, context) => {
     const opponent = context.side === "player" ? "horde" : "player";
     const amount = Number(effect.amount ?? 1);
+    const targetIds = game[opponent].battlefield
+      .filter((card) => card.cardTypes.includes("Creature"))
+      .map((card) => card.instanceId);
+    if (effect.animation === "BURN_VOLLEY") {
+      enqueue(game, {
+        type: "BURN_VOLLEY_DAMAGE",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds,
+          amount,
+        },
+      });
+      return;
+    }
     dealDamageToOpponent(game, context.side, amount);
-    for (const target of game[opponent].battlefield.filter((card) => card.cardTypes.includes("Creature"))) {
-      dealDamageToCreature(game, target, amount, false);
+    for (const targetId of targetIds) {
+      const target = findPermanent(game, targetId);
+      if (target) dealDamageToCreature(game, target, amount, false);
     }
     destroyMarkedCreatures(game);
   },
@@ -348,6 +365,10 @@ export function resolveTriggeredEvent(
   }
   if (event.type === "BURN_DAMAGE") {
     resolveBurnDamageEvent(game, event);
+    return false;
+  }
+  if (event.type === "BURN_VOLLEY_DAMAGE") {
+    resolveBurnVolleyDamageEvent(game, event);
     return false;
   }
   let deferredAny = false;
@@ -775,6 +796,23 @@ function resolveBurnDamageEvent(game: GameState, event: EventItem): void {
   const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Burn"} deals ${amount} damage to ${target.name}.`);
+  destroyMarkedCreatures(game);
+}
+
+function resolveBurnVolleyDamageEvent(game: GameState, event: EventItem): void {
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
+  const targetIds = Array.isArray(event.payload?.targetIds) ? event.payload.targetIds.map(String) : [];
+  if (event.payload?.targetPlayer === true) dealDamageToOpponent(game, sourceSide, amount);
+  for (const targetId of targetIds) {
+    const target = findPermanent(game, targetId);
+    if (!target) continue;
+    dealDamageToCreature(game, target, amount, false);
+    target.flags.burnSmoke = true;
+  }
+  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+    .find((card) => card.instanceId === event.sourceId);
+  game.log.unshift(`${source?.name ?? "Burn volley"} deals ${amount} damage to each opposing target.`);
   destroyMarkedCreatures(game);
 }
 

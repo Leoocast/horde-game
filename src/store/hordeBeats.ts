@@ -12,7 +12,7 @@ import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticA
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
-import { useGameStore } from "./useGameStore";
+import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import {
   BUFF_ANIMATION_MS,
   appendHordeMillAnimations,
@@ -31,11 +31,16 @@ const HORDE_ENTER_TRIGGER_RESOLVE_MS = 430;
 // runs a touch past the duration so the rising damage number finishes before the layer clears.
 const BURN_IMPACT_MS = 638;
 const BURN_ANIMATION_MS = 1220;
+const BURN_PROJECTILE_LAUNCH_MS = 220;
+const BURN_PROJECTILE_GAP_MS = 90;
 // Lead-in matches HORDE_ENTER_TRIGGER_START_MS's intent: let a card that just landed finish its
 // summon pop before its aura pulse animates the same transform on the same slot.
 const STATIC_AURA_LEAD_IN_MS = 420;
 const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
-const STATIC_AURA_BEAT_MS = STATIC_AURA_LEAD_IN_MS + 1080;
+// Once the buff lands, its rising lines can finish underneath the next queued effect. Holding
+// the queue for the full tail made a lord with a second ETB (Hobgoblin Bandit Lord) feel like it
+// stalled every card behind it.
+const STATIC_AURA_BEAT_MS = STATIC_AURA_PULSE_MS + 360;
 // The reveal mounts on the same frame the combat impact commits and the row reflows; a short
 // lead-in lets the board finish moving first. Kept tight — the whole beat has to read as a
 // reaction to the death, not as a pause before one.
@@ -102,8 +107,12 @@ export function scheduleHordeEnterTriggers(
       return;
     }
     const activationAlreadyShown = options.activationAlreadyShownSourceIds?.includes(card.instanceId) ?? false;
-    const triggerStartMs = activationAlreadyShown ? 120 : HORDE_ENTER_TRIGGER_START_MS;
-    const triggerResolveMs = activationAlreadyShown ? 220 : HORDE_ENTER_TRIGGER_RESOLVE_MS;
+    // A static aura already announced and illuminated this source. Its second effect still gets
+    // a distinct queued beat, but needs only a quick handoff rather than another summon-length
+    // anticipation pause.
+    const triggerStartMs = activationAlreadyShown ? 40 : HORDE_ENTER_TRIGGER_START_MS;
+    const triggerResolveMs = activationAlreadyShown ? 80 : HORDE_ENTER_TRIGGER_RESOLVE_MS;
+    const triggerHandoffMs = activationAlreadyShown ? 40 : 180;
     useGameStore.setState({ hordeAutoTriggerCount: 1 });
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
@@ -140,7 +149,7 @@ export function scheduleHordeEnterTriggers(
         if (sequenceId === hordeAutoTriggerSequenceId) {
           scheduleQueuedHordeTriggers(() => runNext(index + 1));
         }
-      }, 180);
+      }, triggerHandoffMs);
     }, triggerStartMs + triggerResolveMs);
   };
   runNext(0);
@@ -405,6 +414,7 @@ const burnBeatHandler: HordeBeatHandler = {
     }
     useGameStore.setState({
       burnAnimation: { id: event.id, sourceId: event.sourceId, targetId, amount: Number(event.payload?.amount ?? 0) },
+      burnImpactCardIds: [],
       hordeAutoTriggerCount: 1,
     });
     // No activation pulse here: the source already flashed gold on the beat that queued this
@@ -427,9 +437,76 @@ const burnBeatHandler: HordeBeatHandler = {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       // Leave hordeAutoTriggerCount alone: the runner sets it for the next beat, and clearing
       // it here would unblock the board for one frame between beats.
-      useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined });
+      useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined, burnImpactCardIds: [] });
       done();
     }, BURN_ANIMATION_MS);
+  },
+};
+
+const burnVolleyBeatHandler: HordeBeatHandler = {
+  id: "burn-volley",
+  claims: (event) => event.type === "BURN_VOLLEY_DAMAGE",
+  run: ({ event, sequenceId, resolve, done }) => {
+    const game = useGameStore.getState().game;
+    const targetIds = Array.isArray(event.payload?.targetIds)
+      ? event.payload.targetIds.map(String).filter((targetId) => Boolean(findBattlefieldCard(game, targetId)))
+      : [];
+    const targetPlayer = Boolean(event.payload?.targetPlayer);
+    const targets: BurnAnimationTarget[] = [
+      ...targetIds.map((targetId) => ({ targetKind: "card" as const, targetId })),
+      ...(targetPlayer ? [{ targetKind: "playerLife" as const }] : []),
+    ];
+    if (targets.length === 0) {
+      resolve();
+      done();
+      return;
+    }
+
+    useGameStore.setState({
+      burnAnimation: {
+        id: event.id,
+        sourceId: event.sourceId,
+        targets,
+        amount: Number(event.payload?.amount ?? 0),
+      },
+      hordeAutoTriggerCount: 1,
+    });
+    // The ETB beat already gave Chainwhirler its single gold activation. This follow-up owns
+    // only the projectiles, with an individual cast and impact voice for every target.
+    targets.forEach((_, projectileIndex) => {
+      const projectileDelay = projectileIndex * BURN_PROJECTILE_GAP_MS;
+      window.setTimeout(() => {
+        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        useAudioStore.getState().playSfx(pickRandom(fireballCastSfx), { volume: 0.7 });
+      }, BURN_PROJECTILE_LAUNCH_MS + projectileDelay);
+
+      window.setTimeout(() => {
+        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.78 });
+        if (projectileIndex !== targets.length - 1) return;
+
+        const impactEventId = Date.now();
+        useGameStore.setState({
+          burnImpactCardIds: targetIds,
+          burnImpactEventId: impactEventId,
+          ...(targetPlayer ? { playerBurnImpactEventId: impactEventId } : {}),
+        });
+        // Chainwhirler's damage is one simultaneous event. Earlier impacts are presentation;
+        // the last impact commits the damage to the player and every surviving target together.
+        resolve();
+      }, BURN_IMPACT_MS + projectileDelay);
+    });
+
+    const finalProjectileDelay = (targets.length - 1) * BURN_PROJECTILE_GAP_MS;
+    window.setTimeout(() => {
+      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      useGameStore.setState({
+        burnAnimation: undefined,
+        burnImpactCardId: undefined,
+        burnImpactCardIds: [],
+      });
+      done();
+    }, BURN_ANIMATION_MS + finalProjectileDelay);
   },
 };
 
@@ -643,6 +720,7 @@ function isDeferredCombatVolleyEffect(effect?: EffectDefinition): boolean {
 // Order matters: the first handler that claims an event owns its presentation.
 const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
   burnBeatHandler,
+  burnVolleyBeatHandler,
   staticAuraBeatHandler,
   hordeGroupBuffBeatHandler,
   deathRevealBeatHandler,

@@ -83,7 +83,14 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## Goblin Chainwhirler
 
-- Its entry effect damages the player and each opposing creature.
+- First strike is resolved as a separate combat-damage step. A 3/3 Chainwhirler kills a normal
+  4/3 blocker before it can answer and survives; against a 4/4, that blocker survives the
+  first-strike step and kills Chainwhirler in the normal step.
+- Its entry effect queues one simultaneous damage event for the player and every opposing
+  creature. The ETB supplies the card's only activation pulse, then a compact Burn volley sends
+  one fireball along a distinct route to each target.
+- Every visible fireball has its own launch and impact sound. Visual impacts are staggered by
+  90ms, but the rules damage is committed to every target together on the final impact.
 
 ## Goblin Trashmaster
 

@@ -155,6 +155,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
+  const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
@@ -953,7 +954,9 @@ export function Battlefield({ game, side, cards }: Props) {
       {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
-      {burnImpactCardId === card.instanceId && <span key={`burn-${burnImpactEventId}`} className="burn-card-scorch-flash" aria-hidden="true" />}
+      {(burnImpactCardId === card.instanceId || burnImpactCardIds.includes(card.instanceId)) && (
+        <span key={`burn-${burnImpactEventId}`} className="burn-card-scorch-flash" aria-hidden="true" />
+      )}
       {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}

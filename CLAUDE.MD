@@ -603,13 +603,19 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (goblin_rabblemaster "must attack", mogg_mob).
 - Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
-  el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta.
+  el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
+  entre ambos beats es corta (160ms) y la cola se libera 360ms despues de aterrizar el buff; las
+  lineas pueden terminar mientras comienza el Burn para no frenar los efectos posteriores.
 - Battle Cry Goblin se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
   hasta fin de turno. Haste y Pack tactics se omiten; el ETB pulsa una vez y el beat de buff no
   vuelve a iluminar la fuente.
 - Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
   hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
   rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
+- Goblin Chainwhirler usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
+  una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
+  criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
+  en el ultimo.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.
