@@ -167,18 +167,6 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
   switch (ability.customHandler) {
     case "rundvelt_hordemaster_exile_top_if_goblin":
       return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
-    case "battle_cry_goblin_pack_tactics":
-      return {
-        type: "CONDITIONAL",
-        condition: { type: "ATTACK_TOTAL_POWER_AT_LEAST", amount: 6 },
-        effect: {
-          type: "CREATE_TOKEN",
-          tokenId: "goblin_token_1_1_red",
-          amount: 1,
-          tapped: true,
-          attacking: true,
-        },
-      };
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",

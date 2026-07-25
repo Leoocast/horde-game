@@ -14,6 +14,7 @@ import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore } from "./useGameStore";
 import {
+  BUFF_ANIMATION_MS,
   appendHordeMillAnimations,
   discardPauseInProgress,
   findBattlefieldCard,
@@ -473,13 +474,17 @@ const staticAuraBeatHandler: HordeBeatHandler = {
   },
 };
 
-const hordeSpellBuffBeatHandler: HordeBeatHandler = {
-  id: "horde-spell-buff",
+const hordeGroupBuffBeatHandler: HordeBeatHandler = {
+  id: "horde-group-buff",
   claims: (event) => event.type === "HORDE_GROUP_BUFF",
   run: ({ event, sequenceId, resolve, done }) => {
-    const source = event.sourceId
-      ? useGameStore.getState().game.horde.graveyard.find((card) => card.instanceId === event.sourceId)
+    const game = useGameStore.getState().game;
+    const battlefieldSource = event.sourceId
+      ? game.horde.battlefield.find((card) => card.instanceId === event.sourceId)
       : undefined;
+    const source = battlefieldSource ?? (event.sourceId
+      ? game.horde.graveyard.find((card) => card.instanceId === event.sourceId)
+      : undefined);
     const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
     if (!source || affectedIds.length === 0) {
       resolve();
@@ -487,6 +492,25 @@ const hordeSpellBuffBeatHandler: HordeBeatHandler = {
       return;
     }
 
+    // A permanent's ETB presentation already supplied the activation pulse and toast before it
+    // queued this event. Keep the stat change as its own beat, but land only the shared buff lines
+    // so one effect never reads as the card activating twice.
+    if (battlefieldSource) {
+      useGameStore.setState({ hordeAutoTriggerCount: 1 });
+      window.setTimeout(() => {
+        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        resolve();
+        useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+        useGameStore.setState(startBuffBeat(affectedIds));
+      }, 80);
+      window.setTimeout(() => {
+        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        done();
+      }, BUFF_ANIMATION_MS);
+      return;
+    }
+
+    // Instants have no battlefield slot to activate from, so they use the dedicated reveal card.
     useGameStore.setState({ hordeSpellCard: source, hordeAutoTriggerCount: 1 });
     useAudioStore.getState().playSfx("drawOne", { volume: 0.78 });
 
@@ -586,7 +610,7 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
 const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
   burnBeatHandler,
   staticAuraBeatHandler,
-  hordeSpellBuffBeatHandler,
+  hordeGroupBuffBeatHandler,
   deathRevealBeatHandler,
   triggerPulseBeatHandler,
 ];

@@ -299,17 +299,15 @@
       "keywords": [],
       "abilities": [
         {
-          "id": "battle_cry_goblin_pump_and_haste",
-          "kind": "ACTIVATED",
+          "id": "battle_cry_goblin_enter_pump",
+          "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{1}{R}"
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
           "targets": [],
           "conditions": [],
-          "engineSupport": "pending",
-          "implementationNote": "Needs multi-effect activated abilities and group pump from an activation; both effects are dead in the current engine.",
           "effects": [
             {
               "type": "MODIFY_STATS",
@@ -326,39 +324,11 @@
               },
               "power": 1,
               "toughness": 0,
-              "duration": "END_OF_TURN"
-            },
-            {
-              "type": "GRANT_KEYWORD",
-              "scope": {
-                "controller": "SELF",
-                "filters": {
-                  "cardTypes": [
-                    "Creature"
-                  ],
-                  "subtypes": [
-                    "Goblin"
-                  ]
-                }
-              },
-              "keyword": "HASTE",
-              "duration": "END_OF_TURN"
+              "duration": "END_OF_TURN",
+              "animation": "BUFF"
             }
-          ]
-        },
-        {
-          "id": "battle_cry_goblin_pack_tactics",
-          "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
-          "trigger": {
-            "event": "ATTACK_DECLARED",
-            "source": "SELF"
-          },
-          "targets": [],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "battle_cry_goblin_pack_tactics",
-          "implementationNote": "Trigger only if the source controller attacked with creatures whose total power was 6 or greater. Create one 1/1 red Goblin creature token tapped and attacking."
+          ],
+          "implementationNote": "PvE adaptation: on entry, Horde Goblins get +1/+0 until end of turn. Haste and Pack tactics are omitted."
         }
       ],
       "needsVerification": false,

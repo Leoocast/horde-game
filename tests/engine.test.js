@@ -723,23 +723,20 @@ test("Goblin Rabblemaster counts every other attacking Goblin after attack token
   assert.deepEqual(getPowerToughness(result, currentRabblemaster), { power: 6, toughness: 2 });
 });
 
-test("Battle Cry Goblin creates a tapped attacking token only at six declared power", () => {
-  const belowThreshold = createTestGame("battle-cry-below");
-  addCard(belowThreshold, cardFromDeck("battle_cry_goblin", "horde"));
-  addCard(belowThreshold, customCard("three_power_goblin", "horde", { subtypes: ["Goblin"], power: 3 }));
+test("Battle Cry Goblin gives Horde Goblins +1/+0 until end of turn on entry", () => {
+  const game = createTestGame("battle-cry-entry-pump");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  addCard(game, cardFromDeck("battle_cry_goblin", "horde", "library"), "horde", "library");
 
-  const belowResult = prepareHordeAttackers(belowThreshold);
-  assert.equal(belowResult.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
+  const result = runHordeMain(game);
+  const battleCry = result.horde.battlefield.find((card) => card.definitionId === "battle_cry_goblin");
+  const token = result.horde.battlefield.find((card) => card.definitionId === "goblin_token_1_1_red");
 
-  const threshold = createTestGame("battle-cry-threshold");
-  addCard(threshold, cardFromDeck("battle_cry_goblin", "horde"));
-  addCard(threshold, customCard("four_power_goblin", "horde", { subtypes: ["Goblin"], power: 4 }));
-
-  const thresholdResult = prepareHordeAttackers(threshold);
-  const token = thresholdResult.horde.battlefield.find((card) => card.definitionId === "goblin_token_1_1_red");
-  assert.ok(token);
-  assert.equal(token.tapped, true);
-  assert.equal(thresholdResult.combat.hordeAttackers.includes(token.instanceId), true);
+  assert.equal(battleCry?.temporaryPower, 1);
+  assert.equal(battleCry?.temporaryToughness, 0);
+  assert.equal(token?.temporaryPower, 1);
+  assert.equal(token?.temporaryToughness, 0);
+  assert.equal(result.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
 });
 
 test("General Kreat creates one attacking token and damages the player when it enters", () => {

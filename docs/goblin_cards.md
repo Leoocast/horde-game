@@ -30,8 +30,10 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## Battle Cry Goblin
 
-- Pack tactics uses the declared attack group's power.
-- At six or more power it creates one tapped and attacking Goblin token.
+- PvE adaptation: when it enters, Horde Goblins get +1/+0 until end of turn.
+- Haste and Pack tactics are deliberately omitted.
+- The entry trigger supplies one activation pulse; the queued group-buff beat only plays the blue
+  buff lines and does not make the source glow again.
 
 ## Goblin War Drums
 

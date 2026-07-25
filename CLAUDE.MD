@@ -598,10 +598,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
 - `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (goblin_rabblemaster "must attack", mogg_mob).
 - Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
   el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta.
+- Battle Cry Goblin se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
+  hasta fin de turno. Haste y Pack tactics se omiten; el ETB pulsa una vez y el beat de buff no
+  vuelve a iluminar la fuente.
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.

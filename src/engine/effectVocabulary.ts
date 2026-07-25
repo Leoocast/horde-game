@@ -66,7 +66,6 @@ export const AMOUNT_TYPES = new Set([
  *  `toxic_N` static pattern and the `fight_simultaneously` effect-level handler. */
 export const CUSTOM_HANDLERS = new Set([
   "rundvelt_hordemaster_exile_top_if_goblin",
-  "battle_cry_goblin_pack_tactics",
   "raid_bombardment_small_attacker_damage",
   "goblin_rabblemaster_begin_combat_token",
   "goblin_rabblemaster_attack_buff",
