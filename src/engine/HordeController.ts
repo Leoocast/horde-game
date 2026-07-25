@@ -1,6 +1,7 @@
 import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { recordBattlefieldEntry } from "./GameState";
 import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
@@ -14,6 +15,7 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   const next = structuredClone(game) as GameState;
   const rules = next.hordeRules;
   const wasInSurge = hordeInSurge(next);
+  next.battlefieldEntriesThisTurn = [];
   next.hordeTurnNumber += 1;
   next.activeSide = "horde";
   next.phase = "horde";
@@ -138,6 +140,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
   game.horde.battlefield.push(card);
+  recordBattlefieldEntry(game, card);
   if (!options.deferEnterBattlefieldTriggers) runEnterBattlefieldTriggers(game, card);
   enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   return card;

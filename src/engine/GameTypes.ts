@@ -207,6 +207,13 @@ export type EventItem = {
   triggerController?: Side;
 };
 
+export type BattlefieldEntryRecord = {
+  instanceId: string;
+  controller: Side;
+  cardTypes: string[];
+  subtypes: string[];
+};
+
 export type GameState = {
   seed: string;
   difficulty: DifficultyMode;
@@ -226,6 +233,9 @@ export type GameState = {
   player: PlayerState;
   horde: HordeState;
   combat: CombatState;
+  /** Permanents that entered since the current turn began. Rules may count entries even if the
+   * permanent later changes zones; presentation and logs must not be used as rules history. */
+  battlefieldEntriesThisTurn: BattlefieldEntryRecord[];
   eventQueue: EventItem[];
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of

@@ -59,6 +59,7 @@ export const STATIC_CONDITION_TYPES = new Set([
 export const AMOUNT_TYPES = new Set([
   "STAT",
   "COUNT_PERMANENTS",
+  "COUNT_PERMANENTS_ENTERED_THIS_TURN",
 ]);
 
 /** Mirrors the switch in normalizeDeck.normalizeCustomTriggeredEffect, plus the

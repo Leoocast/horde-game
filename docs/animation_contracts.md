@@ -12,6 +12,10 @@ Three rules make the sequence readable:
 - Because reactors are re-derived after every beat, `enqueue` stamps each event with `witnessIds`: the permanents in play when it happened. A creature that reaches the battlefield **because** of an event is not a witness to it, so it cannot react to it. Without this, Rundvelt exiling Pashalik onto the battlefield made Pashalik burn for the death that summoned it. The event's own source is always a witness, since a dying card has already left the battlefield when its death event is queued.
 - A beat finishes what it started. Anything a beat's resolution queued jumps ahead of the reactors still waiting on the parent event. Pashalik's trigger does not damage directly, it queues a `BURN_DAMAGE`; appended at the tail, that fireball landed *after* Rundvelt's reveal had already resolved, splitting one card's effect in half around another card's.
 - Nothing in the runner knows a card name. Adding a new Horde effect means pushing a handler onto `HORDE_BEAT_HANDLERS`; order matters, because the first handler that claims an event owns its look.
+- A source with multiple effects still resolves one effect per beat, but only its first effect in
+  that arrival chain supplies the activation pulse. For a permanent with both a newly-online
+  static aura and an entry trigger, the aura goes first; the entry trigger keeps its own toast and
+  resolution timing without a second gold pulse or activation sound.
 
 ### The board must be still between beats
 

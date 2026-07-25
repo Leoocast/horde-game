@@ -33,7 +33,7 @@ import {
   captureStaticAuraBeats,
   hasEnterBattlefieldTrigger,
   resetHordeSequence,
-  scheduleHordeEnterTriggers,
+  scheduleHordeArrivalEffects,
   scheduleQueuedHordeTriggers,
   startHordeCombatSequence,
 } from "./hordeBeats";
@@ -896,8 +896,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
-      if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
-      runSmallpoxSequence(pendingCard);
+      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
       return;
     }
     if (main.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
@@ -911,11 +910,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Before any frame renders the new creatures: hold back the buffs they just gained so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
-    if (triggerCards.length > 0) {
-      scheduleHordeEnterTriggers(triggerCards, () => startHordeCombatSequence());
-    } else {
-      startHordeCombatSequence();
-    }
+    scheduleHordeArrivalEffects(triggerCards, () => startHordeCombatSequence());
   },
   /**
    * Playground only. Same beats as `runHordeMain` — enter triggers, static aura capture, mill
@@ -948,15 +943,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
     if (pendingCard) {
-      if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
-      runSmallpoxSequence(pendingCard);
+      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
       return;
     }
-    if (triggerCards.length > 0) {
-      scheduleHordeEnterTriggers(triggerCards, () => scheduleQueuedHordeTriggers());
-    } else {
-      scheduleQueuedHordeTriggers();
-    }
+    scheduleHordeArrivalEffects(triggerCards, () => scheduleQueuedHordeTriggers());
   },
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;

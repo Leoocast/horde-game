@@ -147,33 +147,35 @@
         },
         {
           "id": "hobgoblin_bandit_lord_entered_goblins_damage",
-          "kind": "ACTIVATED",
+          "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{R}",
-            "tap": true
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
           },
-          "targets": [
+          "targets": [],
+          "conditions": [],
+          "effects": [
             {
-              "id": "damageTarget",
-              "zone": "ANY",
-              "controller": "ANY",
-              "filters": {
-                "objectTypes": [
-                  "Player",
-                  "Creature",
-                  "Planeswalker",
-                  "Battle"
-                ]
-              }
+              "type": "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+              "targetPolicy": "BEST_LETHAL",
+              "animation": "BURN",
+              "amount": {
+                "type": "COUNT_PERMANENTS_ENTERED_THIS_TURN",
+                "controller": "SELF",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
+                }
+              },
+              "damageKind": "NON_COMBAT"
             }
           ],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "hobgoblin_bandit_lord_entered_goblins_damage",
-          "engineSupport": "pending",
-          "implementationNote": "Deal damage to damageTarget equal to the number of Goblins that entered the battlefield under this source controller's control this turn."
+          "implementationNote": "PvE adaptation: on entry, Burn the best opposing creature for the number of Goblins that entered under Horde control this turn."
         }
       ],
       "needsVerification": false,
@@ -1297,12 +1299,6 @@
     {
       "id": "multi_kind_any_target_selector",
       "reason": "Damage abilities may target players, creatures, planeswalkers, or battles."
-    },
-    {
-      "id": "entered_permanent_count_this_turn",
-      "usedBy": [
-        "hobgoblin_bandit_lord_entered_goblins_damage"
-      ]
     },
     {
       "id": "temporary_cast_permission_from_exile",

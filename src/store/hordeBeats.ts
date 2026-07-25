@@ -86,7 +86,11 @@ function hordeEnterTriggerMessage(card: CardInstance): string {
   return uiText("toast.cardTrigger", { card: cardName });
 }
 
-export function scheduleHordeEnterTriggers(cards: CardInstance[], onComplete?: () => void): void {
+export function scheduleHordeEnterTriggers(
+  cards: CardInstance[],
+  onComplete?: () => void,
+  options: { activationAlreadyShownSourceIds?: string[] } = {},
+): void {
   const sequenceId = ++hordeAutoTriggerSequenceId;
   const runNext = (index: number) => {
     if (sequenceId !== hordeAutoTriggerSequenceId) return;
@@ -96,17 +100,22 @@ export function scheduleHordeEnterTriggers(cards: CardInstance[], onComplete?: (
       onComplete?.();
       return;
     }
+    const activationAlreadyShown = options.activationAlreadyShownSourceIds?.includes(card.instanceId) ?? false;
+    const triggerStartMs = activationAlreadyShown ? 120 : HORDE_ENTER_TRIGGER_START_MS;
+    const triggerResolveMs = activationAlreadyShown ? 220 : HORDE_ENTER_TRIGGER_RESOLVE_MS;
     useGameStore.setState({ hordeAutoTriggerCount: 1 });
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
-      useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
+      if (!activationAlreadyShown) {
+        useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+        useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
+      }
       useToastStore.getState().pushToast({
         title: uiText("toast.hordeEffect"),
         message: hordeEnterTriggerMessage(card),
         tone: "horde",
       });
-    }, HORDE_ENTER_TRIGGER_START_MS);
+    }, triggerStartMs);
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       useGameStore.setState((state) => {
@@ -131,9 +140,27 @@ export function scheduleHordeEnterTriggers(cards: CardInstance[], onComplete?: (
           scheduleQueuedHordeTriggers(() => runNext(index + 1));
         }
       }, 180);
-    }, HORDE_ENTER_TRIGGER_START_MS + HORDE_ENTER_TRIGGER_RESOLVE_MS);
+    }, triggerStartMs + triggerResolveMs);
   };
   runNext(0);
+}
+
+/** Resolves the presentation attached to a batch of newly revealed Horde cards. Static auras go
+ * first; a card whose aura already supplied the activation pulse keeps its ETB as a separate beat
+ * but does not glow or play the activation sound a second time. */
+export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
+  const auraSourceIds = [
+    ...new Set(useGameStore.getState().pendingStaticAuras.map((aura) => aura.sourceId)),
+  ];
+  const hasAuraBeats = useGameStore.getState().pendingStaticAuras.length > 0;
+  flushStaticAuraBeats();
+  const runEnterTriggers = () =>
+    scheduleHordeEnterTriggers(cards, onComplete, { activationAlreadyShownSourceIds: auraSourceIds });
+  if (hasAuraBeats) {
+    scheduleQueuedHordeTriggers(runEnterTriggers);
+    return;
+  }
+  runEnterTriggers();
 }
 
 export function startHordeCombatSequence(): void {

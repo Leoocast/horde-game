@@ -604,6 +604,21 @@ test("Goblin static lords and War Drums apply only to the intended Horde creatur
   assert.equal(hasKeyword(game, goblin, "MENACE"), false);
 });
 
+test("Hobgoblin Bandit Lord burns for Goblins that entered this Horde turn", () => {
+  const game = createTestGame("hobgoblin-entered-goblins");
+  const target = addCard(game, customCard("hobgoblin_burn_target", "player", { toughness: 8 }));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde", "library"), "horde", "library");
+
+  const firstTurn = runHordeMain(game);
+  assert.equal(firstTurn.player.battlefield.find((card) => card.instanceId === target.instanceId)?.damageMarked, 3);
+
+  addCard(firstTurn, cardFromDeck("hobgoblin_bandit_lord", "horde", "library"), "horde", "library");
+  const secondTurn = runHordeMain(firstTurn);
+  assert.equal(secondTurn.player.battlefield.find((card) => card.instanceId === target.instanceId)?.damageMarked, 4);
+});
+
 test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on entry", () => {
   const beetlebackGame = createTestGame("beetleback-entry");
   const beetleback = addCard(beetlebackGame, cardFromDeck("beetleback_chief", "horde"));

@@ -16,7 +16,11 @@ below also call out valid-but-uninvoked Horde activations.
 ## Hobgoblin Bandit Lord
 
 - Other Goblins receive the static +1/+1 bonus.
-- Activated burn behavior is explicitly WIP because there is no Horde activation policy.
+- PvE adaptation: on entry, it Burns the best opposing creature for the number of Goblins that
+  entered under Horde control during the current turn, including itself.
+- Its static aura resolves first. If that aura already supplied the activation pulse, the entry
+  damage remains a separate queued beat but does not make the card glow or play the activation
+  sound a second time.
 
 ## Rundvelt Hordemaster
 

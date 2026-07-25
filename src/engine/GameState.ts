@@ -99,6 +99,7 @@ export function createInitialGame(
       poisonCounters: 0,
     },
     combat: { playerAttackers: [], hordeAttackers: [], blockers: {} },
+    battlefieldEntriesThisTurn: [],
     eventQueue: [],
     log: [],
   };
@@ -110,6 +111,15 @@ export function createInitialGame(
   drawCards(game, "player", openingHandSize);
   game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${effectiveSetupTurns}. Mode: ${gameMode}.`);
   return game;
+}
+
+export function recordBattlefieldEntry(game: GameState, card: CardInstance): void {
+  game.battlefieldEntriesThisTurn.push({
+    instanceId: card.instanceId,
+    controller: card.controller,
+    cardTypes: [...card.cardTypes],
+    subtypes: [...card.subtypes],
+  });
 }
 
 export function acceptOpeningHand(game: GameState): GameState {

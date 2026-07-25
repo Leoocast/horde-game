@@ -1,6 +1,5 @@
 import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
-import { createToken } from "./GameState";
-import { drawCards } from "./GameState";
+import { createToken, drawCards, recordBattlefieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
@@ -522,6 +521,7 @@ function exileTopGoblinToBattlefield(game: GameState): void {
   card.tapped = false;
   card.summoningSickness = false;
   game.horde.battlefield.push(card);
+  recordBattlefieldEntry(game, card);
   game.log.unshift(`${card.name} enters the battlefield from exile.`);
   runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
@@ -555,6 +555,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     token.summoningSickness = controller === "player";
     token.tapped = Boolean(effect.tapped);
     game[controller].battlefield.push(token);
+    recordBattlefieldEntry(game, token);
     runEnterBattlefieldTriggers(game, token, undefined, { deferSelfTriggers: true });
     if (effect.attacking && controller === "horde" && game.phase === "combat") {
       token.tapped = true;
@@ -778,6 +779,19 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
     return game[controller].battlefield.filter((card) =>
       matchesFilter(card, data.filters as CardFilter | undefined, context.source)
     ).length;
+  }
+  if (data.type === "COUNT_PERMANENTS_ENTERED_THIS_TURN") {
+    const controller = data.controller === "OPPONENT"
+      ? context.side === "player" ? "horde" : "player"
+      : context.side;
+    const filters = data.filters as CardFilter | undefined;
+    return game.battlefieldEntriesThisTurn.filter((entry) => {
+      if (entry.controller !== controller) return false;
+      if (filters?.excludeSelf && entry.instanceId === context.source?.instanceId) return false;
+      if (filters?.cardTypes?.some((type) => !entry.cardTypes.includes(type))) return false;
+      if (filters?.subtypes?.some((subtype) => !entry.subtypes.includes(subtype))) return false;
+      return true;
+    }).length;
   }
   return Number(amount) || 0;
 }
