@@ -9,10 +9,14 @@ export function normalizeDeck(rawDeck: NewDeckList): DeckList {
     deckSize: rawDeck.deckSize ?? rawDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
     cards: rawDeck.cards.map(normalizeCard),
     tokens: rawDeck.tokens?.map(normalizeCard),
+    rulesProfile: rawDeck.rulesProfile,
   };
 }
 
 function normalizeCard(card: NewDeckCard): CardDefinition {
+  // Abilities flagged with `engineSupport` (pending/ignored/custom) never reach the engine:
+  // they stay in the JSON as data, deck lint reports them, and nothing half-runs.
+  const abilities = (card.abilities ?? []).filter((ability) => !ability.engineSupport);
   return {
     id: card.id,
     name: card.name,
@@ -27,15 +31,22 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     power: card.power,
     toughness: card.toughness,
     triggerMessage: card.triggerMessage,
-    keywords: normalizeKeywords(card),
-    activatedAbilities: normalizeActivatedAbilities(card.abilities ?? []),
-    effects: normalizeEffects(card.abilities ?? []),
-    requiresTargets: normalizeTargets(card.abilities ?? []),
+    entersTapped: card.entersTapped,
+    entersWithCounters: card.entersWithCounters,
+    flags: card.flags,
+    asEnters: card.asEnters,
+    attachTo: card.attachTo,
+    variableCost: card.variableCost,
+    requiresDistribution: card.requiresDistribution,
+    keywords: normalizeKeywords(card, abilities),
+    activatedAbilities: normalizeActivatedAbilities(abilities),
+    effects: normalizeEffects(abilities),
+    requiresTargets: normalizeTargets(abilities),
   };
 }
 
-function normalizeKeywords(card: NewDeckCard): Keyword[] {
-  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(card.abilities ?? [])];
+function normalizeKeywords(card: NewDeckCard, abilities: NewDeckAbility[]): Keyword[] {
+  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(abilities)];
 }
 
 function extractStaticKeywordAbilities(abilities: NewDeckAbility[]): Keyword[] {
@@ -82,6 +93,16 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
     const effect = rawEffect as EffectDefinition;
     const scope = effect.scope && typeof effect.scope === "object" ? (effect.scope as Record<string, unknown>) : undefined;
     if (effect.type === "MODIFY_STATS" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      if (effect.condition) {
+        normalized.push({
+          type: "STATIC_CONDITIONAL_BUFF",
+          condition: effect.condition,
+          target: effect.target ?? "SELF",
+          power: effect.power ?? 0,
+          toughness: effect.toughness ?? 0,
+        });
+        continue;
+      }
       normalized.push({
         type: "STATIC_BUFF",
         controller: scope?.controller ?? "SELF",
@@ -92,6 +113,15 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
       continue;
     }
     if (effect.type === "GRANT_KEYWORD" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+      if (effect.condition) {
+        normalized.push({
+          type: "STATIC_CONDITIONAL_GRANT_KEYWORD",
+          condition: effect.condition,
+          target: effect.target ?? "SELF",
+          keyword: effect.keyword,
+        });
+        continue;
+      }
       normalized.push({
         type: "STATIC_GRANT_KEYWORD",
         controller: scope?.controller ?? "SELF",
@@ -130,24 +160,59 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
     condition: normalizeTriggerCondition(ability),
     effect,
   };
-  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
-    return [
-      normalized,
-      {
-        type: "TRIGGERED_ABILITY",
-        trigger: "THIS_DIES",
-        effect,
-      },
-    ];
-  }
   return [normalized];
 }
 
 function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
-  if (ability.customHandler === "rundvelt_hordemaster_exile_top_if_goblin") {
-    return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
+  switch (ability.customHandler) {
+    case "rundvelt_hordemaster_exile_top_if_goblin":
+      return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
+    case "battle_cry_goblin_pack_tactics":
+      return {
+        type: "CONDITIONAL",
+        condition: { type: "ATTACK_TOTAL_POWER_AT_LEAST", amount: 6 },
+        effect: {
+          type: "CREATE_TOKEN",
+          tokenId: "goblin_token_1_1_red",
+          amount: 1,
+          tapped: true,
+          attacking: true,
+        },
+      };
+    case "raid_bombardment_small_attacker_damage":
+      return {
+        type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
+        filter: { maxPower: 2 },
+        amount: 1,
+      };
+    case "goblin_rabblemaster_begin_combat_token":
+      return { type: "CREATE_TOKEN", tokenId: "goblin_token_1_1_red", amount: 1 };
+    case "goblin_rabblemaster_attack_buff":
+      return {
+        type: "PUMP_SELF_PER_ATTACKER_MATCHING",
+        filter: { subtypes: ["Goblin"], excludeSelf: true },
+        power: 1,
+        toughness: 0,
+      };
+    case "general_kreat_goblins_attack_token":
+      return {
+        type: "CONDITIONAL",
+        condition: { type: "DECLARED_ATTACKER_MATCHES", filters: { subtypes: ["Goblin"] } },
+        effect: {
+          type: "CREATE_TOKEN",
+          tokenId: "goblin_token_1_1_red",
+          amount: 1,
+          tapped: true,
+          attacking: true,
+        },
+      };
+    case "general_kreat_damage_each_opponent":
+      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1 };
+    case "goblin_chainwhirler_enter_damage_all":
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1 };
+    default:
+      return undefined;
   }
-  return undefined;
 }
 
 function normalizeTriggerEvent(event: string, triggerSource: string): string | undefined {
@@ -158,23 +223,51 @@ function normalizeTriggerEvent(event: string, triggerSource: string): string | u
 
 function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | undefined {
   const conditions = Array.isArray(ability.conditions) ? (ability.conditions as Array<Record<string, unknown>>) : [];
-  const eventObjectMatch = conditions.find((condition) => condition.type === "EVENT_OBJECT_MATCHES");
-  if (!eventObjectMatch) return undefined;
-  const filters = eventObjectMatch.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
-  if (eventObjectMatch.controller === "SELF" && eventObjectMatch.excludeSource && filters?.cardTypes?.includes("Creature")) {
-    return { type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters };
+  const normalized: EffectDefinition[] = [];
+  if (ability.trigger?.event === "ATTACK_DECLARED" && ability.trigger?.source === "SELF") {
+    normalized.push({ type: "SOURCE_IS_ATTACKING" });
   }
-  return {
-    type: "EVENT_OBJECT_MATCHES",
-    controller: eventObjectMatch.controller,
-    excludeSource: eventObjectMatch.excludeSource,
-    filters,
-  };
+  for (const condition of conditions) {
+    if (condition.type === "ACTIVE_PLAYER_IS") {
+      normalized.push({ type: "ACTIVE_PLAYER_IS", player: condition.player });
+      continue;
+    }
+    if (condition.type === "EVENT_OBJECT_MATCHES") {
+      const filters = condition.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
+      if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("Creature")) {
+        normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
+      } else {
+        normalized.push({
+          type: "EVENT_OBJECT_MATCHES",
+          controller: condition.controller,
+          excludeSource: condition.excludeSource,
+          filters,
+        });
+      }
+      continue;
+    }
+    // Every other condition type is already written in the engine's own vocabulary
+    // (CAST_CARD_IS_NON_TOKEN, ANOTHER_CREATURE_YOU_CONTROL_DIED, ...) and passes through
+    // untouched; deck lint verifies the type is one triggerConditionMet actually knows.
+    normalized.push({ ...condition } as EffectDefinition);
+  }
+  if (normalized.length === 0) return undefined;
+  return normalized.length === 1 ? normalized[0] : { type: "ALL_OF", conditions: normalized };
 }
 
 function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefined {
   if (!effect) return undefined;
   if (effect.type === "MODIFY_STATS") {
+    const scope = effect.scope && typeof effect.scope === "object" ? effect.scope as Record<string, unknown> : undefined;
+    if (scope) {
+      return {
+        type: "PUMP_GROUP_UNTIL_END_OF_TURN",
+        controller: scope.controller ?? "SELF",
+        filter: scope.filters,
+        power: effect.power ?? 0,
+        toughness: effect.toughness ?? 0,
+      };
+    }
     return {
       type: effect.duration === "END_OF_TURN" ? "PUMP_UNTIL_END_OF_TURN" : "PUMP",
       ...normalizeEffectTarget(effect.target),
@@ -198,6 +291,25 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
       type: "FIGHT_SIMULTANEOUS",
       sourceRef: first?.source ?? second?.target,
       targetRef: first?.target ?? second?.source,
+    };
+  }
+  if (effect.type === "SEQUENCE") {
+    return {
+      ...effect,
+      effects: ((effect.effects as EffectDefinition[] | undefined) ?? [])
+        .map((step) => normalizeEffect(step))
+        .filter(Boolean),
+    };
+  }
+  if (effect.type === "CHOOSE") {
+    return {
+      ...effect,
+      options: ((effect.options as Array<Record<string, unknown>> | undefined) ?? []).map((option) => ({
+        ...option,
+        effects: ((option.effects as EffectDefinition[] | undefined) ?? [])
+          .map((step) => normalizeEffect(step))
+          .filter(Boolean),
+      })),
     };
   }
   return effect;

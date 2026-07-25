@@ -1,40 +1,31 @@
 {
-  "id": "horde_zombies_limited_edition_2_1",
+  "schemaVersion": "0.2.0",
+  "id": "horde_zombies",
   "name": "Zombie Horde",
   "source": "Horde Magic - Limited Edition 2.1",
   "side": "horde",
   "deckSize": 50,
-  "implementationTarget": "typescript-react-prototype",
   "rulesProfile": {
-    "hordeHasNoLifeTotal": true,
-    "hordeHasNoHand": true,
-    "hordeCastsRevealedCardsForFree": true,
+    "revealCount": 3,
+    "stopOnNonToken": true,
+    "miniSurgeTurn": 6,
+    "miniSurgeExtraReveals": 1,
+    "surgeTurn": 10,
+    "surgeTurnChaos": 8,
+    "surgeExtraReveals": 2,
+    "surgeBonus": {
+      "power": 1,
+      "toughness": 0,
+      "subtypes": [
+        "Zombie"
+      ]
+    },
+    "damagePerMill": 3,
+    "poisonPerMill": 3,
     "hordeCreaturesHaveHaste": true,
-    "hordeTokensPersistAcrossZones": true,
-    "damageToHordeRule": {
-      "type": "MILL_PER_DAMAGE_CHUNK",
-      "damagePerCard": 3,
-      "rounding": "floor"
-    },
-    "assaultRevealRule": {
-      "stopWhenCardsPlayedEquals": 3,
-      "stopWhenNonTokenCardPlayed": true
-    },
-    "surgeRule": {
-      "condition": {
-        "type": "GRAVEYARD_PLUS_EXILE_GREATER_THAN_LIBRARY"
-      },
-      "additionalCardsAfterNormalReveal": 2
-    },
-    "hordeManaRule": {
-      "enabled": true,
-      "description": "Horde creatures may tap for mana only when a directive or effect requires payment.",
-      "creatureManaAbility": {
-        "tap": true,
-        "produces": "ANY_COLOR",
-        "amount": "MANA_VALUE"
-      }
-    }
+    "swarmTokenSubtypes": [
+      "Zombie"
+    ]
   },
   "cards": [
     {
@@ -56,7 +47,7 @@
       "power": 2,
       "toughness": 2,
       "keywords": [],
-      "effects": []
+      "abilities": []
     },
     {
       "id": "zombie_giant_token",
@@ -78,7 +69,7 @@
       "power": 5,
       "toughness": 5,
       "keywords": [],
-      "effects": []
+      "abilities": []
     },
     {
       "id": "graf_harvest",
@@ -98,37 +89,58 @@
       "power": null,
       "toughness": null,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "STATIC_GRANT_KEYWORD",
-          "controller": "HORDE",
-          "filter": {
-            "cardTypes": [
-              "Creature"
-            ],
-            "subtypes": [
-              "Zombie"
-            ]
-          },
-          "keyword": "MENACE"
-        },
-        {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "BEGIN_UPKEEP",
-          "controller": "HORDE",
-          "condition": {
-            "type": "NOT",
-            "value": {
-              "type": "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
-              "controller": "HORDE"
+          "id": "graf_harvest_grants_menace",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "scope": {
+                "controller": "HORDE",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Zombie"
+                  ]
+                }
+              },
+              "keyword": "MENACE"
             }
-          },
-          "effect": {
-            "type": "SACRIFICE_SELF"
-          }
+          ]
         },
         {
-          "type": "ACTIVATED_ABILITY",
+          "id": "graf_harvest_upkeep",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "BEGIN_UPKEEP"
+          },
+          "conditions": [
+            {
+              "type": "NOT",
+              "value": {
+                "type": "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
+                "controller": "HORDE"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "SACRIFICE_SELF"
+            }
+          ],
+          "engineSupport": "pending",
+          "implementationNote": "The engine has no BEGIN_UPKEEP event yet; this trigger has never been active."
+        },
+        {
+          "id": "graf_harvest_activated",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
           "activationMode": "HORDE_DIRECTIVE_ONLY",
           "cost": {
             "type": "TAP_HORDE_CREATURES_FOR_MANA",
@@ -142,6 +154,15 @@
             },
             "selectionRule": "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY"
           },
+          "effects": [
+            {
+              "type": "CREATE_TOKEN",
+              "controller": "HORDE",
+              "tokenId": "zombie_token",
+              "amount": 1
+            }
+          ],
+          "engineSupport": "pending",
           "additionalCost": {
             "type": "EXILE_CARD_FROM_GRAVEYARD",
             "controller": "HORDE",
@@ -151,12 +172,6 @@
               ]
             },
             "selectionRule": "LOWEST_MANA_VALUE_THEN_RANDOM"
-          },
-          "effect": {
-            "type": "CREATE_TOKEN",
-            "controller": "HORDE",
-            "tokenId": "zombie_token",
-            "amount": 1
           }
         }
       ],
@@ -184,38 +199,41 @@
       ],
       "power": 0,
       "toughness": 0,
+      "keywords": [],
       "entersWithCounters": [
         {
           "counterType": "+1/+1",
           "amount": 5
         }
       ],
-      "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "CARD_CAST",
-          "condition": {
-            "type": "CAST_CARD_IS_NON_TOKEN"
+          "id": "noosegraf_mob_on_card_cast",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "CARD_CAST"
           },
-          "effect": {
-            "type": "SEQUENCE",
-            "effects": [
-              {
-                "type": "REMOVE_COUNTER",
-                "counterType": "+1/+1",
-                "amount": 1,
-                "from": "SELF",
-                "required": true
-              },
-              {
-                "type": "CREATE_TOKEN",
-                "controller": "HORDE",
-                "tokenId": "zombie_token",
-                "amount": 1
-              }
-            ]
-          }
+          "conditions": [
+            {
+              "type": "CAST_CARD_IS_NON_TOKEN"
+            }
+          ],
+          "effects": [
+            {
+              "type": "REMOVE_COUNTER",
+              "counterType": "+1/+1",
+              "amount": 1,
+              "from": "SELF",
+              "required": true
+            },
+            {
+              "type": "CREATE_TOKEN",
+              "controller": "HORDE",
+              "tokenId": "zombie_token",
+              "amount": 1
+            }
+          ]
         }
       ],
       "hordeErrata": {
@@ -242,14 +260,21 @@
       "power": 2,
       "toughness": 4,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "THIS_DIES",
-          "effect": {
-            "type": "EACH_OPPONENT_DISCARDS",
-            "amount": 1
-          }
+          "id": "rottenheart_ghoul_dies",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "THIS_DIES"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            }
+          ]
         }
       ],
       "hordeErrata": {
@@ -278,14 +303,22 @@
       "power": 2,
       "toughness": 2,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "ENTERS_BATTLEFIELD",
-          "effect": {
-            "type": "EACH_OPPONENT_DISCARDS",
-            "amount": 1
-          }
+          "id": "miasmic_mummy_etb",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            }
+          ]
         }
       ],
       "hordeErrata": {
@@ -308,26 +341,36 @@
         "Sorcery"
       ],
       "subtypes": [],
-      "effects": [
+      "keywords": [],
+      "abilities": [
         {
-          "type": "EACH_OPPONENT_LOSES_LIFE",
-          "amount": 1
-        },
-        {
-          "type": "EACH_OPPONENT_DISCARDS",
-          "amount": 1
-        },
-        {
-          "type": "EACH_OPPONENT_SACRIFICES",
-          "permanentType": "Creature",
-          "amount": 1,
-          "selection": "PLAYER_CHOOSES"
-        },
-        {
-          "type": "EACH_OPPONENT_SACRIFICES",
-          "permanentType": "Land",
-          "amount": 1,
-          "selection": "PLAYER_CHOOSES"
+          "id": "smallpox_spell",
+          "kind": "SPELL",
+          "targets": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_LOSES_LIFE",
+              "amount": 1
+            },
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            },
+            {
+              "type": "EACH_OPPONENT_SACRIFICES",
+              "permanentType": "Creature",
+              "amount": 1,
+              "selection": "PLAYER_CHOOSES"
+            },
+            {
+              "type": "EACH_OPPONENT_SACRIFICES",
+              "permanentType": "Land",
+              "amount": 1,
+              "selection": "PLAYER_CHOOSES"
+            }
+          ],
+          "engineSupport": "custom",
+          "implementationNote": "Resolved by the bespoke interactive sequence in HordeController/useGameStore (horde.pendingCard bridge), not by the generic resolver."
         }
       ],
       "hordeErrata": {
@@ -358,15 +401,20 @@
       "keywords": [
         "FLYING"
       ],
-      "effects": [
+      "abilities": [
         {
-          "type": "ACTIVATED_ABILITY",
+          "id": "blighted_bat_activated",
+          "kind": "ACTIVATED",
+          "zone": "BATTLEFIELD",
           "activationMode": "IGNORED_FOR_HORDE_MVP",
-          "effect": {
-            "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
-            "target": "SELF",
-            "keyword": "HASTE"
-          }
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+              "target": "SELF",
+              "keyword": "HASTE"
+            }
+          ],
+          "engineSupport": "ignored"
         }
       ],
       "implementationNote": "Horde creatures already have haste, so this activated ability can be ignored."
@@ -394,19 +442,23 @@
       "keywords": [
         "FLYING"
       ],
-      "effects": [
+      "abilities": [
         {
-          "type": "ACTIVATED_ABILITY",
-          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "id": "stitchwing_skaab_activated",
+          "kind": "ACTIVATED",
           "zone": "GRAVEYARD",
+          "activationMode": "IGNORED_FOR_HORDE_MVP",
           "cost": {
             "mana": "{1}{U}",
             "discard": 2
           },
-          "effect": {
-            "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
-            "tapped": true
-          }
+          "effects": [
+            {
+              "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
+              "tapped": true
+            }
+          ],
+          "engineSupport": "ignored"
         }
       ],
       "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
@@ -434,19 +486,23 @@
       "keywords": [
         "FLYING"
       ],
-      "effects": [
+      "abilities": [
         {
-          "type": "ACTIVATED_ABILITY",
-          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "id": "advanced_stitchwing_activated",
+          "kind": "ACTIVATED",
           "zone": "GRAVEYARD",
+          "activationMode": "IGNORED_FOR_HORDE_MVP",
           "cost": {
             "mana": "{2}{U}",
             "discard": 2
           },
-          "effect": {
-            "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
-            "tapped": true
-          }
+          "effects": [
+            {
+              "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
+              "tapped": true
+            }
+          ],
+          "engineSupport": "ignored"
         }
       ],
       "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
@@ -475,24 +531,39 @@
         "FLYING"
       ],
       "triggerMessage": "Crow of Dark Tidings triggers. Horde mills 2 cards.",
-      "effects": [
+      "abilities": [
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "ENTERS_BATTLEFIELD",
-          "effect": {
-            "type": "MILL_SELF",
-            "controller": "HORDE",
-            "amount": 2
-          }
+          "id": "crow_of_dark_tidings_etb",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "ENTERS_BATTLEFIELD",
+            "source": "SELF"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MILL_SELF",
+              "controller": "HORDE",
+              "amount": 2
+            }
+          ]
         },
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "THIS_DIES",
-          "effect": {
-            "type": "MILL_SELF",
-            "controller": "HORDE",
-            "amount": 2
-          }
+          "id": "crow_of_dark_tidings_dies",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "THIS_DIES"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MILL_SELF",
+              "controller": "HORDE",
+              "amount": 2
+            }
+          ]
         }
       ]
     },
@@ -519,7 +590,7 @@
       "keywords": [
         "MENACE"
       ],
-      "effects": []
+      "abilities": []
     },
     {
       "id": "thraben_foulbloods",
@@ -542,27 +613,43 @@
       "power": 3,
       "toughness": 2,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "STATIC_CONDITIONAL_BUFF",
-          "condition": {
-            "type": "GRAVEYARD_COUNT_AT_LEAST",
-            "controller": "HORDE",
-            "amount": 7
-          },
-          "target": "SELF",
-          "power": 1,
-          "toughness": 1
+          "id": "thraben_foulbloods_threshold_buff",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "GRAVEYARD_COUNT_AT_LEAST",
+                "controller": "HORDE",
+                "amount": 7
+              },
+              "power": 1,
+              "toughness": 1
+            }
+          ]
         },
         {
-          "type": "STATIC_CONDITIONAL_GRANT_KEYWORD",
-          "condition": {
-            "type": "GRAVEYARD_COUNT_AT_LEAST",
-            "controller": "HORDE",
-            "amount": 7
-          },
-          "target": "SELF",
-          "keyword": "MENACE"
+          "id": "thraben_foulbloods_threshold_menace",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "GRAVEYARD_COUNT_AT_LEAST",
+                "controller": "HORDE",
+                "amount": 7
+              },
+              "keyword": "MENACE"
+            }
+          ]
         }
       ],
       "hordeErrata": {
@@ -591,16 +678,24 @@
       "power": 5,
       "toughness": 3,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "STATIC_CONDITIONAL_GRANT_KEYWORD",
-          "condition": {
-            "type": "GRAVEYARD_COUNT_AT_LEAST",
-            "controller": "HORDE",
-            "amount": 7
-          },
-          "target": "SELF",
-          "keyword": "MENACE"
+          "id": "hound_of_the_farbogs_threshold_menace",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "GRAVEYARD_COUNT_AT_LEAST",
+                "controller": "HORDE",
+                "amount": 7
+              },
+              "keyword": "MENACE"
+            }
+          ]
         }
       ],
       "hordeErrata": {
@@ -632,7 +727,7 @@
         "DEATHTOUCH",
         "SKULK"
       ],
-      "effects": [],
+      "abilities": [],
       "implementationNote": "Skulk: cannot be blocked by creatures with greater power."
     },
     {
@@ -655,20 +750,28 @@
       "power": 2,
       "toughness": 4,
       "keywords": [],
-      "effects": [
+      "abilities": [
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "CREATURE_DIED",
-          "condition": {
-            "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
-            "controller": "HORDE"
+          "id": "gavony_unhallowed_on_creature_died",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "CREATURE_DIED"
           },
-          "effect": {
-            "type": "PUT_COUNTER",
-            "target": "SELF",
-            "counterType": "+1/+1",
-            "amount": 1
-          }
+          "conditions": [
+            {
+              "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+              "controller": "HORDE"
+            }
+          ],
+          "effects": [
+            {
+              "type": "PUT_COUNTER",
+              "target": "SELF",
+              "counterType": "+1/+1",
+              "amount": 1
+            }
+          ]
         }
       ]
     },
@@ -696,38 +799,56 @@
       "keywords": [
         "DEATHTOUCH"
       ],
-      "effects": [
+      "abilities": [
         {
-          "type": "STATIC_BUFF",
-          "controller": "HORDE",
-          "filter": {
-            "cardTypes": [
-              "Creature"
-            ],
-            "subtypes": [
-              "Zombie"
-            ],
-            "excludeSelf": true
-          },
-          "power": 1,
-          "toughness": 1
+          "id": "diregraf_captain_static_buff",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "scope": {
+                "controller": "HORDE",
+                "filters": {
+                  "cardTypes": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Zombie"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "toughness": 1
+            }
+          ]
         },
         {
-          "type": "TRIGGERED_ABILITY",
-          "trigger": "CREATURE_DIED",
-          "condition": {
-            "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
-            "controller": "HORDE",
-            "filter": {
-              "subtypes": [
-                "Zombie"
-              ]
-            }
+          "id": "diregraf_captain_on_creature_died",
+          "kind": "TRIGGERED",
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "CREATURE_DIED"
           },
-          "effect": {
-            "type": "EACH_OPPONENT_LOSES_LIFE",
-            "amount": 1
-          }
+          "conditions": [
+            {
+              "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+              "controller": "HORDE",
+              "filter": {
+                "subtypes": [
+                  "Zombie"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_LOSES_LIFE",
+              "amount": 1
+            }
+          ]
         }
       ]
     }

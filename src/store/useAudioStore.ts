@@ -53,7 +53,7 @@ export const useAudioStore = create<AudioStore>()(
       setMusicEnabled: (musicEnabled) => {
         set({ musicEnabled });
         syncEngine();
-        if (musicEnabled) audioEngine.startRandomBattleTheme();
+        if (musicEnabled && !audioEngine.getStatus().collectionId) audioEngine.startRandomBattleTheme();
         syncMusicStatus();
       },
       setMusicVolume: (volume) => {
@@ -99,7 +99,7 @@ export const useAudioStore = create<AudioStore>()(
       },
       startMenuMusic: () => {
         syncEngine();
-        const status = audioEngine.playCollection("mainMenuTheme", "battle");
+        const status = audioEngine.startRandomMenuTheme();
         set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
       },
       resumeMusic: () => {

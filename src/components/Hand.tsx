@@ -514,6 +514,5 @@ function playFromHand(
     else if (req.controller === "OPPONENT" && enemy) targets[req.id] = enemy;
     else if (friendly) targets[req.id] = friendly;
   }
-  const distribution = card.definitionId === "biogenic_upgrade" && friendly ? { [friendly]: 3 } : undefined;
-  castCard(card.instanceId, { xValue, targets, distribution });
+  castCard(card.instanceId, { xValue, targets });
 }

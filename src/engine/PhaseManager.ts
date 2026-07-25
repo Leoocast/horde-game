@@ -50,9 +50,10 @@ export function endPlayerTurn(game: GameState): GameState {
 }
 
 function resolveHordePoison(game: GameState): void {
-  const poisonMills = Math.floor(game.horde.poisonCounters / 3);
+  const poisonPerMill = game.hordeRules.poisonPerMill;
+  const poisonMills = Math.floor(game.horde.poisonCounters / poisonPerMill);
   if (poisonMills <= 0) return;
-  game.horde.poisonCounters -= poisonMills * 3;
+  game.horde.poisonCounters -= poisonMills * poisonPerMill;
   game.log.unshift(`Horde poison triggers. Horde mills ${poisonMills} card(s).`);
   millHorde(game, poisonMills);
   checkWinLoss(game);

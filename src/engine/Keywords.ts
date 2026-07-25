@@ -16,7 +16,7 @@ export function getToxicAmount(game: GameState, card: CardInstance): number {
 export function getKeywords(game: GameState, card: CardInstance): Keyword[] {
   const keywords = new Set<Keyword>([...card.keywords, ...card.temporaryKeywords]);
 
-  if (card.controller === "horde" && isCreature(card)) {
+  if (card.controller === "horde" && isCreature(card) && game.hordeRules.hordeCreaturesHaveHaste) {
     keywords.add("HASTE");
   }
 

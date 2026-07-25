@@ -1,4 +1,4 @@
-import type { CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
+import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
 import { createToken } from "./GameState";
 import { drawCards } from "./GameState";
 import { findCardDefinition } from "../data/decks";
@@ -6,8 +6,8 @@ import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
 import { addMana, addStoredMana } from "./ManaSystem";
 import { randomInt } from "./RNG";
-import { getPowerToughness } from "./StaticEffects";
-import { findPermanent } from "./Targeting";
+import { getPowerToughness, matchesFilter } from "./StaticEffects";
+import { chooseHordeTarget, findPermanent } from "./Targeting";
 
 export type ResolveContext = {
   source?: CardInstance;
@@ -15,6 +15,7 @@ export type ResolveContext = {
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
   tokenDefinitions?: CardInstance[] | never;
+  event?: EventItem;
 };
 
 export function resolveEffects(game: GameState, effects: EffectDefinition[], context: ResolveContext): void {
@@ -22,23 +23,45 @@ export function resolveEffects(game: GameState, effects: EffectDefinition[], con
 }
 
 export function resolveEffect(game: GameState, effect: EffectDefinition, context: ResolveContext): void {
-  if (
-    effect.type === "TRIGGERED_ABILITY" ||
-    effect.type === "STATIC_BUFF" ||
-    effect.type === "STATIC_GRANT_KEYWORD" ||
-    effect.type === "STATIC_CONDITIONAL_BUFF" ||
-    effect.type === "STATIC_CONDITIONAL_GRANT_KEYWORD"
-  )
-    return;
-  if (effect.type === "SEQUENCE") {
+  // Unknown types resolve to nothing at runtime; deck lint guarantees no deck JSON can
+  // reach this point with a type the registry does not know.
+  EFFECT_HANDLERS[String(effect.type)]?.(game, effect, context);
+}
+
+/** The engine's effect vocabulary derives from the registry keys — adding a handler here is
+ *  the single step that makes an effect type legal in deck JSONs. */
+export function registeredEffectTypes(): Set<string> {
+  return new Set(Object.keys(EFFECT_HANDLERS));
+}
+
+type EffectHandler = (game: GameState, effect: EffectDefinition, context: ResolveContext) => void;
+
+// Wrapper/static types are consumed elsewhere (resolveTriggeredEvent, StaticEffects, Keywords);
+// resolving them directly is deliberately a no-op.
+const skipWrapperOrStatic: EffectHandler = () => {};
+
+const EFFECT_HANDLERS: Record<string, EffectHandler> = {
+  TRIGGERED_ABILITY: skipWrapperOrStatic,
+  STATIC_BUFF: skipWrapperOrStatic,
+  STATIC_GRANT_KEYWORD: skipWrapperOrStatic,
+  STATIC_CONDITIONAL_BUFF: skipWrapperOrStatic,
+  STATIC_CONDITIONAL_GRANT_KEYWORD: skipWrapperOrStatic,
+  SEQUENCE: (game, effect, context) => {
     resolveEffects(game, (effect.effects as EffectDefinition[]) ?? [], context);
-    return;
-  }
-  if (effect.type === "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD") {
+  },
+  CONDITIONAL: (game, effect, context) => {
+    if (effectConditionMet(game, effect.condition as Record<string, unknown> | undefined, context)) {
+      resolveEffect(game, effect.effect as EffectDefinition, context);
+    }
+  },
+  CHOOSE: (game, effect, context) => {
+    const option = chooseEffectOption(game, effect, context);
+    if (option) resolveEffects(game, (option.effects as EffectDefinition[]) ?? [], context);
+  },
+  HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD: (game) => {
     exileTopGoblinToBattlefield(game);
-    return;
-  }
-  if (effect.type === "ADD_MANA") {
+  },
+  ADD_MANA: (game, effect, context) => {
     const mana = effect.mana as Record<string, number> | undefined;
     if (context.side === "player" && context.source?.cardTypes.includes("Creature")) {
       const manaAmounts = Object.values(mana ?? { G: Number(effect.amount ?? 1) });
@@ -50,27 +73,81 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
     for (const [color, amount] of Object.entries(mana ?? { G: effect.amount ?? 1 })) {
       game.player.manaPool = addMana(game.player.manaPool, color, Number(amount));
     }
-    return;
-  }
-  if (effect.type === "DRAW_CARD") {
+  },
+  DRAW_CARD: (game, effect) => {
     drawCards(game, "player", Number(effect.amount ?? 1));
     game.log.unshift(`Player draws ${Number(effect.amount ?? 1)} card(s).`);
-    return;
-  }
-  if (effect.type === "CREATE_TOKEN") {
+  },
+  CREATE_TOKEN: (game, effect, context) => {
     createTokens(game, effect, context);
-    return;
-  }
-  if (effect.type === "PUT_COUNTER") {
+  },
+  DEAL_DAMAGE_TO_OPPONENT: (game, effect, context) => {
+    dealDamageToOpponent(game, context.side, Number(effect.amount ?? 1));
+  },
+  DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT: (game, effect, context) => {
+    queueRandomOpponentPermanentDamage(game, effect, context);
+  },
+  DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES: (game, effect, context) => {
+    const opponent = context.side === "player" ? "horde" : "player";
+    const amount = Number(effect.amount ?? 1);
+    dealDamageToOpponent(game, context.side, amount);
+    for (const target of game[opponent].battlefield.filter((card) => card.cardTypes.includes("Creature"))) {
+      dealDamageToCreature(game, target, amount, false);
+    }
+    destroyMarkedCreatures(game);
+  },
+  DEAL_DAMAGE_TO_OPPONENT_CREATURE: (game, effect, context) => {
+    const amount = resolveNumericAmount(game, effect.amount ?? 0, context);
+    const targetId = chooseHordeTarget(game, "damage", amount);
+    const target = targetId ? findPermanent(game, targetId) : undefined;
+    if (target) {
+      if (effect.animation === "BURN") {
+        enqueueBurnDamage(game, context.source, target, amount, "BURN");
+        return;
+      }
+      dealDamageToCreature(game, target, amount, Boolean(context.source && hasKeyword(game, context.source, "DEATHTOUCH")));
+      game.log.unshift(`${context.source?.name ?? "Horde"} deals ${amount} damage to ${target.name}.`);
+      destroyMarkedCreatures(game);
+    }
+  },
+  DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING: (game, effect, context) => {
+    const attackerIds = declaredAttackerIds(context.event);
+    const maxPower = Number((effect.filter as Record<string, unknown> | undefined)?.maxPower ?? Number.POSITIVE_INFINITY);
+    const powers = (context.event?.payload?.attackerPowers as Record<string, number> | undefined) ?? {};
+    const matches = attackerIds.filter((id) => Number(powers[id] ?? Number.POSITIVE_INFINITY) <= maxPower).length;
+    if (matches > 0) dealDamageToOpponent(game, context.side, matches * Number(effect.amount ?? 1));
+  },
+  PUMP_SELF_PER_ATTACKER_MATCHING: (game, effect, context) => {
+    if (!context.source) return;
+    const source = context.source;
+    const filter = effect.filter as CardFilter | undefined;
+    const amount = game.combat.hordeAttackers
+      .map((id) => game.horde.battlefield.find((card) => card.instanceId === id))
+      .filter((card): card is CardInstance => Boolean(card))
+      .filter((card) => matchesFilter(card, filter, source))
+      .length;
+    source.temporaryPower += amount * Number(effect.power ?? 0);
+    source.temporaryToughness += amount * Number(effect.toughness ?? 0);
+  },
+  PUMP_GROUP_UNTIL_END_OF_TURN: (game, effect, context) => {
+    const controller = effect.controller === "OPPONENT"
+      ? context.side === "player" ? "horde" : "player"
+      : context.side;
+    for (const target of game[controller].battlefield) {
+      if (!matchesFilter(target, effect.filter as CardFilter | undefined, context.source)) continue;
+      target.temporaryPower += Number(effect.power ?? 0);
+      target.temporaryToughness += Number(effect.toughness ?? 0);
+    }
+  },
+  PUT_COUNTER: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + Number(effect.amount ?? 1);
       game.log.unshift(`${target.name} gets ${Number(effect.amount ?? 1)} ${String(effect.counterType ?? "+1/+1")} counter(s).`);
       enqueue(game, { type: "COUNTERS_PUT_ON_PERMANENT", sourceId: target.instanceId, payload: { targetId: target.instanceId } });
     }
-    return;
-  }
-  if (effect.type === "REMOVE_COUNTER") {
+  },
+  REMOVE_COUNTER: (game, effect, context) => {
     const targets = resolveTargetCards(game, { ...effect, target: effect.from ?? effect.target }, context);
     const counterType = String(effect.counterType ?? "+1/+1");
     const amount = Number(effect.amount ?? 1);
@@ -79,32 +156,28 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       target.counters[counterType] = Math.max(0, current - amount);
       game.log.unshift(`${target.name} loses ${amount} ${counterType} counter(s).`);
     }
-    return;
-  }
-  if (effect.type === "GAIN_LIFE") {
+  },
+  GAIN_LIFE: (game, effect, context) => {
     const side = effect.player === "OPPONENT" ? (context.side === "player" ? "horde" : "player") : context.side;
     const amount = Number(effect.amount ?? 1);
     if (side === "player") {
       game.player.life += amount;
       game.log.unshift(`Player gains ${amount} life.`);
     }
-    return;
-  }
-  if (effect.type === "PUMP_UNTIL_END_OF_TURN") {
+  },
+  PUMP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
       target.temporaryToughness += Number(effect.toughness ?? 0);
       game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until end of turn.`);
     }
-    return;
-  }
-  if (effect.type === "GRANT_KEYWORD_UNTIL_END_OF_TURN") {
+  },
+  GRANT_KEYWORD_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) target.temporaryKeywords.push(String(effect.keyword));
-    return;
-  }
-  if (effect.type === "DEAL_DAMAGE_FROM_SOURCE_POWER") {
+  },
+  DEAL_DAMAGE_FROM_SOURCE_POWER: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
@@ -113,9 +186,8 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
       destroyMarkedCreatures(game);
     }
-    return;
-  }
-  if (effect.type === "DEAL_DAMAGE") {
+  },
+  DEAL_DAMAGE: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.source)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.target)] ?? ""));
     if (source && target) {
@@ -123,9 +195,8 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
     }
-    return;
-  }
-  if (effect.type === "FIGHT_SIMULTANEOUS") {
+  },
+  FIGHT_SIMULTANEOUS: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
@@ -135,44 +206,78 @@ export function resolveEffect(game: GameState, effect: EffectDefinition, context
       dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "DEATHTOUCH"));
       game.log.unshift(`${source.name} and ${target.name} fight.`);
     }
-    return;
-  }
-  if (effect.type === "DESTROY" || effect.type === "DESTROY_TARGET") {
-    const targets = resolveTargetCards(game, effect, context);
-    for (const target of targets) destroyPermanent(game, target);
-    return;
-  }
-  if (effect.type === "DISTRIBUTE_COUNTERS") {
+  },
+  DESTROY: handleDestroy,
+  DESTROY_TARGET: handleDestroy,
+  DISTRIBUTE_COUNTERS: (game, effect, context) => {
     if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       const amount = context.distribution?.[target.instanceId] ?? 1;
       target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + amount;
     }
-    return;
-  }
-  if (effect.type === "DOUBLE_COUNTERS_ON_TARGETS") {
+  },
+  DOUBLE_COUNTERS_ON_TARGETS: (game, effect, context) => {
     if (context.side === "player") return;
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       const key = String(effect.counterType ?? "+1/+1");
       target.counters[key] = (target.counters[key] ?? 0) * 2;
     }
-    return;
-  }
-  if (effect.type === "MILL_SELF" || effect.type === "MILL_HORDE") {
-    millHorde(game, Number(effect.amount ?? 1));
-    return;
-  }
-  if (effect.type === "EACH_OPPONENT_DISCARDS") {
+  },
+  MILL_SELF: handleMillSelf,
+  MILL_HORDE: handleMillSelf,
+  EACH_OPPONENT_DISCARDS: (game, effect) => {
     discardPlayer(game, Number(effect.amount ?? 1));
-    return;
-  }
-  if (effect.type === "EACH_OPPONENT_LOSES_LIFE") {
+  },
+  EACH_OPPONENT_LOSES_LIFE: (game, effect) => {
     game.player.life -= Number(effect.amount ?? 1);
     game.log.unshift(`Player loses ${Number(effect.amount ?? 1)} life.`);
-    return;
-  }
+  },
+};
+
+export type EffectPresentation = "fight" | "sourceDamage" | "destroy";
+
+// Which battle animation a spell's resolution should play. Registry metadata: the store asks
+// for a presentation kind instead of re-learning effect types.
+const EFFECT_PRESENTATIONS: Partial<Record<string, EffectPresentation>> = {
+  FIGHT_SIMULTANEOUS: "fight",
+  DEAL_DAMAGE: "sourceDamage",
+  DEAL_DAMAGE_FROM_SOURCE_POWER: "sourceDamage",
+  DESTROY: "destroy",
+  DESTROY_TARGET: "destroy",
+};
+
+export function hasEffectPresentation(effects: EffectDefinition[] | undefined, kind: EffectPresentation): boolean {
+  return (effects ?? []).some((effect) => effectHasPresentation(effect, kind));
+}
+
+function effectHasPresentation(effect: unknown, kind: EffectPresentation): boolean {
+  if (!effect || typeof effect !== "object") return false;
+  const data = effect as Record<string, unknown>;
+  if (EFFECT_PRESENTATIONS[String(data.type)] === kind) return true;
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects)) return data.effects.some((step) => effectHasPresentation(step, kind));
+  return false;
+}
+
+export type EffectAnnouncement = "createsTokens" | "mills" | "discards" | "lifeLoss";
+
+/** What a Horde trigger's resolution announces in its toast. Registry metadata, same idea. */
+export const EFFECT_ANNOUNCEMENTS: Partial<Record<string, EffectAnnouncement>> = {
+  CREATE_TOKEN: "createsTokens",
+  MILL_SELF: "mills",
+  MILL_HORDE: "mills",
+  EACH_OPPONENT_DISCARDS: "discards",
+  EACH_OPPONENT_LOSES_LIFE: "lifeLoss",
+};
+
+function handleDestroy(game: GameState, effect: EffectDefinition, context: ResolveContext): void {
+  const targets = resolveTargetCards(game, effect, context);
+  for (const target of targets) destroyPermanent(game, target);
+}
+
+function handleMillSelf(game: GameState, effect: EffectDefinition): void {
+  millHorde(game, Number(effect.amount ?? 1));
 }
 
 function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveContext): number {
@@ -192,9 +297,24 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
 
 // Returns true if any matching source was skipped because of `deferController`, so the
 // caller can keep the event queued to resolve that side's triggers later.
-export function resolveTriggeredEvent(game: GameState, event: EventItem, deferController?: "player" | "horde"): boolean {
+// `onlySourceId` resolves a single source's triggers and records it on the event, so an
+// animated caller can give each reacting card its own beat instead of firing them all at once.
+export function resolveTriggeredEvent(
+  game: GameState,
+  event: EventItem,
+  deferController?: "player" | "horde",
+  onlySourceId?: string,
+): boolean {
+  if (event.type === "BURN_DAMAGE") {
+    resolveBurnDamageEvent(game, event);
+    return false;
+  }
   let deferredAny = false;
+  const alreadyResolved = resolvedTriggerSourceIds(event);
+  const pending: Array<{ source: CardInstance; wrapper: EffectDefinition }> = [];
   for (const source of triggeredSourcesForEvent(game, event)) {
+    if (alreadyResolved.includes(source.instanceId)) continue;
+    if (onlySourceId && source.instanceId !== onlySourceId) continue;
     if (deferController && source.controller === deferController) {
       deferredAny = true;
       continue;
@@ -203,13 +323,53 @@ export function resolveTriggeredEvent(game: GameState, event: EventItem, deferCo
       if (wrapper.type !== "TRIGGERED_ABILITY" || wrapper.trigger !== event.type) continue;
       if (effectNeedsManualTarget(wrapper.effect)) continue;
       if (!triggerConditionMet(game, wrapper.condition as Record<string, unknown> | undefined, source, event)) continue;
-      resolveEffect(game, wrapper.effect as EffectDefinition, { source, side: source.controller });
+      pending.push({ source, wrapper });
     }
   }
+  if (event.type === "ATTACK_DECLARED") {
+    pending.sort((left, right) => attackTriggerPriority(left.wrapper.effect) - attackTriggerPriority(right.wrapper.effect));
+  }
+  for (const { source, wrapper } of pending) {
+    resolveEffect(game, wrapper.effect as EffectDefinition, { source, side: source.controller, event });
+  }
+  if (onlySourceId) markTriggerSourceResolved(event, onlySourceId);
   return deferredAny;
 }
 
+// A permanent can only react to what it was already in play to see. `witnessIds` is stamped by
+// `enqueue`; older/synthetic events without it are treated as witnessed by everyone.
+function witnessedEvent(event: EventItem, source: CardInstance): boolean {
+  const witnessIds = event.payload?.witnessIds;
+  if (!Array.isArray(witnessIds)) return true;
+  return source.instanceId === event.sourceId || witnessIds.includes(source.instanceId);
+}
+
+export function resolvedTriggerSourceIds(event: EventItem): string[] {
+  const ids = event.payload?.resolvedSourceIds;
+  return Array.isArray(ids) ? ids.map(String) : [];
+}
+
+/** Sources of `event` that still owe a reaction, i.e. have not been resolved individually yet. */
+export function pendingTriggerSources(game: GameState, event: EventItem): CardInstance[] {
+  const alreadyResolved = resolvedTriggerSourceIds(event);
+  return triggeredSourcesForEvent(game, event).filter((source) => !alreadyResolved.includes(source.instanceId));
+}
+
+function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
+  event.payload = { ...(event.payload ?? {}), resolvedSourceIds: [...resolvedTriggerSourceIds(event), sourceId] };
+}
+
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
+  // Self-scoped: only the card that entered reacts, never every other card with an ETB ability.
+  if (event.type === "ENTERS_BATTLEFIELD") {
+    const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
+    if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
+    return source.effects.some(
+      (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
+    )
+      ? [source]
+      : [];
+  }
   if (event.type === "THIS_DIES") {
     const source = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
@@ -219,8 +379,12 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
       ? [source]
       : [];
   }
-  return [...game.player.battlefield, ...game.horde.battlefield].filter(
+  const sources = [...game.player.battlefield, ...game.horde.battlefield];
+  const deadSource = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
+  if (event.type === "CREATURE_DIED" && deadSource) sources.push(deadSource);
+  return sources.filter(
     (source) =>
+      witnessedEvent(event, source) &&
       (!event.triggerController || source.controller === event.triggerController) &&
       source.effects.some(
         (wrapper) =>
@@ -232,10 +396,30 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
   );
 }
 
-export function runEnterBattlefieldTriggers(game: GameState, card: CardInstance, targets?: Record<string, string | string[]>): void {
-  for (const wrapper of card.effects) {
-    if (wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD") {
-      resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
+// `deferSelfTriggers` queues the card's own enters-the-battlefield ability instead of resolving
+// it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
+// Without it, Beetleback Chief exiled onto the battlefield by Rundvelt simply spat out its tokens
+// with no activation of its own, while the same card arriving through the normal Horde reveal
+// (which defers via HordeController) announced itself properly.
+export function runEnterBattlefieldTriggers(
+  game: GameState,
+  card: CardInstance,
+  targets?: Record<string, string | string[]>,
+  options: { deferSelfTriggers?: boolean } = {},
+): void {
+  if (options.deferSelfTriggers) {
+    if (card.effects.some((wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD")) {
+      enqueue(game, {
+        type: "ENTERS_BATTLEFIELD",
+        sourceId: card.instanceId,
+        payload: { controller: card.controller, definitionId: card.definitionId },
+      });
+    }
+  } else {
+    for (const wrapper of card.effects) {
+      if (wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD") {
+        resolveEffect(game, wrapper.effect as EffectDefinition, { source: card, side: card.controller, targets });
+      }
     }
   }
   enqueue(game, {
@@ -303,7 +487,7 @@ function exileTopGoblinToBattlefield(game: GameState): void {
   card.summoningSickness = false;
   game.horde.battlefield.push(card);
   game.log.unshift(`${card.name} enters the battlefield from exile.`);
-  runEnterBattlefieldTriggers(game, card);
+  runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
 
 export function millHorde(game: GameState, amount: number): void {
@@ -323,7 +507,8 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
   const tokenId = String(effect.tokenId);
   const found = findCardDefinition(tokenId);
   if (!found) return;
-  for (let i = 0; i < Number(effect.amount ?? 1); i += 1) {
+  const amount = Math.max(0, Math.floor(resolveNumericAmount(game, effect.amount ?? 1, context)));
+  for (let i = 0; i < amount; i += 1) {
     const token = createToken(
       found,
       controller,
@@ -332,7 +517,13 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     );
     token.zone = "battlefield";
     token.summoningSickness = controller === "player";
+    token.tapped = Boolean(effect.tapped);
     game[controller].battlefield.push(token);
+    runEnterBattlefieldTriggers(game, token, undefined, { deferSelfTriggers: true });
+    if (effect.attacking && controller === "horde" && game.phase === "combat") {
+      token.tapped = true;
+      game.combat.hordeAttackers.push(token.instanceId);
+    }
     game.log.unshift(`${controller === "player" ? "Player" : "Horde"} creates ${token.name}.`);
   }
 }
@@ -402,6 +593,16 @@ export function discardChosenCard(game: GameState, instanceId: string): void {
 
 export function triggerConditionMet(game: GameState, condition: Record<string, unknown> | undefined, source: CardInstance, event: EventItem): boolean {
   if (!condition) return true;
+  if (condition.type === "ALL_OF") {
+    const conditions = Array.isArray(condition.conditions) ? condition.conditions as Array<Record<string, unknown>> : [];
+    return conditions.every((item) => triggerConditionMet(game, item, source, event));
+  }
+  if (condition.type === "ACTIVE_PLAYER_IS") {
+    return condition.player !== "SELF" || game.activeSide === source.controller;
+  }
+  if (condition.type === "SOURCE_IS_ATTACKING") {
+    return declaredAttackerIds(event).includes(source.instanceId);
+  }
   if (condition.type === "CAST_CARD_IS_NON_TOKEN") {
     return event.sourceId !== source.instanceId && event.payload?.nonToken === true;
   }
@@ -436,4 +637,155 @@ function eventObjectMatchesFilters(event: EventItem, filters?: Record<string, un
   const eventCardTypes = Array.isArray(event.payload?.cardTypes) ? event.payload.cardTypes.map(String) : [];
   const eventSubtypes = Array.isArray(event.payload?.subtypes) ? event.payload.subtypes.map(String) : [];
   return cardTypes.every((type) => eventCardTypes.includes(type)) && subtypes.every((subtype) => eventSubtypes.includes(subtype));
+}
+
+function effectConditionMet(
+  game: GameState,
+  condition: Record<string, unknown> | undefined,
+  context: ResolveContext,
+): boolean {
+  if (!condition) return true;
+  if (condition.type === "ATTACK_TOTAL_POWER_AT_LEAST") {
+    return Number(context.event?.payload?.totalPower ?? 0) >= Number(condition.amount ?? 0);
+  }
+  if (condition.type === "DECLARED_ATTACKER_MATCHES") {
+    const filters = condition.filters as CardFilter | undefined;
+    return declaredAttackerIds(context.event).some((id) => {
+      const card = game[context.side].battlefield.find((item) => item.instanceId === id);
+      return Boolean(card && matchesFilter(card, filters, context.source));
+    });
+  }
+  return true;
+}
+
+function declaredAttackerIds(event?: EventItem): string[] {
+  return Array.isArray(event?.payload?.attackerIds) ? event.payload.attackerIds.map(String) : [];
+}
+
+function dealDamageToOpponent(game: GameState, sourceSide: Side, amount: number): void {
+  if (amount <= 0) return;
+  if (sourceSide === "horde") {
+    game.player.life -= amount;
+    game.log.unshift(`Horde deals ${amount} damage to Player.`);
+  }
+}
+
+function queueRandomOpponentPermanentDamage(
+  game: GameState,
+  effect: EffectDefinition,
+  context: ResolveContext,
+): void {
+  const opponent = context.side === "player" ? "horde" : "player";
+  const targetDefinition = effect.target && typeof effect.target === "object"
+    ? effect.target as Record<string, unknown>
+    : undefined;
+  const filters = targetDefinition?.filters as CardFilter | undefined;
+  const candidates = game[opponent].battlefield.filter((card) => matchesFilter(card, filters, context.source));
+  if (candidates.length === 0) {
+    game.log.unshift(`${context.source?.name ?? "Effect"} has no valid Burn target.`);
+    return;
+  }
+  const target = candidates[randomInt(game, candidates.length)];
+  enqueueBurnDamage(
+    game,
+    context.source,
+    target,
+    resolveNumericAmount(game, effect.amount ?? 1, context),
+    String(effect.animation ?? "BURN"),
+  );
+}
+
+function enqueueBurnDamage(
+  game: GameState,
+  source: CardInstance | undefined,
+  target: CardInstance,
+  amount: number,
+  animation: string,
+): void {
+  enqueue(game, {
+    type: "BURN_DAMAGE",
+    sourceId: source?.instanceId,
+    payload: { targetId: target.instanceId, amount, animation },
+  });
+}
+
+function resolveBurnDamageEvent(game: GameState, event: EventItem): void {
+  const targetId = String(event.payload?.targetId ?? "");
+  const target = findPermanent(game, targetId);
+  if (!target) return;
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  dealDamageToCreature(game, target, amount, false);
+  target.flags.burnSmoke = true;
+  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+    .find((card) => card.instanceId === event.sourceId);
+  game.log.unshift(`${source?.name ?? "Burn"} deals ${amount} damage to ${target.name}.`);
+  destroyMarkedCreatures(game);
+}
+
+function resolveNumericAmount(game: GameState, amount: unknown, context: ResolveContext): number {
+  if (typeof amount === "number") return amount;
+  if (!amount || typeof amount !== "object") return Number(amount) || 0;
+  const data = amount as Record<string, unknown>;
+  if (data.type === "STAT") {
+    const objectRef = String(data.object ?? "");
+    const source = objectRef === "SELF"
+      ? context.source
+      : findPermanent(game, String(context.targets?.[objectRef] ?? ""));
+    if (!source) return 0;
+    const stats = getPowerToughness(game, source);
+    return String(data.stat ?? "").toUpperCase() === "TOUGHNESS" ? stats.toughness : stats.power;
+  }
+  if (data.type === "COUNT_PERMANENTS") {
+    const controller = data.controller === "OPPONENT"
+      ? context.side === "player" ? "horde" : "player"
+      : context.side;
+    return game[controller].battlefield.filter((card) =>
+      matchesFilter(card, data.filters as CardFilter | undefined, context.source)
+    ).length;
+  }
+  return Number(amount) || 0;
+}
+
+function attackTriggerPriority(effect: unknown): number {
+  if (!effect || typeof effect !== "object") return 10;
+  const data = effect as Record<string, unknown>;
+  if (data.type === "CREATE_TOKEN") return 0;
+  if (data.type === "CONDITIONAL") return attackTriggerPriority(data.effect);
+  if (data.type === "SEQUENCE" && Array.isArray(data.effects) && data.effects.some((step) => attackTriggerPriority(step) === 0)) return 0;
+  if (data.type === "PUMP_SELF_PER_ATTACKER_MATCHING") return 10;
+  return 20;
+}
+
+function chooseEffectOption(
+  game: GameState,
+  effect: EffectDefinition,
+  context: ResolveContext,
+): Record<string, unknown> | undefined {
+  const options = Array.isArray(effect.options) ? effect.options as Array<Record<string, unknown>> : [];
+  if (options.length === 0) return undefined;
+  if (context.side !== "horde") return options[0];
+  return options.reduce((best, option) =>
+    effectOptionAttackPower(game, option, context) >= effectOptionAttackPower(game, best, context) ? option : best
+  );
+}
+
+function effectOptionAttackPower(
+  game: GameState,
+  option: Record<string, unknown>,
+  context: ResolveContext,
+): number {
+  const effects = Array.isArray(option.effects) ? option.effects as EffectDefinition[] : [];
+  return effects.reduce((score, effect) => {
+    if (effect.type === "CREATE_TOKEN") {
+      const definition = findCardDefinition(String(effect.tokenId));
+      return score + resolveNumericAmount(game, effect.amount ?? 1, context) * Number(definition?.power ?? 0);
+    }
+    if (effect.type === "PUMP_GROUP_UNTIL_END_OF_TURN") {
+      const affected = game[context.side].battlefield.filter((card) =>
+        matchesFilter(card, effect.filter as CardFilter | undefined, context.source)
+      ).length;
+      return score + affected * Number(effect.power ?? 0);
+    }
+    return score;
+  }, 0);
 }

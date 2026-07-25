@@ -4986,6 +4986,40 @@
     filter: drop-shadow(0 8px 11px rgb(0 0 0 / 0.48)) saturate(0.88);
   }
 
+  /* A card presented next to its graveyard while its dies-trigger resolves: drained of colour
+     and lit from below, so it never reads as something still in play. */
+  /* No `filter` at all, on purpose. Any filter forces this subtree — a 13rem card plus its
+     image — to be rasterised on its own, and that cost lands on the first frame of the entrance,
+     which is where the hitch was. `box-shadow` gives the depth against the card's own rounded
+     rect for a fraction of the work, and the ember glow below carries the "dying" read.
+     Transform and transition are cleared too: the entrance layer above owns every transform, and
+     inheriting `.horde-special-card`'s own pair drove nested transforms on the same mount. */
+  .horde-special-card-dying {
+    position: relative;
+    width: 13rem;
+    transform: none;
+    transition: none;
+    /* Explicit: `.horde-special-card` sets its own drop-shadow, which would come straight back. */
+    filter: none;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 16px rgb(0 0 0 / 0.62);
+  }
+
+  .horde-special-card-dying::after {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    border-radius: 0.7rem;
+    background: radial-gradient(ellipse at 50% 92%, rgb(180 58 26 / 0.4), transparent 66%);
+    pointer-events: none;
+    animation: horde-death-reveal-glow 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes horde-death-reveal-glow {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
+  }
+
   .counter-target-preview {
     display: flex;
     width: min(132%, 340px);
@@ -5310,6 +5344,662 @@
     filter: drop-shadow(0 16px 22px rgb(0 0 0 / 0.5));
     transform: scale(1.28);
     transform-origin: left bottom;
+  }
+
+  /* The card throwing the fireball: coil, throw, recoil, settle. Deliberately no gold and no
+     brightness — it already flashed gold on the beat that queued this burn, and repeating that
+     reads as the card triggering a second time. Movement only.
+     The release frame is timed to the projectile's 120ms launch delay, so the card snaps forward
+     on the frame the fireball appears rather than after it has already crossed half the board.
+     The Horde row sits above the player's, so the throw drives DOWN, toward the target. */
+  .burn-source-casting {
+    transform-origin: center 80%;
+    animation: burn-source-cast 640ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  @keyframes burn-source-cast {
+    0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    /* coil back, away from the target */
+    11% { transform: translate(3px, -8px) rotate(-4deg) scale(1.035); }
+    /* release — the fireball appears on this frame */
+    21% { transform: translate(-3px, 10px) rotate(3deg) scale(1.07); }
+    /* recoil from the throw, then two decaying rebounds */
+    35% { transform: translate(2px, -5px) rotate(-1.6deg) scale(1.015); }
+    54% { transform: translate(-1px, 2px) rotate(0.7deg) scale(1.002); }
+    76% { transform: translate(0, -1px) rotate(-0.25deg) scale(1); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  }
+
+  .burn-animation-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    pointer-events: none;
+    overflow: hidden;
+    /* Single master clock, mirrors assets/examples/Fireball. Impact lands at 58%. */
+    --burn-duration: 1100ms;
+  }
+
+  /* Wrapper so the impact shake jolts the effects without shaking the board behind them. */
+  .burn-world {
+    position: absolute;
+    inset: 0;
+    animation: burn-shake var(--burn-duration) linear both;
+  }
+
+  /* ---------- Charge build-up at the source ---------- */
+  .burn-charge {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 142px;
+    height: 142px;
+    transform: translate(-50%, -50%);
+  }
+
+  .burn-charge-glow {
+    position: absolute;
+    inset: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0 10%, rgba(255, 202, 90, 0.8) 20%, rgba(255, 60, 0, 0.18) 44%, transparent 72%);
+    filter: blur(7px);
+    opacity: 0;
+    transform: scale(0);
+    animation: burn-cast-glow var(--burn-duration) ease-out both;
+  }
+
+  .burn-charge-distortion {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(255, 210, 130, 0.4);
+    border-radius: 47% 53% 42% 58% / 56% 43% 57% 44%;
+    filter: blur(0.7px);
+    opacity: 0;
+    transform: scale(0.7);
+    animation: burn-cast-distortion var(--burn-duration) ease-out both;
+  }
+
+  .burn-charge-arc {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    opacity: 1;
+    pointer-events: none;
+    animation: burn-cast-arc var(--burn-duration) linear both;
+  }
+
+  .burn-charge-arc::before,
+  .burn-charge-arc::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border-top: 2px solid rgba(255, 220, 135, 0.65);
+    border-right: 1px solid rgba(255, 160, 70, 0.28);
+    border-left: 0;
+    border-bottom: 0;
+    filter: blur(0.3px);
+  }
+
+  .burn-charge-arc::before { transform: rotate(15deg) scale(1.02); }
+  .burn-charge-arc::after { transform: rotate(205deg) scale(0.88); opacity: 0.7; }
+
+  .burn-charge-particle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: rgba(255, 225, 145, 0.95);
+    box-shadow: 0 0 8px rgba(255, 175, 60, 0.85), 0 0 14px rgba(255, 65, 0, 0.45);
+    opacity: 0;
+    animation: burn-cast-particle var(--burn-duration) ease-in both;
+  }
+
+  /* ---------- Trace sparks (JS spawned) ---------- */
+  .burn-trace-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+  }
+
+  .burn-trace-particle {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    box-shadow: 0 0 calc(var(--size) * 1.5) #ffcf83, 0 0 calc(var(--size) * 3) #ff3b00, 0 0 calc(var(--size) * 6) #a11100;
+    mix-blend-mode: screen;
+    animation: burn-trace-life var(--life, 300ms) ease-out forwards;
+  }
+
+  /* ---------- Fireball projectile + attached trail ---------- */
+  .burn-fireball {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 124px;
+    height: 78px;
+    z-index: 10;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.05);
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.52)) drop-shadow(0 0 20px rgba(203, 33, 1, 0.56));
+    animation: burn-fireball-flight var(--burn-duration) ease-in both;
+  }
+
+  .burn-trail {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    width: 120px;
+    height: 36px;
+    transform: translateY(-50%);
+    transform-origin: right center;
+    z-index: 0;
+    /* The tail whips instead of sitting rigid behind the ball. */
+    animation: burn-trail-whip 120ms ease-in-out infinite alternate;
+  }
+
+  .burn-trail-ribbon,
+  .burn-trail-streak {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    opacity: 0;
+    transform-origin: right center;
+    mix-blend-mode: screen;
+    animation: burn-trail var(--burn-duration) linear both;
+  }
+
+  .burn-trail-ribbon {
+    width: var(--w);
+    height: var(--h);
+    border-radius: 88% 14% 24% 88% / 66% 38% 62% 34%;
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(20, 0, 3, 0.86) 12%,
+        rgba(96, 5, 3, 0.88) 33%,
+        rgba(215, 37, 2, 0.96) 64%,
+        rgba(255, 142, 44, 0.98) 84%,
+        rgba(255, 239, 188, 0.9) 95%,
+        transparent 100%);
+    filter: blur(var(--blur));
+  }
+
+  .burn-trail-ribbon::before {
+    content: "";
+    position: absolute;
+    inset: 24% 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255, 52, 4, 0.2) 22%, rgba(255, 171, 66, 0.74) 68%, #fff4d9 92%, transparent);
+    filter: blur(1px);
+    animation: burn-filament 70ms ease-in-out infinite alternate;
+  }
+
+  .burn-trail-streak {
+    width: var(--w);
+    height: var(--h);
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255, 45, 2, 0.75) 48%, rgba(255, 213, 125, 0.98) 88%, transparent);
+    box-shadow: 0 0 7px rgba(255, 53, 4, 0.5);
+    filter: blur(var(--blur));
+  }
+
+  .burn-fireball-body {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 44px;
+    height: 36px;
+    transform: translateY(-50%);
+    isolation: isolate;
+    z-index: 3;
+  }
+
+  .burn-ball-outer,
+  .burn-ball-mid,
+  .burn-ball-core,
+  .burn-ball-hotspot {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* No black rim: the falloff stays molten (deep red → transparent) so it reads as flame,
+     not a dark sphere. */
+  .burn-ball-outer {
+    inset: 0;
+    border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%;
+    background: radial-gradient(circle at 66% 46%,
+        #fff9e6 0 6%,
+        #ffc267 15%,
+        #f9550d 34%,
+        #e23608 52%,
+        #a71404 68%,
+        rgba(140, 16, 3, 0.5) 80%,
+        transparent 92%);
+    filter: blur(2.4px);
+    animation: burn-blob-one 85ms ease-in-out infinite alternate, burn-outer-flicker 65ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-mid {
+    inset: 3px 4px 4px 5px;
+    border-radius: 56% 44% 47% 53% / 45% 59% 41% 55%;
+    background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(160, 22, 2, 0.5) 72%, transparent 88%);
+    filter: blur(1.4px);
+    mix-blend-mode: screen;
+    animation: burn-blob-two 65ms ease-in-out infinite alternate, burn-mid-flicker 58ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-core {
+    inset: 8px 8px 8px 13px;
+    border-radius: 49% 51% 42% 58% / 58% 44% 56% 42%;
+    background: radial-gradient(circle at 62% 46%, #fff 0 18%, #fff0c9 36%, #ffb04e 66%, rgba(255, 63, 7, 0.12) 100%);
+    filter: blur(0.9px);
+    mix-blend-mode: screen;
+    animation: burn-blob-three 55ms ease-in-out infinite alternate, burn-ball-core-pulse 72ms ease-in-out infinite alternate;
+  }
+
+  .burn-ball-hotspot {
+    inset: 11px 9px 11px 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0 45%, rgba(255, 245, 216, 0.72) 70%, transparent);
+    filter: blur(1.6px);
+    animation: burn-hotspot 46ms ease-in-out infinite alternate;
+  }
+
+  /* ---------- Layered impact anchored on the target ---------- */
+  .burn-impact {
+    position: absolute;
+    left: var(--burn-end-x);
+    top: var(--burn-end-y);
+    width: 1px;
+    height: 1px;
+    z-index: 13;
+    pointer-events: none;
+  }
+
+  .burn-impact-core {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.02);
+    background: radial-gradient(circle,
+        #fff 0 4%,
+        #fff4d0 8%,
+        #ffc066 19%,
+        #ff6317 36%,
+        rgba(182, 19, 1, 0.88) 54%,
+        rgba(25, 0, 4, 0.75) 69%,
+        transparent 82%);
+    filter: blur(3px) drop-shadow(0 0 16px rgba(255, 86, 12, 0.5)) drop-shadow(0 0 34px rgba(185, 16, 0, 0.22));
+    mix-blend-mode: screen;
+    animation: burn-impact-core var(--burn-duration) linear both;
+  }
+
+  .burn-void-disc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+    background: radial-gradient(circle, #000 0 34%, rgba(42, 0, 5, 0.98) 48%, rgba(230, 32, 3, 0.9) 62%, rgba(255, 142, 55, 0.45) 68%, transparent 77%);
+    box-shadow: 0 0 0 3px rgba(255, 91, 35, 0.6), 0 0 44px rgba(184, 11, 0, 0.6);
+    filter: blur(1px);
+    animation: burn-void-implosion var(--burn-duration) linear both;
+  }
+
+  .burn-shock-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--size);
+    height: var(--size);
+    border: var(--border-size) solid rgba(255, 155, 72, 0.76);
+    border-radius: 52% 48% 56% 44% / 47% 61% 39% 53%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.02);
+    box-shadow: 0 0 14px rgba(255, 52, 2, 0.35), inset 0 0 10px rgba(255, 78, 3, 0.2);
+    filter: blur(var(--ring-blur));
+  }
+
+  .burn-shock-ring.one { animation: burn-ring-one var(--burn-duration) linear both; }
+  .burn-shock-ring.two { animation: burn-ring-two var(--burn-duration) linear both; }
+
+  .burn-impact-smoke {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 88px;
+    height: 70px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1);
+    background: radial-gradient(circle at 50% 62%, rgba(117, 30, 17, 0.62), rgba(35, 14, 16, 0.78) 44%, rgba(9, 7, 10, 0.44) 68%, transparent 78%);
+    filter: blur(12px);
+    animation: burn-impact-smoke var(--burn-duration) linear both;
+  }
+
+  /* Radial flash keyed on the impact point, above the world (not shaken). */
+  .burn-screen-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    animation: burn-screen-flash var(--burn-duration) linear both;
+  }
+
+  /* Engraved fantasy face: weighty enough to read instantly without the modern arcade look. */
+  .burn-damage-number {
+    position: absolute;
+    left: var(--burn-end-x);
+    top: var(--burn-end-y);
+    z-index: 21;
+    opacity: 0;
+    color: #ffeeb4;
+    font-family: "Copperplate Gothic Bold", Copperplate, "Palatino Linotype", Georgia, serif;
+    font-size: clamp(42px, 4vw, 62px);
+    font-weight: 900;
+    font-style: normal;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    -webkit-text-stroke: 3px #57110a;
+    paint-order: stroke fill;
+    text-shadow:
+      0 4px 0 #2d0704,
+      0 0 12px #ffbf46,
+      0 0 30px #ff4b16;
+    transform: translate(-50%, -50%) scale(0.35);
+    animation: burn-damage-pop 620ms 640ms linear both;
+  }
+
+  /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
+     lingers with the smoke until the end step wipes card.flags.burnSmoke. */
+  .burn-card-scorch-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 19;
+    border-radius: 0.375rem;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 45%, rgb(255 232 150 / 0.85), rgb(255 88 20 / 0.72) 38%, rgb(150 20 6 / 0.55) 66%, transparent 78%);
+    mix-blend-mode: hard-light;
+    opacity: 0;
+    animation: burn-scorch-flash 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .burn-card-scorch {
+    position: absolute;
+    inset: 0;
+    z-index: 17;
+    border-radius: 0.375rem;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 58%, rgb(74 22 10 / 0.62), rgb(38 12 7 / 0.34) 52%, transparent 76%),
+      linear-gradient(180deg, transparent 42%, rgb(24 8 5 / 0.42) 100%);
+    mix-blend-mode: multiply;
+    animation: burn-scorch-settle 700ms ease-out both;
+  }
+
+  .burn-card-smoke {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .burn-card-smoke > i {
+    position: absolute;
+    left: 48%;
+    bottom: 42%;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgb(82 73 66 / 0.62), rgb(31 27 25 / 0.32) 52%, transparent 72%);
+    filter: blur(2px);
+    animation: burn-card-smoke-rise 2.4s ease-out infinite;
+  }
+
+  .burn-card-smoke > i:nth-child(2) { left: 36%; animation-delay: -0.8s; animation-duration: 2.8s; }
+  .burn-card-smoke > i:nth-child(3) { left: 61%; animation-delay: -1.65s; animation-duration: 2.55s; }
+
+  @keyframes burn-shake {
+    0%, 57.99%, 100% { transform: translate(0, 0) rotate(0); }
+    58% { transform: translate(-14px, 8px) rotate(-0.8deg); }
+    59% { transform: translate(13px, -8px) rotate(0.72deg); }
+    60% { transform: translate(-9px, -5px) rotate(-0.45deg); }
+    61% { transform: translate(7px, 4px) rotate(0.32deg); }
+    63% { transform: translate(-4px, 2px) rotate(-0.16deg); }
+    65% { transform: translate(2px, -1px); }
+    68% { transform: translate(0, 0); }
+  }
+
+  @keyframes burn-cast-glow {
+    0% { opacity: 0; transform: scale(0.05); }
+    5% { opacity: 0.85; transform: scale(0.55); }
+    13% { opacity: 1; transform: scale(1.18); }
+    18% { opacity: 0.92; transform: scale(0.88); }
+    20% { opacity: 0; transform: scale(0.2); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-cast-distortion {
+    0% { opacity: 0; transform: scale(0.7) rotate(0); }
+    5% { opacity: 0.65; }
+    17% { opacity: 1; transform: scale(1.08) rotate(180deg); }
+    20% { opacity: 0; transform: scale(0.25) rotate(220deg); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-cast-arc {
+    0% { opacity: 0; transform: scale(0.5) rotate(0); }
+    5% { opacity: 0.8; }
+    18% { opacity: 1; transform: scale(1) rotate(240deg); }
+    20% { opacity: 0; transform: scale(0.2) rotate(280deg); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-cast-particle {
+    0%, 2% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateX(var(--r)) scale(0.1); }
+    8% { opacity: 1; }
+    18% { opacity: 0.95; transform: translate(-50%, -50%) rotate(calc(var(--a) + 140deg)) translateX(12px) scale(1.2); }
+    20% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+    100% { opacity: 0; }
+  }
+
+  /* Travel is driven by translate along (--burn-dx, --burn-dy) so the ball flies from the
+     caster to the target at any angle; the ball squash + trail ride the heading via
+     rotate(--burn-angle). Fractions 0.369 / 0.738 match the reference's 34% / 48% frames. */
+  @keyframes burn-fireball-flight {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.04); }
+    5% { opacity: 0.45; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.22); }
+    13% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.82); }
+    18% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(1); }
+    20% { transform: translate(-50%, -50%) rotate(var(--burn-angle)) scaleX(1.18) scaleY(0.88); }
+    34% { transform: translate(calc(-50% + 0.369 * var(--burn-dx)), calc(-58% + 0.369 * var(--burn-dy))) rotate(calc(var(--burn-angle) - 1.8deg)) scaleX(1.34) scaleY(0.78); }
+    48% { transform: translate(calc(-50% + 0.738 * var(--burn-dx)), calc(-44% + 0.738 * var(--burn-dy))) rotate(calc(var(--burn-angle) + 1.4deg)) scaleX(1.3) scaleY(0.8); }
+    57.95% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(1.42) scaleY(0.73); filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.55)) drop-shadow(0 0 22px rgba(205, 31, 0, 0.62)); }
+    58% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(0.22) scaleY(1.65); filter: brightness(2.4); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)); }
+  }
+
+  @keyframes burn-trail {
+    0%, 17% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.55); }
+    20% { opacity: 0.92; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.68) scaleY(0.9); }
+    31%, 50% { opacity: var(--o, 0.95); transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(1) scaleY(1); }
+    57% { opacity: 0.4; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.6) scaleY(0.7); }
+    58%, 100% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.2); }
+  }
+
+  @keyframes burn-trace-life {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    60% { opacity: 0.8; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.1); filter: blur(2px); }
+  }
+
+  @keyframes burn-impact-core {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); border-radius: 50%; }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); border-radius: 45% 55% 42% 58% / 55% 45% 58% 42%; filter: blur(2px) brightness(2.4); }
+    59% { opacity: 1; transform: translate(-50%, -50%) scale(0.65, 1.35) rotate(-15deg); border-radius: 75% 25% 88% 12% / 25% 85% 15% 75%; filter: blur(4px) brightness(1.2); }
+    60% { opacity: 0.96; transform: translate(-50%, -50%) scale(1.25, 0.65) rotate(12deg); border-radius: 22% 78% 25% 75% / 78% 22% 85% 15%; }
+    66% { opacity: 0.58; transform: translate(-50%, -50%) scale(0.95, 1.25) rotate(-8deg); border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%; }
+    74% { opacity: 0; transform: translate(-50%, -50%) scale(1.5, 1.1) rotate(5deg); border-radius: 35% 65% 40% 60% / 65% 35% 60% 40%; filter: blur(9px); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-void-implosion {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(1.55); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.08); filter: brightness(2); }
+    59% { opacity: 0.98; transform: translate(-50%, -50%) scale(0.03); }
+    61% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.1); }
+    65% { opacity: 0.25; transform: translate(-50%, -50%) scale(1.45); }
+    75% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-ring-one {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.12); }
+    62% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.25); }
+    68% { opacity: 0.22; transform: translate(-50%, -50%) scale(2); }
+    76% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-ring-two {
+    0%, 58.5% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    59% { opacity: 0.86; transform: translate(-50%, -50%) scale(0.18); }
+    63% { opacity: 0.54; transform: translate(-50%, -50%) scale(1.4); }
+    69% { opacity: 0.12; transform: translate(-50%, -50%) scale(2.2); }
+    78% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-impact-smoke {
+    0%, 59% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1); }
+    62% { opacity: 0.7; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(var(--s)); }
+    70% { opacity: 0.4; transform: translate(calc(-50% + var(--x) + var(--drift)), calc(-50% + var(--y) - 44px)) scale(var(--s2)); }
+    82% { opacity: 0; transform: translate(calc(-50% + var(--x) + var(--drift2)), calc(-50% + var(--y) - 96px)) scale(var(--s3)); }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 255, 0.88), rgba(255, 128, 50, 0.2) 24%, transparent 48%); }
+    59% { opacity: 0.22; }
+    62%, 100% { opacity: 0; }
+  }
+
+  @keyframes burn-filament {
+    from { opacity: 0.68; transform: translateY(-2px) scaleY(0.78); }
+    to { opacity: 1; transform: translateY(2px) scaleY(1.08); }
+  }
+
+  @keyframes burn-trail-whip {
+    from { transform: translateY(-56%) rotate(4deg); }
+    to { transform: translateY(-44%) rotate(-4deg); }
+  }
+
+  @keyframes burn-blob-one {
+    from { border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%; transform: rotate(-12deg) scale(1.05, 0.85); }
+    to { border-radius: 56% 44% 30% 70% / 46% 78% 22% 54%; transform: rotate(15deg) scale(0.9, 1.15); }
+  }
+
+  @keyframes burn-blob-two {
+    from { border-radius: 56% 44% 47% 53% / 25% 79% 21% 75%; transform: rotate(10deg) scale(0.85, 1.15); }
+    to { border-radius: 25% 75% 78% 22% / 57% 43% 76% 24%; transform: rotate(-14deg) scale(1.18, 0.82); }
+  }
+
+  @keyframes burn-blob-three {
+    from { border-radius: 39% 61% 32% 68% / 68% 34% 66% 32%; transform: scale(0.88, 1.15) rotate(5deg); }
+    to { border-radius: 78% 22% 74% 26% / 23% 79% 21% 77%; transform: scale(1.18, 0.82) rotate(-8deg); }
+  }
+
+  @keyframes burn-outer-flicker {
+    from { opacity: 0.84; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-mid-flicker {
+    from { opacity: 0.76; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-ball-core-pulse {
+    from { filter: blur(0.65px) brightness(0.92); }
+    to { filter: blur(1.1px) brightness(1.18); }
+  }
+
+  @keyframes burn-hotspot {
+    from { opacity: 0.7; transform: scale(0.86); }
+    to { opacity: 1; transform: scale(1.16); }
+  }
+
+  @keyframes burn-scorch-flash {
+    0% { opacity: 0; }
+    12% { opacity: 1; }
+    46% { opacity: 0.72; }
+    100% { opacity: 0; }
+  }
+
+  @keyframes burn-scorch-settle {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes burn-damage-pop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -42%) scale(0.3, 0.65) rotate(-3deg);
+      filter: brightness(1.8);
+    }
+    16% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.38, 0.82) rotate(1.5deg);
+      filter: brightness(1.3);
+    }
+    29% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.9, 1.2) rotate(-0.8deg);
+      filter: brightness(1.08);
+    }
+    42% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.08, 0.96) rotate(0.3deg);
+      filter: brightness(1);
+    }
+    56%, 70% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) rotate(0);
+      filter: brightness(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -115%) scale(0.92) rotate(0);
+      filter: brightness(0.9);
+    }
+  }
+
+  @keyframes burn-card-smoke-rise {
+    0% { opacity: 0; transform: translate(-50%, 8px) scale(0.42); }
+    22% { opacity: 0.46; }
+    68% { opacity: 0.24; }
+    100% { opacity: 0; transform: translate(calc(-50% + 8px), -54px) scale(1.65); }
   }
 
   .player-mana-core.player-mana-panel {
@@ -7570,6 +8260,32 @@
   left: calc(50% + 164px);
   z-index: 117;
   width: 190px;
+}
+
+/* Right of the Horde panel is for spells and reveals still resolving (Smallpox). Left is the
+   graveyard side — that is where the deck's graveyard button lives, so cards presented while a
+   dies-trigger resolves belong here and exit into it. */
+.horde-death-reveal-host {
+  position: fixed;
+  top: 8px;
+  right: calc(50% + 164px);
+  z-index: 117;
+  width: 190px;
+}
+
+/* Compositor-driven entrance. This mounts on the same frame the store commits a combat impact
+   and the battlefield re-renders, so anything running on the main thread stutters here. */
+.horde-death-reveal-enter {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  will-change: transform, opacity;
+  animation: horde-death-reveal-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes horde-death-reveal-in {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.9); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 .horde-deck-counter {
@@ -11697,4 +12413,1238 @@
   .opening-hand-cards { gap: 4px; }
   .opening-hand-actions { width: 100%; gap: 8px; }
   .opening-hand-button { min-height: 48px; font-size: 10px; }
+}
+
+/* Playground — developer-only tooling. Deliberately plainer than the game UI: it must never be
+   mistaken for a player-facing screen, and it must not compete visually with the board it inspects. */
+/* Held only while the lazy playground chunk resolves. Matches the shell's background so the
+   transition is a single dark frame instead of a loading screen. */
+.playground-chunk-fallback {
+  position: fixed;
+  inset: 0;
+  background: #0b0c0a;
+}
+
+.playground-shell {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #0b0c0a;
+}
+
+/* The stage deliberately keeps the full viewport and creates NO containing block (no transform,
+   no filter). The Board's overlays measure cards with getBoundingClientRect and draw into
+   `fixed` layers, so the moment an ancestor becomes the containing block every combat arrow and
+   targeting line is offset by the dock width. Instead the dock floats over a full-size board and
+   the board's own content containers are inset below — the cards physically move, so the arrows
+   follow them for free. */
+.playground-stage {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* The tools are portaled into a separate browser window. They remain in the same React tree, so
+   every panel reads and mutates the board's live Zustand store without copying game state. */
+.playground-dock {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  /* Above every game surface. Tooltips at 10000 are the only thing left above it, and those are
+     transient and follow the pointer. */
+  z-index: 9999;
+  display: flex;
+  width: 100vw;
+  flex-direction: column;
+  border-radius: 0;
+  border-right: 0;
+  /* Fully opaque: a translucent panel let the surfaces underneath read straight through the tools. */
+  background: linear-gradient(180deg, #16170f 0%, #101109 100%);
+  box-shadow: none;
+  color: #e4ddc2;
+  font-size: 13px;
+}
+
+/* The popup receives this body class before the portal mounts. It owns the whole viewport and does
+   not inherit the main document's page geometry. */
+.playground-tools-window-body {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #101109;
+}
+
+.playground-dock-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+}
+
+.playground-dock-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b08a48;
+}
+
+.playground-dock-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playground-dock-header-actions { display: flex; gap: 6px; }
+
+.playground-icon-button,
+.playground-dock-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(196, 158, 84, 0.34);
+  background: rgba(20, 21, 18, 0.85);
+  color: #cbc3a6;
+  cursor: pointer;
+}
+
+.playground-icon-button { height: 28px; width: 28px; }
+.playground-icon-button:hover,
+.playground-dock-handle:hover { border-color: rgba(224, 190, 116, 0.7); color: #f2e7c3; }
+
+.playground-dock-handle {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 9999;
+  transform: translateY(-50%);
+  padding: 12px 8px;
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Launching is the first thing you want and the last thing you should have to hunt for, so it sits
+   under the header instead of inside a tab. The active launch is marked: "what is on the board" is
+   otherwise invisible once a scenario and a match look alike. */
+.playground-launch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+}
+
+.playground-launch-button {
+  display: inline-flex;
+  min-height: 34px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid rgba(196, 158, 84, 0.38);
+  background: rgba(24, 25, 20, 0.9);
+  color: #d9cfa8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.playground-launch-button svg { flex: 0 0 auto; }
+
+.playground-launch-button:hover:not(:disabled) { border-color: rgba(224, 190, 116, 0.72); color: #f6e6b8; }
+.playground-launch-button:disabled { cursor: not-allowed; opacity: 0.38; }
+
+.playground-launch-button.is-active {
+  border-color: rgba(224, 190, 116, 0.78);
+  background: rgba(120, 92, 38, 0.52);
+  color: #f8ecc2;
+}
+
+
+.playground-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+}
+
+.playground-tab {
+  padding: 9px 2px;
+  border-right: 1px solid rgba(196, 158, 84, 0.16);
+  background: transparent;
+  color: #938d76;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-tab:last-child { border-right: 0; }
+.playground-tab:hover { color: #d9cfa8; }
+.playground-tab.is-active { background: rgba(196, 158, 84, 0.14); color: #f2e7c3; }
+
+.playground-dock-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+
+.playground-section { display: flex; flex-direction: column; gap: 10px; }
+
+/* A panel is a stack of self-contained groups. Grouping is the whole readability fix: the old flat
+   run of title/buttons/title/buttons gave no way to tell where one concern ended and the next
+   began, so every control looked equally important. */
+.playground-panel { display: flex; flex-direction: column; gap: 12px; }
+
+.playground-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  border-radius: 4px;
+  padding: 10px 11px 11px;
+  background: rgba(22, 23, 18, 0.55);
+}
+
+.playground-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.playground-group-title {
+  color: #cba55f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.playground-group-badge {
+  color: #8d9a94;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Explains what a control does in the model's own words. Deliberately quieter than a note: it is
+   reference, not a warning. */
+.playground-hint {
+  margin-top: 1px;
+  color: #7f7a66;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.playground-hint > strong,
+.playground-note > strong { color: #b9ad86; font-weight: 700; }
+
+/* Lab vs real game. Not a launch control: it chooses which set of fields is on screen, because the
+   two have almost nothing in common and showing both made the lab look like a misconfigured match. */
+.playground-modeswitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  border: 1px solid rgba(196, 158, 84, 0.24);
+  padding: 3px;
+  background: rgba(10, 11, 9, 0.6);
+}
+
+.playground-modeswitch-button {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #837e69;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-modeswitch-button:hover { color: #cbc3a6; }
+.playground-modeswitch-button.is-active { background: rgba(120, 92, 38, 0.5); color: #f6e6b8; }
+
+/* Separates two ways of doing related things inside one group — "play it" above, "just put it
+   there" below — without promoting the second to a group of its own. */
+.playground-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: rgba(196, 158, 84, 0.2);
+}
+
+.playground-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b08a48;
+}
+
+.playground-field { display: flex; flex-direction: column; gap: 4px; }
+
+.playground-field > span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #938d76;
+}
+
+.playground-field input,
+.playground-field select {
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid rgba(196, 158, 84, 0.32);
+  background: rgba(12, 13, 11, 0.9);
+  color: #f2e7c3;
+  font-size: 13px;
+}
+
+.playground-field input:focus,
+.playground-field select:focus { border-color: rgba(224, 190, 116, 0.72); outline: none; }
+
+.playground-button-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.playground-button {
+  display: inline-flex;
+  min-height: 32px;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid rgba(196, 158, 84, 0.34);
+  background: rgba(20, 21, 18, 0.85);
+  color: #d9cfa8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-button:hover:not(:disabled) { border-color: rgba(224, 190, 116, 0.7); color: #f6e6b8; }
+.playground-button:disabled { cursor: not-allowed; opacity: 0.4; }
+.playground-button.is-primary { background: rgba(120, 92, 38, 0.5); color: #f6e6b8; }
+.playground-button.is-tall { min-height: 32px; width: 100%; }
+.playground-button svg { flex: 0 0 auto; opacity: 0.85; }
+
+.playground-note { color: #8d9a94; font-size: 12px; line-height: 1.5; }
+
+/* Energy at a glance, in the same shape the board shows it: four source pips, then the stored
+   reserve. Reading a number out of a label is slower than seeing which pips are lit. */
+.playground-meter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0 1px;
+}
+
+.playground-pip {
+  height: 12px;
+  width: 12px;
+  border: 1px solid rgba(196, 158, 84, 0.34);
+  border-radius: 50%;
+  background: rgba(10, 11, 9, 0.9);
+}
+
+.playground-pip.is-ready { border-color: rgba(126, 190, 224, 0.85); background: rgba(96, 170, 214, 0.72); }
+.playground-pip.is-spent { border-color: rgba(126, 190, 224, 0.32); background: rgba(96, 170, 214, 0.14); }
+.playground-pip.is-stored.is-ready { border-color: rgba(230, 196, 108, 0.9); background: rgba(224, 182, 82, 0.75); }
+
+.playground-meter-split {
+  height: 13px;
+  width: 1px;
+  margin: 0 3px;
+  background: rgba(196, 158, 84, 0.32);
+}
+
+/* Failed actions must always say why: the engine's `lastActionResult.reason` lands here. */
+.playground-status {
+  border-top: 1px solid rgba(196, 158, 84, 0.24);
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.playground-status.is-idle { color: #8d9a94; }
+.playground-status.is-ok { color: #9fbf8c; }
+.playground-status.is-error { background: rgba(120, 38, 32, 0.28); color: #f0b4a6; }
+
+/* Developer entry on the main menu, under the title rule. Kept out of the nav: it is not part of
+   the game's offering, and it must not shift the menu's rhythm when it disappears in production. */
+.main-menu-playground {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 14px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 1px solid rgba(196, 158, 84, 0.38);
+  background: rgba(16, 17, 14, 0.82);
+  color: #cbc3a6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.45);
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.main-menu-playground:hover {
+  border-color: rgba(224, 190, 116, 0.72);
+  color: #f6e6b8;
+  transform: translateX(3px);
+}
+
+/* Playground — Phase 3 panels. */
+.playground-live {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+  background: rgba(196, 158, 84, 0.16);
+}
+
+.playground-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 6px;
+  background: rgba(14, 15, 13, 0.94);
+  overflow: hidden;
+}
+
+.playground-readout > span {
+  overflow: hidden;
+  color: #7f7a66;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.playground-readout > strong {
+  overflow: hidden;
+  color: #e4ddc2;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.playground-readout.is-busy > strong { color: #e6c46c; }
+.playground-readout.is-horde > strong { color: #d99a8c; }
+
+/* Only rendered once someone has won: a permanent "—" row would just be noise. */
+.playground-live-winner {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+  background: rgba(70, 26, 22, 0.5);
+  color: #f0c9a6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.playground-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.playground-note.is-warning {
+  border-left: 2px solid rgba(200, 150, 60, 0.7);
+  padding-left: 8px;
+  color: #d8b46a;
+}
+
+.playground-mini-input { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+
+.playground-mini-input > span {
+  color: #938d76;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playground-mini-input input {
+  width: 100%;
+  height: 26px;
+  border: 1px solid rgba(196, 158, 84, 0.32);
+  background: rgba(12, 13, 11, 0.9);
+  color: #f2e7c3;
+  font-size: 11px;
+  text-align: center;
+}
+
+.playground-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  padding: 7px 8px;
+}
+
+.playground-zone-title {
+  color: #938d76;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.playground-zone-entry { display: flex; align-items: center; gap: 6px; }
+
+.playground-zone-amount {
+  width: 42px;
+  height: 24px;
+  border: 1px solid rgba(196, 158, 84, 0.3);
+  background: rgba(12, 13, 11, 0.9);
+  color: #f2e7c3;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* The board list is a readout, not a form: the count is text, not an editable box. */
+.playground-zone-amount.is-static {
+  display: inline-flex;
+  width: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  border: 0;
+  background: none;
+  color: #7f7a66;
+  font-weight: 800;
+}
+
+.playground-zone-name { flex: 1 1 auto; overflow: hidden; color: #e4ddc2; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+
+.playground-zone-flag {
+  border: 1px solid rgba(196, 158, 84, 0.3);
+  padding: 1px 4px;
+  color: #b08a48;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playground-search,
+.playground-select {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid rgba(196, 158, 84, 0.32);
+  background: rgba(12, 13, 11, 0.9);
+  color: #f2e7c3;
+  font-size: 13px;
+}
+
+.playground-search:focus,
+.playground-select:focus { border-color: rgba(224, 190, 116, 0.72); outline: none; }
+
+.playground-result-count { color: #7f7a66; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.playground-results { display: flex; max-height: 380px; flex-direction: column; gap: 3px; overflow-y: auto; }
+
+.playground-result {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid transparent;
+  padding: 6px 8px;
+  background: rgba(18, 19, 16, 0.7);
+  text-align: left;
+  cursor: pointer;
+}
+
+.playground-result-text { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 1px; }
+.playground-result-text > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.playground-thumb {
+  display: flex;
+  height: 42px;
+  width: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(196, 158, 84, 0.28);
+  background: rgba(8, 9, 8, 0.9);
+}
+
+.playground-thumb.is-large { height: 64px; width: 64px; flex-basis: 64px; }
+.playground-thumb img { height: 100%; width: 100%; object-fit: cover; }
+.playground-thumb-fallback { color: #6f6a58; font-size: 15px; font-weight: 700; }
+
+.playground-selected-head { display: flex; align-items: center; gap: 10px; }
+
+.playground-result:hover { border-color: rgba(196, 158, 84, 0.32); }
+.playground-result.is-active { border-color: rgba(224, 190, 116, 0.7); background: rgba(120, 92, 38, 0.28); }
+
+.playground-result-name { color: #f2e7c3; font-size: 13px; font-weight: 600; }
+.playground-result-name > em { margin-left: 6px; color: #b08a48; font-size: 9px; font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; }
+.playground-result-meta { color: #938d76; font-size: 11px; }
+.playground-result-id { color: #6f6a58; font-size: 10px; }
+
+/* Sits above the result list: the buttons must be reachable without scrolling past the results. */
+.playground-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+  padding-bottom: 10px;
+}
+
+.playground-selected.playground-selected-layout {
+  display: grid;
+  min-height: 158px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  gap: 12px;
+  border-bottom: 0;
+  padding-bottom: 11px;
+}
+
+.playground-selected-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playground-selected-column .playground-inline-row {
+  margin-top: auto;
+  gap: 7px;
+}
+
+.playground-place-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.playground-place-controls > .playground-button {
+  grid-column: 1 / -1;
+}
+
+.playground-amount-control {
+  display: inline-flex;
+  grid-column: 2;
+  grid-row: 1;
+  align-items: center;
+  justify-self: end;
+  gap: 5px;
+  color: #b08a48;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.playground-amount-control input {
+  height: 28px;
+  width: 46px;
+  border: 1px solid rgba(196, 158, 84, 0.32);
+  background: rgba(12, 13, 11, 0.9);
+  color: #f2e7c3;
+  font-size: 11px;
+  text-align: right;
+}
+
+.playground-place-controls > .playground-checkbox {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.playground-selected-column .playground-button {
+  min-width: 0;
+}
+
+.playground-selected-column .playground-skeleton-field {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.playground-selected-column .playground-skeleton-field.is-narrow {
+  flex: 0 0 56px;
+}
+
+.playground-selected-head > div {
+  min-width: 0;
+}
+
+.playground-selected-head .playground-group-title,
+.playground-selected-head .playground-result-meta,
+.playground-selected-head .playground-result-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playground-inline-row { display: flex; align-items: flex-end; gap: 12px; }
+
+.playground-checkbox { display: flex; align-items: center; gap: 6px; color: #938d76; font-size: 12px; cursor: pointer; }
+
+.playground-selection-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  padding: 5px 8px;
+}
+
+.playground-selection-line > span {
+  color: #7f7a66;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.playground-selection-line > strong {
+  overflow: hidden;
+  color: #e4ddc2;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-selection-line.is-empty > strong { color: #6f6a58; font-weight: 500; font-style: italic; }
+
+.playground-selected.is-skeleton { pointer-events: none; opacity: 0.42; user-select: none; }
+
+.playground-skeleton-bar,
+.playground-skeleton-field {
+  display: block;
+  border: 1px solid rgba(196, 158, 84, 0.18);
+  background: rgba(196, 158, 84, 0.08);
+}
+
+.playground-skeleton-bar { height: 11px; width: 100%; margin: 3px 0; border-width: 0; }
+.playground-skeleton-bar.is-title { height: 15px; width: 60%; }
+.playground-skeleton-bar.is-short { width: 45%; }
+.playground-skeleton-field { height: 32px; width: 100%; }
+.playground-skeleton-field.is-narrow { width: 56px; }
+
+.playground-button.is-recording { border-color: rgba(190, 78, 62, 0.75); color: #f0b4a6; }
+.playground-button.is-recording svg { fill: currentColor; }
+
+.playground-steps { display: flex; flex-direction: column; gap: 2px; }
+
+.playground-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  padding: 4px 6px;
+  background: rgba(18, 19, 16, 0.7);
+}
+
+.playground-step.is-done { opacity: 0.45; }
+.playground-step.is-current { border-color: rgba(224, 190, 116, 0.7); background: rgba(120, 92, 38, 0.28); }
+
+.playground-step-index {
+  min-width: 20px;
+  color: #7f7a66;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.playground-step-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #e4ddc2;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-file-input { display: none; }
+
+.playground-library-list { display: flex; flex-direction: column; gap: 3px; }
+
+.playground-library-entry {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  padding: 5px 7px;
+  background: rgba(18, 19, 16, 0.7);
+}
+
+.playground-library-info { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; }
+.playground-library-info > strong { overflow: hidden; color: #f2e7c3; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.playground-library-info > span { color: #7f7a66; font-size: 10px; }
+
+.playground-library-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.playground-compact-button {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 7px;
+  border: 1px solid rgba(196, 158, 84, 0.3);
+  background: rgba(20, 21, 18, 0.85);
+  color: #cbc3a6;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-compact-button:hover {
+  border-color: rgba(224, 190, 116, 0.7);
+  color: #f6e6b8;
+}
+
+.playground-seed-row,
+.playground-save-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 7px;
+}
+
+.playground-seed-row .playground-field {
+  min-width: 0;
+}
+
+.playground-horde-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 7px;
+}
+
+.playground-horde-search {
+  position: relative;
+  min-width: 0;
+}
+
+.playground-horde-search-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 3px);
+  z-index: 30;
+  display: flex;
+  max-height: 190px;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  border: 1px solid rgba(196, 158, 84, 0.42);
+  padding: 3px;
+  background: #101109;
+  box-shadow: 0 12px 22px rgb(0 0 0 / 0.62);
+}
+
+.playground-result.is-compact {
+  min-height: 38px;
+  padding: 4px 7px;
+  color: #b08a48;
+}
+
+.playground-horde-queue {
+  display: flex;
+  max-height: 310px;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.playground-horde-queue .playground-library-entry {
+  padding-left: 3px;
+}
+
+.playground-horde-queue-card {
+  min-height: 54px;
+  padding: 5px 6px 5px 3px;
+  background: rgba(18, 19, 16, 0.78);
+}
+
+.playground-horde-queue-card .playground-thumb {
+  height: 42px;
+  width: 42px;
+  flex-basis: 42px;
+}
+
+.playground-horde-queue .playground-icon-button {
+  height: 24px;
+  width: 24px;
+}
+
+.playground-horde-grip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: #6f6a58;
+  cursor: grab;
+}
+
+.playground-horde-grip:active {
+  cursor: grabbing;
+}
+
+.playground-horde-queue .playground-library-entry.is-dragging {
+  opacity: 0.35;
+}
+
+.playground-horde-queue .playground-library-entry.is-drop-target {
+  border-color: rgba(224, 190, 116, 0.82);
+  background: rgba(120, 92, 38, 0.32);
+}
+
+.playground-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.playground-empty {
+  padding: 6px 2px;
+  color: #7f7a66;
+  font-size: 11px;
+}
+
+/* Detached Playground workbench. The old dock had to be narrow and float over the game; the
+   popup can use a real application layout with persistent navigation and a wider working area. */
+.playground-tools-layout {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: 148px minmax(0, 1fr);
+}
+
+.playground-tools-rail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 1px solid rgba(196, 158, 84, 0.22);
+  background:
+    linear-gradient(180deg, rgba(33, 31, 22, 0.96), rgba(13, 14, 11, 0.98)),
+    #101109;
+}
+
+.playground-tools-brand {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(196, 158, 84, 0.18);
+}
+
+.playground-tools-brand-mark {
+  display: inline-flex;
+  height: 34px;
+  width: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(210, 172, 91, 0.48);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 105, 42, 0.42), rgba(15, 16, 12, 0.9));
+  color: #dfbd71;
+  box-shadow: inset 0 0 12px rgba(226, 185, 92, 0.12);
+}
+
+.playground-tools-brand .playground-dock-title {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.playground-tools-rail .playground-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  border: 0;
+  padding: 12px 8px;
+}
+
+.playground-tools-rail .playground-tab {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 10px;
+  color: #8e8975;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+
+.playground-tools-rail .playground-tab:last-child { border-right: 1px solid transparent; }
+.playground-tools-rail .playground-tab svg { flex: 0 0 auto; opacity: 0.72; }
+.playground-tools-rail .playground-tab:hover { border-color: rgba(196, 158, 84, 0.18); background: rgba(196, 158, 84, 0.06); }
+.playground-tools-rail .playground-tab.is-active {
+  border-color: rgba(214, 177, 95, 0.34);
+  background: linear-gradient(90deg, rgba(134, 99, 37, 0.52), rgba(85, 64, 29, 0.16));
+  color: #f2e7c3;
+  box-shadow: inset 2px 0 #d1a856;
+}
+.playground-tools-rail .playground-tab.is-active svg { color: #e5bd68; opacity: 1; }
+
+.playground-tools-rail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  border-top: 1px solid rgba(196, 158, 84, 0.18);
+  padding: 9px 8px;
+}
+
+.playground-rail-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  background: rgba(15, 16, 13, 0.74);
+  color: #918b76;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-rail-button:hover { border-color: rgba(224, 190, 116, 0.56); color: #e9ddba; }
+
+.playground-tools-main {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 86% 0%, rgba(143, 105, 38, 0.08), transparent 34%),
+    linear-gradient(180deg, #15160f, #0f100c);
+}
+
+.playground-tools-main .playground-dock-header {
+  min-height: 86px;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(15, 16, 12, 0.62);
+}
+
+.playground-tools-heading { min-width: 0; }
+.playground-tools-heading .playground-dock-title { margin-top: 2px; font-size: 21px; line-height: 1.1; }
+.playground-tools-heading > p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #827d6a;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-tools-main .playground-launch {
+  display: flex;
+  width: min(260px, 44%);
+  flex: 0 0 auto;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+}
+
+.playground-tools-main .playground-launch-button {
+  min-height: 38px;
+  flex: 1 1 0;
+  padding: 0 10px;
+}
+
+.playground-tools-main .playground-live {
+  flex: 0 0 auto;
+  border-bottom-color: rgba(196, 158, 84, 0.2);
+}
+
+.playground-tools-main .playground-readout {
+  min-width: 0;
+  padding: 7px 10px;
+  background: rgba(10, 11, 9, 0.72);
+}
+
+.playground-tools-main .playground-readout > strong { font-size: 13px; }
+
+.playground-tools-main .playground-dock-body {
+  min-height: 0;
+  padding: 16px 18px 20px;
+}
+
+.playground-tools-main .playground-panel {
+  gap: 14px;
+}
+
+.playground-tools-main .playground-group {
+  gap: 10px;
+  border-color: rgba(196, 158, 84, 0.22);
+  padding: 13px 14px 14px;
+  background: rgba(22, 23, 18, 0.64);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.playground-dock-body.is-scenario .playground-panel,
+.playground-dock-body.is-actions .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.9fr) minmax(300px, 1.1fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-board .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(310px, 1.15fr) minmax(230px, 0.85fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-board .playground-panel > .playground-group:first-child {
+  grid-row: span 2;
+}
+
+.playground-dock-body.is-timeline .playground-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(300px, 1.15fr);
+  align-items: start;
+}
+
+.playground-dock-body.is-timeline .playground-panel > .playground-group:last-child {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+.playground-card-browser-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(150px, 0.8fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-card-browser-toolbar .playground-result-count {
+  grid-column: 1 / -1;
+}
+
+.playground-dock-body.is-cards .playground-results {
+  display: grid;
+  max-height: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  overflow: visible;
+}
+
+.playground-dock-body.is-cards .playground-result {
+  min-height: 58px;
+  height: 100%;
+}
+
+.playground-dock-body.is-scenario .playground-horde-queue { max-height: 520px; }
+.playground-dock-body.is-board .playground-library-list,
+.playground-dock-body.is-timeline .playground-library-list,
+.playground-dock-body.is-timeline .playground-steps {
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+@media (max-width: 660px) {
+  .playground-tools-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .playground-tools-rail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(196, 158, 84, 0.22);
+  }
+
+  .playground-tools-brand {
+    min-height: 54px;
+    border: 0;
+    padding: 7px 10px;
+  }
+
+  .playground-tools-brand-mark { height: 30px; width: 30px; flex-basis: 30px; }
+  .playground-tools-brand > div { display: none; }
+
+  .playground-tools-rail .playground-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 6px 4px;
+  }
+
+  .playground-tools-rail .playground-tab {
+    min-height: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .playground-tools-rail .playground-tab > span { display: none; }
+  .playground-tools-rail .playground-tab.is-active { box-shadow: inset 0 -2px #d1a856; }
+
+  .playground-tools-rail-actions {
+    align-self: stretch;
+    border-top: 0;
+    border-left: 1px solid rgba(196, 158, 84, 0.18);
+    padding: 6px;
+  }
+
+  .playground-rail-button { min-height: 20px; width: 30px; }
+  .playground-rail-button > span { display: none; }
+
+  .playground-tools-main .playground-dock-header { min-height: 74px; padding: 10px 12px; }
+  .playground-tools-heading .playground-dock-title { font-size: 18px; }
+  .playground-tools-heading > p { display: none; }
+  .playground-tools-main .playground-launch { width: min(230px, 52%); }
+  .playground-tools-main .playground-launch-button { min-height: 34px; font-size: 9px; }
+  .playground-tools-main .playground-dock-body { padding: 12px; }
+
+  .playground-dock-body.is-scenario .playground-panel,
+  .playground-dock-body.is-actions .playground-panel,
+  .playground-dock-body.is-board .playground-panel,
+  .playground-dock-body.is-timeline .playground-panel {
+    display: flex;
+  }
+
+  .playground-dock-body.is-cards .playground-results {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

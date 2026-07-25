@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -10,8 +10,14 @@ import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
+import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
+import { openPlaygroundToolsWindow } from "./playground/toolsWindow";
+
+// Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
+// statically eliminated, so the chunk is still emitted — production simply never requests it.
+const PlaygroundScreen = lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })));
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -20,7 +26,7 @@ export default function App() {
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
-  const [screen, setScreen] = useState<"start" | "deckInspector" | "game">("start");
+  const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground">("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
   const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
@@ -33,6 +39,7 @@ export default function App() {
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
+  const playgroundToolsWindowRef = useRef<Window | null>(null);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
     hordeName: string;
@@ -40,6 +47,9 @@ export default function App() {
     gameMode: GameMode;
     tutorial: boolean;
   } | null>(null);
+  const handlePlaygroundToolsWindowChange = useCallback((popup: Window | null) => {
+    playgroundToolsWindowRef.current = popup;
+  }, []);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -110,7 +120,7 @@ export default function App() {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealTimeout = window.setTimeout(() => {
       if (launchTransition.tutorial) {
-        playCollection("battleTheme1");
+        playCollection("zombiesBattle1");
       } else {
         startBattleMusic(true);
       }
@@ -135,6 +145,29 @@ export default function App() {
       gameMode={launchTransition.gameMode}
     />
   ) : null;
+
+  if (screen === "playground" && IS_DEV) {
+    return (
+      // A plain dark hold, not the game's loading screen: the playground chunk resolves in a frame
+      // or two, and flashing the full boot art on the way into a developer tool reads like the game
+      // is starting over.
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioClickListener />
+        <PlaygroundScreen
+          initialToolsWindow={playgroundToolsWindowRef.current}
+          onToolsWindowChange={handlePlaygroundToolsWindowChange}
+          onReturnToMenu={() => {
+            const popup = playgroundToolsWindowRef.current;
+            if (popup && !popup.closed) popup.close();
+            playgroundToolsWindowRef.current = null;
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
 
   if (screen === "deckInspector") {
     return (
@@ -186,6 +219,11 @@ export default function App() {
             setPlayerName(name);
             setRequestInitialName(false);
           }}
+          onOpenPlayground={IS_DEV ? () => {
+            playgroundToolsWindowRef.current = openPlaygroundToolsWindow(playgroundToolsWindowRef.current);
+            stopMusic();
+            setScreen("playground");
+          } : undefined}
           onRestartFirstTime={() => {
             setScreen("start");
             setMenuReturnScreen("home");

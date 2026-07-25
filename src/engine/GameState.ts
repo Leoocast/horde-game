@@ -1,4 +1,5 @@
 import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
+import { buildHordeRules } from "./HordeRules";
 import { emptyManaPool } from "./ManaSystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
@@ -62,6 +63,7 @@ export function createInitialGame(
     seed,
     difficulty,
     gameMode,
+    hordeRules: buildHordeRules(activeHordeDeck.rulesProfile),
     chaosMutations,
     currentRandomState: randomState,
     hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),

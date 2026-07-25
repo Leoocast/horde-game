@@ -33,6 +33,12 @@ Tests deterministas del engine:
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
 ```
 
+Deck lint (valida los JSON de decks contra el vocabulario real del engine y reporta cartas WIP):
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\lint-decks.mjs
+```
+
 Build completo:
 
 ```powershell
@@ -65,13 +71,18 @@ src/
     StaticEffects.ts      stats y filtros
 
   store/
-    useGameStore.ts       puente UI/engine, animaciones secuenciadas
+    useGameStore.ts       puente UI/engine: acciones, targeting, secuencia de combate del player
+    hordeBeats.ts         sistema de beats de la Horda (handlers, aura estatica, epoch de secuencia)
+    smallpoxSequence.ts   secuencia interactiva bespoke de Smallpox
+    presentationEffects.ts helpers compartidos: uiText/uiCardName, toasts, SFX policy, buff/flash beats, discard/mill diffs
     useAudioStore.ts      SFX y musica
     useToastStore.ts      notificaciones
 
   components/
     Board.tsx
     Battlefield.tsx       layout principal del campo
+    battlefieldLayout.ts  reglas PURAS de layout del campo: agrupado en stacks, orden de fila y
+                          slots sostenidos durante la secuencia de la Horda (testeado)
     Card.tsx              render visual de carta, badges y hover
     Hand.tsx              mano, drag-to-play
     PhaseOrb.tsx          boton central de accion
@@ -89,20 +100,32 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck Alpha 0.0.3 del player
+        mono_green_ramp/  deck Alpha 0.0.3 del player (JSON + manifest de imagenes)
       horde/
-        zombies/          deck activo por defecto de la Horda
+        zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
-    decks.ts              registra los tres decks y expone getPlayerDeck/getHordeDeck por id
-    normalizeDeck.ts      adapta el nuevo JSON del deck al engine viejo
+    decks.ts              DECK_REGISTRY: unico punto de registro; agregar deck = una linea register(...)
+    deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
+    normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
+    deckLint.ts           lint de decks: valida cada habilidad contra el vocabulario del engine
+
+  engine/
+    effectVocabulary.ts   vocabulario del engine para el lint; los effect types derivan del registro de EffectResolver
+    HordeRules.ts         DEFAULT_HORDE_RULES + buildHordeRules: reglas por deck de horda (reveal, surge, mill, haste, swarm)
 
 scripts/
-  run-engine-tests.mjs    corre tests/engine.test.js via vite ssrLoadModule + node:test
+  run-engine-tests.mjs    corre los tests via vite ssrLoadModule + node:test; agregar un archivo
+                          de test = agregar su ssrLoadModule aca, o no corre nunca
+  lint-decks.mjs          corre el deck lint standalone con reporte por deck (ready/vanilla/WIP)
 
 tests/
   engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
+  deckLint.test.js        el lint como test: un hueco silencioso en un deck JSON rompe la suite
+  battlefieldLayout.test.js  layout del campo: slots sostenidos y agrupado congelado
   engineTestUtils.js      helpers para armar game state de prueba
 ```
+
+Detalle de testing en `docs/testing.md`.
 
 ## Estado actual del juego
 
@@ -265,24 +288,22 @@ Keywords:
 
 ## Decks e imagenes
 
-Deck viejo MVP:
-- `player_deck.json`
-- `horde_deck.json`
-- `cardImageLookups.json`
+Ya NO existe formato viejo ni JSONs legacy (`player_deck.json`, `horde_deck.json` y `cardImageLookups.json` fueron eliminados). Los tres decks usan el mismo esquema authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
-Estos estan deprecated para el player Alpha.
+- player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
+- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
+- horde: `goblin_assault_horde` — seleccionable; sus habilidades de lords sin handler estan marcadas `engineSupport: "pending"`
 
-Deck actual del player:
-- `src/data/decks/player/mono_green_ramp/mono_green_ramp.json`
-- `src/data/decks/player/mono_green_ramp/mono_green_ramp_images.json`
+Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
 
-`src/data/decks.ts` registra los tres decks disponibles:
-- player: `normalizeDeck(monoGreenRampRaw)` (`mono_green_ramp`, `DEFAULT_PLAYER_DECK_ID`)
-- horde: `horde-zombies.json` sin normalizar (`horde_zombies`, `DEFAULT_HORDE_DECK_ID`)
-- horde: `normalizeDeck(goblinHordeRaw)` (`goblin_assault_horde`) — **ya es un deck de Horda seleccionable, no solo de inspector**; tiene mas `engineSupportNeeded` sin resolver (target flexible player/criatura/planeswalker, "must attack if able", conteo de goblins atacantes, etc.), asi que varias habilidades de sus cartas legendarias/lords todavia no tienen handler real
-- `getPlayerDeck(id)` / `getHordeDeck(id)` devuelven el deck por id con fallback al default
+`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una linea `register(label, raw, images)`. De ahi derivan el deck del engine, el inspector (`deckCatalog.ts`) y los lookups de imagenes (`cardImages.ts`). Cada deck lleva su manifest de imagenes junto al JSON.
 
-La nueva estructura de imagenes del deck debe ser la base para el inspector.
+Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
+- `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".
+- `"ignored"`: deliberadamente no implementada en este modo (p.ej. dar HASTE a la Horda).
+- `"custom"`: resuelta por un camino bespoke fuera del resolver generico (p.ej. Smallpox).
+
+Sin marcador = la habilidad debe validar completa contra el vocabulario del engine, o el lint (y la suite de tests) fallan. Nunca dejar que una carta "no haga nada" en silencio.
 
 ## Cartas / efectos ya tratados
 
@@ -551,6 +572,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 6. No usar parser de texto de Magic.
 7. No reintroducir features viejas de MVP si el usuario las limpio.
 8. Probar con `tsc -b` despues de cambios.
+9. Si una regla visual tiene logica de verdad (que carta va en que stack, que slot se sostiene), sacarla del componente a un modulo puro y testearla. Ver `battlefieldLayout.ts` y `docs/testing.md`.
+10. Al arreglar un bug reproducible en logica pura: escribir el test primero y confirmar que falla contra el codigo viejo antes de aplicar el arreglo.
 
 ## Cosas que el usuario suele preferir
 
@@ -563,7 +586,15 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; falta cerrar varios `engineSupportNeeded` de ese JSON antes de darlo por completo.
+- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`).
+- `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
+- Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
+- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`) mas los del tutorial/developer seed.
+- Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
+- Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
+- Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
+- `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
 - `Graf Harvest` se fuerza al top de la Horda en developer mode.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.

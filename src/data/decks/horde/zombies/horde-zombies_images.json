@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "0.2.0",
+  "provider": "scryfall",
+  "defaults": {
+    "imageSize": "normal",
+    "face": "front",
+    "cacheKey": "deck-card-images:v1"
+  },
+  "cards": {
+    "zombie_token": {
+      "source": "legacyLookupUrl",
+      "exact": "Zombie Token",
+      "lookupUrl": "https://api.scryfall.com/cards/search?q=%21%22Zombie%22+t%3Atoken+pow%3D2+tou%3D2+-is%3Adfc",
+      "imagePath": "data[0].image_uris.normal",
+      "fallbackImagePath": "image_uris.large",
+      "imageUrl": "https://cards.scryfall.io/normal/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525"
+    },
+    "zombie_giant_token": {
+      "source": "legacyLookupUrl",
+      "exact": "Zombie Giant Token",
+      "lookupUrl": "https://api.scryfall.com/cards/search?q=%21%22Zombie+Giant%22+t%3Atoken+pow%3D5+tou%3D5+-is%3Adfc",
+      "imagePath": "data[0].image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "graf_harvest": {
+      "source": "legacyLookupUrl",
+      "exact": "Graf Harvest",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Graf%20Harvest",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "noosegraf_mob": {
+      "source": "legacyLookupUrl",
+      "exact": "Noosegraf Mob",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Noosegraf%20Mob",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "rottenheart_ghoul": {
+      "source": "legacyLookupUrl",
+      "exact": "Rottenheart Ghoul",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Rottenheart%20Ghoul",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "miasmic_mummy": {
+      "source": "legacyLookupUrl",
+      "exact": "Miasmic Mummy",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Miasmic%20Mummy",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "smallpox": {
+      "source": "legacyLookupUrl",
+      "exact": "Smallpox",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Smallpox",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "blighted_bat": {
+      "source": "legacyLookupUrl",
+      "exact": "Blighted Bat",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Blighted%20Bat",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "stitchwing_skaab": {
+      "source": "legacyLookupUrl",
+      "exact": "Stitchwing Skaab",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Stitchwing%20Skaab",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "advanced_stitchwing": {
+      "source": "legacyLookupUrl",
+      "exact": "Advanced Stitchwing",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Advanced%20Stitchwing",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "crow_of_dark_tidings": {
+      "source": "legacyLookupUrl",
+      "exact": "Crow of Dark Tidings",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Crow%20of%20Dark%20Tidings",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "cursed_minotaur": {
+      "source": "legacyLookupUrl",
+      "exact": "Cursed Minotaur",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Cursed%20Minotaur",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "thraben_foulbloods": {
+      "source": "legacyLookupUrl",
+      "exact": "Thraben Foulbloods",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Thraben%20Foulbloods",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "hound_of_the_farbogs": {
+      "source": "legacyLookupUrl",
+      "exact": "Hound of the Farbogs",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Hound%20of%20the%20Farbogs",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "rancid_rats": {
+      "source": "legacyLookupUrl",
+      "exact": "Rancid Rats",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Rancid%20Rats",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "gavony_unhallowed": {
+      "source": "legacyLookupUrl",
+      "exact": "Gavony Unhallowed",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Gavony%20Unhallowed",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    },
+    "diregraf_captain": {
+      "source": "legacyLookupUrl",
+      "exact": "Diregraf Captain",
+      "lookupUrl": "https://api.scryfall.com/cards/named?exact=Diregraf%20Captain",
+      "imagePath": "image_uris.normal",
+      "fallbackImagePath": "image_uris.large"
+    }
+  }
+}

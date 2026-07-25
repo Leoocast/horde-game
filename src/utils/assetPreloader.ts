@@ -1,7 +1,13 @@
 import { audioEngine } from "../audio/AudioEngine";
-import type { MusicCollectionId } from "../audio/musicManifest";
+import { menuThemeIds, type MusicCollectionId } from "../audio/musicManifest";
 
-const CRITICAL_MUSIC: MusicCollectionId[] = ["mainMenuTheme", "winTheme", "lossTheme", "battleTheme1", "battleTheme3"];
+const CRITICAL_MUSIC: MusicCollectionId[] = [
+  ...menuThemeIds,
+  "winTheme",
+  "lossTheme",
+  "zombiesBattle1",
+  "goblinsBattle1",
+];
 
 export type LoadingLabel = "opening" | "sfx" | "music" | "ready";
 

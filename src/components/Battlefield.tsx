@@ -15,6 +15,7 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
+import { groupBattlefieldCopies, holdCombatCasualties, isSwarmToken, type GroupMeta } from "./battlefieldLayout";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -117,16 +118,21 @@ export function Battlefield({ game, side, cards }: Props) {
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
   const battlefieldFamilyOrder = useRef<Map<string, number>>(new Map());
-  const zombieWaveByCardId = useRef<Map<string, number>>(new Map());
-  const zombieWaveOrder = useRef<Map<number, number>>(new Map());
+  const swarmWaveByCardId = useRef<Map<string, number>>(new Map());
+  const swarmWaveOrder = useRef<Map<number, number>>(new Map());
+  const battlefieldGroupKeys = useRef<Map<string, string>>(new Map());
+  const battlefieldGroupMeta = useRef<Map<string, GroupMeta>>(new Map());
+  const combatCasualties = useRef<Map<string, CardInstance>>(new Map());
+  const previousCards = useRef<CardInstance[]>(cards);
   const nextBattlefieldOrder = useRef(0);
-  const nextZombieWaveId = useRef(0);
-  const currentZombieEntryWaveId = useRef<number | undefined>(undefined);
-  const currentZombieEntryWaveTurn = useRef<number | undefined>(undefined);
+  const nextSwarmWaveId = useRef(0);
+  const currentSwarmEntryWaveId = useRef<number | undefined>(undefined);
+  const currentSwarmEntryWaveTurn = useRef<number | undefined>(undefined);
   const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
+  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
   const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
   const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
@@ -147,6 +153,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
+  const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
+  const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
   const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
   const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
@@ -175,9 +184,17 @@ export function Battlefield({ game, side, cards }: Props) {
   const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
 
-  const creatures = cards.filter((card) => card.cardTypes.includes("Creature"));
-  const lands = cards.filter((card) => card.cardTypes.includes("Land"));
-  const others = cards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
+  // Combat casualties leave game state the instant their impact lands, so their triggers can
+  // resolve in sequence. Removing them from the row right then would re-center every survivor
+  // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
+  // let them all leave at once. This covers both animated Horde combat and the Horde's own
+  // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
+  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0;
+  const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
+  const casualtyIds = combatCasualties.current;
+  const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
+  const lands = displayedCards.filter((card) => card.cardTypes.includes("Land"));
+  const others = displayedCards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
   const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
   const storedManaCount = game.player.manaPool.colorless;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
@@ -188,6 +205,17 @@ export function Battlefield({ game, side, cards }: Props) {
     stored?: EnergyTrackTransition;
   }>({});
   const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+  // The Horde attacks with everything able, every turn. Declaring is a rules step that only runs
+  // after summons and enter triggers, but the board should read as committed from the moment the
+  // creatures land: they arrive already leaning with their attack chevron, and the effects then
+  // play over a board that has stopped moving. Visual only — nothing here declares an attacker.
+  const hordeAttackPending =
+    side === "horde" &&
+    game.activeSide === "horde" &&
+    (game.phase === "horde" || game.phase === "combat") &&
+    game.combat.hordeAttackers.length === 0 &&
+    !resolvingHordeCombat &&
+    !game.winner;
   const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
   const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
@@ -649,12 +677,15 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const definitionId of battlefieldFamilyOrder.current.keys()) {
       if (!activeDefinitionIds.has(definitionId)) battlefieldFamilyOrder.current.delete(definitionId);
     }
-    for (const instanceId of zombieWaveByCardId.current.keys()) {
-      if (!activeCardIds.has(instanceId)) zombieWaveByCardId.current.delete(instanceId);
+    for (const instanceId of swarmWaveByCardId.current.keys()) {
+      if (!activeCardIds.has(instanceId)) swarmWaveByCardId.current.delete(instanceId);
     }
-    const activeZombieWaveIds = new Set(zombieWaveByCardId.current.values());
-    for (const waveId of zombieWaveOrder.current.keys()) {
-      if (!activeZombieWaveIds.has(waveId)) zombieWaveOrder.current.delete(waveId);
+    for (const instanceId of battlefieldGroupKeys.current.keys()) {
+      if (!activeCardIds.has(instanceId)) battlefieldGroupKeys.current.delete(instanceId);
+    }
+    const activeSwarmWaveIds = new Set(swarmWaveByCardId.current.values());
+    for (const waveId of swarmWaveOrder.current.keys()) {
+      if (!activeSwarmWaveIds.has(waveId)) swarmWaveOrder.current.delete(waveId);
     }
 
     for (const card of rowCards) {
@@ -663,17 +694,17 @@ export function Battlefield({ game, side, cards }: Props) {
         battlefieldCardOrder.current.set(card.instanceId, entryOrder);
         nextBattlefieldOrder.current += 1;
 
-        if (isZombieToken(card)) {
-          if (currentZombieEntryWaveId.current === undefined || currentZombieEntryWaveTurn.current !== game.turnNumber) {
-            currentZombieEntryWaveId.current = nextZombieWaveId.current;
-            nextZombieWaveId.current += 1;
-            currentZombieEntryWaveTurn.current = game.turnNumber;
-            zombieWaveOrder.current.set(currentZombieEntryWaveId.current, entryOrder);
+        if (isSwarmToken(card)) {
+          if (currentSwarmEntryWaveId.current === undefined || currentSwarmEntryWaveTurn.current !== game.turnNumber) {
+            currentSwarmEntryWaveId.current = nextSwarmWaveId.current;
+            nextSwarmWaveId.current += 1;
+            currentSwarmEntryWaveTurn.current = game.turnNumber;
+            swarmWaveOrder.current.set(currentSwarmEntryWaveId.current, entryOrder);
           }
-          zombieWaveByCardId.current.set(card.instanceId, currentZombieEntryWaveId.current);
+          swarmWaveByCardId.current.set(card.instanceId, currentSwarmEntryWaveId.current);
         } else {
-          currentZombieEntryWaveId.current = undefined;
-          currentZombieEntryWaveTurn.current = undefined;
+          currentSwarmEntryWaveId.current = undefined;
+          currentSwarmEntryWaveTurn.current = undefined;
         }
       }
       if (!battlefieldFamilyOrder.current.has(card.definitionId)) {
@@ -686,9 +717,15 @@ export function Battlefield({ game, side, cards }: Props) {
       rowCards,
       battlefieldCardOrder.current,
       battlefieldFamilyOrder.current,
-      zombieWaveByCardId.current,
-      zombieWaveOrder.current,
+      swarmWaveByCardId.current,
+      swarmWaveOrder.current,
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
+      battlefieldGroupKeys.current,
+      battlefieldGroupMeta.current,
+      // Freeze grouping for the whole Horde sequence — combat impacts AND trigger/aura beats.
+      // The aura beat window (e.g. Graf Harvest announcing Menace before attackers declare)
+      // regrouped rows mid-turn when it sat outside the frozen span.
+      holdCasualties,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
@@ -727,7 +764,10 @@ export function Battlefield({ game, side, cards }: Props) {
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
     const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
-    const attacking = game.combat.playerAttackers.includes(card.instanceId) || game.combat.hordeAttackers.includes(card.instanceId);
+    const attacking =
+      game.combat.playerAttackers.includes(card.instanceId) ||
+      game.combat.hordeAttackers.includes(card.instanceId) ||
+      (hordeAttackPending && canAttack(game, card));
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
@@ -760,6 +800,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       tutorialAwaitingContinue ||
+      casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "horde") ||
@@ -797,7 +838,10 @@ export function Battlefield({ game, side, cards }: Props) {
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
         (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk" && legalBlocker) || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
     );
-    const visuallyDead = hordeCombatDeadCardIds.includes(card.instanceId);
+    // A ghost is a card already gone from game state whose slot is held until combat ends. It
+    // must keep reading as dead even after hordeCombatDeadCardIds is cleared for the next impact.
+    const isCombatGhost = casualtyIds.has(card.instanceId);
+    const visuallyDead = isCombatGhost || hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
     const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
@@ -866,7 +910,7 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
-          card.tapped ? "battlefield-layout-slot-tapped" : "",
+          card.tapped || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
           card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
@@ -893,6 +937,7 @@ export function Battlefield({ game, side, cards }: Props) {
           effectActive ? "effect-card-lifted" : "",
           effectClosing ? "effect-card-closing" : "",
           effectActivating ? "effect-card-activating" : "",
+          burnSourceCardId === card.instanceId ? "burn-source-casting" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
           smallpoxTargetable ? "counter-targetable-card" : "",
@@ -906,6 +951,9 @@ export function Battlefield({ game, side, cards }: Props) {
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
       {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
+      {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
+      {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
+      {burnImpactCardId === card.instanceId && <span key={`burn-${burnImpactEventId}`} className="burn-card-scorch-flash" aria-hidden="true" />}
       {isOtherPermanent && newlyArrived && <span className="other-permanent-arrival-glow" aria-hidden="true" />}
       <Card
         game={game}
@@ -1159,64 +1207,6 @@ export function Battlefield({ game, side, cards }: Props) {
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
   }
-}
-
-function groupBattlefieldCopies(
-  game: GameState,
-  cards: CardInstance[],
-  cardOrder: Map<string, number>,
-  familyOrder: Map<string, number>,
-  zombieWaveByCardId: Map<string, number>,
-  zombieWaveOrder: Map<number, number>,
-  keepSeparateCardIds?: Set<string>,
-): Array<{ key: string; cards: CardInstance[] }> {
-  const groups = new Map<string, { cards: CardInstance[]; order: number; suborder: number }>();
-  const stackZombieTokens = cards.length > 7;
-
-  for (const card of cards) {
-    const zombieToken = isZombieToken(card);
-    const stats = cardStatState(game, card);
-    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
-    const zombieWaveId = zombieWaveByCardId.get(card.instanceId);
-    const groupingKey =
-      keepSeparateCardIds?.has(card.instanceId)
-        ? `pending-trigger-${card.instanceId}`
-        : zombieToken && !stackZombieTokens
-        ? `instance-${card.instanceId}`
-        : zombieToken
-          ? `zombie-wave-${zombieWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
-          : `copy-${card.definitionId}-${visualStatsKey}`;
-    const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
-    const order = zombieToken
-      ? zombieWaveId === undefined
-        ? instanceOrder
-        : (zombieWaveOrder.get(zombieWaveId) ?? instanceOrder)
-      : (familyOrder.get(card.definitionId) ?? instanceOrder);
-    const group = groups.get(groupingKey);
-    if (group) {
-      group.cards.push(card);
-      group.suborder = Math.min(group.suborder, instanceOrder);
-    } else {
-      groups.set(groupingKey, { cards: [card], order, suborder: instanceOrder });
-    }
-  }
-
-  return Array.from(groups.values())
-    .sort((left, right) => left.order - right.order || left.suborder - right.suborder)
-    .map(({ cards: groupedCards }) => {
-      // The visual grouping criteria can change when a trigger alters a creature's stats.
-      // Anchor the React key to the oldest member instead of those volatile stats; otherwise
-      // a newly-cast base copy can inherit the old group's key while the existing buffed copy
-      // is remounted in a new group, which looks like a brief stack-then-destack jump.
-      const anchor = groupedCards.reduce((oldest, card) =>
-        (cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER) < (cardOrder.get(oldest.instanceId) ?? Number.MAX_SAFE_INTEGER) ? card : oldest,
-      );
-      return { key: `anchor-${anchor.instanceId}`, cards: groupedCards };
-    });
-}
-
-function isZombieToken(card: CardInstance): boolean {
-  return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
 
 function flyingIdleVariables(instanceId: string): CSSProperties {

@@ -2,7 +2,7 @@ import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { prepareHordeAttackers } from "./CombatResolver";
-import { HORDE_MINI_SURGE_TURN, hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
+import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
 import { releasePendingStoredMana } from "./ManaSystem";
 
@@ -12,6 +12,7 @@ type HordeMainOptions = {
 
 export function runHordeMain(game: GameState, options: HordeMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
+  const rules = next.hordeRules;
   const wasInSurge = hordeInSurge(next);
   next.hordeTurnNumber += 1;
   next.activeSide = "horde";
@@ -20,25 +21,52 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   untapSide(next, "horde");
   next.log.unshift("Horde untaps.");
   revealNormal(next, options);
-  if (next.hordeTurnNumber === HORDE_MINI_SURGE_TURN) {
-    next.log.unshift(`Horde Mini Surge on turn ${HORDE_MINI_SURGE_TURN} reveals 1 extra card.`);
-    revealAndPlay(next, 1, options);
+  if (next.hordeTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
+    next.log.unshift(`Horde Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
+    revealAndPlay(next, rules.miniSurgeExtraReveals, options);
   }
   if (hordeInSurge(next)) {
     next.log.unshift(
       wasInSurge
-        ? "Horde Surge reveals 2 extra cards. Horde Zombies have +1/+0."
-        : `Horde enters Surge on turn ${hordeSurgeTurn(next)}, reveals 2 extra cards, and its Zombies get +1/+0 from now on.`,
+        ? `Horde Surge reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " have ")}`
+        : `Horde enters Surge on turn ${hordeSurgeTurn(next)} and reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " get ")}`,
     );
-    revealAndPlay(next, 2, options);
+    revealAndPlay(next, rules.surgeExtraReveals, options);
   }
   if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
   return next;
 }
 
+function surgeBonusText(game: GameState, verb: string): string {
+  const bonus = game.hordeRules.surgeBonus;
+  if (!bonus) return "";
+  const sign = (value: number) => `${value >= 0 ? "+" : ""}${value}`;
+  return ` Horde ${bonus.subtypes.join("/")}s${verb}${sign(bonus.power)}/${sign(bonus.toughness)}.`;
+}
+
 export function runFullHordeTurn(game: GameState): GameState {
   let next = runHordeMain(game);
   next = prepareHordeAttackers(next);
+  return next;
+}
+
+/**
+ * Reveals and plays exactly ONE card off the top of the Horde library, through the same path the
+ * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No untap, no reveal count,
+ * no surge, no combat: this is a single card entering play, not a turn.
+ *
+ * Only the Playground needs it. A match never plays one Horde card in isolation, but a lab does:
+ * putting a card on the board to look at it must not drag a whole Horde turn along with it.
+ */
+export function revealHordeCardFromTop(game: GameState, options: HordeMainOptions = {}): GameState {
+  const next = structuredClone(game) as GameState;
+  if (next.horde.library.length === 0) {
+    next.lastActionResult = { ok: false, reason: "The Horde library is empty." };
+    return next;
+  }
+  revealAndPlayOne(next, options);
+  if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
+  next.lastActionResult = { ok: true };
   return next;
 }
 
@@ -55,10 +83,10 @@ export function finishHordeTurn(game: GameState): GameState {
 
 function revealNormal(game: GameState, options: HordeMainOptions): void {
   let played = 0;
-  while (played < 3 && game.horde.library.length > 0) {
+  while (played < game.hordeRules.revealCount && game.horde.library.length > 0) {
     const card = revealAndPlayOne(game, options);
     played += 1;
-    if (card && !card.isToken) {
+    if (game.hordeRules.stopOnNonToken && card && !card.isToken) {
       game.log.unshift(`Horde reveals ${card.name} and stops revealing.`);
       break;
     }

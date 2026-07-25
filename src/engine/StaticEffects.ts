@@ -1,12 +1,7 @@
 import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
-export const HORDE_SURGE_TURN = 10;
-export const CHAOS_HORDE_SURGE_TURN = 8;
-export const HORDE_MINI_SURGE_TURN = 6;
-export const HORDE_SURGE_ZOMBIE_POWER_BONUS = 1;
-
 export function hordeSurgeTurn(game: GameState): number {
-  return game.gameMode === "chaos" ? CHAOS_HORDE_SURGE_TURN : HORDE_SURGE_TURN;
+  return game.gameMode === "chaos" ? game.hordeRules.surgeTurnChaos : game.hordeRules.surgeTurn;
 }
 
 export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: CardInstance): boolean {
@@ -46,13 +41,16 @@ export function getPowerToughness(
   let power = card.basePower + (card.counters["+1/+1"] ?? 0) + card.temporaryPower;
   let toughness = card.baseToughness + (card.counters["+1/+1"] ?? 0) + card.temporaryToughness;
 
+  const surgeBonus = game.hordeRules.surgeBonus;
   if (
+    surgeBonus &&
     hordeInSurge(game) &&
     card.controller === "horde" &&
     card.cardTypes.includes("Creature") &&
-    card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie")
+    card.subtypes.some((subtype) => surgeBonus.subtypes.some((bonusSubtype) => bonusSubtype.toLowerCase() === subtype.toLowerCase()))
   ) {
-    power += HORDE_SURGE_ZOMBIE_POWER_BONUS;
+    power += surgeBonus.power;
+    toughness += surgeBonus.toughness;
   }
 
   for (const source of [...game.player.battlefield, ...game.horde.battlefield]) {

@@ -31,6 +31,7 @@ import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
+import { BurnAnimator } from "./BurnAnimator";
 
 type Props = {
   playerName: string;
@@ -45,6 +46,13 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
+  const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
+  // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
+  // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
+  // blocker below would swallow those clicks, so drop it while a Smallpox selection is pending — the
+  // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
+  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
@@ -76,6 +84,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} /> : undefined}
         setupTurns={setupTurns}
+        elevated={!game.openingHandAccepted}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -93,7 +102,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <HandLimitOverlay game={game} />
       <PlayerAttackAnimator />
       <SpellFightAnimator />
-      {hordeAutoTriggerCount > 0 && <div data-audio-click="off" className="fixed inset-0 z-[79]" />}
+      <BurnAnimator />
+      {(hordeAutoTriggerCount > 0 || burnAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
