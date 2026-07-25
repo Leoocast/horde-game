@@ -26,8 +26,8 @@ Archivos autoritativos:
 - `src/data/deckLint.ts`: comprueba lo que realmente sobrevive a la normalización.
 - `tests/engine.test.js`: ejemplos ejecutables de reglas ya soportadas.
 
-No usar `player_deck.json` ni `horde_deck.json` de la raíz. Son restos del MVP y ningún archivo de
-`src/` los importa.
+`player_deck.json` y `horde_deck.json` fueron eliminados. No recrearlos: los decks viven bajo
+`src/data/decks/`.
 
 ## Antes de escribir JSON
 

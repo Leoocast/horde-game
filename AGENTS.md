@@ -58,8 +58,7 @@ Verifica por tipos y tests.
 - [`docs/goblin_cards.md`](docs/goblin_cards.md) — estado del deck de goblins.
 - [`docs/game_context_for_lore_ai.md`](docs/game_context_for_lore_ai.md) — contexto narrativo.
 
-## Deuda conocida
+## Formato legacy eliminado
 
-`player_deck.json` y `horde_deck.json` siguen en la raiz del repo pero **ningun archivo de `src/`
-los importa**. Son restos del MVP viejo; no los uses como referencia. Borrarlos es decision del
-usuario.
+`player_deck.json` y `horde_deck.json` fueron eliminados. Los decks vigentes viven únicamente bajo
+`src/data/decks/`.

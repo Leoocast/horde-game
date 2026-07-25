@@ -139,5 +139,5 @@ Las limitaciones concretas y el proceso para ampliar efectos, triggers, targets,
 presentación están documentados en `docs/adding_cards.md`. El comando
 `node scripts/lint-decks.mjs` es la fuente actual para saber qué cartas siguen WIP.
 
-Los archivos `player_deck.json` y `horde_deck.json` de la raíz no forman parte de este formato y no
-son importados por `src/`.
+Los antiguos `player_deck.json` y `horde_deck.json` de la raíz fueron eliminados. No recrearlos:
+este directorio es la única ubicación de los decks vigentes.

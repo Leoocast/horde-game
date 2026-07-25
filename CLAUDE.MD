@@ -290,11 +290,9 @@ Keywords:
 
 ## Decks e imagenes
 
-El runtime ya no usa el formato viejo. `player_deck.json` y `horde_deck.json` todavía existen en la
-raíz como restos del MVP, pero ningún archivo de `src/` los importa: no editarlos ni usarlos como
-referencia. `cardImageLookups.json` sí fue eliminado. Los tres decks vigentes usan el mismo esquema
-authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por
-`normalizeDeck`:
+El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
+`cardImageLookups.json`. Los tres decks vigentes usan el mismo esquema authoring (cards con
+`abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
 - horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
