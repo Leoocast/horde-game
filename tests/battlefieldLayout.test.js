@@ -110,7 +110,7 @@ test("held slots are released once the sequence ends", () => {
   assert.equal(board.casualties.current.size, 0);
 });
 
-test("a creature arriving mid-sequence still takes over a held slot", () => {
+test("a creature arriving from a death trigger stays after the held casualty slot", () => {
   const game = createTestGame();
   const board = makeBoard();
   const first = addCard(game, customCard("first", "horde"));
@@ -124,8 +124,8 @@ test("a creature arriving mid-sequence still takes over a held slot", () => {
   const afterSummon = renderFrame(board, [first, summoned], true);
   assert.deepEqual(
     afterSummon.map((card) => card.instanceId),
-    [first.instanceId, summoned.instanceId],
-    "the arrival reuses the casualty's slot instead of landing past a hole",
+    [first.instanceId, second.instanceId, summoned.instanceId],
+    "the casualty keeps its visual slot while the new arrival stays last, matching battlefield and attack order",
   );
 });
 
