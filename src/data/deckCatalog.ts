@@ -94,6 +94,7 @@ export type DeckImageManifest = {
 };
 
 export type DeckTheme = "ramp" | "zombie" | "goblin";
+export type EncounterTone = "undead" | "goblins";
 
 export type DeckPresentation = {
   /** Card used as the deck cover in collection and expedition views. */
@@ -102,6 +103,8 @@ export type DeckPresentation = {
   theme: DeckTheme;
   /** Localized summary shown while choosing the deck. */
   descriptionKey: TranslationKey;
+  /** Horde-only palette for the pre-match versus transition. */
+  encounterTone?: EncounterTone;
 };
 
 export type InspectableDeck = {

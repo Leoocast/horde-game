@@ -311,8 +311,9 @@ Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeR
 `src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una llamada
 `register(label, raw, images, presentation)`. De ahi derivan el deck del engine, el inspector
 (`deckCatalog.ts`), los lookups de imagenes (`cardImages.ts`) y su presentacion en selectores.
-`presentation` declara `keyCardId`, `theme` y `descriptionKey`; no volver a resolver esos valores
-por id dentro de componentes. Cada deck lleva su manifest de imagenes junto al JSON.
+`presentation` declara `keyCardId`, `theme`, `descriptionKey` y, para Hordas, `encounterTone`; no
+volver a resolver esos valores por id dentro de componentes. Cada deck lleva su manifest de
+imagenes junto al JSON.
 
 Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
 - `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".
@@ -458,6 +459,8 @@ Durante Battle:
 Durante Defend:
 - la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
   agrupado visual por copias/stacks nunca puede reordenar el combate
+- criaturas no-token iguales de la Horda solo comparten stack si entraron durante el mismo turno
+  de Horda; una copia posterior conserva su nueva posicion aunque haya una copia antigua en campo
 - seleccion del defensor puede hacerse por click/drag
 - flechas azules de defensor a atacante
 - si una criatura atacante tiene MENACE, defender debe bloquearse si solo hay 1 blocker; el boton muestra tooltip explicando

@@ -53,6 +53,14 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
         message: `Deck presentation references unknown key card "${entry.presentation.keyCardId}".`,
       });
     }
+    if (entry.deck.side === "horde" && !entry.presentation.encounterTone) {
+      errors.push({
+        deckId,
+        cardId: entry.presentation.keyCardId,
+        abilityId: "presentation.encounterTone",
+        message: "Horde deck presentation must declare an encounter tone.",
+      });
+    }
     for (const card of authoredCards) {
       report.cards.push(lintCard(deckId, card, errors));
     }

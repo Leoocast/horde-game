@@ -161,6 +161,9 @@ export type CardInstance = {
   tapped: boolean;
   entersTapped: boolean;
   summoningSickness: boolean;
+  /** Controller turn in which this permanent most recently entered the battlefield.
+   *  Used by pure battlefield layout to keep later Horde copies in a new visual stack. */
+  battlefieldEntryTurn?: number;
   activatedThisTurn: boolean;
   damageMarked: number;
   deathtouchDamage: boolean;

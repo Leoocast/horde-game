@@ -34,11 +34,13 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     keyCardId: "zombie_token",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
+    encounterTone: "undead",
   }),
   register("Goblin Horde 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest, {
     keyCardId: "goblin_token_1_1_red",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
+    encounterTone: "goblins",
   }),
 ];
 

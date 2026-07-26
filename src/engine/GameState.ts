@@ -114,6 +114,7 @@ export function createInitialGame(
 }
 
 export function recordBattlefieldEntry(game: GameState, card: CardInstance): void {
+  card.battlefieldEntryTurn = card.controller === "horde" ? game.hordeTurnNumber : game.turnNumber;
   game.battlefieldEntriesThisTurn.push({
     instanceId: card.instanceId,
     controller: card.controller,

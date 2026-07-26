@@ -397,8 +397,9 @@ nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí deriva
 catálogo e imágenes.
 
 La llamada de registro de un deck nuevo también debe declarar `presentation` con `keyCardId`,
-`theme` y `descriptionKey`. El deck lint comprueba que `keyCardId` exista; los componentes no
-deben resolver estos valores mediante ramas por id de deck.
+`theme`, `descriptionKey` y, para una Horda, `encounterTone`. El deck lint comprueba que
+`keyCardId` exista y que toda Horda tenga tono de encuentro; los componentes no deben resolver
+estos valores mediante ramas por id de deck.
 
 ## 8. Tests y verificación
 
