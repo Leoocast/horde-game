@@ -14581,3 +14581,99 @@ body.playground-active .phase-banner-shell {
   height: 72px;
   flex-basis: 72px;
 }
+
+/* Denser header, with the navigation directly beneath it. */
+.playground-tools-main .playground-dock-header {
+  min-height: 58px;
+  padding: 8px 14px;
+}
+
+.playground-tools-heading .playground-dock-title {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+.playground-tools-main .playground-launch-button {
+  min-height: 34px;
+  font-size: 11px;
+}
+
+/* Readability pass for the complete dock, not just its primary controls. */
+.playground-dock-host .playground-dock {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-dock-kicker,
+.playground-dock-host .playground-rail-button,
+.playground-dock-host .playground-compact-button {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-tools-brand .playground-dock-title {
+  font-size: 15px;
+}
+
+.playground-dock-host .playground-tools-top-tabs .playground-tab {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-group-title,
+.playground-dock-host .playground-section-title,
+.playground-dock-host .playground-field > span,
+.playground-dock-host .playground-mini-input > span,
+.playground-dock-host .playground-zone-title {
+  font-size: 11px;
+}
+
+.playground-dock-host .playground-group-badge,
+.playground-dock-host .playground-hint,
+.playground-dock-host .playground-note,
+.playground-dock-host .playground-status,
+.playground-dock-host .playground-result-count {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-field input,
+.playground-dock-host .playground-field select,
+.playground-dock-host .playground-search,
+.playground-dock-host .playground-select {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-button {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-zone-name,
+.playground-dock-host .playground-selection-line > strong,
+.playground-dock-host .playground-step-label,
+.playground-dock-host .playground-library-info > strong {
+  font-size: 13px;
+}
+
+.playground-dock-host .playground-zone-amount,
+.playground-dock-host .playground-amount-control input,
+.playground-dock-host .playground-result-meta {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-zone-flag,
+.playground-dock-host .playground-result-name > em {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-result-name {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-result-id,
+.playground-dock-host .playground-selection-line > span,
+.playground-dock-host .playground-step-index,
+.playground-dock-host .playground-library-info > span {
+  font-size: 11px;
+}
+
+.playground-dock-host .playground-checkbox,
+.playground-dock-host .playground-amount-control {
+  font-size: 13px;
+}

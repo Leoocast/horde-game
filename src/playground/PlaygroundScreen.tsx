@@ -287,31 +287,10 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
           </div>
         </header>
 
-        <nav className="playground-tabs playground-tools-top-tabs" aria-label="Playground sections">
-          {TABS.map((entry) => {
-            const Icon = entry.icon;
-            return (
-              <button
-                key={entry.id}
-                className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
-                type="button"
-                title={`${entry.label}: ${entry.description}`}
-                aria-current={tab === entry.id ? "page" : undefined}
-                onClick={() => setTab(entry.id)}
-              >
-                <Icon size={15} />
-                <span>{entry.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
         <section className="playground-tools-main">
           <header className="playground-dock-header">
             <div className="playground-tools-heading">
-              <div className="playground-dock-kicker">Developer playground</div>
               <h2 className="playground-dock-title">{activeTab.label}</h2>
-              <p>{activeTab.description}</p>
             </div>
 
             <div className="playground-launch" role="group" aria-label="Board controls">
@@ -321,6 +300,25 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
               </button>
             </div>
           </header>
+
+          <nav className="playground-tabs playground-tools-top-tabs" aria-label="Playground sections">
+            {TABS.map((entry) => {
+              const Icon = entry.icon;
+              return (
+                <button
+                  key={entry.id}
+                  className={`playground-tab ${tab === entry.id ? "is-active" : ""}`}
+                  type="button"
+                  title={`${entry.label}: ${entry.description}`}
+                  aria-current={tab === entry.id ? "page" : undefined}
+                  onClick={() => setTab(entry.id)}
+                >
+                  <Icon size={15} />
+                  <span>{entry.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
           <div className={`playground-dock-body is-${tab} old-scrollbar`}>
             {tab === "scenario" && (
