@@ -12085,16 +12085,16 @@
   bottom: 11.75rem;
 }
 
-/* The battlefield gets a restrained layer of ambient life behind every card. */
-.game-battlefield-fireflies {
+/* Screen ambience stays fixed behind the game; it is not part of the battlefield layout. */
+.game-ambient-fireflies {
   position: fixed;
-  z-index: 1;
+  z-index: 0;
   inset: 72px 0 9.5rem;
   overflow: hidden;
   pointer-events: none;
 }
 
-.game-battlefield-fireflies span {
+.game-ambient-fireflies span {
   position: absolute;
   width: 3px;
   height: 3px;
@@ -12105,7 +12105,7 @@
   animation: battlefield-firefly var(--battlefly-duration) ease-in-out var(--battlefly-delay) infinite;
 }
 
-.game-battlefield-fireflies span:nth-child(3n) {
+.game-ambient-fireflies span:nth-child(3n) {
   background: #f3da82;
   box-shadow: 0 0 5px #f6d978, 0 0 12px rgb(233 190 80 / 0.42);
 }
@@ -12223,8 +12223,8 @@
   box-shadow: none;
 }
 
-.game-battlefield-fireflies.is-chaos span,
-.game-battlefield-fireflies.is-chaos span:nth-child(3n) {
+.game-ambient-fireflies.is-chaos span,
+.game-ambient-fireflies.is-chaos span:nth-child(3n) {
   width: 16px;
   height: 16px;
   border-radius: 0;
@@ -12233,7 +12233,7 @@
 }
 
 .chaos-active .menu-fireflies span::before,
-.game-battlefield-fireflies.is-chaos span::before {
+.game-ambient-fireflies.is-chaos span::before {
   display: grid;
   width: 100%;
   height: 100%;
@@ -12247,25 +12247,25 @@
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 1)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 1)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 1)::before {
   content: "\16C9";
   font-size: 16px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 2)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 2)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 2)::before {
   content: "\25A1";
   font-size: 11px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 3)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 3)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 3)::before {
   content: "\2726";
   font-size: 12px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n)::before {
   content: "\16B1";
   font-size: 16px;
 }
@@ -12497,7 +12497,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-battlefield-fireflies span {
+  .game-ambient-fireflies span {
     animation: none;
     opacity: 0.3;
   }
@@ -14006,8 +14006,7 @@ body.playground-panel-open {
 }
 
 body.playground-active .hand-atmosphere-shell,
-body.playground-active .player-hand-shell,
-body.playground-active .game-battlefield-fireflies {
+body.playground-active .player-hand-shell {
   left: var(--playground-fixed-inset);
   transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -14381,7 +14380,6 @@ body.playground-active .phase-banner-shell {
   .playground-dock-handle,
   body.playground-active .hand-atmosphere-shell,
   body.playground-active .player-hand-shell,
-  body.playground-active .game-battlefield-fireflies,
   body.playground-active .player-mana-core.player-mana-corner {
     transition-duration: 1ms;
   }
@@ -14540,4 +14538,46 @@ body.playground-active .phase-banner-shell {
   .playground-tools-top-tabs .playground-tab > span {
     display: inline;
   }
+}
+
+/* Playground control rhythm: every action in the same row receives the same footprint. */
+.playground-tools-main .playground-button-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 7px;
+}
+
+.playground-tools-main .playground-button-row > .playground-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+}
+
+/* Card browser stays scannable without falling back to a single, overly long list. */
+.playground-dock-body.is-cards .playground-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.playground-dock-body.is-cards .playground-results > li {
+  min-width: 0;
+}
+
+.playground-dock-body.is-cards .playground-result {
+  min-height: 68px;
+  padding: 7px 8px;
+}
+
+.playground-dock-body.is-cards .playground-thumb {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+}
+
+.playground-dock-body.is-cards .playground-thumb.is-large {
+  width: 72px;
+  height: 72px;
+  flex-basis: 72px;
 }

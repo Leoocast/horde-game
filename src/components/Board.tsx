@@ -80,7 +80,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
 
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
-      <BattlefieldFireflies chaos={game.gameMode === "chaos"} />
+      <GameFireflies chaos={game.gameMode === "chaos"} />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} /> : undefined}
         setupTurns={setupTurns}
@@ -160,9 +160,9 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   );
 }
 
-function BattlefieldFireflies({ chaos }: { chaos: boolean }) {
+function GameFireflies({ chaos }: { chaos: boolean }) {
   return (
-    <div className={["game-battlefield-fireflies", chaos ? "is-chaos" : ""].join(" ")} aria-hidden="true">
+    <div className={["game-ambient-fireflies", chaos ? "is-chaos" : ""].join(" ")} aria-hidden="true">
       {Array.from({ length: 10 }, (_, index) => {
         const left = 6 + ((index * 37 + 11) % 87);
         const top = 8 + ((index * 53 + 17) % 69);
