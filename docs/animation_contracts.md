@@ -12,6 +12,10 @@ Three rules make the sequence readable:
 - Because reactors are re-derived after every beat, `enqueue` stamps each event with `witnessIds`: the permanents in play when it happened. A creature that reaches the battlefield **because** of an event is not a witness to it, so it cannot react to it. Without this, Rundvelt exiling Pashalik onto the battlefield made Pashalik burn for the death that summoned it. The event's own source is always a witness, since a dying card has already left the battlefield when its death event is queued.
 - A beat finishes what it started. Anything a beat's resolution queued jumps ahead of the reactors still waiting on the parent event. Pashalik's trigger does not damage directly, it queues a `BURN_DAMAGE`; appended at the tail, that fireball landed *after* Rundvelt's reveal had already resolved, splitting one card's effect in half around another card's.
 - Nothing in the runner knows a card name. Adding a new Horde effect means pushing a handler onto `HORDE_BEAT_HANDLERS`; order matters, because the first handler that claims an event owns its look.
+- A source with multiple effects still resolves one effect per beat, but only its first effect in
+  that arrival chain supplies the activation pulse. For a permanent with both a newly-online
+  static aura and an entry trigger, the aura goes first; the entry trigger keeps its own toast and
+  resolution timing without a second gold pulse or activation sound.
 
 ### The board must be still between beats
 
@@ -27,14 +31,37 @@ The Horde attacks with everything able, every turn, but declaring is a rules ste
 
 `hordeAttackPending` in `Battlefield.tsx` closes the gap: while the Horde's turn is running and no attackers are declared yet, a Horde creature that `canAttack` is drawn as attacking. Visual only — it declares nothing, and the real declaration changes nothing on screen because the card already looks the part.
 
+Horde entrances are also real queue work. Every newly committed permanent increments
+`summoningAnimationCount`; `Battlefield` decrements it only when that permanent's WAAPI entrance
+finishes. Arrival effects, queued reaction beats, and `startHordeCombatSequence` all wait for the
+counter to reach zero. Their lead-ins are therefore short handoffs, not duplicate summon delays.
+`animatedHordeIds` starts with the cards present when the battlefield mounts, so loading a board
+and executing its first Horde turn never replays the entrances of existing permanents.
+
+Attack resolution order is a rules concern and follows `game.horde.battlefield` insertion order,
+which is summon chronology. It must never be rebuilt from visual families or stack keys. For
+example, four Goblin tokens, then Hobgoblin Bandit Lord, then two later tokens resolve in exactly
+that order. The layout may stack the two token waves, but grouping never moves the second wave in
+front of the lord.
+
 Current handlers:
 
 | Handler | Claims | Presentation |
 | --- | --- | --- |
 | `burn` | `BURN_DAMAGE` | Fireball, see below |
+| `burn-volley` | `BURN_VOLLEY_DAMAGE`, `BURN_PLAYER_LIFE_LOSS` | One or more Burn routes to cards or player life |
 | `static-aura` | `STATIC_AURA_ONLINE` | Source activation, see below |
+| `horde-group-buff` | `HORDE_GROUP_BUFF` | Shared buff lines; spells also reveal beside the Horde deck |
 | `death-reveal` | first pending source already left the battlefield | Card presented beside its graveyard, see below |
+| `deferred-combat-volley` | an attack trigger whose damage waits for the Horde sequence end | Silent rules capture; its single visible activation happens after the last attack |
 | `trigger-pulse` | any pending Horde source | Activation pulse on the source, toast, resolve |
+
+Group buffs are committed on their beat rather than during synchronous effect resolution. The
+event snapshots the creatures covered when the effect resolved and applies the stat change in the
+same frame as the blue buff lines. A permanent source already received its activation pulse from
+the ETB beat, so this beat does not pulse it again. An instant has no battlefield slot and instead
+uses the spell reveal on the right side of the Horde panel. Creatures revealed later in the turn
+are not retroactively included.
 
 ## Burn
 
@@ -52,7 +79,7 @@ The visual is a faithful port of the reference in `assets/examples/Fireball/fire
 
 1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness. A charge build-up (`.burn-charge`: swelling glow, distorting ring, spinning arc, inrushing sparks) plays at the source, and a random cast whoosh (`fireballCastSfx`) fires as the projectile ignites.
 2. A multi-layer morphing fireball (`.burn-fireball-body`) with an attached comet trail (ribbons + streaks) travels from the source card to the target card. The ball squash and trail ride the travel heading (`--burn-angle`), and JS-spawned trace sparks bleed off its real path.
-3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and a random hit sound (`fireballHitSfx`) plays.
+3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and the canonical hit sound (`fireballHitSfx`) plays.
 4. A layered impact anchored on the target fires: a void implosion, a morphing molten core, two shock rings, a ring of JS-spawned embers, lingering smoke puffs, and a radial screen flash. The effects (inside `.burn-world`) get a short impact shake; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
 
 The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `debris` classes are **not** ported — they exist in its CSS but never appear in its DOM, so they never render.
@@ -60,6 +87,58 @@ The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `d
 6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
 Use this contract for Pashalik Mons, Volley Veteran, and future Goblin burn effects.
+
+### Burn volley to player life
+
+Raid Bombardment reuses Burn with a different target and timing:
+
+- Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
+  powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
+- After the final Horde attack event and its queued reactions finish, the enchantment supplies its
+  one activation pulse. The store aims Burn at `[data-player-life-panel]` instead of a card slot.
+- One projectile is rendered per contributing attacker up to a visual cap of six, staggered by
+  90ms. Each visible projectile plays one cast sound when it launches and one hit sound when it
+  arrives; sounds are not layered into a single oversized cue. This remains one compact cast:
+  one source charge, one final visual impact, and one damage number for the complete amount.
+- The engine commits all pending volley damage at that final impact frame. Non-animated callers
+  resolve the same pending damage from `finishHordeCombat`, so presentation cannot change rules.
+- The player life panel runs its normal damage reaction at impact. Buttons stay blocked until the
+  extended final projectile clock has completed.
+
+### Burn volley to multiple targets
+
+Goblin Chainwhirler uses the same compact volley clock with distinct routes:
+
+- Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
+  never pulses it again.
+- The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
+  receives that target list and calculates one source-to-target geometry for each projectile.
+- Projectiles launch 90ms apart. Each one plays a singular cast sound at launch and the canonical
+  singular hit sound at its own impact; every target gets its own impact effect and `-1` number.
+- The stagger is presentation only. Player life and all still-present creatures take damage
+  simultaneously when the final projectile lands, followed by one marked-damage cleanup.
+- All hit creature ids are flashed together at resolution, and surviving creatures keep the
+  normal scorch/smoke state until end-step cleanup.
+
+### Repeated single Burns to player life
+
+General Kreat does not aggregate its creature-entry triggers. Every other creature entering queues
+one independent Burn toward `[data-player-life-panel]`; each has its own projectile, cast sound,
+hit sound, impact, life reaction, and 1-damage engine resolution before the next trigger begins.
+When General Kreat itself created the entering token, `causeSourceId` marks that causal chain so
+the damage follow-up does not repeat the activation pulse already shown for token creation.
+
+### Oil Burn to player life
+
+Diregraf Captain preserves its printed life-loss semantics while using the Burn presentation:
+
+- `EACH_OPPONENT_LOSES_LIFE` with `animation: "OIL_BURN"` queues
+  `BURN_PLAYER_LIFE_LOSS`; player life does not change until the projectile impacts.
+- The projectile follows the ordinary Burn clock and reuses the current fireball cast and hit
+  sounds. `variant: "oil"` only changes its material: nearly black pitch, muted violet
+  iridescence, dark smoke, and a colder impact flash.
+- Each Zombie death remains a separate trigger and projectile. The follow-up does not repeat the
+  Captain's activation pulse.
 
 ## Static activation
 
@@ -84,6 +163,11 @@ Resolution order:
 1. Lead-in, so a card that just landed finishes its summon pop before the same slot animates again.
 2. The granting card plays its effect-activation pulse, with a toast naming the bonus and how many creatures it covers.
 3. The withheld stats land as the newly covered creatures show the same blue rising buff lines a player buff uses (`buff-rise-lines-blue`). A warm tone was tried and rejected: `.buff-rise-lines` blends with `mix-blend-mode: screen`, so ember colours wash out completely against Goblin artwork.
+
+The rising lines may finish while the next beat begins. If the same permanent also has an ETB
+effect, the aura has already supplied its activation pulse: the ETB uses a short 160ms handoff
+instead of another summon-length pause, then immediately presents any follow-up event such as
+Hobgoblin Bandit Lord's Burn.
 
 ## Death reveal
 

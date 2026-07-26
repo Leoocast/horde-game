@@ -1,6 +1,5 @@
 import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
-import { createToken } from "./GameState";
-import { drawCards } from "./GameState";
+import { createToken, drawCards, recordBattlefieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
@@ -58,6 +57,11 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const option = chooseEffectOption(game, effect, context);
     if (option) resolveEffects(game, (option.effects as EffectDefinition[]) ?? [], context);
   },
+  REVEAL_HORDE_ROUND: (game, _effect, context) => {
+    if (context.side !== "horde") return;
+    game.horde.pendingRevealRounds = (game.horde.pendingRevealRounds ?? 0) + 1;
+    game.log.unshift("Horde effect calls for another normal reveal round.");
+  },
   HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD: (game) => {
     exileTopGoblinToBattlefield(game);
   },
@@ -82,7 +86,21 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     createTokens(game, effect, context);
   },
   DEAL_DAMAGE_TO_OPPONENT: (game, effect, context) => {
-    dealDamageToOpponent(game, context.side, Number(effect.amount ?? 1));
+    const amount = Number(effect.amount ?? 1);
+    if (effect.animation === "BURN_TO_PLAYER") {
+      enqueue(game, {
+        type: "BURN_VOLLEY_DAMAGE",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds: [],
+          amount,
+        },
+      });
+      return;
+    }
+    dealDamageToOpponent(game, context.side, amount);
   },
   DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT: (game, effect, context) => {
     queueRandomOpponentPermanentDamage(game, effect, context);
@@ -90,9 +108,26 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES: (game, effect, context) => {
     const opponent = context.side === "player" ? "horde" : "player";
     const amount = Number(effect.amount ?? 1);
+    const targetIds = game[opponent].battlefield
+      .filter((card) => card.cardTypes.includes("Creature"))
+      .map((card) => card.instanceId);
+    if (effect.animation === "BURN_VOLLEY") {
+      enqueue(game, {
+        type: "BURN_VOLLEY_DAMAGE",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds,
+          amount,
+        },
+      });
+      return;
+    }
     dealDamageToOpponent(game, context.side, amount);
-    for (const target of game[opponent].battlefield.filter((card) => card.cardTypes.includes("Creature"))) {
-      dealDamageToCreature(game, target, amount, false);
+    for (const targetId of targetIds) {
+      const target = findPermanent(game, targetId);
+      if (target) dealDamageToCreature(game, target, amount, false);
     }
     destroyMarkedCreatures(game);
   },
@@ -112,10 +147,29 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING: (game, effect, context) => {
     const attackerIds = declaredAttackerIds(context.event);
-    const maxPower = Number((effect.filter as Record<string, unknown> | undefined)?.maxPower ?? Number.POSITIVE_INFINITY);
+    const filter = effect.filter as (CardFilter & { maxPower?: number }) | undefined;
+    const maxPower = Number(filter?.maxPower ?? Number.POSITIVE_INFINITY);
     const powers = (context.event?.payload?.attackerPowers as Record<string, number> | undefined) ?? {};
-    const matches = attackerIds.filter((id) => Number(powers[id] ?? Number.POSITIVE_INFINITY) <= maxPower).length;
-    if (matches > 0) dealDamageToOpponent(game, context.side, matches * Number(effect.amount ?? 1));
+    const matchingIds = attackerIds.filter((id) => {
+      const attacker = game[context.side].battlefield.find((card) => card.instanceId === id);
+      return Boolean(
+        attacker &&
+        matchesFilter(attacker, filter, context.source) &&
+        Number(powers[id] ?? Number.POSITIVE_INFINITY) <= maxPower
+      );
+    });
+    if (matchingIds.length === 0) return;
+    const amountPerAttacker = Number(effect.amount ?? 1);
+    if (context.side === "horde" && effect.deferUntil === "HORDE_ATTACK_SEQUENCE_END") {
+      game.combat.pendingDamageVolleys.push({
+        sourceId: context.source?.instanceId,
+        attackerIds: matchingIds,
+        amountPerAttacker,
+      });
+      game.log.unshift(`${context.source?.name ?? "Horde"} readies ${matchingIds.length * amountPerAttacker} damage for the end of combat.`);
+      return;
+    }
+    dealDamageToOpponent(game, context.side, matchingIds.length * amountPerAttacker);
   },
   PUMP_SELF_PER_ATTACKER_MATCHING: (game, effect, context) => {
     if (!context.source) return;
@@ -133,8 +187,22 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const controller = effect.controller === "OPPONENT"
       ? context.side === "player" ? "horde" : "player"
       : context.side;
-    for (const target of game[controller].battlefield) {
-      if (!matchesFilter(target, effect.filter as CardFilter | undefined, context.source)) continue;
+    const targets = game[controller].battlefield.filter((target) =>
+      matchesFilter(target, effect.filter as CardFilter | undefined, context.source)
+    );
+    if (context.side === "horde" && effect.animation === "BUFF" && targets.length > 0) {
+      enqueue(game, {
+        type: "HORDE_GROUP_BUFF",
+        sourceId: context.source?.instanceId,
+        payload: {
+          affectedIds: targets.map((target) => target.instanceId),
+          power: Number(effect.power ?? 0),
+          toughness: Number(effect.toughness ?? 0),
+        },
+      });
+      return;
+    }
+    for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
       target.temporaryToughness += Number(effect.toughness ?? 0);
     }
@@ -230,9 +298,24 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   EACH_OPPONENT_DISCARDS: (game, effect) => {
     discardPlayer(game, Number(effect.amount ?? 1));
   },
-  EACH_OPPONENT_LOSES_LIFE: (game, effect) => {
-    game.player.life -= Number(effect.amount ?? 1);
-    game.log.unshift(`Player loses ${Number(effect.amount ?? 1)} life.`);
+  EACH_OPPONENT_LOSES_LIFE: (game, effect, context) => {
+    const amount = Number(effect.amount ?? 1);
+    if (effect.animation === "OIL_BURN") {
+      enqueue(game, {
+        type: "BURN_PLAYER_LIFE_LOSS",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds: [],
+          amount,
+          variant: "oil",
+        },
+      });
+      return;
+    }
+    game.player.life -= amount;
+    game.log.unshift(`Player loses ${amount} life.`);
   },
 };
 
@@ -305,8 +388,20 @@ export function resolveTriggeredEvent(
   deferController?: "player" | "horde",
   onlySourceId?: string,
 ): boolean {
+  if (event.type === "HORDE_GROUP_BUFF") {
+    resolveHordeGroupBuffEvent(game, event);
+    return false;
+  }
   if (event.type === "BURN_DAMAGE") {
     resolveBurnDamageEvent(game, event);
+    return false;
+  }
+  if (event.type === "BURN_VOLLEY_DAMAGE") {
+    resolveBurnVolleyDamageEvent(game, event);
+    return false;
+  }
+  if (event.type === "BURN_PLAYER_LIFE_LOSS") {
+    resolveBurnPlayerLifeLossEvent(game, event);
     return false;
   }
   let deferredAny = false;
@@ -334,6 +429,19 @@ export function resolveTriggeredEvent(
   }
   if (onlySourceId) markTriggerSourceResolved(event, onlySourceId);
   return deferredAny;
+}
+
+function resolveHordeGroupBuffEvent(game: GameState, event: EventItem): void {
+  const affectedIds = new Set(
+    Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [],
+  );
+  const power = Number(event.payload?.power ?? 0);
+  const toughness = Number(event.payload?.toughness ?? 0);
+  for (const target of game.horde.battlefield) {
+    if (!affectedIds.has(target.instanceId)) continue;
+    target.temporaryPower += power;
+    target.temporaryToughness += toughness;
+  }
 }
 
 // A permanent can only react to what it was already in play to see. `witnessIds` is stamped by
@@ -405,14 +513,18 @@ export function runEnterBattlefieldTriggers(
   game: GameState,
   card: CardInstance,
   targets?: Record<string, string | string[]>,
-  options: { deferSelfTriggers?: boolean } = {},
+  options: { deferSelfTriggers?: boolean; causeSourceId?: string } = {},
 ): void {
   if (options.deferSelfTriggers) {
     if (card.effects.some((wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === "ENTERS_BATTLEFIELD")) {
       enqueue(game, {
         type: "ENTERS_BATTLEFIELD",
         sourceId: card.instanceId,
-        payload: { controller: card.controller, definitionId: card.definitionId },
+        payload: {
+          controller: card.controller,
+          definitionId: card.definitionId,
+          causeSourceId: options.causeSourceId,
+        },
       });
     }
   } else {
@@ -430,6 +542,7 @@ export function runEnterBattlefieldTriggers(
       definitionId: card.definitionId,
       cardTypes: card.cardTypes,
       subtypes: card.subtypes,
+      causeSourceId: options.causeSourceId,
     },
   });
 }
@@ -486,6 +599,7 @@ function exileTopGoblinToBattlefield(game: GameState): void {
   card.tapped = false;
   card.summoningSickness = false;
   game.horde.battlefield.push(card);
+  recordBattlefieldEntry(game, card);
   game.log.unshift(`${card.name} enters the battlefield from exile.`);
   runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
@@ -519,7 +633,11 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     token.summoningSickness = controller === "player";
     token.tapped = Boolean(effect.tapped);
     game[controller].battlefield.push(token);
-    runEnterBattlefieldTriggers(game, token, undefined, { deferSelfTriggers: true });
+    recordBattlefieldEntry(game, token);
+    runEnterBattlefieldTriggers(game, token, undefined, {
+      deferSelfTriggers: true,
+      causeSourceId: context.source?.instanceId,
+    });
     if (effect.attacking && controller === "horde" && game.phase === "combat") {
       token.tapped = true;
       game.combat.hordeAttackers.push(token.instanceId);
@@ -722,6 +840,33 @@ function resolveBurnDamageEvent(game: GameState, event: EventItem): void {
   destroyMarkedCreatures(game);
 }
 
+function resolveBurnVolleyDamageEvent(game: GameState, event: EventItem): void {
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
+  const targetIds = Array.isArray(event.payload?.targetIds) ? event.payload.targetIds.map(String) : [];
+  if (event.payload?.targetPlayer === true) dealDamageToOpponent(game, sourceSide, amount);
+  for (const targetId of targetIds) {
+    const target = findPermanent(game, targetId);
+    if (!target) continue;
+    dealDamageToCreature(game, target, amount, false);
+    target.flags.burnSmoke = true;
+  }
+  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+    .find((card) => card.instanceId === event.sourceId);
+  game.log.unshift(`${source?.name ?? "Burn volley"} deals ${amount} damage to each opposing target.`);
+  destroyMarkedCreatures(game);
+}
+
+function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void {
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
+  if (sourceSide !== "horde" || event.payload?.targetPlayer !== true || amount <= 0) return;
+  game.player.life -= amount;
+  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+    .find((card) => card.instanceId === event.sourceId);
+  game.log.unshift(`${source?.name ?? "Horde effect"} causes Player to lose ${amount} life.`);
+}
+
 function resolveNumericAmount(game: GameState, amount: unknown, context: ResolveContext): number {
   if (typeof amount === "number") return amount;
   if (!amount || typeof amount !== "object") return Number(amount) || 0;
@@ -742,6 +887,19 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
     return game[controller].battlefield.filter((card) =>
       matchesFilter(card, data.filters as CardFilter | undefined, context.source)
     ).length;
+  }
+  if (data.type === "COUNT_PERMANENTS_ENTERED_THIS_TURN") {
+    const controller = data.controller === "OPPONENT"
+      ? context.side === "player" ? "horde" : "player"
+      : context.side;
+    const filters = data.filters as CardFilter | undefined;
+    return game.battlefieldEntriesThisTurn.filter((entry) => {
+      if (entry.controller !== controller) return false;
+      if (filters?.excludeSelf && entry.instanceId === context.source?.instanceId) return false;
+      if (filters?.cardTypes?.some((type) => !entry.cardTypes.includes(type))) return false;
+      if (filters?.subtypes?.some((subtype) => !entry.subtypes.includes(subtype))) return false;
+      return true;
+    }).length;
   }
   return Number(amount) || 0;
 }

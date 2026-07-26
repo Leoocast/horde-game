@@ -1574,12 +1574,12 @@
     position: relative;
     z-index: 10;
     display: grid;
-    grid-template-columns: 150px minmax(0, 1fr) auto;
-    min-height: 122px;
+    grid-template-columns: 130px minmax(0, 1fr) auto;
+    min-height: 88px;
     align-items: center;
-    gap: 28px;
+    gap: 20px;
     border-bottom: 1px solid rgb(156 143 99 / 0.25);
-    padding: 22px clamp(30px, 3.5vw, 58px);
+    padding: 12px clamp(26px, 3.2vw, 52px);
     background: linear-gradient(180deg, rgb(4 11 10 / 0.9), rgb(5 13 12 / 0.72));
     box-shadow: 0 18px 34px rgb(0 0 0 / 0.18);
     animation: deck-detail-header-open 160ms ease-out both;
@@ -1603,7 +1603,7 @@
     margin: 0;
     color: #ded2af;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(27px, 2.6vw, 42px);
+    font-size: clamp(24px, 2.25vw, 36px);
     font-weight: 500;
     letter-spacing: 0.025em;
     line-height: 1;
@@ -1614,7 +1614,61 @@
   .deck-detail-tools {
     display: flex;
     align-items: center;
-    gap: clamp(22px, 2.5vw, 42px);
+    gap: clamp(14px, 1.8vw, 28px);
+  }
+
+  .deck-detail-search {
+    display: flex;
+    width: clamp(190px, 18vw, 280px);
+    height: 38px;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgb(128 139 123 / 0.28);
+    background: rgb(7 16 14 / 0.7);
+    padding: 0 7px 0 11px;
+    color: #89958d;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  .deck-detail-search:focus-within {
+    border-color: color-mix(in srgb, var(--deck-accent) 72%, #887548);
+    box-shadow: 0 0 12px var(--deck-accent-soft);
+  }
+
+  .deck-detail-search input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #ded2af;
+    font-size: 12px;
+  }
+
+  .deck-detail-search input::placeholder {
+    color: #68766f;
+  }
+
+  .deck-detail-search input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .deck-detail-search button {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #89958d;
+  }
+
+  .deck-detail-search button:hover,
+  .deck-detail-search button:focus-visible {
+    background: rgb(112 124 107 / 0.13);
+    color: #eee2c2;
+    outline: none;
   }
 
   .deck-detail-counts {
@@ -1680,7 +1734,7 @@
     z-index: 2;
     display: grid;
     grid-template-columns: minmax(0, 1fr) clamp(360px, 27vw, 430px);
-    height: calc(100vh - 122px);
+    height: calc(100vh - 88px);
     min-height: 0;
     overflow: hidden;
   }
@@ -1725,6 +1779,18 @@
     align-items: start;
     gap: 28px 22px;
     padding: 34px clamp(26px, 3vw, 48px) 60px;
+  }
+
+  .deck-detail-empty {
+    display: grid;
+    min-height: 45vh;
+    place-items: center;
+    padding: 40px;
+    color: #7f8d85;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    text-align: center;
   }
 
   .deck-detail-card {
@@ -2349,7 +2415,7 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
-    border-top: 1px solid rgb(132 145 125 / 0.12);
+    border-top: 0;
     margin-top: 16px;
     gap: 9px;
     color: #75877d;
@@ -5727,6 +5793,167 @@
     animation: burn-damage-pop 620ms 640ms linear both;
   }
 
+  /* Diregraf Captain variant: the same Burn timing and audio, rendered as a dense,
+     iridescent pitch projectile instead of ordinary flame. */
+  .burn-animation-layer-oil {
+    --burn-flight-impact-filter:
+      drop-shadow(0 0 8px rgba(225, 217, 255, 0.62))
+      drop-shadow(0 0 24px rgba(36, 12, 64, 0.9));
+    --burn-impact-flash-filter: brightness(1.3) contrast(1.45);
+  }
+
+  .burn-animation-layer-oil .burn-charge-glow {
+    background: radial-gradient(circle,
+        rgba(246, 241, 255, 0.7) 0 7%,
+        rgba(120, 92, 151, 0.72) 18%,
+        rgba(20, 12, 27, 0.72) 44%,
+        transparent 72%);
+  }
+
+  .burn-animation-layer-oil .burn-charge-distortion {
+    border-color: rgba(166, 145, 184, 0.52);
+  }
+
+  .burn-animation-layer-oil .burn-charge-arc::before,
+  .burn-animation-layer-oil .burn-charge-arc::after {
+    border-top-color: rgba(210, 196, 224, 0.68);
+    border-right-color: rgba(83, 57, 105, 0.5);
+  }
+
+  .burn-animation-layer-oil .burn-charge-particle {
+    background: rgba(220, 209, 230, 0.92);
+    box-shadow: 0 0 8px rgba(103, 77, 126, 0.9), 0 0 15px rgba(5, 3, 8, 0.95);
+  }
+
+  .burn-animation-layer-oil .burn-trace-particle {
+    background: #ddd4e4;
+    box-shadow:
+      0 0 calc(var(--size) * 1.5) #7d688e,
+      0 0 calc(var(--size) * 3) #211329,
+      0 0 calc(var(--size) * 6) #020203;
+  }
+
+  .burn-animation-layer-oil .burn-fireball {
+    filter:
+      drop-shadow(0 0 8px rgba(198, 185, 211, 0.48))
+      drop-shadow(0 0 23px rgba(12, 6, 17, 0.96));
+  }
+
+  .burn-animation-layer-oil .burn-trail-ribbon {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 0, 0, 0.94) 14%,
+        rgba(16, 10, 19, 0.98) 38%,
+        rgba(48, 32, 57, 0.96) 67%,
+        rgba(111, 88, 126, 0.86) 86%,
+        rgba(220, 208, 226, 0.68) 96%,
+        transparent 100%);
+  }
+
+  .burn-animation-layer-oil .burn-trail-ribbon::before {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(0, 0, 0, 0.88) 24%,
+        rgba(83, 61, 96, 0.68) 72%,
+        rgba(230, 221, 235, 0.72) 93%,
+        transparent);
+  }
+
+  .burn-animation-layer-oil .burn-trail-streak {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(3, 2, 4, 0.96) 46%,
+        rgba(120, 99, 132, 0.88) 87%,
+        transparent);
+    box-shadow: 0 0 8px rgba(18, 8, 24, 0.88);
+  }
+
+  .burn-animation-layer-oil .burn-ball-outer {
+    background: radial-gradient(circle at 66% 46%,
+        #ede7f1 0 4%,
+        #897498 12%,
+        #3b2945 28%,
+        #17101b 48%,
+        #050406 69%,
+        rgba(0, 0, 0, 0.78) 82%,
+        transparent 94%);
+  }
+
+  .burn-animation-layer-oil .burn-ball-mid {
+    background: radial-gradient(circle at 63% 46%,
+        #f4eff6 0 4%,
+        #a28cad 13%,
+        #46344f 34%,
+        rgba(4, 3, 5, 0.9) 74%,
+        transparent 89%);
+  }
+
+  .burn-animation-layer-oil .burn-ball-core {
+    background: radial-gradient(circle at 62% 46%,
+        #f3eef5 0 12%,
+        #9e8aa8 30%,
+        #34273b 58%,
+        rgba(0, 0, 0, 0.72) 100%);
+  }
+
+  .burn-animation-layer-oil .burn-ball-hotspot {
+    background: radial-gradient(circle,
+        #fff 0 24%,
+        rgba(205, 194, 212, 0.7) 53%,
+        transparent 78%);
+  }
+
+  .burn-animation-layer-oil .burn-impact-core {
+    background: radial-gradient(circle,
+        #f4eef7 0 3%,
+        #a18baa 9%,
+        #493650 22%,
+        #151019 39%,
+        rgba(0, 0, 0, 0.96) 61%,
+        rgba(43, 27, 48, 0.62) 71%,
+        transparent 83%);
+    filter:
+      blur(3px)
+      drop-shadow(0 0 18px rgba(78, 55, 88, 0.58))
+      drop-shadow(0 0 38px rgba(0, 0, 0, 0.5));
+  }
+
+  .burn-animation-layer-oil .burn-void-disc {
+    background: radial-gradient(circle,
+        #000 0 39%,
+        rgba(8, 6, 9, 0.99) 49%,
+        rgba(61, 42, 69, 0.9) 63%,
+        rgba(167, 147, 178, 0.38) 69%,
+        transparent 78%);
+    box-shadow: 0 0 0 3px rgba(105, 81, 116, 0.48), 0 0 46px rgba(0, 0, 0, 0.82);
+  }
+
+  .burn-animation-layer-oil .burn-shock-ring {
+    border-color: rgba(156, 133, 168, 0.64);
+    box-shadow: 0 0 16px rgba(29, 16, 34, 0.7), inset 0 0 11px rgba(83, 57, 94, 0.34);
+  }
+
+  .burn-animation-layer-oil .burn-impact-smoke {
+    background: radial-gradient(circle at 50% 62%,
+        rgba(38, 30, 42, 0.82),
+        rgba(12, 10, 14, 0.9) 47%,
+        rgba(0, 0, 0, 0.56) 70%,
+        transparent 80%);
+  }
+
+  .burn-animation-layer-oil .burn-screen-flash {
+    animation-name: burn-oil-screen-flash;
+  }
+
+  .burn-animation-layer-oil .burn-damage-number {
+    color: #e2d9e6;
+    -webkit-text-stroke-color: #160f19;
+    text-shadow:
+      0 4px 0 #050406,
+      0 0 12px #877390,
+      0 0 30px #1f1226;
+  }
+
   /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
      lingers with the smoke until the end step wipes card.flags.burnSmoke. */
   .burn-card-scorch-flash {
@@ -5833,8 +6060,8 @@
     20% { transform: translate(-50%, -50%) rotate(var(--burn-angle)) scaleX(1.18) scaleY(0.88); }
     34% { transform: translate(calc(-50% + 0.369 * var(--burn-dx)), calc(-58% + 0.369 * var(--burn-dy))) rotate(calc(var(--burn-angle) - 1.8deg)) scaleX(1.34) scaleY(0.78); }
     48% { transform: translate(calc(-50% + 0.738 * var(--burn-dx)), calc(-44% + 0.738 * var(--burn-dy))) rotate(calc(var(--burn-angle) + 1.4deg)) scaleX(1.3) scaleY(0.8); }
-    57.95% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(1.42) scaleY(0.73); filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.55)) drop-shadow(0 0 22px rgba(205, 31, 0, 0.62)); }
-    58% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(0.22) scaleY(1.65); filter: brightness(2.4); }
+    57.95% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(1.42) scaleY(0.73); filter: var(--burn-flight-impact-filter, drop-shadow(0 0 8px rgba(255, 237, 184, 0.55)) drop-shadow(0 0 22px rgba(205, 31, 0, 0.62))); }
+    58% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(0.22) scaleY(1.65); filter: var(--burn-impact-flash-filter, brightness(2.4)); }
     100% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)); }
   }
 
@@ -11858,16 +12085,16 @@
   bottom: 11.75rem;
 }
 
-/* The battlefield gets a restrained layer of ambient life behind every card. */
-.game-battlefield-fireflies {
+/* Screen ambience stays fixed behind the game; it is not part of the battlefield layout. */
+.game-ambient-fireflies {
   position: fixed;
-  z-index: 1;
+  z-index: 0;
   inset: 72px 0 9.5rem;
   overflow: hidden;
   pointer-events: none;
 }
 
-.game-battlefield-fireflies span {
+.game-ambient-fireflies span {
   position: absolute;
   width: 3px;
   height: 3px;
@@ -11878,7 +12105,7 @@
   animation: battlefield-firefly var(--battlefly-duration) ease-in-out var(--battlefly-delay) infinite;
 }
 
-.game-battlefield-fireflies span:nth-child(3n) {
+.game-ambient-fireflies span:nth-child(3n) {
   background: #f3da82;
   box-shadow: 0 0 5px #f6d978, 0 0 12px rgb(233 190 80 / 0.42);
 }
@@ -11996,8 +12223,8 @@
   box-shadow: none;
 }
 
-.game-battlefield-fireflies.is-chaos span,
-.game-battlefield-fireflies.is-chaos span:nth-child(3n) {
+.game-ambient-fireflies.is-chaos span,
+.game-ambient-fireflies.is-chaos span:nth-child(3n) {
   width: 16px;
   height: 16px;
   border-radius: 0;
@@ -12006,7 +12233,7 @@
 }
 
 .chaos-active .menu-fireflies span::before,
-.game-battlefield-fireflies.is-chaos span::before {
+.game-ambient-fireflies.is-chaos span::before {
   display: grid;
   width: 100%;
   height: 100%;
@@ -12020,25 +12247,25 @@
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 1)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 1)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 1)::before {
   content: "\16C9";
   font-size: 16px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 2)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 2)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 2)::before {
   content: "\25A1";
   font-size: 11px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n + 3)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n + 3)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n + 3)::before {
   content: "\2726";
   font-size: 12px;
 }
 
 .chaos-active .menu-fireflies span:nth-child(4n)::before,
-.game-battlefield-fireflies.is-chaos span:nth-child(4n)::before {
+.game-ambient-fireflies.is-chaos span:nth-child(4n)::before {
   content: "\16B1";
   font-size: 16px;
 }
@@ -12270,7 +12497,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-battlefield-fireflies span {
+  .game-ambient-fireflies span {
     animation: none;
     opacity: 0.3;
   }
@@ -12434,12 +12661,8 @@
   background: #0b0c0a;
 }
 
-/* The stage deliberately keeps the full viewport and creates NO containing block (no transform,
-   no filter). The Board's overlays measure cards with getBoundingClientRect and draw into
-   `fixed` layers, so the moment an ancestor becomes the containing block every combat arrow and
-   targeting line is offset by the dock width. Instead the dock floats over a full-size board and
-   the board's own content containers are inset below — the cards physically move, so the arrows
-   follow them for free. */
+/* Keep the stage free of transforms. Board overlays measure cards with getBoundingClientRect and
+   draw into fixed layers; the docked layout reserves space inside the Board instead. */
 .playground-stage {
   position: relative;
   height: 100vh;
@@ -12447,8 +12670,7 @@
   overflow: hidden;
 }
 
-/* The tools are portaled into a separate browser window. They remain in the same React tree, so
-   every panel reads and mutates the board's live Zustand store without copying game state. */
+/* The tools and Board share the live Zustand store; the dock host below owns their position. */
 .playground-dock {
   position: fixed;
   left: 0;
@@ -12467,15 +12689,6 @@
   box-shadow: none;
   color: #e4ddc2;
   font-size: 13px;
-}
-
-/* The popup receives this body class before the portal mounts. It owns the whole viewport and does
-   not inherit the main document's page geometry. */
-.playground-tools-window-body {
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  background: #101109;
 }
 
 .playground-dock-header {
@@ -12967,6 +13180,50 @@
 .playground-search:focus,
 .playground-select:focus { border-color: rgba(224, 190, 116, 0.72); outline: none; }
 
+.playground-clearable-input {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.playground-clearable-input > input {
+  width: 100%;
+  padding-right: 34px;
+}
+
+.playground-search::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.playground-input-clear {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-flex;
+  height: 30px;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #938d76;
+  cursor: pointer;
+  transition: background 130ms ease, color 130ms ease, opacity 100ms ease;
+}
+
+.playground-input-clear[aria-hidden="true"] {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.playground-input-clear:hover,
+.playground-input-clear:focus-visible {
+  background: rgba(120, 92, 38, 0.24);
+  color: #f2e7c3;
+  outline: none;
+}
+
 .playground-result-count { color: #7f7a66; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
 
 .playground-results { display: flex; max-height: 380px; flex-direction: column; gap: 3px; overflow-y: auto; }
@@ -13340,8 +13597,7 @@
   font-size: 11px;
 }
 
-/* Detached Playground workbench. The old dock had to be narrow and float over the game; the
-   popup can use a real application layout with persistent navigation and a wider working area. */
+/* Playground workbench: persistent navigation plus a scrollable workspace. */
 .playground-tools-layout {
   display: grid;
   height: 100%;
@@ -13587,6 +13843,13 @@
     grid-template-rows: auto minmax(0, 1fr);
   }
 
+  @keyframes burn-oil-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 0.78; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(226, 216, 232, 0.72), rgba(37, 24, 43, 0.3) 23%, transparent 48%); }
+    59% { opacity: 0.18; }
+    62%, 100% { opacity: 0; }
+  }
+
   .playground-tools-rail {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -13647,4 +13910,770 @@
   .playground-dock-body.is-cards .playground-results {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Docked Playground workbench.
+   The tools reserve a real slice of the viewport; the board keeps its viewport coordinate
+   system so targeting/combat lines continue to use getBoundingClientRect without an offset. */
+.playground-shell {
+  --playground-panel-width: clamp(460px, 34vw, 620px);
+}
+
+.playground-stage .game-screen {
+  box-sizing: border-box;
+  padding-left: 0;
+  transition: padding-left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-shell.is-tools-open .playground-stage .game-screen {
+  padding-left: var(--playground-panel-width);
+}
+
+.playground-dock-host {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 410;
+  width: var(--playground-panel-width);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-100%);
+  transition:
+    opacity 180ms ease,
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-shell.is-tools-open .playground-dock-host {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.playground-dock-host .playground-dock {
+  position: absolute;
+  inset: 0;
+  z-index: auto;
+  width: 100%;
+  border-right: 1px solid rgb(178 158 95 / 0.5);
+  background:
+    radial-gradient(circle at 82% 0%, rgb(184 150 75 / 0.09), transparent 33%),
+    linear-gradient(145deg, rgb(23 29 31 / 0.99), rgb(7 12 14 / 0.995));
+  box-shadow:
+    inset -1px 0 rgb(235 220 171 / 0.05),
+    18px 0 54px rgb(0 0 0 / 0.54);
+  color: #d7d1b9;
+}
+
+.playground-dock-handle {
+  left: 0;
+  z-index: 411;
+  min-height: 108px;
+  border-color: rgb(178 158 95 / 0.48);
+  border-left: 0;
+  border-radius: 0 3px 3px 0;
+  padding: 13px 9px;
+  background:
+    linear-gradient(180deg, rgb(28 35 36 / 0.99), rgb(8 14 16 / 0.99)),
+    radial-gradient(circle at 50% 0%, rgb(225 205 139 / 0.13), transparent 58%);
+  box-shadow: 8px 0 24px rgb(0 0 0 / 0.46);
+  color: #b8b29a;
+  transition:
+    left 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms ease,
+    color 150ms ease,
+    filter 150ms ease;
+}
+
+.playground-shell.is-tools-open .playground-dock-handle {
+  left: calc(var(--playground-panel-width) - 1px);
+}
+
+.playground-dock-handle:hover,
+.playground-dock-handle:focus-visible {
+  border-color: rgb(208 187 119 / 0.78);
+  color: #ead59b;
+  filter: brightness(1.1);
+  outline: none;
+}
+
+/* Fixed game surfaces need the same reserved left edge as the normal Board layout. */
+body.playground-active {
+  --playground-fixed-inset: 0px;
+}
+
+body.playground-panel-open {
+  --playground-fixed-inset: clamp(460px, 34vw, 620px);
+}
+
+body.playground-active .hand-atmosphere-shell,
+body.playground-active .player-hand-shell {
+  left: var(--playground-fixed-inset);
+  transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.playground-active .player-mana-core.player-mana-corner {
+  left: var(--playground-fixed-inset);
+  transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.playground-active .card-preview-dismiss-layer {
+  left: var(--playground-fixed-inset);
+  transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.playground-active .card-preview-dismiss-layer + div {
+  left: calc(var(--playground-fixed-inset) + 1rem);
+  transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.playground-active .phase-banner-shell {
+  left: var(--playground-fixed-inset);
+  transition: left 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-tools-layout {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.playground-tools-rail {
+  border-right-color: rgb(151 143 103 / 0.24);
+  background:
+    linear-gradient(180deg, rgb(28 35 36 / 0.93), rgb(9 15 17 / 0.98)),
+    #07100e;
+}
+
+.playground-tools-brand {
+  min-height: 88px;
+  padding: 15px 11px;
+  border-bottom-color: rgb(151 143 103 / 0.22);
+}
+
+.playground-tools-brand-mark {
+  width: 31px;
+  height: 31px;
+  flex-basis: 31px;
+  border-color: rgb(208 187 119 / 0.56);
+  background:
+    radial-gradient(circle, rgb(130 101 45 / 0.44), rgb(10 17 18 / 0.96));
+  color: #d8bd7a;
+  box-shadow:
+    inset 0 0 12px rgb(226 185 92 / 0.1),
+    0 0 18px rgb(184 144 61 / 0.08);
+}
+
+.playground-tools-brand .playground-dock-title {
+  color: #ded4b5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+}
+
+.playground-dock-kicker {
+  color: #8f845e;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.playground-tools-rail .playground-tabs {
+  gap: 5px;
+  padding: 12px 7px;
+}
+
+.playground-tools-rail .playground-tab {
+  min-height: 44px;
+  gap: 8px;
+  border-radius: 2px;
+  padding: 0 8px;
+  color: #7c8984;
+  font-size: 9px;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-tools-rail .playground-tab:hover {
+  border-color: rgb(151 143 103 / 0.24);
+  background: rgb(165 149 94 / 0.065);
+  color: #c7c0a6;
+  transform: translateX(2px);
+}
+
+.playground-tools-rail .playground-tab.is-active {
+  border-color: rgb(208 187 119 / 0.35);
+  background:
+    linear-gradient(90deg, rgb(112 84 38 / 0.52), rgb(29 38 38 / 0.42));
+  color: #eee2c2;
+  box-shadow:
+    inset 2px 0 #caaa63,
+    inset 0 1px rgb(235 220 171 / 0.04);
+  transform: translateX(0);
+}
+
+.playground-tools-rail .playground-tab.is-active svg {
+  color: #d8bd7a;
+}
+
+.playground-tools-rail-actions {
+  border-top-color: rgb(151 143 103 / 0.2);
+  padding: 8px 7px;
+}
+
+.playground-rail-button {
+  border-color: rgb(124 142 137 / 0.24);
+  background: rgb(7 13 15 / 0.74);
+  color: #7f8f89;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 120ms ease;
+}
+
+.playground-rail-button:hover {
+  border-color: rgb(208 187 119 / 0.48);
+  background: rgb(40 42 34 / 0.72);
+  color: #ded4b5;
+  transform: translateY(-1px);
+}
+
+.playground-tools-main {
+  background:
+    radial-gradient(circle at 88% 0%, rgb(154 125 64 / 0.07), transparent 34%),
+    linear-gradient(180deg, #11191a, #080e10);
+}
+
+.playground-tools-main .playground-dock-header {
+  min-height: 88px;
+  border-bottom-color: rgb(151 143 103 / 0.24);
+  padding: 14px 15px;
+  background: linear-gradient(180deg, rgb(28 35 36 / 0.7), rgb(12 18 20 / 0.22));
+}
+
+.playground-tools-heading .playground-dock-title {
+  color: #ded4b5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+}
+
+.playground-tools-heading > p {
+  color: #71817c;
+  font-size: 10px;
+}
+
+.playground-tools-main .playground-launch {
+  width: 104px;
+}
+
+.playground-launch-button {
+  border-color: rgb(164 151 101 / 0.34);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgb(31 39 40 / 0.96), rgb(10 16 18 / 0.98));
+  color: #b8b29a;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    filter 150ms ease,
+    transform 120ms ease;
+}
+
+.playground-launch-button.is-active {
+  border-color: rgb(208 187 119 / 0.58);
+  background:
+    linear-gradient(180deg, rgb(84 69 39 / 0.9), rgb(31 30 23 / 0.96));
+  color: #eadcae;
+  box-shadow: inset 0 1px rgb(240 221 163 / 0.08);
+}
+
+.playground-launch-button:hover:not(:disabled) {
+  border-color: rgb(225 203 133 / 0.78);
+  color: #f1e4bc;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.playground-live {
+  border-bottom-color: rgb(151 143 103 / 0.2);
+  background: rgb(151 143 103 / 0.16);
+}
+
+.playground-tools-main .playground-readout {
+  background: rgb(6 12 14 / 0.88);
+}
+
+.playground-readout > span {
+  color: #677873;
+}
+
+.playground-readout > strong {
+  color: #c8c4ae;
+}
+
+.playground-readout.is-busy > strong {
+  color: #d5aa63;
+}
+
+.playground-tools-main .playground-dock-body {
+  padding: 14px 14px 22px;
+  scrollbar-color: #596a64 rgb(5 11 12 / 0.72);
+}
+
+.playground-tools-main .playground-dock-body > .playground-panel {
+  animation: playground-panel-content-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.playground-dock-body.is-scenario .playground-panel,
+.playground-dock-body.is-actions .playground-panel,
+.playground-dock-body.is-board .playground-panel,
+.playground-dock-body.is-timeline .playground-panel {
+  display: flex;
+}
+
+.playground-dock-body.is-timeline .playground-panel > .playground-group:last-child {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.playground-dock-body.is-cards .playground-results {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.playground-tools-main .playground-group {
+  border-color: rgb(124 142 137 / 0.25);
+  border-top-color: rgb(164 151 101 / 0.34);
+  border-radius: 2px;
+  padding: 13px;
+  background:
+    linear-gradient(145deg, rgb(25 33 34 / 0.76), rgb(8 15 17 / 0.88));
+  box-shadow:
+    inset 0 1px rgb(235 220 171 / 0.035),
+    0 9px 24px rgb(0 0 0 / 0.16);
+}
+
+.playground-group-title,
+.playground-section-title {
+  color: #aa9b68;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.playground-group-badge,
+.playground-hint,
+.playground-note,
+.playground-empty {
+  color: #71817c;
+}
+
+.playground-field > span {
+  color: #82908b;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.playground-field input,
+.playground-field select,
+.playground-search-input {
+  border-color: rgb(124 142 137 / 0.32);
+  border-radius: 2px;
+  background: rgb(4 10 12 / 0.78);
+  color: #d9d4bd;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.playground-field input:focus,
+.playground-field select:focus,
+.playground-search-input:focus-within {
+  border-color: rgb(177 158 95 / 0.64);
+  background: rgb(7 14 16 / 0.96);
+  box-shadow: 0 0 0 1px rgb(177 158 95 / 0.08), 0 0 18px rgb(177 136 57 / 0.06);
+}
+
+.playground-button,
+.playground-icon-button {
+  border-color: rgb(124 142 137 / 0.3);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgb(28 36 37 / 0.94), rgb(8 15 17 / 0.96));
+  color: #b8b9aa;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    filter 150ms ease,
+    transform 120ms ease;
+}
+
+.playground-button.is-primary {
+  border-color: rgb(177 158 95 / 0.5);
+  background: linear-gradient(180deg, rgb(78 65 38 / 0.9), rgb(29 29 23 / 0.96));
+  color: #e3d5aa;
+}
+
+.playground-button:hover:not(:disabled),
+.playground-icon-button:hover:not(:disabled) {
+  border-color: rgb(208 187 119 / 0.66);
+  color: #efe3bd;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.playground-result,
+.playground-library-entry,
+.playground-step {
+  border-color: rgb(124 142 137 / 0.22);
+  background: rgb(7 14 16 / 0.62);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-result:hover,
+.playground-library-entry:hover,
+.playground-step:hover {
+  border-color: rgb(177 158 95 / 0.44);
+  background: rgb(32 38 36 / 0.84);
+  transform: translateX(2px);
+}
+
+.playground-divider {
+  background: rgb(151 143 103 / 0.2);
+}
+
+@keyframes playground-panel-content-in {
+  from { opacity: 0; filter: blur(2px); transform: translateY(7px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+@media (max-width: 1100px) {
+  .playground-shell {
+    --playground-panel-width: clamp(420px, 42vw, 500px);
+  }
+
+  body.playground-panel-open {
+    --playground-fixed-inset: clamp(420px, 42vw, 500px);
+  }
+
+  .playground-tools-layout {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .playground-tools-brand > div,
+  .playground-tools-rail .playground-tab > span {
+    display: none;
+  }
+
+  .playground-tools-brand,
+  .playground-tools-rail .playground-tab {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playground-stage .game-screen,
+  .playground-dock-host,
+  .playground-dock-handle,
+  body.playground-active .hand-atmosphere-shell,
+  body.playground-active .player-hand-shell,
+  body.playground-active .player-mana-core.player-mana-corner {
+    transition-duration: 1ms;
+  }
+
+  .playground-tools-main .playground-dock-body > .playground-panel {
+    animation-duration: 1ms;
+  }
+}
+
+/* Compact dock navigation: the workbench owns the complete panel width, with tabs above it. */
+.playground-tools-layout {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.playground-tools-topbar {
+  display: flex;
+  min-height: 64px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(151 143 103 / 0.2);
+  padding: 9px 12px;
+  background: linear-gradient(180deg, rgb(28 35 36 / 0.88), rgb(11 18 19 / 0.76));
+}
+
+.playground-tools-topbar .playground-tools-brand {
+  min-height: 0;
+  justify-content: flex-start;
+  gap: 9px;
+  border: 0;
+  padding: 0;
+}
+
+.playground-tools-topbar .playground-tools-brand > div {
+  display: block;
+}
+
+.playground-tools-topbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.playground-tools-topbar-actions .playground-rail-button {
+  min-width: 68px;
+  min-height: 34px;
+  padding: 0 9px;
+}
+
+.playground-tools-top-tabs {
+  display: grid;
+  width: 100%;
+  min-height: 52px;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 1px solid rgb(151 143 103 / 0.25);
+  padding: 0 7px;
+  background: rgb(5 11 13 / 0.82);
+}
+
+.playground-tools-top-tabs .playground-tab {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-right: 1px solid rgb(124 142 137 / 0.12);
+  padding: 0 4px;
+  color: #778681;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.playground-tools-top-tabs .playground-tab:last-child {
+  border-right: 0;
+}
+
+.playground-tools-top-tabs .playground-tab::after {
+  position: absolute;
+  right: 13px;
+  bottom: 0;
+  left: 13px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #caaa63 18% 82%, transparent);
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.35);
+  transition:
+    opacity 150ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playground-tools-top-tabs .playground-tab:hover {
+  background: rgb(165 149 94 / 0.06);
+  color: #c7c0a6;
+  transform: translateY(-1px);
+}
+
+.playground-tools-top-tabs .playground-tab.is-active {
+  background:
+    linear-gradient(180deg, rgb(112 84 38 / 0.26), rgb(29 38 38 / 0.18));
+  color: #eee2c2;
+  box-shadow: none;
+  transform: none;
+}
+
+.playground-tools-top-tabs .playground-tab.is-active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.playground-tools-top-tabs .playground-tab.is-active svg {
+  color: #d8bd7a;
+}
+
+.playground-tools-main {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.playground-tools-main .playground-dock-header,
+.playground-tools-main .playground-dock-body,
+.playground-tools-main .playground-panel,
+.playground-tools-main .playground-section,
+.playground-tools-main .playground-group,
+.playground-tools-main .playground-grid-2,
+.playground-tools-main .playground-seed-row,
+.playground-tools-main .playground-horde-turn,
+.playground-tools-main .playground-card-browser-toolbar,
+.playground-tools-main .playground-results,
+.playground-tools-main .playground-library-list,
+.playground-tools-main .playground-steps {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-tools-main .playground-dock-body {
+  align-items: stretch;
+}
+
+.playground-tools-main .playground-panel {
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .playground-tools-top-tabs .playground-tab > span {
+    display: inline;
+  }
+}
+
+/* Playground control rhythm: every action in the same row receives the same footprint. */
+.playground-tools-main .playground-button-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 7px;
+}
+
+.playground-tools-main .playground-button-row > .playground-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+}
+
+/* Card browser stays scannable without falling back to a single, overly long list. */
+.playground-dock-body.is-cards .playground-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.playground-dock-body.is-cards .playground-results > li {
+  min-width: 0;
+}
+
+.playground-dock-body.is-cards .playground-result {
+  min-height: 68px;
+  padding: 7px 8px;
+}
+
+.playground-dock-body.is-cards .playground-thumb {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+}
+
+.playground-dock-body.is-cards .playground-thumb.is-large {
+  width: 72px;
+  height: 72px;
+  flex-basis: 72px;
+}
+
+/* Denser header, with the navigation directly beneath it. */
+.playground-tools-main .playground-dock-header {
+  min-height: 58px;
+  padding: 8px 14px;
+}
+
+.playground-tools-heading .playground-dock-title {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+.playground-tools-main .playground-launch-button {
+  min-height: 34px;
+  font-size: 11px;
+}
+
+/* Readability pass for the complete dock, not just its primary controls. */
+.playground-dock-host .playground-dock {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-dock-kicker,
+.playground-dock-host .playground-rail-button,
+.playground-dock-host .playground-compact-button {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-tools-brand .playground-dock-title {
+  font-size: 15px;
+}
+
+.playground-dock-host .playground-tools-top-tabs .playground-tab {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-group-title,
+.playground-dock-host .playground-section-title,
+.playground-dock-host .playground-field > span,
+.playground-dock-host .playground-mini-input > span,
+.playground-dock-host .playground-zone-title {
+  font-size: 11px;
+}
+
+.playground-dock-host .playground-group-badge,
+.playground-dock-host .playground-hint,
+.playground-dock-host .playground-note,
+.playground-dock-host .playground-status,
+.playground-dock-host .playground-result-count {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-field input,
+.playground-dock-host .playground-field select,
+.playground-dock-host .playground-search,
+.playground-dock-host .playground-select {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-button {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-zone-name,
+.playground-dock-host .playground-selection-line > strong,
+.playground-dock-host .playground-step-label,
+.playground-dock-host .playground-library-info > strong {
+  font-size: 13px;
+}
+
+.playground-dock-host .playground-zone-amount,
+.playground-dock-host .playground-amount-control input,
+.playground-dock-host .playground-result-meta {
+  font-size: 12px;
+}
+
+.playground-dock-host .playground-zone-flag,
+.playground-dock-host .playground-result-name > em {
+  font-size: 10px;
+}
+
+.playground-dock-host .playground-result-name {
+  font-size: 14px;
+}
+
+.playground-dock-host .playground-result-id,
+.playground-dock-host .playground-selection-line > span,
+.playground-dock-host .playground-step-index,
+.playground-dock-host .playground-library-info > span {
+  font-size: 11px;
+}
+
+.playground-dock-host .playground-checkbox,
+.playground-dock-host .playground-amount-control {
+  font-size: 13px;
 }

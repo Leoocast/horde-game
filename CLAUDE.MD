@@ -100,7 +100,7 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck Alpha 0.0.3 del player (JSON + manifest de imagenes)
+        mono_green_ramp/  deck del player en esquema 0.2.0 (JSON + manifest de imagenes)
       horde/
         zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
@@ -125,9 +125,16 @@ tests/
   engineTestUtils.js      helpers para armar game state de prueba
 ```
 
-Detalle de testing en `docs/testing.md`.
+Detalle de testing en `docs/testing.md`. Para agregar o implementar una carta, seguir
+`docs/adding_cards.md`.
 
 ## Estado actual del juego
+
+### Modos legacy
+
+Chaos Mode está **deprecated** y oculto del menú principal. Su implementación se conserva por
+compatibilidad y pruebas existentes, pero no debe recibir features ni mantenimiento activo hasta
+que se decida retomarlo explícitamente.
 
 ### Player
 
@@ -176,15 +183,16 @@ Seed especial: `developer`.
 
 En `src/engine/GameState.ts`:
 - `DEVELOPER_SEED = "developer"`
-- player inicia con 50 vida
-- player inicia con 5 Forest en battlefield
-- player opening hand esta controlada por constantes
-- horde opening library puede forzar cartas al top
+- player inicia con 999 vida
+- player inicia con 4 Forest en battlefield
+- player roba 2 Broken Wings forzadas mas 5 cartas aleatorias
+- la Horda fuerza `goblin_token_1_1_red` y `rundvelt_hordemaster` al frente
+- `graf_harvest` se mantiene fuera de esas dos posiciones protegidas
 
 Actualmente se usa para testear rapido:
 - cartas concretas en mano
 - tierras listas en campo
-- `graf_harvest` al top de la Horda para probar permanentes no criatura y Menace
+- una apertura Goblin reproducible para probar triggers y muertes
 
 Si el usuario pide "ponme X en mano/campo en developer", hacerlo en `GameState.ts`, no hackear componentes.
 
@@ -284,11 +292,15 @@ Importante:
 Keywords:
 - se muestran arriba como badges
 - la descripcion no debe repetir keywords si ya se muestran arriba
-- si una carta no tiene rules text util, mostrar flavor text cuando exista
+- si una carta no tiene reglas adicionales, `gameText` debe decirlo de forma breve
+- las descripciones de reglas visibles usan `gameText` del JSON del deck y deben explicar el
+  comportamiento real de Hostfall; no usar oracle text de Magic como descripción de gameplay
 
 ## Decks e imagenes
 
-Ya NO existe formato viejo ni JSONs legacy (`player_deck.json`, `horde_deck.json` y `cardImageLookups.json` fueron eliminados). Los tres decks usan el mismo esquema authoring (cards con `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
+El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
+`cardImageLookups.json`. Los tres decks vigentes usan el mismo esquema authoring (cards con
+`abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
 - horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
@@ -440,6 +452,8 @@ Durante Battle:
 ### Defensa contra Horda
 
 Durante Defend:
+- la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
+  agrupado visual por copias/stacks nunca puede reordenar el combate
 - seleccion del defensor puede hacerse por click/drag
 - flechas azules de defensor a atacante
 - si una criatura atacante tiene MENACE, defender debe bloquearse si solo hay 1 blocker; el boton muestra tooltip explicando
@@ -594,8 +608,41 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
 - `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (hobgoblin_bandit_lord, battle_cry_goblin, goblin_rabblemaster "must attack", mogg_mob).
-- `Graf Harvest` se fuerza al top de la Horda en developer mode.
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`. Mogg Mob se simplifico a criatura vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Horda ya la satisface.
+- Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
+  este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
+  el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
+  entre ambos beats es corta (160ms) y la cola se libera 360ms despues de aterrizar el buff; las
+  lineas pueden terminar mientras comienza el Burn para no frenar los efectos posteriores.
+- Battle Cry Goblin se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
+  hasta fin de turno. Haste y Pack tactics se omiten; el ETB pulsa una vez y el beat de buff no
+  vuelve a iluminar la fuente.
+- Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
+  hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
+  rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
+- Goblin Chainwhirler usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
+  una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
+  criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
+  en el ultimo.
+- Las keywords inglesas de varias palabras se presentan con espacios (`FIRST STRIKE`), nunca con
+  el identificador interno `FIRST_STRIKE`; carta, preview y tooltip comparten esa localizacion.
+- Diregraf Captain conserva perdida de vida (no dano), pero la difiere hasta el impacto de
+  `BURN_PLAYER_LIFE_LOSS`: una bola Burn negra, aceitosa y con brillo violeta usa temporalmente
+  los mismos sonidos de lanzamiento e impacto que el fuego normal.
+- General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
+  tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
+  agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
+  usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
+- Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
+  individual del Playground y los beats que crean permanentes incrementan
+  `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
+  reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
+  que el primer Execute no vuelva a animar permanentes viejos.
+- El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
+  invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
+  layout siga apilando copias iguales.
+- En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
+  queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
@@ -611,6 +658,7 @@ Leer primero:
 - componente visual especifico involucrado
 
 Si es carta nueva:
+- seguir `docs/adding_cards.md`
 - revisar su JSON en `src/data/decks/player/mono_green_ramp/mono_green_ramp.json` o el deck correspondiente bajo `src/data/decks/horde/`
 - revisar normalizacion en `src/data/normalizeDeck.ts`
 - revisar si ya hay efecto generico en `EffectResolver.ts`

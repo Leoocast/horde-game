@@ -1,19 +1,17 @@
 import {
   Activity,
-  ExternalLink,
-  FlaskConical,
   Gamepad2,
   Home,
   Layers3,
   ListVideo,
+  PanelLeftClose,
+  PanelLeftOpen,
   RotateCcw,
   Search,
   SlidersHorizontal,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Board } from "../components/Board";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
@@ -44,7 +42,6 @@ import {
   type ScenarioDefinition,
 } from "./scenario";
 import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } from "./timeline";
-import { openPlaygroundToolsWindow, trackToolsWindowBounds } from "./toolsWindow";
 
 type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
 
@@ -58,17 +55,12 @@ const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon:
 
 const REPLAY_POLL_MS = 120;
 const REPLAY_STEP_GAP_MS = 220;
-const TOOLS_ROOT_ID = "playground-tools-root";
-const COPIED_STYLE_ATTRIBUTE = "data-playground-style-copy";
 
 type PlaygroundScreenProps = {
   onReturnToMenu: () => void;
-  onToolsWindowChange?: (popup: Window | null) => void;
-  /** Opened synchronously by the menu click so popup blockers see a direct user gesture. */
-  initialToolsWindow?: Window | null;
 };
 
-export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialToolsWindow }: PlaygroundScreenProps) {
+export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
   const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const game = useGameStore((state) => state.game);
@@ -83,85 +75,20 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
   const [autoPlaying, setAutoPlaying] = useState(false);
   const [boards, setBoards] = useState<StoredBoard[]>(() => listStoredBoards());
   const [replays, setReplays] = useState<StoredReplay[]>(() => listStoredReplays());
-  const [toolsRoot, setToolsRoot] = useState<HTMLElement | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(true);
   const startedRef = useRef(false);
-  const toolsWindowRef = useRef<Window | null>(
-    initialToolsWindow && !initialToolsWindow.closed ? initialToolsWindow : null,
-  );
 
   const reportError = useCallback(
     (message: string) => pushToast({ title: "Playground", message, tone: "warning" }),
     [pushToast],
   );
 
-  const attachToolsWindow = useCallback((popup: Window) => {
-    prepareToolsDocument(popup);
-    copyPlaygroundStyles(document, popup.document);
-    toolsWindowRef.current = popup;
-    onToolsWindowChange?.(popup);
-    setToolsRoot(popup.document.getElementById(TOOLS_ROOT_ID));
-    popup.focus();
-  }, [onToolsWindowChange]);
-
-  const openToolsWindow = useCallback(() => {
-    const current = toolsWindowRef.current;
-    if (current && !current.closed) {
-      current.focus();
-      return;
-    }
-    const popup = openPlaygroundToolsWindow(current);
-    if (!popup) {
-      reportError("The browser blocked the Playground tools window. Allow popups and try again.");
-      return;
-    }
-    attachToolsWindow(popup);
-  }, [attachToolsWindow, reportError]);
-
-  const closeToolsWindow = useCallback(() => {
-    const popup = toolsWindowRef.current;
-    toolsWindowRef.current = null;
-    onToolsWindowChange?.(null);
-    setToolsRoot(null);
-    if (popup && !popup.closed) popup.close();
-  }, [onToolsWindowChange]);
-
-  useEffect(() => {
-    const popup = toolsWindowRef.current;
-    if (popup && !popup.closed) attachToolsWindow(popup);
-  }, [attachToolsWindow]);
-
-  useEffect(() => {
-    const popup = toolsWindowRef.current;
-    if (!popup || popup.closed) return;
-    const onToolsWindowClosed = () => {
-      toolsWindowRef.current = null;
-      onToolsWindowChange?.(null);
-      setToolsRoot(null);
-    };
-    popup.addEventListener("pagehide", onToolsWindowClosed);
-    return () => popup.removeEventListener("pagehide", onToolsWindowClosed);
-  }, [onToolsWindowChange, toolsRoot]);
-
-  useEffect(() => {
-    const popup = toolsWindowRef.current;
-    if (!popup || popup.closed) return;
-    const observer = new MutationObserver(() => copyPlaygroundStyles(document, popup.document));
-    observer.observe(document.head, { attributes: true, childList: true, characterData: true, subtree: true });
-    return () => observer.disconnect();
-  }, [toolsRoot]);
-
-  useEffect(() => {
-    const popup = toolsWindowRef.current;
-    if (!popup || popup.closed) return;
-    return trackToolsWindowBounds(popup);
-  }, [toolsRoot]);
-
   const buildBoard = useCallback(
     (definition: ScenarioDefinition) => {
       const problems = validateScenario(definition);
       if (problems.length > 0) {
         reportError(problems.join(" "));
-        return;
+        return false;
       }
       const snapshot = cloneScenario(definition);
       loadScenario(buildScenarioGame(snapshot), {
@@ -171,6 +98,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
       setLaunch(snapshot);
       setReplayCursor(undefined);
       setAutoPlaying(false);
+      return true;
     },
     [loadScenario, reportError],
   );
@@ -185,11 +113,20 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "F2") return;
       event.preventDefault();
-      openToolsWindow();
+      setToolsOpen((open) => !open);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [openToolsWindow]);
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.add("playground-active");
+    document.body.classList.toggle("playground-panel-open", toolsOpen);
+    return () => {
+      document.body.classList.remove("playground-active");
+      document.body.classList.remove("playground-panel-open");
+    };
+  }, [toolsOpen]);
 
   function dispatch(step: TimelineStep) {
     const outcome = executeStep(step);
@@ -199,6 +136,7 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
   }
 
   function executeHordeTurn() {
+    if (useGameStore.getState().hordeDeckId !== draft.hordeDeckId && !buildBoard(draft)) return;
     dispatch(
       hordeQueue.length > 0
         ? { kind: "hordeTurnExact", entries: structuredClone(hordeQueue) }
@@ -299,16 +237,9 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
         reportError(problems.join(" "));
         return;
       }
-      // A JSON load is a one-off preview until Build board is pressed. Restart therefore returns
-      // to the previous checkpoint instead of getting silently rebound to the imported file.
       const definition = cloneScenario(board.definition);
       setDraft(definition);
-      loadScenario(buildScenarioGame(definition), {
-        playerDeckId: definition.playerDeckId,
-        hordeDeckId: definition.hordeDeckId,
-      });
-      setReplayCursor(undefined);
-      setAutoPlaying(false);
+      buildBoard(definition);
     });
   }
 
@@ -335,16 +266,42 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
   const tools = (
     <aside className="playground-dock" aria-label="Playground tools">
       <div className="playground-tools-layout">
-        <aside className="playground-tools-rail">
+        <header className="playground-tools-topbar">
           <div className="playground-tools-brand">
             <span className="playground-tools-brand-mark"><Activity size={17} /></span>
             <div>
               <div className="playground-dock-kicker">Hostfall</div>
-              <div className="playground-dock-title">Lab</div>
+              <div className="playground-dock-title">Playground</div>
             </div>
           </div>
 
-          <nav className="playground-tabs" aria-label="Playground sections">
+          <div className="playground-tools-topbar-actions">
+            <button className="playground-rail-button" type="button" title="Return to main menu" onClick={onReturnToMenu}>
+              <Home size={15} />
+              <span>Menu</span>
+            </button>
+            <button className="playground-rail-button" type="button" title="Collapse Playground panel (F2)" onClick={() => setToolsOpen(false)}>
+              <PanelLeftClose size={15} />
+              <span>Close</span>
+            </button>
+          </div>
+        </header>
+
+        <section className="playground-tools-main">
+          <header className="playground-dock-header">
+            <div className="playground-tools-heading">
+              <h2 className="playground-dock-title">{activeTab.label}</h2>
+            </div>
+
+            <div className="playground-launch" role="group" aria-label="Board controls">
+              <button className="playground-launch-button is-active" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
+                <RotateCcw size={14} />
+                <span>Restart</span>
+              </button>
+            </div>
+          </header>
+
+          <nav className="playground-tabs playground-tools-top-tabs" aria-label="Playground sections">
             {TABS.map((entry) => {
               const Icon = entry.icon;
               return (
@@ -356,52 +313,12 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
                   aria-current={tab === entry.id ? "page" : undefined}
                   onClick={() => setTab(entry.id)}
                 >
-                  <Icon size={16} />
+                  <Icon size={15} />
                   <span>{entry.label}</span>
                 </button>
               );
             })}
           </nav>
-
-          <div className="playground-tools-rail-actions">
-            <button className="playground-rail-button" type="button" title="Return to main menu" onClick={onReturnToMenu}>
-              <Home size={15} />
-              <span>Menu</span>
-            </button>
-            <button className="playground-rail-button" type="button" title="Close tools window" onClick={closeToolsWindow}>
-              <X size={15} />
-              <span>Close</span>
-            </button>
-          </div>
-        </aside>
-
-        <section className="playground-tools-main">
-          <header className="playground-dock-header">
-            <div className="playground-tools-heading">
-              <div className="playground-dock-kicker">Developer playground</div>
-              <h2 className="playground-dock-title">{activeTab.label}</h2>
-              <p>{activeTab.description}</p>
-            </div>
-
-            <div className="playground-launch" role="group" aria-label="Board controls">
-              <button className="playground-launch-button is-active" type="button" onClick={() => buildBoard(draft)}>
-                <FlaskConical size={14} />
-                <span>Build board</span>
-              </button>
-              <button className="playground-launch-button" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
-                <RotateCcw size={14} />
-                <span>Restart</span>
-              </button>
-            </div>
-          </header>
-
-          <div className="playground-live" aria-label="Live game state">
-            <LiveReadout label="Turn" value={String(game.turnNumber)} />
-            <LiveReadout label="Side" value={game.activeSide} />
-            <LiveReadout label="Phase" value={game.phase} />
-            <LiveReadout label="Hand" value={String(game.player.hand.length)} />
-            <LiveReadout label="Events" value={String(game.eventQueue.length)} busy={game.eventQueue.length > 0} />
-          </div>
 
           <div className={`playground-dock-body is-${tab} old-scrollbar`}>
             {tab === "scenario" && (
@@ -409,7 +326,10 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
                 draft={draft}
                 queue={hordeQueue}
                 onChangeQueue={setHordeQueue}
-                onChange={setDraft}
+                onChange={(definition) => {
+                  if (definition.hordeDeckId !== draft.hordeDeckId) setHordeQueue([]);
+                  setDraft(definition);
+                }}
                 onUpdate={() => buildBoard(draft)}
                 onExecuteHordeTurn={executeHordeTurn}
               />
@@ -458,51 +378,24 @@ export function PlaygroundScreen({ onReturnToMenu, onToolsWindowChange, initialT
   );
 
   return (
-    <div className="playground-shell">
+    <div className={`playground-shell ${toolsOpen ? "is-tools-open" : ""}`}>
       <div className="playground-stage">
         <Board key={gameSessionId} playerName="Playground" setupTurns={0} onReturnToMenu={onReturnToMenu} />
       </div>
 
-      {toolsRoot ? createPortal(tools, toolsRoot) : (
-        <button className="playground-dock-handle" type="button" title="Open Playground tools (F2)" onClick={openToolsWindow}>
-          <ExternalLink size={16} />
-          <span>Open tools</span>
-        </button>
-      )}
+      <div className="playground-dock-host" aria-hidden={!toolsOpen} inert={!toolsOpen}>
+        {tools}
+      </div>
+      <button
+        className="playground-dock-handle"
+        type="button"
+        title={`${toolsOpen ? "Close" : "Open"} Playground tools (F2)`}
+        aria-label={`${toolsOpen ? "Close" : "Open"} Playground tools`}
+        onClick={() => setToolsOpen((open) => !open)}
+      >
+        {toolsOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+        <span>{toolsOpen ? "Hide Playground" : "Open Playground"}</span>
+      </button>
     </div>
   );
-}
-
-function LiveReadout({ label, value, busy = false }: { label: string; value: string; busy?: boolean }) {
-  return (
-    <div className={`playground-readout ${busy ? "is-busy" : ""}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function prepareToolsDocument(popup: Window) {
-  if (!popup.document.getElementById(TOOLS_ROOT_ID)) {
-    popup.document.open();
-    popup.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Hostfall — Playground</title></head><body class="playground-tools-window-body"><div id="${TOOLS_ROOT_ID}"></div></body></html>`);
-    popup.document.close();
-    const base = popup.document.createElement("base");
-    base.href = document.baseURI;
-    popup.document.head.prepend(base);
-  }
-  popup.document.documentElement.lang = document.documentElement.lang;
-  popup.document.body.className = "playground-tools-window-body";
-}
-
-function copyPlaygroundStyles(source: Document, target: Document) {
-  target.head.querySelectorAll(`[${COPIED_STYLE_ATTRIBUTE}]`).forEach((node) => node.remove());
-  source.head.querySelectorAll<HTMLLinkElement | HTMLStyleElement>('link[rel="stylesheet"], style').forEach((node) => {
-    const copy = node.cloneNode(true) as HTMLLinkElement | HTMLStyleElement;
-    copy.setAttribute(COPIED_STYLE_ATTRIBUTE, "true");
-    if (node.tagName === "LINK") {
-      (copy as HTMLLinkElement).href = (node as HTMLLinkElement).href;
-    }
-    target.head.appendChild(copy);
-  });
 }

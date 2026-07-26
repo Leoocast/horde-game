@@ -1,5 +1,7 @@
 export type Side = "player" | "horde";
 export type DifficultyMode = "easy" | "normal" | "hard";
+// `chaos` is retained only for legacy saves/tests. The experiment is deprecated and no longer
+// exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
@@ -60,6 +62,10 @@ export type CardDefinition = {
   id: string;
   name: string;
   displayNameEs?: string;
+  gameText?: {
+    en?: string;
+    es?: string;
+  };
   quantity?: number;
   isToken?: boolean;
   manaCost?: string;
@@ -131,6 +137,10 @@ export type CardInstance = {
   name: string;
   displayName: string;
   displayNameEs?: string;
+  gameText?: {
+    en?: string;
+    es?: string;
+  };
   owner: Side;
   controller: Side;
   zone: ZoneName;
@@ -187,12 +197,22 @@ export type HordeState = {
   /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
   pendingCard?: CardInstance;
+  /** Extra normal reveal rounds requested by a Horde spell. HordeController consumes these
+   * inside the current turn; they never advance the Horde turn counter or add Surge reveals. */
+  pendingRevealRounds?: number;
 };
 
 export type CombatState = {
   playerAttackers: string[];
   hordeAttackers: string[];
   blockers: Record<string, string[]>;
+  /** Damage captured when attackers are declared but deliberately held until the animated Horde
+   * attack sequence ends. Attacker ids make each attacker count once even with multiple blockers. */
+  pendingDamageVolleys: Array<{
+    sourceId?: string;
+    attackerIds: string[];
+    amountPerAttacker: number;
+  }>;
 };
 
 export type EventItem = {
@@ -202,6 +222,13 @@ export type EventItem = {
   payload?: Record<string, unknown>;
   /** Limits a deferred event to the controller whose triggers still need to resolve. */
   triggerController?: Side;
+};
+
+export type BattlefieldEntryRecord = {
+  instanceId: string;
+  controller: Side;
+  cardTypes: string[];
+  subtypes: string[];
 };
 
 export type GameState = {
@@ -223,6 +250,9 @@ export type GameState = {
   player: PlayerState;
   horde: HordeState;
   combat: CombatState;
+  /** Permanents that entered since the current turn began. Rules may count entries even if the
+   * permanent later changes zones; presentation and logs must not be used as rules history. */
+  battlefieldEntriesThisTurn: BattlefieldEntryRecord[];
   eventQueue: EventItem[];
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of

@@ -17,6 +17,10 @@
       "id": "llanowar_elves",
       "name": "Llanowar Elves",
       "displayNameEs": "Elfos de Llanowar",
+      "gameText": {
+        "en": "{{T}}: Add {G}.",
+        "es": "{{T}}: Agrega {G}."
+      },
       "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "227",
@@ -71,6 +75,10 @@
       "id": "sunshower_druid",
       "name": "Sunshower Druid",
       "displayNameEs": "Druida de la lluvia solar",
+      "gameText": {
+        "en": "When this creature enters, put a +1/+1 counter on an allied creature. You gain 1 life.",
+        "es": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida."
+      },
       "quantity": 3,
       "setCode": "BLB",
       "collectorNumber": "195",
@@ -139,6 +147,10 @@
       "id": "druid_of_the_cowl",
       "name": "Druid of the Cowl",
       "displayNameEs": "Druid of the Cowl",
+      "gameText": {
+        "en": "{{T}}: Add {G}.",
+        "es": "{{T}}: Agrega {G}."
+      },
       "quantity": 2,
       "setCode": "M19",
       "collectorNumber": "177",
@@ -193,6 +205,10 @@
       "id": "ichorspit_basilisk",
       "name": "Ichorspit Basilisk",
       "displayNameEs": "Basilisco escupeicor",
+      "gameText": {
+        "en": "When this creature deals combat damage to the Horde, give the Horde 1 poison counter.",
+        "es": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno."
+      },
       "quantity": 2,
       "setCode": "ONE",
       "collectorNumber": "170",
@@ -239,6 +255,10 @@
       "id": "beast_kin_ranger",
       "name": "Beast-Kin Ranger",
       "displayNameEs": "Guardabosque bestial",
+      "gameText": {
+        "en": "Whenever another allied creature enters, this creature gets +1/+0 until end of turn.",
+        "es": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno."
+      },
       "quantity": 3,
       "setCode": "FDN",
       "collectorNumber": "100",
@@ -306,6 +326,10 @@
       "id": "magnigoth_sentry",
       "name": "Magnigoth Sentry",
       "displayNameEs": "Centinela mágnigoth",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "556",
@@ -340,6 +364,10 @@
       "id": "colossadactyl",
       "name": "Colossadactyl",
       "displayNameEs": "Colosadáctilo",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 2,
       "setCode": "LCI",
       "collectorNumber": "180",
@@ -375,6 +403,10 @@
       "id": "timberland_ancient",
       "name": "Timberland Ancient",
       "displayNameEs": "Anciano forestal",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 1,
       "setCode": "MOM",
       "collectorNumber": "210",
@@ -410,6 +442,10 @@
       "id": "cosmic_hunger",
       "name": "Cosmic Hunger",
       "displayNameEs": "Hambre cósmica",
+      "gameText": {
+        "en": "Choose an allied creature and another creature. The allied creature deals damage equal to its power to the other creature.",
+        "es": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura."
+      },
       "quantity": 2,
       "setCode": "MOM",
       "collectorNumber": "182",
@@ -503,6 +539,10 @@
       "id": "ruthless_predation",
       "name": "Ruthless Predation",
       "displayNameEs": "Depredación despiadada",
+      "gameText": {
+        "en": "An allied creature gets +1/+2 until end of turn, then fights an enemy creature.",
+        "es": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga."
+      },
       "quantity": 1,
       "setCode": "ONE",
       "collectorNumber": "182",
@@ -605,6 +645,10 @@
       "id": "broken_wings",
       "name": "Broken Wings",
       "displayNameEs": "Alas rotas",
+      "gameText": {
+        "en": "Destroy an artifact, an enchantment, or a creature with Flying.",
+        "es": "Destruye un artefacto, un encantamiento o una criatura con Vuelo."
+      },
       "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "214",
@@ -681,6 +725,10 @@
       "id": "giant_growth",
       "name": "Giant Growth",
       "displayNameEs": "Crecimiento gigante",
+      "gameText": {
+        "en": "Target creature gets +3/+3 until end of turn.",
+        "es": "La criatura objetivo obtiene +3/+3 hasta el final del turno."
+      },
       "quantity": 2,
       "setCode": "FDN",
       "collectorNumber": "223",
@@ -743,6 +791,10 @@
       "id": "forest",
       "name": "Forest",
       "displayNameEs": "Bosque",
+      "gameText": {
+        "en": "{{T}}: Add {G}.",
+        "es": "{{T}}: Agrega {G}."
+      },
       "quantity": 15,
       "setCode": "FDN",
       "collectorNumber": null,

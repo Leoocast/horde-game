@@ -6,7 +6,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
-import { effectSummary } from "../utils/cardText";
+import { gameEffectDescription } from "../utils/cardText";
 import { cardKeywords, cardStats } from "../utils/selectors";
 import { KeywordPills } from "./CardPreview";
 
@@ -209,7 +209,7 @@ export function GraveyardDetailsModal({
   const displayName = language === "es" ? displayCard.displayNameEs || details.displayName || localizedCardName(displayCard, language) : localizedCardName(displayCard, language);
   const keywords = cardKeywords(game, displayCard);
   const stats = cardStats(game, displayCard);
-  const text = cleanCardDescriptionText(details.oracleText, details.flavorText, keywords, effectSummary(displayCard));
+  const text = cleanCardDescriptionText(undefined, undefined, keywords, gameEffectDescription(displayCard, language));
 
   return (
     <div

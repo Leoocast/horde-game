@@ -13,6 +13,8 @@ import {
   declareHordeAttackers,
   finishHordeCombat,
   isHordeAttackEventCurrent,
+  pendingHordeCombatDamageVolley,
+  resolvePendingHordeCombatDamageVolleys,
   resolvePlayerCombat,
   sortPlayerAttackersLeftToRight,
   togglePlayerAttacker,
@@ -32,11 +34,13 @@ import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules"
 import {
   captureStaticAuraBeats,
   hasEnterBattlefieldTrigger,
+  hordeSequenceEpoch,
   resetHordeSequence,
-  scheduleHordeEnterTriggers,
+  scheduleHordeArrivalEffects,
   scheduleQueuedHordeTriggers,
   startHordeCombatSequence,
 } from "./hordeBeats";
+import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { advanceSmallpoxSequence, runSmallpoxSequence } from "./smallpoxSequence";
 import {
   appendHordeMillAnimations,
@@ -60,8 +64,11 @@ export type GameStore = {
   hordeAttackAnimation?: HordeAttackAnimation;
   burnAnimation?: BurnAnimationState;
   burnImpactCardId?: string;
+  burnImpactCardIds: string[];
   burnImpactEventId?: number;
+  playerBurnImpactEventId?: number;
   deathRevealCard?: CardInstance;
+  hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
   pendingStaticAuras: StaticAura[];
   /** Stat bonus withheld from each card until its aura's beat plays. Presentation only. */
@@ -185,6 +192,12 @@ export type GameStore = {
 const SEED_STORAGE_KEY = "horde-game-seed";
 const defaultSeed = readStoredSeed();
 const HORDE_ATTACK_ANIMATION_MS = 500;
+const COMBAT_VOLLEY_LEAD_IN_MS = 360;
+const COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS = 220;
+const COMBAT_VOLLEY_IMPACT_MS = 638;
+const COMBAT_VOLLEY_ANIMATION_MS = 1220;
+const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
+const COMBAT_VOLLEY_MAX_PROJECTILES = 6;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
 const HORDE_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
@@ -245,8 +258,17 @@ export type EnergyRecycleAnimation = {
 export type BurnAnimationState = {
   id: string;
   sourceId?: string;
-  targetId: string;
+  targetId?: string;
+  targetKind?: "card" | "playerLife";
+  targets?: BurnAnimationTarget[];
   amount: number;
+  projectileCount?: number;
+  variant?: "fire" | "oil";
+};
+
+export type BurnAnimationTarget = {
+  targetId?: string;
+  targetKind: "card" | "playerLife";
 };
 
 export type BlockDragState = {
@@ -317,8 +339,11 @@ function createCleanUiState(): Partial<GameStore> {
     hordeAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
+    burnImpactCardIds: [],
     burnImpactEventId: undefined,
+    playerBurnImpactEventId: undefined,
     deathRevealCard: undefined,
+    hordeSpellCard: undefined,
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
     playerAttackAnimation: undefined,
@@ -362,8 +387,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeAttackAnimation: undefined,
   burnAnimation: undefined,
   burnImpactCardId: undefined,
+  burnImpactCardIds: [],
   burnImpactEventId: undefined,
+  playerBurnImpactEventId: undefined,
   deathRevealCard: undefined,
+  hordeSpellCard: undefined,
   pendingStaticAuras: [],
   heldStaticAuraBonuses: {},
   playerAttackAnimation: undefined,
@@ -890,11 +918,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedHordeCreatureId: undefined,
         selectedPlayerCreatureId: undefined,
         hordeAutoTriggerCount: triggerCards.length,
+        summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
         hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
-      if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
-      runSmallpoxSequence(pendingCard);
+      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
       return;
     }
     if (main.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
@@ -903,16 +931,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedHordeCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
       hordeAutoTriggerCount: triggerCards.length,
+      summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
     });
     // Before any frame renders the new creatures: hold back the buffs they just gained so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
-    if (triggerCards.length > 0) {
-      scheduleHordeEnterTriggers(triggerCards, () => startHordeCombatSequence());
-    } else {
-      startHordeCombatSequence();
-    }
+    scheduleHordeArrivalEffects(triggerCards, () => startHordeCombatSequence());
   },
   /**
    * Playground only. Same beats as `runHordeMain` — enter triggers, static aura capture, mill
@@ -939,13 +964,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedHordeCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
       hordeAutoTriggerCount: triggerCards.length,
+      summoningAnimationCount: state.summoningAnimationCount + entered.length,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
     });
     // Before any frame renders the new permanent: hold back the buffs it just granted so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
-    if (triggerCards.length > 0) scheduleHordeEnterTriggers(triggerCards);
-    if (pendingCard) runSmallpoxSequence(pendingCard);
+    if (pendingCard) {
+      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
+      return;
+    }
+    scheduleHordeArrivalEffects(triggerCards, () => scheduleQueuedHordeTriggers());
   },
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;
@@ -1024,7 +1053,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const attackEvents = buildHordeAttackEvents(game);
     if (attackEvents.length === 0) {
-      finishAnimatedHordeCombat();
+      runPendingHordeCombatVolleyOrFinish();
       return;
     }
     set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
@@ -1049,7 +1078,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number): void {
   const event = events[index];
   if (!event) {
-    finishAnimatedHordeCombat();
+    runPendingHordeCombatVolleyOrFinish();
     return;
   }
   if (!isHordeAttackEventCurrent(useGameStore.getState().game, event)) {
@@ -1093,6 +1122,69 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number):
   }, HORDE_ATTACK_ANIMATION_MS);
 }
 
+function runPendingHordeCombatVolleyOrFinish(): void {
+  const state = useGameStore.getState();
+  const volley = pendingHordeCombatDamageVolley(state.game);
+  if (!volley || volley.damage <= 0) {
+    finishAnimatedHordeCombat();
+    return;
+  }
+
+  const sequenceId = hordeSequenceEpoch();
+  const source = volley.sourceId
+    ? state.game.horde.battlefield.find((card) => card.instanceId === volley.sourceId)
+    : undefined;
+  const projectileCount = Math.max(1, Math.min(COMBAT_VOLLEY_MAX_PROJECTILES, volley.attackerCount));
+  const volleyDelay = (projectileCount - 1) * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
+
+  useGameStore.setState({ hordeAutoTriggerCount: 1 });
+  if (source) {
+    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+    useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
+    useToastStore.getState().pushToast({
+      title: uiText("toast.hordeEffect"),
+      message: uiText("toast.cardTrigger", { card: uiCardName(source) }),
+      tone: "horde",
+    });
+  }
+
+  window.setTimeout(() => {
+    if (sequenceId !== hordeSequenceEpoch()) return;
+    useGameStore.setState({
+      burnAnimation: {
+        id: `combat-volley-${Date.now()}`,
+        sourceId: volley.sourceId,
+        targetKind: "playerLife",
+        amount: volley.damage,
+        projectileCount,
+      },
+    });
+    for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {
+      const projectileDelay = projectileIndex * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
+      window.setTimeout(() => {
+        if (sequenceId !== hordeSequenceEpoch()) return;
+        useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx), { volume: 0.64 });
+      }, COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS + projectileDelay);
+
+      window.setTimeout(() => {
+        if (sequenceId !== hordeSequenceEpoch()) return;
+        useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.72 });
+        if (projectileIndex !== projectileCount - 1) return;
+        useGameStore.setState((current) => ({
+          game: resolvePendingHordeCombatDamageVolleys(current.game),
+          playerBurnImpactEventId: Date.now(),
+        }));
+      }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
+    }
+
+    window.setTimeout(() => {
+      if (sequenceId !== hordeSequenceEpoch()) return;
+      useGameStore.setState({ burnAnimation: undefined });
+      finishAnimatedHordeCombat();
+    }, COMBAT_VOLLEY_ANIMATION_MS + volleyDelay);
+  }, COMBAT_VOLLEY_LEAD_IN_MS);
+}
+
 function finishAnimatedHordeCombat(): void {
   const previous = useGameStore.getState().game;
   const resolved = finishHordeCombat(previous, { deferTriggeredEvents: true });
@@ -1103,7 +1195,9 @@ function finishAnimatedHordeCombat(): void {
     hordeAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
+    burnImpactCardIds: [],
     deathRevealCard: undefined,
+    hordeSpellCard: undefined,
     // Failsafe: an aura whose beat never got to play must not keep its buff hidden forever.
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
@@ -1114,6 +1208,10 @@ function finishAnimatedHordeCombat(): void {
     selectedPlayerCreatureId: undefined,
   });
   scheduleQueuedHordeTriggers();
+}
+
+function pickRandomSfx(ids: SfxId[]): SfxId {
+  return ids[Math.floor(Math.random() * ids.length)];
 }
 
 function readStoredSeed(): string {
@@ -1293,6 +1391,7 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       return {
         game: next,
         hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
+        summoningAnimationCount: state.summoningAnimationCount + newHordeCreatures.length,
         hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
         ...(buffBeat ?? {}),
       };
@@ -1460,4 +1559,3 @@ function nextDeadCardIds(event: HordeAttackEvent): string[] {
   if (event.blockerDies && event.blockerId) next.add(event.blockerId);
   return [...next];
 }
-

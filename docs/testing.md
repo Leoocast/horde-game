@@ -45,9 +45,13 @@ archivo no corre nunca.
 
 | Archivo | Cubre |
 | --- | --- |
-| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, chaos mode, targeting |
+| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
+| `tests/hordeBeats.test.js` | Regresiones de la cola visual de la Horda bajo timers retrasados, incluyendo salvas Burn que crean muertes. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad de un deck JSON que el engine no entiende rompe la suite en vez de quedar muda |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
+| `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
+| `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
+| `tests/playgroundStorage.test.js` | Import/export y parseo defensivo de escenarios y flujos |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).
@@ -81,6 +85,11 @@ flujo usado para el bug de reagrupado fue:
 
 ## Estado actual
 
-68 tests, todos en verde. El deck lint pasa con WIP conocidos y declarados en
-`goblin_assault_horde` (`hobgoblin_bandit_lord`, `battle_cry_goblin`, `goblin_rabblemaster`,
-`mogg_mob`), que estan marcados `engineSupport: "pending"` a proposito.
+No mantener aqui un numero fijo de tests ni una lista copiada de cartas WIP: ambos cambian con
+frecuencia y fueron una fuente de documentacion atrasada.
+
+- La suite imprime el total y el resultado vigentes.
+- `scripts/lint-decks.mjs` imprime por deck las cartas `ready`, `vanilla` y `partial`, junto con
+  cada habilidad marcada `engineSupport: "pending"`.
+- Un WIP declarado no falla la suite; una habilidad que promete estar soportada y no coincide con
+  el vocabulario del engine si la rompe.

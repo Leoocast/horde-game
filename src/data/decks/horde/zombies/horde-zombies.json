@@ -32,6 +32,10 @@
       "id": "zombie_token",
       "name": "Zombie Token",
       "displayNameEs": "Ficha de Zombie",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 21,
       "isToken": true,
       "manaValue": 2,
@@ -53,6 +57,10 @@
       "id": "zombie_giant_token",
       "name": "Zombie Giant Token",
       "displayNameEs": "Ficha de Zombie Gigante",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 4,
       "isToken": true,
       "manaValue": 5,
@@ -75,6 +83,10 @@
       "id": "graf_harvest",
       "name": "Graf Harvest",
       "displayNameEs": "Cosecha del cementerio",
+      "gameText": {
+        "en": "Horde Zombies have Menace. Its upkeep and token abilities are currently inactive.",
+        "es": "Los Zombies de la Horda tienen Amenaza. Sus habilidades de mantenimiento y creación de fichas están inactivas por ahora."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{B}",
@@ -184,6 +196,10 @@
       "id": "noosegraf_mob",
       "name": "Noosegraf Mob",
       "displayNameEs": "Turba de Noosegraf",
+      "gameText": {
+        "en": "Whenever a non-token card is cast, remove a +1/+1 counter from this creature and create a 2/2 Zombie.",
+        "es": "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2."
+      },
       "quantity": 1,
       "isToken": false,
       "manaCost": "{4}{B}{B}",
@@ -244,6 +260,10 @@
       "id": "rottenheart_ghoul",
       "name": "Rottenheart Ghoul",
       "displayNameEs": "Ghoul de corazón podrido",
+      "gameText": {
+        "en": "When this creature dies, the player discards a card.",
+        "es": "Cuando esta criatura muere, el jugador descarta una carta."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{3}{B}",
@@ -286,6 +306,10 @@
       "id": "miasmic_mummy",
       "name": "Miasmic Mummy",
       "displayNameEs": "Momia miasmática",
+      "gameText": {
+        "en": "When this creature enters, the player discards a card.",
+        "es": "Cuando esta criatura entra, el jugador descarta una carta."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{1}{B}",
@@ -330,6 +354,10 @@
       "id": "smallpox",
       "name": "Smallpox",
       "displayNameEs": "Viruela pequeña",
+      "gameText": {
+        "en": "The player loses 1 life, discards a card, sacrifices a creature, and sacrifices a land.",
+        "es": "El jugador pierde 1 vida, descarta una carta, sacrifica una criatura y sacrifica una tierra."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{B}{B}",
@@ -382,6 +410,10 @@
       "id": "blighted_bat",
       "name": "Blighted Bat",
       "displayNameEs": "Murciélago infectado",
+      "gameText": {
+        "en": "No additional active effect.",
+        "es": "Sin efecto activo adicional."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{2}{B}",
@@ -423,6 +455,10 @@
       "id": "stitchwing_skaab",
       "name": "Stitchwing Skaab",
       "displayNameEs": "Skaab ala cosida",
+      "gameText": {
+        "en": "Its graveyard return ability is currently inactive.",
+        "es": "Su habilidad para regresar del cementerio está inactiva por ahora."
+      },
       "quantity": 1,
       "isToken": false,
       "manaCost": "{3}{U}",
@@ -467,6 +503,10 @@
       "id": "advanced_stitchwing",
       "name": "Advanced Stitchwing",
       "displayNameEs": "Ala cosida avanzada",
+      "gameText": {
+        "en": "Its graveyard return ability is currently inactive.",
+        "es": "Su habilidad para regresar del cementerio está inactiva por ahora."
+      },
       "quantity": 1,
       "isToken": false,
       "manaCost": "{3}{U}{U}",
@@ -511,6 +551,10 @@
       "id": "crow_of_dark_tidings",
       "name": "Crow of Dark Tidings",
       "displayNameEs": "Cuervo de malos augurios",
+      "gameText": {
+        "en": "When this creature enters or dies, mill 2 cards from the Horde deck.",
+        "es": "Cuando esta criatura entra o muere, pon 2 cartas del mazo de la Horda en su cementerio."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{2}{B}",
@@ -571,6 +615,10 @@
       "id": "cursed_minotaur",
       "name": "Cursed Minotaur",
       "displayNameEs": "Minotauro maldito",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 1,
       "isToken": false,
       "manaCost": "{2}{B}",
@@ -596,6 +644,10 @@
       "id": "thraben_foulbloods",
       "name": "Thraben Foulbloods",
       "displayNameEs": "Sangremalas de Thraben",
+      "gameText": {
+        "en": "While the Horde has 7 or more cards in its graveyard, this creature gets +1/+1 and has Menace.",
+        "es": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura obtiene +1/+1 y tiene Amenaza."
+      },
       "quantity": 1,
       "isToken": false,
       "manaCost": "{2}{B}",
@@ -661,6 +713,10 @@
       "id": "hound_of_the_farbogs",
       "name": "Hound of the Farbogs",
       "displayNameEs": "Sabueso de Farbog",
+      "gameText": {
+        "en": "While the Horde has 7 or more cards in its graveyard, this creature has Menace.",
+        "es": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura tiene Amenaza."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{4}{B}",
@@ -707,6 +763,10 @@
       "id": "rancid_rats",
       "name": "Rancid Rats",
       "displayNameEs": "Ratas rancias",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{1}{B}",
@@ -734,6 +794,10 @@
       "id": "gavony_unhallowed",
       "name": "Gavony Unhallowed",
       "displayNameEs": "Profano de Gavony",
+      "gameText": {
+        "en": "Whenever another Horde creature dies, put a +1/+1 counter on this creature.",
+        "es": "Siempre que otra criatura de la Horda muera, pon un contador +1/+1 sobre esta criatura."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{3}{B}",
@@ -779,6 +843,10 @@
       "id": "diregraf_captain",
       "name": "Diregraf Captain",
       "displayNameEs": "Capitán de Diregraf",
+      "gameText": {
+        "en": "Other Horde Zombies get +1/+1. Whenever another Horde Zombie dies, the player loses 1 life.",
+        "es": "Los demás Zombies de la Horda obtienen +1/+1. Siempre que otro Zombie de la Horda muera, el jugador pierde 1 vida."
+      },
       "quantity": 2,
       "isToken": false,
       "manaCost": "{1}{U}{B}",
@@ -846,7 +914,8 @@
           "effects": [
             {
               "type": "EACH_OPPONENT_LOSES_LIFE",
-              "amount": 1
+              "amount": 1,
+              "animation": "OIL_BURN"
             }
           ]
         }

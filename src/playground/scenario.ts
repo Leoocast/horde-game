@@ -163,24 +163,29 @@ export function snapshotBoard(game: GameState, base: ScenarioDefinition): Scenar
   };
 }
 
-/** Identical cards collapse into one entry with an amount — "3× Forest (tapped)", not three lines. */
+/** Consecutive identical cards collapse into one entry with an amount. */
+// Only consecutive copies collapse. Merging across another card would erase summon chronology
+// from saved boards (for example: four tokens, a lord, then a second two-token wave).
 function groupCards(cards: CardInstance[]): ScenarioCard[] {
-  const groups = new Map<string, ScenarioCard>();
+  const groups: Array<{ key: string; entry: ScenarioCard }> = [];
   for (const card of cards) {
     const key = `${card.definitionId}:${card.tapped ? "t" : ""}:${card.damageMarked ?? 0}`;
-    const existing = groups.get(key);
-    if (existing) {
-      existing.amount = (existing.amount ?? 1) + 1;
+    const previous = groups[groups.length - 1];
+    if (previous?.key === key) {
+      previous.entry.amount = (previous.entry.amount ?? 1) + 1;
       continue;
     }
-    groups.set(key, {
-      definitionId: card.definitionId,
-      amount: 1,
-      ...(card.tapped ? { tapped: true } : {}),
-      ...(card.damageMarked ? { damageMarked: card.damageMarked } : {}),
+    groups.push({
+      key,
+      entry: {
+        definitionId: card.definitionId,
+        amount: 1,
+        ...(card.tapped ? { tapped: true } : {}),
+        ...(card.damageMarked ? { damageMarked: card.damageMarked } : {}),
+      },
     });
   }
-  return [...groups.values()];
+  return groups.map(({ entry }) => entry);
 }
 
 /** Problems the UI should surface before starting. `buildScenarioGame` silently skips whatever
@@ -232,7 +237,7 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   game.player.energyActionUsedThisTurn = false;
   game.horde.poisonCounters = scenario.horde.poisonCounters;
   delete game.horde.pendingCard;
-  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {} };
+  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
   game.eventQueue = [];
   delete game.winner;
   delete game.lastActionResult;

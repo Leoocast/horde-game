@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -12,8 +13,73 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <Field label={label}>
-      <input value={value} onChange={(event) => onChange(event.target.value)} />
+      <ClearableInput ariaLabel={label} value={value} onChange={onChange} />
     </Field>
+  );
+}
+
+export function ClearableInput({
+  value,
+  ariaLabel,
+  placeholder,
+  className,
+  type = "text",
+  clearTitle = "Clear field",
+  onChange,
+}: {
+  value: string;
+  ariaLabel: string;
+  placeholder?: string;
+  className?: string;
+  type?: "text" | "search";
+  clearTitle?: string;
+  onChange: (value: string) => void;
+}) {
+  const empty = value.length === 0;
+  return (
+    <div className="playground-clearable-input">
+      <input
+        className={className}
+        type={type}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <button
+        className="playground-input-clear"
+        type="button"
+        aria-label={`${clearTitle}: ${ariaLabel}`}
+        aria-hidden={empty}
+        tabIndex={empty ? -1 : 0}
+        title={clearTitle}
+        onClick={() => onChange("")}
+      >
+        <X size={15} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+export function SearchInput({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <ClearableInput
+      className="playground-search"
+      type="search"
+      ariaLabel={placeholder}
+      placeholder={placeholder}
+      value={value}
+      clearTitle="Clear search"
+      onChange={onChange}
+    />
   );
 }
 

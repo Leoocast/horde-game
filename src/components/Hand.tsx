@@ -277,11 +277,11 @@ export function Hand({ game }: { game: GameState }) {
   return (
     <>
       {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} recycleLabel={t("hand.recycle")} hintLabel={t("hand.recycleHint")} />}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
+      <div className="hand-atmosphere-shell pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
         <div className="hand-atmosphere absolute inset-0" />
       </div>
       <section className={[
-        "pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
+        "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
         draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]",
       ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>

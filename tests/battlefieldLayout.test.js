@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { groupBattlefieldCopies, holdCombatCasualties } from "../src/components/battlefieldLayout";
+import {
+  createBattlefieldArrivalRegistry,
+  groupBattlefieldCopies,
+  holdCombatCasualties,
+  unregisteredBattlefieldArrivals,
+} from "../src/components/battlefieldLayout";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 // The battlefield holds a dead card's slot open ("a ghost") for the whole Horde sequence so the
@@ -36,6 +41,24 @@ function renderFrame(board, cards, holdCasualties) {
   const displayed = holdCombatCasualties(cards, holdCasualties, board.casualties, board.previousCards, board.cardOrder);
   return renderCreatureRow(board, displayed);
 }
+
+test("a loaded Horde board registers existing cards and only animates later arrivals", () => {
+  const game = createTestGame();
+  const existingA = addCard(game, customCard("existing_a", "horde"));
+  const existingB = addCard(game, customCard("existing_b", "horde"));
+  const registry = createBattlefieldArrivalRegistry([existingA, existingB]);
+
+  assert.deepEqual(unregisteredBattlefieldArrivals([existingA, existingB], registry), []);
+
+  const arriving = addCard(game, customCard("arriving", "horde"));
+  assert.deepEqual(
+    unregisteredBattlefieldArrivals([existingA, existingB, arriving], registry).map((card) => card.instanceId),
+    [arriving.instanceId],
+  );
+
+  registry.add(arriving.instanceId);
+  assert.deepEqual(unregisteredBattlefieldArrivals([existingA, existingB, arriving], registry), []);
+});
 
 test("a horde death mid-sequence keeps its slot even with an other permanent on the board", () => {
   const game = createTestGame();
@@ -87,7 +110,7 @@ test("held slots are released once the sequence ends", () => {
   assert.equal(board.casualties.current.size, 0);
 });
 
-test("a creature arriving mid-sequence still takes over a held slot", () => {
+test("a creature arriving from a death trigger stays after the held casualty slot", () => {
   const game = createTestGame();
   const board = makeBoard();
   const first = addCard(game, customCard("first", "horde"));
@@ -101,8 +124,8 @@ test("a creature arriving mid-sequence still takes over a held slot", () => {
   const afterSummon = renderFrame(board, [first, summoned], true);
   assert.deepEqual(
     afterSummon.map((card) => card.instanceId),
-    [first.instanceId, summoned.instanceId],
-    "the arrival reuses the casualty's slot instead of landing past a hole",
+    [first.instanceId, second.instanceId, summoned.instanceId],
+    "the casualty keeps its visual slot while the new arrival stays last, matching battlefield and attack order",
   );
 });
 

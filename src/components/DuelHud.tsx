@@ -19,6 +19,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
   const smallpoxCard = useGameStore((state) => state.smallpoxCard);
   const deathRevealCard = useGameStore((state) => state.deathRevealCard);
+  const hordeSpellCard = useGameStore((state) => state.hordeSpellCard);
   // Primitive selectors: smallpoxSelection.x/y update on every mousemove while the
   // SmallpoxSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
   const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
@@ -65,7 +66,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hordeSpellCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -100,6 +101,33 @@ export function DuelHud({ game }: { game: GameState }) {
                 ].join(" ")}
               >
                 <Card game={game} card={deathRevealCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+              </div>
+            </div>
+          </motion.div>
+        )}
+        {hordeSpellCard && (
+          <motion.div
+            key={`spell-reveal-${hordeSpellCard.instanceId}`}
+            className="horde-special-card-host flex flex-col items-center gap-2"
+            initial={false}
+            exit={{
+              opacity: [1, 1, 0],
+              x: [0, 8, -50],
+              y: [0, 10, -36],
+              scale: [1, 0.97, 0.66],
+              rotate: [0, 3, 9],
+              transition: { duration: 0.3, times: [0, 0.22, 1], ease: ["easeOut", "easeIn"] },
+            }}
+          >
+            <div className="horde-death-reveal-enter">
+              <div
+                data-card-id={hordeSpellCard.instanceId}
+                className={[
+                  "horde-special-card horde-special-card-resolving",
+                  activatingEffectCardId === hordeSpellCard.instanceId ? "effect-card-activating" : "",
+                ].join(" ")}
+              >
+                <Card game={game} card={hordeSpellCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
               </div>
             </div>
           </motion.div>
@@ -242,6 +270,7 @@ export function DuelHud({ game }: { game: GameState }) {
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const t = useTranslation();
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+  const playerBurnImpactEventId = useGameStore((state) => state.playerBurnImpactEventId);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
@@ -251,6 +280,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const [visualLife, setVisualLife] = useState(game.player.life);
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
+  const lastBurnImpactEventId = useRef<number | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
 
@@ -271,6 +301,18 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
       window.clearTimeout(timeout);
     };
   }, [hordeAttackAnimation]);
+
+  useEffect(() => {
+    if (!playerBurnImpactEventId || playerBurnImpactEventId === lastBurnImpactEventId.current) return;
+    lastBurnImpactEventId.current = playerBurnImpactEventId;
+    setTakingDamage(false);
+    const frame = window.requestAnimationFrame(() => setTakingDamage(true));
+    const timeout = window.setTimeout(() => setTakingDamage(false), 430);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [playerBurnImpactEventId]);
 
   return (
     <>

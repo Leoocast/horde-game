@@ -30,8 +30,17 @@ const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, backLabel, onBack }: Props) {
   const t = useTranslation();
-  const cards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
-  const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(cards[0]?.card.id);
+  const allCards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const cards = useMemo(() => {
+    const query = normalizeSearchText(searchQuery);
+    if (!query) return allCards;
+    return allCards.filter(({ card }) =>
+      [card.name, card.displayNameEs, card.id, ...(card.subtypes ?? [])]
+        .some((value) => normalizeSearchText(value).includes(query)),
+    );
+  }, [allCards, searchQuery]);
+  const [hoveredCardId, setHoveredCardId] = useState<string | undefined>(allCards[0]?.card.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>();
   const activeCard = cards.find((copy) => copy.card.id === (focusedCardId ?? hoveredCardId))?.card ?? cards[0]?.card;
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
@@ -49,6 +58,11 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
       return next;
     });
   };
+
+  useEffect(() => {
+    if (focusedCardId && !cards.some((copy) => copy.card.id === focusedCardId)) setFocusedCardId(undefined);
+    if (hoveredCardId && !cards.some((copy) => copy.card.id === hoveredCardId)) setHoveredCardId(cards[0]?.card.id);
+  }, [cards, focusedCardId, hoveredCardId]);
 
   useEffect(() => {
     if (!closing) return;
@@ -75,16 +89,29 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
           {backLabel}
         </button>
         <div className="deck-detail-heading">
-          <p>{t("deck.collection")}</p>
           <h1>{deck.deck.name}</h1>
         </div>
         <div className="deck-detail-tools">
+          <label className="deck-detail-search">
+            <Search size={15} aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={t("deck.searchPlaceholder")}
+              aria-label={t("deck.searchAria")}
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")} title={t("deck.clearSearch")} aria-label={t("deck.clearSearch")}>
+                <X size={14} />
+              </button>
+            )}
+          </label>
           <div className="deck-detail-counts">
             <span><strong>{cards.length}</strong> {t("common.unique")}</span>
             <span><strong>{cards.reduce((total, copy) => total + copy.quantity, 0)}</strong> {t("common.cards")}</span>
           </div>
           <div className="deck-detail-zoom">
-            <Search size={15} aria-label={t("deck.cardZoom")} />
             <button disabled={columnCount === DECK_COLUMN_OPTIONS[0]} onClick={() => setColumnCount((value) => value + 1)} title={t("deck.zoomOut")}>−</button>
             <input
               aria-label={t("deck.cardZoomColumns", { count: columnCount })}
@@ -120,6 +147,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
                 />
               ))}
             </div>
+            {cards.length === 0 && <div className="deck-detail-empty">{t("deck.noSearchResults")}</div>}
           </div>
         </section>
         {ENABLE_DECK_CARD_PREVIEW && (
@@ -431,8 +459,20 @@ function describeCardFromJson(card: NewDeckCard): string {
 }
 
 function deckCardDescription(card: NewDeckCard, language: AppLanguage, oracleText?: string, flavorText?: string): string {
-  if ((card.cardTypes ?? []).some((type) => type.toLowerCase() === "land")) return language === "es" ? "Agrega maná." : "Add mana.";
-  return cleanCardDescriptionText(oracleText, flavorText, deckKeywords(card), describeCardFromJson(card));
+  void oracleText;
+  void flavorText;
+  const authored = card.gameText?.[language] ?? card.gameText?.en;
+  if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), authored);
+  const generated = describeCardFromJson(card);
+  if (generated) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), generated);
+  return language === "es" ? "Sin efecto adicional." : "No additional effect.";
+}
+
+function normalizeSearchText(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase();
 }
 
 function describeAbility(ability: NewDeckAbility): string {

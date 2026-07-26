@@ -4,6 +4,7 @@ import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
 import { CATALOG_DECKS, describeCardTypes, searchCatalog, type CatalogCard } from "../cardCatalog";
 import type { ScenarioZoneKey } from "../scenario";
 import type { TimelineStep } from "../timeline";
+import { SearchInput } from "./fields";
 
 const RESULT_LIMIT = 60;
 
@@ -164,11 +165,10 @@ export function CardsPanel({ onDispatch }: Props) {
       )}
 
       <div className="playground-card-browser-toolbar">
-        <input
-          className="playground-search"
+        <SearchInput
           placeholder="Search by name or id"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={setQuery}
         />
         <select className="playground-select" value={deckId} onChange={(event) => setDeckId(event.target.value)}>
           <option value="">All decks</option>

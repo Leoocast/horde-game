@@ -21,6 +21,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     id: card.id,
     name: card.name,
     displayNameEs: card.displayNameEs,
+    gameText: card.gameText,
     quantity: card.quantity,
     isToken: Boolean(card.isToken),
     manaCost: card.manaCost ?? "",
@@ -167,23 +168,13 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
   switch (ability.customHandler) {
     case "rundvelt_hordemaster_exile_top_if_goblin":
       return { type: "HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD" };
-    case "battle_cry_goblin_pack_tactics":
-      return {
-        type: "CONDITIONAL",
-        condition: { type: "ATTACK_TOTAL_POWER_AT_LEAST", amount: 6 },
-        effect: {
-          type: "CREATE_TOKEN",
-          tokenId: "goblin_token_1_1_red",
-          amount: 1,
-          tapped: true,
-          attacking: true,
-        },
-      };
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
-        filter: { maxPower: 2 },
+        filter: { cardTypes: ["Creature"], subtypes: ["Goblin"], maxPower: 2 },
         amount: 1,
+        deferUntil: "HORDE_ATTACK_SEQUENCE_END",
+        animation: "BURN_VOLLEY_TO_PLAYER",
       };
     case "goblin_rabblemaster_begin_combat_token":
       return { type: "CREATE_TOKEN", tokenId: "goblin_token_1_1_red", amount: 1 };
@@ -207,9 +198,9 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
         },
       };
     case "general_kreat_damage_each_opponent":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1 };
+      return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
     case "goblin_chainwhirler_enter_damage_all":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1 };
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1, animation: "BURN_VOLLEY" };
     default:
       return undefined;
   }
@@ -266,6 +257,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
         filter: scope.filters,
         power: effect.power ?? 0,
         toughness: effect.toughness ?? 0,
+        animation: effect.animation,
       };
     }
     return {

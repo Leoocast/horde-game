@@ -21,6 +21,16 @@ export type CardGroup = { key: string; cards: CardInstance[] };
  */
 export type MutableBox<T> = { current: T };
 
+/** Cards mounted with a loaded board are already committed; only later ids are arrival work. */
+export function createBattlefieldArrivalRegistry(cards: CardInstance[]): Set<string> {
+  return new Set(cards.map((card) => card.instanceId));
+}
+
+/** Pure lookup used before the component claims an id after finding its rendered card slot. */
+export function unregisteredBattlefieldArrivals(cards: CardInstance[], registeredIds: Set<string>): CardInstance[] {
+  return cards.filter((card) => !registeredIds.has(card.instanceId));
+}
+
 export function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
@@ -143,34 +153,10 @@ export function holdCombatCasualties(
         casualties.current.set(card.instanceId, card);
       }
     }
-    // A creature arriving mid-combat takes over a held slot rather than landing past the gap the
-    // casualty left, which read as the card entering after a hole. Rightmost held slot first.
-    //
-    // Creatures only, on BOTH sides of the swap. `cardOrder` is the creature row's registry:
-    // `renderCardStacks` is called with the creature row alone and prunes everything else out of
-    // it on every render, so lands and other permanents (Graf Harvest, a player's Forests) look
-    // like brand-new arrivals on every single render. Without this guard the first one of them
-    // consumed the ghost the instant a creature died — the held slot vanished mid-sequence and
-    // the whole row re-centered, which is exactly the "everything regroups when something dies"
-    // bug. They also have no business inheriting a creature's slot in the first place.
-    for (const card of cards) {
-      if (!isHeldRowCard(card)) continue;
-      if (cardOrder.current.has(card.instanceId)) continue;
-      let recycledId: string | undefined;
-      let recycledOrder = Number.NEGATIVE_INFINITY;
-      for (const [ghostId, ghost] of casualties.current) {
-        if (!isHeldRowCard(ghost)) continue;
-        const order = cardOrder.current.get(ghostId);
-        if (order !== undefined && order > recycledOrder) {
-          recycledOrder = order;
-          recycledId = ghostId;
-        }
-      }
-      if (recycledId === undefined) break;
-      casualties.current.delete(recycledId);
-      cardOrder.current.delete(recycledId);
-      cardOrder.current.set(card.instanceId, recycledOrder);
-    }
+    // New creatures keep their actual arrival order. In particular, a Goblin summoned by
+    // Rundvelt after another Goblin dies must not inherit the casualty's middle slot: combat
+    // still resolves it last because the engine appended it to `horde.battlefield`. Keeping the
+    // ghost until the sequence ends makes the visual row agree with that rules order.
   } else if (casualties.current.size > 0) {
     casualties.current.clear();
   }
@@ -187,9 +173,4 @@ export function holdCombatCasualties(
       (cardOrder.current.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) -
       (cardOrder.current.get(right.instanceId) ?? Number.MAX_SAFE_INTEGER),
   );
-}
-
-/** The creature row is the only row whose slots are held open during a Horde sequence. */
-function isHeldRowCard(card: CardInstance): boolean {
-  return card.cardTypes.includes("Creature");
 }
