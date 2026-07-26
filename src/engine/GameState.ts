@@ -258,6 +258,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     name: definition.name,
     displayName: definition.name,
     displayNameEs: definition.displayNameEs,
+    gameText: definition.gameText,
     owner: side,
     controller: side,
     zone: "library",

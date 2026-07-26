@@ -244,11 +244,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.play")}</span>
             </button>
-            <button className="main-menu-entry main-menu-entry-chaos group" type="button" onClick={() => setMenuScreen("chaos")}>
-              <span className="main-menu-entry-mark" />
-              <span><strong>{t("menu.chaosMode")}</strong><small>{t("menu.mutatedBattle")}</small></span>
-              <Dices size={18} aria-hidden="true" />
-            </button>
             <button className={`main-menu-entry group ${menuScreen === "chronicles" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("chronicles"); }}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.chronicles")}</span>

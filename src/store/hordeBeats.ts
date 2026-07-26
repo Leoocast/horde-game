@@ -9,6 +9,7 @@ import {
 } from "../engine/EffectResolver";
 import { enqueue } from "../engine/EventQueue";
 import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticAuras, type StaticAuraSnapshot } from "../engine/StaticAuras";
+import { getPowerToughness } from "../engine/StaticEffects";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -35,6 +36,7 @@ const BURN_IMPACT_MS = 638;
 const BURN_ANIMATION_MS = 1220;
 const BURN_PROJECTILE_LAUNCH_MS = 220;
 const BURN_PROJECTILE_GAP_MS = 90;
+const SPECIAL_DEATH_ANIMATION_MS = 260;
 // The entrance is already settled before aura beats begin; retain only a short visual handoff.
 const STATIC_AURA_LEAD_IN_MS = 80;
 const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
@@ -432,6 +434,13 @@ const burnBeatHandler: HordeBeatHandler = {
   id: "burn",
   claims: (event) => event.type === "BURN_DAMAGE",
   run: ({ event, sequenceId, resolve, done }) => {
+    let committed = false;
+    const commit = () => {
+      if (committed || sequenceId !== hordeAutoTriggerSequenceId) return;
+      committed = true;
+      resolve();
+      useGameStore.setState({ specialDeadCardIds: [] });
+    };
     const targetId = String(event.payload?.targetId ?? "");
     if (!targetId) {
       resolve();
@@ -455,12 +464,29 @@ const burnBeatHandler: HordeBeatHandler = {
       useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.78 });
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
-      useGameStore.setState({ burnImpactCardId: targetId, burnImpactEventId: Date.now() });
-      resolve();
+      const lethalTargetIds = burnLethalTargetIds(useGameStore.getState().game, [targetId], Number(event.payload?.amount ?? 0));
+      useGameStore.setState({
+        burnImpactCardId: targetId,
+        burnImpactEventId: Date.now(),
+        specialDeadCardIds: lethalTargetIds,
+      });
+      if (lethalTargetIds.length === 0) {
+        commit();
+        return;
+      }
+      // Keep lethal targets on the battlefield through the same death fade used by
+      // fight/destroy spells. Committing Burn immediately removed the DOM node before
+      // the death class could render.
     }, BURN_IMPACT_MS);
+
+    // Registered up front, before the animation-finish timer. If the browser throttles and
+    // releases both timers in one batch, the event is still consumed before done() can let
+    // the queue claim the same Burn again.
+    window.setTimeout(commit, BURN_IMPACT_MS + SPECIAL_DEATH_ANIMATION_MS);
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      commit();
       // Leave hordeAutoTriggerCount alone: the runner sets it for the next beat, and clearing
       // it here would unblock the board for one frame between beats.
       useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined, burnImpactCardIds: [] });
@@ -471,8 +497,15 @@ const burnBeatHandler: HordeBeatHandler = {
 
 const burnVolleyBeatHandler: HordeBeatHandler = {
   id: "burn-volley",
-  claims: (event) => event.type === "BURN_VOLLEY_DAMAGE",
+  claims: (event) => event.type === "BURN_VOLLEY_DAMAGE" || event.type === "BURN_PLAYER_LIFE_LOSS",
   run: ({ event, sequenceId, resolve, done }) => {
+    let committed = false;
+    const commit = () => {
+      if (committed || sequenceId !== hordeAutoTriggerSequenceId) return;
+      committed = true;
+      resolve();
+      useGameStore.setState({ specialDeadCardIds: [] });
+    };
     const game = useGameStore.getState().game;
     const targetIds = Array.isArray(event.payload?.targetIds)
       ? event.payload.targetIds.map(String).filter((targetId) => Boolean(findBattlefieldCard(game, targetId)))
@@ -494,6 +527,7 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
         sourceId: event.sourceId,
         targets,
         amount: Number(event.payload?.amount ?? 0),
+        variant: event.payload?.variant === "oil" ? "oil" : "fire",
       },
       hordeAutoTriggerCount: 1,
     });
@@ -512,20 +546,31 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
         if (projectileIndex !== targets.length - 1) return;
 
         const impactEventId = Date.now();
+        const lethalTargetIds = burnLethalTargetIds(useGameStore.getState().game, targetIds, Number(event.payload?.amount ?? 0));
         useGameStore.setState({
           burnImpactCardIds: targetIds,
           burnImpactEventId: impactEventId,
+          specialDeadCardIds: lethalTargetIds,
           ...(targetPlayer ? { playerBurnImpactEventId: impactEventId } : {}),
         });
         // Chainwhirler's damage is one simultaneous event. Earlier impacts are presentation;
         // the last impact commits the damage to the player and every surviving target together.
-        resolve();
+        if (lethalTargetIds.length === 0) {
+          commit();
+          return;
+        }
       }, BURN_IMPACT_MS + projectileDelay);
     });
 
     const finalProjectileDelay = (targets.length - 1) * BURN_PROJECTILE_GAP_MS;
+    // Pre-register the lethal commit before the finish callback. This ordering matters when
+    // a busy/throttled tab releases several expired timers together.
+    window.setTimeout(commit, BURN_IMPACT_MS + finalProjectileDelay + SPECIAL_DEATH_ANIMATION_MS);
+
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      // Fail-safe invariant: no Burn beat may call done() while its queue event is unconsumed.
+      commit();
       useGameStore.setState({
         burnAnimation: undefined,
         burnImpactCardId: undefined,
@@ -535,6 +580,15 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
     }, BURN_ANIMATION_MS + finalProjectileDelay);
   },
 };
+
+function burnLethalTargetIds(game: GameState, targetIds: string[], amount: number): string[] {
+  if (amount <= 0) return [];
+  return targetIds.filter((targetId) => {
+    const target = findBattlefieldCard(game, targetId);
+    if (!target?.cardTypes.includes("Creature")) return false;
+    return target.damageMarked + amount >= getPowerToughness(game, target).toughness;
+  });
+}
 
 const staticAuraBeatHandler: HordeBeatHandler = {
   id: "static-aura",

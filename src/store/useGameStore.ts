@@ -263,6 +263,7 @@ export type BurnAnimationState = {
   targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
+  variant?: "fire" | "oil";
 };
 
 export type BurnAnimationTarget = {

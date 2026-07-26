@@ -21,6 +21,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     id: card.id,
     name: card.name,
     displayNameEs: card.displayNameEs,
+    gameText: card.gameText,
     quantity: card.quantity,
     isToken: Boolean(card.isToken),
     manaCost: card.manaCost ?? "",

@@ -62,7 +62,8 @@ below also call out valid-but-uninvoked Horde activations.
 ## Goblin Rabblemaster
 
 - Creates one Goblin token before attackers are declared.
-- The Horde's global attack rule already makes every able Goblin attack.
+- Its printed "other Goblins attack if able" clause is marked `engineSupport: "ignored"` because
+  the Horde's global attack rule already makes every able creature attack.
 - Its attack bonus counts other Goblins that are attacking when the trigger resolves.
 
 ## Goblin Surprise
@@ -74,7 +75,7 @@ below also call out valid-but-uninvoked Horde activations.
 
 ## Mogg Mob
 
-- Divided activated burn is explicitly WIP and also needs a Horde activation policy.
+- PvE adaptation: it is only a vanilla 3/3 Goblin — a sack of meat with no abilities.
 
 ## Volley Veteran
 

@@ -95,7 +95,8 @@ Tema: trasgos rojos, generación masiva de tokens, sacrificio, daño directo.
 - **Goblin Token** (1/1 rojo, x25): volumen puro.
 - Varios "lords" que dan +1/+1 a otros goblins (Hobgoblin Bandit Lord, Rundvelt Hordemaster, Goblin Trashmaster).
 - Generadores de tokens al entrar (Beetleback Chief, Siege-Gang Commander) o al atacar (Goblin Rabblemaster, Krenko Tin Street Kingpin, General Kreat).
-- Sacrificio de goblins para daño directo (Siege-Gang Commander, Mogg Mob divide 3 daño entre hasta 3 targets).
+- Sacrificio de goblins para daño directo (Siege-Gang Commander). Mogg Mob es deliberadamente
+  una criatura vanilla 3/3 en este modo.
 - Goblin War Drums / Raid Bombardment: enchantments que dan Menace global o pegan daño extra por atacantes chicos.
 - Goblin Chainwhirler: daño en área al entrar (1 a Player y a todo lo que controla).
 - Varias legendarias (General Kreat, Krenko, Pashalik Mons) con triggers de generar tokens al atacar o al morir un goblin.

@@ -45,7 +45,8 @@ archivo no corre nunca.
 
 | Archivo | Cubre |
 | --- | --- |
-| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, chaos mode, targeting |
+| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
+| `tests/hordeBeats.test.js` | Regresiones de la cola visual de la Horda bajo timers retrasados, incluyendo salvas Burn que crean muertes. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad de un deck JSON que el engine no entiende rompe la suite en vez de quedar muda |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |

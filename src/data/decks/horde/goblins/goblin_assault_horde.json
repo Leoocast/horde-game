@@ -31,6 +31,10 @@
       "id": "goblin_token_1_1_red",
       "name": "Goblin Token",
       "displayNameEs": "Ficha de Trasgo",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "manaCost": null,
       "manaValue": 0,
       "colors": [
@@ -65,6 +69,10 @@
       "id": "goblin_token_1_1_red",
       "name": "Goblin Token",
       "displayNameEs": "Ficha de Trasgo",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "manaCost": null,
       "manaValue": 0,
       "colors": [
@@ -92,12 +100,16 @@
         "fallbackImagePath": "data[0].image_uris.large",
         "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
       },
-      "quantity": 25
+      "quantity": 24
     },
     {
       "id": "hobgoblin_bandit_lord",
       "name": "Hobgoblin Bandit Lord",
       "displayNameEs": "Señor de los bandidos hobgoblin",
+      "gameText": {
+        "en": "Other Horde Goblins get +1/+1. When this creature enters, it launches a fireball at the best opposing creature; its damage equals the number of Goblins that entered this turn.",
+        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga; su daño es igual a la cantidad de Trasgos que entraron este turno."
+      },
       "quantity": 2,
       "manaCost": "{1}{R}{R}",
       "manaValue": 3,
@@ -190,6 +202,10 @@
       "id": "rundvelt_hordemaster",
       "name": "Rundvelt Hordemaster",
       "displayNameEs": "Señor de la horda de Rundvelt",
+      "gameText": {
+        "en": "Other Horde Goblins get +1/+1. Whenever a Horde Goblin dies, exile the top Horde card; if it is a Goblin creature, put it onto the battlefield.",
+        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Siempre que muera un Trasgo de la Horda, exilia la primera carta de la Horda; si es una criatura Trasgo, ponla en el campo."
+      },
       "quantity": 2,
       "manaCost": "{1}{R}",
       "manaValue": 2,
@@ -279,6 +295,10 @@
       "id": "battle_cry_goblin",
       "name": "Battle Cry Goblin",
       "displayNameEs": "Goblin del grito de guerra",
+      "gameText": {
+        "en": "When this creature enters, Horde Goblins get +1/+0 until end of turn.",
+        "es": "Cuando esta criatura entra, los Trasgos de la Horda obtienen +1/+0 hasta el final del turno."
+      },
       "quantity": 2,
       "manaCost": "{1}{R}",
       "manaValue": 2,
@@ -343,6 +363,10 @@
       "id": "goblin_war_drums",
       "name": "Goblin War Drums",
       "displayNameEs": null,
+      "gameText": {
+        "en": "Horde creatures have Menace.",
+        "es": "Las criaturas de la Horda tienen Amenaza."
+      },
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -395,6 +419,10 @@
       "id": "raid_bombardment",
       "name": "Raid Bombardment",
       "displayNameEs": "Bombardeo de incursión",
+      "gameText": {
+        "en": "After the Horde attack resolves, each attacking Goblin with power 2 or less adds 1 damage to a fireball volley against the player.",
+        "es": "Después de resolver el ataque de la Horda, cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a una salva de bolas de fuego contra el jugador."
+      },
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -438,6 +466,10 @@
       "id": "beetleback_chief",
       "name": "Beetleback Chief",
       "displayNameEs": "Jefe lomo de escarabajo",
+      "gameText": {
+        "en": "When this creature enters, create two 1/1 Goblins.",
+        "es": "Cuando esta criatura entra, crea dos Trasgos 1/1."
+      },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
       "manaValue": 4,
@@ -490,6 +522,10 @@
       "id": "siege_gang_commander",
       "name": "Siege-Gang Commander",
       "displayNameEs": "Comandante de sitiadores",
+      "gameText": {
+        "en": "When this creature enters, create three 1/1 Goblins. The Horde may sacrifice a Goblin to deal 2 damage to a target.",
+        "es": "Cuando esta criatura entra, crea tres Trasgos 1/1. La Horda puede sacrificar un Trasgo para hacer 2 de daño a un objetivo."
+      },
       "quantity": 2,
       "manaCost": "{3}{R}{R}",
       "manaValue": 5,
@@ -586,6 +622,10 @@
       "id": "goblin_rabblemaster",
       "name": "Goblin Rabblemaster",
       "displayNameEs": "Agitador trasgo",
+      "gameText": {
+        "en": "At the start of Horde combat, create a 1/1 Goblin. When this creature attacks, it gets +1/+0 for each other attacking Goblin.",
+        "es": "Al comienzo del combate de la Horda, crea un Trasgo 1/1. Cuando esta criatura ataca, obtiene +1/+0 por cada otro Trasgo atacante."
+      },
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -614,8 +654,8 @@
           "conditions": [],
           "effects": [],
           "customHandler": "goblin_rabblemaster_force_other_goblins_attack",
-          "engineSupport": "pending",
-          "implementationNote": "Other Goblin creatures controlled by the source controller attack each combat if able while this source is on the battlefield."
+          "engineSupport": "ignored",
+          "implementationNote": "Deliberately omitted: the Horde's global rule already makes every able creature attack each combat."
         },
         {
           "id": "goblin_rabblemaster_begin_combat_token",
@@ -662,6 +702,10 @@
       "id": "goblin_surprise",
       "name": "Goblin Surprise",
       "displayNameEs": "Sorpresa trasga",
+      "gameText": {
+        "en": "The Horde chooses one: its creatures get +2/+0 until end of turn, or it performs another reveal round.",
+        "es": "La Horda elige uno: sus criaturas obtienen +2/+0 hasta el final del turno, o realiza otra ronda de revelado."
+      },
       "quantity": 3,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -739,6 +783,10 @@
       "id": "mogg_mob",
       "name": "Mogg Mob",
       "displayNameEs": "Pandilla mogg",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
       "quantity": 1,
       "manaCost": "{R}{R}{R}",
       "manaValue": 3,
@@ -757,39 +805,7 @@
       "power": 3,
       "toughness": 3,
       "keywords": [],
-      "abilities": [
-        {
-          "id": "mogg_mob_sacrifice_divided_damage",
-          "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "engineSupport": "pending",
-          "cost": {
-            "sacrificeSelf": true
-          },
-          "targets": [
-            {
-              "id": "damageTargets",
-              "zone": "ANY",
-              "controller": "ANY",
-              "min": 1,
-              "max": 3,
-              "filters": {
-                "objectTypes": [
-                  "Player",
-                  "Creature",
-                  "Planeswalker",
-                  "Battle"
-                ]
-              }
-            }
-          ],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "mogg_mob_divide_three_damage",
-          "implementationNote": "Divide 3 damage as chosen among one, two, or three legal targets. Each chosen target must receive at least 1 damage."
-        }
-      ],
+      "abilities": [],
       "needsVerification": false,
       "scryfall": {
         "lookupMode": "named",
@@ -802,6 +818,10 @@
       "id": "volley_veteran",
       "name": "Volley Veteran",
       "displayNameEs": "Veterano de salvas",
+      "gameText": {
+        "en": "When this creature enters, it launches a fireball at the best opposing creature. Its damage equals the number of Horde Goblins.",
+        "es": "Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga. Su daño es igual a la cantidad de Trasgos de la Horda."
+      },
       "quantity": 1,
       "manaCost": "{3}{R}",
       "manaValue": 4,
@@ -867,6 +887,10 @@
       "id": "goblin_chainwhirler",
       "name": "Goblin Chainwhirler",
       "displayNameEs": null,
+      "gameText": {
+        "en": "When this creature enters, it deals 1 damage to the player and every player creature.",
+        "es": "Cuando esta criatura entra, hace 1 de daño al jugador y a cada criatura del jugador."
+      },
       "quantity": 2,
       "manaCost": "{R}{R}{R}",
       "manaValue": 3,
@@ -916,6 +940,10 @@
       "id": "goblin_trashmaster",
       "name": "Goblin Trashmaster",
       "displayNameEs": "Maestro chatarrero trasgo",
+      "gameText": {
+        "en": "Other Horde Goblins get +1/+1. The Horde may sacrifice a Goblin to destroy an artifact.",
+        "es": "Los demás Trasgos de la Horda obtienen +1/+1. La Horda puede sacrificar un Trasgo para destruir un artefacto."
+      },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
       "manaValue": 4,
@@ -1014,6 +1042,10 @@
       "id": "general_kreat_the_boltbringer",
       "name": "General Kreat, the Boltbringer",
       "displayNameEs": "General Kreat, la Crearrayos",
+      "gameText": {
+        "en": "When Horde Goblins attack, create one 1/1 Goblin attacking. Whenever another Horde creature enters, the player loses 1 life.",
+        "es": "Cuando los Trasgos de la Horda atacan, crea un Trasgo 1/1 atacando. Siempre que otra criatura de la Horda entre, el jugador pierde 1 vida."
+      },
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -1088,6 +1120,10 @@
       "id": "krenko_tin_street_kingpin",
       "name": "Krenko, Tin Street Kingpin",
       "displayNameEs": "Krenko, líder de la Calle Hojalata",
+      "gameText": {
+        "en": "When this creature attacks, put a +1/+1 counter on it, then create that many 1/1 Goblins attacking, equal to its new power.",
+        "es": "Cuando esta criatura ataca, pon un contador +1/+1 sobre ella y luego crea esa cantidad de Trasgos 1/1 atacando, igual a su nueva fuerza."
+      },
       "quantity": 1,
       "manaCost": "{2}{R}",
       "manaValue": 3,
@@ -1159,7 +1195,11 @@
       "id": "pashalik_mons",
       "name": "Pashalik Mons",
       "displayNameEs": "Pashalik Mons",
-      "quantity": 1,
+      "gameText": {
+        "en": "Whenever a Horde Goblin dies, launch a 1-damage fireball at a random player creature. The Horde may sacrifice a Goblin to create two 1/1 Goblins.",
+        "es": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador. La Horda puede sacrificar un Trasgo para crear dos Trasgos 1/1."
+      },
+      "quantity": 2,
       "manaCost": "{2}{R}",
       "manaValue": 3,
       "colors": [
@@ -1274,12 +1314,6 @@
       "id": "temporary_cast_permission_from_exile",
       "usedBy": [
         "rundvelt_hordemaster_goblin_died_exile"
-      ]
-    },
-    {
-      "id": "divide_damage_among_multiple_targets",
-      "usedBy": [
-        "mogg_mob_sacrifice_divided_damage"
       ]
     }
   ]

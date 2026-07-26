@@ -130,6 +130,12 @@ Detalle de testing en `docs/testing.md`. Para agregar o implementar una carta, s
 
 ## Estado actual del juego
 
+### Modos legacy
+
+Chaos Mode está **deprecated** y oculto del menú principal. Su implementación se conserva por
+compatibilidad y pruebas existentes, pero no debe recibir features ni mantenimiento activo hasta
+que se decida retomarlo explícitamente.
+
 ### Player
 
 Tiene:
@@ -286,7 +292,9 @@ Importante:
 Keywords:
 - se muestran arriba como badges
 - la descripcion no debe repetir keywords si ya se muestran arriba
-- si una carta no tiene rules text util, mostrar flavor text cuando exista
+- si una carta no tiene reglas adicionales, `gameText` debe decirlo de forma breve
+- las descripciones de reglas visibles usan `gameText` del JSON del deck y deben explicar el
+  comportamiento real de Hostfall; no usar oracle text de Magic como descripción de gameplay
 
 ## Decks e imagenes
 
@@ -600,7 +608,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
 - `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`; sus habilidades sin handler estan marcadas `engineSupport: "pending"` (goblin_rabblemaster "must attack", mogg_mob).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`. Mogg Mob se simplifico a criatura vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Horda ya la satisface.
 - Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
   el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
@@ -616,6 +624,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
   criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
   en el ultimo.
+- Las keywords inglesas de varias palabras se presentan con espacios (`FIRST STRIKE`), nunca con
+  el identificador interno `FIRST_STRIKE`; carta, preview y tooltip comparten esa localizacion.
+- Diregraf Captain conserva perdida de vida (no dano), pero la difiere hasta el impacto de
+  `BURN_PLAYER_LIFE_LOSS`: una bola Burn negra, aceitosa y con brillo violeta usa temporalmente
+  los mismos sonidos de lanzamiento e impacto que el fuego normal.
 - General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
   tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,

@@ -298,9 +298,24 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   EACH_OPPONENT_DISCARDS: (game, effect) => {
     discardPlayer(game, Number(effect.amount ?? 1));
   },
-  EACH_OPPONENT_LOSES_LIFE: (game, effect) => {
-    game.player.life -= Number(effect.amount ?? 1);
-    game.log.unshift(`Player loses ${Number(effect.amount ?? 1)} life.`);
+  EACH_OPPONENT_LOSES_LIFE: (game, effect, context) => {
+    const amount = Number(effect.amount ?? 1);
+    if (effect.animation === "OIL_BURN") {
+      enqueue(game, {
+        type: "BURN_PLAYER_LIFE_LOSS",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetPlayer: context.side === "horde",
+          targetIds: [],
+          amount,
+          variant: "oil",
+        },
+      });
+      return;
+    }
+    game.player.life -= amount;
+    game.log.unshift(`Player loses ${amount} life.`);
   },
 };
 
@@ -383,6 +398,10 @@ export function resolveTriggeredEvent(
   }
   if (event.type === "BURN_VOLLEY_DAMAGE") {
     resolveBurnVolleyDamageEvent(game, event);
+    return false;
+  }
+  if (event.type === "BURN_PLAYER_LIFE_LOSS") {
+    resolveBurnPlayerLifeLossEvent(game, event);
     return false;
   }
   let deferredAny = false;
@@ -836,6 +855,16 @@ function resolveBurnVolleyDamageEvent(game: GameState, event: EventItem): void {
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Burn volley"} deals ${amount} damage to each opposing target.`);
   destroyMarkedCreatures(game);
+}
+
+function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void {
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
+  if (sourceSide !== "horde" || event.payload?.targetPlayer !== true || amount <= 0) return;
+  game.player.life -= amount;
+  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+    .find((card) => card.instanceId === event.sourceId);
+  game.log.unshift(`${source?.name ?? "Horde effect"} causes Player to lose ${amount} life.`);
 }
 
 function resolveNumericAmount(game: GameState, amount: unknown, context: ResolveContext): number {

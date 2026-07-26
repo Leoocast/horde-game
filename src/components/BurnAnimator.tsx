@@ -209,7 +209,12 @@ export function BurnAnimator() {
     : [{ geometry: geometries[geometries.length - 1], delay: finalProjectileDelay }];
 
   return createPortal(
-    <div key={burn.id} className="burn-animation-layer" style={style} aria-hidden="true">
+    <div
+      key={burn.id}
+      className={`burn-animation-layer${burn.variant === "oil" ? " burn-animation-layer-oil" : ""}`}
+      style={style}
+      aria-hidden="true"
+    >
       <div className="burn-world">
         {/* Charge build-up at the source card. */}
         <div className="burn-charge">

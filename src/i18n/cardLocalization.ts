@@ -57,8 +57,8 @@ export function localizedTypeLine(card: LocalizableCard, language: AppLanguage):
 }
 
 export function localizedKeywordLabel(keyword: string, language: AppLanguage): string {
-  if (language !== "es") return keyword;
   const text = keyword.trim();
+  if (language !== "es") return text.replace(/_/g, " ");
   const toxic = text.match(/^TOXIC\s+\{(\d+)\}$/i);
   if (toxic) return `TÓXICO {${toxic[1]}}`;
   const labels: Record<string, string> = {
@@ -84,6 +84,7 @@ export function localizedKeywordTooltip(keyword: string, language: AppLanguage):
     if (upper === "VIGILANCE") return "Attacking does not tap this creature.";
     if (upper === "MENACE") return "This creature can only be blocked by two or more creatures.";
     if (upper === "DEATHTOUCH") return "Any damage this creature deals to another creature is lethal.";
+    if (upper === "FIRST_STRIKE") return "Deals combat damage before creatures without first strike.";
     if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
     if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
     if (upper === "SKULK") return "Can't be blocked by creatures with greater power.";
@@ -95,6 +96,7 @@ export function localizedKeywordTooltip(keyword: string, language: AppLanguage):
   if (upper === "VIGILANCE") return "Atacar no gira esta criatura.";
   if (upper === "MENACE") return "Esta criatura solo puede ser bloqueada por dos o más criaturas.";
   if (upper === "DEATHTOUCH") return "Cualquier daño que haga a otra criatura es letal.";
+  if (upper === "FIRST_STRIKE") return "Hace daño de combate antes que las criaturas sin dañar primero.";
   if (upper === "TRAMPLE") return "El daño de combate sobrante puede pasar al bando defensor.";
   if (upper === "HASTE") return "Puede atacar y usar habilidades de girar inmediatamente.";
   if (upper === "SKULK") return "No puede ser bloqueada por criaturas con mayor fuerza.";

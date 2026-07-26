@@ -5,6 +5,10 @@ export type NewDeckCard = {
   id: string;
   name: string;
   displayNameEs?: string;
+  gameText?: {
+    en?: string;
+    es?: string;
+  };
   quantity?: number;
   isToken?: boolean;
   manaCost?: string;

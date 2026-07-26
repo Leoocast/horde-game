@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { getHordeDeck, hordeDeck, playerDeck } from "../src/data/decks";
+import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
 import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
@@ -208,6 +209,11 @@ test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first s
   const versusFourFour = resolveDuel(4);
   assert.equal(versusFourFour.result.horde.graveyard.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
   assert.equal(versusFourFour.result.player.battlefield.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
+});
+
+test("multi-word keywords render as words instead of engine identifiers", () => {
+  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "en"), "FIRST STRIKE");
+  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "es"), "DAÑAR PRIMERO");
 });
 
 test("standard games keep nine energy cards in the player deck", () => {
@@ -879,6 +885,30 @@ test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and 
   assert.equal(game.player.life, 29);
   assert.equal(game.player.battlefield.some((card) => card.instanceId === fragile.instanceId), false);
   assert.equal(game.player.battlefield.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+});
+
+test("Diregraf Captain queues an oil Burn before the player loses life", () => {
+  const game = createTestGame("diregraf-captain-oil-burn");
+  const captain = addCard(game, cardFromDeck("diregraf_captain", "horde"));
+  const zombie = addCard(game, cardFromDeck("zombie_token", "horde"));
+
+  destroyPermanent(game, zombie);
+  const deathIndex = game.eventQueue.findIndex((event) => event.type === "CREATURE_DIED");
+  assert.notEqual(deathIndex, -1);
+  const [deathEvent] = game.eventQueue.splice(deathIndex, 1);
+  resolveTriggeredEvent(game, deathEvent, undefined, captain.instanceId);
+
+  assert.equal(game.player.life, 30, "life loss waits for the projectile impact");
+  const oilBurnIndex = game.eventQueue.findIndex((event) => event.type === "BURN_PLAYER_LIFE_LOSS");
+  assert.notEqual(oilBurnIndex, -1);
+  const [oilBurn] = game.eventQueue.splice(oilBurnIndex, 1);
+  assert.equal(oilBurn.sourceId, captain.instanceId);
+  assert.equal(oilBurn.payload?.targetPlayer, true);
+  assert.equal(oilBurn.payload?.amount, 1);
+  assert.equal(oilBurn.payload?.variant, "oil");
+
+  resolveTriggeredEvent(game, oilBurn);
+  assert.equal(game.player.life, 29);
 });
 
 test("Pashalik Mons burns a random opposing creature separately for each Goblin death", () => {

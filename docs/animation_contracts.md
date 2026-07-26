@@ -49,6 +49,7 @@ Current handlers:
 | Handler | Claims | Presentation |
 | --- | --- | --- |
 | `burn` | `BURN_DAMAGE` | Fireball, see below |
+| `burn-volley` | `BURN_VOLLEY_DAMAGE`, `BURN_PLAYER_LIFE_LOSS` | One or more Burn routes to cards or player life |
 | `static-aura` | `STATIC_AURA_ONLINE` | Source activation, see below |
 | `horde-group-buff` | `HORDE_GROUP_BUFF` | Shared buff lines; spells also reveal beside the Horde deck |
 | `death-reveal` | first pending source already left the battlefield | Card presented beside its graveyard, see below |
@@ -126,6 +127,18 @@ one independent Burn toward `[data-player-life-panel]`; each has its own project
 hit sound, impact, life reaction, and 1-damage engine resolution before the next trigger begins.
 When General Kreat itself created the entering token, `causeSourceId` marks that causal chain so
 the damage follow-up does not repeat the activation pulse already shown for token creation.
+
+### Oil Burn to player life
+
+Diregraf Captain preserves its printed life-loss semantics while using the Burn presentation:
+
+- `EACH_OPPONENT_LOSES_LIFE` with `animation: "OIL_BURN"` queues
+  `BURN_PLAYER_LIFE_LOSS`; player life does not change until the projectile impacts.
+- The projectile follows the ordinary Burn clock and reuses the current fireball cast and hit
+  sounds. `variant: "oil"` only changes its material: nearly black pitch, muted violet
+  iridescence, dark smoke, and a colder impact flash.
+- Each Zombie death remains a separate trigger and projectile. The follow-up does not repeat the
+  Captain's activation pulse.
 
 ## Static activation
 

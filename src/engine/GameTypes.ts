@@ -1,5 +1,7 @@
 export type Side = "player" | "horde";
 export type DifficultyMode = "easy" | "normal" | "hard";
+// `chaos` is retained only for legacy saves/tests. The experiment is deprecated and no longer
+// exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
 export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
@@ -60,6 +62,10 @@ export type CardDefinition = {
   id: string;
   name: string;
   displayNameEs?: string;
+  gameText?: {
+    en?: string;
+    es?: string;
+  };
   quantity?: number;
   isToken?: boolean;
   manaCost?: string;
@@ -131,6 +137,10 @@ export type CardInstance = {
   name: string;
   displayName: string;
   displayNameEs?: string;
+  gameText?: {
+    en?: string;
+    es?: string;
+  };
   owner: Side;
   controller: Side;
   zone: ZoneName;

@@ -67,6 +67,10 @@ El esquema actual es `0.2.0`. Una criatura vanilla mínima:
   "id": "example_guardian",
   "name": "Example Guardian",
   "displayNameEs": "Guardián de ejemplo",
+  "gameText": {
+    "en": "Whenever another allied Elf enters, this creature gets +1/+0 until end of turn.",
+    "es": "Siempre que otro Elfo aliado entre, esta criatura obtiene +1/+0 hasta el final del turno."
+  },
   "quantity": 2,
   "manaCost": "{2}{G}",
   "manaValue": 3,
@@ -93,6 +97,9 @@ Reglas:
   gameplay del texto de Scryfall.
 - `displayNameEs` es el nombre local del juego; imagen, oracle text y flavor text se consultan
   mediante el manifest.
+- `gameText` describe lo que la carta hace realmente en Hostfall, en inglés y español. Los
+  detalles de carta no usan oracle text de Magic para explicar reglas, porque varias cartas
+  tienen adaptaciones PvE o habilidades deliberadamente inactivas.
 
 Si se está creando un deck de Horda, su personalidad global vive en `rulesProfile`: cantidad de
 revelados, parada en no-token, Mini Surge, Surge, mill por daño o poison, Haste implícito,
@@ -381,8 +388,9 @@ Entrada típica:
 }
 ```
 
-El gameplay nunca depende de la respuesta de Scryfall. El manifest sólo aporta imagen, nombre
-impreso, type line, oracle text y flavor text para la UI.
+El gameplay nunca depende de la respuesta de Scryfall. El manifest aporta imagen, nombre impreso
+y type line. El texto de reglas mostrado en detalles viene de `gameText`; no debe copiar oracle
+text cuando el comportamiento de Hostfall sea distinto.
 
 Al añadir una carta a un deck existente, añadir también su entrada al manifest. Al crear un deck
 nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí derivan engine, inspector,

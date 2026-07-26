@@ -29,7 +29,9 @@ Evitar repartir demasiadas keywords ocultas: una derrota debe sentirse explicabl
 
 ## Modo Chaos
 
-Chaos es un modo separado de la dificultad normal. Tiene su propia entrada **Chaos Mode** debajo de **Play** en el menú principal.
+Estado: **deprecated**. Fue una prueba y queda estacionada sin desarrollo previsto. Se conserva el
+código existente únicamente como referencia y compatibilidad interna, pero el modo ya no aparece
+en el menú principal. No extender ni mantener sus reglas mientras siga marcado como deprecated.
 
 ### Ritmo de partida
 
@@ -85,7 +87,7 @@ El pool se forma con las keywords impresas originalmente en las criaturas y toke
 
 ### Presentación actual
 
-- **Chaos Mode** aparece debajo de **Play** y abre su propio menú.
+- **Chaos Mode** está oculto del menú principal.
 - Debe conservar el estilo dark medieval del juego, pero sentirse inestable, extraño y peligroso.
 - La UI debe mostrar claramente todas las keywords mutadas cuando la carta se vuelve visible.
 
