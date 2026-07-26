@@ -271,7 +271,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
             <span className="playground-tools-brand-mark"><Activity size={17} /></span>
             <div>
               <div className="playground-dock-kicker">Hostfall</div>
-              <div className="playground-dock-title">Lab</div>
+              <div className="playground-dock-title">Playground</div>
             </div>
           </div>
 
@@ -396,7 +396,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
         onClick={() => setToolsOpen((open) => !open)}
       >
         {toolsOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-        <span>{toolsOpen ? "Hide Lab" : "Open Lab"}</span>
+        <span>{toolsOpen ? "Hide Playground" : "Open Playground"}</span>
       </button>
     </div>
   );
