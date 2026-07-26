@@ -49,7 +49,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
   const [columnCount, setColumnCountState] = useState(readStoredColumnCount);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const [closing, setClosing] = useState(false);
-  const theme = deckTheme(deck.id);
+  const theme = deck.presentation.theme;
   const zoomLevel = DECK_COLUMN_OPTIONS.indexOf(columnCount);
   const setColumnCount = (value: number | ((current: number) => number)) => {
     setColumnCountState((current) => {
@@ -359,7 +359,7 @@ function DeckInspectorDetailsModal({
   return (
     <div
       data-preserve-card-focus="true"
-      className={`deck-collection-modal-backdrop deck-theme-${deckTheme(deck.id)} ${closing ? "is-closing" : ""}`}
+      className={`deck-collection-modal-backdrop deck-theme-${deck.presentation.theme} ${closing ? "is-closing" : ""}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) closeModal();
       }}
@@ -508,12 +508,6 @@ function readStoredColumnCount(): DeckColumnCount {
   const stored = window.localStorage.getItem(DECK_COLUMNS_STORAGE_KEY);
   const parsed = stored ? Number(stored) : DEFAULT_DECK_COLUMNS;
   return clampColumnCount(Number.isFinite(parsed) ? parsed : DEFAULT_DECK_COLUMNS);
-}
-
-function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
-  if (deckId === "horde_zombies") return "zombie";
-  if (deckId === "goblin_assault_horde") return "goblin";
-  return "ramp";
 }
 
 function DeckFireflies() {

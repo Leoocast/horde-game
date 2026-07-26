@@ -691,7 +691,7 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>
           <h2>{deck?.deck.name ?? t("common.chooseDeck")}</h2>
-          <p>{deckDescription(deck?.id, t)}</p>
+          <p>{deck ? t(deck.presentation.descriptionKey) : ""}</p>
         </div>
       </div>
       <div className="expedition-deck-options" role="listbox" aria-label={`${eyebrow} deck`}>
@@ -701,21 +701,9 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   );
 }
 
-const SETUP_KEY_CARD_IDS: Record<string, string> = {
-  mono_green_ramp: "sunshower_druid",
-  horde_zombies: "zombie_token",
-  goblin_assault_horde: "goblin_token_1_1_red",
-};
-
 function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
   const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === SETUP_KEY_CARD_IDS[deck.id]) ?? cards[0];
-}
-
-function deckDescription(deckId: string | undefined, t: ReturnType<typeof useTranslation>): string {
-  if (deckId === "mono_green_ramp") return t("setup.descriptionRamp");
-  if (deckId === "goblin_assault_horde") return t("setup.descriptionGoblins");
-  return t("setup.descriptionZombies");
+  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
 }
 
 function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {

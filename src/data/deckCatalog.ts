@@ -1,4 +1,5 @@
 import type { Color } from "../engine/GameTypes";
+import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
 
 export type NewDeckCard = {
@@ -92,15 +93,33 @@ export type DeckImageManifest = {
   >;
 };
 
+export type DeckTheme = "ramp" | "zombie" | "goblin";
+
+export type DeckPresentation = {
+  /** Card used as the deck cover in collection and expedition views. */
+  keyCardId: string;
+  /** Existing CSS theme applied to deck collection surfaces. */
+  theme: DeckTheme;
+  /** Localized summary shown while choosing the deck. */
+  descriptionKey: TranslationKey;
+};
+
 export type InspectableDeck = {
   id: string;
   label: string;
   deck: NewDeckList;
   images: DeckImageManifest;
+  presentation: DeckPresentation;
 };
 
 function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
-  return { id: entry.deck.id, label: entry.label, deck: entry.raw, images: entry.images };
+  return {
+    id: entry.deck.id,
+    label: entry.label,
+    deck: entry.raw,
+    images: entry.images,
+    presentation: entry.presentation,
+  };
 }
 
 export const playerInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "player").map(toInspectable);

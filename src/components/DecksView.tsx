@@ -14,12 +14,6 @@ type Props = {
   closing?: boolean;
 };
 
-const KEY_CARD_IDS: Record<string, string> = {
-  mono_green_ramp: "sunshower_druid",
-  horde_zombies: "zombie_token",
-  goblin_assault_horde: "goblin_token_1_1_red",
-};
-
 export function DecksView({ collection, decks, onOpenDeck, onBack, closing = false }: Props) {
   const t = useTranslation();
   const title = collection === "chronicles" ? t("menu.chronicles") : t("menu.hosts");
@@ -56,7 +50,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
 
   return (
     <button
-      className={`deck-key-card deck-theme-${deckTheme(deck.id)}`}
+      className={`deck-key-card deck-theme-${deck.presentation.theme}`}
       type="button"
       onClick={onOpen}
       onMouseEnter={playHoverSound}
@@ -88,13 +82,6 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
 }
 
 function findKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
-  const cardId = KEY_CARD_IDS[deck.id];
   const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === cardId) ?? cards[0];
-}
-
-function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
-  if (deckId === "horde_zombies") return "zombie";
-  if (deckId === "goblin_assault_horde") return "goblin";
-  return "ramp";
+  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
 }

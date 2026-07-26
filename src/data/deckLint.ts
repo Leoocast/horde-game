@@ -44,7 +44,16 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
   for (const entry of DECK_REGISTRY) {
     const deckId = entry.deck.id;
     const report: DeckLintReport = { deckId, label: entry.label, cards: [] };
-    for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+    const authoredCards = [...entry.raw.cards, ...(entry.raw.tokens ?? [])];
+    if (!authoredCards.some((card) => card.id === entry.presentation.keyCardId)) {
+      errors.push({
+        deckId,
+        cardId: entry.presentation.keyCardId,
+        abilityId: "presentation.keyCardId",
+        message: `Deck presentation references unknown key card "${entry.presentation.keyCardId}".`,
+      });
+    }
+    for (const card of authoredCards) {
       report.cards.push(lintCard(deckId, card, errors));
     }
     reports.push(report);

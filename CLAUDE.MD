@@ -104,7 +104,7 @@ src/
       horde/
         zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
-    decks.ts              DECK_REGISTRY: unico punto de registro; agregar deck = una linea register(...)
+    decks.ts              DECK_REGISTRY: registro unico de deck, imagenes y metadata visual
     deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
     normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
     deckLint.ts           lint de decks: valida cada habilidad contra el vocabulario del engine
@@ -308,7 +308,11 @@ El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
 
 Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
 
-`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una linea `register(label, raw, images)`. De ahi derivan el deck del engine, el inspector (`deckCatalog.ts`) y los lookups de imagenes (`cardImages.ts`). Cada deck lleva su manifest de imagenes junto al JSON.
+`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una llamada
+`register(label, raw, images, presentation)`. De ahi derivan el deck del engine, el inspector
+(`deckCatalog.ts`), los lookups de imagenes (`cardImages.ts`) y su presentacion en selectores.
+`presentation` declara `keyCardId`, `theme` y `descriptionKey`; no volver a resolver esos valores
+por id dentro de componentes. Cada deck lleva su manifest de imagenes junto al JSON.
 
 Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
 - `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".

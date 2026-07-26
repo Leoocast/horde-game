@@ -4,7 +4,7 @@ import hordeZombiesRaw from "./decks/horde/zombies/horde-zombies.json";
 import hordeZombiesImagesRaw from "./decks/horde/zombies/horde-zombies_images.json";
 import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
 import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
-import type { DeckImageManifest, NewDeckList } from "./deckCatalog";
+import type { DeckImageManifest, DeckPresentation, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
 import type { CardDefinition, DeckList } from "../engine/GameTypes";
 
@@ -13,20 +13,33 @@ export type DeckRegistryEntry = {
   label: string;
   raw: NewDeckList;
   images: DeckImageManifest;
+  presentation: DeckPresentation;
   /** Engine-ready deck derived from `raw`; id and side come from the JSON itself. */
   deck: DeckList;
 };
 
-function register(label: string, raw: NewDeckList, images: DeckImageManifest): DeckRegistryEntry {
-  return { label, raw, images, deck: normalizeDeck(raw) };
+function register(label: string, raw: NewDeckList, images: DeckImageManifest, presentation: DeckPresentation): DeckRegistryEntry {
+  return { label, raw, images, presentation, deck: normalizeDeck(raw) };
 }
 
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("Mono-Green Ramp 39", monoGreenRampRaw as NewDeckList, monoGreenRampImagesRaw as DeckImageManifest),
-  register("Zombie Horde 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest),
-  register("Goblin Horde 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest),
+  register("Mono-Green Ramp 39", monoGreenRampRaw as NewDeckList, monoGreenRampImagesRaw as DeckImageManifest, {
+    keyCardId: "sunshower_druid",
+    theme: "ramp",
+    descriptionKey: "setup.descriptionRamp",
+  }),
+  register("Zombie Horde 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
+    keyCardId: "zombie_token",
+    theme: "zombie",
+    descriptionKey: "setup.descriptionZombies",
+  }),
+  register("Goblin Horde 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest, {
+    keyCardId: "goblin_token_1_1_red",
+    theme: "goblin",
+    descriptionKey: "setup.descriptionGoblins",
+  }),
 ];
 
 export const DEFAULT_PLAYER_DECK_ID = "mono_green_ramp";
