@@ -46,8 +46,8 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
     return null;
   }
 
-  if (lookup.imageUrl && language === "en") {
-    const direct = { imageUrl: lookup.imageUrl };
+  if (lookup.imageUrl && (lookup.source === "local" || language === "en")) {
+    const direct = { imageUrl: lookup.imageUrl, language };
     writeCachedDetails(cacheId, direct);
     return direct;
   }

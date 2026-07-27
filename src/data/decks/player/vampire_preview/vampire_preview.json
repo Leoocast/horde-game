@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "0.2.0",
+  "id": "vampire_chronicle_preview",
+  "name": "La Corte Carmesí — Muestras",
+  "format": "early-access-preview",
+  "side": "PLAYER",
+  "deckSize": 3,
+  "archetype": "life-payment-lifesteal",
+  "gamePlan": "Paga vida para acelerar tu desarrollo y recupérala decidiendo cuándo atacar al Host y cuándo conservar bloqueadores.",
+  "tokens": [],
+  "cards": [
+    {
+      "id": "crimson_energy",
+      "name": "Crimson Energy",
+      "displayNameEs": "Energía Carmesí",
+      "gameText": {
+        "en": "Exhaust: Generate 1 Energy.",
+        "es": "Agota: genera 1 de Energía."
+      },
+      "flavorText": {
+        "en": "Every vow leaves something behind.",
+        "es": "Todo juramento deja algo atrás."
+      },
+      "quantity": 1,
+      "manaCost": null,
+      "manaValue": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": [
+        "Energy"
+      ],
+      "subtypes": [
+        "Sanctuary"
+      ],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": []
+    },
+    {
+      "id": "crimson_bat",
+      "name": "Crimson Bat",
+      "displayNameEs": "Murciélago Carmesí",
+      "gameText": {
+        "en": "Flying\nLifesteal",
+        "es": "Volar\nRobo de vida"
+      },
+      "flavorText": {
+        "en": "The bells fall silent before its wings arrive.",
+        "es": "Las campanas callan antes de que lleguen sus alas."
+      },
+      "quantity": 1,
+      "manaCost": "{2}",
+      "manaValue": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bat",
+        "Vampire"
+      ],
+      "power": 1,
+      "toughness": 2,
+      "keywords": [
+        "FLYING",
+        "LIFESTEAL"
+      ],
+      "abilities": []
+    },
+    {
+      "id": "eternal_feast_countess",
+      "name": "Countess of the Eternal Feast",
+      "displayNameEs": "Condesa del Banquete Eterno",
+      "gameText": {
+        "en": "Flying\nLifesteal",
+        "es": "Volar\nRobo de vida"
+      },
+      "flavorText": {
+        "en": "Her court has waited centuries for the final guest.",
+        "es": "Su corte ha esperado siglos al último invitado."
+      },
+      "quantity": 1,
+      "manaCost": "{6}",
+      "manaValue": 6,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": [
+        "Legendary",
+        "Creature"
+      ],
+      "subtypes": [
+        "Vampire",
+        "Noble"
+      ],
+      "power": 4,
+      "toughness": 5,
+      "keywords": [
+        "FLYING",
+        "LIFESTEAL"
+      ],
+      "abilities": []
+    }
+  ],
+  "engineSupportNeeded": [
+    "Lifesteal and life-payment mechanics will be implemented when the full 40-card Chronicle is approved."
+  ]
+}

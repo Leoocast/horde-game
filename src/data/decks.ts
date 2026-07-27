@@ -4,6 +4,8 @@ import hordeZombiesRaw from "./decks/horde/zombies/horde-zombies.json";
 import hordeZombiesImagesRaw from "./decks/horde/zombies/horde-zombies_images.json";
 import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
 import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
+import vampirePreviewRaw from "./decks/player/vampire_preview/vampire_preview.json";
+import vampirePreviewImagesRaw from "./decks/player/vampire_preview/vampire_preview_images.json";
 import type { DeckImageManifest, DeckPresentation, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
 import type { CardDefinition, DeckList } from "../engine/GameTypes";
@@ -30,6 +32,12 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",
   }),
+  register("La Corte Carmesí — Muestras", vampirePreviewRaw as NewDeckList, vampirePreviewImagesRaw as DeckImageManifest, {
+    keyCardId: "eternal_feast_countess",
+    theme: "vampire",
+    descriptionKey: "setup.descriptionVampires",
+    playable: false,
+  }),
   register("Zombie Horde 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
     keyCardId: "zombie_token",
     theme: "zombie",
@@ -51,7 +59,9 @@ export const playerDeck = requireDeck(DEFAULT_PLAYER_DECK_ID);
 export const hordeDeck = requireDeck(DEFAULT_HORDE_DECK_ID);
 
 export function getPlayerDeck(id: string): DeckList {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === id && item.deck.side === "player");
+  const entry = DECK_REGISTRY.find(
+    (item) => item.deck.id === id && item.deck.side === "player" && item.presentation.playable !== false,
+  );
   return entry?.deck ?? playerDeck;
 }
 

@@ -93,7 +93,7 @@ export type DeckImageManifest = {
   >;
 };
 
-export type DeckTheme = "ramp" | "zombie" | "goblin";
+export type DeckTheme = "ramp" | "zombie" | "goblin" | "vampire";
 export type EncounterTone = "undead" | "goblins";
 
 export type DeckPresentation = {
@@ -103,6 +103,8 @@ export type DeckPresentation = {
   theme: DeckTheme;
   /** Localized summary shown while choosing the deck. */
   descriptionKey: TranslationKey;
+  /** Preview Chronicles remain inspectable in the collection without entering Expedition setup. */
+  playable?: boolean;
   /** Horde-only palette for the pre-match versus transition. */
   encounterTone?: EncounterTone;
 };

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "cacheKey": "vampire-preview-v1"
+  },
+  "cards": {
+    "crimson_energy": {
+      "source": "local",
+      "imageUrl": "/cards/vampires/crimson_energy.webp"
+    },
+    "crimson_bat": {
+      "source": "local",
+      "imageUrl": "/cards/vampires/crimson_bat.webp"
+    },
+    "eternal_feast_countess": {
+      "source": "local",
+      "imageUrl": "/cards/vampires/eternal_feast_countess.webp"
+    }
+  }
+}

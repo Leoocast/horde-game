@@ -66,7 +66,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
-  const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
+  const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
+  const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
 
@@ -346,7 +347,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       ) : (
         <ExpeditionSetup
           playerDeck={selectedDeck}
-          playerDecks={decks}
+          playerDecks={playableDecks}
           selectedPlayerDeckId={selectedDeckId}
           onSelectPlayerDeck={onSelectDeck}
           onInspectPlayerDeck={() => onViewDeck(menuScreen === "chaos" ? "chaos" : "setup")}

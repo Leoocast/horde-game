@@ -9,6 +9,7 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { KeywordPills } from "./CardPreview";
+import { DeckCardVisual } from "./DeckCardVisual";
 
 type Props = {
   deck: InspectableDeck;
@@ -192,6 +193,7 @@ function DeckCardTile({
   const language = useLanguageStore((state) => state.language);
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
+  const localArt = isLocalDeckCard(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -216,7 +218,22 @@ function DeckCardTile({
           </span>
         )}
         <div className="deck-detail-card-image">
-          {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <MissingCardArt card={card} />}
+          {details.imageUrl && localArt ? (
+            <DeckCardVisual
+              card={card}
+              imageUrl={details.imageUrl}
+              displayName={displayName}
+              typeLine={localizedTypeLine(card, language)}
+              description={authoredCardText(card, language)}
+              flavorText={authoredFlavorText(card, language)}
+              credit="HOSTFALL — ORIGINAL ART"
+              className="hostfall-vampire"
+            />
+          ) : details.imageUrl ? (
+            <img src={details.imageUrl} alt={displayName} draggable={false} />
+          ) : (
+            <MissingCardArt card={card} />
+          )}
           {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
@@ -309,6 +326,7 @@ function DeckInspectorDetailsModal({
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
+  const localArt = isLocalDeckCard(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -375,7 +393,22 @@ function DeckInspectorDetailsModal({
               <ChevronLeft size={24} />
             </button>
             <div className="deck-collection-modal-art">
-              {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <MissingCardArt card={card} />}
+              {details.imageUrl && localArt ? (
+                <DeckCardVisual
+                  card={card}
+                  imageUrl={details.imageUrl}
+                  displayName={displayName}
+                  typeLine={localizedTypeLine(card, language)}
+                  description={authoredCardText(card, language)}
+                  flavorText={authoredFlavorText(card, language)}
+                  credit="HOSTFALL — ORIGINAL ART"
+                  className="hostfall-vampire"
+                />
+              ) : details.imageUrl ? (
+                <img src={details.imageUrl} alt={displayName} draggable={false} />
+              ) : (
+                <MissingCardArt card={card} />
+              )}
             </div>
             <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title={t("common.nextCard")}>
               <ChevronRight size={24} />
@@ -451,6 +484,23 @@ function formatDeckKeyword(keyword: string): string {
   const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
   if (toxic) return `TOXIC {${toxic[1]}}`;
   return text.toUpperCase();
+}
+
+function isLocalDeckCard(deck: InspectableDeck, card: NewDeckCard): boolean {
+  return deck.images.cards[card.id]?.source === "local";
+}
+
+function authoredCardText(card: NewDeckCard, language: AppLanguage): string {
+  return card.gameText?.[language] ?? card.gameText?.en ?? "";
+}
+
+function authoredFlavorText(card: NewDeckCard, language: AppLanguage): string {
+  const flavorText = card.flavorText;
+  if (typeof flavorText === "string") return flavorText;
+  if (!flavorText || typeof flavorText !== "object") return "";
+  const localized = flavorText as Partial<Record<AppLanguage, unknown>>;
+  const value = localized[language] ?? localized.en;
+  return typeof value === "string" ? value : "";
 }
 
 function describeCardFromJson(card: NewDeckCard): string {

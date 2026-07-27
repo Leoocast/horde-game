@@ -13,6 +13,7 @@ const SPANISH_TYPES: Record<string, string> = {
   Basic: "Básica",
   Creature: "Criatura",
   Enchantment: "Encantamiento",
+  Energy: "Energía",
   Instant: "Instantáneo",
   Land: "Tierra",
   Legendary: "Legendaria",
@@ -35,7 +36,9 @@ const SPANISH_SUBTYPES: Record<string, string> = {
   Goblin: "Trasgo",
   Human: "Humano",
   Lizard: "Lagarto",
+  Noble: "Noble",
   Rat: "Rata",
+  Sanctuary: "Santuario",
   Shaman: "Chamán",
   Warrior: "Guerrero",
   Wizard: "Hechicero",
@@ -67,6 +70,7 @@ export function localizedKeywordLabel(keyword: string, language: AppLanguage): s
     FLYING: "VOLAR",
     HASTE: "PRISA",
     HEXPROOF: "ANTIMALEFICIO",
+    LIFESTEAL: "ROBO DE VIDA",
     MENACE: "AMENAZA",
     REACH: "ALCANCE",
     SKULK: "ESCURRIDIZO",
@@ -87,6 +91,7 @@ export function localizedKeywordTooltip(keyword: string, language: AppLanguage):
     if (upper === "FIRST_STRIKE") return "Deals combat damage before creatures without first strike.";
     if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
     if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
+    if (upper === "LIFESTEAL") return "Combat damage dealt by this creature restores that much life.";
     if (upper === "SKULK") return "Can't be blocked by creatures with greater power.";
     if (upper.startsWith("TOXIC")) return "When this creature deals combat damage to the Horde, it adds poison counters.";
     return "Keyword ability.";
@@ -99,6 +104,7 @@ export function localizedKeywordTooltip(keyword: string, language: AppLanguage):
   if (upper === "FIRST_STRIKE") return "Hace daño de combate antes que las criaturas sin dañar primero.";
   if (upper === "TRAMPLE") return "El daño de combate sobrante puede pasar al bando defensor.";
   if (upper === "HASTE") return "Puede atacar y usar habilidades de girar inmediatamente.";
+  if (upper === "LIFESTEAL") return "El daño de combate que hace esta criatura recupera esa cantidad de vida.";
   if (upper === "SKULK") return "No puede ser bloqueada por criaturas con mayor fuerza.";
   if (upper.startsWith("TOXIC")) return "Cuando hace daño de combate a la Horda, añade contadores de veneno.";
   return "Habilidad de palabra clave.";
