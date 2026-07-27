@@ -650,7 +650,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   reordenar. El HTML sigue vigente en mulligan y previews, donde no existe ese reordenamiento. El
   camino HTML de mano se conserva detras de `renderHdHandCardsAsHtml` solo para diagnostico; no
   volver a activarlo como default sin comparar reordenamientos. El rombo de disponible pertenece
-  a `.hand-card`, el mismo rectangulo que crece durante hover. Los PNG de mano deben usar
+  a `.hand-card`, el mismo rectangulo que crece durante hover, pero su render esta detras de
+  `showPlayerHandActionableGems` y permanece apagado mientras se evalua la mano sin rombos. Los
+  PNG de mano deben usar
   `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al
   reducirlos y rotarlos en el abanico. Esos PNG exportados tambien traen negro semitransparente
   fuera del radio de 48px: la ruta `showFullImage` no debe heredar el fondo/sombra base de `Card` y
@@ -668,8 +670,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG/HTML. En `CardPreview` queda unos pixeles
   elevado; tanto el preview como la mano recuperan el borde dorado sobre slate gris de la variante
-  recortada. Mano y `CardPreview` tambien cubren el coste impreso con `CardCostBadge`: un circulo
-  dorado proporcional, mayor que el original y desplazado fuera de la esquina superior derecha.
+  recortada. Mano y `CardPreview` tambien cubren el coste impreso con `CardCostBadge`: un orbe
+  azul proporcional inspirado en los orbes de energia, mayor que el original, desplazado fuera
+  de la esquina superior derecha y con pulso luminoso en el numero y el nucleo.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

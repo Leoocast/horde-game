@@ -461,12 +461,14 @@ export function Hand({ game }: { game: GameState }) {
                         <span className="hand-card-actionable-glow-layer" aria-hidden="true" />
                       )}
                   </div>
-                  {cardActionable && draggingCardId !== card.instanceId && (
-                    <span
-                      className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}
-                      aria-hidden="true"
-                    />
-                  )}
+                  {UI_FEATURE_FLAGS.showPlayerHandActionableGems &&
+                    cardActionable &&
+                    draggingCardId !== card.instanceId && (
+                      <span
+                        className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}
+                        aria-hidden="true"
+                      />
+                    )}
                 </motion.div>
               </motion.div>
             );

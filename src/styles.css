@@ -10264,33 +10264,100 @@
   top: -2.8cqw;
   right: -1cqw;
   z-index: 45;
+  isolation: isolate;
   display: grid;
   width: 16cqw;
   height: 16cqw;
+  overflow: hidden;
   place-items: center;
-  border: 0.75cqw solid #c8a65a;
+  border: 0.62cqw solid rgb(185 232 255 / 0.96);
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 38% 30%, rgb(91 76 43 / 0.7), transparent 34%),
-    radial-gradient(circle, #30281a 0 57%, #171109 74%, #090704 100%);
+  background: radial-gradient(circle at 36% 28%, #effcff 0%, #79d4ff 19%, #2786d2 51%, #092e62 79%, #03142e 100%);
   box-shadow:
-    inset 0 0 0 0.32cqw rgb(246 224 157 / 0.48),
-    inset 0 0 1.6cqw rgb(0 0 0 / 0.82),
-    0 0 0 0.22cqw rgb(48 35 15 / 0.92),
-    0 0.9cqw 2.2cqw rgb(0 0 0 / 0.72);
-  color: #fff7da;
+    inset 0.55cqw 0.55cqw 1cqw rgb(238 252 255 / 0.76),
+    inset -1.3cqw -1.5cqw 2cqw rgb(3 24 58 / 0.76),
+    0 0 0 0.24cqw rgb(6 31 66 / 0.94),
+    0 0 2cqw rgb(92 201 255 / 0.92),
+    0 0 4cqw rgb(38 115 226 / 0.7),
+    0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+  color: #fff;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-  font-size: 7cqw;
+  font-size: 10.8cqw;
   font-weight: 950;
   line-height: 1;
   pointer-events: none;
-  text-shadow:
-    0.25cqw 0.35cqw 0.55cqw rgb(0 0 0 / 0.95),
-    0 0 0.8cqw rgb(235 205 122 / 0.2);
+  animation: card-cost-orb-idle 2.6s ease-in-out infinite;
+  text-shadow: none;
+}
+
+.card-cost-badge::before {
+  position: absolute;
+  left: 19%;
+  top: 15%;
+  z-index: 3;
+  width: 35%;
+  height: 19%;
+  border-radius: 50%;
+  background: rgb(242 253 255 / 0.8);
+  box-shadow: 0 0 1.4cqw rgb(181 232 255 / 0.84);
+  content: "";
+  filter: blur(0.18cqw);
+  pointer-events: none;
+  transform: rotate(-28deg);
+}
+
+.card-cost-badge::after {
+  position: absolute;
+  z-index: 2;
+  inset: 1.25cqw;
+  border: 0.3cqw solid rgb(239 253 255 / 0.28);
+  border-radius: 50%;
+  box-shadow: inset 0 0 1.5cqw rgb(154 226 255 / 0.22);
+  content: "";
+  pointer-events: none;
 }
 
 .card-cost-badge > span {
+  position: relative;
+  z-index: 4;
+  color: #fff;
+  -webkit-text-stroke: 0.46cqw rgb(3 25 58 / 0.98);
+  paint-order: stroke fill;
+  text-shadow:
+    0 0.35cqw 0.45cqw rgb(2 15 38 / 0.98),
+    0 0 0.55cqw rgb(225 248 255 / 0.44);
   transform: translateY(-0.15cqw);
+}
+
+@keyframes card-cost-orb-idle {
+  0%,
+  100% {
+    border-color: rgb(185 232 255 / 0.88);
+    box-shadow:
+      inset 0.55cqw 0.55cqw 1cqw rgb(238 252 255 / 0.7),
+      inset -1.3cqw -1.5cqw 2cqw rgb(3 24 58 / 0.76),
+      0 0 0 0.24cqw rgb(6 31 66 / 0.94),
+      0 0 1.8cqw rgb(92 201 255 / 0.8),
+      0 0 3.5cqw rgb(38 115 226 / 0.54),
+      0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+  }
+
+  50% {
+    border-color: rgb(225 248 255 / 1);
+    box-shadow:
+      inset 0.55cqw 0.55cqw 1cqw rgb(248 255 255 / 0.86),
+      inset -1.3cqw -1.5cqw 2cqw rgb(4 31 72 / 0.68),
+      0 0 0 0.24cqw rgb(11 57 112 / 0.98),
+      0 0 2.8cqw rgb(132 222 255 / 1),
+      0 0 5.2cqw rgb(47 139 239 / 0.82),
+      0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-cost-badge {
+    animation: none;
+  }
 }
 
 .hand-card .card-visual.card-image-full > .card-stat-badge {
