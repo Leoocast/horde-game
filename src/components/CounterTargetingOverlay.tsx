@@ -143,6 +143,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             suppressSummoningSickness
             highRes
             showFullImage={showFullSourceImage}
+            showCostBadge={showFullSourceImage}
             preferNativeImageRendering={showFullSourceImage}
           />
         </div>

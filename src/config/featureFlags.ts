@@ -8,7 +8,7 @@ export const UI_FEATURE_FLAGS = {
   renderHtmlHandAtHoverResolution: true,
   isolateHtmlHandActionableGlow: true,
   isolateHtmlHandActionableSweep: true,
-  showPlayerHandActionableGems: false,
+  showPlayerHandActionableGems: true,
   showDynamicHandCardStats: true,
   stabilizeHtmlMulliganHoverText: true,
   useAdjustedPlayerHandCardHoverScale: true,

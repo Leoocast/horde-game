@@ -10,6 +10,7 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { KeywordPills } from "./CardPreview";
+import { CardCostBadge, CardStatsBadge, type CardStatDisplay } from "./Card";
 import { DeckCardVisual } from "./DeckCardVisual";
 import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
@@ -199,6 +200,7 @@ function DeckCardTile({
   const renderHtmlCard =
     UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
     hasMonoGreenHtmlCardFace(card.id);
+  const showDynamicChrome = hasMonoGreenHtmlCardFace(card.id);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -218,11 +220,11 @@ function DeckCardTile({
     >
       <div className="deck-detail-card-frame">
         {quantity > 1 && (
-          <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
+          <span className={["deck-quantity-badge pointer-events-none absolute -top-2 z-20", showDynamicChrome ? "deck-quantity-badge-left" : "-right-2"].join(" ")}>
             x{quantity}
           </span>
         )}
-        <div className={["deck-detail-card-image", renderHtmlCard ? "is-html-card" : ""].join(" ")}>
+        <div className={["deck-detail-card-image", renderHtmlCard ? "is-html-card" : "", showDynamicChrome ? "deck-card-dynamic-frame" : ""].join(" ")}>
           {renderHtmlCard ? (
             <MonoGreenHandCardFace card={{ definitionId: card.id }} />
           ) : details.imageUrl && localArt ? (
@@ -241,6 +243,7 @@ function DeckCardTile({
           ) : (
             <MissingCardArt card={card} />
           )}
+          {showDynamicChrome && <DeckCardChrome card={card} />}
           {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
@@ -267,6 +270,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const renderHtmlCard =
     UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
     hasMonoGreenHtmlCardFace(card.id);
+  const showDynamicChrome = hasMonoGreenHtmlCardFace(card.id);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -286,8 +290,9 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
       </div>
       <div className="deck-detail-info-body">
         {renderHtmlCard ? (
-          <div className="deck-detail-info-html-card">
+          <div className={["deck-detail-info-html-card", showDynamicChrome ? "deck-card-dynamic-frame" : ""].join(" ")}>
             <MonoGreenHandCardFace card={{ definitionId: card.id }} />
+            {showDynamicChrome && <DeckCardChrome card={card} />}
           </div>
         ) : details.imageUrl ? (
           <img src={details.imageUrl} alt={displayName} className="deck-detail-info-image" />
@@ -344,6 +349,7 @@ function DeckInspectorDetailsModal({
   const renderHtmlCard =
     UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
     hasMonoGreenHtmlCardFace(card.id);
+  const showDynamicChrome = hasMonoGreenHtmlCardFace(card.id);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -409,7 +415,7 @@ function DeckInspectorDetailsModal({
             <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title={t("common.previousCard")}>
               <ChevronLeft size={24} />
             </button>
-            <div className={["deck-collection-modal-art", renderHtmlCard ? "is-html-card" : ""].join(" ")}>
+            <div className={["deck-collection-modal-art", renderHtmlCard ? "is-html-card" : "", showDynamicChrome ? "deck-card-dynamic-frame" : ""].join(" ")}>
               {renderHtmlCard ? (
                 <MonoGreenHandCardFace card={{ definitionId: card.id }} />
               ) : details.imageUrl && localArt ? (
@@ -428,6 +434,7 @@ function DeckInspectorDetailsModal({
               ) : (
                 <MissingCardArt card={card} />
               )}
+              {showDynamicChrome && <DeckCardChrome card={card} />}
             </div>
             <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title={t("common.nextCard")}>
               <ChevronRight size={24} />
@@ -466,6 +473,28 @@ function DeckInspectorDetailsModal({
       </section>
     </div>
   );
+}
+
+function DeckCardChrome({ card }: { card: NewDeckCard }) {
+  const cardStats = deckCardStatDisplay(card);
+
+  return (
+    <>
+      <CardCostBadge card={card} />
+      {cardStats && <CardStatsBadge stats={cardStats} preferSingleSword />}
+    </>
+  );
+}
+
+function deckCardStatDisplay(card: NewDeckCard): CardStatDisplay | undefined {
+  if (typeof card.power !== "number" || typeof card.toughness !== "number") return undefined;
+  return {
+    text: `${card.power}/${card.toughness}`,
+    power: card.power,
+    toughness: card.toughness,
+    damaged: false,
+    buffed: false,
+  };
 }
 
 function uniqueCards(cards: NewDeckCard[]): CardCopy[] {

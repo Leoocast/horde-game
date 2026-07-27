@@ -190,6 +190,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
             suppressSummoningSickness
             highRes
             showFullImage={showFullSourceImage}
+            showCostBadge={showFullSourceImage}
             preferNativeImageRendering={showFullSourceImage}
           />
         </div>

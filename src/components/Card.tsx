@@ -234,10 +234,12 @@ export type CardStatDisplay = ReturnType<typeof cardStatState>;
 export function CardCostBadge({
   card,
 }: {
-  card: Pick<CardInstance, "manaCost" | "manaValue">;
+  card: { manaCost?: string; manaValue?: number };
 }) {
-  if (!card.manaCost.trim()) return null;
-  const label = card.manaCost.includes("{X}") ? "X" : card.manaValue;
+  const manaCost = card.manaCost?.trim();
+  if (!manaCost) return null;
+  const label = manaCost.includes("{X}") ? "X" : card.manaValue;
+  if (label === undefined) return null;
 
   return (
     <div className="card-cost-badge" aria-hidden="true">
