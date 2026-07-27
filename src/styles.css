@@ -10294,17 +10294,17 @@
 
 .card-cost-badge {
   position: absolute;
-  top: -2.8cqw;
+  top: -1.55cqw;
   right: auto;
-  left: -1cqw;
+  left: -0.7cqw;
   z-index: 45;
   isolation: isolate;
   display: grid;
-  width: 16cqw;
-  height: 16cqw;
+  width: 14.5cqw;
+  height: 14.5cqw;
   overflow: hidden;
   place-items: center;
-  border: 0.62cqw solid rgb(185 232 255 / 0.96);
+  border: 0.56cqw solid rgb(185 232 255 / 0.96);
   border-radius: 50%;
   background: radial-gradient(circle at 36% 28%, #effcff 0%, #79d4ff 19%, #2786d2 51%, #092e62 79%, #03142e 100%);
   box-shadow:
@@ -10316,7 +10316,7 @@
     0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
   color: #fff;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-  font-size: 10.8cqw;
+  font-size: 9.8cqw;
   font-weight: 950;
   line-height: 1;
   pointer-events: none;
@@ -10343,8 +10343,8 @@
 .card-cost-badge::after {
   position: absolute;
   z-index: 2;
-  inset: 1.25cqw;
-  border: 0.3cqw solid rgb(239 253 255 / 0.28);
+  inset: 1.12cqw;
+  border: 0.27cqw solid rgb(239 253 255 / 0.28);
   border-radius: 50%;
   box-shadow: inset 0 0 1.5cqw rgb(154 226 255 / 0.22);
   content: "";
@@ -10355,7 +10355,7 @@
   position: relative;
   z-index: 4;
   color: #fff;
-  -webkit-text-stroke: 0.46cqw rgb(3 25 58 / 0.98);
+  -webkit-text-stroke: 0.42cqw rgb(3 25 58 / 0.98);
   paint-order: stroke fill;
   text-shadow:
     0 0.35cqw 0.45cqw rgb(2 15 38 / 0.98),
