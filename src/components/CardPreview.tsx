@@ -9,7 +9,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords, cardStatState } from "../utils/selectors";
-import { CardStatsBadge } from "./Card";
+import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
@@ -173,7 +173,8 @@ export function CardPreview() {
 
   const keywords = cardKeywords(game, card);
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
-  const showFullCardStats = shouldShowFullCardImage(card.definitionId) && Boolean(stats.text);
+  const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
+  const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
   const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
@@ -192,7 +193,7 @@ export function CardPreview() {
             className={[
               "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
               renderFocusedHtmlPreview ? "card-preview-html-frame" : "",
-              showFullCardStats ? "card-preview-full-card-frame" : "",
+              showFullCardPresentation ? "card-preview-full-card-frame" : "",
             ].join(" ")}
           >
             {renderFocusedHtmlPreview ? (
@@ -200,6 +201,7 @@ export function CardPreview() {
             ) : imageUrl ? (
               <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
             ) : null}
+            {showFullCardPresentation && <CardCostBadge card={card} />}
             {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
           </div>
           {keywords && (
@@ -223,7 +225,7 @@ export function CardPreview() {
       className={[
         "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
         renderHoverHtmlPreview ? "card-preview-html-frame" : "",
-        showFullCardStats ? "card-preview-full-card-frame" : "",
+        showFullCardPresentation ? "card-preview-full-card-frame" : "",
       ].join(" ")}
       style={hoverStyle}
     >
@@ -232,6 +234,7 @@ export function CardPreview() {
       ) : imageUrl ? (
         <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
       ) : null}
+      {showFullCardPresentation && <CardCostBadge card={card} />}
       {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );

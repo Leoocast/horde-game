@@ -38,6 +38,7 @@ type Props = {
   highRes?: boolean;
   sharpImageOverlay?: boolean;
   showFullImage?: boolean;
+  showCostBadge?: boolean;
   clipActionSweep?: boolean;
   preferNativeImageRendering?: boolean;
   face?: ReactNode;
@@ -45,7 +46,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -162,6 +163,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
         </div>
       )}
+      {showCostBadge && <CardCostBadge card={card} />}
       {actionable && !dragging && (
         clipActionSweep ? (
           <span className="card-actionable-sweep-clip" aria-hidden="true">
@@ -228,6 +230,21 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
 }
 
 export type CardStatDisplay = ReturnType<typeof cardStatState>;
+
+export function CardCostBadge({
+  card,
+}: {
+  card: Pick<CardInstance, "manaCost" | "manaValue">;
+}) {
+  if (!card.manaCost.trim()) return null;
+  const label = card.manaCost.includes("{X}") ? "X" : card.manaValue;
+
+  return (
+    <div className="card-cost-badge" aria-hidden="true">
+      <span>{label}</span>
+    </div>
+  );
+}
 
 export function CardStatsBadge({
   stats,

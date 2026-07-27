@@ -422,6 +422,7 @@ export function Hand({ game }: { game: GameState }) {
                       highRes={isHeld}
                       sharpImageOverlay={!useNativeHdRendering}
                       showFullImage={showFullImage}
+                      showCostBadge={showFullImage}
                       clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
                       preferNativeImageRendering={useNativeHdRendering}
                       hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}

@@ -668,7 +668,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG/HTML. En `CardPreview` queda unos pixeles
   elevado; tanto el preview como la mano recuperan el borde dorado sobre slate gris de la variante
-  recortada.
+  recortada. Mano y `CardPreview` tambien cubren el coste impreso con `CardCostBadge`: un circulo
+  dorado proporcional, mayor que el original y desplazado fuera de la esquina superior derecha.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

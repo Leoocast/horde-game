@@ -10250,6 +10250,49 @@
   background: linear-gradient(180deg, #344c3c, #1d3227 66%, #122219);
 }
 
+.card-preview-full-card-frame {
+  overflow: visible;
+  background: transparent;
+}
+
+.card-preview-full-card-frame > .card-preview-cropped-image {
+  border-radius: 4.918% / 3.529%;
+}
+
+.card-cost-badge {
+  position: absolute;
+  top: -2.8cqw;
+  right: -1cqw;
+  z-index: 45;
+  display: grid;
+  width: 16cqw;
+  height: 16cqw;
+  place-items: center;
+  border: 0.75cqw solid #c8a65a;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 30%, rgb(91 76 43 / 0.7), transparent 34%),
+    radial-gradient(circle, #30281a 0 57%, #171109 74%, #090704 100%);
+  box-shadow:
+    inset 0 0 0 0.32cqw rgb(246 224 157 / 0.48),
+    inset 0 0 1.6cqw rgb(0 0 0 / 0.82),
+    0 0 0 0.22cqw rgb(48 35 15 / 0.92),
+    0 0.9cqw 2.2cqw rgb(0 0 0 / 0.72);
+  color: #fff7da;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  font-size: 7cqw;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow:
+    0.25cqw 0.35cqw 0.55cqw rgb(0 0 0 / 0.95),
+    0 0 0.8cqw rgb(235 205 122 / 0.2);
+}
+
+.card-cost-badge > span {
+  transform: translateY(-0.15cqw);
+}
+
 .hand-card .card-visual.card-image-full > .card-stat-badge {
   border: 1px solid rgb(214 188 111 / 0.58);
   background: linear-gradient(180deg, #263342, #18212c 68%, #111923);
