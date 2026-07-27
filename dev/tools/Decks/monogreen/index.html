@@ -7,11 +7,8 @@
     <title>Hostfall Deck — Mono Green (976x1360 HD)</title>
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.min.js"></script>
 
-    <!-- Librerías para Exportar Deck a ZIP en formato WebP (976x1360) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;600;700;800&family=Oswald:wght@600;700&display=swap');
 
@@ -73,7 +70,7 @@
             margin: 0 0 20px 0;
         }
 
-        /* BOTÓN EXPORT DECK ZIP WEBP */
+        /* ENLACE AL EXPORTADOR DE CAPTURA NATIVA */
         .export-btn {
             display: inline-flex;
             align-items: center;
@@ -89,6 +86,7 @@
             padding: 14px 32px;
             border-radius: 35px;
             cursor: pointer;
+            text-decoration: none;
             box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
             transition: all 0.3s ease;
         }
@@ -97,15 +95,6 @@
             transform: translateY(-2px);
             background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
             box-shadow: 0 12px 30px rgba(34, 197, 94, 0.6);
-        }
-
-        .export-btn:disabled {
-            opacity: 0.75;
-            cursor: wait;
-            transform: none;
-            background: #334155;
-            border-color: #94a3b8;
-            box-shadow: none;
         }
 
         /* ==================== CONTROLES DE ZOOM / COLUMNAS ==================== */
@@ -191,14 +180,13 @@
             flex-shrink: 0;
         }
 
-        /* MARCO EXTERIOR: VERDE NATURALEZA CON MOTIVO DE HOJAS A GRIS ACERO */
+        /* MARCO EXTERIOR: VERDE NATURALEZA A GRIS ACERO (SIN MOTIVO) */
         .tcg-outer-border {
             position: absolute;
             inset: 0;
             border-radius: 48px;
             padding: 18px;
             background-image:
-                var(--nature-pattern),
                 var(--noise-tex),
                 linear-gradient(180deg,
                     #26472d 0%,
@@ -565,7 +553,7 @@
         }
 
         .tcg-stat-atk .tcg-stat-icon {
-            color: #cbd5e1;
+            color: #d6b36a;
         }
 
         .tcg-stat-def .tcg-stat-icon {
@@ -597,10 +585,10 @@
         <h1>Hostfall — Deck Mono Green (Cartas HD 976×1360)</h1>
         <p>Colección completa de 13 cartas en alta resolución • Formato Completo Estándar</p>
 
-        <button class="export-btn" id="export-btn" onclick="exportDeckZip()">
-            <i class="fa-solid fa-file-zipper"></i>
-            <span id="export-btn-text">Export Deck (ZIP / PNG 976×1360)</span>
-        </button>
+        <a class="export-btn" href="./export_cards.cmd" download>
+            <i class="fa-solid fa-camera"></i>
+            <span>Exportar PNGs (captura nativa)</span>
+        </a>
     </div>
 
     <!-- CONTENEDOR DE TODAS LAS CARTAS EN MULTI-COLUMNA -->
@@ -793,6 +781,7 @@
 
             const hasEffect = card.desc && card.desc.trim() !== "" && card.desc.trim().toLowerCase() !== "sin efecto adicional.";
             const hasLore = card.lore && card.lore.trim() !== "";
+            const isLand = card.tipo && card.tipo.toLowerCase().includes("tierra");
 
             const cardEl = document.createElement('div');
             cardEl.className = 'tcg-card';
@@ -807,9 +796,7 @@
                             <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
                             <div class="tcg-title">${card.nombre}</div>
                         </div>
-                        <div class="tcg-mana-gem">
-                            <span>${card.costo}</span>
-                        </div>
+                        ${!isLand ? `<div class="tcg-mana-gem"><span>${card.costo}</span></div>` : ''}
                     </div>
 
                     <!-- Ventana de Arte -->
@@ -827,9 +814,9 @@
 
                     <!-- Cuerpo de Descripción -->
                     <div class="tcg-body">
-                        ${hasEffect ? `<p class="tcg-effect">${formatEffectText(card.desc)}</p>` : ''}
-                        ${hasEffect && hasLore ? `<div class="tcg-divider"></div>` : ''}
-                        ${hasLore ? `<p class="tcg-flavor ${hasEffect ? '' : 'tcg-flavor-solo'}">${card.lore}</p>` : ''}
+                        ${(!isLand && hasEffect) ? `<p class="tcg-effect">${formatEffectText(card.desc)}</p>` : ''}
+                        ${(!isLand && hasEffect && hasLore) ? `<div class="tcg-divider"></div>` : ''}
+                        ${(isLand || !hasEffect) && hasLore ? `<p class="tcg-flavor tcg-flavor-solo">${card.lore}</p>` : (!isLand && hasLore ? `<p class="tcg-flavor ${hasEffect ? '' : 'tcg-flavor-solo'}">${card.lore}</p>` : '')}
                         <div class="tcg-footer-info">HFA1 #${cardNumberStr} • Hostfall TCG</div>
                     </div>
                 </div>
@@ -839,7 +826,7 @@
                 <div class="tcg-stats-badge">
                     <div class="tcg-stat-item tcg-stat-atk">
                         <div class="tcg-stat-icon">
-                            <i class="fa-solid fa-swords"></i>
+                            <i data-lucide="sword" style="width: 42px; height: 42px; transform: scaleX(-1);"></i>
                         </div>
                         <span class="tcg-stat-val">${card.atk}</span>
                     </div>
@@ -855,84 +842,8 @@
             container.appendChild(cardEl);
         });
 
-        // FUNCIÓN PARA EXPORTAR EL DECK COMPLETO A ZIP CON IMÁGENES PNG (976x1360)
-        async function exportDeckZip() {
-            const btn = document.getElementById('export-btn');
-            const btnText = document.getElementById('export-btn-text');
-            btn.disabled = true;
+        if (window.lucide) lucide.createIcons();
 
-            // Crear contenedor fuera de pantalla sin zoom para captura 100% limpia a 976x1360 HD
-            const offscreenHost = document.createElement('div');
-            offscreenHost.style.position = 'absolute';
-            offscreenHost.style.left = '-9999px';
-            offscreenHost.style.top = '0';
-            offscreenHost.style.width = '976px';
-            offscreenHost.style.height = '1360px';
-            offscreenHost.style.zoom = '1';
-            offscreenHost.style.transform = 'none';
-            document.body.appendChild(offscreenHost);
-
-            try {
-                const zip = new JSZip();
-                const cards = document.querySelectorAll('.tcg-card');
-                const total = cards.length;
-
-                for (let i = 0; i < total; i++) {
-                    const originalCard = cards[i];
-                    const cardInfo = deckData[i] || {};
-                    const cardName = cardInfo.id || `carta_${i + 1}`;
-                    const cardNumber = String(i + 1).padStart(3, '0');
-
-                    btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Procesando ${i + 1}/${total}: ${cardInfo.nombre || cardName}...`;
-
-                    // Clonar carta en el contenedor sin zoom
-                    const clone = originalCard.cloneNode(true);
-                    clone.style.zoom = '1';
-                    clone.style.transform = 'none';
-                    clone.style.margin = '0';
-                    clone.style.position = 'relative';
-                    offscreenHost.appendChild(clone);
-
-                    // Renderizar con html2canvas en 976x1360px exactos
-                    const canvas = await html2canvas(clone, {
-                        scale: 1,
-                        useCORS: true,
-                        allowTaint: true,
-                        width: 976,
-                        height: 1360,
-                        backgroundColor: null,
-                        logging: false
-                    });
-
-                    // Limpiar el clon
-                    offscreenHost.innerHTML = '';
-
-                    // Obtener data URL en formato PNG
-                    const pngDataUrl = canvas.toDataURL('image/png');
-                    const base64Data = pngDataUrl.replace(/^data:image\/png;base64,/, '');
-
-                    zip.file(`${cardNumber}_${cardName}.png`, base64Data, { base64: true });
-                }
-
-                btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Empaquetando ZIP...`;
-                const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-                saveAs(zipBlob, 'mono-green-deck-976x1360-png.zip');
-
-                btnText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Deck Exportado con Éxito!`;
-            } catch (err) {
-                console.error("Error exportando deck:", err);
-                alert("Ocurrió un error al generar las imágenes. Revisa la consola del navegador.");
-            } finally {
-                if (offscreenHost.parentNode) {
-                    offscreenHost.parentNode.removeChild(offscreenHost);
-                }
-                setTimeout(() => {
-                    btnText.innerHTML = `Export Deck (ZIP / PNG 976×1360)`;
-                    btn.disabled = false;
-                }, 3500);
-            }
-        }
     </script>
 </body>
 
