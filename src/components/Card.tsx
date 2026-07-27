@@ -40,6 +40,7 @@ type Props = {
   sharpImageOverlay?: boolean;
   showFullImage?: boolean;
   showCostBadge?: boolean;
+  showCroppedTitle?: boolean;
   clipActionSweep?: boolean;
   preferNativeImageRendering?: boolean;
   face?: ReactNode;
@@ -47,7 +48,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -162,6 +163,11 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {!face && sharpImageOverlay && highResImageUrl && (
         <div className="card-sharp-image-overlay" aria-hidden="true">
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
+        </div>
+      )}
+      {showCroppedTitle && (
+        <div className="card-cropped-title" aria-hidden="true" title={localizedName}>
+          <span>{localizedName}</span>
         </div>
       )}
       {showCostBadge && <CardCostBadge card={card} />}

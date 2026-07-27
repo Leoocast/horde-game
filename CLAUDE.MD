@@ -671,7 +671,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
   carta recortada. En battlefield, el badge cutted es una excepcion visual deliberada: conserva
   fuente, iconos y lectura de estados, pero usa un HUD compacto, oscuro, angular y neutral en vez
-  de imitar la pestana impresa; el buff se expresa con verde apagado y poco glow. El mismo
+  de imitar la pestana impresa; el buff se expresa con verde apagado y poco glow. En esas mismas
+  criaturas cutted, el titulo horneado dentro del PNG se cubre con un header HTML localizado,
+  nitido y del mismo lenguaje HUD; esta capa es exclusiva del battlefield y no se propaga a mano,
+  previews, mulligan, targeting ni deck. El mismo
   `CardStatsBadge` dinamico cubre el badge impreso en mano,
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG. En targeting vienen del estado vivo.

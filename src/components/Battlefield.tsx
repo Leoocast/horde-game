@@ -975,6 +975,7 @@ export function Battlefield({ game, side, cards }: Props) {
         compact={compact}
         cropTopHalf={isLand}
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
+        showCroppedTitle={!compact && card.cardTypes.includes("Creature") && shouldShowFullCardImage(card.definitionId)}
         selected={selected}
         attacking={attacking}
         blocking={blocking}
