@@ -16,6 +16,7 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { Zone } from "./Zone";
+import { Hourglass, Zap } from "lucide-react";
 import {
   createBattlefieldArrivalRegistry,
   groupBattlefieldCopies,
@@ -874,7 +875,8 @@ export function Battlefield({ game, side, cards }: Props) {
           : hordeCombat && actionable
             ? "defense"
             : undefined;
-    const showActionGem = !combatAvailabilityTone && (blockDragActive ? false : cardActionable || effectAvailable);
+    const showEffectAvailabilityBorder = Boolean(effectAvailable && !combatAvailabilityTone);
+    const showActionGem = !combatAvailabilityTone && !showEffectAvailabilityBorder && (blockDragActive ? false : cardActionable);
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable
@@ -949,7 +951,7 @@ export function Battlefield({ game, side, cards }: Props) {
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
           actionable && !combatAvailabilityTone ? "battlefield-card-actionable" : "",
-          effectAvailable && !actionable ? "battlefield-card-effect-available" : "",
+          effectAvailable && !showEffectAvailabilityBorder && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
@@ -989,7 +991,7 @@ export function Battlefield({ game, side, cards }: Props) {
         blocking={blocking}
         glowBorderWidth={4}
         actionable={cardActionable && !combatAvailabilityTone}
-        effectAvailable={effectAvailable}
+        effectAvailable={effectAvailable && !showEffectAvailabilityBorder}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}
@@ -1057,15 +1059,38 @@ export function Battlefield({ game, side, cards }: Props) {
         }}
       />
       {combatAvailabilityTone && (
-        <span
-          className={[
-            "battlefield-combat-available-border",
-            combatAvailabilityTone === "attack"
-              ? "battlefield-combat-available-attack"
-              : "battlefield-combat-available-defense",
-          ].join(" ")}
-          aria-hidden="true"
-        />
+        <>
+          <span
+            className={[
+              "battlefield-combat-available-border",
+              combatAvailabilityTone === "attack"
+                ? "battlefield-combat-available-attack"
+                : "battlefield-combat-available-defense",
+            ].join(" ")}
+            aria-hidden="true"
+          />
+          <span
+            className={[
+              "battlefield-available-pulse",
+              combatAvailabilityTone === "attack"
+                ? "battlefield-available-pulse-attack"
+                : "battlefield-available-pulse-defense",
+            ].join(" ")}
+            aria-hidden="true"
+          />
+        </>
+      )}
+      {showEffectAvailabilityBorder && (
+        <>
+          <span
+            className="battlefield-combat-available-border battlefield-effect-available-border"
+            aria-hidden="true"
+          />
+          <span
+            className="battlefield-available-pulse battlefield-available-pulse-effect"
+            aria-hidden="true"
+          />
+        </>
       )}
       {showActionGem && (
         <span
@@ -1094,9 +1119,22 @@ export function Battlefield({ game, side, cards }: Props) {
             }, 620);
           }}
         >
-          <span className="effect-action-copy">
-            <strong>{renderCardText(abilityButtonText(primaryAbility))}</strong>
-          </span>
+          {primaryAbility.effect.type === "ADD_MANA" || primaryAbility.effect.type === "ADD_MANA_DYNAMIC" ? (
+            <span className="effect-action-mana-copy">
+              <span className="effect-action-symbol effect-action-symbol-tap" title="Agotar / Activar">
+                <Hourglass aria-hidden="true" />
+              </span>
+              <span className="effect-action-mana-colon" aria-hidden="true">:</span>
+              <span className="effect-action-mana-label">Add</span>
+              <span className="effect-action-symbol effect-action-symbol-energy" title="Energía">
+                <Zap aria-hidden="true" />
+              </span>
+            </span>
+          ) : (
+            <span className="effect-action-copy">
+              <strong>{renderCardText(abilityButtonText(primaryAbility))}</strong>
+            </span>
+          )}
         </button>
       )}
       {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}

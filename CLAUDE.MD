@@ -670,9 +670,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   como fuente de verdad. `stats.buffed` debe leerse
   solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
   carta recortada. En battlefield, el badge cutted es una excepcion visual deliberada: conserva
-  fuente, iconos y lectura de estados, pero usa un HUD compacto, oscuro, angular y verde apagado en
-  vez de imitar la pestana impresa; el buff sube claramente la luminosidad, el contraste y el glow
-  sin llegar a verde fosfo. En esas mismas
+  fuente, iconos y lectura de estados, pero usa un HUD compacto y angular en vez de imitar la
+  pestana impresa. Su estado base comparte el degradado vegetal, grano tenue y borde dorado del
+  header cutted; el buff sube claramente la luminosidad, el contraste y el glow sin llegar a verde
+  fosfo. En esas mismas
   criaturas cutted, el titulo horneado dentro del PNG se cubre con un header HTML localizado,
   nitido y del mismo lenguaje HUD; esta capa es exclusiva del battlefield y no se propaga a mano,
   previews, mulligan, targeting ni deck. El mismo
@@ -712,7 +713,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
   defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
-  generico de `Card.actionable`; los indicadores de targeting y efectos conservan su semantica.
+  generico de `Card.actionable`. Las criaturas con activacion de mana disponible usan una tercera
+  corona dorada con el mismo fade y tampoco muestran rombo. Las tres coronas son exteriores: su
+  borde interior termina justo donde empieza la silueta de la carta, sin comerse el arte ni parecer
+  marco impreso; targeting conserva sus estilos propios. Naranja, azul y dorado animan la corona
+  completa con `hand-available-border-pulse` de 2.1s. Ademas llevan una capa de glow independiente,
+  equivalente al pulse extra que `Card.actionable` aporta en la mano: anima sombras de `7/16px` a
+  `11/25px` cada 1.5s, teñidas segun ataque, defensa o activacion.
+- El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Tap: Add G` con los
+  mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
+  azul para energia. No debe volver a los chips genericos de `renderCardText`.
 - Una criatura ya asignada como blocker muestra su orden real en un badge cuadrado azul arriba a la
   izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag compuesto
   `Blocking + numero`, usa el lenguaje cromatico de defensa y reserva espacio en el titulo para no
