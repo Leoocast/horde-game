@@ -4233,6 +4233,11 @@
     background: #1c120b;
   }
 
+  .card-preview-cropped-frame.card-preview-html-frame {
+    border-radius: 4.918% / 3.529%;
+    background: transparent;
+  }
+
   .card-preview-cropped-image {
     width: 100%;
     height: 100%;

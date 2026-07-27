@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { CardInstance } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -9,6 +10,7 @@ import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords } from "../utils/selectors";
 import { GameTooltip } from "./GameTooltip";
+import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
 const HOVER_PREVIEW_GAP = 14;
 const HOVER_PREVIEW_MIN_WIDTH = 230;
@@ -152,10 +154,23 @@ export function CardPreview() {
     };
   }, [activeEffectCardId, focusedCardId, hoveredCardId]);
 
-  if (!card || !details.imageUrl) return null;
+  if (!card) return null;
+
+  const supportsHtmlPreview = hasMonoGreenHtmlCardFace(card.definitionId);
+  const renderFocusedHtmlPreview =
+    Boolean(focusedCardId) &&
+    supportsHtmlPreview &&
+    UI_FEATURE_FLAGS.renderHtmlRightClickPreviews;
+  const renderHoverHtmlPreview =
+    !focusedCardId &&
+    card.zone === "battlefield" &&
+    supportsHtmlPreview &&
+    UI_FEATURE_FLAGS.renderHtmlBattlefieldHoverPreviews;
+
+  if (!details.imageUrl && !renderFocusedHtmlPreview && !renderHoverHtmlPreview) return null;
 
   const keywords = cardKeywords(game, card);
-  const imageUrl = toHighResImageUrl(details.imageUrl) ?? details.imageUrl;
+  const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
   if (focusedCardId) {
@@ -166,8 +181,20 @@ export function CardPreview() {
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
           onContextMenu={(event) => event.preventDefault()}
         >
-          <div data-preserve-card-focus="true" data-card-preview-locked="true" className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
-            <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+          <div
+            data-preserve-card-focus="true"
+            data-card-preview-locked="true"
+            data-preview-renderer={renderFocusedHtmlPreview ? "html" : "image"}
+            className={[
+              "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
+              renderFocusedHtmlPreview ? "card-preview-html-frame" : "",
+            ].join(" ")}
+          >
+            {renderFocusedHtmlPreview ? (
+              <MonoGreenHandCardFace card={card} />
+            ) : imageUrl ? (
+              <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+            ) : null}
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -185,8 +212,19 @@ export function CardPreview() {
   void _positionCardId;
 
   return (
-    <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverStyle}>
-      <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+    <div
+      data-preview-renderer={renderHoverHtmlPreview ? "html" : "image"}
+      className={[
+        "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
+        renderHoverHtmlPreview ? "card-preview-html-frame" : "",
+      ].join(" ")}
+      style={hoverStyle}
+    >
+      {renderHoverHtmlPreview ? (
+        <MonoGreenHandCardFace card={card} />
+      ) : imageUrl ? (
+        <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+      ) : null}
     </div>
   );
 }
