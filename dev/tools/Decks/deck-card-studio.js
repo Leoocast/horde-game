@@ -35,7 +35,7 @@
         let formatted = escapeHtml(value || "");
         formatted = formatted.replace(
             /\{\{T\}\}/g,
-            '<span class="symbol-badge symbol-tap" title="Agotar">↻</span>'
+            '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>'
         );
         formatted = formatted.replace(
             /\{(?:G|E|R|B)\}/g,
@@ -44,6 +44,10 @@
         formatted = formatted.replace(
             /(\+\d+\/\+\d+|-\d+\/-\d+)/g,
             '<strong class="effect-buff">$1</strong>'
+        );
+        formatted = formatted.replace(
+            /\b(dos|tres) Trasgos 1\/1\b/gi,
+            '<strong class="effect-token">$&</strong>'
         );
         formatted = formatted.replace(
             /(Daña primero|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar)/g,
@@ -55,7 +59,7 @@
     function typeSymbol(type) {
         const normalized = String(type || "").toLocaleLowerCase("es");
 
-        if (theme === "zombies") {
+        if (theme === "zombies" || theme === "goblins" || theme === "vampires") {
             if (normalized.includes("criatura")) {
                 return `
                     <svg class="fa-inline-icon" aria-hidden="true" focusable="false" viewBox="0 0 512 512">
@@ -70,20 +74,55 @@
                 || normalized.includes("sorcery")
             ) {
                 return `
-                    <svg class="fa-inline-icon" aria-hidden="true" focusable="false" viewBox="0 0 576 512">
+                    <svg class="fa-inline-icon tcg-spell-icon" aria-hidden="true" focusable="false" viewBox="0 0 576 512">
                         <path fill="currentColor" d="M0 80v48c0 17.7 14.3 32 32 32H48 96V80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48V384c0 35.3 28.7 64 64 64s64-28.7 64-64v-5.3c0-32.4 26.3-58.7 58.7-58.7H480V128c0-53-43-96-96-96H112zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16H314.7c-14.7 0-26.7 11.9-26.7 26.7V384c0 53-43 96-96 96H368h96z"></path>
                     </svg>
                 `;
             }
         }
 
+        if (normalized.includes("encantamiento") || normalized.includes("enchantment")) {
+            return '<span class="tcg-enchantment-icon">✦</span>';
+        }
+
         const entry = Object.entries(typeSymbols).find(([name]) => normalized.includes(name));
         return entry ? entry[1] : "◆";
     }
 
+    function factionSymbol() {
+        if (theme === "goblins") {
+            return `
+                <svg class="tcg-faction-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                    <path fill="currentColor" fill-rule="evenodd" d="M15.362 5.214A8.252 8.252 0 0 1 12 21a8.25 8.25 0 0 1-5.962-13.953A8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3.001 2.48ZM12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-3.252 5.032A3.75 3.75 0 0 0 12 18Z" clip-rule="evenodd"></path>
+                </svg>
+            `;
+        }
+
+        if (theme === "vampires") {
+            return `
+                <svg class="tcg-faction-icon tcg-faction-icon--blood" aria-hidden="true" focusable="false" viewBox="0 0 384 512">
+                    <path fill="currentColor" d="M192 0C79.9 95.2 0 213.9 0 320c0 106 86 192 192 192s192-86 192-192C384 213.9 304.1 95.2 192 0Z"></path>
+                </svg>
+            `;
+        }
+
+        return "";
+    }
+
     function isFullArt(card) {
         const type = String(card.tipo || "").toLocaleLowerCase("es");
-        return type.includes("tierra") || type.includes("energía");
+        const description = String(card.desc || "").trim().toLocaleLowerCase("es");
+        const isHordeToken =
+            (theme === "zombies" || theme === "goblins")
+            && Boolean(card.isToken);
+        const isVanillaHordeCreature =
+            (theme === "zombies" || theme === "goblins")
+            && type.includes("criatura")
+            && description === "sin efecto adicional.";
+        return type.includes("tierra")
+            || type.includes("energía")
+            || isHordeToken
+            || isVanillaHordeCreature;
     }
 
     function placeholderDataUrl(cardName) {
@@ -137,8 +176,8 @@
             const hasStats = card.atk !== null && card.atk !== undefined
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);
-    const isHordeDeck =
-      theme === "zombies" || theme === "goblins" || theme === "vampires";
+            const isHordeDeck =
+                theme === "zombies" || theme === "goblins";
             const showCost = !isHordeDeck
                 && !fullArt
                 && card.costo !== null
@@ -169,7 +208,7 @@
                         ` : ""}
                         <div class="tcg-title-wrap">
                             <div class="tcg-title${titleClass}">${escapeHtml(cardName)}</div>
-                            <div class="tcg-faction-seal tcg-element-icon" aria-hidden="true"></div>
+                            <div class="tcg-faction-seal tcg-element-icon" aria-hidden="true">${factionSymbol()}</div>
                         </div>
                     </header>
 

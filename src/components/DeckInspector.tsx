@@ -9,7 +9,6 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { KeywordPills } from "./CardPreview";
-import { CardCostBadge, CardStatsBadge, type CardStatDisplay } from "./Card";
 import { DeckCardVisual } from "./DeckCardVisual";
 
 type Props = {
@@ -195,7 +194,7 @@ function DeckCardTile({
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const localArt = usesGeneratedCardFrame(deck, card);
-  const showDynamicChrome = usesFullCardImage(deck, card);
+  const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -219,7 +218,7 @@ function DeckCardTile({
             x{quantity}
           </span>
         )}
-        <div className={["deck-detail-card-image", showDynamicChrome ? "is-full-card deck-card-dynamic-frame" : ""].join(" ")}>
+        <div className={["deck-detail-card-image", showFullCardImage ? "is-full-card" : ""].join(" ")}>
           {details.imageUrl && localArt ? (
             <DeckCardVisual
               card={card}
@@ -236,7 +235,6 @@ function DeckCardTile({
           ) : (
             <MissingCardArt card={card} />
           )}
-          {showDynamicChrome && <DeckCardChrome card={card} />}
           {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
@@ -260,7 +258,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const hasText = text.length > 0;
-  const showDynamicChrome = usesFullCardImage(deck, card);
+  const showFullCardImage = usesFullCardImage(deck, card);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -279,10 +277,9 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         </div>
       </div>
       <div className="deck-detail-info-body">
-        {details.imageUrl && showDynamicChrome ? (
-          <div className="deck-detail-info-card-frame deck-card-dynamic-frame">
+        {details.imageUrl && showFullCardImage ? (
+          <div className="deck-detail-info-card-frame">
             <img src={details.imageUrl} alt={displayName} />
-            <DeckCardChrome card={card} />
           </div>
         ) : details.imageUrl ? (
           <img src={details.imageUrl} alt={displayName} className="deck-detail-info-image" />
@@ -336,7 +333,7 @@ function DeckInspectorDetailsModal({
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
   const localArt = usesGeneratedCardFrame(deck, card);
-  const showDynamicChrome = usesFullCardImage(deck, card);
+  const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -402,7 +399,7 @@ function DeckInspectorDetailsModal({
             <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title={t("common.previousCard")}>
               <ChevronLeft size={24} />
             </button>
-            <div className={["deck-collection-modal-art", showDynamicChrome ? "is-full-card deck-card-dynamic-frame" : ""].join(" ")}>
+            <div className={["deck-collection-modal-art", showFullCardImage ? "is-full-card" : ""].join(" ")}>
               {details.imageUrl && localArt ? (
                 <DeckCardVisual
                   card={card}
@@ -419,7 +416,6 @@ function DeckInspectorDetailsModal({
               ) : (
                 <MissingCardArt card={card} />
               )}
-              {showDynamicChrome && <DeckCardChrome card={card} />}
             </div>
             <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title={t("common.nextCard")}>
               <ChevronRight size={24} />
@@ -458,28 +454,6 @@ function DeckInspectorDetailsModal({
       </section>
     </div>
   );
-}
-
-function DeckCardChrome({ card }: { card: NewDeckCard }) {
-  const cardStats = deckCardStatDisplay(card);
-
-  return (
-    <>
-      <CardCostBadge card={card} />
-      {cardStats && <CardStatsBadge stats={cardStats} preferSingleSword />}
-    </>
-  );
-}
-
-function deckCardStatDisplay(card: NewDeckCard): CardStatDisplay | undefined {
-  if (typeof card.power !== "number" || typeof card.toughness !== "number") return undefined;
-  return {
-    text: `${card.power}/${card.toughness}`,
-    power: card.power,
-    toughness: card.toughness,
-    damaged: false,
-    buffed: false,
-  };
 }
 
 function uniqueCards(cards: NewDeckCard[]): CardCopy[] {
@@ -526,7 +500,7 @@ function usesGeneratedCardFrame(deck: InspectableDeck, card: NewDeckCard): boole
 
 function usesFullCardImage(deck: InspectableDeck, card: NewDeckCard): boolean {
   const image = deck.images.cards[card.id];
-  return image?.showFullCardImage ?? deck.images.defaults?.showFullCardImage ?? false;
+  return image?.imageKind === "card" || (image?.showFullCardImage ?? deck.images.defaults?.showFullCardImage ?? false);
 }
 
 function authoredCardText(card: NewDeckCard, language: AppLanguage): string {

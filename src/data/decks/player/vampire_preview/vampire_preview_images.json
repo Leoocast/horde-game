@@ -2,64 +2,78 @@
   "schemaVersion": "1.0.0",
   "provider": "local",
   "defaults": {
-    "cacheKey": "vampire-early-access-v1"
+    "cacheKey": "vampire-early-access-v2"
   },
   "cards": {
     "crimson_energy": {
       "source": "local",
-      "imageUrl": "/cards/vampires/crimson_energy.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_energy.png"
     },
     "blood_page": {
       "source": "local",
-      "imageUrl": "/cards/vampires/blood_page.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_page.png"
     },
     "crimson_bat": {
       "source": "local",
-      "imageUrl": "/cards/vampires/crimson_bat.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_bat.png"
     },
     "tithe_acolyte": {
       "source": "local",
-      "imageUrl": "/cards/vampires/tithe_acolyte.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/tithe_acolyte.png"
     },
     "court_duelist": {
       "source": "local",
-      "imageUrl": "/cards/vampires/court_duelist.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/court_duelist.png"
     },
     "crypt_guardian": {
       "source": "local",
-      "imageUrl": "/cards/vampires/crypt_guardian.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crypt_guardian.png"
     },
     "black_vein_executioner": {
       "source": "local",
-      "imageUrl": "/cards/vampires/black_vein_executioner.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/black_vein_executioner.png"
     },
     "blood_sentinel": {
       "source": "local",
-      "imageUrl": "/cards/vampires/blood_sentinel.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_sentinel.png"
     },
     "eternal_feast_countess": {
       "source": "local",
-      "imageUrl": "/cards/vampires/eternal_feast_countess.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/eternal_feast_countess.png"
     },
     "blood_pact": {
       "source": "local",
-      "imageUrl": "/cards/vampires/blood_pact.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_pact.png"
     },
     "crimson_impulse": {
       "source": "local",
-      "imageUrl": "/cards/vampires/crimson_impulse.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_impulse.png"
     },
     "drain_essence": {
       "source": "local",
-      "imageUrl": "/cards/vampires/drain_essence.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/drain_essence.png"
     },
     "predatory_thirst": {
       "source": "local",
-      "imageUrl": "/cards/vampires/predatory_thirst.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/predatory_thirst.png"
     },
     "final_banquet": {
       "source": "local",
-      "imageUrl": "/cards/vampires/final_banquet.webp"
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/final_banquet.png"
     }
   }
 }
