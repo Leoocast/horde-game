@@ -679,8 +679,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   del `index`. Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
   `CardCostBadge`: un orbe azul proporcional
   inspirado en los orbes de energia, mayor que el original, desplazado fuera de la esquina superior
-  izquierda, con nucleo oscuro legible, borde exterior azul, aro cian interior difuminado y el
-  pulso concentrado en el edge.
+  izquierda, con azul saturado pero nucleo oscuro legible, borde exterior azul, aro cian interior
+  difuminado y el pulso concentrado en el edge.
   `DeckInspector` tambien cubre el PNG
   con `CardCostBadge` y `CardStatsBadge` en grid, preview lateral y modal; sus stats vienen de la
   definicion estatica y `xN` permanece a la derecha.
@@ -695,8 +695,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
 - La disponibilidad normal en la mano (jugable o energia reciclable) no reutiliza el borde generico
   de `Card.actionable`: `Hand` suprime ese chrome y dibuja una corona cian propia con mascara,
-  intensa arriba y con fade vertical a alfa cero antes del borde inferior. Los estados de descarte,
-  tutorial y targeting conservan sus estilos separados; el rombo sigue detras del feature flag.
+  intensa arriba y con fade vertical a alfa cero antes del borde inferior. En cartas con coste
+  superpuesto, un arco cian separado sigue solamente la circunferencia exterior expuesta del orbe;
+  nunca dibuja el tramo interior montado sobre la carta. Los estados de descarte, tutorial y
+  targeting conservan sus estilos separados; el rombo sigue detras del feature flag.
 
 ## Antes de tocar algo
 
