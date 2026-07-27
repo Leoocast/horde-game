@@ -10241,6 +10241,19 @@
   text-shadow: 0 0 7px rgb(126 229 81 / 0.9);
 }
 
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::before {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 50% 112%, rgb(122 231 75 / 0.3), transparent 62%),
+    linear-gradient(118deg, transparent 20%, rgb(215 255 155 / 0.15) 48%, transparent 74%);
+  content: "";
+  pointer-events: none;
+  animation: mono-green-buffed-art-pulse 1.8s ease-in-out infinite;
+}
+
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::after {
   position: absolute;
   inset: 0;
@@ -10254,6 +10267,17 @@
   content: "";
   pointer-events: none;
   animation: mono-green-buffed-frame-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes mono-green-buffed-art-pulse {
+  0%,
+  100% {
+    opacity: 0.48;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
 }
 
 @keyframes mono-green-buffed-frame-pulse {
@@ -10308,6 +10332,7 @@
 @media (prefers-reduced-motion: reduce) {
   .tactical-arrow-runes,
   .tactical-arrow-glyph { animation: none; }
+  .battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::before,
   .battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::after { animation: none; }
 }
 
