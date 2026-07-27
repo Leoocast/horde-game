@@ -263,8 +263,8 @@
         }
 
         .tcg-element-icon {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -275,7 +275,7 @@
                 radial-gradient(circle at 38% 30%, rgba(112, 177, 125, 0.2), transparent 38%),
                 linear-gradient(145deg, #173621, #0a1d10 72%);
             color: #78c690;
-            font-size: 31px;
+            font-size: 33px;
             box-shadow:
                 inset 0 1px 0 rgba(235, 222, 174, 0.1),
                 inset 0 -5px 9px rgba(0, 0, 0, 0.34),
@@ -447,7 +447,7 @@
             flex: 1;
             margin: 9px 12px 12px;
             padding: 30px 36px 70px 36px;
-            border-radius: 9px 9px 42px 18px;
+            border-radius: 9px 9px 18px 18px;
             background-image:
                 var(--noise-tex),
                 var(--noise-tex),
@@ -606,6 +606,60 @@
             text-transform: uppercase;
         }
 
+        /* --- VARIANTE FULL ART PARA TIERRAS --- */
+        .tcg-card--full-art-land .tcg-inner {
+            background: #0a100c;
+        }
+
+        .tcg-card--full-art-land .tcg-art-frame {
+            position: absolute;
+            top: 101px;
+            right: 12px;
+            bottom: 92px;
+            left: 12px;
+            z-index: 0;
+            height: auto;
+            margin: 0;
+            border: 3px solid rgba(184, 162, 107, 0.45);
+            border-radius: 15px 15px 18px 18px;
+            box-shadow:
+                0 9px 24px rgba(0, 0, 0, 0.8),
+                inset 0 0 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .tcg-card--full-art-land .tcg-art-image {
+            object-position: center center;
+        }
+
+        .tcg-card--full-art-land .tcg-art-frame::after {
+            background: linear-gradient(180deg,
+                rgba(0, 0, 0, 0.04) 0%,
+                transparent 68%,
+                rgba(3, 8, 5, 0.18) 84%,
+                rgba(3, 8, 5, 0.52) 100%);
+        }
+
+        .tcg-card--full-art-land .tcg-typeband {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 7;
+            margin: 0;
+            padding-right: 30px;
+            border-radius: 9px;
+            clip-path: none;
+        }
+
+        .tcg-card--full-art-land .tcg-typeband::before {
+            border-radius: 7px;
+            clip-path: none;
+        }
+
+        .tcg-card--full-art-land .tcg-body {
+            display: none;
+        }
+
         /* --- STATS BADGE HD --- */
         .tcg-stats-badge {
             position: absolute;
@@ -614,31 +668,35 @@
             z-index: 25;
             display: flex;
             width: auto;
-            min-width: 351px;
-            height: 112px;
+            min-width: 198px;
+            height: 90px;
             overflow: hidden;
             align-items: center;
             justify-content: center;
-            gap: 18px;
-            padding: 0 44px 0 34px;
+            gap: 11px;
+            padding: 0 29px 0 25px;
             border: 0;
-            border-radius: 42px 0 30px 0;
-            background: linear-gradient(180deg, #263342, #18212c 68%, #111923);
+            border-radius: 30px 0 25px 0;
+            background-image:
+                var(--noise-tex),
+                var(--noise-tex),
+                linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
+            background-size: auto, 145px 145px, 100% 100%;
+            background-blend-mode: soft-light, overlay, normal;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.09),
-                inset 0 -2px 4px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(3, 10, 14, 0.74),
-                0 4px 10px rgba(0, 0, 0, 0.58);
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -3px 5px rgba(0, 0, 0, 0.34),
+                0 3px 8px rgba(0, 0, 0, 0.52);
             font-family: 'Trebuchet MS', 'Outfit', sans-serif;
         }
 
         .tcg-stats-badge::after {
             content: "";
             position: absolute;
-            inset: 1px;
+            inset: 2px;
             z-index: 2;
-            border: 3px solid rgba(214, 188, 111, 0.78);
-            border-radius: 41px 0 29px 0;
+            border: 2px solid rgba(201, 177, 111, 0.48);
+            border-radius: 28px 0 23px 0;
             pointer-events: none;
         }
 
@@ -647,11 +705,11 @@
             z-index: 3;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .tcg-stat-icon {
-            font-size: 42px;
+            font-size: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -659,7 +717,7 @@
         }
 
         .tcg-stat-atk .tcg-stat-icon {
-            color: #d6b36a;
+            color: #c9aa66;
         }
 
         .tcg-stat-atk .tcg-stat-icon svg {
@@ -667,16 +725,16 @@
         }
 
         .tcg-stat-def .tcg-stat-icon {
-            color: #f87171;
+            color: #df7d7a;
         }
 
         .tcg-stat-val {
             font-family: 'Trebuchet MS', 'Outfit', sans-serif;
-            font-size: 54px;
+            font-size: 51px;
             font-weight: 950;
             line-height: 1;
-            color: #ffffff;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+            color: #f2f0e6;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.86);
         }
 
         .tcg-stat-sep {
@@ -684,7 +742,7 @@
             z-index: 3;
             color: #94a3b8;
             font-family: 'Trebuchet MS', 'Outfit', sans-serif;
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 600;
             margin: 0 3px;
         }
@@ -896,7 +954,7 @@
             const isLand = card.tipo && card.tipo.toLowerCase().includes("tierra");
 
             const cardEl = document.createElement('div');
-            cardEl.className = 'tcg-card';
+            cardEl.className = `tcg-card${isLand ? ' tcg-card--full-art-land' : ''}`;
             cardEl.id = `card-${card.id}`;
 
             cardEl.innerHTML = `
@@ -937,14 +995,10 @@
                 ${hasStats ? `
                 <div class="tcg-stats-badge">
                     <div class="tcg-stat-item tcg-stat-atk">
-                        <div class="tcg-stat-icon">
-                            <i data-lucide="sword" style="width: 42px; height: 42px; transform: scaleX(-1);"></i>
-                        </div>
                         <span class="tcg-stat-val">${card.atk}</span>
                     </div>
                     <span class="tcg-stat-sep">/</span>
                     <div class="tcg-stat-item tcg-stat-def">
-                        <div class="tcg-stat-icon"><i class="fa-solid fa-heart"></i></div>
                         <span class="tcg-stat-val">${card.def}</span>
                     </div>
                 </div>

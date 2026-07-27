@@ -95,6 +95,11 @@ async function main() {
             document.body.style.background = 'transparent';
             document.body.style.backgroundImage = 'none';
             document.getElementById('cards-container').className = 'cards-grid scale-100';
+            document.querySelectorAll('.tcg-card').forEach((card) => {
+                // The page shadow is useful in the deck viewer, but an element screenshot bakes
+                // part of it into the transparent square outside the rounded card silhouette.
+                card.style.setProperty('box-shadow', 'none', 'important');
+            });
         });
 
         const cards = page.locator('.tcg-card');
