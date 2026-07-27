@@ -10289,68 +10289,68 @@
   box-shadow: inset 1px 0 0 rgb(230 250 255 / 0.05);
 }
 
-.card-block-order-badge {
-  --block-order-accent: #66d8ff;
-  position: relative;
-  display: inline-grid;
-  width: 24px;
-  height: 21px;
-  flex: 0 0 24px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--block-order-accent) 74%, #d9f6ff);
-  border-radius: 0;
+.card-defense-badge {
+  --defense-badge-accent: #8edfff;
+  --defense-badge-border: rgb(112 190 226 / 0.78);
+  --defense-badge-top: #2a5770;
+  --defense-badge-mid: #123548;
+  --defense-badge-bottom: #071a26;
+  position: absolute;
+  z-index: 32;
+  display: inline-flex;
+  min-width: 39px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 7px 0 6px;
+  border: 1px solid var(--defense-badge-border);
   background:
-    radial-gradient(circle at 36% 28%, rgb(221 247 255 / 0.2), transparent 30%),
-    linear-gradient(145deg, color-mix(in srgb, var(--block-order-accent) 42%, #173548), #07151e 72%);
+    radial-gradient(ellipse at 28% 4%, rgb(230 250 255 / 0.2), transparent 48%),
+    repeating-linear-gradient(112deg, rgb(224 246 255 / 0.016) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, var(--defense-badge-top), var(--defense-badge-mid) 58%, var(--defense-badge-bottom));
   color: #effcff;
-  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-  font-size: 11px;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
   font-weight: 950;
   line-height: 1;
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
-  text-shadow: 0 1px 2px #000, 0 0 6px var(--block-order-accent);
-  box-shadow:
-    inset 0 1px 0 rgb(234 251 255 / 0.24),
-    inset 0 -3px 6px rgb(0 8 13 / 0.44),
-    0 0 0 2px rgb(3 15 22 / 0.76),
-    0 2px 7px rgb(0 0 0 / 0.56),
-    0 0 8px color-mix(in srgb, var(--block-order-accent) 42%, transparent);
-}
-
-.card-defense-order-badge {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  z-index: 32;
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid rgb(112 190 226 / 0.78);
-  border-radius: 5px;
-  background:
-    radial-gradient(ellipse at 28% 4%, rgb(207 241 255 / 0.2), transparent 48%),
-    radial-gradient(ellipse at 90% 120%, rgb(65 146 190 / 0.14), transparent 52%),
-    repeating-linear-gradient(112deg, rgb(224 246 255 / 0.014) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, rgb(42 87 112 / 0.99), rgb(18 53 72 / 0.99) 58%, rgb(7 26 38 / 1));
-  color: #e8f6fb;
-  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
-  font-size: 19px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  line-height: 1;
   pointer-events: none;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  text-shadow: 0 1px 2px #000, 0 0 5px var(--defense-badge-accent);
   box-shadow:
-    inset 0 1px 0 rgb(218 244 255 / 0.18),
+    inset 0 1px 0 rgb(234 251 255 / 0.16),
     inset 0 -3px 5px rgb(0 0 0 / 0.4),
     0 0 0 1px rgb(4 17 27 / 0.58),
-    0 0 7px rgb(65 168 218 / 0.22),
     0 3px 7px rgb(0 0 0 / 0.52);
 }
 
-.card-visual:has(> .card-defense-order-badge) > .card-cropped-title {
-  padding-left: 45px;
+.card-defense-badge-horde {
+  top: 3px;
+  right: 3px;
+  border-radius: 7px 0 8px;
+}
+
+.card-defense-badge-player {
+  top: 3px;
+  left: 3px;
+  border-radius: 0 7px 8px;
+}
+
+.card-defense-badge > svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  fill: color-mix(in srgb, var(--defense-badge-accent) 20%, transparent);
+  color: var(--defense-badge-accent);
+  stroke-width: 2.4;
+}
+
+.card-defense-badge > strong {
+  font: inherit;
+}
+
+.card-visual:has(> .card-defense-badge-horde) > .card-cropped-title {
+  padding-right: 49px;
 }
 
 /* Shared stats palette: matches the printed mono-green card generator. */
@@ -10878,6 +10878,101 @@
   color: #c4dcae;
   font-size: 6px;
   text-shadow: 0 0 4px rgb(139 187 111 / 0.52);
+}
+
+/* Zombie chrome follows the palette authored in dev/tools/Decks/zombies/index.html. The damaged
+   state keeps that faction material and signals damage through its edge and life value. */
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
+  background:
+    radial-gradient(circle at 20% 30%, rgb(165 208 168 / 0.07) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 68%, rgb(0 0 0 / 0.14) 0 2px, transparent 3px),
+    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #102822 100%);
+  color: #f2f5e8;
+  box-shadow:
+    inset 0 1px 0 rgb(235 222 174 / 0.12),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 2px 4px rgb(0 0 0 / 0.42);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge,
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge,
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge {
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(165 208 168 / 0.13), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #3f7569 0%, #315f55 54%, #102822 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-damaged,
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-damaged,
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-damaged {
+  --card-stat-border: rgb(232 137 112 / 0.68);
+  background:
+    radial-gradient(ellipse at 82% 46%, rgb(190 79 61 / 0.16), transparent 52%),
+    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #365f58 0%, #294a43 54%, #10211e 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-buffed,
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-buffed,
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-buffed {
+  --card-stat-border: rgb(165 208 168 / 0.78);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.2), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(226 241 230 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
+}
+
+/* Goblin chrome mirrors the forged-red palette from dev/tools/Decks/goblins/index.html. */
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-cropped-title {
+  background:
+    radial-gradient(circle at 22% 28%, rgb(255 173 76 / 0.09) 0 1px, transparent 2px),
+    radial-gradient(circle at 81% 70%, rgb(0 0 0 / 0.15) 0 2px, transparent 3px),
+    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px),
+    linear-gradient(90deg, #a63216 0%, #5e180d 65%, #3a0e08 100%);
+  color: #f8eedc;
+  box-shadow:
+    inset 0 1px 0 rgb(235 222 174 / 0.12),
+    inset 0 -2px 3px rgb(0 0 0 / 0.38),
+    0 2px 4px rgb(0 0 0 / 0.44);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge,
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge,
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge {
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(255 173 76 / 0.15), transparent 46%),
+    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.02) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #a63216 0%, #76220f 54%, #3a0e08 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-damaged,
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-damaged,
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-damaged {
+  --card-stat-border: rgb(255 173 76 / 0.82);
+  background:
+    radial-gradient(ellipse at 82% 46%, rgb(255 193 111 / 0.15), transparent 52%),
+    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.016) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #7b2417 0%, #50140d 54%, #250804 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-buffed,
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-buffed,
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-buffed {
+  --card-stat-border: rgb(255 191 99 / 0.82);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(255 204 126 / 0.22), transparent 46%),
+    repeating-linear-gradient(133deg, rgb(255 211 141 / 0.024) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #bd4a1f 0%, #873018 54%, #401108 100%);
+}
+
+/* Full-art exports move the printed stats tab above the type band. The manifest marks this
+   layout explicitly; 58/976 and 136/976 preserve the generator's authored offsets at any size. */
+.card-visual.card-image-full.card-layout-full-art > .card-stat-badge,
+.card-preview-full-card-frame.card-layout-full-art > .card-stat-badge {
+  right: 5.94cqw;
+  bottom: 13.93cqw;
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */
@@ -13363,6 +13458,36 @@
     0 2px 5px rgb(0 0 0 / 0.46);
 }
 
+.card-keyword-badge-zombie,
+.card-preview-keyword-explanations.is-zombie:not(.is-chaos) .card-preview-keyword-badge {
+  border-color: rgb(165 208 168 / 0.68);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.17), transparent 47%),
+    radial-gradient(circle at 80% 68%, rgb(0 0 0 / 0.13) 0 2px, transparent 3px),
+    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(63 117 105 / 0.99), rgb(49 95 85 / 0.99) 54%, rgb(16 40 34 / 1));
+  color: #f2f5e8;
+  box-shadow:
+    inset 0 1px 0 rgb(235 245 226 / 0.13),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 2px 5px rgb(0 0 0 / 0.44);
+}
+
+.card-keyword-badge-goblin,
+.card-preview-keyword-explanations.is-goblin:not(.is-chaos) .card-preview-keyword-badge {
+  border-color: rgb(255 173 76 / 0.72);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(255 204 126 / 0.18), transparent 47%),
+    radial-gradient(circle at 80% 68%, rgb(0 0 0 / 0.14) 0 2px, transparent 3px),
+    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.018) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, rgb(166 50 22 / 0.99), rgb(118 34 15 / 0.99) 54%, rgb(58 14 8 / 1));
+  color: #f8eedc;
+  box-shadow:
+    inset 0 1px 0 rgb(255 225 182 / 0.14),
+    inset 0 -2px 3px rgb(0 0 0 / 0.38),
+    0 2px 5px rgb(0 0 0 / 0.46);
+}
+
 .card-keyword-stack {
   z-index: 16;
   max-width: 7.6rem;
@@ -13398,7 +13523,7 @@
   left: 10px;
 }
 
-.card-visual:has(> .card-defense-order-badge) > .card-keyword-stack {
+.card-visual:has(> .card-defense-badge-player) > .card-keyword-stack {
   top: 42px;
 }
 

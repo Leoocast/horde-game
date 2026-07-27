@@ -2,11 +2,11 @@ import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
-import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { Heart, Sword, Swords } from "lucide-react";
+import { Heart, Shield, Sword, Swords } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -64,11 +64,23 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           .filter(Boolean)
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
+  const isGoblin = card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin");
+  const hordeTheme = card.controller === "horde"
+    ? isZombie
+      ? "zombie"
+      : isGoblin
+        ? "goblin"
+        : undefined
+    : undefined;
   // Horde creatures tap as a rule of the mode, not as a choice the player made, so they never get
   // the grey "spent" treatment or the Tapped badge. They DO lean, and they lean the moment they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
   const usesHordeTappedStyle = card.controller === "horde" && card.cardTypes.includes("Creature");
-  const usesAllyKeywordStyle = card.controller !== "horde" || isZombie;
+  const keywordToneClass = hordeTheme
+    ? `card-keyword-badge-${hordeTheme}`
+    : card.controller === "horde"
+      ? "card-keyword-badge-enemy"
+      : "card-keyword-badge-ally";
   const { imageUrl, displayName } = useCardDetails(card.definitionId);
   const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const highResImageUrl = toHighResImageUrl(imageUrl) ?? imageUrl;
@@ -146,6 +158,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         cropTopHalf ? "battlefield-land-card-crop" : "",
         showFullImage ? "card-image-full" : "",
         preferNativeImageRendering ? "card-image-native-hd" : "",
+        hordeTheme ? `card-theme-${hordeTheme}` : "",
+        usesFullArtCardImage(card.definitionId) ? "card-layout-full-art" : "",
         stats.buffed ? "card-stats-buffed" : "",
         stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
@@ -197,26 +211,25 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
-          ) : linkLabel ? (
-            <span
-              className="card-block-order-badge"
-              aria-label={`${linkLabel} blockers assigned`}
-              style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
-            >
-              {linkLabel}
-            </span>
           ) : null}
         </div>
       </div>
+      {card.controller === "horde" && !blocking && linkLabel && (
+        <span className="card-defense-badge card-defense-badge-horde" aria-label={t("card.blockersAssigned", { count: linkLabel })}>
+          <Shield aria-hidden="true" />
+          <strong>{linkLabel}</strong>
+        </span>
+      )}
       {blocking && linkLabel && (
-        <span className="card-defense-order-badge" aria-label={`Blocking, order ${linkLabel}`}>
-          {linkLabel}
+        <span className="card-defense-badge card-defense-badge-player" aria-label={t("card.blockingOrder", { count: linkLabel })}>
+          <Shield aria-hidden="true" />
+          <strong>{linkLabel}</strong>
         </span>
       )}
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
-            <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
+            <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", keywordToneClass].join(" ")}>
               {renderBattlefieldKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}
             </span>
           ))}

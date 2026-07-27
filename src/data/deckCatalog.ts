@@ -89,6 +89,7 @@ export type DeckImageManifest = {
       imageUrl?: string;
       imageKind?: "art" | "card";
       showFullCardImage?: boolean;
+      fullArt?: boolean;
       lookupUrl?: string;
       imagePath?: string;
       fallbackImagePath?: string;

@@ -467,7 +467,10 @@ Durante Defend:
 - si no hay bloqueos, boton dice algo tipo "No defend"
 - orden de bloqueadores contra un mismo zombie:
   - debe respetar izquierda/derecha segun regla actual
-  - mostrar numeritos 1,2 solo si hay mas de un blocker
+  - cada blocker muestra su orden real (1, 2, ...) en el badge azul, incluso si es el unico
+- cada atacante de la Horda con bloqueadores asignados muestra su cantidad en un badge azul con
+  escudo anclado top-right; aplica por igual a Zombies y Goblins, y el header cutted reserva ese
+  espacio
 
 Animacion:
 - atacante y defensor se mueven un poco hacia adelante en queue
@@ -683,13 +686,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG. Esa variante full replica las medidas
   198x90 del `index` sobre el ancho fuente de 976px, oculta espada/corazon y muestra solamente
-  `ataque / resistencia`, con degradado vegetal y filete dorado interior. En targeting vienen del
-  estado vivo.
-  El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
-  pero excluye los buffs; el hover conserva los stats vivos y su estado buffed. En el hover queda
-  unos pixeles elevado; preview, mano y targeting comparten la pestana vegetal del `index`, con
-  variantes legibles para dano y buff. Mano, mulligan, targeting y `CardPreview` tambien cubren el
-  coste impreso con
+  `ataque / resistencia`. La paleta se deriva del `index` del deck: mono-green conserva su
+  degradado vegetal, Zombies usa verde petroleo y Goblins rojo forja tanto en el header cutted
+  como en stats, dano y buff. En targeting vienen del estado vivo.
+  El preview fijado con click derecho muestra el PNG limpio, sin superponer stats; el hover conserva
+  los stats vivos y su estado buffed. En el hover queda unos pixeles elevado; preview, mano y
+  targeting comparten la pestana del `index` correspondiente, con variantes legibles para dano y
+  buff. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
+  desplazamiento del generador (58px desde la derecha y 136px desde abajo sobre 976px) para cubrir
+  los stats horneados encima de la banda de tipo. No inferir esa composicion por nombre.
+  Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
   `CardCostBadge`: un socket proporcional inspirado directamente en el HUD de energia, desplazado
   fuera de la esquina superior izquierda. Replica el nucleo del HUD de energia: esfera azul con
   liquido giratorio y respiracion de brillo, sin socket metalico ni arco cian exteriores. El nucleo
@@ -698,6 +704,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
   sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
   cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
+  La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
+  `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
+  Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
+  generica. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
+  composicion ni cantidades duplicadas dentro del manifest visual.
   `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
   preview lateral o modal; `xN` permanece a la derecha.
 - Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
@@ -713,9 +724,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Las keywords superpuestas sobre cartas ya no usan pills verdes brillantes ni la placa generica de
   dashboard. Full y cutted comparten el material del header: degradado vegetal oscuro, grano tenue,
   borde dorado, Lora, texto en Camel Case y la silueta redondeada diagonal de los stats. La carta
-  completa usa medidas `cqw`; la cutted queda justo debajo del header. Enemigos conservan una
-  variante borgona del mismo material y Chaos su magenta. El badge de keyword junto al preview
-  fijado comparte este mismo material, tipografia y capitalizacion.
+  completa usa medidas `cqw`; la cutted queda justo debajo del header. Zombies y Goblins toman el
+  material verde petroleo o rojo forja de sus respectivos generadores; otros enemigos conservan
+  la variante borgona generica y Chaos su magenta. El badge de keyword junto al preview fijado
+  comparte este mismo material, tipografia y capitalizacion.
   Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
@@ -739,10 +751,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Tap: Add G` con los
   mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
   azul para energia. No debe volver a los chips genericos de `renderCardText`.
-- Una criatura ya asignada como blocker muestra su orden real en un badge cuadrado azul arriba a la
-  izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag compuesto
-  `Blocking + numero`, usa el lenguaje cromatico de defensa y reserva espacio en el titulo para no
-  tapar nombres largos.
+- Una criatura ya asignada como blocker muestra su orden real en el mismo badge azul con escudo,
+  arriba a la izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag
+  compuesto `Blocking + numero` y puede superponerse al nombre: el titulo no reserva espacio.
 
 ## Antes de tocar algo
 
