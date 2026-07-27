@@ -103,6 +103,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const arrow = makeTargetArrow(start, end);
   const locked = Boolean(counterTargeting.targetId);
   const previewStats = target ? getBuffedStats(game, target) : undefined;
+  const showFullSourceImage = shouldShowFullCardImage(source.definitionId);
 
   return (
     <>
@@ -142,7 +143,8 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             suppressSummoningSickness
             hideStats
             highRes
-            showFullImage={shouldShowFullCardImage(source.definitionId)}
+            showFullImage={showFullSourceImage}
+            preferNativeImageRendering={showFullSourceImage}
           />
         </div>
         <div className="counter-target-preview old-panel-soft">

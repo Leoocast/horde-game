@@ -123,6 +123,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
 
   if (!spellTargeting || !spell || !activeReq || !followEnd) return null;
 
+  const showFullSourceImage = shouldShowFullCardImage(spell.definitionId);
   const followArrow = makeTargetArrow(start, followEnd);
   const currentLabel = activeReq.controller === "SELF" ? t("target.chooseAlly") : t("target.chooseEnemy");
   const lockedArrows = requirements
@@ -189,7 +190,8 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
             suppressSummoningSickness
             hideStats
             highRes
-            showFullImage={shouldShowFullCardImage(spell.definitionId)}
+            showFullImage={showFullSourceImage}
+            preferNativeImageRendering={showFullSourceImage}
           />
         </div>
         <div className="counter-target-preview old-panel-soft">

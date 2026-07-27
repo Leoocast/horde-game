@@ -11,6 +11,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
@@ -973,6 +974,7 @@ export function Battlefield({ game, side, cards }: Props) {
         card={card}
         compact={compact}
         cropTopHalf={isLand}
+        preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
         selected={selected}
         attacking={attacking}
         blocking={blocking}

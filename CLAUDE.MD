@@ -657,7 +657,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   la imagen se recorta con el radio equivalente `4.918% / 3.529%`. Los previews fuente de targeting
   (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
   `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
-  generico de `Card`.
+  generico de `Card`. Cuando usan la imagen completa tambien deben activar
+  `preferNativeImageRendering`, igual que la mano, para conservar el mismo sampling CSS. Las cartas
+  mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
+  `showFullImage`: el recorte del battlefield se conserva.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.
