@@ -7984,7 +7984,7 @@
     transform-origin: 50% 100%;
   }
 
-  .hand-card-available .hand-card-face-scale::before {
+  .hand-card-available .hand-card-face-scale:has(.card-cost-badge)::before {
     position: absolute;
     top: calc(-1.15cqw - 2px);
     left: calc(-0.7cqw - 2px);
@@ -13299,9 +13299,8 @@
   background: rgb(3 10 10 / 0.64);
 }
 
-/* Keywords now read as compact game-state plaques instead of glossy pills. */
-.keyword-pill,
-.card-keyword-badge {
+/* Keyword explanations outside the card retain their compact UI plaque. */
+.keyword-pill {
   min-height: 1.55rem;
   height: auto;
   border: 1px solid color-mix(in srgb, var(--deck-accent, #78956e) 62%, #283632);
@@ -13325,33 +13324,149 @@
   --deck-accent-soft: rgb(190 57 143 / 0.24);
 }
 
+.card-preview-keyword-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgb(184 162 107 / 0.62);
+  border-radius: 7px 0 9px;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.15), transparent 47%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.98), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  padding: 5px 11px;
+  color: #f0ead7;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.018em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  text-transform: none;
+  box-shadow:
+    inset 0 1px 0 rgb(232 222 174 / 0.11),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 2px 5px rgb(0 0 0 / 0.44);
+  clip-path: none;
+}
+
+.card-preview-keyword-explanations.is-chaos .card-preview-keyword-badge {
+  border-color: rgb(210 131 172 / 0.78);
+  background: linear-gradient(180deg, rgb(79 31 55 / 0.96), rgb(37 18 29 / 0.97));
+  color: #f2cfdf;
+  box-shadow:
+    inset 0 1px 0 rgb(255 221 235 / 0.15),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 0 8px rgb(174 73 123 / 0.32);
+}
+
+.card-keyword-badge {
+  display: inline-flex;
+  min-height: 22px;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  border: 1px solid rgb(184 162 107 / 0.62);
+  border-radius: 6px 0 8px;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.15), transparent 47%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.98), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  padding: 4px 9px;
+  color: #f0ead7;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.018em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  text-transform: none;
+  box-shadow:
+    inset 0 1px 0 rgb(232 222 174 / 0.11),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 2px 5px rgb(0 0 0 / 0.44);
+  clip-path: none;
+  white-space: nowrap;
+}
+
 .card-keyword-badge-ally {
-  --deck-accent: #618b57;
-  --deck-accent-bright: #d6efc0;
-  --deck-accent-soft: rgb(73 135 67 / 0.2);
+  border-color: rgb(184 162 107 / 0.62);
 }
 
 .card-keyword-badge-enemy {
-  --deck-accent: #9b493b;
-  --deck-accent-bright: #f1b4a1;
-  --deck-accent-soft: rgb(159 51 36 / 0.22);
+  border-color: rgb(180 112 91 / 0.66);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(235 174 151 / 0.14), transparent 47%),
+    linear-gradient(90deg, rgb(231 196 174 / 0.02), transparent 34%, rgb(0 0 0 / 0.12)),
+    repeating-linear-gradient(112deg, rgb(250 224 212 / 0.012) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(91 48 40 / 0.98), rgb(48 25 23 / 0.99) 58%, rgb(24 11 11 / 1));
+  color: #f2d9ce;
+  box-shadow:
+    inset 0 1px 0 rgb(246 207 188 / 0.1),
+    inset 0 -2px 3px rgb(0 0 0 / 0.38),
+    0 2px 5px rgb(0 0 0 / 0.46);
 }
 
 .card-keyword-stack {
-  max-width: 7.2rem;
+  z-index: 16;
+  max-width: 7.6rem;
+  gap: 3px;
+}
+
+.card-visual.card-image-full > .card-keyword-stack {
+  top: 16.5cqw;
+  left: 3.4cqw;
+  max-width: 52cqw;
+  gap: 1.1cqw;
+}
+
+.card-visual.card-image-full > .card-keyword-stack > .card-keyword-badge {
+  min-height: clamp(20px, 8.6cqw, 26px);
+  padding:
+    clamp(3px, 1.5cqw, 5px)
+    clamp(7px, 3.4cqw, 10px);
+  border-radius:
+    clamp(5px, 2.4cqw, 7px)
+    0
+    clamp(5px, 2.8cqw, 8px);
+  font-size: 13px;
+}
+
+.battlefield-side-player .battlefield-row-overflow .card-keyword-stack {
+  top: 34px;
+  left: 7px;
+}
+
+.battlefield-side-horde .battlefield-row-overflow .card-keyword-stack {
+  top: 37px;
+  left: 10px;
+}
+
+.card-visual:has(> .card-defense-order-badge) > .card-keyword-stack {
+  top: 42px;
 }
 
 .card-keyword-deathtouch {
   max-width: none;
-  padding-inline: 0.76rem;
+  padding-inline: 9px;
 }
 
 .toxic-keyword-badge,
 .card-toxic-counter {
-  border-color: #77518a;
-  background: linear-gradient(145deg, #b98acb, #4d2d5c);
-  color: #fff2ff;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 8px rgb(147 79 177 / 0.42);
+  border-color: rgb(164 119 177 / 0.72);
+  background:
+    radial-gradient(circle at 36% 25%, rgb(231 200 240 / 0.18), transparent 34%),
+    linear-gradient(145deg, #62456d, #392541 56%, #211526);
+  color: #f4e6f7;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.84);
+  box-shadow:
+    inset 0 1px 0 rgb(245 221 251 / 0.14),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 0 6px rgb(147 79 177 / 0.28);
 }
 
 .toast-stack-game {

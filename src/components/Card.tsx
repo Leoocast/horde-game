@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel } from "../i18n/cardLocalization";
+import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
@@ -217,7 +217,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
-              {renderBattlefieldKeywordLabel(localizedKeywordLabel(keyword, language))}
+              {renderBattlefieldKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}
             </span>
           ))}
         </div>

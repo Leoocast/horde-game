@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
+import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -327,7 +327,7 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedKeywordTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(localizedKeywordLabel(clean, language))}</span>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(clean, language)))}</span>
           </GameTooltip>
         );
       })}
@@ -348,7 +348,7 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(localizedKeywordLabel(keyword, language))}</div>
+          <div className="keyword-pill card-preview-keyword-badge">{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}</div>
           <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedKeywordTooltip(keyword, language)}</p>
         </div>
       ))}
@@ -357,11 +357,11 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
 }
 
 function renderKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^TOXIC\s+\{(\d+)\}$/i);
+  const toxic = keyword.match(/^(TOXIC|TÓXICO)\s+\{(\d+)\}$/i);
   if (!toxic) return keyword;
   return (
     <>
-      TOXIC <span className="toxic-keyword-badge">{toxic[1]}</span>
+      {toxic[1]} <span className="toxic-keyword-badge">{toxic[2]}</span>
     </>
   );
 }

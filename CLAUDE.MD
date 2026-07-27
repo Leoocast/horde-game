@@ -701,20 +701,29 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
-- Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
+- Las keywords superpuestas sobre cartas ya no usan pills verdes brillantes ni la placa generica de
+  dashboard. Full y cutted comparten el material del header: degradado vegetal oscuro, grano tenue,
+  borde dorado, Lora, texto en Camel Case y la silueta redondeada diagonal de los stats. La carta
+  completa usa medidas `cqw`; la cutted queda justo debajo del header. Enemigos conservan una
+  variante borgona del mismo material y Chaos su magenta. El badge de keyword junto al preview
+  fijado comparte este mismo material, tipografia y capitalizacion.
+  Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
-- La disponibilidad normal en la mano (jugable o energia reciclable) no reutiliza el borde generico
-  de `Card.actionable`: `Hand` suprime ese chrome y dibuja una corona cian propia con mascara,
-  intensa arriba y con fade vertical a alfa cero antes del borde inferior. En cartas con coste
+- La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
+  suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
+  a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa
+  corona. En cartas con coste
   superpuesto, un arco cian separado sigue solamente la circunferencia exterior expuesta del orbe;
-  nunca dibuja el tramo interior montado sobre la carta. Los estados de descarte, tutorial y
+  nunca dibuja el tramo interior montado sobre la carta. Ese arco solo existe cuando el DOM contiene
+  realmente un `CardCostBadge`, por lo que no debe aparecer flotando sobre una tierra. Los estados de descarte, tutorial y
   targeting conservan sus estilos separados; el rombo sigue detras del feature flag.
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
   defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
   generico de `Card.actionable`. Las criaturas con activacion de mana disponible usan una tercera
-  corona dorada con el mismo fade y tampoco muestran rombo. Las tres coronas son exteriores: su
+  corona dorada con el mismo fade y tampoco muestran rombo; las tierras quedan excluidas de ese
+  chrome aunque internamente tambien tengan una habilidad de agotar. Las tres coronas son exteriores: su
   borde interior termina justo donde empieza la silueta de la carta, sin comerse el arte ni parecer
   marco impreso; targeting conserva sus estilos propios. Naranja, azul y dorado animan la corona
   completa con `hand-available-border-pulse` de 2.1s. Ademas llevan una capa de glow independiente,

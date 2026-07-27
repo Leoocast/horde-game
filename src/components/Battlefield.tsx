@@ -825,6 +825,7 @@ export function Battlefield({ game, side, cards }: Props) {
       (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const effectAvailable = canUseTapActivatedAbility(card);
+    const showActivatedAbilityChrome = effectAvailable && !isLand;
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
@@ -875,7 +876,7 @@ export function Battlefield({ game, side, cards }: Props) {
           : hordeCombat && actionable
             ? "defense"
             : undefined;
-    const showEffectAvailabilityBorder = Boolean(effectAvailable && !combatAvailabilityTone);
+    const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem = !combatAvailabilityTone && !showEffectAvailabilityBorder && (blockDragActive ? false : cardActionable);
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
@@ -885,7 +886,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ? "card-attack-gem"
         : hordeCombat && actionable
           ? "card-defense-gem"
-          : effectAvailable && !cardActionable
+          : showActivatedAbilityChrome && !cardActionable
             ? "card-effect-available-gem"
             : "";
     const interactionElevated = Boolean(
@@ -951,7 +952,7 @@ export function Battlefield({ game, side, cards }: Props) {
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
           actionable && !combatAvailabilityTone ? "battlefield-card-actionable" : "",
-          effectAvailable && !showEffectAvailabilityBorder && !actionable ? "battlefield-card-effect-available" : "",
+          showActivatedAbilityChrome && !showEffectAvailabilityBorder && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
@@ -991,7 +992,7 @@ export function Battlefield({ game, side, cards }: Props) {
         blocking={blocking}
         glowBorderWidth={4}
         actionable={cardActionable && !combatAvailabilityTone}
-        effectAvailable={effectAvailable && !showEffectAvailabilityBorder}
+        effectAvailable={showActivatedAbilityChrome && !showEffectAvailabilityBorder}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
         selectionDisabled={selectionDisabled}

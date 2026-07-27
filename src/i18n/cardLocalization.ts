@@ -80,6 +80,11 @@ export function localizedKeywordLabel(keyword: string, language: AppLanguage): s
   return labels[text.toUpperCase()] ?? text;
 }
 
+export function naturalCaseKeywordLabel(keyword: string): string {
+  const lowerCaseKeyword = keyword.toLocaleLowerCase();
+  return lowerCaseKeyword.charAt(0).toLocaleUpperCase() + lowerCaseKeyword.slice(1);
+}
+
 export function localizedKeywordTooltip(keyword: string, language: AppLanguage): string {
   const upper = keyword.trim().toUpperCase();
   if (language !== "es") {
