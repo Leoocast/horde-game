@@ -43,7 +43,11 @@
         );
         formatted = formatted.replace(
             /(\+\d+\/\+\d+|-\d+\/-\d+)/g,
-            "<strong>$1</strong>"
+            '<strong class="effect-buff">$1</strong>'
+        );
+        formatted = formatted.replace(
+            /(Daña primero|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar)/g,
+            '<strong class="effect-keyword">$1</strong>'
         );
         return formatted.replace(/\r?\n/g, "<br>");
     }
@@ -133,7 +137,10 @@
             const hasStats = card.atk !== null && card.atk !== undefined
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);
-            const showCost = !fullArt
+    const isHordeDeck =
+      theme === "zombies" || theme === "goblins" || theme === "vampires";
+            const showCost = !isHordeDeck
+                && !fullArt
                 && card.costo !== null
                 && card.costo !== undefined
                 && !card.isToken;

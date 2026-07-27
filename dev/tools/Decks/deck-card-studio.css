@@ -895,11 +895,12 @@ body[data-theme="zombies"] .tcg-title-wrap {
 body[data-theme="zombies"] .tcg-title {
     overflow: hidden;
     color: #f2f5e8;
-    font-family: "Cinzel", serif;
+    font-family: "Lora", serif;
     font-size: 45px;
     font-weight: 700;
     line-height: 1.1358;
     letter-spacing: 1px;
+    text-transform: capitalize;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -931,6 +932,15 @@ body[data-theme="zombies"] .tcg-faction-seal {
         0 4px 9px rgba(0, 0, 0, 0.52),
         0 0 8px rgba(75, 145, 118, 0.14);
     font-size: 33px;
+}
+
+body[data-theme="zombies"] .tcg-faction-seal::before {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    line-height: 1;
+    transform: translateY(5px);
 }
 
 body[data-theme="zombies"] .tcg-cost {
@@ -1100,11 +1110,12 @@ body[data-theme="zombies"] .tcg-typeband::after {
 body[data-theme="zombies"] .tcg-type-text {
     gap: 18px;
     color: #eae4cf;
-    font-family: "Cinzel", serif;
+    font-family: "Lora", serif;
     font-size: 36px;
     font-weight: 600;
     line-height: 1.17284;
-    letter-spacing: 3.5px;
+    letter-spacing: 1.5px;
+    text-transform: capitalize;
     text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
 }
 
@@ -1138,22 +1149,21 @@ body[data-theme="zombies"] .tcg-body {
     color: #202820;
     background-image:
         var(--noise),
-        var(--noise),
         linear-gradient(180deg, #c7c5a4 0%, #999879 100%);
-    background-blend-mode: multiply, multiply, normal;
+    background-blend-mode: soft-light, normal;
     box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
 }
 
 body[data-theme="zombies"] .tcg-body::before {
     content: "H";
     position: absolute;
-    top: 46%;
-    left: 50%;
+    inset: 0;
     z-index: 0;
-    color: rgba(49, 95, 85, 0.1);
+    display: grid;
+    place-items: center;
+    color: rgba(49, 95, 85, 0.055);
     font: 700 350px/1 "Cinzel Decorative", serif;
     letter-spacing: normal;
-    transform: translate(-50%, -50%);
     pointer-events: none;
 }
 
@@ -1167,7 +1177,7 @@ body[data-theme="zombies"] .tcg-effect {
     color: #1a211b;
     font: 500 46px/1.48 "Lora", serif;
     text-align: left;
-    text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5);
+    text-shadow: none;
 }
 
 body[data-theme="zombies"] .tcg-effect strong {
@@ -1253,7 +1263,7 @@ body[data-theme="zombies"] .tcg-flavor {
     font: 500 48px/1.45 "Lora", serif;
     font-style: normal;
     text-align: left;
-    text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5);
+    text-shadow: none;
 }
 
 body[data-theme="zombies"] .tcg-footer-info {
