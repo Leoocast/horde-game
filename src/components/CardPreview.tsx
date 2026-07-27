@@ -6,9 +6,10 @@ import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, loca
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
-import { cardKeywords } from "../utils/selectors";
+import { cardKeywords, cardStatState } from "../utils/selectors";
+import { CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
@@ -36,6 +37,7 @@ export function CardPreview() {
 
   const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
+  const heldStaticAuraBonus = useGameStore((state) => activeId ? state.heldStaticAuraBonuses[activeId] : undefined);
   const details = useCardDetails(card?.definitionId ?? "");
 
   useEffect(() => {
@@ -170,6 +172,8 @@ export function CardPreview() {
   if (!details.imageUrl && !renderFocusedHtmlPreview && !renderHoverHtmlPreview) return null;
 
   const keywords = cardKeywords(game, card);
+  const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
+  const showFullCardStats = shouldShowFullCardImage(card.definitionId) && Boolean(stats.text);
   const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
@@ -188,6 +192,7 @@ export function CardPreview() {
             className={[
               "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
               renderFocusedHtmlPreview ? "card-preview-html-frame" : "",
+              showFullCardStats ? "card-preview-full-card-frame" : "",
             ].join(" ")}
           >
             {renderFocusedHtmlPreview ? (
@@ -195,6 +200,7 @@ export function CardPreview() {
             ) : imageUrl ? (
               <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
             ) : null}
+            {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -217,6 +223,7 @@ export function CardPreview() {
       className={[
         "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
         renderHoverHtmlPreview ? "card-preview-html-frame" : "",
+        showFullCardStats ? "card-preview-full-card-frame" : "",
       ].join(" ")}
       style={hoverStyle}
     >
@@ -225,6 +232,7 @@ export function CardPreview() {
       ) : imageUrl ? (
         <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
       ) : null}
+      {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );
 }

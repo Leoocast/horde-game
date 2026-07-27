@@ -217,24 +217,43 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ))}
         </div>
       )}
-      {!hideStats && stats.text && (
-        <div
-          aria-label={`${stats.power} attack, ${stats.toughness} life`}
-          className={[
-            "card-stat-badge",
-            stats.damaged ? "is-damaged" : "",
-            stats.buffed ? "is-buffed" : "",
-          ].join(" ")}
-        >
-          <span className="card-stat-segment card-stat-attack">
-            {preferNativeImageRendering ? <Sword aria-hidden="true" /> : <Swords aria-hidden="true" />}
-            <b>{stats.power}</b>
-          </span>
-          <i aria-hidden="true" />
-          <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
-        </div>
+      {!hideStats && (
+        <CardStatsBadge
+          stats={stats}
+          preferSingleSword={preferNativeImageRendering || showFullImage}
+        />
       )}
     </article>
+  );
+}
+
+export type CardStatDisplay = ReturnType<typeof cardStatState>;
+
+export function CardStatsBadge({
+  stats,
+  preferSingleSword = false,
+}: {
+  stats: CardStatDisplay;
+  preferSingleSword?: boolean;
+}) {
+  if (!stats.text) return null;
+
+  return (
+    <div
+      aria-label={`${stats.power} attack, ${stats.toughness} life`}
+      className={[
+        "card-stat-badge",
+        stats.damaged ? "is-damaged" : "",
+        stats.buffed ? "is-buffed" : "",
+      ].join(" ")}
+    >
+      <span className="card-stat-segment card-stat-attack">
+        {preferSingleSword ? <Sword aria-hidden="true" /> : <Swords aria-hidden="true" />}
+        <b>{stats.power}</b>
+      </span>
+      <i aria-hidden="true" />
+      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+    </div>
   );
 }
 

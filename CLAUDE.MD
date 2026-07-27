@@ -663,8 +663,12 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `showFullImage`: el recorte del battlefield se conserva. Su badge dinamico adapta el
   `tcg-stats-badge` impreso al espacio chico (slate, espada dorada, slash gris, corazon rojo y
   numeros blancos), con borde/volumen discretos para separarlo del arte. `stats.buffed` debe leerse
-  tambien en la carta completa mediante el marco verde persistente y una veladura verde sobre el
-  arte, no solo en el numero.
+  solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
+  carta recortada. El mismo `CardStatsBadge` dinamico cubre el badge impreso en mano,
+  mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
+  quedar exactamente sobre la pestana horneada en el PNG/HTML. En `CardPreview` queda unos pixeles
+  elevado; tanto el preview como la mano recuperan el borde dorado sobre slate gris de la variante
+  recortada.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

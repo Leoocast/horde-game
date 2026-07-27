@@ -141,7 +141,6 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             suppressContextMenu
             suppressCardId
             suppressSummoningSickness
-            hideStats
             highRes
             showFullImage={showFullSourceImage}
             preferNativeImageRendering={showFullSourceImage}
