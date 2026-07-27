@@ -24,8 +24,9 @@
             /* Textura de grano fino */
             --noise-tex: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E");
 
-            /* Patrón gráfico detallado de hojas de naturaleza flotantes y dispersas */
-            --nature-pattern: url("data:image/svg+xml,%3Csvg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(30,25) rotate(-25) scale(0.9)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%234ade80' fill-opacity='0.09'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-8 L 6,-14 M 0,0 L -6,-6 M 0,8 L 6,2' stroke='%234ade80' stroke-width='1.5' stroke-opacity='0.12' fill='none'/%3E%3C/g%3E%3Cg transform='translate(105,45) rotate(40) scale(0.65)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%2386efac' fill-opacity='0.08'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-6 L 6,-12 M 0,4 L -6,-2' stroke='%2386efac' stroke-width='1.5' stroke-opacity='0.1' fill='none'/%3E%3C/g%3E%3Cg transform='translate(55,100) rotate(65) scale(0.8)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%2322c55e' fill-opacity='0.08'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-8 L -6,-14 M 0,2 L 6,-4' stroke='%2322c55e' stroke-width='1.5' stroke-opacity='0.1' fill='none'/%3E%3C/g%3E%3Cg transform='translate(125,115) rotate(-45) scale(0.7)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%234ade80' fill-opacity='0.07'/%3E%3C/g%3E%3C/svg%3E");
+            /* Follaje dibujado como ramas continuas, no como mosaico repetido */
+            --header-foliage: url("data:image/svg+xml,%3Csvg viewBox='0 0 900 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2386efac' stroke-width='2' stroke-linecap='round' stroke-opacity='.11'%3E%3Cpath d='M0 87 C74 64 106 23 185 30 C248 36 276 69 360 53'/%3E%3Cpath d='M466 105 C548 91 573 60 641 49 C724 35 773 11 900 39'/%3E%3Cpath d='M616 55 C598 35 596 17 608 1'/%3E%3Cpath d='M706 36 C699 61 715 83 750 106'/%3E%3Cpath d='M794 28 C825 45 843 72 852 109'/%3E%3C/g%3E%3Cg fill='%234ade80' fill-opacity='.09' stroke='%2386efac' stroke-opacity='.13' stroke-width='1.2'%3E%3Cg transform='translate(78 57) rotate(-34) scale(.7)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(151 31) rotate(-9) scale(.58)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(230 40) rotate(25) scale(.66)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(569 79) rotate(-31) scale(.76)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(622 51) rotate(-105) scale(.62)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(671 42) rotate(17) scale(.82)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(718 33) rotate(-49) scale(.66)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(779 25) rotate(28) scale(.72)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(846 34) rotate(48) scale(.6)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            --type-foliage: url("data:image/svg+xml,%3Csvg viewBox='0 0 900 72' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 53 C92 13 164 65 258 35 S432 16 532 45 S711 60 900 25' fill='none' stroke='%2386efac' stroke-width='1.7' stroke-linecap='round' stroke-opacity='.1'/%3E%3Cg fill='%234ade80' fill-opacity='.075' stroke='%2386efac' stroke-opacity='.11' stroke-width='1'%3E%3Cg transform='translate(112 31) rotate(-24) scale(.55)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(245 38) rotate(28) scale(.66)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(386 25) rotate(-39) scale(.5)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(528 44) rotate(20) scale(.62)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(681 48) rotate(44) scale(.56)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3Cg transform='translate(813 32) rotate(-28) scale(.64)'%3E%3Cpath d='M0 0 C10-17 29-21 44-10 C34 5 17 12 0 0Z'/%3E%3Cpath d='M4-1 L36-9' fill='none'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
         * {
@@ -237,7 +238,9 @@
             inset: 0;
             z-index: 0;
             border-radius: 18px 0 0 9px;
-            background-image: var(--nature-pattern), var(--noise-tex), linear-gradient(90deg, #26472d 0%, #16321d 65%, transparent 98%);
+            background-image: var(--header-foliage), var(--noise-tex), linear-gradient(90deg, #26472d 0%, #16321d 65%, transparent 98%);
+            background-repeat: no-repeat, repeat, no-repeat;
+            background-size: 100% 100%, auto, 100% 100%;
             border-top: 3px solid rgba(184, 162, 107, 0.55);
             border-left: 3px solid rgba(184, 162, 107, 0.55);
             border-bottom: 3px solid rgba(184, 162, 107, 0.55);
@@ -366,7 +369,9 @@
             position: absolute;
             inset: 2px;
             z-index: 0;
-            background-image: var(--nature-pattern), var(--noise-tex), linear-gradient(180deg, #26472d 0%, #1a3220 100%);
+            background-image: var(--type-foliage), var(--noise-tex), linear-gradient(180deg, #26472d 0%, #1a3220 100%);
+            background-repeat: no-repeat, repeat, no-repeat;
+            background-size: 100% 100%, auto, 100% 100%;
             border-radius: 7px 0 0 7px;
             clip-path: polygon(0 0, calc(100% - 29px) 0, 100% 50%, calc(100% - 29px) 100%, 0 100%);
         }
@@ -393,7 +398,11 @@
             margin: 9px 12px 12px;
             padding: 30px 36px 70px 36px;
             border-radius: 9px 9px 42px 18px;
-            background-image: var(--noise-tex), linear-gradient(180deg, #e6e3ce 0%, #d8dcc3 100%);
+            background-image:
+                var(--noise-tex),
+                var(--noise-tex),
+                linear-gradient(180deg, #e6e3ce 0%, #d8dcc3 100%);
+            background-blend-mode: multiply, multiply, normal;
             border: 3px solid rgba(184, 162, 107, 0.4);
             box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
             display: flex;
@@ -474,8 +483,18 @@
             z-index: 1;
             width: 100%;
             height: 3px;
+            min-height: 3px;
+            flex: 0 0 3px;
             margin: 12px 0;
-            background: linear-gradient(90deg, transparent 0%, rgba(52, 96, 59, 0.45) 25%, rgba(52, 96, 59, 0.45) 75%, transparent 100%);
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(52, 96, 59, 0.45) 25%,
+                    rgba(52, 96, 59, 0.45) 47%,
+                    transparent 47%,
+                    transparent 53%,
+                    rgba(52, 96, 59, 0.45) 53%,
+                    rgba(52, 96, 59, 0.45) 75%,
+                    transparent 100%);
         }
 
         .tcg-divider::after {
@@ -486,16 +505,18 @@
             transform: translate(-50%, -50%);
             font-size: 21px;
             color: #386b40;
-            background: #dedcc5;
-            padding: 0 14px;
+            line-height: 1;
+            background: transparent;
+            padding: 0;
         }
 
         .tcg-flavor {
             position: relative;
             z-index: 1;
             font-family: 'Lora', serif;
-            font-style: italic;
-            font-size: 38px;
+            font-style: normal;
+            font-size: 48px;
+            font-weight: 500;
             line-height: 1.45;
             color: #454e40;
             margin: 0;
@@ -505,7 +526,7 @@
         }
 
         .tcg-flavor-solo {
-            font-size: 44px;
+            font-size: 48px;
             line-height: 1.48;
             color: #353f31;
         }
@@ -766,7 +787,7 @@
 
         // Determinar ícono de tipo
         function getTypeIcon(tipo) {
-            if (tipo.includes("Criatura")) return '<i class="fa-solid fa-seedling" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Criatura")) return '<i class="fa-solid fa-paw" style="font-size: 28px; color: #86efac;"></i>';
             if (tipo.includes("Instantáneo") || tipo.includes("Conjuro")) return '<i class="fa-solid fa-scroll" style="font-size: 28px; color: #86efac;"></i>';
             if (tipo.includes("Tierra")) return '<i class="fa-solid fa-mountain-sun" style="font-size: 28px; color: #86efac;"></i>';
             return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';

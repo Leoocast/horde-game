@@ -193,7 +193,7 @@ function DeckCardTile({
   const language = useLanguageStore((state) => state.language);
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const localArt = isLocalDeckCard(deck, card);
+  const localArt = usesGeneratedCardFrame(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -326,7 +326,7 @@ function DeckInspectorDetailsModal({
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
-  const localArt = isLocalDeckCard(deck, card);
+  const localArt = usesGeneratedCardFrame(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -486,8 +486,9 @@ function formatDeckKeyword(keyword: string): string {
   return text.toUpperCase();
 }
 
-function isLocalDeckCard(deck: InspectableDeck, card: NewDeckCard): boolean {
-  return deck.images.cards[card.id]?.source === "local";
+function usesGeneratedCardFrame(deck: InspectableDeck, card: NewDeckCard): boolean {
+  const image = deck.images.cards[card.id];
+  return image?.source === "local" && image.imageKind !== "card";
 }
 
 function authoredCardText(card: NewDeckCard, language: AppLanguage): string {

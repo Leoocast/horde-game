@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, PointerEvent } from "react";
+import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -37,11 +37,15 @@ type Props = {
   cropTopHalf?: boolean;
   highRes?: boolean;
   sharpImageOverlay?: boolean;
+  showFullImage?: boolean;
+  clipActionSweep?: boolean;
+  preferNativeImageRendering?: boolean;
+  face?: ReactNode;
   dragging?: boolean;
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -134,6 +138,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
+        showFullImage ? "card-image-full" : "",
+        preferNativeImageRendering ? "card-image-native-hd" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
         summoningSick ? "summoning-sick-card" : "",
@@ -141,21 +147,33 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
     >
-      {displayImageUrl ? (
+      {face ?? (displayImageUrl ? (
         <img src={displayImageUrl} alt={localizedName} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
-      )}
-      {sharpImageOverlay && highResImageUrl && (
+      ))}
+      {!face && sharpImageOverlay && highResImageUrl && (
         <div className="card-sharp-image-overlay" aria-hidden="true">
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
         </div>
       )}
       {actionable && !dragging && (
-        <span className="card-actionable-sweep" aria-hidden="true" />
+        clipActionSweep ? (
+          <span className="card-actionable-sweep-clip" aria-hidden="true">
+            <span className="card-actionable-sweep" />
+          </span>
+        ) : (
+          <span className="card-actionable-sweep" aria-hidden="true" />
+        )
       )}
       {showEffectAvailable && (
-        <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
+        clipActionSweep ? (
+          <span className="card-actionable-sweep-clip" aria-hidden="true">
+            <span className="card-actionable-sweep card-effect-available-sweep" />
+          </span>
+        ) : (
+          <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
+        )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}

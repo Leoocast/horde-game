@@ -38,6 +38,18 @@ function pngSize(png) {
     };
 }
 
+async function writeFileWithRetry(filePath, contents, attempts = 6) {
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+            await fs.promises.writeFile(filePath, contents);
+            return;
+        } catch (error) {
+            if (attempt === attempts) throw error;
+            await new Promise((resolve) => setTimeout(resolve, attempt * 120));
+        }
+    }
+}
+
 async function main() {
     const { chromium } = requireExporterDependency('playwright');
     const JSZip = requireExporterDependency('jszip');
@@ -76,6 +88,12 @@ async function main() {
                     img.decode ? img.decode().catch(() => undefined) : Promise.resolve()
                 )
             );
+            // Element screenshots include whatever is painted behind rounded corners. Keep the
+            // export surface transparent so the PNG preserves the card silhouette instead of
+            // baking the deck-builder's dark page background into every corner.
+            document.documentElement.style.background = 'transparent';
+            document.body.style.background = 'transparent';
+            document.body.style.backgroundImage = 'none';
             document.getElementById('cards-container').className = 'cards-grid scale-100';
         });
 
@@ -104,12 +122,12 @@ async function main() {
                 );
             }
 
-            fs.writeFileSync(filePath, png);
+            await writeFileWithRetry(filePath, png);
             zip.file(fileName, png);
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
-        fs.writeFileSync(zipPath, await zip.generateAsync({ type: 'nodebuffer' }));
+        await writeFileWithRetry(zipPath, await zip.generateAsync({ type: 'nodebuffer' }));
         console.log('');
         console.log(`Listo: ${zipPath}`);
         console.log(`También quedaron los PNG individuales en: ${outputDir}`);

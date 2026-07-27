@@ -1,8 +1,10 @@
 import { Check, RefreshCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
@@ -35,7 +37,11 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                   suppressHoverOverlay
                   darkenOnHover={false}
                   highRes
-                  sharpImageOverlay
+                  sharpImageOverlay={!UI_FEATURE_FLAGS.useNativeHdHandImageRendering || !shouldShowFullCardImage(card.definitionId)}
+                  showFullImage={shouldShowFullCardImage(card.definitionId)}
+                  clipActionSweep={UI_FEATURE_FLAGS.alignHdHandActionSweep && shouldShowFullCardImage(card.definitionId)}
+                  preferNativeImageRendering={UI_FEATURE_FLAGS.useNativeHdHandImageRendering && shouldShowFullCardImage(card.definitionId)}
+                  hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
                 />
               </div>
             </motion.div>

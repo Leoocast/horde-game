@@ -1,5 +1,6 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
@@ -7,7 +8,9 @@ import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinu
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
@@ -287,7 +290,11 @@ export function Hand({ game }: { game: GameState }) {
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
             ref={handCardsRef}
-            className="player-hand-cards flex items-end justify-center overflow-visible"
+            className={[
+              "player-hand-cards flex items-end justify-center overflow-visible",
+              UI_FEATURE_FLAGS.boostPlayerHandCardHoverByTwentyPercent ? "player-hand-cards-stronger-hover" : "",
+              UI_FEATURE_FLAGS.useLargerPlayerHandCards ? "player-hand-cards-larger" : "",
+            ].join(" ")}
             style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
@@ -308,6 +315,15 @@ export function Hand({ game }: { game: GameState }) {
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
             const isHovered = hoveredHandId === card.instanceId;
             const isHeld = isHovered || draggingCardId === card.instanceId;
+            const showFullImage = shouldShowFullCardImage(card.definitionId);
+            const renderHtmlCard =
+              showFullImage &&
+              UI_FEATURE_FLAGS.renderHdHandCardsAsHtml &&
+              hasMonoGreenHtmlCardFace(card.definitionId);
+            const useNativeHdRendering =
+              showFullImage &&
+              !renderHtmlCard &&
+              UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
             const { x: dragX, y: dragY } = getDragMotionValues(card.instanceId);
             return (
               <motion.div
@@ -356,6 +372,8 @@ export function Hand({ game }: { game: GameState }) {
                   }}
                   className={[
                     "hand-card",
+                    renderHtmlCard ? "hand-card-html" : "",
+                    useNativeHdRendering ? "hand-card-native-hd" : "",
                     isHeld ? "hand-card-hovered" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     energyRecycleAnimation?.card.instanceId === card.instanceId ? "opacity-0" : "",
@@ -388,7 +406,12 @@ export function Hand({ game }: { game: GameState }) {
                     suppressHoverOverlay
                     darkenOnHover={false}
                     highRes={isHeld}
-                    sharpImageOverlay
+                    sharpImageOverlay={!useNativeHdRendering}
+                    showFullImage={showFullImage}
+                    clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
+                    preferNativeImageRendering={useNativeHdRendering}
+                    hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
+                    face={renderHtmlCard ? <MonoGreenHandCardFace card={card} /> : undefined}
                     onSelect={() => {
                       if (handLimitDiscardActive) {
                         selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);

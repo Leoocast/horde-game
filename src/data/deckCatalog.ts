@@ -75,6 +75,7 @@ export type DeckImageManifest = {
     imageSize?: string;
     face?: string;
     cacheKey?: string;
+    showFullCardImage?: boolean;
   };
   cards: Record<
     string,
@@ -86,6 +87,8 @@ export type DeckImageManifest = {
       set?: string;
       collectorNumber?: string;
       imageUrl?: string;
+      imageKind?: "art" | "card";
+      showFullCardImage?: boolean;
       lookupUrl?: string;
       imagePath?: string;
       fallbackImagePath?: string;
