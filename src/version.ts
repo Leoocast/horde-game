@@ -1,1 +1,1 @@
-export const APP_VERSION = "ALPHA 14.0-GOBLINS-UPDATE";
+export const APP_VERSION = "ALPHA 15.0-CARDS-UPDATE";

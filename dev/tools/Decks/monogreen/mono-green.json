@@ -18,7 +18,7 @@
         "costo": 1,
         "atk": 0,
         "def": 2,
-        "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida.",
+        "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida.",
         "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
     },
     {

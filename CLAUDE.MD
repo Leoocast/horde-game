@@ -630,6 +630,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
   hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
   rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
+- Siege-Gang Commander conserva solamente su ETB de tres tokens; se elimino el modo activado de
+  sacrificar un Goblin para hacer dano. Pashalik Mons conserva solamente el Burn cuando muere otro
+  Goblin; se elimino su modo activado de sacrificar para crear tokens.
 - Goblin Chainwhirler usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
   una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
   criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
@@ -648,6 +651,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
+- Los cuatro generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
+  `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
+  de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
+  de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
+  oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
+  crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
+  usa `quita ... y crea ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
+  `tests/deckCardText.test.js`.
+- El generador de Vampires toma sus WebP de arte recortado desde
+  `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
+  `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
+  PNG de la raiz, no a los WebP de `art/`.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto

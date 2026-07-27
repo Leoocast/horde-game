@@ -582,6 +582,27 @@ input {
     font-weight: 700;
 }
 
+.effect-paragraph {
+    display: block;
+}
+
+.effect-paragraph + .effect-paragraph {
+    margin-top: 0.36em;
+}
+
+.effect-keyword,
+.effect-counter,
+.effect-token,
+.effect-stat {
+    color: var(--accent-deep);
+    font-weight: 700;
+}
+
+.tcg-effect strong.effect-danger {
+    color: #a61b12 !important;
+    font-weight: 800;
+}
+
 .symbol-badge {
     display: inline-grid;
     width: 43px;

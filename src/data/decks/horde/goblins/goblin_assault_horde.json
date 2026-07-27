@@ -523,8 +523,8 @@
       "name": "Siege-Gang Commander",
       "displayNameEs": "Comandante de sitiadores",
       "gameText": {
-        "en": "When this creature enters, create three 1/1 Goblins. The Horde may sacrifice a Goblin to deal 2 damage to a target.",
-        "es": "Cuando esta criatura entra, crea tres Trasgos 1/1. La Horda puede sacrificar un Trasgo para hacer 2 de daño a un objetivo."
+        "en": "When this creature enters, create three 1/1 Goblins.",
+        "es": "Cuando esta criatura entra, crea tres Trasgos 1/1."
       },
       "quantity": 2,
       "manaCost": "{3}{R}{R}",
@@ -561,51 +561,6 @@
               "player": "SELF",
               "tokenId": "goblin_token_1_1_red",
               "amount": 3
-            }
-          ]
-        },
-        {
-          "id": "siege_gang_commander_sacrifice_damage",
-          "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{1}{R}",
-            "sacrifice": {
-              "controller": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            }
-          },
-          "targets": [
-            {
-              "id": "damageTarget",
-              "zone": "ANY",
-              "controller": "ANY",
-              "filters": {
-                "objectTypes": [
-                  "Player",
-                  "Creature",
-                  "Planeswalker",
-                  "Battle"
-                ]
-              }
-            }
-          ],
-          "conditions": [],
-          "effects": [
-            {
-              "type": "DEAL_DAMAGE",
-              "source": "SELF",
-              "target": "damageTarget",
-              "amount": 2,
-              "damageKind": "NON_COMBAT"
             }
           ]
         }
@@ -1196,8 +1151,8 @@
       "name": "Pashalik Mons",
       "displayNameEs": "Pashalik Mons",
       "gameText": {
-        "en": "Whenever a Horde Goblin dies, launch a 1-damage fireball at a random player creature. The Horde may sacrifice a Goblin to create two 1/1 Goblins.",
-        "es": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador. La Horda puede sacrificar un Trasgo para crear dos Trasgos 1/1."
+        "en": "Whenever a Horde Goblin dies, launch a 1-damage fireball at a random player creature.",
+        "es": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador."
       },
       "quantity": 2,
       "manaCost": "{2}{R}",
@@ -1264,36 +1219,6 @@
               }
             }
           ]
-        },
-        {
-          "id": "pashalik_mons_sacrifice_create_goblins",
-          "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{3}{R}",
-            "sacrifice": {
-              "controller": "SELF",
-              "filters": {
-                "cardTypes": [
-                  "Creature"
-                ],
-                "subtypes": [
-                  "Goblin"
-                ]
-              }
-            }
-          },
-          "targets": [],
-          "conditions": [],
-          "effects": [
-            {
-              "type": "CREATE_TOKEN",
-              "player": "SELF",
-              "tokenId": "goblin_token_1_1_red",
-              "amount": 2
-            }
-          ]
         }
       ],
       "needsVerification": false,
@@ -1306,10 +1231,6 @@
     }
   ],
   "engineSupportNeeded": [
-    {
-      "id": "multi_kind_any_target_selector",
-      "reason": "Damage abilities may target players, creatures, planeswalkers, or battles."
-    },
     {
       "id": "temporary_cast_permission_from_exile",
       "usedBy": [

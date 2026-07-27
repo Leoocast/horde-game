@@ -76,8 +76,8 @@
       "name": "Sunshower Druid",
       "displayNameEs": "Druida de la lluvia solar",
       "gameText": {
-        "en": "When this creature enters, put a +1/+1 counter on an allied creature. You gain 1 life.",
-        "es": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida."
+        "en": "When this creature enters, put a +1/+1 counter on an allied creature and gain 1 life.",
+        "es": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida."
       },
       "quantity": 3,
       "setCode": "BLB",
