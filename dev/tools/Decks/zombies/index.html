@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hostfall — Taller de cartas Zombies</title>
+    <link rel="stylesheet" href="../deck-card-studio.css">
+</head>
+<body
+    data-theme="zombies"
+    data-set-code="HFZ"
+>
+    <header class="studio-header">
+        <p class="studio-kicker">Archivo del Cementerio</p>
+        <h1 class="studio-title">Deck Zombies</h1>
+        <p class="studio-subtitle">
+            Piedra húmeda, hueso envejecido y costuras de mausoleo. Las cartas conservan
+            el formato de exportación HD del player: 976×1360.
+        </p>
+
+        <div class="studio-toolbar">
+            <button class="zoom-button" type="button" data-scale="35">35%</button>
+            <button class="zoom-button is-active" type="button" data-scale="45">45%</button>
+            <button class="zoom-button" type="button" data-scale="60">60%</button>
+            <button class="zoom-button" type="button" data-scale="100">100%</button>
+        </div>
+
+        <p class="studio-status" id="studio-status">
+            Generando deck completo…
+        </p>
+    </header>
+
+    <main class="cards-grid scale-45" id="cards-container"></main>
+
+    <script id="deck-data" type="application/json">
+        [
+          {
+            "id": "zombie_token",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Zombie",
+            "nombre": "Ficha de Zombie",
+            "tipo": "Criatura ficha — Zombie",
+            "costo": 0,
+            "atk": 2,
+            "def": 2,
+            "desc": "Sin efecto adicional.",
+            "lore": "",
+            "cantidad": 21,
+            "isToken": true
+          },
+          {
+            "id": "zombie_giant_token",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Zombie%20Giant",
+            "nombre": "Ficha de Zombie Gigante",
+            "tipo": "Criatura ficha — Zombie Giga",
+            "costo": 0,
+            "atk": 5,
+            "def": 5,
+            "desc": "Sin efecto adicional.",
+            "lore": "",
+            "cantidad": 4,
+            "isToken": true
+          },
+          {
+            "id": "graf_harvest",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Graf%20Harvest",
+            "nombre": "Cosecha del cementerio",
+            "tipo": "Encantamiento",
+            "costo": 1,
+            "atk": null,
+            "def": null,
+            "desc": "Los Zombies de la Horda tienen Amenaza. Sus habilidades de mantenimiento y creación de fichas están inactivas por ahora.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "noosegraf_mob",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Noosegraf%20Mob",
+            "nombre": "Turba de Noosegraf",
+            "tipo": "Criatura — Zombie",
+            "costo": 6,
+            "atk": 0,
+            "def": 0,
+            "desc": "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2.",
+            "lore": "",
+            "cantidad": 1
+          },
+          {
+            "id": "rottenheart_ghoul",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Rottenheart%20Ghoul",
+            "nombre": "Ghoul de corazón podrido",
+            "tipo": "Criatura — Zombie",
+            "costo": 4,
+            "atk": 2,
+            "def": 4,
+            "desc": "Cuando esta criatura muere, el jugador descarta una carta.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "miasmic_mummy",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Miasmic%20Mummy",
+            "nombre": "Momia miasmática",
+            "tipo": "Criatura — Zombie Chacal",
+            "costo": 2,
+            "atk": 2,
+            "def": 2,
+            "desc": "Cuando esta criatura entra, el jugador descarta una carta.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "smallpox",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Smallpox",
+            "nombre": "Viruela pequeña",
+            "tipo": "Conjuro",
+            "costo": 2,
+            "atk": null,
+            "def": null,
+            "desc": "El jugador pierde 1 vida, descarta una carta, sacrifica una criatura y sacrifica una tierra.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "blighted_bat",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Blighted%20Bat",
+            "nombre": "Murciélago infectado",
+            "tipo": "Criatura — Zombie Murciélago",
+            "costo": 3,
+            "atk": 2,
+            "def": 1,
+            "desc": "Volar. Sin efecto activo adicional.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "stitchwing_skaab",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Stitchwing%20Skaab",
+            "nombre": "Skaab ala cosida",
+            "tipo": "Criatura — Zombie Horror",
+            "costo": 4,
+            "atk": 3,
+            "def": 1,
+            "desc": "Volar. Su habilidad para regresar del cementerio está inactiva por ahora.",
+            "lore": "",
+            "cantidad": 1
+          },
+          {
+            "id": "advanced_stitchwing",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Advanced%20Stitchwing",
+            "nombre": "Ala cosida avanzada",
+            "tipo": "Criatura — Zombie Horror",
+            "costo": 5,
+            "atk": 3,
+            "def": 4,
+            "desc": "Volar. Su habilidad para regresar del cementerio está inactiva por ahora.",
+            "lore": "",
+            "cantidad": 1
+          },
+          {
+            "id": "crow_of_dark_tidings",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Crow%20of%20Dark%20Tidings",
+            "nombre": "Cuervo de malos augurios",
+            "tipo": "Criatura — Zombie Ave",
+            "costo": 3,
+            "atk": 2,
+            "def": 1,
+            "desc": "Volar. Cuando esta criatura entra o muere, pon 2 cartas del mazo de la Horda en su cementerio.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "cursed_minotaur",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Cursed%20Minotaur",
+            "nombre": "Minotauro maldito",
+            "tipo": "Criatura — Zombie Minotauro",
+            "costo": 3,
+            "atk": 3,
+            "def": 2,
+            "desc": "Amenaza.",
+            "lore": "",
+            "cantidad": 1
+          },
+          {
+            "id": "thraben_foulbloods",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Thraben%20Foulbloods",
+            "nombre": "Sangremalas de Thraben",
+            "tipo": "Criatura — Zombie Perro",
+            "costo": 3,
+            "atk": 3,
+            "def": 2,
+            "desc": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura obtiene +1/+1 y tiene Amenaza.",
+            "lore": "",
+            "cantidad": 1
+          },
+          {
+            "id": "hound_of_the_farbogs",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Hound%20of%20the%20Farbogs",
+            "nombre": "Sabueso de Farbog",
+            "tipo": "Criatura — Zombie Perro",
+            "costo": 5,
+            "atk": 5,
+            "def": 3,
+            "desc": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura tiene Amenaza.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "rancid_rats",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Rancid%20Rats",
+            "nombre": "Ratas rancias",
+            "tipo": "Criatura — Zombie Rata",
+            "costo": 2,
+            "atk": 1,
+            "def": 1,
+            "desc": "Toque mortal. Escurridizo.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "gavony_unhallowed",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Gavony%20Unhallowed",
+            "nombre": "Profano de Gavony",
+            "tipo": "Criatura — Zombie",
+            "costo": 4,
+            "atk": 2,
+            "def": 4,
+            "desc": "Siempre que otra criatura de la Horda muera, pon un contador +1/+1 sobre esta criatura.",
+            "lore": "",
+            "cantidad": 2
+          },
+          {
+            "id": "diregraf_captain",
+            "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Diregraf%20Captain",
+            "nombre": "Capitán de Diregraf",
+            "tipo": "Criatura — Zombie Soldado",
+            "costo": 3,
+            "atk": 2,
+            "def": 2,
+            "desc": "Toque mortal. Los demás Zombies de la Horda obtienen +1/+1. Siempre que otro Zombie de la Horda muera, el jugador pierde 1 vida.",
+            "lore": "",
+            "cantidad": 2
+          }
+        ]
+    </script>
+    <script src="../deck-card-studio.js"></script>
+</body>
+</html>
