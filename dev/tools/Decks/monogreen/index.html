@@ -273,6 +273,8 @@
         }
 
         .tcg-title {
+            flex: 1;
+            min-width: 0;
             font-family: 'Cinzel', serif;
             font-size: 45px;
             font-weight: 700;
@@ -284,34 +286,73 @@
             text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
         }
 
-        /* EMBLEMA CIRCULAR MANA GEM HD DORADO */
+        /* ORBE DE COSTE AZUL, MISMO LENGUAJE VISUAL QUE LA ENERGÍA DEL JUEGO */
         .tcg-mana-gem {
+            position: relative;
+            isolation: isolate;
             width: 90px;
             height: 90px;
+            overflow: hidden;
             flex-shrink: 0;
             border-radius: 50%;
             margin-top: -9px;
             margin-bottom: -9px;
-            margin-right: -9px;
+            margin-right: 12px;
+            margin-left: -9px;
             z-index: 15;
-            background: linear-gradient(180deg, #3d321d 0%, #1f180d 100%);
-            border: 3px solid #b8a26b;
+            background: radial-gradient(circle at 36% 28%, #effcff 0%, #79d4ff 19%, #2786d2 51%, #092e62 79%, #03142e 100%);
+            border: 4px solid rgba(185, 232, 255, 0.96);
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             box-shadow:
-                0 8px 16px rgba(0, 0, 0, 0.7),
-                0 0 15px rgba(234, 217, 168, 0.3),
-                inset 0 3px 0 rgba(255, 235, 175, 0.4);
+                inset 4px 4px 7px rgba(238, 252, 255, 0.76),
+                inset -10px -12px 16px rgba(3, 24, 58, 0.76),
+                0 0 0 2px rgba(6, 31, 66, 0.94),
+                0 0 15px rgba(92, 201, 255, 0.92),
+                0 0 31px rgba(38, 115, 226, 0.7),
+                0 8px 16px rgba(0, 0, 0, 0.68);
+        }
+
+        .tcg-mana-gem::before {
+            content: "";
+            position: absolute;
+            left: 19%;
+            top: 15%;
+            z-index: 3;
+            width: 35%;
+            height: 19%;
+            border-radius: 50%;
+            background: rgba(242, 253, 255, 0.8);
+            box-shadow: 0 0 9px rgba(181, 232, 255, 0.84);
+            filter: blur(1px);
+            pointer-events: none;
+            transform: rotate(-28deg);
+        }
+
+        .tcg-mana-gem::after {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            z-index: 2;
+            border: 2px solid rgba(239, 253, 255, 0.28);
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(154, 226, 255, 0.22);
+            pointer-events: none;
         }
 
         .tcg-mana-gem span {
-            font-family: 'Cinzel', 'Oswald', sans-serif;
+            position: relative;
+            z-index: 4;
+            font-family: 'Trebuchet MS', 'Outfit', sans-serif;
             font-size: 54px;
             font-weight: 900;
-            color: #fce8b3;
-            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.9), 0 0 10px rgba(184, 162, 107, 0.6);
+            color: #ffffff;
+            -webkit-text-stroke: 3px rgba(3, 25, 58, 0.98);
+            paint-order: stroke fill;
+            text-shadow:
+                0 3px 4px rgba(2, 15, 38, 0.98),
+                0 0 5px rgba(225, 248, 255, 0.44);
             line-height: 1;
             display: flex;
             align-items: center;
@@ -813,11 +854,11 @@
                 <div class="tcg-inner">
                     <!-- Cabecera -->
                     <div class="tcg-head">
-                        <div class="tcg-title-wrap">
-                            <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
-                            <div class="tcg-title">${card.nombre}</div>
-                        </div>
                         ${!isLand ? `<div class="tcg-mana-gem"><span>${card.costo}</span></div>` : ''}
+                        <div class="tcg-title-wrap">
+                            <div class="tcg-title">${card.nombre}</div>
+                            <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
+                        </div>
                     </div>
 
                     <!-- Ventana de Arte -->
