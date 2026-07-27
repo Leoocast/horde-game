@@ -669,8 +669,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   numeros blancos), usando exactamente la paleta del generador `dev/tools/Decks/monogreen/index.html`
   como fuente de verdad. `stats.buffed` debe leerse
   solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
-  carta recortada, y su panel verde debe coincidir con el del preview de hover incluso cuando la
-  criatura tambien esta danada. El mismo `CardStatsBadge` dinamico cubre el badge impreso en mano,
+  carta recortada. En battlefield, el badge cutted es una excepcion visual deliberada: conserva
+  fuente, iconos y lectura de estados, pero usa un HUD compacto, oscuro, angular y neutral en vez
+  de imitar la pestana impresa; el buff se expresa con verde apagado y poco glow. El mismo
+  `CardStatsBadge` dinamico cubre el badge impreso en mano,
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG. En targeting vienen del estado vivo.
   El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
@@ -684,6 +686,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `DeckInspector` tambien cubre el PNG
   con `CardCostBadge` y `CardStatsBadge` en grid, preview lateral y modal; sus stats vienen de la
   definicion estatica y `xN` permanece a la derecha.
+- Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
+  maximo anterior del `clamp`; no deben reducirse segun `vw` ni la altura del panel. El alto
+  recortado sigue siendo `0.89 * ancho`. Tierras y otros permanentes conservan el slot compacto
+  independiente de `92-118px`.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

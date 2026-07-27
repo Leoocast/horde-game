@@ -4420,7 +4420,7 @@
   }
 
   .battlefield-side-content > .old-panel-soft {
-    --battlefield-card-width: clamp(140px, min(12vw, calc((100cqh - 80px) * 0.717875)), 212px);
+    --battlefield-card-width: 212px;
     height: 100%;
     min-height: 0;
     container-type: size;
@@ -5434,7 +5434,7 @@
   .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-image-native-hd > img {
     width: 140%;
     height: 140%;
-    transform: translate(calc(-20% + 29px), calc(-20% + 43px));
+    transform: translate(calc(-20% + 18px), calc(-20% + 46px));
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
@@ -10512,27 +10512,30 @@
   background: var(--card-stat-buffed-background);
 }
 
-/* Mono-green cropped battlefield cards adapt the printed slate stats tab for the much smaller
-   crop: same palette and icon language, but inset and edged so it reads over the artwork. */
+/* Cropped battlefield cards use game HUD chrome instead of the printed-card tab used by hand and
+   previews. Keep the typography and stat language, but make the surface compact and neutral. */
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
-  right: clamp(4px, 2.6cqw, 6px);
-  bottom: clamp(3px, 2cqw, 5px);
+  right: 5px;
+  bottom: 4px;
   display: flex;
-  height: clamp(31px, 18cqw, 38px);
-  min-width: clamp(88px, 50cqw, 108px);
+  height: 32px;
+  min-width: 94px;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: clamp(3px, 2.4cqw, 5px);
-  padding: clamp(4px, 2.5cqw, 6px) clamp(9px, 5.8cqw, 13px) clamp(5px, 3cqw, 7px) clamp(7px, 4.4cqw, 10px);
-  border: 1px solid var(--card-stat-border);
-  border-radius: clamp(10px, 5.5cqw, 13px) 3px clamp(8px, 4.4cqw, 10px) 3px;
-  background: var(--card-stat-background);
-  color: var(--card-stat-number);
+  gap: 4px;
+  padding: 3px 9px 4px 8px;
+  border: 1px solid rgb(128 145 143 / 0.58);
+  border-radius: 4px 0 8px;
+  background:
+    radial-gradient(circle at 28% 0%, rgb(180 200 193 / 0.11), transparent 46%),
+    linear-gradient(180deg, rgb(37 48 51 / 0.97), rgb(10 16 20 / 0.98));
+  color: #e7e4d8;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -3px 5px rgb(0 0 0 / 0.34),
-    0 3px 8px rgb(0 0 0 / 0.52);
+    inset 0 1px 0 rgb(227 239 232 / 0.1),
+    inset 0 -2px 4px rgb(0 0 0 / 0.48),
+    0 0 0 1px rgb(2 8 10 / 0.66),
+    0 3px 7px rgb(0 0 0 / 0.58);
   clip-path: none;
 }
 
@@ -10544,8 +10547,8 @@
   border: 0;
   background: none;
   box-shadow: none;
-  color: var(--card-stat-separator);
-  font-size: clamp(12px, 7cqw, 16px);
+  color: #7f918f;
+  font-size: 14px;
   font-style: normal;
   font-weight: 600;
   line-height: 1;
@@ -10557,35 +10560,37 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment {
-  gap: clamp(2px, 1.7cqw, 4px);
+  gap: 3px;
   padding: 0;
   background: none;
-  color: var(--card-stat-number);
-  font-size: clamp(14px, 7.8cqw, 18px);
+  color: #e7e4d8;
+  font-size: 16px;
   letter-spacing: 0;
   text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment svg {
-  width: clamp(11px, 6.7cqw, 15px);
-  height: clamp(11px, 6.7cqw, 15px);
+  width: 13px;
+  height: 13px;
   stroke-width: 2.35;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-attack svg {
-  color: var(--card-stat-attack-icon);
+  color: #bda76e;
   transform: scaleX(-1);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-life svg {
-  fill: var(--card-stat-life-icon);
-  color: var(--card-stat-life-icon);
+  fill: #cf7774;
+  color: #cf7774;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged {
-  border-color: rgb(232 137 112 / 0.62);
-  background: linear-gradient(180deg, #3a2a2d, #24191e 68%, #181014);
+  border-color: rgb(180 104 92 / 0.62);
+  background:
+    radial-gradient(circle at 28% 0%, rgb(218 153 132 / 0.1), transparent 46%),
+    linear-gradient(180deg, rgb(54 37 39 / 0.97), rgb(20 13 17 / 0.98));
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged .card-stat-life svg {
@@ -10595,27 +10600,29 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed {
-  border-color: var(--card-stat-buffed-border);
-  background: var(--card-stat-buffed-background);
+  border-color: rgb(139 171 125 / 0.58);
+  background:
+    radial-gradient(circle at 28% 0%, rgb(180 209 163 / 0.12), transparent 46%),
+    linear-gradient(180deg, rgb(38 51 45 / 0.97), rgb(11 19 17 / 0.98));
   box-shadow:
-    inset 0 1px 0 rgb(232 244 217 / 0.14),
-    inset 0 -2px 5px rgb(3 19 9 / 0.46),
-    0 0 0 1px rgb(4 18 9 / 0.76),
-    0 0 9px rgb(111 157 94 / 0.38),
-    0 4px 10px rgb(0 0 0 / 0.58);
+    inset 0 1px 0 rgb(224 239 215 / 0.11),
+    inset 0 -2px 4px rgb(0 0 0 / 0.48),
+    0 0 0 1px rgb(4 13 10 / 0.68),
+    0 0 6px rgb(111 157 94 / 0.22),
+    0 3px 7px rgb(0 0 0 / 0.58);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
-  color: var(--card-stat-buffed-number);
-  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 7px rgb(137 227 94 / 0.72);
+  color: #cfe3c2;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 4px rgb(126 176 104 / 0.38);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed::before {
   top: 2px;
-  right: 5px;
-  color: #bed4aa;
-  font-size: 8px;
-  text-shadow: 0 0 5px rgb(111 157 94 / 0.52);
+  right: 4px;
+  color: #aabf9c;
+  font-size: 7px;
+  text-shadow: 0 0 3px rgb(111 157 94 / 0.34);
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */
