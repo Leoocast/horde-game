@@ -8,6 +8,7 @@ import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
@@ -100,7 +101,16 @@ export function DuelHud({ game }: { game: GameState }) {
                   activatingEffectCardId === deathRevealCard.instanceId ? "effect-card-activating" : "",
                 ].join(" ")}
               >
-                <Card game={game} card={deathRevealCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+                <Card
+                  game={game}
+                  card={deathRevealCard}
+                  selectionDisabled
+                  suppressContextMenu
+                  suppressCardId
+                  suppressSummoningSickness
+                  showFullImage={shouldShowFullCardImage(deathRevealCard.definitionId)}
+                  preferNativeImageRendering={shouldShowFullCardImage(deathRevealCard.definitionId)}
+                />
               </div>
             </div>
           </motion.div>
@@ -127,7 +137,16 @@ export function DuelHud({ game }: { game: GameState }) {
                   activatingEffectCardId === hordeSpellCard.instanceId ? "effect-card-activating" : "",
                 ].join(" ")}
               >
-                <Card game={game} card={hordeSpellCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+                <Card
+                  game={game}
+                  card={hordeSpellCard}
+                  selectionDisabled
+                  suppressContextMenu
+                  suppressCardId
+                  suppressSummoningSickness
+                  showFullImage={shouldShowFullCardImage(hordeSpellCard.definitionId)}
+                  preferNativeImageRendering={shouldShowFullCardImage(hordeSpellCard.definitionId)}
+                />
               </div>
             </div>
           </motion.div>
@@ -155,7 +174,16 @@ export function DuelHud({ game }: { game: GameState }) {
                 activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
-              <Card game={game} card={smallpoxCard} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness />
+              <Card
+                game={game}
+                card={smallpoxCard}
+                selectionDisabled
+                suppressContextMenu
+                suppressCardId
+                suppressSummoningSickness
+                showFullImage={shouldShowFullCardImage(smallpoxCard.definitionId)}
+                preferNativeImageRendering={shouldShowFullCardImage(smallpoxCard.definitionId)}
+              />
             </div>
             {smallpoxSelectionActive && (
               <div className="smallpox-selection-panel-inline old-panel-soft">

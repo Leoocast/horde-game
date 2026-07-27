@@ -7,6 +7,11 @@
     const embeddedData = document.getElementById("deck-data");
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
+    const cardText = window.HostfallCardText;
+
+    if (!cardText) {
+        throw new Error("No se cargó deck-card-text.js antes del estudio de cartas.");
+    }
 
     const typeSymbols = {
         criatura: "♞",
@@ -32,28 +37,12 @@
     }
 
     function formatEffectText(value) {
-        let formatted = escapeHtml(value || "");
-        formatted = formatted.replace(
-            /\{\{T\}\}/g,
-            '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>'
-        );
-        formatted = formatted.replace(
-            /\{(?:G|E|R|B)\}/g,
-            '<span class="symbol-badge symbol-energy" title="Energía">ϟ</span>'
-        );
-        formatted = formatted.replace(
-            /(\+\d+\/\+\d+|-\d+\/-\d+)/g,
-            '<strong class="effect-buff">$1</strong>'
-        );
-        formatted = formatted.replace(
-            /\b(dos|tres) Trasgos 1\/1\b/gi,
-            '<strong class="effect-token">$&</strong>'
-        );
-        formatted = formatted.replace(
-            /(Daña primero|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar)/g,
-            '<strong class="effect-keyword">$1</strong>'
-        );
-        return formatted.replace(/\r?\n/g, "<br>");
+        return cardText.formatEffectText(value, {
+            tapIconHtml:
+                '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>',
+            energyIconHtml:
+                '<span class="symbol-badge symbol-energy" title="Energía">ϟ</span>',
+        });
     }
 
     function typeSymbol(type) {

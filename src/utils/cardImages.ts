@@ -32,6 +32,11 @@ const showFullCardImageById = new Map<string, boolean>(
     ]),
   ),
 );
+const fullArtCardImageIds = new Set<string>(
+  DECK_REGISTRY.flatMap((entry) =>
+    Object.entries(entry.images.cards).flatMap(([id, image]) => image.fullArt ? [id] : []),
+  ),
+);
 const directDetailsById = new Map<string, CardRemoteDetails>([
   ...DECK_REGISTRY.flatMap((entry) =>
     Object.entries(entry.images.cards).flatMap(([id, image]) =>
@@ -40,14 +45,6 @@ const directDetailsById = new Map<string, CardRemoteDetails>([
         : [],
     ),
   ),
-  [
-    "zombie_token",
-    {
-      imageUrl: "https://cards.scryfall.io/large/back/1/3/13e4832d-8530-4b85-b738-51d0c18f28ec.jpg?1782739525",
-      oracleText: "Token Creature - Zombie\n2/2",
-      flavorText: "",
-    },
-  ],
 ]);
 const memoryCache = new Map<string, CardRemoteDetails | null>();
 const pending = new Map<string, Promise<CardRemoteDetails | null>>();
@@ -78,6 +75,10 @@ export function useCardImage(definitionId: string): string | undefined {
 
 export function shouldShowFullCardImage(definitionId: string): boolean {
   return showFullCardImageById.get(definitionId) ?? false;
+}
+
+export function usesFullArtCardImage(definitionId: string): boolean {
+  return fullArtCardImageIds.has(definitionId);
 }
 
 const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;

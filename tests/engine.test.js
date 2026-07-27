@@ -658,6 +658,14 @@ test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on en
   assert.equal(siegeGangGame.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
 });
 
+test("Siege-Gang Commander and Pashalik Mons omit their sacrifice modes", () => {
+  const siegeGang = cardFromDeck("siege_gang_commander", "horde");
+  const pashalik = cardFromDeck("pashalik_mons", "horde");
+
+  assert.deepEqual(siegeGang.activatedAbilities, []);
+  assert.deepEqual(pashalik.activatedAbilities, []);
+});
+
 test("Goblin Surprise pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
   const firstGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));

@@ -467,7 +467,10 @@ Durante Defend:
 - si no hay bloqueos, boton dice algo tipo "No defend"
 - orden de bloqueadores contra un mismo zombie:
   - debe respetar izquierda/derecha segun regla actual
-  - mostrar numeritos 1,2 solo si hay mas de un blocker
+  - cada blocker muestra su orden real (1, 2, ...) en el badge azul, incluso si es el unico
+- cada atacante de la Horda con bloqueadores asignados muestra su cantidad en un badge azul con
+  escudo anclado top-right; aplica por igual a Zombies y Goblins, y el header cutted reserva ese
+  espacio
 
 Animacion:
 - atacante y defensor se mueven un poco hacia adelante en queue
@@ -627,6 +630,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
   hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
   rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
+- Siege-Gang Commander conserva solamente su ETB de tres tokens; se elimino el modo activado de
+  sacrificar un Goblin para hacer dano. Pashalik Mons conserva solamente el Burn cuando muere otro
+  Goblin; se elimino su modo activado de sacrificar para crear tokens.
 - Goblin Chainwhirler usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
   una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
   criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
@@ -645,6 +651,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
+- Los cuatro generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
+  `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
+  de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
+  de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
+  oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
+  crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
+  usa `quita ... y crea ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
+  `tests/deckCardText.test.js`.
+- El generador de Vampires toma sus WebP de arte recortado desde
+  `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
+  `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
+  PNG de la raiz, no a los WebP de `art/`.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto
@@ -683,13 +701,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
   quedar exactamente sobre la pestana horneada en el PNG. Esa variante full replica las medidas
   198x90 del `index` sobre el ancho fuente de 976px, oculta espada/corazon y muestra solamente
-  `ataque / resistencia`, con degradado vegetal y filete dorado interior. En targeting vienen del
-  estado vivo.
-  El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
-  pero excluye los buffs; el hover conserva los stats vivos y su estado buffed. En el hover queda
-  unos pixeles elevado; preview, mano y targeting comparten la pestana vegetal del `index`, con
-  variantes legibles para dano y buff. Mano, mulligan, targeting y `CardPreview` tambien cubren el
-  coste impreso con
+  `ataque / resistencia`. La paleta se deriva del `index` del deck: mono-green conserva su
+  degradado vegetal, Zombies usa verde petroleo y Goblins rojo forja tanto en el header cutted
+  como en stats, dano y buff. En targeting vienen del estado vivo.
+  El preview fijado con click derecho muestra el PNG limpio, sin superponer stats; el hover conserva
+  los stats vivos y su estado buffed. En el hover queda unos pixeles elevado; preview, mano y
+  targeting comparten la pestana del `index` correspondiente, con variantes legibles para dano y
+  buff. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
+  desplazamiento del generador (58px desde la derecha y 136px desde abajo sobre 976px) para cubrir
+  los stats horneados encima de la banda de tipo. No inferir esa composicion por nombre.
+  Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
   `CardCostBadge`: un socket proporcional inspirado directamente en el HUD de energia, desplazado
   fuera de la esquina superior izquierda. Replica el nucleo del HUD de energia: esfera azul con
   liquido giratorio y respiracion de brillo, sin socket metalico ni arco cian exteriores. El nucleo
@@ -698,6 +719,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
   sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
   cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
+  La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
+  `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
+  Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
+  generica. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
+  composicion ni cantidades duplicadas dentro del manifest visual.
   `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
   preview lateral o modal; `xN` permanece a la derecha.
 - Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
@@ -713,9 +739,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Las keywords superpuestas sobre cartas ya no usan pills verdes brillantes ni la placa generica de
   dashboard. Full y cutted comparten el material del header: degradado vegetal oscuro, grano tenue,
   borde dorado, Lora, texto en Camel Case y la silueta redondeada diagonal de los stats. La carta
-  completa usa medidas `cqw`; la cutted queda justo debajo del header. Enemigos conservan una
-  variante borgona del mismo material y Chaos su magenta. El badge de keyword junto al preview
-  fijado comparte este mismo material, tipografia y capitalizacion.
+  completa usa medidas `cqw`; la cutted queda justo debajo del header. Zombies y Goblins toman el
+  material verde petroleo o rojo forja de sus respectivos generadores; otros enemigos conservan
+  la variante borgona generica y Chaos su magenta. El badge de keyword junto al preview fijado
+  comparte este mismo material, tipografia y capitalizacion.
   Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
@@ -739,10 +766,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Tap: Add G` con los
   mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
   azul para energia. No debe volver a los chips genericos de `renderCardText`.
-- Una criatura ya asignada como blocker muestra su orden real en un badge cuadrado azul arriba a la
-  izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag compuesto
-  `Blocking + numero`, usa el lenguaje cromatico de defensa y reserva espacio en el titulo para no
-  tapar nombres largos.
+- Una criatura ya asignada como blocker muestra su orden real en el mismo badge azul con escudo,
+  arriba a la izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag
+  compuesto `Blocking + numero` y puede superponerse al nombre: el titulo no reserva espacio.
 
 ## Antes de tocar algo
 

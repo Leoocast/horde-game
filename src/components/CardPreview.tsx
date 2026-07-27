@@ -5,7 +5,7 @@ import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, loca
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
@@ -162,15 +162,14 @@ export function CardPreview() {
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
   const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
   const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
-  const focusedStats = stats.buffed
-    ? {
-        text: `${card.basePower}/${Math.max(0, card.baseToughness - card.damageMarked)}`,
-        power: card.basePower,
-        toughness: Math.max(0, card.baseToughness - card.damageMarked),
-        damaged: card.damageMarked > 0,
-        buffed: false,
-      }
-    : { ...stats, buffed: false };
+  const hordeTheme = card.controller === "horde"
+    ? card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie")
+      ? "zombie"
+      : card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin")
+        ? "goblin"
+        : undefined
+    : undefined;
+  const usesFullArtLayout = usesFullArtCardImage(card.definitionId);
   const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
@@ -189,15 +188,16 @@ export function CardPreview() {
             className={[
               "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
               showFullCardPresentation ? "card-preview-full-card-frame" : "",
+              hordeTheme ? `card-theme-${hordeTheme}` : "",
+              usesFullArtLayout ? "card-layout-full-art" : "",
             ].join(" ")}
           >
             {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-            {showFullCardPresentation && <CardCostBadge card={card} />}
-            {showFullCardStats && <CardStatsBadge stats={focusedStats} preferSingleSword />}
+            {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
-              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} />
+              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} hordeTheme={hordeTheme} />
             </div>
           )}
         </aside>
@@ -216,11 +216,13 @@ export function CardPreview() {
       className={[
         "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
         showFullCardPresentation ? "card-preview-full-card-frame" : "",
+        hordeTheme ? `card-theme-${hordeTheme}` : "",
+        usesFullArtLayout ? "card-layout-full-art" : "",
       ].join(" ")}
       style={hoverStyle}
     >
       {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-      {showFullCardPresentation && <CardCostBadge card={card} />}
+      {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
       {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );
@@ -335,7 +337,15 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
   );
 }
 
-function KeywordExplanations({ keywords, chaos = false }: { keywords: string; chaos?: boolean }) {
+function KeywordExplanations({
+  keywords,
+  chaos = false,
+  hordeTheme,
+}: {
+  keywords: string;
+  chaos?: boolean;
+  hordeTheme?: "zombie" | "goblin";
+}) {
   const language = useLanguageStore((state) => state.language);
   const entries = keywords
     .split(",")
@@ -345,7 +355,7 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
   if (entries.length === 0) return null;
 
   return (
-    <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : ""].join(" ")}>
+    <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", hordeTheme ? `is-${hordeTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
           <div className="keyword-pill card-preview-keyword-badge">{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}</div>

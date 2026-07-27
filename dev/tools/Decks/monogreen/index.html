@@ -538,6 +538,27 @@
             font-weight: 700;
         }
 
+        .effect-paragraph {
+            display: block;
+        }
+
+        .effect-paragraph + .effect-paragraph {
+            margin-top: 0.36em;
+        }
+
+        .effect-keyword,
+        .effect-counter,
+        .effect-token,
+        .effect-stat {
+            color: #14532d;
+            font-weight: 700;
+        }
+
+        .tcg-effect strong.effect-danger {
+            color: #b91c1c !important;
+            font-weight: 800;
+        }
+
         /* ICONOS DE EFECTO (Tapar / Energía) */
         .symbol-badge {
             display: inline-flex;
@@ -824,6 +845,7 @@
         <!-- Renderizado dinámico vía JavaScript -->
     </div>
 
+    <script src="../deck-card-text.js"></script>
     <script>
         // Datos del Deck Mono Green extraídos directamente de mono-green.json
         const deckData = [
@@ -846,7 +868,7 @@
                 "costo": 1,
                 "atk": 0,
                 "def": 2,
-                "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida.",
+                "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida.",
                 "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
             },
             {
@@ -890,7 +912,7 @@
                 "costo": 4,
                 "atk": 4,
                 "def": 4,
-                "desc": "Sin efecto adicional.",
+                "desc": "Alcance.",
                 "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
             },
             {
@@ -901,7 +923,7 @@
                 "costo": 4,
                 "atk": 4,
                 "def": 5,
-                "desc": "Sin efecto adicional.",
+                "desc": "Alcance.",
                 "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
             },
             {
@@ -912,7 +934,7 @@
                 "costo": 6,
                 "atk": 6,
                 "def": 5,
-                "desc": "Sin efecto adicional.",
+                "desc": "Alcance.",
                 "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
             },
             {
@@ -974,22 +996,12 @@
 
         // Función para formatear el texto de descripción y reemplazar los símbolos {{T}}, {G}, {E} por íconos
         function formatEffectText(text) {
-            if (!text) return "";
-            let formatted = text;
-
-            // Reemplazo de {{T}} por el ícono de Exhaust / Agotar (Reloj de Arena)
             const tapIcon = `<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half"></i></span>`;
-            formatted = formatted.replace(/\{\{T\}\}/g, tapIcon);
-
-            // Reemplazo de {G} y {E} por el ícono de Energía (Rayo de Energía)
             const energyIcon = `<span class="symbol-badge symbol-energy" title="Energía"><i class="fa-solid fa-bolt-lightning"></i></span>`;
-            formatted = formatted.replace(/\{G\}/g, energyIcon);
-            formatted = formatted.replace(/\{E\}/g, energyIcon);
-
-            // Resaltado de palabras clave como +1/+1 o +3/+3
-            formatted = formatted.replace(/(\+\d+\/\+\d+)/g, '<strong>$1</strong>');
-
-            return formatted;
+            return window.HostfallCardText.formatEffectText(text, {
+                tapIconHtml: tapIcon,
+                energyIconHtml: energyIcon,
+            });
         }
 
         // Determinar ícono de tipo
