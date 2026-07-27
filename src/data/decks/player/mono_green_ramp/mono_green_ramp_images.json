@@ -1,76 +1,75 @@
 {
-  "schemaVersion": "0.2.0",
-  "provider": "scryfall",
+  "schemaVersion": "1.0.0",
+  "provider": "local",
   "defaults": {
-    "imageSize": "normal",
-    "face": "front",
-    "cacheKey": "deck-card-images:v1"
+    "cacheKey": "mono-green-ramp-local-v1",
+    "showFullCardImage": true
   },
   "cards": {
     "llanowar_elves": {
-      "source": "scryfallNamed",
-      "exact": "Llanowar Elves",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/llanowar_elves.png"
     },
     "sunshower_druid": {
-      "source": "scryfallNamed",
-      "exact": "Sunshower Druid",
-      "set": "blb"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/sunshower_druid.png"
     },
     "druid_of_the_cowl": {
-      "source": "scryfallNamed",
-      "exact": "Druid of the Cowl",
-      "set": "m19"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/druid_of_the_cowl.png"
     },
     "ichorspit_basilisk": {
-      "source": "scryfallNamed",
-      "exact": "Ichorspit Basilisk",
-      "set": "one"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/ichorspit_basilisk.png"
     },
     "beast_kin_ranger": {
-      "source": "scryfallNamed",
-      "exact": "Beast-Kin Ranger",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/beast_kin_ranger.png"
     },
     "magnigoth_sentry": {
-      "source": "scryfallNamed",
-      "exact": "Magnigoth Sentry",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/magnigoth_sentry.png"
     },
     "colossadactyl": {
-      "source": "scryfallNamed",
-      "exact": "Colossadactyl",
-      "set": "lci"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/colossadactyl.png"
     },
     "timberland_ancient": {
-      "source": "scryfallNamed",
-      "exact": "Timberland Ancient",
-      "set": "mom"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/timberland_ancient.png"
     },
     "cosmic_hunger": {
-      "source": "scryfallNamed",
-      "exact": "Cosmic Hunger",
-      "set": "mom"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/cosmic_hunger.png"
     },
     "ruthless_predation": {
-      "source": "scryfallNamed",
-      "exact": "Ruthless Predation",
-      "set": "one"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/ruthless_predation.png"
     },
     "broken_wings": {
-      "source": "scryfallNamed",
-      "exact": "Broken Wings",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/broken_wings.png"
     },
     "giant_growth": {
-      "source": "scryfallNamed",
-      "exact": "Giant Growth",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/giant_growth.png"
     },
     "forest": {
-      "source": "scryfallNamed",
-      "exact": "Forest",
-      "set": "fdn"
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/mono_green_ramp/forest.png"
     }
   }
 }

@@ -34,8 +34,8 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
       .filter(Boolean),
   );
   const baseKeywords = new Set([
-    "FLYING", "REACH", "VIGILANCE", "MENACE", "DEATHTOUCH", "TRAMPLE", "HASTE", "HEXPROOF", "SKULK",
-    "VOLAR", "ALCANCE", "VIGILANCIA", "AMENAZA", "TOQUE MORTAL", "ARROLLAR", "PRISA", "ANTIMALEFICIO", "ESCURRIDIZO",
+    "FLYING", "REACH", "VIGILANCE", "MENACE", "DEATHTOUCH", "TRAMPLE", "HASTE", "HEXPROOF", "SKULK", "LIFESTEAL",
+    "VOLAR", "ALCANCE", "VIGILANCIA", "AMENAZA", "TOQUE MORTAL", "ARROLLAR", "PRISA", "ANTIMALEFICIO", "ESCURRIDIZO", "ROBO DE VIDA",
     "TOXICO 1", "TÓXICO 1",
   ]);
   const blocks = text

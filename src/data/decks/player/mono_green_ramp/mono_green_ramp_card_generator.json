@@ -1,0 +1,145 @@
+[
+  {
+    "id": "llanowar_elves",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd.jpg?1783909057",
+    "nombre": "Elfos de Llanowar",
+    "tipo": "Criatura — Elfo Druida",
+    "costo": 1,
+    "atk": 1,
+    "def": 1,
+    "desc": "{{T}}: Agrega {G}.",
+    "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
+  },
+  {
+    "id": "sunshower_druid",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/7/7740abc5-54e1-478d-966e-0fa64e727995.jpg?1783910802",
+    "nombre": "Druida de la lluvia solar",
+    "tipo": "Criatura — Rana Druida",
+    "costo": 1,
+    "atk": 0,
+    "def": 2,
+    "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida.",
+    "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
+  },
+  {
+    "id": "druid_of_the_cowl",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/76ceff1d-9e83-41cc-b54b-8bf90d985da9.jpg?1783934537",
+    "nombre": "Druida de la capucha",
+    "tipo": "Criatura — Elfo Druida",
+    "costo": 2,
+    "atk": 1,
+    "def": 3,
+    "desc": "{{T}}: Agrega {G}.",
+    "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
+  },
+  {
+    "id": "ichorspit_basilisk",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/0955b64f-6721-4fa6-b161-cae404cb5b9f.jpg?1783918014",
+    "nombre": "Basilisco escupeicor",
+    "tipo": "Criatura — Pirexiano Basilisco",
+    "costo": 3,
+    "atk": 1,
+    "def": 3,
+    "desc": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno.",
+    "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
+  },
+  {
+    "id": "beast_kin_ranger",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/0102e0be-5783-4825-9489-713b1b1df0b2.jpg?1783909098",
+    "nombre": "Guardabosque bestial",
+    "tipo": "Criatura — Elfo Explorador",
+    "costo": 3,
+    "atk": 3,
+    "def": 3,
+    "desc": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno.",
+    "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
+  },
+  {
+    "id": "magnigoth_sentry",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/5624e610-c4c0-4103-a32b-0f1264030a7a.jpg?1783908947",
+    "nombre": "Centinela mágnigoth",
+    "tipo": "Criatura — Pueblo-arbóreo",
+    "costo": 4,
+    "atk": 4,
+    "def": 4,
+    "desc": "Sin efecto adicional.",
+    "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
+  },
+  {
+    "id": "colossadactyl",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/7/8702e776-be2c-48a9-9bc5-bb8ea514333b.jpg?1783913750",
+    "nombre": "Colosadáctilo",
+    "tipo": "Criatura — Dinosaurio",
+    "costo": 4,
+    "atk": 4,
+    "def": 5,
+    "desc": "Sin efecto adicional.",
+    "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
+  },
+  {
+    "id": "timberland_ancient",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/f/5f73cd60-cd89-4c7a-85a6-e0ae34ca101b.jpg?1783916960",
+    "nombre": "Anciano forestal",
+    "tipo": "Criatura — Pueblo-arbóreo",
+    "costo": 6,
+    "atk": 6,
+    "def": 5,
+    "desc": "Sin efecto adicional.",
+    "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
+  },
+  {
+    "id": "cosmic_hunger",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b8eef541-6851-4312-ad2b-74f45c7ede6c.jpg?1783916972",
+    "nombre": "Hambre cósmica",
+    "tipo": "Instantáneo",
+    "costo": 2,
+    "atk": null,
+    "def": null,
+    "desc": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura.",
+    "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
+  },
+  {
+    "id": "ruthless_predation",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/2/123f0c76-1fde-439e-a76d-eccf96f8d941.jpg?1783918010",
+    "nombre": "Depredación despiadada",
+    "tipo": "Conjuro",
+    "costo": 2,
+    "atk": null,
+    "def": null,
+    "desc": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
+    "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
+  },
+  {
+    "id": "broken_wings",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61f9cbeb-cc9c-4562-be65-8a77053faefe.jpg?1783909061",
+    "nombre": "Alas rotas",
+    "tipo": "Instantáneo",
+    "costo": 3,
+    "atk": null,
+    "def": null,
+    "desc": "Destruye un artefacto, un encantamiento o una criatura con Vuelo.",
+    "lore": "Todo lo que domina el cielo termina por conocer la tierra."
+  },
+  {
+    "id": "giant_growth",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd0bf74e-14c1-4428-88d8-2181a080b5d0.jpg?1783909057",
+    "nombre": "Crecimiento gigante",
+    "tipo": "Instantáneo",
+    "costo": 1,
+    "atk": null,
+    "def": null,
+    "desc": "La criatura objetivo obtiene +3/+3 hasta el final del turno.",
+    "lore": "La naturaleza no pide permiso para superar sus límites."
+  },
+  {
+    "id": "forest",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d232fcc2-12f6-401a-b1aa-ddff11cb9378.jpg?1783909039",
+    "nombre": "Bosque",
+    "tipo": "Tierra básica — Bosque",
+    "costo": 0,
+    "atk": null,
+    "def": null,
+    "desc": "{{T}}: Agrega {G}.",
+    "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
+  }
+]

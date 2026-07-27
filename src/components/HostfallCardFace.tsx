@@ -5,6 +5,7 @@ export type HostfallCardFaceProps = {
   name: string;
   imageUrl?: string;
   manaValue?: number;
+  typeLine?: string;
   cardTypes?: string[];
   subtypes?: string[];
   rulesText?: string;
@@ -21,7 +22,8 @@ export type HostfallCardFaceProps = {
 export function HostfallCardFace({
   name,
   imageUrl,
-  manaValue = 0,
+  manaValue,
+  typeLine: authoredTypeLine,
   cardTypes = [],
   subtypes = [],
   rulesText = "",
@@ -31,11 +33,13 @@ export function HostfallCardFace({
   cutted = false,
   damaged = false,
   buffed = false,
-  credit = "HOSTFALL — SCRYFALL",
+  credit = "HOSTFALL — ORIGINAL CARD",
   className = "",
 }: HostfallCardFaceProps) {
-  const typeLine = formatTypeLine(cardTypes, subtypes);
+  const typeLine = authoredTypeLine ?? formatTypeLine(cardTypes, subtypes);
   const hasStats = typeof power === "number" && typeof toughness === "number";
+  const isEnergy = cardTypes.includes("Energy") || cardTypes.includes("Land");
+  const hasCost = typeof manaValue === "number" && !isEnergy;
   const textDensity = rulesText.length > 320 ? "is-text-very-dense" : rulesText.length > 210 ? "is-text-dense" : "";
 
   if (cutted) {
@@ -64,12 +68,12 @@ export function HostfallCardFace({
   }
 
   return (
-    <div className={["hostfall-standard hostfall-light", textDensity, damaged ? "is-damaged" : "", buffed ? "is-buffed" : "", className].filter(Boolean).join(" ")} role="img" aria-label={name}>
+    <div className={["hostfall-standard hostfall-light", isEnergy ? "is-energy" : "", textDensity, damaged ? "is-damaged" : "", buffed ? "is-buffed" : "", className].filter(Boolean).join(" ")} role="img" aria-label={name}>
       <div className="hostfall-standard-frame" aria-hidden="true" />
       <div className="hostfall-standard-inner">
         <header className="hostfall-standard-head">
           <div className="hostfall-standard-title">{name}</div>
-          <div className="hostfall-standard-cost" aria-label={`Mana value ${manaValue}`}><span>{manaValue}</span></div>
+          {hasCost && <div className="hostfall-standard-cost" aria-label={`Energy cost ${manaValue}`}><span>{manaValue}</span></div>}
         </header>
 
         <div className="hostfall-standard-art">

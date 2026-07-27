@@ -1,5 +1,6 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
@@ -7,6 +8,7 @@ import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinu
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
@@ -16,6 +18,7 @@ const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
+const HAND_HOVER_SCALE = 1.3 * (UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? 1.08 : 1);
 const handCardMotion: Variants = {
   initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
   animate: (custom: { index: number; stagger: boolean }) => ({
@@ -108,13 +111,19 @@ export function Hand({ game }: { game: GameState }) {
       // the hand overlap calculated from an in-between animation frame.
       // Measuring the slot (not the inner .hand-card) also keeps this stable while
       // a card grows in real width/height on hover, since the slot never resizes.
-      const cardWidth = firstSlot.offsetWidth;
+      const cardWidth =
+        Number.parseFloat(window.getComputedStyle(firstSlot).width) ||
+        firstSlot.offsetWidth;
       const gap = Number.parseFloat(window.getComputedStyle(observedCards).columnGap) || 0;
       const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
       const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
       const baseOverlapMargin = -(cardWidth * HAND_BASE_OVERLAP_RATIO + gap);
       const minimumVisibleStrip = 28;
-      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), Math.min(baseOverlapMargin, requiredMargin)));
+      const desiredMargin = Math.max(
+        -(cardWidth - minimumVisibleStrip),
+        Math.min(baseOverlapMargin, requiredMargin),
+      );
+      setHandStackMargin(desiredMargin);
     }
 
     function scheduleMeasure() {
@@ -147,7 +156,8 @@ export function Hand({ game }: { game: GameState }) {
     // the card's true rendered size, including the hover/held grow-in-place.
     const el = innerCardRefs.current.get(cardId);
     if (!el) return;
-    const rect = el.getBoundingClientRect();
+    const visualCard = el.querySelector<HTMLElement>(".hand-card-face-scale") ?? el;
+    const rect = visualCard.getBoundingClientRect();
     const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     dragOriginCenters.current.set(cardId, center);
     dragStartPointers.current.set(cardId, { x: pointerX, y: pointerY });
@@ -287,8 +297,14 @@ export function Hand({ game }: { game: GameState }) {
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
             ref={handCardsRef}
-            className="player-hand-cards flex items-end justify-center overflow-visible"
-            style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}
+            className={[
+              "player-hand-cards flex items-end justify-center overflow-visible",
+              UI_FEATURE_FLAGS.useLargerPlayerHandCards ? "player-hand-cards-larger" : "",
+            ].join(" ")}
+            style={{
+              "--hand-count": Math.max(handSize, 1),
+              "--hand-stack-margin": `${handStackMargin}px`,
+            } as React.CSSProperties}
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
           >
@@ -301,13 +317,23 @@ export function Hand({ game }: { game: GameState }) {
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
-            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable || energyRecyclable);
+            const cardAvailable =
+              !tutorialAwaitingContinue &&
+              !handLimitDiscardActive &&
+              !smallpoxSelectionActive &&
+              tutorialHandTargetId === null &&
+              (playable || energyRecyclable);
+            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : cardAvailable);
             const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
             const isHovered = hoveredHandId === card.instanceId;
             const isHeld = isHovered || draggingCardId === card.instanceId;
+            const showFullImage = shouldShowFullCardImage(card.definitionId);
+            const useNativeHdRendering =
+              showFullImage &&
+              UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
             const { x: dragX, y: dragY } = getDragMotionValues(card.instanceId);
             return (
               <motion.div
@@ -356,7 +382,8 @@ export function Hand({ game }: { game: GameState }) {
                   }}
                   className={[
                     "hand-card",
-                    isHeld ? "hand-card-hovered" : "",
+                    useNativeHdRendering ? "hand-card-native-hd" : "",
+                    cardAvailable && draggingCardId !== card.instanceId ? "hand-card-available" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     energyRecycleAnimation?.card.instanceId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
@@ -373,43 +400,56 @@ export function Hand({ game }: { game: GameState }) {
                     x: "-50%",
                     y: isHeld ? -86 : 48 + fanDip,
                     rotate: isHeld ? 0 : fanAngle,
+                    // Keep the face and its cqw overlays on one composited layer. Changing the
+                    // real box size makes the cost and keyword positions reflow by subpixels.
+                    scale: isHeld ? HAND_HOVER_SCALE : 1,
                     transition: isHeld
                       ? { duration: 0.18, ease: [0.16, 1, 0.3, 1] }
                       : { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
                 >
-                  <Card
-                    game={game}
-                    card={card}
-                    selected={selectedHandId === card.instanceId}
-                    dragging={draggingCardId === card.instanceId}
-                    actionable={cardActionable}
-                    suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
-                    suppressHoverOverlay
-                    darkenOnHover={false}
-                    highRes={isHeld}
-                    sharpImageOverlay
-                    onSelect={() => {
-                      if (handLimitDiscardActive) {
-                        selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
-                        return;
-                      }
-                      if (smallpoxSelectionActive) {
-                        if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
-                        return;
-                      }
-                      selectHand(card.instanceId);
-                    }}
-                    onLeave={() => {
-                      if (selectedHandId === card.instanceId) selectHand(undefined);
-                    }}
-                  />
-                  {cardActionable && draggingCardId !== card.instanceId && (
-                    <span
-                      className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}
-                      aria-hidden="true"
+                  <div className="hand-card-face-scale">
+                    <Card
+                      game={game}
+                      card={card}
+                      selected={selectedHandId === card.instanceId}
+                      dragging={draggingCardId === card.instanceId}
+                      actionable={cardActionable}
+                      suppressActionableChrome={cardAvailable}
+                      suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
+                      suppressHoverOverlay
+                      darkenOnHover={false}
+                      highRes={isHeld}
+                      sharpImageOverlay={!useNativeHdRendering}
+                      showFullImage={showFullImage}
+                      showCostBadge={showFullImage}
+                      clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
+                      preferNativeImageRendering={useNativeHdRendering}
+                      hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
+                      onSelect={() => {
+                        if (handLimitDiscardActive) {
+                          selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
+                          return;
+                        }
+                        if (smallpoxSelectionActive) {
+                          if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+                          return;
+                        }
+                        selectHand(card.instanceId);
+                      }}
+                      onLeave={() => {
+                        if (selectedHandId === card.instanceId) selectHand(undefined);
+                      }}
                     />
-                  )}
+                  </div>
+                  {UI_FEATURE_FLAGS.showPlayerHandActionableGems &&
+                    cardActionable &&
+                    draggingCardId !== card.instanceId && (
+                      <span
+                        className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}
+                        aria-hidden="true"
+                      />
+                    )}
                 </motion.div>
               </motion.div>
             );

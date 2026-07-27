@@ -24,7 +24,22 @@ export type CardRemoteDetails = {
 const lookupById = new Map<string, LookupEntry>(
   DECK_REGISTRY.flatMap((entry) => newDeckImageLookups(entry.images)).map((entry) => [entry.id, entry]),
 );
+const showFullCardImageById = new Map<string, boolean>(
+  DECK_REGISTRY.flatMap((entry) =>
+    Object.entries(entry.images.cards).map(([id, image]) => [
+      id,
+      image.showFullCardImage ?? entry.images.defaults?.showFullCardImage ?? false,
+    ]),
+  ),
+);
 const directDetailsById = new Map<string, CardRemoteDetails>([
+  ...DECK_REGISTRY.flatMap((entry) =>
+    Object.entries(entry.images.cards).flatMap(([id, image]) =>
+      image.source === "local" && image.imageUrl
+        ? [[id, { imageUrl: image.imageUrl }] as [string, CardRemoteDetails]]
+        : [],
+    ),
+  ),
   [
     "zombie_token",
     {
@@ -59,6 +74,10 @@ export function useCardDetails(definitionId: string): CardRemoteDetails {
 
 export function useCardImage(definitionId: string): string | undefined {
   return useCardDetails(definitionId).imageUrl;
+}
+
+export function shouldShowFullCardImage(definitionId: string): boolean {
+  return showFullCardImageById.get(definitionId) ?? false;
 }
 
 const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;
@@ -182,16 +201,17 @@ function cacheKey(cacheId: string): string {
 }
 
 function newDeckImageLookups(manifest: DeckImageManifest): LookupEntry[] {
-  return Object.entries(manifest.cards).map(([id, entry]) => {
+  return Object.entries(manifest.cards).flatMap(([id, entry]) => {
+    if (entry.source === "local") return [];
     const exact = entry.exact ?? id;
     const query = entry.query ?? (entry.set ? `!"${exact}" set:${entry.set}` : `!"${exact}"`);
-    return {
+    return [{
       id,
       name: exact,
       // Manifests may pin the exact lookup URL (e.g. token searches); otherwise build one.
       lookup_url: entry.lookupUrl ?? `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`,
       image_path: entry.imagePath ?? "data[0].image_uris.normal",
-    };
+    }];
   });
 }
 

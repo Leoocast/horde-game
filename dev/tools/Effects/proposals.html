@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCG Effects Proposals</title>
+    <style>
+        :root {
+            --bg-color: #0b0b10;
+            --card-w: 160px;
+            --card-h: 230px;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-color);
+            color: white;
+            font-family: 'Inter', system-ui, sans-serif;
+            padding: 40px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 50px;
+            font-size: 0.9rem;
+        }
+
+        h2 {
+            margin-top: 60px;
+            margin-bottom: 30px;
+            color: #aaa;
+            font-size: 1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            font-weight: 400;
+            max-width: 1300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 20px;
+            max-width: 1300px;
+            margin: 0 auto;
+            justify-items: center;
+        }
+
+        .card-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+            pointer-events: none;
+        }
+
+        .card-container {
+            width: var(--card-w);
+            height: var(--card-h);
+            position: relative;
+            border-radius: 10px;
+            background: #14141d;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Base illustration placeholder */
+        .card-art {
+            position: absolute;
+            inset: 8px;
+            background: linear-gradient(145deg, #222230, #181822);
+            border-radius: 6px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .effect-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* =========================================
+           ROW 1: HEALING EFFECTS
+           ========================================= */
+
+        /* 1. Holy Aura */
+        .heal-holy {
+            background: radial-gradient(circle at center, rgba(255, 230, 120, 0.8) 0%, transparent 20%);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        .card-container.active .heal-holy {
+            animation: holy-burst 1s ease-out forwards;
+        }
+
+        @keyframes holy-burst {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 2. Nature Leaves */
+        .heal-leaves i {
+            position: absolute;
+            bottom: -20px;
+            left: var(--x);
+            width: 12px;
+            height: 12px;
+            background: #4caf50;
+            border-radius: 2px 10px;
+            opacity: 0;
+            box-shadow: 0 0 10px #4caf50;
+        }
+
+        .card-container.active .heal-leaves i {
+            animation: leaf-float 1.2s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes leaf-float {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-150px) rotate(180deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* 3. Mend Crosses */
+        .heal-crosses i {
+            position: absolute;
+            bottom: var(--y);
+            left: var(--x);
+            color: #21e665;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: sans-serif;
+            text-shadow: 0 0 8px #21e665;
+            opacity: 0;
+        }
+
+        .card-container.active .heal-crosses i {
+            animation: cross-float 1.2s ease-out forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes cross-float {
+            0% {
+                transform: translateY(20px) scale(0.5);
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-80px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* 4. Water Restor */
+        .heal-water {
+            background: linear-gradient(to top, rgba(0, 195, 255, 0.6) 0%, transparent 100%);
+            transform-origin: bottom;
+            transform: scaleY(0);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        .card-container.active .heal-water {
+            animation: water-rise 1s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes water-rise {
+            0% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+
+            40% {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scaleY(1) translateY(-20px);
+                opacity: 0;
+            }
+        }
+
+        /* 5. Rejuvenation (Border Trace) */
+        .heal-rejuv {
+            border-radius: 10px;
+            box-shadow: inset 0 0 0 0 rgba(76, 255, 114, 0);
+        }
+
+        .card-container.active .heal-rejuv {
+            animation: rejuv-pulse 1s ease-out forwards;
+        }
+
+        @keyframes rejuv-pulse {
+            0% {
+                box-shadow: inset 0 0 0 2px rgba(76, 255, 114, 0);
+            }
+
+            30% {
+                box-shadow: inset 0 0 20px 4px rgba(76, 255, 114, 0.8);
+            }
+
+            100% {
+                box-shadow: inset 0 0 40px 0px rgba(76, 255, 114, 0);
+            }
+        }
+
+        /* 6. Angelic Light */
+        .heal-angelic {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 240, 180, 0.4) 50%, transparent 100%);
+            transform: translateY(-100%);
+            opacity: 0;
+            mix-blend-mode: overlay;
+        }
+
+        .card-container.active .heal-angelic {
+            animation: angelic-fall 1s ease-out forwards;
+        }
+
+        @keyframes angelic-fall {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                transform: translateY(0%);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(20%);
+                opacity: 0;
+            }
+        }
+
+        /* 7. Life Bubbles */
+        .heal-bubbles i {
+            position: absolute;
+            bottom: -10px;
+            left: var(--x);
+            width: var(--s);
+            height: var(--s);
+            border: 2px solid rgba(100, 255, 150, 0.8);
+            border-radius: 50%;
+            background: rgba(100, 255, 150, 0.2);
+            opacity: 0;
+            box-shadow: 0 0 8px rgba(100, 255, 150, 0.6);
+        }
+
+        .card-container.active .heal-bubbles i {
+            animation: bubble-float 1.2s ease-in forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes bubble-float {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-180px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* =========================================
+           ROW 2: DAMAGE BUFF EFFECTS
+           ========================================= */
+
+        /* 1. Rage Aura */
+        .buff-rage {
+            background: radial-gradient(circle, rgba(255, 50, 0, 0.8) 0%, transparent 60%);
+            opacity: 0;
+            mix-blend-mode: screen;
+            filter: contrast(2) blur(4px);
+        }
+
+        .card-container.active .buff-rage {
+            animation: rage-burst 0.8s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+        }
+
+        @keyframes rage-burst {
+            0% {
+                transform: scale(0.2);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* 2. Power Up Arrows */
+        .buff-arrows i {
+            position: absolute;
+            bottom: var(--y);
+            left: var(--x);
+            width: 20px;
+            height: 20px;
+            border-top: 4px solid #ff7700;
+            border-left: 4px solid #ff7700;
+            transform: rotate(45deg) scale(0.5);
+            opacity: 0;
+            box-shadow: -2px -2px 8px #ff4400;
+        }
+
+        .card-container.active .buff-arrows i {
+            animation: arrow-shoot 0.6s ease-in forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes arrow-shoot {
+            0% {
+                transform: translateY(0) rotate(45deg) scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-120px) rotate(45deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* 3. Enrage Veins (Border) */
+        .buff-veins {
+            border: 2px solid transparent;
+            border-radius: 10px;
+        }
+
+        .card-container.active .buff-veins {
+            animation: veins-pulse 0.8s ease-out forwards;
+        }
+
+        @keyframes veins-pulse {
+            0% {
+                box-shadow: inset 0 0 0 0 rgba(255, 0, 50, 0), 0 0 0 0 rgba(255, 0, 50, 0);
+                border-color: transparent;
+            }
+
+            20% {
+                box-shadow: inset 0 0 15px 5px rgba(255, 0, 50, 0.9), 0 0 20px 5px rgba(255, 0, 50, 0.8);
+                border-color: #ff0032;
+            }
+
+            100% {
+                box-shadow: inset 0 0 40px 0 rgba(255, 0, 50, 0), 0 0 40px 0 rgba(255, 0, 50, 0);
+                border-color: transparent;
+            }
+        }
+
+        /* 4. Fury Shake */
+        .card-container.active.shake-card {
+            animation: fury-shake 0.5s ease-in-out;
+        }
+
+        .buff-fury {
+            background: linear-gradient(45deg, rgba(255, 0, 0, 0.5), rgba(255, 100, 0, 0.5));
+            opacity: 0;
+            mix-blend-mode: overlay;
+        }
+
+        .card-container.active .buff-fury {
+            animation: fury-flash 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fury-flash {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+                filter: brightness(2);
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fury-shake {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            20% {
+                transform: translate(-3px, 3px) rotate(-1deg);
+            }
+
+            40% {
+                transform: translate(3px, -3px) rotate(1deg);
+            }
+
+            60% {
+                transform: translate(-3px, -3px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(3px, 3px) rotate(1deg);
+            }
+        }
+
+        /* 5. Sharp Spikes */
+        .buff-spikes i {
+            position: absolute;
+            width: 4px;
+            height: 40px;
+            background: #ff0022;
+            box-shadow: 0 0 10px #ff0022;
+            opacity: 0;
+        }
+
+        .card-container.active .buff-spikes i {
+            animation: spike-shoot 0.6s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+        }
+
+        @keyframes spike-shoot {
+            0% {
+                transform: scaleY(0.1) translateY(var(--start));
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scaleY(1.5) translateY(var(--end));
+                opacity: 0;
+            }
+        }
+
+        /* 6. Focus Glow */
+        .buff-focus {
+            border-radius: 50%;
+            border: 4px solid #ff0055;
+            box-shadow: 0 0 20px #ff0055, inset 0 0 20px #ff0055;
+            opacity: 0;
+        }
+
+        .card-container.active .buff-focus {
+            animation: focus-collapse 0.7s ease-in forwards;
+        }
+
+        @keyframes focus-collapse {
+            0% {
+                transform: scale(2);
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            90% {
+                transform: scale(0.1);
+                opacity: 1;
+                border-width: 20px;
+            }
+
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* 7. Bloodlust */
+        .buff-bloodlust i {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #d90000;
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 8px #ff0000;
+        }
+
+        .card-container.active .buff-bloodlust i {
+            animation: blood-burst 0.7s cubic-bezier(0.1, 1, 0.3, 1) forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes blood-burst {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* =========================================
+           ROW 3: BURN LOOPS (INFINITE)
+           ========================================= */
+
+        /* 1. Smoldering Embers */
+        .burn-embers i {
+            position: absolute;
+            bottom: -10px;
+            left: var(--x);
+            width: var(--s);
+            height: var(--s);
+            background: #ff5500;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff2200, 0 0 5px #ffaa00;
+            animation: ember-float var(--dur) linear infinite;
+            animation-delay: var(--d);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes ember-float {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-240px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* 2. Bottom Flames */
+        .burn-bottom {
+            background: radial-gradient(ellipse at bottom, rgba(255, 100, 0, 0.8) 0%, rgba(255, 0, 0, 0.4) 40%, transparent 70%);
+            transform-origin: bottom;
+            animation: flame-flicker 0.4s ease-in-out infinite alternate;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes flame-flicker {
+            0% {
+                transform: scaleY(0.9);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scaleY(1.1);
+                opacity: 1;
+                filter: brightness(1.2);
+            }
+        }
+
+        /* 3. Scorched Borders */
+        .burn-borders {
+            border-radius: 10px;
+            box-shadow: inset 0 0 15px 2px #ff2200, inset 0 0 30px #880000;
+            animation: scorch-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes scorch-pulse {
+            0% {
+                box-shadow: inset 0 0 10px 2px #ff2200, inset 0 0 20px #880000;
+            }
+
+            100% {
+                box-shadow: inset 0 0 25px 4px #ff5500, inset 0 0 45px #ff0000;
+            }
+        }
+
+        /* 4. Magma Core */
+        .burn-magma {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 60, 0, 0.5) 0%, transparent 60%);
+            animation: magma-shift 3s ease-in-out infinite alternate;
+            mix-blend-mode: overlay;
+        }
+
+        @keyframes magma-shift {
+            0% {
+                transform: scale(1) translate(-5px, 5px);
+            }
+
+            50% {
+                transform: scale(1.2) translate(5px, -5px);
+                background: radial-gradient(circle at 50% 50%, rgba(255, 80, 0, 0.7) 0%, transparent 70%);
+            }
+
+            100% {
+                transform: scale(0.9) translate(-5px, -5px);
+            }
+        }
+
+        /* 5. Ash & Smoke */
+        .burn-smoke {
+            background: linear-gradient(to top, rgba(20, 20, 20, 0.8) 0%, rgba(50, 50, 50, 0.2) 60%, transparent 100%);
+            animation: smoke-rise 2s linear infinite alternate;
+        }
+
+        .burn-smoke i {
+            position: absolute;
+            background: #222;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            left: var(--x);
+            bottom: -5px;
+            animation: ash-fall var(--dur) linear infinite;
+            animation-delay: var(--d);
+        }
+
+        @keyframes smoke-rise {
+            0% {
+                opacity: 0.6;
+                transform: scaleY(0.9);
+            }
+
+            100% {
+                opacity: 0.9;
+                transform: scaleY(1.1);
+            }
+        }
+
+        @keyframes ash-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-200px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 6. Blue Fire */
+        .burn-blue {
+            background: radial-gradient(ellipse at bottom, rgba(0, 150, 255, 0.8) 0%, rgba(0, 50, 255, 0.4) 40%, transparent 70%);
+            transform-origin: bottom;
+            animation: blue-flicker 0.5s ease-in-out infinite alternate;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes blue-flicker {
+            0% {
+                transform: scaleY(0.95);
+                opacity: 0.8;
+                filter: hue-rotate(-10deg);
+            }
+
+            100% {
+                transform: scaleY(1.05);
+                opacity: 1;
+                filter: hue-rotate(10deg) brightness(1.3);
+            }
+        }
+
+        /* 7. Chaotic Flicker */
+        .burn-chaotic {
+            background: rgba(255, 50, 0, 0.3);
+            mix-blend-mode: overlay;
+            animation: chaotic-flash 0.15s infinite;
+        }
+
+        @keyframes chaotic-flash {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 0.8;
+                background: rgba(255, 100, 0, 0.5);
+            }
+
+            100% {
+                opacity: 0.3;
+            }
+        }
+
+        /* =========================================
+           ROW 4: SHIELDS & BARRIERS (DEFENSE)
+           ========================================= */
+
+        /* 1. Energy Bubble */
+        .shield-bubble {
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 255, 255, 0.8) 0%, rgba(0, 100, 255, 0.3) 50%, transparent 70%);
+            box-shadow: inset 0 0 20px #00ffff, 0 0 20px #00aaff;
+            opacity: 0;
+            transform: scale(0.1);
+        }
+
+        .card-container.active .shield-bubble {
+            animation: bubble-shield 1.5s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+        }
+
+        @keyframes bubble-shield {
+            0% {
+                transform: scale(0.1);
+                opacity: 0;
+            }
+
+            20% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+
+            80% {
+                transform: scale(1.6);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        /* 2. Frost Armor */
+        .shield-frost {
+            background: linear-gradient(to top, rgba(150, 220, 255, 0.8) 0%, transparent 60%);
+            border-bottom: 8px solid #aaddff;
+            border-radius: 0 0 10px 10px;
+            transform: translateY(100%);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        .card-container.active .shield-frost {
+            animation: frost-rise 1.5s ease-out forwards;
+        }
+
+        @keyframes frost-rise {
+            0% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            20% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            80% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(20%);
+                opacity: 0;
+            }
+        }
+
+        /* 3. Holy Aegis */
+        .shield-aegis {
+            background: repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.2) 0px, rgba(255, 215, 0, 0.2) 10px, transparent 10px, transparent 20px);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #ffaa00;
+            opacity: 0;
+            transform: scale(1.1);
+        }
+
+        .card-container.active .shield-aegis {
+            animation: aegis-block 1.5s ease-in-out forwards;
+        }
+
+        @keyframes aegis-block {
+            0% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+
+            15% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            85% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        /* 4. Thornmail */
+        .shield-thorn {
+            border: 4px dashed #33ff33;
+            border-radius: 10px;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .card-container.active .shield-thorn {
+            animation: thorn-pop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes thorn-pop {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            20% {
+                transform: scale(1.05);
+                opacity: 1;
+                box-shadow: 0 0 15px #33ff33;
+            }
+
+            80% {
+                transform: scale(1.05);
+                opacity: 1;
+                box-shadow: 0 0 5px #33ff33;
+            }
+
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* 5. Phase Shift */
+        .card-container.active.phase-card {
+            animation: phase-shift-card 1.5s ease-in-out;
+        }
+
+        .shield-phase {
+            background: rgba(100, 100, 255, 0.3);
+            mix-blend-mode: color-dodge;
+            opacity: 0;
+        }
+
+        .card-container.active .shield-phase {
+            animation: phase-glow 1.5s ease-in-out;
+        }
+
+        @keyframes phase-shift-card {
+            0% {
+                filter: blur(0) opacity(1);
+                transform: translateY(0);
+            }
+
+            20% {
+                filter: blur(4px) opacity(0.6);
+                transform: translateY(-10px);
+            }
+
+            80% {
+                filter: blur(4px) opacity(0.6);
+                transform: translateY(-10px);
+            }
+
+            100% {
+                filter: blur(0) opacity(1);
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes phase-glow {
+
+            20%,
+            80% {
+                opacity: 1;
+            }
+        }
+
+        /* 6. Rock Wall */
+        .shield-rock i {
+            position: absolute;
+            bottom: -50px;
+            left: var(--x);
+            width: var(--w);
+            height: var(--h);
+            background: #665544;
+            border-top: 3px solid #887766;
+            border-radius: 4px;
+            box-shadow: 0 10px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .card-container.active .shield-rock i {
+            animation: rock-rise 1.5s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes rock-rise {
+            0% {
+                transform: translateY(0);
+            }
+
+            20% {
+                transform: translateY(calc(-1 * var(--y)));
+            }
+
+            80% {
+                transform: translateY(calc(-1 * var(--y)));
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+        }
+
+        /* 7. Shadow Cloak */
+        .shield-cloak {
+            background: radial-gradient(circle, transparent 20%, rgba(30, 0, 50, 0.9) 80%);
+            opacity: 0;
+            filter: blur(8px);
+        }
+
+        .card-container.active .shield-cloak {
+            animation: cloak-wrap 1.5s ease-in-out forwards;
+        }
+
+        @keyframes cloak-wrap {
+            0% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+
+            30% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            80% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+
+        /* =========================================
+           ROW 5: SPAWN ANIMATIONS
+           ========================================= */
+
+        /* 1. Portal Opening */
+        .spawn-portal {
+            background: conic-gradient(from 0deg, transparent 0%, #00ffff 20%, transparent 40%, #ff00ff 60%, transparent 80%);
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+            box-shadow: inset 0 0 40px #000;
+        }
+
+        .card-container.active .spawn-portal {
+            animation: portal-spin 1.5s ease-out forwards;
+        }
+
+        @keyframes portal-spin {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            30% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+                filter: brightness(2);
+            }
+
+            70% {
+                transform: scale(1.5) rotate(360deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0) rotate(540deg);
+                opacity: 0;
+            }
+        }
+
+        /* 2. Lightning Strike */
+        .spawn-lightning {
+            background: linear-gradient(to right, transparent 45%, #fff 48%, #fff 52%, transparent 55%);
+            box-shadow: 0 0 30px #ffff00;
+            transform: translateY(-100%);
+            opacity: 0;
+            mix-blend-mode: overlay;
+        }
+
+        .card-container.active .spawn-lightning {
+            animation: strike-flash 1s ease-out forwards;
+        }
+
+        @keyframes strike-flash {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            5% {
+                transform: translateY(0);
+                opacity: 1;
+                filter: brightness(3);
+            }
+
+            10% {
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* 3. Emerge from Shadows */
+        .spawn-shadows {
+            background: #000;
+            opacity: 1;
+            /* Starts hidden */
+        }
+
+        .card-container.active .spawn-shadows {
+            animation: shadow-clear 1.5s ease-in forwards;
+        }
+
+        @keyframes shadow-clear {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translateY(50%);
+                opacity: 1;
+                filter: blur(10px);
+            }
+
+            100% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        /* 4. Holy Descent */
+        .spawn-holy i {
+            position: absolute;
+            top: -20px;
+            left: var(--x);
+            width: 10px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50% 50% 0 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #ffddaa;
+            opacity: 0;
+            transform: rotate(var(--r));
+        }
+
+        .card-container.active .spawn-holy i {
+            animation: feather-fall 1.5s ease-in-out forwards;
+            animation-delay: var(--d);
+        }
+
+        @keyframes feather-fall {
+            0% {
+                transform: translateY(0) rotate(var(--r));
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(200px) rotate(calc(var(--r) + 90deg));
+                opacity: 0;
+            }
+        }
+
+        /* 5. Tech Glitch */
+        .spawn-tech {
+            background: repeating-linear-gradient(0deg, transparent 0, transparent 10px, rgba(0, 255, 100, 0.4) 10px, rgba(0, 255, 100, 0.4) 12px);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        .card-container.active .spawn-tech {
+            animation: glitch-scan 1s steps(10) forwards;
+        }
+
+        @keyframes glitch-scan {
+            0% {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                opacity: 1;
+                transform: translateY(0) translateX(5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                opacity: 0.5;
+                transform: translateY(0) translateX(-5px);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+        }
+
+        /* 6. Fire Burst */
+        .spawn-fire {
+            background: radial-gradient(circle, #ffaa00 0%, #ff0000 30%, transparent 60%);
+            opacity: 0;
+            transform: scale(0);
+            mix-blend-mode: screen;
+        }
+
+        .card-container.active .spawn-fire {
+            animation: fire-burst 1s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+        }
+
+        @keyframes fire-burst {
+            0% {
+                transform: scale(0.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+                filter: blur(10px);
+            }
+        }
+
+        /* 7. Water Ripple */
+        .spawn-water {
+            border: 4px solid #00ffff;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+            box-shadow: 0 0 20px #00aaff;
+        }
+
+        .card-container.active .spawn-water {
+            animation: ripple-ring 1.5s ease-out forwards;
+        }
+
+        @keyframes ripple-ring {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+                border-width: 20px;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+                border-width: 0px;
+            }
+        }
+
+        /* =========================================
+           ROW 6: RARITY & FOILS (INFINITE)
+           ========================================= */
+
+        /* 1. Prismatic Sheen */
+        .foil-prismatic {
+            background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.4) 25%, rgba(255, 200, 255, 0.5) 30%, transparent 35%);
+            background-size: 300% 100%;
+            animation: prismatic-sweep 3s linear infinite;
+            mix-blend-mode: color-dodge;
+        }
+
+        @keyframes prismatic-sweep {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -50% 0;
+            }
+        }
+
+        /* 2. Gold Foil */
+        .foil-gold {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0) 0%, rgba(255, 215, 0, 0.4) 50%, rgba(255, 215, 0, 0) 100%);
+            background-size: 200% 200%;
+            animation: gold-shimmer 4s ease-in-out infinite alternate;
+            mix-blend-mode: overlay;
+        }
+
+        @keyframes gold-shimmer {
+            0% {
+                background-position: 0% 0%;
+            }
+
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        /* 3. Galaxy Rare */
+        .foil-galaxy {
+            background: radial-gradient(circle at 30% 70%, rgba(100, 0, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(0, 255, 255, 0.4) 0%, transparent 50%);
+            animation: galaxy-spin 10s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes galaxy-spin {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        /* 4. Ghost Rare */
+        .foil-ghost {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: grayscale(100%) blur(2px) contrast(1.5);
+            -webkit-backdrop-filter: grayscale(100%) blur(2px) contrast(1.5);
+            animation: ghost-float 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes ghost-float {
+            0% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 0.9;
+            }
+        }
+
+        /* 5. Matrix Code */
+        .foil-matrix {
+            background: repeating-linear-gradient(180deg, rgba(0, 255, 0, 0.1) 0, rgba(0, 255, 0, 0.4) 5px, transparent 5px, transparent 10px);
+            background-size: 100% 20px;
+            animation: matrix-fall 1s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes matrix-fall {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 20px;
+            }
+        }
+
+        /* 6. Diamond Sparkles */
+        .foil-diamond i {
+            position: absolute;
+            background: #fff;
+            width: 4px;
+            height: 4px;
+            left: var(--x);
+            top: var(--y);
+            border-radius: 50%;
+            box-shadow: 0 0 8px #fff, 0 0 12px #aaffff;
+            animation: diamond-twinkle var(--dur) ease-in-out infinite alternate;
+            animation-delay: var(--d);
+        }
+
+        @keyframes diamond-twinkle {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+
+        /* 7. Breathing Art */
+        .foil-breathing {
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .breathe-card {
+            animation: breathe-scale 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes breathe-scale {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.03);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Efectos Visuales TCG</h1>
+    <p class="subtitle">Haz clic en las cartas para disparar los efectos de Curación y Buff.</p>
+
+    <!-- ROW 1: HEALING -->
+    <h2>Healing Effects (Click to Trigger)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-holy"></div>
+            </div>
+            <div class="card-title">1. Holy Aura</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-leaves">
+                    <i style="--x:20%; --d:0ms"></i>
+                    <i style="--x:50%; --d:150ms"></i>
+                    <i style="--x:75%; --d:50ms"></i>
+                    <i style="--x:35%; --d:200ms"></i>
+                </div>
+            </div>
+            <div class="card-title">2. Nature Leaves</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-crosses">
+                    <i style="--x:25%; --y:20%; --d:0ms">+</i>
+                    <i style="--x:60%; --y:10%; --d:200ms">+</i>
+                    <i style="--x:40%; --y:40%; --d:100ms">+</i>
+                </div>
+            </div>
+            <div class="card-title">3. Mend Crosses</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-water"></div>
+            </div>
+            <div class="card-title">4. Water Restor</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-rejuv"></div>
+            </div>
+            <div class="card-title">5. Rejuvenation</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-angelic"></div>
+            </div>
+            <div class="card-title">6. Angelic Light</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer heal-bubbles">
+                    <i style="--x:20%; --s:10px; --d:0ms"></i>
+                    <i style="--x:60%; --s:15px; --d:100ms"></i>
+                    <i style="--x:40%; --s:8px; --d:250ms"></i>
+                    <i style="--x:70%; --s:12px; --d:150ms"></i>
+                </div>
+            </div>
+            <div class="card-title">7. Life Bubbles</div>
+        </div>
+    </div>
+
+    <!-- ROW 2: DAMAGE BUFFS -->
+    <h2>Damage Buffs (Click to Trigger)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-rage"></div>
+            </div>
+            <div class="card-title">1. Rage Aura</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-arrows">
+                    <i style="--x:40%; --y:10%; --d:0ms"></i>
+                    <i style="--x:40%; --y:-10%; --d:150ms"></i>
+                    <i style="--x:40%; --y:-30%; --d:300ms"></i>
+                </div>
+            </div>
+            <div class="card-title">2. Power Up Arrows</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-veins"></div>
+            </div>
+            <div class="card-title">3. Enrage Veins</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container shake-card">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-fury"></div>
+            </div>
+            <div class="card-title">4. Fury Distortion</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-spikes">
+                    <i style="top:0; left:0; transform: rotate(45deg); --start: 20px; --end: -40px;"></i>
+                    <i style="top:0; right:0; transform: rotate(-45deg); --start: 20px; --end: -40px;"></i>
+                    <i style="bottom:0; left:0; transform: rotate(135deg); --start: 20px; --end: -40px;"></i>
+                    <i style="bottom:0; right:0; transform: rotate(-135deg); --start: 20px; --end: -40px;"></i>
+                </div>
+            </div>
+            <div class="card-title">5. Sharp Spikes</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-focus"></div>
+            </div>
+            <div class="card-title">6. Focus Glow</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer buff-bloodlust">
+                    <i style="--dx:-40px; --dy:-50px; --d:0ms"></i>
+                    <i style="--dx:50px; --dy:-40px; --d:50ms"></i>
+                    <i style="--dx:-20px; --dy:60px; --d:100ms"></i>
+                    <i style="--dx:40px; --dy:30px; --d:30ms"></i>
+                    <i style="--dx:0px; --dy:-60px; --d:80ms"></i>
+                </div>
+            </div>
+            <div class="card-title">7. Bloodlust</div>
+        </div>
+    </div>
+
+    <!-- ROW 3: BURN LOOPS -->
+    <h2>Burn Loops (Infinite)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-embers">
+                    <i style="--x:20%; --s:4px; --dur:1.5s; --d:0s"></i>
+                    <i style="--x:50%; --s:6px; --dur:2s; --d:0.5s"></i>
+                    <i style="--x:80%; --s:3px; --dur:1.2s; --d:1s"></i>
+                    <i style="--x:35%; --s:5px; --dur:1.8s; --d:0.2s"></i>
+                    <i style="--x:65%; --s:7px; --dur:2.2s; --d:0.8s"></i>
+                </div>
+            </div>
+            <div class="card-title">1. Smoldering Embers</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-bottom"></div>
+            </div>
+            <div class="card-title">2. Bottom Flames</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-borders"></div>
+            </div>
+            <div class="card-title">3. Scorched Borders</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-magma"></div>
+            </div>
+            <div class="card-title">4. Magma Core</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-smoke">
+                    <i style="--x:30%; --dur:2s; --d:0s"></i>
+                    <i style="--x:60%; --dur:1.5s; --d:0.5s"></i>
+                    <i style="--x:45%; --dur:2.5s; --d:1s"></i>
+                </div>
+            </div>
+            <div class="card-title">5. Ash & Smoke</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-blue"></div>
+            </div>
+            <div class="card-title">6. Blue Fire</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer burn-chaotic"></div>
+            </div>
+            <div class="card-title">7. Chaotic Flicker</div>
+        </div>
+    </div>
+
+    <!-- ROW 4: SHIELDS & BARRIERS -->
+    <h2>Shields & Barriers (Click to Trigger)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-bubble"></div>
+            </div>
+            <div class="card-title">1. Energy Bubble</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-frost"></div>
+            </div>
+            <div class="card-title">2. Frost Armor</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-aegis"></div>
+            </div>
+            <div class="card-title">3. Holy Aegis</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-thorn"></div>
+            </div>
+            <div class="card-title">4. Thornmail</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container phase-card">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-phase"></div>
+            </div>
+            <div class="card-title">5. Phase Shift</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-rock">
+                    <i style="--x: 10%; --w: 40px; --h: 50px; --y: 40px; --d: 0ms"></i>
+                    <i style="--x: 40%; --w: 60px; --h: 70px; --y: 60px; --d: 100ms"></i>
+                    <i style="--x: 70%; --w: 30px; --h: 40px; --y: 30px; --d: 50ms"></i>
+                </div>
+            </div>
+            <div class="card-title">6. Rock Wall</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer shield-cloak"></div>
+            </div>
+            <div class="card-title">7. Shadow Cloak</div>
+        </div>
+    </div>
+
+    <!-- ROW 5: SPAWN ANIMATIONS -->
+    <h2>Spawn Animations (Click to Trigger)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-portal"></div>
+            </div>
+            <div class="card-title">1. Portal Opening</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-lightning"></div>
+            </div>
+            <div class="card-title">2. Lightning Strike</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-shadows"></div>
+            </div>
+            <div class="card-title">3. Emerge from Shadows</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-holy">
+                    <i style="--x: 20%; --r: -20deg; --d: 0s"></i>
+                    <i style="--x: 50%; --r: 10deg; --d: 0.2s"></i>
+                    <i style="--x: 80%; --r: 45deg; --d: 0.1s"></i>
+                    <i style="--x: 35%; --r: -10deg; --d: 0.4s"></i>
+                </div>
+            </div>
+            <div class="card-title">4. Holy Descent</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-tech"></div>
+            </div>
+            <div class="card-title">5. Tech Glitch</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-fire"></div>
+            </div>
+            <div class="card-title">6. Fire Burst</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer spawn-water"></div>
+            </div>
+            <div class="card-title">7. Water Ripple</div>
+        </div>
+    </div>
+
+    <!-- ROW 6: RARITY & FOIL EFFECTS -->
+    <h2>Rarity & Foil Effects (Infinite)</h2>
+    <div class="grid">
+        <!-- 1 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-prismatic"></div>
+            </div>
+            <div class="card-title">1. Prismatic Sheen</div>
+        </div>
+        <!-- 2 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-gold"></div>
+            </div>
+            <div class="card-title">2. Gold Foil</div>
+        </div>
+        <!-- 3 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-galaxy"></div>
+            </div>
+            <div class="card-title">3. Galaxy Rare</div>
+        </div>
+        <!-- 4 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-ghost"></div>
+            </div>
+            <div class="card-title">4. Ghost Rare</div>
+        </div>
+        <!-- 5 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-matrix"></div>
+            </div>
+            <div class="card-title">5. Matrix Code</div>
+        </div>
+        <!-- 6 -->
+        <div class="card-wrapper">
+            <div class="card-container">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-diamond">
+                    <i style="--x: 20%; --y: 30%; --dur: 1s; --d: 0s"></i>
+                    <i style="--x: 70%; --y: 20%; --dur: 1.5s; --d: 0.5s"></i>
+                    <i style="--x: 50%; --y: 80%; --dur: 0.8s; --d: 0.2s"></i>
+                    <i style="--x: 80%; --y: 60%; --dur: 1.2s; --d: 0.7s"></i>
+                    <i style="--x: 15%; --y: 70%; --dur: 2s; --d: 0.1s"></i>
+                </div>
+            </div>
+            <div class="card-title">6. Diamond Sparkles</div>
+        </div>
+        <!-- 7 -->
+        <div class="card-wrapper">
+            <div class="card-container breathe-card">
+                <div class="card-art"></div>
+                <div class="effect-layer foil-breathing"></div>
+            </div>
+            <div class="card-title">7. Breathing Art</div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica para reiniciar y disparar animaciones al hacer clic
+        document.querySelectorAll('.card-container').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.remove('active');
+                void card.offsetWidth; // Forzar reflow para reiniciar CSS animation
+                card.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

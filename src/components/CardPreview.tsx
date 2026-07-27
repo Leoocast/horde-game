@@ -1,13 +1,14 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
+import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
-import { cardKeywords } from "../utils/selectors";
+import { cardKeywords, cardStatState } from "../utils/selectors";
+import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 
 const HOVER_PREVIEW_GAP = 14;
@@ -34,6 +35,7 @@ export function CardPreview() {
 
   const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
+  const heldStaticAuraBonus = useGameStore((state) => activeId ? state.heldStaticAuraBonuses[activeId] : undefined);
   const details = useCardDetails(card?.definitionId ?? "");
 
   useEffect(() => {
@@ -152,10 +154,24 @@ export function CardPreview() {
     };
   }, [activeEffectCardId, focusedCardId, hoveredCardId]);
 
-  if (!card || !details.imageUrl) return null;
+  if (!card) return null;
+
+  if (!details.imageUrl) return null;
 
   const keywords = cardKeywords(game, card);
-  const imageUrl = toHighResImageUrl(details.imageUrl) ?? details.imageUrl;
+  const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
+  const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
+  const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
+  const focusedStats = stats.buffed
+    ? {
+        text: `${card.basePower}/${Math.max(0, card.baseToughness - card.damageMarked)}`,
+        power: card.basePower,
+        toughness: Math.max(0, card.baseToughness - card.damageMarked),
+        damaged: card.damageMarked > 0,
+        buffed: false,
+      }
+    : { ...stats, buffed: false };
+  const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
   if (focusedCardId) {
@@ -166,8 +182,18 @@ export function CardPreview() {
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
           onContextMenu={(event) => event.preventDefault()}
         >
-          <div data-preserve-card-focus="true" data-card-preview-locked="true" className="card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65">
-            <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+          <div
+            data-preserve-card-focus="true"
+            data-card-preview-locked="true"
+            data-preview-renderer="image"
+            className={[
+              "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
+              showFullCardPresentation ? "card-preview-full-card-frame" : "",
+            ].join(" ")}
+          >
+            {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
+            {showFullCardPresentation && <CardCostBadge card={card} />}
+            {showFullCardStats && <CardStatsBadge stats={focusedStats} preferSingleSword />}
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -185,8 +211,17 @@ export function CardPreview() {
   void _positionCardId;
 
   return (
-    <div className="card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65" style={hoverStyle}>
-      <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
+    <div
+      data-preview-renderer="image"
+      className={[
+        "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
+        showFullCardPresentation ? "card-preview-full-card-frame" : "",
+      ].join(" ")}
+      style={hoverStyle}
+    >
+      {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
+      {showFullCardPresentation && <CardCostBadge card={card} />}
+      {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );
 }
@@ -292,7 +327,7 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedKeywordTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(localizedKeywordLabel(clean, language))}</span>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(clean, language)))}</span>
           </GameTooltip>
         );
       })}
@@ -313,7 +348,7 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill inline-flex min-h-6 items-center px-2.5 text-xs">{renderKeywordLabel(localizedKeywordLabel(keyword, language))}</div>
+          <div className="keyword-pill card-preview-keyword-badge">{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}</div>
           <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedKeywordTooltip(keyword, language)}</p>
         </div>
       ))}
@@ -322,11 +357,11 @@ function KeywordExplanations({ keywords, chaos = false }: { keywords: string; ch
 }
 
 function renderKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^TOXIC\s+\{(\d+)\}$/i);
+  const toxic = keyword.match(/^(TOXIC|TÓXICO)\s+\{(\d+)\}$/i);
   if (!toxic) return keyword;
   return (
     <>
-      TOXIC <span className="toxic-keyword-badge">{toxic[1]}</span>
+      {toxic[1]} <span className="toxic-keyword-badge">{toxic[2]}</span>
     </>
   );
 }

@@ -1,8 +1,10 @@
 import { Check, RefreshCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
@@ -17,29 +19,41 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
     <div className="opening-hand-overlay fixed inset-0 z-[420] flex items-center justify-center" role="presentation">
       <section className="opening-hand-layout" role="dialog" aria-modal="true" aria-label={t("mulligan.title")}>
         <div className="opening-hand-cards">
-          {game.player.hand.map((card, index) => (
-            <motion.div
-              key={`${game.mulligansTaken}-${card.instanceId}`}
-              className="opening-hand-card-entry"
-              initial={{ opacity: 0, y: 26, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="opening-hand-card">
-                <Card
-                  game={game}
-                  card={card}
-                  selectionDisabled
-                  suppressCardId
-                  suppressContextMenu
-                  suppressHoverOverlay
-                  darkenOnHover={false}
-                  highRes
-                  sharpImageOverlay
-                />
-              </div>
-            </motion.div>
-          ))}
+          {game.player.hand.map((card, index) => {
+            const showFullImage = shouldShowFullCardImage(card.definitionId);
+            const useNativeHdRendering =
+              showFullImage &&
+              UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
+
+            return (
+              <motion.div
+                key={`${game.mulligansTaken}-${card.instanceId}`}
+                className="opening-hand-card-entry"
+                initial={{ opacity: 0, y: 26, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="opening-hand-card">
+                  <Card
+                    game={game}
+                    card={card}
+                    selectionDisabled
+                    suppressCardId
+                    suppressContextMenu
+                    suppressHoverOverlay
+                    darkenOnHover={false}
+                    highRes
+                    sharpImageOverlay={!useNativeHdRendering}
+                    showFullImage={showFullImage}
+                    showCostBadge={showFullImage}
+                    clipActionSweep={UI_FEATURE_FLAGS.alignHdHandActionSweep && showFullImage}
+                    preferNativeImageRendering={useNativeHdRendering}
+                    hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="opening-hand-actions">

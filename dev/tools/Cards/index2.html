@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunshower Druid - Premium Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+        :root {
+            --gold-bright: #fceda6;
+            --gold-main: #d4af37;
+            --gold-dark: #997a00;
+            --green-mana: radial-gradient(circle at top left, #438753, #11361e);
+            --bg-dark: rgba(8, 15, 10, 0.95);
+            --text-bright: #f4f6f4;
+            --text-dim: #a7b5ac;
+            --border-radius: 16px;
+        }
+
+        body {
+            background-color: #121413;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Lora', serif;
+        }
+
+        /* Contenedor principal Full Art */
+        .card {
+            width: 390px;
+            height: 540px;
+            border-radius: var(--border-radius);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.95), 0 0 15px rgba(212, 175, 55, 0.2);
+            background-image: url('image.png');
+            background-size: cover;
+            background-position: center 15%;
+            border: 1px solid #2a332a;
+        }
+
+        /* El degradado (Fade) */
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                    rgba(8, 15, 10, 0.8) 0%,
+                    rgba(8, 15, 10, 0.15) 18%,
+                    rgba(8, 15, 10, 0) 35%,
+                    rgba(8, 15, 10, 0.7) 55%,
+                    rgba(8, 15, 10, 0.98) 75%,
+                    #060a07 100%);
+            z-index: 1;
+        }
+
+        /* Borde interno con esquinas ornamentadas */
+        .inner-border {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* Esquinas ornamentadas en CSS */
+        .inner-border::before,
+        .inner-border::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid var(--gold-main);
+            border-radius: 2px;
+        }
+
+        .inner-border::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .inner-border::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* Contenedor de contenido estructurado */
+        .content {
+            position: relative;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 18px;
+            box-sizing: border-box;
+        }
+
+        /* Cabecera (Icono Tipo a la izq, Costo a la der) */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid transparent;
+            /* Espacio visual */
+        }
+
+        .type-icon {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(12, 24, 16, 0.8);
+            border-radius: 50%;
+            border: 1.5px solid var(--gold-main);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), inset 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .type-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--gold-bright);
+        }
+
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+
+        .title {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-bright);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 5px #000, 0 0 10px rgba(212, 175, 55, 0.4);
+            margin-bottom: 2px;
+        }
+
+        .subtitle {
+            font-family: 'Cinzel', serif;
+            color: var(--text-bright);
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+            padding: 2px 20px;
+            text-shadow: 1px 1px 3px #000;
+        }
+
+        .cost {
+            width: 38px;
+            height: 38px;
+            background: var(--green-mana);
+            border: 1.5px solid var(--gold-main);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Espaciador para empujar el texto hacia abajo */
+        .spacer {
+            flex-grow: 1;
+        }
+
+        /* Cuerpo del texto */
+        .text-box {
+            text-align: center;
+            padding: 0 8px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Descripción principal más grande */
+        .effect {
+            color: var(--text-bright);
+            font-size: 16px;
+            /* Tamaño aumentado */
+            line-height: 1.5;
+            font-weight: 600;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9);
+            margin-bottom: 5px;
+        }
+
+        /* DIVISOR ORNAMENTAL (Inspirado en la imagen) */
+        .divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            width: 100%;
+        }
+
+        .divider .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-main));
+            position: relative;
+        }
+
+        .divider .line.right {
+            background: linear-gradient(-90deg, transparent, var(--gold-main));
+        }
+
+        /* Puntos en la línea */
+        .divider .dot {
+            width: 3px;
+            height: 3px;
+            background: var(--gold-bright);
+            transform: rotate(45deg);
+            position: absolute;
+            top: -1px;
+            right: 25px;
+            box-shadow: 0 0 4px var(--gold-main);
+        }
+
+        .divider .line.right .dot {
+            right: auto;
+            left: 25px;
+        }
+
+        /* Gema central del divisor */
+        .divider .gem-ornament {
+            margin: 0 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Flavor Text */
+        .flavor {
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 11.5px;
+            line-height: 1.4;
+            padding: 0 10px;
+        }
+
+        /* Footer (Stats a la izq) */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 5px;
+        }
+
+        /* Stats unificados a la izquierda */
+        .stats-block {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(20, 40, 25, 0.9), rgba(6, 12, 8, 0.95));
+            border: 1px solid var(--gold-main);
+            border-radius: 4px;
+            padding: 4px 14px;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.8), inset 0 0 6px rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+
+        /* Detalles geométricos del stat block */
+        .stats-block::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+            width: 6px;
+            height: 6px;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--gold-main);
+            border-right: 1px solid var(--gold-main);
+        }
+
+        .stats-block::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+            width: 6px;
+            height: 6px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--gold-main);
+            border-left: 1px solid var(--gold-main);
+        }
+
+        .stat-val {
+            color: #fff;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px #000;
+        }
+
+        .stat-separator {
+            color: var(--gold-main);
+            margin: 0 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .credits {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            color: rgba(167, 181, 172, 0.5);
+            font-size: 8px;
+            font-family: sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .credits span {
+            margin-top: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <div class="card-overlay"></div>
+        <div class="inner-border"></div>
+
+        <div class="content">
+            <div class="header">
+                <div class="type-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z" />
+                    </svg>
+                </div>
+
+                <div class="title-container">
+                    <div class="title">SUNSHOWER DRUID</div>
+                    <div class="subtitle">Creature — Frog Druid</div>
+                </div>
+
+                <div class="cost">1</div>
+            </div>
+
+            <div class="spacer"></div>
+
+            <div class="text-box">
+                <div class="effect">
+                    When Sunshower Druid enters, put a +1/+1 counter on target creature and you gain 1 life.
+                </div>
+
+                <div class="divider">
+                    <div class="line">
+                        <div class="dot"></div>
+                    </div>
+
+                    <div class="gem-ornament">
+                        <svg width="46" height="26" viewBox="0 0 46 26">
+                            <polyline points="10,13 14,9 16,11 12,13 16,15 14,17" fill="none" stroke="#d4af37"
+                                stroke-width="1.5" stroke-linejoin="round" />
+                            <polyline points="36,13 32,9 30,11 34,13 30,15 32,17" fill="none" stroke="#d4af37"
+                                stroke-width="1.5" stroke-linejoin="round" />
+
+                            <polygon points="23,3 33,13 23,23 13,13" fill="none" stroke="#d4af37" stroke-width="1.5" />
+                            <polygon points="23,5 31,13 23,21 15,13" fill="none" stroke="#fceda6" stroke-width="0.5" />
+
+                            <polygon points="23,7 29,13 23,19 17,13" fill="#0b7a42" stroke="#104226" stroke-width="1" />
+                            <polygon points="23,8 27,12 23,16 19,12" fill="#1ccc7b" />
+                        </svg>
+                    </div>
+
+                    <div class="line right">
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="flavor">
+                    Apprentice augurs begin their studies by predicting where the rain will fall. Even those who don't
+                    succeed derive great joy from the process.
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="stats-block">
+                    <span class="stat-val">0</span>
+                    <span class="stat-separator">/</span>
+                    <span class="stat-val">2</span>
+                </div>
+
+                <div class="credits">
+                    <span>012/150 • R</span>
+                    <span>© 2026 WIZARDS OF THE COAST</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,453 @@
+{
+  "schemaVersion": "0.2.0",
+  "id": "vampire_chronicle_preview",
+  "name": "La Corte Carmesí — Early Access",
+  "format": "early-access-preview",
+  "side": "PLAYER",
+  "deckSize": 40,
+  "archetype": "life-payment-lifesteal",
+  "gamePlan": "Paga vida para acelerar tu desarrollo y convertirla en poder. Ataca directamente al Host para recuperar vida, pero conserva bloqueadores cuando la Horda amenace con devolverte el golpe.",
+  "mechanics": {
+    "lifePayment": "Pagar vida es un coste, no daño, y nunca puede reducir tu vida por debajo de 1.",
+    "lifesteal": "Cuando una criatura con Robo de vida hace daño de combate, recuperas esa misma cantidad de vida.",
+    "hostfallCombat": "Las criaturas del jugador atacan al Host, no a las criaturas de la Horda. Se enfrentan a ellas al bloquear o mediante hechizos."
+  },
+  "tokens": [],
+  "cards": [
+    {
+      "id": "crimson_energy",
+      "name": "Crimson Energy",
+      "displayNameEs": "Energía Carmesí",
+      "gameText": {
+        "en": "Exhaust: Generate 1 Energy.",
+        "es": "Agota: genera 1 de Energía."
+      },
+      "flavorText": {
+        "en": "Every vow leaves something behind.",
+        "es": "Todo juramento deja algo atrás."
+      },
+      "quantity": 9,
+      "manaCost": null,
+      "manaValue": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Energy"],
+      "subtypes": ["Sanctuary"],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "crimson_energy_generate",
+          "kind": "ACTIVATED",
+          "engineSupport": "pending",
+          "implementationNote": "Agotar esta carta genera 1 de la Energía universal de Hostfall."
+        }
+      ]
+    },
+    {
+      "id": "blood_page",
+      "name": "Blood Page",
+      "displayNameEs": "Paje de la Sed",
+      "gameText": {
+        "en": "The first time you pay life during your turn, this creature gets +1/+0 until end of turn.",
+        "es": "La primera vez que pagues vida durante tu turno, esta criatura obtiene +1/+0 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "The youngest learn to serve before they learn to feed.",
+        "es": "Los más jóvenes aprenden a servir antes que a alimentarse."
+      },
+      "quantity": 3,
+      "manaCost": "{1}",
+      "manaValue": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Servant"],
+      "power": 1,
+      "toughness": 2,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "blood_page_first_life_payment",
+          "kind": "TRIGGERED",
+          "engineSupport": "pending",
+          "implementationNote": "Una vez por turno propio, detecta el primer coste de vida pagado y obtiene +1/+0 hasta fin de turno."
+        }
+      ]
+    },
+    {
+      "id": "crimson_bat",
+      "name": "Crimson Bat",
+      "displayNameEs": "Murciélago Carmesí",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The bells fall silent before its wings arrive.",
+        "es": "Las campanas callan antes de que lleguen sus alas."
+      },
+      "quantity": 3,
+      "manaCost": "{2}",
+      "manaValue": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Bat", "Vampire"],
+      "power": 1,
+      "toughness": 2,
+      "keywords": ["FLYING", "LIFESTEAL"],
+      "abilities": [
+        {
+          "id": "crimson_bat_lifesteal",
+          "kind": "STATIC",
+          "engineSupport": "pending",
+          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
+        }
+      ]
+    },
+    {
+      "id": "tithe_acolyte",
+      "name": "Tithe Acolyte",
+      "displayNameEs": "Acólito del Diezmo",
+      "gameText": {
+        "en": "Exhaust and pay 3 life: Generate 1 Energy.",
+        "es": "Agota y paga 3 vidas: genera 1 de Energía."
+      },
+      "flavorText": {
+        "en": "The court accepts every currency, especially the one that hurts.",
+        "es": "La corte acepta toda moneda, especialmente la que duele."
+      },
+      "quantity": 3,
+      "manaCost": "{2}",
+      "manaValue": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Cleric"],
+      "power": 1,
+      "toughness": 3,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "tithe_acolyte_generate",
+          "kind": "ACTIVATED",
+          "engineSupport": "pending",
+          "implementationNote": "Coste: agotar y pagar 3 vidas. Efecto: generar 1 de Energía universal."
+        }
+      ]
+    },
+    {
+      "id": "court_duelist",
+      "name": "Court Duelist",
+      "displayNameEs": "Duelista de la Corte",
+      "gameText": {
+        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +2/+0 until end of turn.",
+        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +2/+0 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "Courtesy ends at the first drawn blade.",
+        "es": "La cortesía termina con la primera hoja desenvainada."
+      },
+      "quantity": 3,
+      "manaCost": "{3}",
+      "manaValue": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Warrior"],
+      "power": 3,
+      "toughness": 2,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "court_duelist_blood_rush",
+          "kind": "ACTIVATED",
+          "engineSupport": "pending",
+          "implementationNote": "Una vez durante el turno propio, pagar 3 vidas da +2/+0 hasta fin de turno."
+        }
+      ]
+    },
+    {
+      "id": "crypt_guardian",
+      "name": "Crypt Guardian",
+      "displayNameEs": "Guardián de la Cripta",
+      "gameText": {
+        "en": "Whenever this creature survives blocking, recover 2 life.",
+        "es": "Cuando esta criatura sobreviva bloqueando, recuperas 2 vidas."
+      },
+      "flavorText": {
+        "en": "Nothing leaves the crypt without his permission.",
+        "es": "Nada abandona la cripta sin su permiso."
+      },
+      "quantity": 3,
+      "manaCost": "{3}",
+      "manaValue": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Knight"],
+      "power": 2,
+      "toughness": 4,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "crypt_guardian_survives_block",
+          "kind": "TRIGGERED",
+          "engineSupport": "pending",
+          "implementationNote": "Después del combate de defensa, si bloqueó y sigue en el campo, el jugador recupera 2 vidas."
+        }
+      ]
+    },
+    {
+      "id": "black_vein_executioner",
+      "name": "Black Vein Executioner",
+      "displayNameEs": "Verdugo de la Vena Negra",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "One cut is enough. The vein does the rest.",
+        "es": "Un corte basta. La vena hace el resto."
+      },
+      "quantity": 2,
+      "manaCost": "{3}",
+      "manaValue": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Assassin"],
+      "power": 1,
+      "toughness": 3,
+      "keywords": ["DEATHTOUCH"],
+      "abilities": []
+    },
+    {
+      "id": "blood_sentinel",
+      "name": "Blood Sentinel",
+      "displayNameEs": "Centinela de Sangre",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Duty keeps the hunger on a short chain.",
+        "es": "El deber mantiene el hambre atada con una cadena corta."
+      },
+      "quantity": 2,
+      "manaCost": "{4}",
+      "manaValue": 4,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Creature"],
+      "subtypes": ["Vampire", "Knight"],
+      "power": 2,
+      "toughness": 4,
+      "keywords": ["VIGILANCE", "LIFESTEAL"],
+      "abilities": [
+        {
+          "id": "blood_sentinel_lifesteal",
+          "kind": "STATIC",
+          "engineSupport": "pending",
+          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
+        }
+      ]
+    },
+    {
+      "id": "eternal_feast_countess",
+      "name": "Countess of the Eternal Feast",
+      "displayNameEs": "Condesa del Banquete Eterno",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Her court has waited centuries for the final guest.",
+        "es": "Su corte ha esperado siglos al último invitado."
+      },
+      "quantity": 1,
+      "manaCost": "{6}",
+      "manaValue": 6,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Legendary", "Creature"],
+      "subtypes": ["Vampire", "Noble"],
+      "power": 4,
+      "toughness": 5,
+      "keywords": ["FLYING", "LIFESTEAL"],
+      "abilities": [
+        {
+          "id": "eternal_feast_countess_lifesteal",
+          "kind": "STATIC",
+          "engineSupport": "pending",
+          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
+        }
+      ]
+    },
+    {
+      "id": "blood_pact",
+      "name": "Blood Pact",
+      "displayNameEs": "Pacto de Sangre",
+      "gameText": {
+        "en": "Lose 4 life. Draw 2 cards.",
+        "es": "Pierde 4 vidas. Roba 2 cartas."
+      },
+      "flavorText": {
+        "en": "Knowledge never asks whether the price was fair.",
+        "es": "El conocimiento nunca pregunta si el precio fue justo."
+      },
+      "quantity": 3,
+      "manaCost": "{2}",
+      "manaValue": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Sorcery"],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "blood_pact_spell",
+          "kind": "SPELL",
+          "engineSupport": "pending",
+          "implementationNote": "Al resolver, el jugador pierde 4 vidas y roba 2 cartas."
+        }
+      ]
+    },
+    {
+      "id": "crimson_impulse",
+      "name": "Crimson Impulse",
+      "displayNameEs": "Impulso Carmesí",
+      "gameText": {
+        "en": "As an additional cost, pay 2 life. An allied creature gets +2/+2 until end of turn.",
+        "es": "Como coste adicional, paga 2 vidas. Una criatura aliada obtiene +2/+2 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "Pain is merely strength waiting for direction.",
+        "es": "El dolor sólo es fuerza esperando una dirección."
+      },
+      "quantity": 3,
+      "manaCost": "{2}",
+      "manaValue": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Instant"],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "crimson_impulse_spell",
+          "kind": "SPELL",
+          "engineSupport": "pending",
+          "implementationNote": "Coste adicional de 2 vidas; hace objetivo a una criatura aliada y le da +2/+2 hasta fin de turno."
+        }
+      ]
+    },
+    {
+      "id": "drain_essence",
+      "name": "Drain Essence",
+      "displayNameEs": "Drenar la Esencia",
+      "gameText": {
+        "en": "Deal 3 damage to a Horde creature. Recover 2 life.",
+        "es": "Haz 3 de daño a una criatura de la Horda. Recupera 2 vidas."
+      },
+      "flavorText": {
+        "en": "Even the dead have something left to surrender.",
+        "es": "Hasta los muertos conservan algo que entregar."
+      },
+      "quantity": 2,
+      "manaCost": "{3}",
+      "manaValue": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Instant"],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "drain_essence_spell",
+          "kind": "SPELL",
+          "engineSupport": "pending",
+          "implementationNote": "Hace objetivo únicamente a una criatura de la Horda, le hace 3 de daño y luego recupera 2 vidas."
+        }
+      ]
+    },
+    {
+      "id": "predatory_thirst",
+      "name": "Predatory Thirst",
+      "displayNameEs": "Sed Depredadora",
+      "gameText": {
+        "en": "An allied creature gets +1/+0 and Lifesteal until end of turn.",
+        "es": "Una criatura aliada obtiene +1/+0 y Robo de vida hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "Hunger sharpens every step toward the Host.",
+        "es": "El hambre afila cada paso hacia el Host."
+      },
+      "quantity": 2,
+      "manaCost": "{3}",
+      "manaValue": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Instant"],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "predatory_thirst_spell",
+          "kind": "SPELL",
+          "engineSupport": "pending",
+          "implementationNote": "Hace objetivo a una criatura aliada y le da +1/+0 y Robo de vida hasta fin de turno."
+        }
+      ]
+    },
+    {
+      "id": "final_banquet",
+      "name": "Final Banquet",
+      "displayNameEs": "Banquete Final",
+      "gameText": {
+        "en": "Destroy a Horde creature. Lose life equal to its power.",
+        "es": "Destruye una criatura de la Horda. Pierde vidas igual a su fuerza."
+      },
+      "flavorText": {
+        "en": "The last guest always pays for the feast.",
+        "es": "El último invitado siempre paga el banquete."
+      },
+      "quantity": 1,
+      "manaCost": "{5}",
+      "manaValue": 5,
+      "colors": [],
+      "colorIdentity": [],
+      "cardTypes": ["Sorcery"],
+      "subtypes": [],
+      "power": null,
+      "toughness": null,
+      "keywords": [],
+      "abilities": [
+        {
+          "id": "final_banquet_spell",
+          "kind": "SPELL",
+          "engineSupport": "pending",
+          "implementationNote": "Hace objetivo únicamente a una criatura de la Horda, registra su fuerza, la destruye y hace perder esa cantidad de vida al jugador."
+        }
+      ]
+    }
+  ],
+  "engineSupportNeeded": [
+    "Energía universal y costes numéricos sin colores.",
+    "Costes de vida que no pueden reducir al jugador por debajo de 1.",
+    "Robo de vida basado en daño de combate.",
+    "Triggers al pagar vida y al sobrevivir bloqueando.",
+    "Conceder Robo de vida hasta el final del turno.",
+    "Hechizos que sólo pueden hacer objetivo a criaturas de la Horda."
+  ]
+}

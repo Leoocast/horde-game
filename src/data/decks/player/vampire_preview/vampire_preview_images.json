@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "cacheKey": "vampire-early-access-v2"
+  },
+  "cards": {
+    "crimson_energy": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_energy.png"
+    },
+    "blood_page": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_page.png"
+    },
+    "crimson_bat": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_bat.png"
+    },
+    "tithe_acolyte": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/tithe_acolyte.png"
+    },
+    "court_duelist": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/court_duelist.png"
+    },
+    "crypt_guardian": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crypt_guardian.png"
+    },
+    "black_vein_executioner": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/black_vein_executioner.png"
+    },
+    "blood_sentinel": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_sentinel.png"
+    },
+    "eternal_feast_countess": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/eternal_feast_countess.png"
+    },
+    "blood_pact": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/blood_pact.png"
+    },
+    "crimson_impulse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/crimson_impulse.png"
+    },
+    "drain_essence": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/drain_essence.png"
+    },
+    "predatory_thirst": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/predatory_thirst.png"
+    },
+    "final_banquet": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/vampires/final_banquet.png"
+    }
+  }
+}

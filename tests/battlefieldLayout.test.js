@@ -137,6 +137,8 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
   const groupMeta = new Map();
   const left = addCard(game, customCard("ghoul", "horde", { power: 2, toughness: 2 }));
   const right = addCard(game, customCard("ghoul", "horde", { power: 2, toughness: 2 }));
+  left.battlefieldEntryTurn = 1;
+  right.battlefieldEntryTurn = 1;
   cardOrder.set(left.instanceId, 0);
   cardOrder.set(right.instanceId, 1);
   familyOrder.set(left.definitionId, 0);
@@ -151,4 +153,49 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
 
   const after = groupBattlefieldCopies(game, [left, right], cardOrder, familyOrder, new Map(), new Map(), undefined, groupKeys, groupMeta, false);
   assert.equal(after.length, 2, "once the sequence is over the differing stats split the stack");
+});
+
+test("non-token Horde copies stack only when they entered during the same Horde turn", () => {
+  const game = createTestGame();
+  const cardOrder = new Map();
+  const familyOrder = new Map();
+  const firstBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
+  const interveningZombie = addCard(game, customCard("intervening_zombie", "horde", { subtypes: ["Zombie"] }));
+  const laterBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
+  firstBat.battlefieldEntryTurn = 1;
+  interveningZombie.battlefieldEntryTurn = 1;
+  laterBat.battlefieldEntryTurn = 2;
+  [firstBat, interveningZombie, laterBat].forEach((card, index) => {
+    cardOrder.set(card.instanceId, index);
+    if (!familyOrder.has(card.definitionId)) familyOrder.set(card.definitionId, index);
+  });
+
+  const separateTurns = groupBattlefieldCopies(
+    game,
+    [firstBat, interveningZombie, laterBat],
+    cardOrder,
+    familyOrder,
+    new Map(),
+    new Map(),
+  );
+  assert.deepEqual(
+    separateTurns.map((group) => group.cards.map((card) => card.instanceId)),
+    [[firstBat.instanceId], [interveningZombie.instanceId], [laterBat.instanceId]],
+    "the later Blighted Bat keeps its summon position instead of joining the old stack",
+  );
+
+  laterBat.battlefieldEntryTurn = 1;
+  const sameTurn = groupBattlefieldCopies(
+    game,
+    [firstBat, interveningZombie, laterBat],
+    cardOrder,
+    familyOrder,
+    new Map(),
+    new Map(),
+  );
+  assert.deepEqual(
+    sameTurn.map((group) => group.cards.map((card) => card.instanceId)),
+    [[firstBat.instanceId, laterBat.instanceId], [interveningZombie.instanceId]],
+    "matching copies from the same Horde turn may share one stack",
+  );
 });

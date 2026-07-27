@@ -83,7 +83,9 @@ export function groupBattlefieldCopies(
         ? `instance-${card.instanceId}`
         : swarmToken
           ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
-          : `copy-${card.definitionId}-${visualStatsKey}`);
+          : card.controller === "horde"
+            ? `horde-turn-${card.battlefieldEntryTurn ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
+            : `copy-${card.definitionId}-${visualStatsKey}`);
     lastGroupKeys?.set(card.instanceId, groupingKey);
     groupOfCard.set(card.instanceId, groupingKey);
     const instanceOrder = cardOrder.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
@@ -91,7 +93,9 @@ export function groupBattlefieldCopies(
       ? swarmWaveId === undefined
         ? instanceOrder
         : (swarmWaveOrder.get(swarmWaveId) ?? instanceOrder)
-      : (familyOrder.get(card.definitionId) ?? instanceOrder);
+      : card.controller === "horde"
+        ? instanceOrder
+        : (familyOrder.get(card.definitionId) ?? instanceOrder);
     const group = groups.get(groupingKey);
     if (group) {
       group.cards.push(card);

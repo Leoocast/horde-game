@@ -5,7 +5,7 @@ import { DeckInspector } from "./components/DeckInspector";
 import { EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
-import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
+import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
 import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
@@ -41,7 +41,7 @@ export default function App() {
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
     hordeName: string;
-    hordeDeckId: string;
+    encounterTone: EncounterTone;
     gameMode: GameMode;
     tutorial: boolean;
   } | null>(null);
@@ -136,7 +136,7 @@ export default function App() {
     <EncounterTransition
       playerName={launchTransition.playerName}
       hordeName={launchTransition.hordeName}
-      hordeDeckId={launchTransition.hordeDeckId}
+      encounterTone={launchTransition.encounterTone}
       gameMode={launchTransition.gameMode}
     />
   ) : null;
@@ -236,10 +236,12 @@ export default function App() {
               options.mode,
               options.gameMode,
             );
+            const transitionHordeDeckId = isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId;
+            const transitionHordeDeck = hordeInspectableDecks.find((deck) => deck.id === transitionHordeDeckId);
             setLaunchTransition({
               playerName: options.playerName,
-              hordeName: hordeInspectableDecks.find((deck) => deck.id === selectedHordeDeckId)?.deck.name ?? "The Horde",
-              hordeDeckId: selectedHordeDeckId,
+              hordeName: transitionHordeDeck?.deck.name ?? "The Horde",
+              encounterTone: transitionHordeDeck?.presentation.encounterTone ?? "undead",
               gameMode: options.gameMode,
               tutorial: isTutorial,
             });

@@ -9,6 +9,7 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { KeywordPills } from "./CardPreview";
+import { DeckCardVisual } from "./DeckCardVisual";
 
 type Props = {
   deck: InspectableDeck;
@@ -49,7 +50,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
   const [columnCount, setColumnCountState] = useState(readStoredColumnCount);
   const [detailsFontSize, setDetailsFontSize] = useState(20);
   const [closing, setClosing] = useState(false);
-  const theme = deckTheme(deck.id);
+  const theme = deck.presentation.theme;
   const zoomLevel = DECK_COLUMN_OPTIONS.indexOf(columnCount);
   const setColumnCount = (value: number | ((current: number) => number)) => {
     setColumnCountState((current) => {
@@ -192,6 +193,8 @@ function DeckCardTile({
   const language = useLanguageStore((state) => state.language);
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
+  const localArt = usesGeneratedCardFrame(deck, card);
+  const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -215,8 +218,23 @@ function DeckCardTile({
             x{quantity}
           </span>
         )}
-        <div className="deck-detail-card-image">
-          {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <MissingCardArt card={card} />}
+        <div className={["deck-detail-card-image", showFullCardImage ? "is-full-card" : ""].join(" ")}>
+          {details.imageUrl && localArt ? (
+            <DeckCardVisual
+              card={card}
+              imageUrl={details.imageUrl}
+              displayName={displayName}
+              typeLine={localizedTypeLine(card, language)}
+              description={authoredCardText(card, language)}
+              flavorText={authoredFlavorText(card, language)}
+              credit="HOSTFALL — ORIGINAL ART"
+              className="hostfall-vampire"
+            />
+          ) : details.imageUrl ? (
+            <img src={details.imageUrl} alt={displayName} draggable={false} />
+          ) : (
+            <MissingCardArt card={card} />
+          )}
           {selected && <div className="deck-detail-card-selection" />}
         </div>
       </div>
@@ -240,6 +258,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const hasText = text.length > 0;
+  const showFullCardImage = usesFullCardImage(deck, card);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -258,7 +277,11 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         </div>
       </div>
       <div className="deck-detail-info-body">
-        {details.imageUrl ? (
+        {details.imageUrl && showFullCardImage ? (
+          <div className="deck-detail-info-card-frame">
+            <img src={details.imageUrl} alt={displayName} />
+          </div>
+        ) : details.imageUrl ? (
           <img src={details.imageUrl} alt={displayName} className="deck-detail-info-image" />
         ) : (
           <MissingCardArt card={card} />
@@ -309,6 +332,8 @@ function DeckInspectorDetailsModal({
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
+  const localArt = usesGeneratedCardFrame(deck, card);
+  const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -359,7 +384,7 @@ function DeckInspectorDetailsModal({
   return (
     <div
       data-preserve-card-focus="true"
-      className={`deck-collection-modal-backdrop deck-theme-${deckTheme(deck.id)} ${closing ? "is-closing" : ""}`}
+      className={`deck-collection-modal-backdrop deck-theme-${deck.presentation.theme} ${closing ? "is-closing" : ""}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) closeModal();
       }}
@@ -374,8 +399,23 @@ function DeckInspectorDetailsModal({
             <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title={t("common.previousCard")}>
               <ChevronLeft size={24} />
             </button>
-            <div className="deck-collection-modal-art">
-              {details.imageUrl ? <img src={details.imageUrl} alt={displayName} draggable={false} /> : <MissingCardArt card={card} />}
+            <div className={["deck-collection-modal-art", showFullCardImage ? "is-full-card" : ""].join(" ")}>
+              {details.imageUrl && localArt ? (
+                <DeckCardVisual
+                  card={card}
+                  imageUrl={details.imageUrl}
+                  displayName={displayName}
+                  typeLine={localizedTypeLine(card, language)}
+                  description={authoredCardText(card, language)}
+                  flavorText={authoredFlavorText(card, language)}
+                  credit="HOSTFALL — ORIGINAL ART"
+                  className="hostfall-vampire"
+                />
+              ) : details.imageUrl ? (
+                <img src={details.imageUrl} alt={displayName} draggable={false} />
+              ) : (
+                <MissingCardArt card={card} />
+              )}
             </div>
             <button className="deck-collection-modal-nav is-next" type="button" onClick={() => navigate("next")} title={t("common.nextCard")}>
               <ChevronRight size={24} />
@@ -453,6 +493,29 @@ function formatDeckKeyword(keyword: string): string {
   return text.toUpperCase();
 }
 
+function usesGeneratedCardFrame(deck: InspectableDeck, card: NewDeckCard): boolean {
+  const image = deck.images.cards[card.id];
+  return image?.source === "local" && image.imageKind !== "card";
+}
+
+function usesFullCardImage(deck: InspectableDeck, card: NewDeckCard): boolean {
+  const image = deck.images.cards[card.id];
+  return image?.imageKind === "card" || (image?.showFullCardImage ?? deck.images.defaults?.showFullCardImage ?? false);
+}
+
+function authoredCardText(card: NewDeckCard, language: AppLanguage): string {
+  return card.gameText?.[language] ?? card.gameText?.en ?? "";
+}
+
+function authoredFlavorText(card: NewDeckCard, language: AppLanguage): string {
+  const flavorText = card.flavorText;
+  if (typeof flavorText === "string") return flavorText;
+  if (!flavorText || typeof flavorText !== "object") return "";
+  const localized = flavorText as Partial<Record<AppLanguage, unknown>>;
+  const value = localized[language] ?? localized.en;
+  return typeof value === "string" ? value : "";
+}
+
 function describeCardFromJson(card: NewDeckCard): string {
   const abilities = card.abilities ?? [];
   return abilities.map(describeAbility).filter(Boolean).join("\n\n");
@@ -508,12 +571,6 @@ function readStoredColumnCount(): DeckColumnCount {
   const stored = window.localStorage.getItem(DECK_COLUMNS_STORAGE_KEY);
   const parsed = stored ? Number(stored) : DEFAULT_DECK_COLUMNS;
   return clampColumnCount(Number.isFinite(parsed) ? parsed : DEFAULT_DECK_COLUMNS);
-}
-
-function deckTheme(deckId: string): "ramp" | "zombie" | "goblin" {
-  if (deckId === "horde_zombies") return "zombie";
-  if (deckId === "goblin_assault_horde") return "goblin";
-  return "ramp";
 }
 
 function DeckFireflies() {

@@ -44,6 +44,12 @@ example, four Goblin tokens, then Hobgoblin Bandit Lord, then two later tokens r
 that order. The layout may stack the two token waves, but grouping never moves the second wave in
 front of the lord.
 
+Non-token Horde copies also preserve summon chronology. Identical copies may share a visual stack
+only when `recordBattlefieldEntry` recorded the same Horde turn for both. A later copy starts a new
+stack at its real arrival position instead of jumping back into an older family stack. If entry
+history is unavailable, layout keeps the copies separate rather than guessing that they arrived
+together. `tests/battlefieldLayout.test.js` covers the Blighted Bat regression.
+
 Current handlers:
 
 | Handler | Claims | Presentation |

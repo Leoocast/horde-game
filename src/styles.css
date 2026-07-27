@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Hostfall Card Lora";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/mono-green/lora-normal-latin.woff2") format("woff2");
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -1842,6 +1850,15 @@
     width: 100%;
     height: 100%;
     object-fit: fill;
+  }
+
+  .deck-detail-card-image.is-html-card,
+  .deck-detail-card-image.is-full-card,
+  .deck-collection-modal-art.is-full-card,
+  .deck-collection-modal-art.is-html-card {
+    border-color: transparent;
+    border-radius: 4.918% / 3.529%;
+    background: transparent;
   }
 
   .deck-detail-card-selection {
@@ -3816,6 +3833,39 @@
     animation: card-actionable-sweep 2.8s ease-in-out infinite;
   }
 
+  .deck-detail-info-card-frame {
+    width: min(100%, 275px);
+    aspect-ratio: 488 / 680;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 4.918% / 3.529%;
+    box-shadow:
+      7px 10px 0 #17231c,
+      0 20px 38px rgb(0 0 0 / 0.52),
+      0 0 28px rgb(127 151 126 / 0.08);
+  }
+
+  .deck-detail-info-card-frame > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 4.918% / 3.529%;
+    object-fit: fill;
+  }
+
+  .card-actionable-sweep-clip {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    overflow: hidden;
+    border-radius: 4.9% / 3.5%;
+  }
+
+  .card-actionable-sweep-clip > .card-actionable-sweep {
+    z-index: auto;
+  }
+
   .card-effect-available-sweep {
     background: linear-gradient(112deg, transparent 37%, rgb(255 236 178 / 0.04) 44%, rgb(255 207 111 / 0.28) 50%, rgb(255 143 44 / 0.12) 56%, transparent 63%);
   }
@@ -4215,9 +4265,16 @@
   }
 
   .card-preview-cropped-frame {
+    position: relative;
     overflow: hidden;
     border-radius: 0.375rem;
     background: #1c120b;
+    container-type: inline-size;
+  }
+
+  .card-preview-cropped-frame.card-preview-html-frame {
+    border-radius: 4.918% / 3.529%;
+    background: transparent;
   }
 
   .card-preview-cropped-image {
@@ -4225,9 +4282,8 @@
     height: 100%;
     max-width: none;
     object-fit: cover;
-    clip-path: inset(0 0 2.5% 0);
-    transform: translateY(1%) scale(1.085);
-    transform-origin: center;
+    clip-path: none;
+    transform: none;
   }
 
   .card-sharp-image-overlay {
@@ -4250,6 +4306,37 @@
     transform: translateY(1%) scale(1.085) translateZ(0);
     transform-origin: center;
     backface-visibility: hidden;
+  }
+
+  .card-visual.card-image-full > img,
+  .card-visual.card-image-full .card-sharp-image-overlay > img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: contain;
+    /*
+     * The exported 976x1360 PNGs contain semi-transparent black pixels outside their 48px
+     * rounded card face. Clip that baked export shadow at the matching 48/976 by 48/1360 radii.
+     */
+    border-radius: 4.918% / 3.529%;
+    clip-path: none;
+    transform: none;
+  }
+
+  .card-visual.card-image-full {
+    overflow: visible;
+    border: 0;
+    border-radius: 4.918% / 3.529%;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .card-visual.card-image-native-hd > img {
+    /*
+     * The exported 976px cards contain sub-1px gold rules at hand size. Contrast-optimized
+     * resampling turns those fractional lines into alternating dots once the fan rotates them.
+     */
+    image-rendering: auto;
   }
 
   .card-stat-badge {
@@ -4341,7 +4428,7 @@
   }
 
   .battlefield-side-content > .old-panel-soft {
-    --battlefield-card-width: clamp(140px, min(12vw, calc((100cqh - 80px) * 0.717875)), 212px);
+    --battlefield-card-width: 212px;
     height: 100%;
     min-height: 0;
     container-type: size;
@@ -4358,6 +4445,140 @@
       top 220ms ease,
       transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
       filter 220ms ease;
+  }
+
+  .battlefield-combat-available-border {
+    pointer-events: none;
+    position: absolute;
+    inset: -3px;
+    z-index: 18;
+    border-radius: calc(0.375rem + 3px);
+    animation: hand-available-border-pulse 2.1s ease-in-out infinite;
+  }
+
+  .battlefield-combat-available-border::before,
+  .battlefield-combat-available-border::after {
+    position: absolute;
+    box-sizing: border-box;
+    border-radius: inherit;
+    background: var(--battlefield-combat-border-gradient);
+    content: "";
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .battlefield-combat-available-border::before {
+    inset: -2px;
+    padding: 5px;
+    opacity: 0.64;
+    filter: blur(3.4px);
+  }
+
+  .battlefield-combat-available-border::after {
+    inset: 0;
+    padding: 3px;
+    filter: drop-shadow(0 0 2px var(--battlefield-combat-border-shadow));
+  }
+
+  .battlefield-combat-available-attack {
+    --battlefield-combat-border-gradient: linear-gradient(
+      180deg,
+      rgb(255 177 89 / 0.92) 0%,
+      rgb(249 135 52 / 0.86) 24%,
+      rgb(231 91 30 / 0.66) 49%,
+      rgb(202 62 22 / 0.24) 68%,
+      rgb(177 43 18 / 0) 84%,
+      transparent 100%
+    );
+    --battlefield-combat-border-shadow: rgb(244 123 43 / 0.76);
+  }
+
+  .battlefield-combat-available-defense {
+    --battlefield-combat-border-gradient: linear-gradient(
+      180deg,
+      rgb(67 226 255 / 0.86) 0%,
+      rgb(39 207 244 / 0.82) 24%,
+      rgb(23 178 224 / 0.64) 49%,
+      rgb(18 147 198 / 0.23) 68%,
+      rgb(15 126 181 / 0) 84%,
+      transparent 100%
+    );
+    --battlefield-combat-border-shadow: rgb(72 211 244 / 0.68);
+  }
+
+  .battlefield-effect-available-border {
+    inset: -4px;
+    border-radius: calc(0.375rem + 4px);
+    --battlefield-combat-border-gradient:
+      radial-gradient(ellipse at 30% 0%, rgb(255 250 200 / 0.94), transparent 34%),
+      linear-gradient(
+        180deg,
+        rgb(255 235 142 / 0.98) 0%,
+        rgb(247 198 77 / 0.94) 26%,
+        rgb(225 154 45 / 0.76) 52%,
+        rgb(196 111 28 / 0.38) 72%,
+        rgb(163 78 20 / 0.12) 88%,
+        transparent 100%
+      );
+    --battlefield-combat-border-shadow: rgb(247 193 69 / 0.9);
+  }
+
+  .battlefield-effect-available-border::before {
+    opacity: 0.78;
+    filter: blur(4px);
+  }
+
+  .battlefield-effect-available-border::after {
+    padding: 4px;
+  }
+
+  .battlefield-available-pulse {
+    pointer-events: none;
+    position: absolute;
+    inset: -3px;
+    z-index: 17;
+    border-radius: calc(0.375rem + 3px);
+    animation: battlefield-available-glow-pulse 1.5s ease-in-out infinite;
+  }
+
+  .battlefield-available-pulse-attack {
+    --battlefield-pulse-near-rest: rgb(238 142 54 / 0.52);
+    --battlefield-pulse-far-rest: rgb(224 91 26 / 0.3);
+    --battlefield-pulse-near-peak: rgb(255 174 79 / 0.78);
+    --battlefield-pulse-far-peak: rgb(231 92 27 / 0.5);
+  }
+
+  .battlefield-available-pulse-defense {
+    --battlefield-pulse-near-rest: rgb(72 190 236 / 0.52);
+    --battlefield-pulse-far-rest: rgb(29 133 193 / 0.3);
+    --battlefield-pulse-near-peak: rgb(91 220 255 / 0.78);
+    --battlefield-pulse-far-peak: rgb(35 159 220 / 0.5);
+  }
+
+  .battlefield-available-pulse-effect {
+    inset: -4px;
+    border-radius: calc(0.375rem + 4px);
+    --battlefield-pulse-near-rest: rgb(225 190 91 / 0.54);
+    --battlefield-pulse-far-rest: rgb(194 126 34 / 0.3);
+    --battlefield-pulse-near-peak: rgb(255 220 111 / 0.82);
+    --battlefield-pulse-far-peak: rgb(222 151 44 / 0.52);
+  }
+
+  .battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .battlefield-combat-available-border {
+    transform: rotate(4deg);
+    transform-origin: center;
+  }
+
+  .battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .battlefield-available-pulse {
+    transform: rotate(4deg);
+    transform-origin: center;
   }
 
   .battlefield-card-slot::before {
@@ -4708,7 +4929,70 @@
     white-space: nowrap;
   }
 
-  .counter-targetable-card > article {
+  .effect-action-mana-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+  }
+
+  .effect-action-symbol {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 1px solid;
+    border-radius: 50%;
+  }
+
+  .effect-action-symbol svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.35;
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.72));
+  }
+
+  .effect-action-symbol-tap {
+    border-color: rgb(184 162 107 / 0.66);
+    background:
+      radial-gradient(circle at 36% 27%, rgb(242 229 191 / 0.18), transparent 32%),
+      linear-gradient(145deg, #665b43 0%, #403a2d 48%, #211f1a 100%);
+    color: #eadcae;
+    box-shadow:
+      inset 0 1px 2px rgb(255 242 204 / 0.24),
+      inset 0 -3px 5px rgb(16 12 7 / 0.48),
+      0 3px 7px rgb(0 0 0 / 0.42);
+  }
+
+  .effect-action-symbol-energy {
+    border-color: rgb(137 198 213 / 0.66);
+    background:
+      radial-gradient(circle at 36% 27%, rgb(213 239 242 / 0.18), transparent 32%),
+      linear-gradient(145deg, #47788a 0%, #285166 48%, #142c3c 100%);
+    color: #dceff0;
+    box-shadow:
+      inset 0 1px 2px rgb(222 245 247 / 0.24),
+      inset 0 -3px 5px rgb(3 17 28 / 0.48),
+      0 3px 7px rgb(0 0 0 / 0.42);
+  }
+
+  .effect-action-mana-colon {
+    color: rgb(192 183 147 / 0.72);
+    font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .effect-action-mana-label {
+    color: #e8dfbd;
+    font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .counter-targetable-card > article,
+  .counter-targetable-card > .hand-card-face-scale > article {
     border-color: rgb(207 190 116 / 0.92) !important;
     box-shadow:
       inset 0 0 0 1px rgb(236 226 167 / 0.34),
@@ -4717,7 +5001,8 @@
     animation: actionable-card-glow 1.5s ease-in-out infinite;
   }
 
-  .counter-target-locked-card > article {
+  .counter-target-locked-card > article,
+  .counter-target-locked-card > .hand-card-face-scale > article {
     border-color: rgb(145 245 143 / 0.98) !important;
     box-shadow:
       0 0 0 1.5px rgb(201 255 184 / 0.84),
@@ -5016,7 +5301,7 @@
     top: 50%;
     z-index: 108;
     display: flex;
-    width: clamp(230px, 18vw, 300px);
+    width: clamp(246px, 19.25vw, 320px);
     transform: translateY(-72%);
     flex-direction: column;
     align-items: center;
@@ -5350,6 +5635,12 @@
     object-position: top center;
     transform: translate(-4%, -5%);
     transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), height 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-image-native-hd > img {
+    width: 140%;
+    height: 140%;
+    transform: translate(calc(-20% + 18px), calc(-20% + 46px));
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
@@ -7592,6 +7883,10 @@
     --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
   }
 
+  .player-hand-cards.player-hand-cards-larger {
+    --hand-card-width: clamp(162.1px, min(13.53vw, calc((100cqw - 48px) / 5.06)), 261.2px);
+  }
+
   .player-hand-cards > * + * {
     margin-left: var(--hand-stack-margin);
   }
@@ -7611,21 +7906,125 @@
     position: absolute;
     left: 50%;
     bottom: 0;
-    --hand-hover-scale: 1;
-    width: calc(var(--hand-card-width) * var(--hand-hover-scale));
-    height: calc(var(--hand-card-width) * 1.393 * var(--hand-hover-scale));
+    width: var(--hand-card-width);
+    height: calc(var(--hand-card-width) * 1.393);
     z-index: var(--hand-z);
     transform-origin: 50% 100%;
     backface-visibility: hidden;
-    will-change: transform, width, height;
-    transition:
-      z-index 0ms,
-      width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-      height 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    transition: z-index 0ms;
   }
 
-  .hand-card-hovered {
-    --hand-hover-scale: 1.3;
+  .hand-card-native-hd,
+  .hand-card-html {
+    backface-visibility: visible;
+    will-change: auto;
+  }
+
+  .hand-card-available::before,
+  .hand-card-available::after {
+    position: absolute;
+    box-sizing: border-box;
+    border-radius: 4.918% / 3.529%;
+    background: linear-gradient(
+      180deg,
+      rgb(67 226 255 / 0.86) 0%,
+      rgb(39 207 244 / 0.82) 24%,
+      rgb(23 178 224 / 0.64) 49%,
+      rgb(18 147 198 / 0.23) 68%,
+      rgb(15 126 181 / 0) 84%,
+      transparent 100%
+    );
+    content: "";
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .hand-card-available::before {
+    inset: -2px;
+    z-index: 10;
+    padding: 5px;
+    filter: blur(3.4px);
+    opacity: 0.64;
+  }
+
+  .hand-card-available::after {
+    inset: 0;
+    z-index: 11;
+    padding: 3px;
+    filter: drop-shadow(0 0 2px rgb(72 211 244 / 0.68));
+    animation: hand-available-border-pulse 2.1s ease-in-out infinite;
+  }
+
+  .hand-card-face-scale {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    container-type: inline-size;
+    transform-origin: 50% 100%;
+  }
+
+  .player-hand-cards-isolated-actionable-glow .hand-card-html .card-actionable {
+    border-width: 2px;
+    border-color: transparent;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .player-hand-cards-isolated-actionable-sweep .hand-card-html .card-actionable-sweep-clip {
+    display: none;
+  }
+
+  .hand-card-actionable-sweep-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    overflow: hidden;
+    border-radius: 4.9% / 3.5%;
+    transform: translateZ(0);
+  }
+
+  .hand-card-actionable-sweep-layer > .card-actionable-sweep {
+    z-index: auto;
+    will-change: transform, opacity;
+  }
+
+  .hand-card-actionable-glow-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    border: 2px solid rgb(210 197 119 / 0.96);
+    border-radius: 0.375rem;
+    box-shadow:
+      inset 0 0 0 1px rgb(239 226 155 / 0.54),
+      0 0 10px rgb(111 181 145 / 0.72),
+      0 0 23px rgb(47 123 108 / 0.48);
+    transform: translateZ(0);
+  }
+
+  .hand-card-actionable-glow-layer::after {
+    position: absolute;
+    inset: -2px;
+    border: 2px solid rgb(229 218 151 / 0.98);
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 1px rgb(244 231 166 / 0.62),
+      0 0 11px rgb(124 184 149 / 0.76),
+      0 0 25px rgb(62 128 111 / 0.46);
+    content: "";
+    opacity: 0;
+    transform: translateZ(0);
+    animation: hand-actionable-glow-opacity 1.5s ease-in-out infinite;
+    will-change: opacity;
   }
 
   .hand-card:hover,
@@ -7740,6 +8139,29 @@
   58% { opacity: 1; }
   82% { opacity: 0.78; transform: translateX(145%); }
   100% { opacity: 0; transform: translateX(145%); }
+}
+
+@keyframes hand-available-border-pulse {
+  0%,
+  100% { opacity: 0.76; }
+  50% { opacity: 1; }
+}
+
+@keyframes battlefield-available-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 7px var(--battlefield-pulse-near-rest),
+      0 0 16px var(--battlefield-pulse-far-rest);
+    opacity: 0.78;
+  }
+
+  50% {
+    box-shadow:
+      0 0 11px var(--battlefield-pulse-near-peak),
+      0 0 25px var(--battlefield-pulse-far-peak);
+    opacity: 1;
+  }
 }
 
 @keyframes card-actionable-gem-pulse {
@@ -9895,21 +10317,75 @@
     0 0 8px color-mix(in srgb, var(--block-order-accent) 42%, transparent);
 }
 
-/* Dark stats, with a clearly separate buff state. */
+.card-defense-order-badge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 32;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgb(112 190 226 / 0.78);
+  border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 28% 4%, rgb(207 241 255 / 0.2), transparent 48%),
+    radial-gradient(ellipse at 90% 120%, rgb(65 146 190 / 0.14), transparent 52%),
+    repeating-linear-gradient(112deg, rgb(224 246 255 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(42 87 112 / 0.99), rgb(18 53 72 / 0.99) 58%, rgb(7 26 38 / 1));
+  color: #e8f6fb;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  box-shadow:
+    inset 0 1px 0 rgb(218 244 255 / 0.18),
+    inset 0 -3px 5px rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(4 17 27 / 0.58),
+    0 0 7px rgb(65 168 218 / 0.22),
+    0 3px 7px rgb(0 0 0 / 0.52);
+}
+
+.card-visual:has(> .card-defense-order-badge) > .card-cropped-title {
+  padding-left: 45px;
+}
+
+/* Shared stats palette: matches the printed mono-green card generator. */
 .card-stat-badge {
-  border-color: rgb(179 170 133 / 0.68);
-  background: linear-gradient(180deg, rgb(26 31 30 / 0.98), rgb(5 9 9 / 0.99));
-  color: #eee8d5;
-  box-shadow: inset 0 1px 0 rgb(255 247 214 / 0.12), 0 4px 12px rgb(0 0 0 / 0.68);
+  --card-stat-background: linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
+  --card-stat-border: rgb(201 177 111 / 0.48);
+  --card-stat-number: #f2f0e6;
+  --card-stat-separator: #94a3b8;
+  --card-stat-attack-icon: #c9aa66;
+  --card-stat-life-icon: #df7d7a;
+  --card-stat-buffed-background: linear-gradient(180deg, #344c3c, #1d3227 66%, #122219);
+  --card-stat-buffed-border: rgb(157 184 132 / 0.68);
+  --card-stat-buffed-number: #dfeecf;
+  border-color: var(--card-stat-border);
+  background: var(--card-stat-background);
+  color: var(--card-stat-number);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -3px 5px rgb(0 0 0 / 0.34),
+    0 3px 8px rgb(0 0 0 / 0.52);
 }
 
 .card-stat-badge > i {
-  background: linear-gradient(transparent 10%, rgb(188 174 126 / 0.42) 50%, transparent 90%);
+  background: linear-gradient(transparent 10%, rgb(148 163 184 / 0.42) 50%, transparent 90%);
 }
 
 .card-stat-segment {
-  color: #eee8d5;
+  color: var(--card-stat-number);
   text-shadow: 0 1px 3px #000;
+}
+
+.card-stat-attack svg { color: var(--card-stat-attack-icon); }
+.card-stat-life svg {
+  fill: var(--card-stat-life-icon);
+  color: var(--card-stat-life-icon);
 }
 
 .card-stat-badge.is-damaged {
@@ -9920,9 +10396,9 @@
 .card-stat-badge.is-damaged .card-stat-life { color: #ee9a88; }
 
 .card-stat-badge.is-buffed:not(.is-damaged) {
-  border-color: rgb(139 195 109 / 0.92);
-  background: linear-gradient(180deg, rgb(29 48 34 / 0.99), rgb(5 12 8 / 0.99));
-  box-shadow: inset 0 0 0 1px rgb(180 229 150 / 0.18), 0 0 11px rgb(94 189 82 / 0.5), 0 4px 12px rgb(0 0 0 / 0.68);
+  border-color: var(--card-stat-buffed-border);
+  background: var(--card-stat-buffed-background);
+  box-shadow: inset 0 0 0 1px rgb(179 205 159 / 0.13), 0 0 9px rgb(111 157 94 / 0.34), 0 4px 12px rgb(0 0 0 / 0.68);
 }
 
 .card-stat-badge.is-buffed::before {
@@ -9930,15 +10406,478 @@
   top: 1px;
   right: 3px;
   z-index: 2;
-  color: #a9d48d;
+  color: #acc69a;
   content: "\25B2";
   font-size: 7px;
   line-height: 1;
-  text-shadow: 0 0 6px rgb(120 218 96 / 0.72);
+  text-shadow: 0 0 5px rgb(111 157 94 / 0.42);
 }
 
 .card-stat-badge.is-buffed.is-damaged {
-  box-shadow: inset 0 0 0 1px rgb(180 229 150 / 0.13), 0 0 10px rgb(94 189 82 / 0.38), 0 4px 12px rgb(0 0 0 / 0.68);
+  box-shadow: inset 0 0 0 1px rgb(179 205 159 / 0.1), 0 0 8px rgb(111 157 94 / 0.28), 0 4px 12px rgb(0 0 0 / 0.68);
+}
+
+/* Full mono-green cards already print a stats tab into the PNG/HTML face. This dynamic tab sits
+   exactly over it so counters, damage and buffs never disagree with the visible card. */
+.card-visual.card-image-full > .card-stat-badge,
+.card-preview-full-card-frame > .card-stat-badge,
+.deck-card-dynamic-frame > .card-stat-badge {
+  --card-stat-background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  --card-stat-border: rgb(201 177 111 / 0.48);
+  isolation: isolate;
+  right: 0.2cqw;
+  bottom: 0.2cqw;
+  z-index: 40;
+  display: flex;
+  width: auto;
+  height: 9.22cqw;
+  min-width: 20.3cqw;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  gap: 1.13cqw;
+  padding: 0 2.97cqw 0 2.56cqw;
+  border: 0;
+  border-radius: 3.07cqw 0 2.56cqw 0;
+  background: var(--card-stat-background);
+  color: var(--card-stat-number);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
+    0 0.31cqw 0.82cqw rgb(0 0 0 / 0.52);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  clip-path: none;
+}
+
+.card-visual.card-image-full > .card-stat-badge::after,
+.card-preview-full-card-frame > .card-stat-badge::after,
+.deck-card-dynamic-frame > .card-stat-badge::after {
+  position: absolute;
+  inset: 0.2cqw;
+  z-index: 2;
+  border: 0.2cqw solid var(--card-stat-border);
+  border-radius: 2.87cqw 0 2.36cqw 0;
+  content: "";
+  pointer-events: none;
+}
+
+.card-visual.card-image-full > .card-stat-badge > i,
+.card-preview-full-card-frame > .card-stat-badge > i,
+.deck-card-dynamic-frame > .card-stat-badge > i {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+  width: auto;
+  height: auto;
+  margin: 0 0.31cqw;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--card-stat-separator);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 3.9cqw;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  transform: none;
+}
+
+.card-visual.card-image-full > .card-stat-badge > i::before,
+.card-preview-full-card-frame > .card-stat-badge > i::before,
+.deck-card-dynamic-frame > .card-stat-badge > i::before {
+  content: "/";
+}
+
+.card-visual.card-image-full > .card-stat-badge .card-stat-segment,
+.card-preview-full-card-frame > .card-stat-badge .card-stat-segment,
+.deck-card-dynamic-frame > .card-stat-badge .card-stat-segment {
+  position: relative;
+  z-index: 3;
+  gap: 0;
+  padding: 0;
+  color: var(--card-stat-number);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 5.23cqw;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-shadow: 0.2cqw 0.2cqw 0.41cqw rgb(0 0 0 / 0.86);
+}
+
+.card-visual.card-image-full > .card-stat-badge .card-stat-segment svg,
+.card-preview-full-card-frame > .card-stat-badge .card-stat-segment svg,
+.deck-card-dynamic-frame > .card-stat-badge .card-stat-segment svg {
+  display: none;
+}
+
+.card-visual.card-image-full > .card-stat-badge .card-stat-attack svg,
+.card-preview-full-card-frame > .card-stat-badge .card-stat-attack svg,
+.deck-card-dynamic-frame > .card-stat-badge .card-stat-attack svg {
+  color: var(--card-stat-attack-icon);
+  transform: scaleX(-1);
+}
+
+.card-visual.card-image-full > .card-stat-badge .card-stat-life svg,
+.card-preview-full-card-frame > .card-stat-badge .card-stat-life svg,
+.deck-card-dynamic-frame > .card-stat-badge .card-stat-life svg {
+  fill: var(--card-stat-life-icon);
+  color: var(--card-stat-life-icon);
+}
+
+.card-visual.card-image-full > .card-stat-badge.is-damaged,
+.card-preview-full-card-frame > .card-stat-badge.is-damaged,
+.deck-card-dynamic-frame > .card-stat-badge.is-damaged {
+  --card-stat-border: rgb(232 137 112 / 0.62);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(238 167 145 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(249 219 211 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
+}
+
+.card-visual.card-image-full > .card-stat-badge.is-buffed,
+.card-preview-full-card-frame > .card-stat-badge.is-buffed,
+.deck-card-dynamic-frame > .card-stat-badge.is-buffed {
+  --card-stat-border: rgb(184 216 151 / 0.76);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(239 248 226 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(240 255 225 / 0.16),
+    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
+    0 0 1.5cqw rgb(111 157 94 / 0.38);
+}
+
+.card-visual.card-image-full > .card-stat-badge.is-buffed .card-stat-segment b,
+.card-preview-full-card-frame > .card-stat-badge.is-buffed .card-stat-segment b,
+.deck-card-dynamic-frame > .card-stat-badge.is-buffed .card-stat-segment b {
+  color: var(--card-stat-buffed-number);
+  text-shadow: 0.3cqw 0.3cqw 0.6cqw rgb(0 0 0 / 0.9), 0 0 1.3cqw rgb(137 227 94 / 0.72);
+}
+
+.card-visual.card-image-full > .card-stat-badge.is-buffed::before,
+.card-preview-full-card-frame > .card-stat-badge.is-buffed::before,
+.deck-card-dynamic-frame > .card-stat-badge.is-buffed::before {
+  top: 0.48cqw;
+  right: 0.76cqw;
+  z-index: 4;
+  color: #bed4aa;
+  font-size: 1.1cqw;
+  text-shadow: 0 0 0.82cqw rgb(111 157 94 / 0.52);
+}
+
+.card-preview-full-card-frame > .card-stat-badge {
+  right: 0.2cqw;
+  bottom: 0.2cqw;
+}
+
+.card-preview-full-card-frame {
+  overflow: visible;
+  background: transparent;
+}
+
+.card-preview-full-card-frame > .card-preview-cropped-image {
+  border-radius: 4.918% / 3.529%;
+}
+
+.deck-card-dynamic-frame {
+  position: relative;
+  overflow: visible;
+  border-radius: 4.918% / 3.529%;
+  background: transparent;
+  container-type: inline-size;
+}
+
+.deck-card-dynamic-frame > img {
+  border-radius: 4.918% / 3.529%;
+}
+
+.card-cost-badge {
+  position: absolute;
+  top: -1.7cqw;
+  right: auto;
+  left: -1.25cqw;
+  z-index: 45;
+  isolation: isolate;
+  display: grid;
+  width: 15.8cqw;
+  height: 15.8cqw;
+  overflow: visible;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  font-size: 9.2cqw;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: none;
+}
+
+.card-cost-energy-orb {
+  position: absolute;
+  inset: 0.18cqw;
+  z-index: 2;
+  display: block;
+  overflow: hidden;
+  border: 0.14cqw solid rgb(185 232 255 / 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 28%, #b3e8f6 0%, #4eb8e9 20%, #196daf 53%, #06356c 80%, #01152f 100%);
+  box-shadow:
+    inset 0.32cqw 0.32cqw 0.62cqw rgb(220 247 255 / 0.38),
+    inset -0.9cqw -1.05cqw 1.35cqw rgb(3 24 58 / 0.76),
+    0 0 0.7cqw rgb(72 175 232 / 0.52),
+    0 0 1.55cqw rgb(24 88 190 / 0.34);
+  animation: card-cost-energy-orb-idle 9s ease-in-out infinite;
+}
+
+.card-cost-energy-orb::before {
+  position: absolute;
+  left: 17%;
+  top: 10%;
+  z-index: 3;
+  width: 31%;
+  height: 11%;
+  border-radius: 50%;
+  background: rgb(230 251 255 / 0.64);
+  box-shadow: 0 0 0.46cqw rgb(134 225 255 / 0.52);
+  content: "";
+  filter: blur(0.08cqw);
+  pointer-events: none;
+  transform: rotate(-25deg);
+}
+
+.card-cost-energy-orb::after {
+  position: absolute;
+  inset: 0.7cqw;
+  z-index: 2;
+  border: 0.1cqw solid rgb(231 251 255 / 0.24);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0.72cqw rgb(184 234 255 / 0.26);
+  content: "";
+  pointer-events: none;
+}
+
+.card-cost-energy-liquid {
+  position: absolute;
+  inset: 0.9cqw;
+  z-index: 1;
+  display: block;
+  border-radius: 42% 58% 55% 45% / 47% 41% 59% 53%;
+  background: conic-gradient(
+    from 20deg,
+    rgb(161 229 248 / 0.72),
+    rgb(43 144 216 / 0.1),
+    rgb(89 188 231 / 0.66),
+    rgb(11 72 164 / 0.16),
+    rgb(161 229 248 / 0.72)
+  );
+  box-shadow: inset 0 0 1cqw rgb(177 228 246 / 0.34);
+  opacity: 0.56;
+  transform-origin: 48% 53%;
+  animation: card-cost-energy-liquid-swirl 9s linear infinite;
+}
+
+.card-cost-value {
+  position: relative;
+  z-index: 5;
+  color: #fff8df;
+  -webkit-text-stroke: 0.56cqw rgb(1 12 32 / 1);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0.38cqw 0.34cqw rgb(0 5 18 / 1),
+    0 0 0.1cqw rgb(255 255 255 / 0.34);
+  transform: translateY(-0.15cqw);
+}
+
+@keyframes card-cost-energy-orb-idle {
+  0%,
+  100% {
+    filter: brightness(0.88) saturate(0.98);
+    transform: scale(0.99);
+  }
+
+  50% {
+    filter: brightness(1.02) saturate(1.04);
+    transform: scale(1.015);
+  }
+}
+
+@keyframes card-cost-energy-liquid-swirl {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-cost-energy-orb,
+  .card-cost-energy-liquid {
+    animation: none;
+  }
+}
+
+/* Cropped battlefield cards use compact game chrome instead of the printed-card tab used by hand
+   and previews. The title stays integrated into the card while the stats remain a readable HUD. */
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 15;
+  display: flex;
+  height: 29px;
+  overflow: hidden;
+  align-items: center;
+  padding: 1px 10px 0;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.16), transparent 47%),
+    radial-gradient(ellipse at 88% 125%, rgb(91 142 96 / 0.11), transparent 52%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.99), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  color: #f0ead7;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: clamp(12px, 6.6cqw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.008em;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  box-shadow:
+    inset 0 1px 0 rgb(232 222 174 / 0.12),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 2px 4px rgb(0 0 0 / 0.42);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
+  --card-stat-border: rgb(201 177 111 / 0.52);
+  isolation: isolate;
+  right: 3px;
+  bottom: 3px;
+  display: flex;
+  width: auto;
+  height: 31px;
+  min-width: 64px;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 9px 0 8px;
+  border: 0;
+  border-radius: 11px 0 9px;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  color: #f2f0e6;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -2px 4px rgb(0 0 0 / 0.4),
+    0 3px 7px rgb(0 0 0 / 0.56);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  clip-path: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge::after {
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  border: 1px solid var(--card-stat-border);
+  border-radius: 10px 0 8px;
+  content: "";
+  pointer-events: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > i {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+  justify-self: center;
+  width: auto;
+  height: auto;
+  margin: 0 1px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #94a3b8;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  transform: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > i::before {
+  content: "/";
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment {
+  position: relative;
+  z-index: 3;
+  gap: 0;
+  padding: 0;
+  background: none;
+  color: #f2f0e6;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 0.86);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment svg {
+  display: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged {
+  --card-stat-border: rgb(232 137 112 / 0.62);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(238 167 145 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(249 219 211 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed {
+  --card-stat-border: rgb(184 216 151 / 0.76);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(239 248 226 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(240 255 225 / 0.16),
+    inset 0 -2px 4px rgb(0 0 0 / 0.4),
+    0 0 9px rgb(129 176 103 / 0.38),
+    0 3px 7px rgb(0 0 0 / 0.56);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
+  color: #e0f0cf;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 5px rgb(151 195 122 / 0.56);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed::before {
+  top: 2px;
+  right: 3px;
+  z-index: 4;
+  color: #c4dcae;
+  font-size: 6px;
+  text-shadow: 0 0 4px rgb(139 187 111 / 0.52);
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */
@@ -11920,6 +12859,292 @@
   text-shadow: 0 2px 5px rgb(0 0 0 / 0.9), 0 0 14px var(--deck-accent-soft);
 }
 
+@keyframes hand-actionable-glow-opacity {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Original Hostfall cards: local art is framed from deck data instead of using a
+   pre-rendered third-party card image. */
+.deck-theme-vampire {
+  --deck-accent: #8f3342;
+  --deck-accent-bright: #efb4b5;
+  --deck-accent-soft: rgb(133 26 49 / 0.38);
+}
+
+.deck-key-card.deck-theme-vampire {
+  --deck-accent: #8f3342;
+  --deck-accent-bright: #efb4b5;
+  --deck-accent-soft: rgb(133 26 49 / 0.38);
+}
+
+.deck-detail-card-image > .hostfall-standard,
+.deck-collection-modal-art > .hostfall-standard {
+  width: 100%;
+  height: 100%;
+}
+
+.hostfall-standard {
+  --hostfall-accent: #8f3342;
+  --hostfall-accent-bright: #e8a7aa;
+  --hostfall-ink: #12090c;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  display: block;
+  width: 100%;
+  aspect-ratio: 488 / 680;
+  overflow: hidden;
+  border-radius: 4.3% / 3.2%;
+  background:
+    radial-gradient(circle at 50% 18%, rgb(173 55 70 / 0.34), transparent 42%),
+    #090708;
+  color: #eee0ca;
+  font-family: Georgia, "Times New Roman", serif;
+  box-shadow: inset 0 0 0 1px rgb(245 205 164 / 0.15);
+}
+
+.hostfall-standard-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  border: clamp(2px, 2cqw, 9px) solid transparent;
+  border-radius: inherit;
+  background:
+    linear-gradient(145deg, #34292a, #0b090a 38%, #5e2631 64%, #171012) border-box;
+  box-shadow:
+    inset 0 0 0 clamp(1px, 0.65cqw, 3px) rgb(224 188 133 / 0.35),
+    inset 0 0 clamp(8px, 5cqw, 24px) rgb(0 0 0 / 0.9);
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.hostfall-standard-inner {
+  position: absolute;
+  inset: 2.7%;
+  display: grid;
+  grid-template-rows: 10% 47% 7.5% minmax(0, 35.5%);
+  overflow: hidden;
+  border: 1px solid rgb(218 180 122 / 0.32);
+  border-radius: 2.7% / 2%;
+  background: #0b090a;
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 0.72);
+}
+
+.hostfall-standard-head {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border-bottom: 1px solid rgb(210 167 104 / 0.36);
+  padding: 1.2% 15% 1.2% 5%;
+  background:
+    linear-gradient(90deg, rgb(16 8 10 / 0.98), rgb(83 22 34 / 0.94) 72%, rgb(17 8 11 / 0.98)),
+    repeating-linear-gradient(135deg, transparent 0 7px, rgb(255 255 255 / 0.025) 7px 8px);
+  box-shadow: 0 2px 7px rgb(0 0 0 / 0.66);
+}
+
+.hostfall-standard-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #f1e5d2;
+  font-size: clamp(7px, 5.7cqw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 0.98;
+  text-align: left;
+  text-shadow: 0 2px 3px #000, 0 0 9px rgb(177 62 72 / 0.26);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.hostfall-standard-cost {
+  position: absolute;
+  top: 50%;
+  right: 3.5%;
+  display: grid;
+  width: clamp(17px, 11cqw, 46px);
+  aspect-ratio: 1;
+  place-items: center;
+  border: clamp(1px, 0.8cqw, 3px) solid #b69a68;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 31%, #efbfc1 0 6%, #a63449 25%, #3d111d 66%, #12090d 100%);
+  color: #fff2d9;
+  font-size: clamp(9px, 7cqw, 29px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 3px #000;
+  box-shadow: inset 0 0 0 1px rgb(27 6 10 / 0.72), 0 0 10px rgb(173 43 65 / 0.55);
+  transform: translateY(-50%);
+}
+
+.hostfall-standard-art {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgb(210 167 104 / 0.38);
+  background: #100c0d;
+}
+
+.hostfall-standard-art::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 67%, rgb(15 6 9 / 0.58)),
+    radial-gradient(circle at 50% 46%, transparent 46%, rgb(4 2 3 / 0.22));
+  box-shadow: inset 0 0 clamp(8px, 5cqw, 26px) rgb(0 0 0 / 0.42);
+}
+
+.hostfall-standard-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+}
+
+.hostfall-standard-typeband {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border-top: 1px solid rgb(244 211 157 / 0.12);
+  border-bottom: 1px solid rgb(79 16 27 / 0.78);
+  padding: 0 4.5%;
+  background:
+    linear-gradient(90deg, #241519, #6d2735 50%, #211316),
+    repeating-linear-gradient(90deg, transparent 0 12px, rgb(255 255 255 / 0.025) 12px 13px);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.58);
+}
+
+.hostfall-standard-subtype {
+  overflow: hidden;
+  color: #e2cbb2;
+  font-size: clamp(6px, 3.8cqw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+}
+
+.hostfall-standard-body {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  padding: 5.5% 6% 12%;
+  background:
+    linear-gradient(rgb(18 11 13 / 0.95), rgb(8 7 8 / 0.98)),
+    repeating-linear-gradient(0deg, transparent 0 8px, rgb(255 255 255 / 0.015) 8px 9px);
+  color: #e2d5c3;
+}
+
+.hostfall-standard-effect,
+.hostfall-standard-flavor {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.hostfall-standard-effect {
+  font-size: clamp(6px, 4.25cqw, 17px);
+  font-weight: 650;
+  line-height: 1.22;
+}
+
+.hostfall-standard-flavor {
+  color: #a89586;
+  font-size: clamp(5px, 3.25cqw, 13px);
+  font-style: italic;
+  line-height: 1.2;
+}
+
+.hostfall-standard-rule {
+  width: 58%;
+  height: 1px;
+  margin: 4.5% auto;
+  background: linear-gradient(90deg, transparent, rgb(189 132 101 / 0.48), transparent);
+}
+
+.hostfall-standard-credits {
+  position: absolute;
+  right: 4%;
+  bottom: 3%;
+  left: 4%;
+  overflow: hidden;
+  color: #796c63;
+  font-family: Arial, sans-serif;
+  font-size: clamp(4px, 2.25cqw, 9px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hostfall-standard-stats {
+  position: absolute;
+  right: 3.2%;
+  bottom: 3%;
+  z-index: 4;
+  display: flex;
+  min-width: 25%;
+  height: 22%;
+  align-items: center;
+  justify-content: center;
+  gap: 5%;
+  border: 1px solid #a88759;
+  background: linear-gradient(150deg, #6c2936, #231015 62%, #0d090a);
+  color: #fff0d4;
+  font-size: clamp(9px, 7cqw, 29px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 3px #000;
+  box-shadow: inset 0 0 0 1px rgb(245 213 159 / 0.12), 0 4px 8px rgb(0 0 0 / 0.5);
+  transform: skewX(-5deg);
+}
+
+.hostfall-standard-stats > * {
+  transform: skewX(5deg);
+}
+
+.hostfall-standard-stats + *,
+.hostfall-standard:has(.hostfall-standard-stats) .hostfall-standard-credits {
+  right: 31%;
+}
+
+.hostfall-standard.is-energy .hostfall-standard-inner {
+  grid-template-rows: 10% 54% 7.5% minmax(0, 28.5%);
+}
+
+.hostfall-standard.is-energy .hostfall-standard-head {
+  padding-right: 5%;
+}
+
+.hostfall-standard.is-energy .hostfall-standard-art img {
+  object-position: center 54%;
+}
+
+.hostfall-vampire {
+  --hostfall-accent: #8f3342;
+  --hostfall-accent-bright: #efb4b5;
+}
+
 .deck-detail-fireflies {
   z-index: 0;
 }
@@ -12026,9 +13251,8 @@
   background: rgb(3 10 10 / 0.64);
 }
 
-/* Keywords now read as compact game-state plaques instead of glossy pills. */
-.keyword-pill,
-.card-keyword-badge {
+/* Keyword explanations outside the card retain their compact UI plaque. */
+.keyword-pill {
   min-height: 1.55rem;
   height: auto;
   border: 1px solid color-mix(in srgb, var(--deck-accent, #78956e) 62%, #283632);
@@ -12052,33 +13276,149 @@
   --deck-accent-soft: rgb(190 57 143 / 0.24);
 }
 
+.card-preview-keyword-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgb(184 162 107 / 0.62);
+  border-radius: 7px 0 9px;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.15), transparent 47%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.98), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  padding: 5px 11px;
+  color: #f0ead7;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.018em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  text-transform: none;
+  box-shadow:
+    inset 0 1px 0 rgb(232 222 174 / 0.11),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 2px 5px rgb(0 0 0 / 0.44);
+  clip-path: none;
+}
+
+.card-preview-keyword-explanations.is-chaos .card-preview-keyword-badge {
+  border-color: rgb(210 131 172 / 0.78);
+  background: linear-gradient(180deg, rgb(79 31 55 / 0.96), rgb(37 18 29 / 0.97));
+  color: #f2cfdf;
+  box-shadow:
+    inset 0 1px 0 rgb(255 221 235 / 0.15),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 0 8px rgb(174 73 123 / 0.32);
+}
+
+.card-keyword-badge {
+  display: inline-flex;
+  min-height: 22px;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  border: 1px solid rgb(184 162 107 / 0.62);
+  border-radius: 6px 0 8px;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.15), transparent 47%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.98), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  padding: 4px 9px;
+  color: #f0ead7;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.018em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  text-transform: none;
+  box-shadow:
+    inset 0 1px 0 rgb(232 222 174 / 0.11),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 2px 5px rgb(0 0 0 / 0.44);
+  clip-path: none;
+  white-space: nowrap;
+}
+
 .card-keyword-badge-ally {
-  --deck-accent: #618b57;
-  --deck-accent-bright: #d6efc0;
-  --deck-accent-soft: rgb(73 135 67 / 0.2);
+  border-color: rgb(184 162 107 / 0.62);
 }
 
 .card-keyword-badge-enemy {
-  --deck-accent: #9b493b;
-  --deck-accent-bright: #f1b4a1;
-  --deck-accent-soft: rgb(159 51 36 / 0.22);
+  border-color: rgb(180 112 91 / 0.66);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(235 174 151 / 0.14), transparent 47%),
+    linear-gradient(90deg, rgb(231 196 174 / 0.02), transparent 34%, rgb(0 0 0 / 0.12)),
+    repeating-linear-gradient(112deg, rgb(250 224 212 / 0.012) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(91 48 40 / 0.98), rgb(48 25 23 / 0.99) 58%, rgb(24 11 11 / 1));
+  color: #f2d9ce;
+  box-shadow:
+    inset 0 1px 0 rgb(246 207 188 / 0.1),
+    inset 0 -2px 3px rgb(0 0 0 / 0.38),
+    0 2px 5px rgb(0 0 0 / 0.46);
 }
 
 .card-keyword-stack {
-  max-width: 7.2rem;
+  z-index: 16;
+  max-width: 7.6rem;
+  gap: 3px;
+}
+
+.card-visual.card-image-full > .card-keyword-stack {
+  top: 16.5cqw;
+  left: 3.4cqw;
+  max-width: 52cqw;
+  gap: 1.1cqw;
+}
+
+.card-visual.card-image-full > .card-keyword-stack > .card-keyword-badge {
+  min-height: clamp(20px, 8.6cqw, 26px);
+  padding:
+    clamp(3px, 1.5cqw, 5px)
+    clamp(7px, 3.4cqw, 10px);
+  border-radius:
+    clamp(5px, 2.4cqw, 7px)
+    0
+    clamp(5px, 2.8cqw, 8px);
+  font-size: 13px;
+}
+
+.battlefield-side-player .battlefield-row-overflow .card-keyword-stack {
+  top: 34px;
+  left: 7px;
+}
+
+.battlefield-side-horde .battlefield-row-overflow .card-keyword-stack {
+  top: 37px;
+  left: 10px;
+}
+
+.card-visual:has(> .card-defense-order-badge) > .card-keyword-stack {
+  top: 42px;
 }
 
 .card-keyword-deathtouch {
   max-width: none;
-  padding-inline: 0.76rem;
+  padding-inline: 9px;
 }
 
 .toxic-keyword-badge,
 .card-toxic-counter {
-  border-color: #77518a;
-  background: linear-gradient(145deg, #b98acb, #4d2d5c);
-  color: #fff2ff;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 8px rgb(147 79 177 / 0.42);
+  border-color: rgb(164 119 177 / 0.72);
+  background:
+    radial-gradient(circle at 36% 25%, rgb(231 200 240 / 0.18), transparent 34%),
+    linear-gradient(145deg, #62456d, #392541 56%, #211526);
+  color: #f4e6f7;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.84);
+  box-shadow:
+    inset 0 1px 0 rgb(245 221 251 / 0.14),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 0 6px rgb(147 79 177 / 0.28);
 }
 
 .toast-stack-game {
@@ -12571,10 +13911,29 @@
   transform: scale(1.85);
 }
 
-.opening-hand-card .card-visual {
+.opening-hand-card .card-visual:not(.card-image-full) {
   min-height: 0;
   border-color: rgb(154 125 68 / 0.42);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.72), 0 12px 22px rgb(0 0 0 / 0.5);
+}
+
+.opening-hand-card-html-stable {
+  position: absolute;
+  top: -42.5%;
+  left: -42.5%;
+  width: 185%;
+  height: 185%;
+  backface-visibility: hidden;
+  transform: scale(0.5405405405);
+  will-change: transform;
+}
+
+.opening-hand-card-entry:hover .opening-hand-card-html-stable {
+  transform: scale(1);
+}
+
+.opening-hand-card .card-visual.card-image-full {
+  min-height: 0;
 }
 
 .opening-hand-actions {
@@ -12632,6 +13991,14 @@
   .opening-hand-cards { height: 380px; }
   .opening-hand-card-entry { max-width: 145px; }
   .opening-hand-card-entry:hover .opening-hand-card { transform: scale(1.75); }
+  .opening-hand-card-html-stable {
+    top: -37.5%;
+    left: -37.5%;
+    width: 175%;
+    height: 175%;
+    transform: scale(0.5714285714);
+  }
+  .opening-hand-card-entry:hover .opening-hand-card-html-stable { transform: scale(1); }
   .opening-hand-button { min-height: 46px; }
 }
 

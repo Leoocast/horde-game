@@ -104,7 +104,7 @@ src/
       horde/
         zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
-    decks.ts              DECK_REGISTRY: unico punto de registro; agregar deck = una linea register(...)
+    decks.ts              DECK_REGISTRY: registro unico de deck, imagenes y metadata visual
     deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
     normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
     deckLint.ts           lint de decks: valida cada habilidad contra el vocabulario del engine
@@ -308,7 +308,12 @@ El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
 
 Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
 
-`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una linea `register(label, raw, images)`. De ahi derivan el deck del engine, el inspector (`deckCatalog.ts`) y los lookups de imagenes (`cardImages.ts`). Cada deck lleva su manifest de imagenes junto al JSON.
+`src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una llamada
+`register(label, raw, images, presentation)`. De ahi derivan el deck del engine, el inspector
+(`deckCatalog.ts`), los lookups de imagenes (`cardImages.ts`) y su presentacion en selectores.
+`presentation` declara `keyCardId`, `theme`, `descriptionKey` y, para Hordas, `encounterTone`; no
+volver a resolver esos valores por id dentro de componentes. Cada deck lleva su manifest de
+imagenes junto al JSON.
 
 Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
 - `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".
@@ -454,6 +459,8 @@ Durante Battle:
 Durante Defend:
 - la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
   agrupado visual por copias/stacks nunca puede reordenar el combate
+- criaturas no-token iguales de la Horda solo comparten stack si entraron durante el mismo turno
+  de Horda; una copia posterior conserva su nueva posicion aunque haya una copia antigua en campo
 - seleccion del defensor puede hacerse por click/drag
 - flechas azules de defensor a atacante
 - si una criatura atacante tiene MENACE, defender debe bloquearse si solo hay 1 blocker; el boton muestra tooltip explicando
@@ -638,15 +645,104 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
+- Las cartas mono-green usan sus PNG completos de 976x1360 desde
+  `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
+  targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto
+  `mono_green_ramp_images.json` es la fuente unica de esas rutas. `MonoGreenHandCardFace` se
+  conserva solo como referencia/diagnostico y no debe volver a conectarse a una superficie del
+  juego: el texto HTML vivo bajo transforms FLIP/fan de Framer puede quedar rasterizado a una
+  escala intermedia al reordenar. El rombo de disponible pertenece a `.hand-card`, pero su render
+  esta detras de `showPlayerHandActionableGems`, actualmente inactivo. Los PNG de mano deben usar
+  `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al
+  reducirlos y rotarlos en el abanico. El exportador apaga la sombra exterior de `.tcg-card` al
+  capturar para que las cuatro esquinas terminen con alfa cero. La ruta `showFullImage` no debe
+  heredar el fondo/sombra base de `Card` y la imagen se recorta con el radio equivalente
+  `4.918% / 3.529%`. El hover de mano escala `.hand-card` completa mediante Framer Motion; no debe
+  animar su ancho/alto reales porque obliga a recalcular por subpixel las unidades `cqw` del coste
+  y las keywords, que entonces parecen brincar. El contenedor transparente de `Card` conserva ese
+  mismo radio para que el glow naranja de drag siga la silueta redondeada y no dibuje un panel
+  rectangular detras. Los previews fuente de targeting
+  (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
+  `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
+  generico de `Card`. Cuando usan la imagen completa tambien deben activar
+  `preferNativeImageRendering`, igual que la mano, para conservar el mismo sampling CSS. Las cartas
+  mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
+  `showFullImage`: el recorte del battlefield se conserva. Su badge dinamico adapta el
+  `tcg-stats-badge` impreso al espacio chico (espada dorada, slash gris, corazon rojo y numeros
+  blancos), usando la paleta vegetal del generador `dev/tools/Decks/monogreen/index.html` como
+  fuente de verdad. `stats.buffed` debe leerse
+  solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
+  carta recortada. En battlefield, el badge cutted es una adaptacion compacta de la pestana impresa:
+  conserva `ataque / resistencia` sin iconos, la silueta redondeada, el degradado vegetal, el grano
+  tenue y el filete dorado interior; el buff sube claramente la luminosidad, el contraste y el glow
+  sin llegar a verde fosfo. En esas mismas
+  criaturas cutted, el titulo horneado dentro del PNG se cubre con un header HTML localizado,
+  nitido y del mismo lenguaje HUD; esta capa es exclusiva del battlefield y no se propaga a mano,
+  previews, mulligan, targeting ni deck. El mismo
+  `CardStatsBadge` dinamico cubre el badge impreso en mano,
+  mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
+  quedar exactamente sobre la pestana horneada en el PNG. Esa variante full replica las medidas
+  198x90 del `index` sobre el ancho fuente de 976px, oculta espada/corazon y muestra solamente
+  `ataque / resistencia`, con degradado vegetal y filete dorado interior. En targeting vienen del
+  estado vivo.
+  El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
+  pero excluye los buffs; el hover conserva los stats vivos y su estado buffed. En el hover queda
+  unos pixeles elevado; preview, mano y targeting comparten la pestana vegetal del `index`, con
+  variantes legibles para dano y buff. Mano, mulligan, targeting y `CardPreview` tambien cubren el
+  coste impreso con
+  `CardCostBadge`: un socket proporcional inspirado directamente en el HUD de energia, desplazado
+  fuera de la esquina superior izquierda. Replica el nucleo del HUD de energia: esfera azul con
+  liquido giratorio y respiracion de brillo, sin socket metalico ni arco cian exteriores. El nucleo
+  usa azules contenidos y el remolino tiene brillo tenue para no competir con el numero. Tanto el
+  giro del liquido como el pulso minimo de escala y brillo duran nueve segundos. El numero se
+  dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
+  sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
+  cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
+  `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
+  preview lateral o modal; `xN` permanece a la derecha.
+- Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
+  maximo anterior del `clamp`; no deben reducirse segun `vw` ni la altura del panel. El alto
+  recortado sigue siendo `0.89 * ancho`. Tierras y otros permanentes conservan el slot compacto
+  independiente de `92-118px`.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
-- Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
+- Las keywords superpuestas sobre cartas ya no usan pills verdes brillantes ni la placa generica de
+  dashboard. Full y cutted comparten el material del header: degradado vegetal oscuro, grano tenue,
+  borde dorado, Lora, texto en Camel Case y la silueta redondeada diagonal de los stats. La carta
+  completa usa medidas `cqw`; la cutted queda justo debajo del header. Enemigos conservan una
+  variante borgona del mismo material y Chaos su magenta. El badge de keyword junto al preview
+  fijado comparte este mismo material, tipografia y capitalizacion.
+  Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
+- La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
+  suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
+  a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa
+  corona. El orbe de coste no recibe una segunda corona de disponibilidad: la indicacion visual
+  permanece solamente en el borde de la carta. Los estados de descarte, tutorial y targeting
+  conservan sus estilos separados; el rombo sigue detras del feature flag.
+- La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
+  criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
+  defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
+  generico de `Card.actionable`. Las criaturas con activacion de mana disponible usan una tercera
+  corona dorada con el mismo fade y tampoco muestran rombo; las tierras quedan excluidas de ese
+  chrome aunque internamente tambien tengan una habilidad de agotar. Las tres coronas son exteriores: su
+  borde interior termina justo donde empieza la silueta de la carta, sin comerse el arte ni parecer
+  marco impreso; targeting conserva sus estilos propios. Naranja, azul y dorado animan la corona
+  completa con `hand-available-border-pulse` de 2.1s. Ademas llevan una capa de glow independiente,
+  equivalente al pulse extra que `Card.actionable` aporta en la mano: anima sombras de `7/16px` a
+  `11/25px` cada 1.5s, teñidas segun ataque, defensa o activacion.
+- El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Tap: Add G` con los
+  mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
+  azul para energia. No debe volver a los chips genericos de `renderCardText`.
+- Una criatura ya asignada como blocker muestra su orden real en un badge cuadrado azul arriba a la
+  izquierda, la zona que permanece expuesta en stacks. El badge reemplaza el tag compuesto
+  `Blocking + numero`, usa el lenguaje cromatico de defensa y reserva espacio en el titulo para no
+  tapar nombres largos.
 
 ## Antes de tocar algo
 

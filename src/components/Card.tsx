@@ -1,12 +1,12 @@
-import type { CSSProperties, MouseEvent, PointerEvent } from "react";
+import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel } from "../i18n/cardLocalization";
+import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { Heart, Swords } from "lucide-react";
+import { Heart, Sword, Swords } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -19,6 +19,7 @@ type Props = {
   selectionDisabled?: boolean;
   muted?: boolean;
   actionable?: boolean;
+  suppressActionableChrome?: boolean;
   effectAvailable?: boolean;
   linkLabel?: string;
   hideStats?: boolean;
@@ -37,11 +38,17 @@ type Props = {
   cropTopHalf?: boolean;
   highRes?: boolean;
   sharpImageOverlay?: boolean;
+  showFullImage?: boolean;
+  showCostBadge?: boolean;
+  showCroppedTitle?: boolean;
+  clipActionSweep?: boolean;
+  preferNativeImageRendering?: boolean;
+  face?: ReactNode;
   dragging?: boolean;
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -76,7 +83,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
-  const showActionGlow = Boolean(actionable);
+  const showActionGlow = Boolean(actionable && !suppressActionableChrome);
   const actionGlow = showActionGlow
     ? "inset 0 0 0 1px rgba(228,218,158,0.42), 0 0 8px rgba(103,166,137,0.62), 0 0 18px rgba(44,111,99,0.4)"
     : "";
@@ -127,13 +134,20 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       }}
       style={style}
       className={[
-        "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
+        "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col text-left transition duration-300 ease-out",
+        showFullImage
+          ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
+          : "overflow-hidden rounded-md border bg-stone-900 shadow-lg shadow-black/30",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
         card.tapped || (attacking && usesHordeTappedStyle) ? "card-tapped" : "",
         (card.tapped || attacking) && usesHordeTappedStyle ? "card-tapped-zombie" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
+        showFullImage ? "card-image-full" : "",
+        preferNativeImageRendering ? "card-image-native-hd" : "",
+        stats.buffed ? "card-stats-buffed" : "",
+        stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
         summoningSick ? "summoning-sick-card" : "",
@@ -141,21 +155,39 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
     >
-      {displayImageUrl ? (
+      {face ?? (displayImageUrl ? (
         <img src={displayImageUrl} alt={localizedName} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
-      )}
-      {sharpImageOverlay && highResImageUrl && (
+      ))}
+      {!face && sharpImageOverlay && highResImageUrl && (
         <div className="card-sharp-image-overlay" aria-hidden="true">
           <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
         </div>
       )}
-      {actionable && !dragging && (
-        <span className="card-actionable-sweep" aria-hidden="true" />
+      {showCroppedTitle && (
+        <div className="card-cropped-title" aria-hidden="true" title={localizedName}>
+          <span>{localizedName}</span>
+        </div>
+      )}
+      {showCostBadge && <CardCostBadge card={card} />}
+      {showActionGlow && !dragging && (
+        clipActionSweep ? (
+          <span className="card-actionable-sweep-clip" aria-hidden="true">
+            <span className="card-actionable-sweep" />
+          </span>
+        ) : (
+          <span className="card-actionable-sweep" aria-hidden="true" />
+        )
       )}
       {showEffectAvailable && (
-        <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
+        clipActionSweep ? (
+          <span className="card-actionable-sweep-clip" aria-hidden="true">
+            <span className="card-actionable-sweep card-effect-available-sweep" />
+          </span>
+        ) : (
+          <span className="card-actionable-sweep card-effect-available-sweep" aria-hidden="true" />
+        )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
       {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
@@ -163,16 +195,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className="flex flex-wrap gap-1">
           {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
           {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
-          {blocking && linkLabel ? (
-            <span
-              className="card-block-state-tag"
-              aria-label={`Blocking, order ${linkLabel}`}
-              style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
-            >
-              <span>{t("card.blocking")}</span>
-              <strong>{linkLabel}</strong>
-            </span>
-          ) : blocking ? (
+          {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : linkLabel ? (
             <span
@@ -185,30 +208,77 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ) : null}
         </div>
       </div>
+      {blocking && linkLabel && (
+        <span className="card-defense-order-badge" aria-label={`Blocking, order ${linkLabel}`}>
+          {linkLabel}
+        </span>
+      )}
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", usesAllyKeywordStyle ? "card-keyword-badge-ally" : "card-keyword-badge-enemy"].join(" ")}>
-              {renderBattlefieldKeywordLabel(localizedKeywordLabel(keyword, language))}
+              {renderBattlefieldKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}
             </span>
           ))}
         </div>
       )}
-      {!hideStats && stats.text && (
-        <div
-          aria-label={`${stats.power} attack, ${stats.toughness} life`}
-          className={[
-            "card-stat-badge",
-            stats.damaged ? "is-damaged" : "",
-            stats.buffed ? "is-buffed" : "",
-          ].join(" ")}
-        >
-          <span className="card-stat-segment card-stat-attack"><Swords aria-hidden="true" /><b>{stats.power}</b></span>
-          <i aria-hidden="true" />
-          <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
-        </div>
+      {!hideStats && (
+        <CardStatsBadge
+          stats={stats}
+          preferSingleSword={preferNativeImageRendering || showFullImage}
+        />
       )}
     </article>
+  );
+}
+
+export type CardStatDisplay = ReturnType<typeof cardStatState>;
+
+export function CardCostBadge({
+  card,
+}: {
+  card: { manaCost?: string; manaValue?: number };
+}) {
+  const manaCost = card.manaCost?.trim();
+  if (!manaCost) return null;
+  const label = manaCost.includes("{X}") ? "X" : card.manaValue;
+  if (label === undefined) return null;
+
+  return (
+    <div className="card-cost-badge" aria-hidden="true">
+      <span className="card-cost-energy-orb">
+        <span className="card-cost-energy-liquid" />
+      </span>
+      <span className="card-cost-value">{label}</span>
+    </div>
+  );
+}
+
+export function CardStatsBadge({
+  stats,
+  preferSingleSword = false,
+}: {
+  stats: CardStatDisplay;
+  preferSingleSword?: boolean;
+}) {
+  if (!stats.text) return null;
+
+  return (
+    <div
+      aria-label={`${stats.power} attack, ${stats.toughness} life`}
+      className={[
+        "card-stat-badge",
+        stats.damaged ? "is-damaged" : "",
+        stats.buffed ? "is-buffed" : "",
+      ].join(" ")}
+    >
+      <span className="card-stat-segment card-stat-attack">
+        {preferSingleSword ? <Sword aria-hidden="true" /> : <Swords aria-hidden="true" />}
+        <b>{stats.power}</b>
+      </span>
+      <i aria-hidden="true" />
+      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+    </div>
   );
 }
 
