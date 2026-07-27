@@ -6,7 +6,6 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
-import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -22,13 +21,8 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
         <div className="opening-hand-cards">
           {game.player.hand.map((card, index) => {
             const showFullImage = shouldShowFullCardImage(card.definitionId);
-            const renderHtmlCard =
-              showFullImage &&
-              UI_FEATURE_FLAGS.renderHtmlMulliganCards &&
-              hasMonoGreenHtmlCardFace(card.definitionId);
             const useNativeHdRendering =
               showFullImage &&
-              !renderHtmlCard &&
               UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
 
             return (
@@ -39,12 +33,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div
-                  className={[
-                    "opening-hand-card",
-                    renderHtmlCard && UI_FEATURE_FLAGS.stabilizeHtmlMulliganHoverText ? "opening-hand-card-html-stable" : "",
-                  ].join(" ")}
-                >
+                <div className="opening-hand-card">
                   <Card
                     game={game}
                     card={card}
@@ -59,7 +48,6 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                     clipActionSweep={UI_FEATURE_FLAGS.alignHdHandActionSweep && showFullImage}
                     preferNativeImageRendering={useNativeHdRendering}
                     hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
-                    face={renderHtmlCard ? <MonoGreenHandCardFace card={card} /> : undefined}
                   />
                 </div>
               </motion.div>

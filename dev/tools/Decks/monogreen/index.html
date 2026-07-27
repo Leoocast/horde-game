@@ -240,14 +240,32 @@
             inset: 0;
             z-index: 0;
             border-radius: 18px 0 0 9px;
-            background-image: var(--header-foliage), var(--noise-tex), linear-gradient(90deg, #315b3a 0%, #1d4228 65%, transparent 98%);
-            background-repeat: no-repeat, repeat, no-repeat;
-            background-size: 100% 100%, auto, 100% 100%;
+            background-image:
+                var(--noise-tex),
+                linear-gradient(90deg, #315b3a 0%, #1d4228 65%, transparent 98%);
+            background-repeat: repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-blend-mode: soft-light, normal;
+            background-clip: padding-box;
             border-top: 3px solid rgba(184, 162, 107, 0.55);
             border-left: 3px solid rgba(184, 162, 107, 0.55);
             border-bottom: 3px solid rgba(184, 162, 107, 0.55);
             border-right: none;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+            mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+        }
+
+        .tcg-head::after {
+            content: "";
+            position: absolute;
+            inset: 3px 0 3px 3px;
+            z-index: 0;
+            border-radius: 15px 0 0 6px;
+            background: url("./motivo.avif") center 38% / cover no-repeat;
+            mix-blend-mode: multiply;
+            opacity: 0.33;
+            pointer-events: none;
             -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
             mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
         }
@@ -419,10 +437,26 @@
             position: absolute;
             inset: 2px;
             z-index: 0;
-            background-image: var(--type-foliage), var(--noise-tex), linear-gradient(180deg, #305a38 0%, #214329 100%);
-            background-repeat: no-repeat, repeat, no-repeat;
-            background-size: 100% 100%, auto, 100% 100%;
+            background-image:
+                var(--noise-tex),
+                linear-gradient(180deg, #305a38 0%, #214329 100%);
+            background-repeat: repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-blend-mode: soft-light, normal;
             border-radius: 7px 0 0 7px;
+            clip-path: polygon(0 0, calc(100% - 29px) 0, 100% 50%, calc(100% - 29px) 100%, 0 100%);
+        }
+
+        .tcg-typeband::after {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            z-index: 0;
+            border-radius: 7px 0 0 7px;
+            background: url("./motivo.avif") center 67% / cover no-repeat;
+            mix-blend-mode: multiply;
+            opacity: 0.33;
+            pointer-events: none;
             clip-path: polygon(0 0, calc(100% - 29px) 0, 100% 50%, calc(100% - 29px) 100%, 0 100%);
         }
 
@@ -652,6 +686,11 @@
         }
 
         .tcg-card--full-art-land .tcg-typeband::before {
+            border-radius: 7px;
+            clip-path: none;
+        }
+
+        .tcg-card--full-art-land .tcg-typeband::after {
             border-radius: 7px;
             clip-path: none;
         }

@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { CardInstance } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -11,7 +10,6 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
-import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
 const HOVER_PREVIEW_GAP = 14;
 const HOVER_PREVIEW_MIN_WIDTH = 230;
@@ -158,18 +156,7 @@ export function CardPreview() {
 
   if (!card) return null;
 
-  const supportsHtmlPreview = hasMonoGreenHtmlCardFace(card.definitionId);
-  const renderFocusedHtmlPreview =
-    Boolean(focusedCardId) &&
-    supportsHtmlPreview &&
-    UI_FEATURE_FLAGS.renderHtmlRightClickPreviews;
-  const renderHoverHtmlPreview =
-    !focusedCardId &&
-    card.zone === "battlefield" &&
-    supportsHtmlPreview &&
-    UI_FEATURE_FLAGS.renderHtmlBattlefieldHoverPreviews;
-
-  if (!details.imageUrl && !renderFocusedHtmlPreview && !renderHoverHtmlPreview) return null;
+  if (!details.imageUrl) return null;
 
   const keywords = cardKeywords(game, card);
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
@@ -189,18 +176,13 @@ export function CardPreview() {
           <div
             data-preserve-card-focus="true"
             data-card-preview-locked="true"
-            data-preview-renderer={renderFocusedHtmlPreview ? "html" : "image"}
+            data-preview-renderer="image"
             className={[
               "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
-              renderFocusedHtmlPreview ? "card-preview-html-frame" : "",
               showFullCardPresentation ? "card-preview-full-card-frame" : "",
             ].join(" ")}
           >
-            {renderFocusedHtmlPreview ? (
-              <MonoGreenHandCardFace card={card} />
-            ) : imageUrl ? (
-              <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
-            ) : null}
+            {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
             {showFullCardPresentation && <CardCostBadge card={card} />}
             {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
           </div>
@@ -221,19 +203,14 @@ export function CardPreview() {
 
   return (
     <div
-      data-preview-renderer={renderHoverHtmlPreview ? "html" : "image"}
+      data-preview-renderer="image"
       className={[
         "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
-        renderHoverHtmlPreview ? "card-preview-html-frame" : "",
         showFullCardPresentation ? "card-preview-full-card-frame" : "",
       ].join(" ")}
       style={hoverStyle}
     >
-      {renderHoverHtmlPreview ? (
-        <MonoGreenHandCardFace card={card} />
-      ) : imageUrl ? (
-        <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />
-      ) : null}
+      {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
       {showFullCardPresentation && <CardCostBadge card={card} />}
       {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>

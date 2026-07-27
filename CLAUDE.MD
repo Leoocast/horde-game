@@ -645,20 +645,20 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
-- Las cartas mono-green de la mano usan por defecto sus PNG completos de 976x1360; el texto HTML
-  vivo bajo los transforms FLIP/fan de Framer puede quedar rasterizado a una escala intermedia al
-  reordenar. El HTML sigue vigente en mulligan y previews, donde no existe ese reordenamiento. El
-  camino HTML de mano se conserva detras de `renderHdHandCardsAsHtml` solo para diagnostico; no
-  volver a activarlo como default sin comparar reordenamientos. El rombo de disponible pertenece
-  a `.hand-card`, el mismo rectangulo que crece durante hover, pero su render esta detras de
-  `showPlayerHandActionableGems`, actualmente activo. Los
-  PNG de mano deben usar
+- Las cartas mono-green usan sus PNG completos de 976x1360 desde
+  `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
+  targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto
+  `mono_green_ramp_images.json` es la fuente unica de esas rutas. `MonoGreenHandCardFace` se
+  conserva solo como referencia/diagnostico y no debe volver a conectarse a una superficie del
+  juego: el texto HTML vivo bajo transforms FLIP/fan de Framer puede quedar rasterizado a una
+  escala intermedia al reordenar. El rombo de disponible pertenece a `.hand-card`, pero su render
+  esta detras de `showPlayerHandActionableGems`, actualmente inactivo. Los PNG de mano deben usar
   `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al
-  reducirlos y rotarlos en el abanico. Esos PNG exportados tambien traen negro semitransparente
-  fuera del radio de 48px: la ruta `showFullImage` no debe heredar el fondo/sombra base de `Card` y
-  la imagen se recorta con el radio equivalente `4.918% / 3.529%`. El contenedor transparente de
-  `Card` conserva ese mismo radio para que el glow naranja de drag siga la silueta redondeada y no
-  dibuje un panel rectangular detras. Los previews fuente de targeting
+  reducirlos y rotarlos en el abanico. El exportador apaga la sombra exterior de `.tcg-card` al
+  capturar para que las cuatro esquinas terminen con alfa cero. La ruta `showFullImage` no debe
+  heredar el fondo/sombra base de `Card` y la imagen se recorta con el radio equivalente
+  `4.918% / 3.529%`. El contenedor transparente de `Card` conserva ese mismo radio para que el glow
+  naranja de drag siga la silueta redondeada y no dibuje un panel rectangular detras. Los previews fuente de targeting
   (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
   `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
   generico de `Card`. Cuando usan la imagen completa tambien deben activar
@@ -671,13 +671,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   carta recortada. El mismo `CardStatsBadge` dinamico cubre el badge impreso en mano,
   mulligan, sources de targeting, `CardPreview` y las cartas mono-green de `DeckInspector`; en
   carta completa usa proporciones `cqw` para quedar exactamente sobre la pestana horneada en el
-  PNG/HTML. En el deck los stats vienen de la definicion estatica; en targeting vienen del estado
+  PNG. En el deck los stats vienen de la definicion estatica; en targeting vienen del estado
   vivo. En `CardPreview` queda unos pixeles elevado; preview, mano, targeting y deck recuperan el
   borde dorado sobre slate gris de la variante recortada. Mano, targeting, `CardPreview` y
   `DeckInspector` tambien cubren el coste impreso con `CardCostBadge`: un orbe azul proporcional
   inspirado en los orbes de energia, mayor que el original, desplazado fuera de la esquina superior
-  derecha y con pulso luminoso en el numero y el nucleo. En el grid del deck, `xN` se mueve a la
-  izquierda para no competir con el orbe.
+  izquierda y con pulso luminoso en el numero y el nucleo. En el grid del deck, `xN` queda a la
+  derecha para no competir con el orbe.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

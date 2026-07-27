@@ -19,13 +19,20 @@ const pending = new Map<string, Promise<DeckCardDetails | null>>();
 export function useDeckCardDetails(deckId: string, card: NewDeckCard | undefined, manifest: DeckImageManifest): DeckCardDetails {
   const language = useLanguageStore((state) => state.language);
   const cacheId = useMemo(() => (card ? `${language}:${deckId}:${card.id}` : ""), [card, deckId, language]);
-  const [details, setDetails] = useState<DeckCardDetails>(() => readCachedDetails(cacheId) ?? {});
+  const [details, setDetails] = useState<DeckCardDetails>(() => directDeckCardDetails(card, manifest, language) ?? readCachedDetails(cacheId) ?? {});
 
   useEffect(() => {
     if (!card || !cacheId) {
       setDetails({});
       return;
     }
+    const directDetails = directDeckCardDetails(card, manifest, language);
+    if (directDetails) {
+      writeCachedDetails(cacheId, directDetails);
+      setDetails(directDetails);
+      return;
+    }
+    setDetails(readCachedDetails(cacheId) ?? {});
     let active = true;
     resolveDeckCardDetails(deckId, card, manifest, language).then((loaded) => {
       if (active) setDetails(loaded ?? {});
@@ -46,8 +53,8 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
     return null;
   }
 
-  if (lookup.imageUrl && (lookup.source === "local" || language === "en")) {
-    const direct = { imageUrl: lookup.imageUrl, language };
+  const direct = directDeckCardDetails(card, manifest, language);
+  if (direct) {
     writeCachedDetails(cacheId, direct);
     return direct;
   }
@@ -88,6 +95,13 @@ export async function resolveDeckCardDetails(deckId: string, card: NewDeckCard, 
 
   pending.set(cacheId, request);
   return request;
+}
+
+function directDeckCardDetails(card: NewDeckCard | undefined, manifest: DeckImageManifest, language: AppLanguage): DeckCardDetails | undefined {
+  if (!card) return undefined;
+  const lookup = manifest.cards[card.id];
+  if (!lookup?.imageUrl || (lookup.source !== "local" && language !== "en")) return undefined;
+  return { imageUrl: lookup.imageUrl, language };
 }
 
 function buildScryfallUrl(lookup: DeckImageManifest["cards"][string], card: NewDeckCard): string {
