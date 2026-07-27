@@ -4447,6 +4447,77 @@
       filter 220ms ease;
   }
 
+  .battlefield-combat-available-border {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    border-radius: 0.375rem;
+  }
+
+  .battlefield-combat-available-border::before,
+  .battlefield-combat-available-border::after {
+    position: absolute;
+    box-sizing: border-box;
+    border-radius: inherit;
+    background: var(--battlefield-combat-border-gradient);
+    content: "";
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .battlefield-combat-available-border::before {
+    inset: -2px;
+    padding: 5px;
+    opacity: 0.64;
+    filter: blur(3.4px);
+  }
+
+  .battlefield-combat-available-border::after {
+    inset: 0;
+    padding: 3px;
+    filter: drop-shadow(0 0 2px var(--battlefield-combat-border-shadow));
+    animation: hand-available-border-pulse 2.1s ease-in-out infinite;
+  }
+
+  .battlefield-combat-available-attack {
+    --battlefield-combat-border-gradient: linear-gradient(
+      180deg,
+      rgb(255 177 89 / 0.92) 0%,
+      rgb(249 135 52 / 0.86) 24%,
+      rgb(231 91 30 / 0.66) 49%,
+      rgb(202 62 22 / 0.24) 68%,
+      rgb(177 43 18 / 0) 84%,
+      transparent 100%
+    );
+    --battlefield-combat-border-shadow: rgb(244 123 43 / 0.76);
+  }
+
+  .battlefield-combat-available-defense {
+    --battlefield-combat-border-gradient: linear-gradient(
+      180deg,
+      rgb(67 226 255 / 0.86) 0%,
+      rgb(39 207 244 / 0.82) 24%,
+      rgb(23 178 224 / 0.64) 49%,
+      rgb(18 147 198 / 0.23) 68%,
+      rgb(15 126 181 / 0) 84%,
+      transparent 100%
+    );
+    --battlefield-combat-border-shadow: rgb(72 211 244 / 0.68);
+  }
+
+  .battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .battlefield-combat-available-border {
+    transform: rotate(4deg);
+    transform-origin: center;
+  }
+
   .battlefield-card-slot::before {
     content: "";
     position: absolute;
@@ -10165,6 +10236,42 @@
     0 0 8px color-mix(in srgb, var(--block-order-accent) 42%, transparent);
 }
 
+.card-defense-order-badge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 32;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgb(112 190 226 / 0.78);
+  border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 28% 4%, rgb(207 241 255 / 0.2), transparent 48%),
+    radial-gradient(ellipse at 90% 120%, rgb(65 146 190 / 0.14), transparent 52%),
+    repeating-linear-gradient(112deg, rgb(224 246 255 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(42 87 112 / 0.99), rgb(18 53 72 / 0.99) 58%, rgb(7 26 38 / 1));
+  color: #e8f6fb;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  box-shadow:
+    inset 0 1px 0 rgb(218 244 255 / 0.18),
+    inset 0 -3px 5px rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(4 17 27 / 0.58),
+    0 0 7px rgb(65 168 218 / 0.22),
+    0 3px 7px rgb(0 0 0 / 0.52);
+}
+
+.card-visual:has(> .card-defense-order-badge) > .card-cropped-title {
+  padding-left: 45px;
+}
+
 /* Shared stats palette: matches the printed mono-green card generator. */
 .card-stat-badge {
   --card-stat-background: linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
@@ -10520,8 +10627,8 @@
   background: var(--card-stat-buffed-background);
 }
 
-/* Cropped battlefield cards use game HUD chrome instead of the printed-card tab used by hand and
-   previews. Keep the typography and stat language, but make the surface compact and neutral. */
+/* Cropped battlefield cards use compact game chrome instead of the printed-card tab used by hand
+   and previews. The title stays integrated into the card while the stats remain a readable HUD. */
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
   position: absolute;
   top: 0;
@@ -10529,28 +10636,31 @@
   left: 0;
   z-index: 15;
   display: flex;
-  height: 30px;
+  height: 29px;
   overflow: hidden;
   align-items: center;
-  padding: 1px 9px 0;
-  border: 1px solid rgb(112 139 110 / 0.68);
-  border-radius: 5px 5px 1px 1px;
+  padding: 1px 10px 0;
+  border: 0;
+  border-bottom: 1px solid rgb(184 162 107 / 0.72);
+  border-radius: 0;
   background:
-    radial-gradient(circle at 25% 0%, rgb(166 195 158 / 0.14), transparent 48%),
-    linear-gradient(180deg, rgb(34 65 45 / 0.98), rgb(12 29 20 / 0.99));
-  color: #eeeadd;
+    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.16), transparent 47%),
+    radial-gradient(ellipse at 88% 125%, rgb(91 142 96 / 0.11), transparent 52%),
+    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
+    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(47 75 53 / 0.99), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  color: #f0ead7;
   font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
   font-size: clamp(12px, 6.6cqw, 14px);
   font-weight: 600;
-  letter-spacing: 0;
+  letter-spacing: 0.008em;
   line-height: 1;
   pointer-events: none;
-  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
   box-shadow:
-    inset 0 1px 0 rgb(225 239 216 / 0.12),
-    inset 0 -2px 4px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(3 12 7 / 0.66),
-    0 3px 7px rgb(0 0 0 / 0.58);
+    inset 0 1px 0 rgb(232 222 174 / 0.12),
+    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    0 2px 4px rgb(0 0 0 / 0.42);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title > span {
@@ -10565,22 +10675,22 @@
   bottom: 4px;
   display: flex;
   height: 32px;
-  min-width: 94px;
+  min-width: 88px;
   overflow: hidden;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 3px 9px 4px 8px;
-  border: 1px solid rgb(128 145 143 / 0.58);
+  padding: 3px 7px 4px 6px;
+  border: 1px solid rgb(139 171 125 / 0.58);
   border-radius: 4px 0 8px;
   background:
-    radial-gradient(circle at 28% 0%, rgb(180 200 193 / 0.11), transparent 46%),
-    linear-gradient(180deg, rgb(37 48 51 / 0.97), rgb(10 16 20 / 0.98));
+    radial-gradient(circle at 28% 0%, rgb(180 209 163 / 0.12), transparent 46%),
+    linear-gradient(180deg, rgb(38 51 45 / 0.97), rgb(11 19 17 / 0.98));
   color: #e7e4d8;
   box-shadow:
-    inset 0 1px 0 rgb(227 239 232 / 0.1),
+    inset 0 1px 0 rgb(224 239 215 / 0.11),
     inset 0 -2px 4px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(2 8 10 / 0.66),
+    0 0 0 1px rgb(4 13 10 / 0.68),
     0 3px 7px rgb(0 0 0 / 0.58);
   clip-path: none;
 }
@@ -10646,29 +10756,29 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed {
-  border-color: rgb(139 171 125 / 0.58);
+  border-color: rgb(174 207 143 / 0.82);
   background:
-    radial-gradient(circle at 28% 0%, rgb(180 209 163 / 0.12), transparent 46%),
-    linear-gradient(180deg, rgb(38 51 45 / 0.97), rgb(11 19 17 / 0.98));
+    radial-gradient(circle at 28% 0%, rgb(208 235 178 / 0.21), transparent 48%),
+    linear-gradient(180deg, rgb(54 76 57 / 0.98), rgb(15 31 21 / 0.99));
   box-shadow:
-    inset 0 1px 0 rgb(224 239 215 / 0.11),
+    inset 0 1px 0 rgb(232 246 215 / 0.2),
     inset 0 -2px 4px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(4 13 10 / 0.68),
-    0 0 6px rgb(111 157 94 / 0.22),
+    0 0 0 1px rgb(7 19 12 / 0.7),
+    0 0 8px rgb(129 176 103 / 0.4),
     0 3px 7px rgb(0 0 0 / 0.58);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
-  color: #cfe3c2;
-  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 4px rgb(126 176 104 / 0.38);
+  color: #e0f0cf;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 5px rgb(151 195 122 / 0.56);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed::before {
   top: 2px;
   right: 4px;
-  color: #aabf9c;
-  font-size: 7px;
-  text-shadow: 0 0 3px rgb(111 157 94 / 0.34);
+  color: #c4dcae;
+  font-size: 8px;
+  text-shadow: 0 0 4px rgb(139 187 111 / 0.52);
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */

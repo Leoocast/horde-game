@@ -866,7 +866,15 @@ export function Battlefield({ game, side, cards }: Props) {
         game.combat.hordeAttackers.includes(card.instanceId) &&
         canBlockAttacker(game, draggedDefender, card),
     );
-    const showActionGem = blockDragActive ? isDraggedDefender || dragDefenseTargetable : cardActionable || effectAvailable;
+    const combatAvailabilityTone =
+      isDraggedDefender || dragDefenseTargetable
+        ? "defense"
+        : playerCombat && availablePlayerAttacker
+          ? "attack"
+          : hordeCombat && actionable
+            ? "defense"
+            : undefined;
+    const showActionGem = !combatAvailabilityTone && (blockDragActive ? false : cardActionable || effectAvailable);
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable
@@ -940,7 +948,7 @@ export function Battlefield({ game, side, cards }: Props) {
           isOtherPermanent ? "battlefield-other-permanent-slot" : "",
           isLand ? "battlefield-land-slot" : "",
           selected ? "battlefield-card-selected" : "",
-          actionable ? "battlefield-card-actionable" : "",
+          actionable && !combatAvailabilityTone ? "battlefield-card-actionable" : "",
           effectAvailable && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
           side === "horde" && attacking ? "horde-attacker-readied" : "",
@@ -980,7 +988,7 @@ export function Battlefield({ game, side, cards }: Props) {
         attacking={attacking}
         blocking={blocking}
         glowBorderWidth={4}
-        actionable={cardActionable}
+        actionable={cardActionable && !combatAvailabilityTone}
         effectAvailable={effectAvailable}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
@@ -1048,6 +1056,17 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
+      {combatAvailabilityTone && (
+        <span
+          className={[
+            "battlefield-combat-available-border",
+            combatAvailabilityTone === "attack"
+              ? "battlefield-combat-available-attack"
+              : "battlefield-combat-available-defense",
+          ].join(" ")}
+          aria-hidden="true"
+        />
+      )}
       {showActionGem && (
         <span
           className={[

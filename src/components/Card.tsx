@@ -195,16 +195,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className="flex flex-wrap gap-1">
           {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
           {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
-          {blocking && linkLabel ? (
-            <span
-              className="card-block-state-tag"
-              aria-label={`Blocking, order ${linkLabel}`}
-              style={{ "--block-order-accent": accentColor ?? "#66d8ff" } as CSSProperties}
-            >
-              <span>{t("card.blocking")}</span>
-              <strong>{linkLabel}</strong>
-            </span>
-          ) : blocking ? (
+          {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : linkLabel ? (
             <span
@@ -217,6 +208,11 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ) : null}
         </div>
       </div>
+      {blocking && linkLabel && (
+        <span className="card-defense-order-badge" aria-label={`Blocking, order ${linkLabel}`}>
+          {linkLabel}
+        </span>
+      )}
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
