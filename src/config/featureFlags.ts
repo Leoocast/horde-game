@@ -3,6 +3,8 @@ export const UI_FEATURE_FLAGS = {
   boostPlayerHandCardHoverByTwentyPercent: true,
   renderHdHandCardsAsHtml: true,
   renderHtmlBattlefieldHoverPreviews: true,
+  renderHtmlDeckPreviews: true,
+  renderHtmlMulliganCards: true,
   renderHtmlRightClickPreviews: true,
   showDynamicHandCardStats: false,
   useLargerPlayerHandCards: true,

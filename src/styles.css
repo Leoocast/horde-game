@@ -1844,6 +1844,13 @@
     object-fit: fill;
   }
 
+  .deck-detail-card-image.is-html-card,
+  .deck-collection-modal-art.is-html-card {
+    border-color: transparent;
+    border-radius: 4.918% / 3.529%;
+    background: transparent;
+  }
+
   .deck-detail-card-selection {
     position: absolute;
     inset: 0;
@@ -3814,6 +3821,18 @@
     background: linear-gradient(112deg, transparent 37%, rgb(227 242 193 / 0.05) 44%, rgb(212 231 178 / 0.24) 50%, rgb(104 183 151 / 0.1) 56%, transparent 63%);
     transform: translateX(-145%);
     animation: card-actionable-sweep 2.8s ease-in-out infinite;
+  }
+
+  .deck-detail-info-html-card {
+    width: min(100%, 275px);
+    aspect-ratio: 488 / 680;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 4.918% / 3.529%;
+    box-shadow:
+      7px 10px 0 #17231c,
+      0 20px 38px rgb(0 0 0 / 0.52),
+      0 0 28px rgb(127 151 126 / 0.08);
   }
 
   .card-actionable-sweep-clip {

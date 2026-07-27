@@ -34,7 +34,7 @@ export function hasMonoGreenHtmlCardFace(definitionId: string): boolean {
   return presentationById.has(definitionId);
 }
 
-export function MonoGreenHandCardFace({ card }: { card: CardInstance }) {
+export function MonoGreenHandCardFace({ card }: { card: Pick<CardInstance, "definitionId"> }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const presentation = presentationById.get(card.definitionId);
 

@@ -1,5 +1,6 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -10,6 +11,7 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { KeywordPills } from "./CardPreview";
 import { DeckCardVisual } from "./DeckCardVisual";
+import { hasMonoGreenHtmlCardFace, MonoGreenHandCardFace } from "./MonoGreenHandCardFace";
 
 type Props = {
   deck: InspectableDeck;
@@ -194,6 +196,9 @@ function DeckCardTile({
   const details = useDeckCardDetails(deck.id, card, deck.images);
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const localArt = usesGeneratedCardFrame(deck, card);
+  const renderHtmlCard =
+    UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
+    hasMonoGreenHtmlCardFace(card.id);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
 
@@ -217,8 +222,10 @@ function DeckCardTile({
             x{quantity}
           </span>
         )}
-        <div className="deck-detail-card-image">
-          {details.imageUrl && localArt ? (
+        <div className={["deck-detail-card-image", renderHtmlCard ? "is-html-card" : ""].join(" ")}>
+          {renderHtmlCard ? (
+            <MonoGreenHandCardFace card={{ definitionId: card.id }} />
+          ) : details.imageUrl && localArt ? (
             <DeckCardVisual
               card={card}
               imageUrl={details.imageUrl}
@@ -257,6 +264,9 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
   const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
   const hasText = text.length > 0;
+  const renderHtmlCard =
+    UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
+    hasMonoGreenHtmlCardFace(card.id);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -275,7 +285,11 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         </div>
       </div>
       <div className="deck-detail-info-body">
-        {details.imageUrl ? (
+        {renderHtmlCard ? (
+          <div className="deck-detail-info-html-card">
+            <MonoGreenHandCardFace card={{ definitionId: card.id }} />
+          </div>
+        ) : details.imageUrl ? (
           <img src={details.imageUrl} alt={displayName} className="deck-detail-info-image" />
         ) : (
           <MissingCardArt card={card} />
@@ -327,6 +341,9 @@ function DeckInspectorDetailsModal({
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
   const localArt = usesGeneratedCardFrame(deck, card);
+  const renderHtmlCard =
+    UI_FEATURE_FLAGS.renderHtmlDeckPreviews &&
+    hasMonoGreenHtmlCardFace(card.id);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
   const [transition, setTransition] = useState<"idle" | "leave-next" | "leave-previous" | "enter-next" | "enter-previous">("idle");
@@ -392,8 +409,10 @@ function DeckInspectorDetailsModal({
             <button className="deck-collection-modal-nav is-previous" type="button" onClick={() => navigate("previous")} title={t("common.previousCard")}>
               <ChevronLeft size={24} />
             </button>
-            <div className="deck-collection-modal-art">
-              {details.imageUrl && localArt ? (
+            <div className={["deck-collection-modal-art", renderHtmlCard ? "is-html-card" : ""].join(" ")}>
+              {renderHtmlCard ? (
+                <MonoGreenHandCardFace card={{ definitionId: card.id }} />
+              ) : details.imageUrl && localArt ? (
                 <DeckCardVisual
                   card={card}
                   imageUrl={details.imageUrl}
