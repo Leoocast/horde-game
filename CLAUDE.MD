@@ -660,7 +660,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   generico de `Card`. Cuando usan la imagen completa tambien deben activar
   `preferNativeImageRendering`, igual que la mano, para conservar el mismo sampling CSS. Las cartas
   mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
-  `showFullImage`: el recorte del battlefield se conserva.
+  `showFullImage`: el recorte del battlefield se conserva. Su badge dinamico adapta el
+  `tcg-stats-badge` impreso al espacio chico (slate, espada dorada, slash gris, corazon rojo y
+  numeros blancos), con borde/volumen discretos para separarlo del arte. `stats.buffed` debe leerse
+  tambien en la carta completa mediante el marco verde persistente, no solo en el numero.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

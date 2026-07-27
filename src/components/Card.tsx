@@ -6,7 +6,7 @@ import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { Heart, Swords } from "lucide-react";
+import { Heart, Sword, Swords } from "lucide-react";
 
 type Props = {
   game: GameState;
@@ -143,6 +143,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         cropTopHalf ? "battlefield-land-card-crop" : "",
         showFullImage ? "card-image-full" : "",
         preferNativeImageRendering ? "card-image-native-hd" : "",
+        stats.buffed ? "card-stats-buffed" : "",
+        stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
         summoningSick ? "summoning-sick-card" : "",
@@ -224,7 +226,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
             stats.buffed ? "is-buffed" : "",
           ].join(" ")}
         >
-          <span className="card-stat-segment card-stat-attack"><Swords aria-hidden="true" /><b>{stats.power}</b></span>
+          <span className="card-stat-segment card-stat-attack">
+            {preferNativeImageRendering ? <Sword aria-hidden="true" /> : <Swords aria-hidden="true" />}
+            <b>{stats.power}</b>
+          </span>
           <i aria-hidden="true" />
           <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
         </div>

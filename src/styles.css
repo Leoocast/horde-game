@@ -10124,6 +10124,157 @@
   box-shadow: inset 0 0 0 1px rgb(180 229 150 / 0.13), 0 0 10px rgb(94 189 82 / 0.38), 0 4px 12px rgb(0 0 0 / 0.68);
 }
 
+/* Mono-green cropped battlefield cards adapt the printed slate stats tab for the much smaller
+   crop: same palette and icon language, but inset and edged so it reads over the artwork. */
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
+  right: clamp(4px, 2.6cqw, 6px);
+  bottom: clamp(3px, 2cqw, 5px);
+  display: flex;
+  height: clamp(31px, 18cqw, 38px);
+  min-width: clamp(88px, 50cqw, 108px);
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3px, 2.4cqw, 5px);
+  padding: clamp(4px, 2.5cqw, 6px) clamp(9px, 5.8cqw, 13px) clamp(5px, 3cqw, 7px) clamp(7px, 4.4cqw, 10px);
+  border: 1px solid rgb(214 188 111 / 0.46);
+  border-radius: clamp(10px, 5.5cqw, 13px) 3px clamp(8px, 4.4cqw, 10px) 3px;
+  background: linear-gradient(180deg, #263342, #18212c 68%, #111923);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    inset 0 -2px 4px rgb(0 0 0 / 0.3),
+    0 0 0 1px rgb(3 10 14 / 0.74),
+    0 4px 10px rgb(0 0 0 / 0.58);
+  clip-path: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > i {
+  align-self: center;
+  justify-self: center;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #94a3b8;
+  font-size: clamp(12px, 7cqw, 16px);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  transform: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > i::before {
+  content: "/";
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment {
+  gap: clamp(2px, 1.7cqw, 4px);
+  padding: 0;
+  background: none;
+  color: #fff;
+  font-size: clamp(14px, 7.8cqw, 18px);
+  letter-spacing: 0;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment svg {
+  width: clamp(11px, 6.7cqw, 15px);
+  height: clamp(11px, 6.7cqw, 15px);
+  stroke-width: 2.35;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-attack svg {
+  color: #d6b36a;
+  transform: scaleX(-1);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-life svg {
+  fill: #f87171;
+  color: #f87171;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged {
+  border-color: rgb(232 137 112 / 0.62);
+  background: linear-gradient(180deg, #3a2a2d, #24191e 68%, #181014);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged .card-stat-life svg {
+  fill: #fb8d8d;
+  color: #fb8d8d;
+  filter: drop-shadow(0 0 4px rgb(248 113 113 / 0.56));
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed:not(.is-damaged) {
+  border-color: rgb(190 232 128 / 0.94);
+  background: linear-gradient(180deg, #344c3c, #1d3227 66%, #122219);
+  box-shadow:
+    inset 0 1px 0 rgb(235 255 203 / 0.18),
+    inset 0 -2px 5px rgb(3 19 9 / 0.46),
+    0 0 0 1px rgb(4 18 9 / 0.76),
+    0 0 12px rgb(129 215 91 / 0.64),
+    0 4px 10px rgb(0 0 0 / 0.58);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
+  color: #e7ffc4;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 7px rgb(137 227 94 / 0.72);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed.is-damaged {
+  border-color: rgb(190 232 128 / 0.86);
+  background: linear-gradient(180deg, #433637, #2c2226 66%, #1b1418);
+  box-shadow:
+    inset 0 1px 0 rgb(235 255 203 / 0.12),
+    0 0 0 1px rgb(4 18 9 / 0.72),
+    0 0 11px rgb(129 215 91 / 0.54),
+    0 4px 10px rgb(0 0 0 / 0.58);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed::before {
+  top: 2px;
+  right: 5px;
+  color: #d9ffad;
+  font-size: 8px;
+  text-shadow: 0 0 7px rgb(126 229 81 / 0.9);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::after {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  border: 2px solid rgb(174 228 106 / 0.82);
+  border-radius: inherit;
+  background: linear-gradient(118deg, transparent 18%, rgb(186 244 119 / 0.08) 48%, transparent 72%);
+  box-shadow:
+    inset 0 0 0 1px rgb(231 255 189 / 0.14),
+    inset 0 0 18px rgb(106 205 69 / 0.2);
+  content: "";
+  pointer-events: none;
+  animation: mono-green-buffed-frame-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes mono-green-buffed-frame-pulse {
+  0%,
+  100% {
+    border-color: rgb(164 220 97 / 0.68);
+    box-shadow:
+      inset 0 0 0 1px rgb(231 255 189 / 0.1),
+      inset 0 0 14px rgb(106 205 69 / 0.14);
+    opacity: 0.78;
+  }
+
+  50% {
+    border-color: rgb(207 246 137 / 0.98);
+    box-shadow:
+      inset 0 0 0 1px rgb(241 255 211 / 0.24),
+      inset 0 0 22px rgb(125 226 78 / 0.3);
+    opacity: 1;
+  }
+}
+
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */
 .graveyard-viewer-backdrop {
   background: radial-gradient(circle at 50% 8%, rgb(73 105 119 / 0.2), transparent 40%), rgb(1 5 7 / 0.96) !important;
@@ -10157,6 +10308,7 @@
 @media (prefers-reduced-motion: reduce) {
   .tactical-arrow-runes,
   .tactical-arrow-glyph { animation: none; }
+  .battlefield-row-overflow .card-visual.card-image-native-hd.card-stats-buffed::after { animation: none; }
 }
 
 /* Main-menu identity: the same editable name is carried into the expedition. */
