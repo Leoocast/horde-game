@@ -10483,39 +10483,63 @@
 .card-visual.card-image-full > .card-stat-badge,
 .card-preview-full-card-frame > .card-stat-badge,
 .deck-card-dynamic-frame > .card-stat-badge {
-  right: 0;
-  bottom: 0;
+  --card-stat-background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  --card-stat-border: rgb(201 177 111 / 0.48);
+  isolation: isolate;
+  right: 0.2cqw;
+  bottom: 0.2cqw;
   z-index: 40;
   display: flex;
-  height: 11.5cqw;
-  min-width: 36cqw;
+  width: auto;
+  height: 9.22cqw;
+  min-width: 20.3cqw;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 1.8cqw;
-  padding: 0 4.5cqw 0 3.5cqw;
-  border: 1px solid var(--card-stat-border);
-  border-radius: 4.3cqw 0 3.1cqw 0;
+  gap: 1.13cqw;
+  padding: 0 2.97cqw 0 2.56cqw;
+  border: 0;
+  border-radius: 3.07cqw 0 2.56cqw 0;
   background: var(--card-stat-background);
   color: var(--card-stat-number);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -3px 5px rgb(0 0 0 / 0.34),
-    0 3px 8px rgb(0 0 0 / 0.52);
+    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
+    0 0.31cqw 0.82cqw rgb(0 0 0 / 0.52);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   clip-path: none;
+}
+
+.card-visual.card-image-full > .card-stat-badge::after,
+.card-preview-full-card-frame > .card-stat-badge::after,
+.deck-card-dynamic-frame > .card-stat-badge::after {
+  position: absolute;
+  inset: 0.2cqw;
+  z-index: 2;
+  border: 0.2cqw solid var(--card-stat-border);
+  border-radius: 2.87cqw 0 2.36cqw 0;
+  content: "";
+  pointer-events: none;
 }
 
 .card-visual.card-image-full > .card-stat-badge > i,
 .card-preview-full-card-frame > .card-stat-badge > i,
 .deck-card-dynamic-frame > .card-stat-badge > i {
+  position: relative;
+  z-index: 3;
   align-self: center;
   width: auto;
   height: auto;
+  margin: 0 0.31cqw;
   border: 0;
   background: none;
   box-shadow: none;
   color: var(--card-stat-separator);
-  font-size: 4.3cqw;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 3.9cqw;
   font-style: normal;
   font-weight: 600;
   line-height: 1;
@@ -10531,21 +10555,23 @@
 .card-visual.card-image-full > .card-stat-badge .card-stat-segment,
 .card-preview-full-card-frame > .card-stat-badge .card-stat-segment,
 .deck-card-dynamic-frame > .card-stat-badge .card-stat-segment {
-  gap: 1.4cqw;
+  position: relative;
+  z-index: 3;
+  gap: 0;
   padding: 0;
   color: var(--card-stat-number);
-  font-size: 5.5cqw;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 5.23cqw;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
   letter-spacing: 0;
-  text-shadow: 0.3cqw 0.3cqw 0.6cqw rgb(0 0 0 / 0.9);
+  text-shadow: 0.2cqw 0.2cqw 0.41cqw rgb(0 0 0 / 0.86);
 }
 
 .card-visual.card-image-full > .card-stat-badge .card-stat-segment svg,
 .card-preview-full-card-frame > .card-stat-badge .card-stat-segment svg,
 .deck-card-dynamic-frame > .card-stat-badge .card-stat-segment svg {
-  width: 4.3cqw;
-  height: 4.3cqw;
-  stroke-width: 2.35;
-  filter: drop-shadow(0 0.3cqw 0.6cqw rgb(0 0 0 / 0.8));
+  display: none;
 }
 
 .card-visual.card-image-full > .card-stat-badge .card-stat-attack svg,
@@ -10565,16 +10591,25 @@
 .card-visual.card-image-full > .card-stat-badge.is-damaged,
 .card-preview-full-card-frame > .card-stat-badge.is-damaged,
 .deck-card-dynamic-frame > .card-stat-badge.is-damaged {
-  border-color: rgb(232 137 112 / 0.62);
-  background: linear-gradient(180deg, #34272d, #1b1720);
+  --card-stat-border: rgb(232 137 112 / 0.62);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(238 167 145 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(249 219 211 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
 }
 
 .card-visual.card-image-full > .card-stat-badge.is-buffed,
 .card-preview-full-card-frame > .card-stat-badge.is-buffed,
 .deck-card-dynamic-frame > .card-stat-badge.is-buffed {
-  border-color: var(--card-stat-buffed-border);
-  background: var(--card-stat-buffed-background);
-  box-shadow: inset 0 0 0 0.3cqw rgb(179 205 159 / 0.16), 0 0 1.8cqw rgb(111 157 94 / 0.38);
+  --card-stat-border: rgb(184 216 151 / 0.76);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(239 248 226 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(240 255 225 / 0.16),
+    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
+    0 0 1.5cqw rgb(111 157 94 / 0.38);
 }
 
 .card-visual.card-image-full > .card-stat-badge.is-buffed .card-stat-segment b,
@@ -10587,32 +10622,17 @@
 .card-visual.card-image-full > .card-stat-badge.is-buffed::before,
 .card-preview-full-card-frame > .card-stat-badge.is-buffed::before,
 .deck-card-dynamic-frame > .card-stat-badge.is-buffed::before {
-  top: 0.6cqw;
-  right: 1cqw;
+  top: 0.48cqw;
+  right: 0.76cqw;
+  z-index: 4;
   color: #bed4aa;
-  font-size: 2cqw;
-  text-shadow: 0 0 1.1cqw rgb(111 157 94 / 0.52);
+  font-size: 1.1cqw;
+  text-shadow: 0 0 0.82cqw rgb(111 157 94 / 0.52);
 }
 
 .card-preview-full-card-frame > .card-stat-badge {
-  right: 2px;
-  bottom: 1cqw;
-  border-color: var(--card-stat-border);
-  background: var(--card-stat-background);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -3px 5px rgb(0 0 0 / 0.34),
-    0 3px 8px rgb(0 0 0 / 0.52);
-}
-
-.card-preview-full-card-frame > .card-stat-badge.is-damaged {
-  border-color: rgb(232 137 112 / 0.62);
-  background: linear-gradient(180deg, #3a2a2d, #24191e 68%, #181014);
-}
-
-.card-preview-full-card-frame > .card-stat-badge.is-buffed {
-  border-color: var(--card-stat-buffed-border);
-  background: var(--card-stat-buffed-background);
+  right: 0.2cqw;
+  bottom: 0.2cqw;
 }
 
 .card-preview-full-card-frame {
@@ -10744,31 +10764,6 @@
   }
 }
 
-.hand-card .card-visual.card-image-full > .card-stat-badge,
-.counter-target-source-card .card-visual.card-image-full > .card-stat-badge,
-.deck-card-dynamic-frame > .card-stat-badge {
-  border-color: var(--card-stat-border);
-  background: var(--card-stat-background);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -3px 5px rgb(0 0 0 / 0.34),
-    0 3px 8px rgb(0 0 0 / 0.52);
-}
-
-.hand-card .card-visual.card-image-full > .card-stat-badge.is-damaged,
-.counter-target-source-card .card-visual.card-image-full > .card-stat-badge.is-damaged,
-.deck-card-dynamic-frame > .card-stat-badge.is-damaged {
-  border-color: rgb(232 137 112 / 0.62);
-  background: linear-gradient(180deg, #3a2a2d, #24191e 68%, #181014);
-}
-
-.hand-card .card-visual.card-image-full > .card-stat-badge.is-buffed,
-.counter-target-source-card .card-visual.card-image-full > .card-stat-badge.is-buffed,
-.deck-card-dynamic-frame > .card-stat-badge.is-buffed {
-  border-color: var(--card-stat-buffed-border);
-  background: var(--card-stat-buffed-background);
-}
-
 /* Cropped battlefield cards use compact game chrome instead of the printed-card tab used by hand
    and previews. The title stays integrated into the card while the stats remain a readable HUD. */
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
@@ -10813,42 +10808,57 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
-  right: 5px;
-  bottom: 4px;
+  --card-stat-border: rgb(201 177 111 / 0.52);
+  isolation: isolate;
+  right: 3px;
+  bottom: 3px;
   display: flex;
-  height: 32px;
-  min-width: 88px;
+  width: auto;
+  height: 31px;
+  min-width: 64px;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 3px 7px 4px 6px;
-  border: 1px solid rgb(184 162 107 / 0.72);
-  border-radius: 4px 0 8px;
+  gap: 3px;
+  padding: 0 9px 0 8px;
+  border: 0;
+  border-radius: 11px 0 9px;
   background:
-    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.16), transparent 47%),
-    radial-gradient(ellipse at 88% 125%, rgb(91 142 96 / 0.11), transparent 52%),
-    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
-    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, rgb(47 75 53 / 0.99), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
-  color: #e7e4d8;
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  color: #f2f0e6;
   box-shadow:
-    inset 0 1px 0 rgb(232 222 174 / 0.12),
-    inset 0 -2px 4px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(4 13 10 / 0.66),
-    0 3px 7px rgb(0 0 0 / 0.58);
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -2px 4px rgb(0 0 0 / 0.4),
+    0 3px 7px rgb(0 0 0 / 0.56);
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   clip-path: none;
 }
 
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge::after {
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  border: 1px solid var(--card-stat-border);
+  border-radius: 10px 0 8px;
+  content: "";
+  pointer-events: none;
+}
+
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > i {
+  position: relative;
+  z-index: 3;
   align-self: center;
   justify-self: center;
   width: auto;
   height: auto;
+  margin: 0 1px;
   border: 0;
   background: none;
   box-shadow: none;
-  color: #7f918f;
+  color: #94a3b8;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 600;
@@ -10861,58 +10871,43 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment {
-  gap: 3px;
+  position: relative;
+  z-index: 3;
+  gap: 0;
   padding: 0;
   background: none;
-  color: #e7e4d8;
-  font-size: 16px;
+  color: #f2f0e6;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
   letter-spacing: 0;
-  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9);
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 0.86);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-segment svg {
-  width: 13px;
-  height: 13px;
-  stroke-width: 2.35;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
-}
-
-.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-attack svg {
-  color: #bda76e;
-  transform: scaleX(-1);
-}
-
-.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge .card-stat-life svg {
-  fill: #cf7774;
-  color: #cf7774;
+  display: none;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged {
-  border-color: rgb(180 104 92 / 0.62);
+  --card-stat-border: rgb(232 137 112 / 0.62);
   background:
-    radial-gradient(circle at 28% 0%, rgb(218 153 132 / 0.1), transparent 46%),
-    linear-gradient(180deg, rgb(54 37 39 / 0.97), rgb(20 13 17 / 0.98));
-}
-
-.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-damaged .card-stat-life svg {
-  fill: #fb8d8d;
-  color: #fb8d8d;
-  filter: drop-shadow(0 0 4px rgb(248 113 113 / 0.56));
+    radial-gradient(ellipse at 24% 0%, rgb(238 167 145 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(249 219 211 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed {
-  border-color: rgb(184 216 151 / 0.9);
+  --card-stat-border: rgb(184 216 151 / 0.76);
   background:
-    radial-gradient(circle at 28% 0%, rgb(208 235 178 / 0.21), transparent 48%),
-    linear-gradient(180deg, rgb(54 76 57 / 0.98), rgb(15 31 21 / 0.99));
+    radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(239 248 226 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
   box-shadow:
-    inset 0 1px 0 rgb(232 246 215 / 0.2),
-    inset 0 0 0 1px rgb(205 232 178 / 0.1),
-    inset 0 -2px 4px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(7 19 12 / 0.7),
-    0 0 4px rgb(195 226 161 / 0.46),
-    0 0 9px rgb(129 176 103 / 0.36),
-    0 3px 7px rgb(0 0 0 / 0.58);
+    inset 0 1px 0 rgb(240 255 225 / 0.16),
+    inset 0 -2px 4px rgb(0 0 0 / 0.4),
+    0 0 9px rgb(129 176 103 / 0.38),
+    0 3px 7px rgb(0 0 0 / 0.56);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
@@ -10922,9 +10917,10 @@
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed::before {
   top: 2px;
-  right: 4px;
+  right: 3px;
+  z-index: 4;
   color: #c4dcae;
-  font-size: 8px;
+  font-size: 6px;
   text-shadow: 0 0 4px rgb(139 187 111 / 0.52);
 }
 

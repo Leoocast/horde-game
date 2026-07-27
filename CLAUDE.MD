@@ -665,32 +665,34 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `preferNativeImageRendering`, igual que la mano, para conservar el mismo sampling CSS. Las cartas
   mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
   `showFullImage`: el recorte del battlefield se conserva. Su badge dinamico adapta el
-  `tcg-stats-badge` impreso al espacio chico (slate, espada dorada, slash gris, corazon rojo y
-  numeros blancos), usando exactamente la paleta del generador `dev/tools/Decks/monogreen/index.html`
-  como fuente de verdad. `stats.buffed` debe leerse
+  `tcg-stats-badge` impreso al espacio chico (espada dorada, slash gris, corazon rojo y numeros
+  blancos), usando la paleta vegetal del generador `dev/tools/Decks/monogreen/index.html` como
+  fuente de verdad. `stats.buffed` debe leerse
   solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
-  carta recortada. En battlefield, el badge cutted es una excepcion visual deliberada: conserva
-  fuente, iconos y lectura de estados, pero usa un HUD compacto y angular en vez de imitar la
-  pestana impresa. Su estado base comparte el degradado vegetal, grano tenue y borde dorado del
-  header cutted; el buff sube claramente la luminosidad, el contraste y el glow sin llegar a verde
-  fosfo. En esas mismas
+  carta recortada. En battlefield, el badge cutted es una adaptacion compacta de la pestana impresa:
+  conserva `ataque / resistencia` sin iconos, la silueta redondeada, el degradado vegetal, el grano
+  tenue y el filete dorado interior; el buff sube claramente la luminosidad, el contraste y el glow
+  sin llegar a verde fosfo. En esas mismas
   criaturas cutted, el titulo horneado dentro del PNG se cubre con un header HTML localizado,
   nitido y del mismo lenguaje HUD; esta capa es exclusiva del battlefield y no se propaga a mano,
   previews, mulligan, targeting ni deck. El mismo
   `CardStatsBadge` dinamico cubre el badge impreso en mano,
   mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
-  quedar exactamente sobre la pestana horneada en el PNG. En targeting vienen del estado vivo.
+  quedar exactamente sobre la pestana horneada en el PNG. Esa variante full replica las medidas
+  198x90 del `index` sobre el ancho fuente de 976px, oculta espada/corazon y muestra solamente
+  `ataque / resistencia`, con degradado vegetal y filete dorado interior. En targeting vienen del
+  estado vivo.
   El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
   pero excluye los buffs; el hover conserva los stats vivos y su estado buffed. En el hover queda
-  unos pixeles elevado; preview, mano y targeting comparten el borde dorado sutil sobre el slate
-  del `index`. Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
+  unos pixeles elevado; preview, mano y targeting comparten la pestana vegetal del `index`, con
+  variantes legibles para dano y buff. Mano, mulligan, targeting y `CardPreview` tambien cubren el
+  coste impreso con
   `CardCostBadge`: un orbe azul proporcional
   inspirado en los orbes de energia, mayor que el original, desplazado fuera de la esquina superior
   izquierda, con azul saturado pero nucleo oscuro legible, borde exterior azul, aro cian interior
   difuminado y el pulso concentrado en el edge.
-  `DeckInspector` tambien cubre el PNG
-  con `CardCostBadge` y `CardStatsBadge` en grid, preview lateral y modal; sus stats vienen de la
-  definicion estatica y `xN` permanece a la derecha.
+  `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
+  preview lateral o modal; `xN` permanece a la derecha.
 - Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
   maximo anterior del `clamp`; no deben reducirse segun `vw` ni la altura del panel. El alto
   recortado sigue siendo `0.89 * ancho`. Tierras y otros permanentes conservan el slot compacto
