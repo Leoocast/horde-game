@@ -1,5 +1,6 @@
 import { Sword } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
+import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import monoGreenCards from "../data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json";
 import type { CardInstance } from "../engine/GameTypes";
 import "./monoGreenHandCardExact.css";
@@ -34,7 +35,18 @@ export function hasMonoGreenHtmlCardFace(definitionId: string): boolean {
   return presentationById.has(definitionId);
 }
 
-export function MonoGreenHandCardFace({ card }: { card: Pick<CardInstance, "definitionId"> }) {
+type MonoGreenHandCardFaceProps = {
+  card: Pick<CardInstance, "definitionId">;
+};
+
+// Engine actions clone GameState, so unchanged cards receive new object references whenever the
+// hand is reordered. The face only depends on definitionId: keep its DOM and raster layer intact.
+export const MonoGreenHandCardFace = memo(
+  MonoGreenHandCardFaceView,
+  (previous, next) => previous.card.definitionId === next.card.definitionId,
+);
+
+function MonoGreenHandCardFaceView({ card }: MonoGreenHandCardFaceProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const presentation = presentationById.get(card.definitionId);
 
@@ -68,7 +80,10 @@ export function MonoGreenHandCardFace({ card }: { card: Pick<CardInstance, "defi
   return (
     <div
       ref={viewportRef}
-      className="mono-green-exact-viewport"
+      className={[
+        "mono-green-exact-viewport",
+        UI_FEATURE_FLAGS.useLocalExactCardFonts ? "uses-local-exact-fonts" : "",
+      ].join(" ")}
       role="img"
       aria-label={presentation.nombre}
     >

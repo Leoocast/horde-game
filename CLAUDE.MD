@@ -645,6 +645,19 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
+- Las cartas mono-green de la mano usan por defecto sus PNG completos de 976x1360; el texto HTML
+  vivo bajo los transforms FLIP/fan de Framer puede quedar rasterizado a una escala intermedia al
+  reordenar. El HTML sigue vigente en mulligan y previews, donde no existe ese reordenamiento. El
+  camino HTML de mano se conserva detras de `renderHdHandCardsAsHtml` solo para diagnostico; no
+  volver a activarlo como default sin comparar reordenamientos. El rombo de disponible pertenece
+  a `.hand-card`, el mismo rectangulo que crece durante hover. Los PNG de mano deben usar
+  `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al
+  reducirlos y rotarlos en el abanico. Esos PNG exportados tambien traen negro semitransparente
+  fuera del radio de 48px: la ruta `showFullImage` no debe heredar el fondo/sombra base de `Card` y
+  la imagen se recorta con el radio equivalente `4.918% / 3.529%`. Los previews fuente de targeting
+  (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
+  `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
+  generico de `Card`.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.

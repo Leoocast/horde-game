@@ -131,7 +131,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       }}
       style={style}
       className={[
-        "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col overflow-hidden rounded-md border bg-stone-900 text-left shadow-lg shadow-black/30 transition duration-300 ease-out",
+        "card-visual group relative flex h-full w-full aspect-[488/680] min-h-28 flex-col text-left transition duration-300 ease-out",
+        showFullImage
+          ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
+          : "overflow-hidden rounded-md border bg-stone-900 shadow-lg shadow-black/30",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
         card.tapped || (attacking && usesHordeTappedStyle) ? "card-tapped" : "",
         (card.tapped || attacking) && usesHordeTappedStyle ? "card-tapped-zombie" : "",

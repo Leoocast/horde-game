@@ -6,6 +6,7 @@ import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
+import { shouldShowFullCardImage } from "../utils/cardImages";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 
@@ -179,7 +180,17 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
       </svg>
       <aside data-spell-targeting-ui="true" className="counter-target-source-panel">
         <div ref={sourceRef} className="counter-target-source-card">
-          <Card game={game} card={spell} selectionDisabled suppressContextMenu suppressCardId suppressSummoningSickness hideStats />
+          <Card
+            game={game}
+            card={spell}
+            selectionDisabled
+            suppressContextMenu
+            suppressCardId
+            suppressSummoningSickness
+            hideStats
+            highRes
+            showFullImage={shouldShowFullCardImage(spell.definitionId)}
+          />
         </div>
         <div className="counter-target-preview old-panel-soft">
           <span className="text-[#d6b879]">{complete ? t("target.ready") : currentLabel}</span>

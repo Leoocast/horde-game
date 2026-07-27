@@ -39,7 +39,12 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="opening-hand-card">
+                <div
+                  className={[
+                    "opening-hand-card",
+                    renderHtmlCard && UI_FEATURE_FLAGS.stabilizeHtmlMulliganHoverText ? "opening-hand-card-html-stable" : "",
+                  ].join(" ")}
+                >
                   <Card
                     game={game}
                     card={card}

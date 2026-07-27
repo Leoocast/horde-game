@@ -111,13 +111,19 @@ export function Hand({ game }: { game: GameState }) {
       // the hand overlap calculated from an in-between animation frame.
       // Measuring the slot (not the inner .hand-card) also keeps this stable while
       // a card grows in real width/height on hover, since the slot never resizes.
-      const cardWidth = firstSlot.offsetWidth;
+      const cardWidth =
+        Number.parseFloat(window.getComputedStyle(firstSlot).width) ||
+        firstSlot.offsetWidth;
       const gap = Number.parseFloat(window.getComputedStyle(observedCards).columnGap) || 0;
       const naturalWidth = handSize * cardWidth + (handSize - 1) * gap;
       const requiredMargin = Math.min(0, (availableWidth - naturalWidth) / (handSize - 1));
       const baseOverlapMargin = -(cardWidth * HAND_BASE_OVERLAP_RATIO + gap);
       const minimumVisibleStrip = 28;
-      setHandStackMargin(Math.max(-(cardWidth - minimumVisibleStrip), Math.min(baseOverlapMargin, requiredMargin)));
+      const desiredMargin = Math.max(
+        -(cardWidth - minimumVisibleStrip),
+        Math.min(baseOverlapMargin, requiredMargin),
+      );
+      setHandStackMargin(desiredMargin);
     }
 
     function scheduleMeasure() {
@@ -150,7 +156,8 @@ export function Hand({ game }: { game: GameState }) {
     // the card's true rendered size, including the hover/held grow-in-place.
     const el = innerCardRefs.current.get(cardId);
     if (!el) return;
-    const rect = el.getBoundingClientRect();
+    const visualCard = el.querySelector<HTMLElement>(".hand-card-face-scale") ?? el;
+    const rect = visualCard.getBoundingClientRect();
     const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     dragOriginCenters.current.set(cardId, center);
     dragStartPointers.current.set(cardId, { x: pointerX, y: pointerY });
@@ -292,10 +299,16 @@ export function Hand({ game }: { game: GameState }) {
             ref={handCardsRef}
             className={[
               "player-hand-cards flex items-end justify-center overflow-visible",
-              UI_FEATURE_FLAGS.boostPlayerHandCardHoverByTwentyPercent ? "player-hand-cards-stronger-hover" : "",
+              UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? "player-hand-cards-adjusted-hover" : "",
               UI_FEATURE_FLAGS.useLargerPlayerHandCards ? "player-hand-cards-larger" : "",
+              UI_FEATURE_FLAGS.renderHtmlHandAtHoverResolution ? "player-hand-cards-hover-resolution" : "",
+              UI_FEATURE_FLAGS.isolateHtmlHandActionableGlow ? "player-hand-cards-isolated-actionable-glow" : "",
+              UI_FEATURE_FLAGS.isolateHtmlHandActionableSweep ? "player-hand-cards-isolated-actionable-sweep" : "",
             ].join(" ")}
-            style={{ "--hand-count": Math.max(handSize, 1), "--hand-stack-margin": `${handStackMargin}px` } as React.CSSProperties}
+            style={{
+              "--hand-count": Math.max(handSize, 1),
+              "--hand-stack-margin": `${handStackMargin}px`,
+            } as React.CSSProperties}
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
           >
@@ -396,37 +409,57 @@ export function Hand({ game }: { game: GameState }) {
                       : { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
                 >
-                  <Card
-                    game={game}
-                    card={card}
-                    selected={selectedHandId === card.instanceId}
-                    dragging={draggingCardId === card.instanceId}
-                    actionable={cardActionable}
-                    suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
-                    suppressHoverOverlay
-                    darkenOnHover={false}
-                    highRes={isHeld}
-                    sharpImageOverlay={!useNativeHdRendering}
-                    showFullImage={showFullImage}
-                    clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
-                    preferNativeImageRendering={useNativeHdRendering}
-                    hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
-                    face={renderHtmlCard ? <MonoGreenHandCardFace card={card} /> : undefined}
-                    onSelect={() => {
-                      if (handLimitDiscardActive) {
-                        selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
-                        return;
+                  <div className="hand-card-face-scale">
+                    <Card
+                      game={game}
+                      card={card}
+                      selected={selectedHandId === card.instanceId}
+                      dragging={draggingCardId === card.instanceId}
+                      actionable={cardActionable}
+                      suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
+                      suppressHoverOverlay
+                      darkenOnHover={false}
+                      highRes={isHeld}
+                      sharpImageOverlay={!useNativeHdRendering}
+                      showFullImage={showFullImage}
+                      clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
+                      preferNativeImageRendering={useNativeHdRendering}
+                      hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
+                      face={
+                        renderHtmlCard ? (
+                          <MonoGreenHandCardFace card={card} />
+                        ) : undefined
                       }
-                      if (smallpoxSelectionActive) {
-                        if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
-                        return;
-                      }
-                      selectHand(card.instanceId);
-                    }}
-                    onLeave={() => {
-                      if (selectedHandId === card.instanceId) selectHand(undefined);
-                    }}
-                  />
+                      onSelect={() => {
+                        if (handLimitDiscardActive) {
+                          selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
+                          return;
+                        }
+                        if (smallpoxSelectionActive) {
+                          if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+                          return;
+                        }
+                        selectHand(card.instanceId);
+                      }}
+                      onLeave={() => {
+                        if (selectedHandId === card.instanceId) selectHand(undefined);
+                      }}
+                    />
+                    {UI_FEATURE_FLAGS.isolateHtmlHandActionableSweep &&
+                      renderHtmlCard &&
+                      cardActionable &&
+                      draggingCardId !== card.instanceId && (
+                        <span className="hand-card-actionable-sweep-layer" aria-hidden="true">
+                          <span className="card-actionable-sweep" />
+                        </span>
+                      )}
+                    {UI_FEATURE_FLAGS.isolateHtmlHandActionableGlow &&
+                      renderHtmlCard &&
+                      cardActionable &&
+                      draggingCardId !== card.instanceId && (
+                        <span className="hand-card-actionable-glow-layer" aria-hidden="true" />
+                      )}
+                  </div>
                   {cardActionable && draggingCardId !== card.instanceId && (
                     <span
                       className={["card-actionable-gem card-actionable-gem-outside", cardTargetable ? "card-target-gem" : ""].join(" ")}

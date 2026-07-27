@@ -1,4 +1,57 @@
+@font-face {
+  font-family: "Hostfall Exact Cinzel";
+  font-style: normal;
+  font-weight: 500 900;
+  font-display: block;
+  src: url("/fonts/mono-green/cinzel-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hostfall Exact Cinzel Decorative";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("/fonts/mono-green/cinzel-decorative-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hostfall Exact Lora";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: block;
+  src: url("/fonts/mono-green/lora-normal-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hostfall Exact Lora";
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/mono-green/lora-italic-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hostfall Exact Outfit";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: block;
+  src: url("/fonts/mono-green/outfit-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hostfall Exact Oswald";
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: block;
+  src: url("/fonts/mono-green/oswald-latin.woff2") format("woff2");
+}
+
 .mono-green-exact-viewport {
+  --mono-green-font-cinzel: 'Cinzel';
+  --mono-green-font-cinzel-decorative: 'Cinzel Decorative';
+  --mono-green-font-lora: 'Lora';
+  --mono-green-font-outfit: 'Outfit';
+  --mono-green-font-oswald: 'Oswald';
   --gold-light: #ead9a8;
   --gold-main: #b8a26b;
   --nature-border-subtle: rgba(52, 96, 59, 0.45);
@@ -11,6 +64,14 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+.mono-green-exact-viewport.uses-local-exact-fonts {
+  --mono-green-font-cinzel: "Hostfall Exact Cinzel";
+  --mono-green-font-cinzel-decorative: "Hostfall Exact Cinzel Decorative";
+  --mono-green-font-lora: "Hostfall Exact Lora";
+  --mono-green-font-outfit: "Hostfall Exact Outfit";
+  --mono-green-font-oswald: "Hostfall Exact Oswald";
 }
 
 .mono-green-exact-viewport,
@@ -124,7 +185,7 @@
 .mono-green-exact-card .tcg-title {
   overflow: hidden;
   color: #f2f5e8;
-  font-family: 'Cinzel', serif;
+  font-family: var(--mono-green-font-cinzel), serif;
   font-size: 45px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -162,7 +223,7 @@
   justify-content: center;
   margin-top: 2px;
   color: #fce8b3;
-  font-family: 'Cinzel', 'Oswald', sans-serif;
+  font-family: var(--mono-green-font-cinzel), var(--mono-green-font-oswald), sans-serif;
   font-size: 54px;
   font-weight: 900;
   line-height: 1;
@@ -229,7 +290,7 @@
   align-items: center;
   gap: 18px;
   color: #eae4cf;
-  font-family: 'Cinzel', serif;
+  font-family: var(--mono-green-font-cinzel), serif;
   font-size: 36px;
   font-weight: 600;
   letter-spacing: 3.5px;
@@ -265,7 +326,7 @@
   left: 50%;
   color: rgba(45, 80, 50, 0.08);
   content: "H";
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--mono-green-font-cinzel-decorative), serif;
   font-size: 350px;
   font-weight: 700;
   pointer-events: none;
@@ -278,7 +339,7 @@
   width: 100%;
   margin: 0;
   color: #1a1e16;
-  font-family: 'Lora', serif;
+  font-family: var(--mono-green-font-lora), serif;
   font-size: 46px;
   font-weight: 500;
   line-height: 1.48;
@@ -350,7 +411,7 @@
   width: 100%;
   margin: 0;
   color: #454e40;
-  font-family: 'Lora', serif;
+  font-family: var(--mono-green-font-lora), serif;
   font-size: 48px;
   font-style: normal;
   font-weight: 500;
@@ -371,7 +432,7 @@
   bottom: 18px;
   left: 30px;
   color: rgba(60, 74, 55, 0.55);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--mono-green-font-outfit), sans-serif;
   font-size: 26px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -416,7 +477,7 @@
 
 .mono-green-exact-card .tcg-stat-val {
   color: #ffffff;
-  font-family: 'Cinzel', serif;
+  font-family: var(--mono-green-font-cinzel), serif;
   font-size: 54px;
   font-weight: 800;
   line-height: 1;
@@ -426,7 +487,7 @@
 .mono-green-exact-card .tcg-stat-sep {
   margin: 0 3px;
   color: #94a3b8;
-  font-family: 'Cinzel', serif;
+  font-family: var(--mono-green-font-cinzel), serif;
   font-size: 42px;
   font-weight: 600;
 }
