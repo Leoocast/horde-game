@@ -162,6 +162,15 @@ export function CardPreview() {
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
   const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
   const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
+  const focusedStats = stats.buffed
+    ? {
+        text: `${card.basePower}/${Math.max(0, card.baseToughness - card.damageMarked)}`,
+        power: card.basePower,
+        toughness: Math.max(0, card.baseToughness - card.damageMarked),
+        damaged: card.damageMarked > 0,
+        buffed: false,
+      }
+    : { ...stats, buffed: false };
   const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
 
@@ -184,7 +193,7 @@ export function CardPreview() {
           >
             {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
             {showFullCardPresentation && <CardCostBadge card={card} />}
-            {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
+            {showFullCardStats && <CardStatsBadge stats={focusedStats} preferSingleSword />}
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">

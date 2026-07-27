@@ -317,7 +317,13 @@ export function Hand({ game }: { game: GameState }) {
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
             const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
-            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : playable || energyRecyclable);
+            const cardAvailable =
+              !tutorialAwaitingContinue &&
+              !handLimitDiscardActive &&
+              !smallpoxSelectionActive &&
+              tutorialHandTargetId === null &&
+              (playable || energyRecyclable);
+            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : cardAvailable);
             const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
@@ -378,6 +384,7 @@ export function Hand({ game }: { game: GameState }) {
                     "hand-card",
                     useNativeHdRendering ? "hand-card-native-hd" : "",
                     isHeld ? "hand-card-hovered" : "",
+                    cardAvailable && draggingCardId !== card.instanceId ? "hand-card-available" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     energyRecycleAnimation?.card.instanceId === card.instanceId ? "opacity-0" : "",
                     discardTargetable ? "counter-targetable-card" : "",
@@ -406,6 +413,7 @@ export function Hand({ game }: { game: GameState }) {
                       selected={selectedHandId === card.instanceId}
                       dragging={draggingCardId === card.instanceId}
                       actionable={cardActionable}
+                      suppressActionableChrome={cardAvailable}
                       suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
                       suppressHoverOverlay
                       darkenOnHover={false}

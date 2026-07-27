@@ -45,6 +45,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                     highRes
                     sharpImageOverlay={!useNativeHdRendering}
                     showFullImage={showFullImage}
+                    showCostBadge={showFullImage}
                     clipActionSweep={UI_FEATURE_FLAGS.alignHdHandActionSweep && showFullImage}
                     preferNativeImageRendering={useNativeHdRendering}
                     hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}

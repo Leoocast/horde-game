@@ -19,6 +19,7 @@ type Props = {
   selectionDisabled?: boolean;
   muted?: boolean;
   actionable?: boolean;
+  suppressActionableChrome?: boolean;
   effectAvailable?: boolean;
   linkLabel?: string;
   hideStats?: boolean;
@@ -46,7 +47,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -81,7 +82,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
-  const showActionGlow = Boolean(actionable);
+  const showActionGlow = Boolean(actionable && !suppressActionableChrome);
   const actionGlow = showActionGlow
     ? "inset 0 0 0 1px rgba(228,218,158,0.42), 0 0 8px rgba(103,166,137,0.62), 0 0 18px rgba(44,111,99,0.4)"
     : "";
@@ -164,7 +165,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         </div>
       )}
       {showCostBadge && <CardCostBadge card={card} />}
-      {actionable && !dragging && (
+      {showActionGlow && !dragging && (
         clipActionSweep ? (
           <span className="card-actionable-sweep-clip" aria-hidden="true">
             <span className="card-actionable-sweep" />

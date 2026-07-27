@@ -666,18 +666,24 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
   `showFullImage`: el recorte del battlefield se conserva. Su badge dinamico adapta el
   `tcg-stats-badge` impreso al espacio chico (slate, espada dorada, slash gris, corazon rojo y
-  numeros blancos), con borde/volumen discretos para separarlo del arte. `stats.buffed` debe leerse
+  numeros blancos), usando exactamente la paleta del generador `dev/tools/Decks/monogreen/index.html`
+  como fuente de verdad. `stats.buffed` debe leerse
   solamente dentro del badge dinamico; no debe agregar marco verde ni veladura sobre el arte de la
-  carta recortada. El mismo `CardStatsBadge` dinamico cubre el badge impreso en mano,
-  mulligan, sources de targeting, `CardPreview` y las cartas mono-green de `DeckInspector`; en
-  carta completa usa proporciones `cqw` para quedar exactamente sobre la pestana horneada en el
-  PNG. En el deck los stats vienen de la definicion estatica; en targeting vienen del estado
-  vivo. En `CardPreview` queda unos pixeles elevado; preview, mano, targeting y deck recuperan el
-  borde dorado sobre slate gris de la variante recortada. Mano, targeting, `CardPreview` y
-  `DeckInspector` tambien cubren el coste impreso con `CardCostBadge`: un orbe azul proporcional
+  carta recortada, y su panel verde debe coincidir con el del preview de hover incluso cuando la
+  criatura tambien esta danada. El mismo `CardStatsBadge` dinamico cubre el badge impreso en mano,
+  mulligan, sources de targeting y `CardPreview`; en carta completa usa proporciones `cqw` para
+  quedar exactamente sobre la pestana horneada en el PNG. En targeting vienen del estado vivo.
+  El preview fijado con click derecho superpone el badge del juego con stats base y dano actual,
+  pero excluye los buffs; el hover conserva los stats vivos y su estado buffed. En el hover queda
+  unos pixeles elevado; preview, mano y targeting comparten el borde dorado sutil sobre el slate
+  del `index`. Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
+  `CardCostBadge`: un orbe azul proporcional
   inspirado en los orbes de energia, mayor que el original, desplazado fuera de la esquina superior
-  izquierda y con pulso luminoso en el numero y el nucleo. En el grid del deck, `xN` queda a la
-  derecha para no competir con el orbe.
+  izquierda, con nucleo oscuro legible, borde exterior azul, aro cian interior difuminado y el
+  pulso concentrado en el edge.
+  `DeckInspector` tambien cubre el PNG
+  con `CardCostBadge` y `CardStatsBadge` en grid, preview lateral y modal; sus stats vienen de la
+  definicion estatica y `xN` permanece a la derecha.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
   layout siga apilando copias iguales.
@@ -687,6 +693,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Keywords de zombies se muestran debajo de `Tapped`/`Atk`, en verde, mismo tamano/estilo base. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
+- La disponibilidad normal en la mano (jugable o energia reciclable) no reutiliza el borde generico
+  de `Card.actionable`: `Hand` suprime ese chrome y dibuja una corona cian propia con mascara,
+  intensa arriba y con fade vertical a alfa cero antes del borde inferior. Los estados de descarte,
+  tutorial y targeting conservan sus estilos separados; el rombo sigue detras del feature flag.
 
 ## Antes de tocar algo
 
