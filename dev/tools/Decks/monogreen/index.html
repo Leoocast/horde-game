@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostfall Deck — Mono Green (976x1360 HD)</title>
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Librerías para Exportar Deck a ZIP en formato WebP (976x1360) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;600;700;800&family=Oswald:wght@600;700&display=swap');
+
+        :root {
+            --gold-light: #ead9a8;
+            --gold-main: #b8a26b;
+
+            /* Elemento Naturaleza */
+            --nature-border-subtle: rgba(52, 96, 59, 0.45);
+            --nature-border-accent: #34603b;
+            --nature-bg: linear-gradient(180deg, #18381c 0%, #0a1c0e 100%);
+
+            /* Textura de grano fino */
+            --noise-tex: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E");
+
+            /* Patrón gráfico detallado de hojas de naturaleza flotantes y dispersas */
+            --nature-pattern: url("data:image/svg+xml,%3Csvg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(30,25) rotate(-25) scale(0.9)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%234ade80' fill-opacity='0.09'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-8 L 6,-14 M 0,0 L -6,-6 M 0,8 L 6,2' stroke='%234ade80' stroke-width='1.5' stroke-opacity='0.12' fill='none'/%3E%3C/g%3E%3Cg transform='translate(105,45) rotate(40) scale(0.65)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%2386efac' fill-opacity='0.08'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-6 L 6,-12 M 0,4 L -6,-2' stroke='%2386efac' stroke-width='1.5' stroke-opacity='0.1' fill='none'/%3E%3C/g%3E%3Cg transform='translate(55,100) rotate(65) scale(0.8)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%2322c55e' fill-opacity='0.08'/%3E%3Cpath d='M 0,-22 L 0,22 M 0,-8 L -6,-14 M 0,2 L 6,-4' stroke='%2322c55e' stroke-width='1.5' stroke-opacity='0.1' fill='none'/%3E%3C/g%3E%3Cg transform='translate(125,115) rotate(-45) scale(0.7)'%3E%3Cpath d='M 0,-24 C -12,-8 -12,12 0,24 C 12,12 12,-8 0,-24 Z' fill='%234ade80' fill-opacity='0.07'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #08080a;
+            background-image:
+                radial-gradient(ellipse at 50% 10%, rgba(24, 56, 28, 0.35) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(15, 23, 42, 0.4) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: #e2e8f0;
+            font-family: 'Lora', serif;
+            margin: 0;
+            padding: 60px 30px 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header-title h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            color: var(--gold-light);
+            margin: 0 0 12px 0;
+            letter-spacing: 4px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+        }
+
+        .header-title p {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+        }
+
+        /* BOTÓN EXPORT DECK ZIP WEBP */
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            background: linear-gradient(180deg, #15803d 0%, #166534 100%);
+            border: 2px solid #86efac;
+            padding: 14px 32px;
+            border-radius: 35px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 12px 30px rgba(34, 197, 94, 0.6);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.75;
+            cursor: wait;
+            transform: none;
+            background: #334155;
+            border-color: #94a3b8;
+            box-shadow: none;
+        }
+
+        /* ==================== CONTROLES DE ZOOM / COLUMNAS ==================== */
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(184, 162, 107, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .zoom-controls span {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            color: var(--gold-light);
+            letter-spacing: 1px;
+            margin-right: 8px;
+        }
+
+        .zoom-btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover,
+        .zoom-btn.active {
+            color: #ffffff;
+            background: #15803d;
+            border-color: #86efac;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+        }
+
+        /* ==================== REJILLA DE CARTAS MULTI-COLUMNA ==================== */
+        .cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            max-width: 100%;
+            padding: 0 10px;
+        }
+
+        /* ESCALAS DE COLUMNA DENSAS */
+        .cards-grid.scale-35 .tcg-card {
+            zoom: 0.35;
+        }
+
+        .cards-grid.scale-45 .tcg-card {
+            zoom: 0.45;
+        }
+
+        .cards-grid.scale-60 .tcg-card {
+            zoom: 0.60;
+        }
+
+        .cards-grid.scale-100 .tcg-card {
+            zoom: 1.0;
+        }
+
+        /* ==================== CARTA HD (976px x 1360px) ==================== */
+        .tcg-card {
+            width: 976px;
+            height: 1360px;
+            border-radius: 48px;
+            position: relative;
+            background: #090a08;
+            box-shadow: 0 36px 80px rgba(0, 0, 0, 0.9), 0 0 0 3px rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* MARCO EXTERIOR: VERDE NATURALEZA CON MOTIVO DE HOJAS A GRIS ACERO */
+        .tcg-outer-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 48px;
+            padding: 18px;
+            background-image:
+                var(--nature-pattern),
+                var(--noise-tex),
+                linear-gradient(180deg,
+                    #26472d 0%,
+                    #1b3a21 48%,
+                    #475569 68%,
+                    #273344 82%,
+                    #1b232e 88%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Estructura Interna */
+        .tcg-inner {
+            position: absolute;
+            inset: 18px;
+            border-radius: 30px;
+            overflow: hidden;
+            background: var(--nature-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tcg-inner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            box-shadow: inset 0 0 0 2px rgba(184, 162, 107, 0.4), inset 0 0 36px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* --- CABECERA DE CARTA --- */
+        .tcg-head {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 24px;
+            margin: 12px 12px 0 12px;
+            border-radius: 18px 0 0 9px;
+            background: transparent;
+        }
+
+        .tcg-head::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            border-radius: 18px 0 0 9px;
+            background-image: var(--nature-pattern), var(--noise-tex), linear-gradient(90deg, #26472d 0%, #16321d 65%, transparent 98%);
+            border-top: 3px solid rgba(184, 162, 107, 0.55);
+            border-left: 3px solid rgba(184, 162, 107, 0.55);
+            border-bottom: 3px solid rgba(184, 162, 107, 0.55);
+            border-right: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+            mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+        }
+
+        .tcg-title-wrap {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tcg-element-icon {
+            width: 45px;
+            height: 45px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #86efac;
+            font-size: 35px;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.8));
+        }
+
+        .tcg-title {
+            font-family: 'Cinzel', serif;
+            font-size: 45px;
+            font-weight: 700;
+            color: #f2f5e8;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
+        }
+
+        /* EMBLEMA CIRCULAR MANA GEM HD DORADO */
+        .tcg-mana-gem {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            margin-top: -9px;
+            margin-bottom: -9px;
+            margin-right: -9px;
+            z-index: 15;
+            background: linear-gradient(180deg, #3d321d 0%, #1f180d 100%);
+            border: 3px solid #b8a26b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow:
+                0 8px 16px rgba(0, 0, 0, 0.7),
+                0 0 15px rgba(234, 217, 168, 0.3),
+                inset 0 3px 0 rgba(255, 235, 175, 0.4);
+        }
+
+        .tcg-mana-gem span {
+            font-family: 'Cinzel', 'Oswald', sans-serif;
+            font-size: 54px;
+            font-weight: 900;
+            color: #fce8b3;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.9), 0 0 10px rgba(184, 162, 107, 0.6);
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            margin-top: 2px;
+        }
+
+        /* --- MARCO Y VENTANA DE ARTE --- */
+        .tcg-art-frame {
+            position: relative;
+            margin: 9px 12px;
+            height: 560px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid rgba(184, 162, 107, 0.45);
+            box-shadow: 0 9px 24px rgba(0, 0, 0, 0.8), inset 0 0 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .tcg-art-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 25%;
+        }
+
+        .tcg-art-frame::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.55) 100%);
+            pointer-events: none;
+        }
+
+        /* --- CINTA DE TIPO RIBBON CUT --- */
+        .tcg-typeband {
+            position: relative;
+            z-index: 5;
+            margin: 0 12px;
+            padding: 12px 48px 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.55) 0%, rgba(184, 162, 107, 0.45) 50%, rgba(138, 115, 55, 0.35) 100%);
+            border: none;
+            border-radius: 9px 0 0 9px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+            clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 50%, calc(100% - 30px) 100%, 0 100%);
+        }
+
+        .tcg-typeband::before {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            z-index: 0;
+            background-image: var(--nature-pattern), var(--noise-tex), linear-gradient(180deg, #26472d 0%, #1a3220 100%);
+            border-radius: 7px 0 0 7px;
+            clip-path: polygon(0 0, calc(100% - 29px) 0, 100% 50%, calc(100% - 29px) 100%, 0 100%);
+        }
+
+        .tcg-type-text {
+            position: relative;
+            z-index: 1;
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            font-weight: 600;
+            letter-spacing: 3.5px;
+            text-transform: uppercase;
+            color: #eae4cf;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        /* --- CAJA DE TEXTO Y DESCRIPCIÓN --- */
+        .tcg-body {
+            position: relative;
+            flex: 1;
+            margin: 9px 12px 12px;
+            padding: 30px 36px 70px 36px;
+            border-radius: 9px 9px 42px 18px;
+            background-image: var(--noise-tex), linear-gradient(180deg, #e6e3ce 0%, #d8dcc3 100%);
+            border: 3px solid rgba(184, 162, 107, 0.4);
+            box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 18px;
+            overflow: hidden;
+        }
+
+        /* MARCA DE AGUA "H" EN EL FONDO */
+        .tcg-body::before {
+            content: "H";
+            position: absolute;
+            top: 46%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 350px;
+            font-weight: 700;
+            color: rgba(45, 80, 50, 0.08);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .tcg-effect {
+            position: relative;
+            z-index: 1;
+            font-family: 'Lora', serif;
+            font-size: 46px;
+            line-height: 1.48;
+            color: #1a1e16;
+            margin: 0;
+            font-weight: 500;
+            text-shadow: 0 2px 0 rgba(255, 255, 255, 0.6);
+            text-align: left;
+            width: 100%;
+        }
+
+        .tcg-effect strong {
+            color: #14532d;
+            font-weight: 700;
+        }
+
+        /* ICONOS DE EFECTO (Tapar / Energía) */
+        .symbol-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin: 0 8px;
+            vertical-align: middle;
+            transform: translateY(-5px);
+            /* Alineación óptica exacta en medio del texto */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+
+        .symbol-tap {
+            background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+            border: 3px solid #cbd5e1;
+            color: #f8fafc;
+            font-size: 30px;
+        }
+
+        .symbol-energy {
+            background: linear-gradient(180deg, #22c55e 0%, #14532d 100%);
+            border: 3px solid #86efac;
+            color: #ffffff;
+            font-size: 30px;
+            box-shadow: 0 0 14px rgba(34, 197, 94, 0.6), 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .tcg-divider {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 3px;
+            margin: 12px 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(52, 96, 59, 0.45) 25%, rgba(52, 96, 59, 0.45) 75%, transparent 100%);
+        }
+
+        .tcg-divider::after {
+            content: "◆";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 21px;
+            color: #386b40;
+            background: #dedcc5;
+            padding: 0 14px;
+        }
+
+        .tcg-flavor {
+            position: relative;
+            z-index: 1;
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 38px;
+            line-height: 1.45;
+            color: #454e40;
+            margin: 0;
+            text-shadow: 0 2px 0 rgba(255, 255, 255, 0.5);
+            text-align: left;
+            width: 100%;
+        }
+
+        .tcg-flavor-solo {
+            font-size: 44px;
+            line-height: 1.48;
+            color: #353f31;
+        }
+
+        .tcg-footer-info {
+            position: absolute;
+            left: 30px;
+            bottom: 18px;
+            z-index: 1;
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            letter-spacing: 3px;
+            color: rgba(60, 74, 55, 0.55);
+            text-transform: uppercase;
+        }
+
+        /* --- STATS BADGE HD --- */
+        .tcg-stats-badge {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 27px 60px 30px 42px;
+            border-radius: 42px 0 30px 0;
+            background: #1b232e;
+            border: none;
+            box-shadow: none;
+        }
+
+        .tcg-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tcg-stat-icon {
+            font-size: 39px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.8));
+        }
+
+        .tcg-stat-atk .tcg-stat-icon {
+            color: #cbd5e1;
+        }
+
+        .tcg-stat-def .tcg-stat-icon {
+            color: #f87171;
+        }
+
+        .tcg-stat-val {
+            font-family: 'Cinzel', serif;
+            font-size: 54px;
+            font-weight: 800;
+            line-height: 1;
+            color: #ffffff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+        }
+
+        .tcg-stat-sep {
+            color: #94a3b8;
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 600;
+            margin: 0 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-title">
+        <h1>Hostfall — Deck Mono Green (Cartas HD 976×1360)</h1>
+        <p>Colección completa de 13 cartas en alta resolución • Formato Completo Estándar</p>
+
+        <button class="export-btn" id="export-btn" onclick="exportDeckZip()">
+            <i class="fa-solid fa-file-zipper"></i>
+            <span id="export-btn-text">Export Deck (ZIP / PNG 976×1360)</span>
+        </button>
+    </div>
+
+    <!-- CONTENEDOR DE TODAS LAS CARTAS EN MULTI-COLUMNA -->
+    <div class="cards-grid scale-45" id="cards-container">
+        <!-- Renderizado dinámico vía JavaScript -->
+    </div>
+
+    <script>
+        // Datos del Deck Mono Green extraídos directamente de mono-green.json
+        const deckData = [
+            {
+                "id": "llanowar_elves",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd.jpg?1783909057",
+                "nombre": "Elfos de Llanowar",
+                "tipo": "Criatura — Elfo Druida",
+                "costo": 1,
+                "atk": 1,
+                "def": 1,
+                "desc": "{{T}}: Agrega {G}.",
+                "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
+            },
+            {
+                "id": "sunshower_druid",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/7/7/7740abc5-54e1-478d-966e-0fa64e727995.jpg?1783910802",
+                "nombre": "Druida de la lluvia solar",
+                "tipo": "Criatura — Rana Druida",
+                "costo": 1,
+                "atk": 0,
+                "def": 2,
+                "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada. Ganas 1 vida.",
+                "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
+            },
+            {
+                "id": "druid_of_the_cowl",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/76ceff1d-9e83-41cc-b54b-8bf90d985da9.jpg?1783934537",
+                "nombre": "Druida de la capucha",
+                "tipo": "Criatura — Elfo Druida",
+                "costo": 2,
+                "atk": 1,
+                "def": 3,
+                "desc": "{{T}}: Agrega {G}.",
+                "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
+            },
+            {
+                "id": "ichorspit_basilisk",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/0955b64f-6721-4fa6-b161-cae404cb5b9f.jpg?1783918014",
+                "nombre": "Basilisco escupeicor",
+                "tipo": "Criatura — Pirexiano Basilisco",
+                "costo": 3,
+                "atk": 1,
+                "def": 3,
+                "desc": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno.",
+                "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
+            },
+            {
+                "id": "beast_kin_ranger",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/0102e0be-5783-4825-9489-713b1b1df0b2.jpg?1783909098",
+                "nombre": "Guardabosque bestial",
+                "tipo": "Criatura — Elfo Explorador",
+                "costo": 3,
+                "atk": 3,
+                "def": 3,
+                "desc": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno.",
+                "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
+            },
+            {
+                "id": "magnigoth_sentry",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/5624e610-c4c0-4103-a32b-0f1264030a7a.jpg?1783908947",
+                "nombre": "Centinela mágnigoth",
+                "tipo": "Criatura — Pueblo-arbóreo",
+                "costo": 4,
+                "atk": 4,
+                "def": 4,
+                "desc": "Sin efecto adicional.",
+                "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
+            },
+            {
+                "id": "colossadactyl",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/8/7/8702e776-be2c-48a9-9bc5-bb8ea514333b.jpg?1783913750",
+                "nombre": "Colosadáctilo",
+                "tipo": "Criatura — Dinosaurio",
+                "costo": 4,
+                "atk": 4,
+                "def": 5,
+                "desc": "Sin efecto adicional.",
+                "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
+            },
+            {
+                "id": "timberland_ancient",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/5/f/5f73cd60-cd89-4c7a-85a6-e0ae34ca101b.jpg?1783916960",
+                "nombre": "Anciano forestal",
+                "tipo": "Criatura — Pueblo-arbóreo",
+                "costo": 6,
+                "atk": 6,
+                "def": 5,
+                "desc": "Sin efecto adicional.",
+                "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
+            },
+            {
+                "id": "cosmic_hunger",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b8eef541-6851-4312-ad2b-74f45c7ede6c.jpg?1783916972",
+                "nombre": "Hambre cósmica",
+                "tipo": "Instantáneo",
+                "costo": 2,
+                "atk": null,
+                "def": null,
+                "desc": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura.",
+                "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
+            },
+            {
+                "id": "ruthless_predation",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/1/2/123f0c76-1fde-439e-a76d-eccf96f8d941.jpg?1783918010",
+                "nombre": "Depredación despiadada",
+                "tipo": "Conjuro",
+                "costo": 2,
+                "atk": null,
+                "def": null,
+                "desc": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
+                "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
+            },
+            {
+                "id": "broken_wings",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61f9cbeb-cc9c-4562-be65-8a77053faefe.jpg?1783909061",
+                "nombre": "Alas rotas",
+                "tipo": "Instantáneo",
+                "costo": 3,
+                "atk": null,
+                "def": null,
+                "desc": "Destruye un artefacto, un encantamiento o una criatura con Vuelo.",
+                "lore": "Todo lo que domina el cielo termina por conocer la tierra."
+            },
+            {
+                "id": "giant_growth",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd0bf74e-14c1-4428-88d8-2181a080b5d0.jpg?1783909057",
+                "nombre": "Crecimiento gigante",
+                "tipo": "Instantáneo",
+                "costo": 1,
+                "atk": null,
+                "def": null,
+                "desc": "La criatura objetivo obtiene +3/+3 hasta el final del turno.",
+                "lore": "La naturaleza no pide permiso para superar sus límites."
+            },
+            {
+                "id": "forest",
+                "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d232fcc2-12f6-401a-b1aa-ddff11cb9378.jpg?1783909039",
+                "nombre": "Bosque",
+                "tipo": "Tierra básica — Bosque",
+                "costo": 0,
+                "atk": null,
+                "def": null,
+                "desc": "{{T}}: Agrega {E}.",
+                "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
+            }
+        ];
+
+        // Función para formatear el texto de descripción y reemplazar los símbolos {{T}}, {G}, {E} por íconos
+        function formatEffectText(text) {
+            if (!text) return "";
+            let formatted = text;
+
+            // Reemplazo de {{T}} por el ícono de Exhaust / Agotar (Reloj de Arena)
+            const tapIcon = `<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half"></i></span>`;
+            formatted = formatted.replace(/\{\{T\}\}/g, tapIcon);
+
+            // Reemplazo de {G} y {E} por el ícono de Energía (Rayo de Energía)
+            const energyIcon = `<span class="symbol-badge symbol-energy" title="Energía"><i class="fa-solid fa-bolt-lightning"></i></span>`;
+            formatted = formatted.replace(/\{G\}/g, energyIcon);
+            formatted = formatted.replace(/\{E\}/g, energyIcon);
+
+            // Resaltado de palabras clave como +1/+1 o +3/+3
+            formatted = formatted.replace(/(\+\d+\/\+\d+)/g, '<strong>$1</strong>');
+
+            return formatted;
+        }
+
+        // Determinar ícono de tipo
+        function getTypeIcon(tipo) {
+            if (tipo.includes("Criatura")) return '<i class="fa-solid fa-seedling" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Instantáneo") || tipo.includes("Conjuro")) return '<i class="fa-solid fa-scroll" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Tierra")) return '<i class="fa-solid fa-mountain-sun" style="font-size: 28px; color: #86efac;"></i>';
+            return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';
+        }
+
+        // Renderizado de las cartas
+        const container = document.getElementById('cards-container');
+
+        deckData.forEach((card, index) => {
+            const hasStats = card.atk !== null && card.def !== null;
+            const cardNumberStr = String(index + 1).padStart(3, '0');
+
+            const hasEffect = card.desc && card.desc.trim() !== "" && card.desc.trim().toLowerCase() !== "sin efecto adicional.";
+            const hasLore = card.lore && card.lore.trim() !== "";
+
+            const cardEl = document.createElement('div');
+            cardEl.className = 'tcg-card';
+            cardEl.id = `card-${card.id}`;
+
+            cardEl.innerHTML = `
+                <div class="tcg-outer-border"></div>
+                <div class="tcg-inner">
+                    <!-- Cabecera -->
+                    <div class="tcg-head">
+                        <div class="tcg-title-wrap">
+                            <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
+                            <div class="tcg-title">${card.nombre}</div>
+                        </div>
+                        <div class="tcg-mana-gem">
+                            <span>${card.costo}</span>
+                        </div>
+                    </div>
+
+                    <!-- Ventana de Arte -->
+                    <div class="tcg-art-frame">
+                        <img src="${card.art_crop}" alt="${card.nombre}" class="tcg-art-image" onerror="this.src='https://via.placeholder.com/976x560/0a1c0e/86efac?text=${encodeURIComponent(card.nombre)}'">
+                    </div>
+
+                    <!-- Banda de Tipo -->
+                    <div class="tcg-typeband">
+                        <div class="tcg-type-text">
+                            ${getTypeIcon(card.tipo)}
+                            ${card.tipo}
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo de Descripción -->
+                    <div class="tcg-body">
+                        ${hasEffect ? `<p class="tcg-effect">${formatEffectText(card.desc)}</p>` : ''}
+                        ${hasEffect && hasLore ? `<div class="tcg-divider"></div>` : ''}
+                        ${hasLore ? `<p class="tcg-flavor ${hasEffect ? '' : 'tcg-flavor-solo'}">${card.lore}</p>` : ''}
+                        <div class="tcg-footer-info">HFA1 #${cardNumberStr} • Hostfall TCG</div>
+                    </div>
+                </div>
+
+                <!-- Stats (Ataque / Defensa) si aplica -->
+                ${hasStats ? `
+                <div class="tcg-stats-badge">
+                    <div class="tcg-stat-item tcg-stat-atk">
+                        <div class="tcg-stat-icon">
+                            <i class="fa-solid fa-swords"></i>
+                        </div>
+                        <span class="tcg-stat-val">${card.atk}</span>
+                    </div>
+                    <span class="tcg-stat-sep">/</span>
+                    <div class="tcg-stat-item tcg-stat-def">
+                        <div class="tcg-stat-icon"><i class="fa-solid fa-heart"></i></div>
+                        <span class="tcg-stat-val">${card.def}</span>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+
+            container.appendChild(cardEl);
+        });
+
+        // FUNCIÓN PARA EXPORTAR EL DECK COMPLETO A ZIP CON IMÁGENES PNG (976x1360)
+        async function exportDeckZip() {
+            const btn = document.getElementById('export-btn');
+            const btnText = document.getElementById('export-btn-text');
+            btn.disabled = true;
+
+            // Crear contenedor fuera de pantalla sin zoom para captura 100% limpia a 976x1360 HD
+            const offscreenHost = document.createElement('div');
+            offscreenHost.style.position = 'absolute';
+            offscreenHost.style.left = '-9999px';
+            offscreenHost.style.top = '0';
+            offscreenHost.style.width = '976px';
+            offscreenHost.style.height = '1360px';
+            offscreenHost.style.zoom = '1';
+            offscreenHost.style.transform = 'none';
+            document.body.appendChild(offscreenHost);
+
+            try {
+                const zip = new JSZip();
+                const cards = document.querySelectorAll('.tcg-card');
+                const total = cards.length;
+
+                for (let i = 0; i < total; i++) {
+                    const originalCard = cards[i];
+                    const cardInfo = deckData[i] || {};
+                    const cardName = cardInfo.id || `carta_${i + 1}`;
+                    const cardNumber = String(i + 1).padStart(3, '0');
+
+                    btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Procesando ${i + 1}/${total}: ${cardInfo.nombre || cardName}...`;
+
+                    // Clonar carta en el contenedor sin zoom
+                    const clone = originalCard.cloneNode(true);
+                    clone.style.zoom = '1';
+                    clone.style.transform = 'none';
+                    clone.style.margin = '0';
+                    clone.style.position = 'relative';
+                    offscreenHost.appendChild(clone);
+
+                    // Renderizar con html2canvas en 976x1360px exactos
+                    const canvas = await html2canvas(clone, {
+                        scale: 1,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: 976,
+                        height: 1360,
+                        backgroundColor: null,
+                        logging: false
+                    });
+
+                    // Limpiar el clon
+                    offscreenHost.innerHTML = '';
+
+                    // Obtener data URL en formato PNG
+                    const pngDataUrl = canvas.toDataURL('image/png');
+                    const base64Data = pngDataUrl.replace(/^data:image\/png;base64,/, '');
+
+                    zip.file(`${cardNumber}_${cardName}.png`, base64Data, { base64: true });
+                }
+
+                btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Empaquetando ZIP...`;
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+                saveAs(zipBlob, 'mono-green-deck-976x1360-png.zip');
+
+                btnText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Deck Exportado con Éxito!`;
+            } catch (err) {
+                console.error("Error exportando deck:", err);
+                alert("Ocurrió un error al generar las imágenes. Revisa la consola del navegador.");
+            } finally {
+                if (offscreenHost.parentNode) {
+                    offscreenHost.parentNode.removeChild(offscreenHost);
+                }
+                setTimeout(() => {
+                    btnText.innerHTML = `Export Deck (ZIP / PNG 976×1360)`;
+                    btn.disabled = false;
+                }, 3500);
+            }
+        }
+    </script>
+</body>
+
+</html>

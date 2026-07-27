@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burn Card Effects</title>
+    <style>
+        :root {
+            --bg-color: #0b0b10;
+            --card-w: 160px;
+            --card-h: 230px;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-color);
+            color: white;
+            font-family: 'Inter', system-ui, sans-serif;
+            padding: 40px;
+            overflow-x: hidden;
+            display: flex;
+            gap: 50px;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+            pointer-events: none;
+        }
+
+        .card-container {
+            width: var(--card-w);
+            height: var(--card-h);
+            position: relative;
+            border-radius: 10px;
+            background: #14141d;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Base illustration placeholder */
+        .card-art {
+            position: absolute;
+            inset: 8px;
+            background: linear-gradient(145deg, #222230, #181822);
+            border-radius: 6px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .effect-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* 4. Fury Shake */
+        .card-container.active.shake-card {
+            animation: fury-shake 0.5s ease-in-out;
+        }
+
+        .buff-fury {
+            background: linear-gradient(45deg, rgba(255, 0, 0, 0.5), rgba(255, 100, 0, 0.5));
+            opacity: 0;
+            mix-blend-mode: overlay;
+        }
+
+        .card-container.active .buff-fury {
+            animation: fury-flash 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fury-flash {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+                filter: brightness(2);
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fury-shake {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            20% {
+                transform: translate(-3px, 3px) rotate(-1deg);
+            }
+
+            40% {
+                transform: translate(3px, -3px) rotate(1deg);
+            }
+
+            60% {
+                transform: translate(-3px, -3px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(3px, 3px) rotate(1deg);
+            }
+        }
+
+        /* 1. Smoldering Embers */
+        .burn-embers i {
+            position: absolute;
+            bottom: -10px;
+            left: var(--x);
+            width: var(--s);
+            height: var(--s);
+            background: #ff5500;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff2200, 0 0 5px #ffaa00;
+            animation: ember-float var(--dur) ease-in infinite;
+            animation-delay: var(--d);
+            opacity: 0;
+            mix-blend-mode: screen;
+        }
+
+        .burn-embers i.ash {
+            background: #444;
+            box-shadow: 0 0 5px #222;
+            mix-blend-mode: normal;
+        }
+
+        @keyframes ember-float {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(-260px) translateX(var(--drift)) scale(0.2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Fury Distortion -->
+    <div class="card-wrapper">
+        <div class="card-container shake-card">
+            <div class="card-art"></div>
+            <div class="effect-layer buff-fury"></div>
+        </div>
+        <div class="card-title">4. Fury Distortion</div>
+    </div>
+
+    <!-- Smoldering Embers -->
+    <div class="card-wrapper">
+        <div class="card-container">
+            <div class="card-art"></div>
+            <div class="effect-layer burn-embers">
+                <!-- Ascuas (Naranjas) -->
+                <i style="--x:15%; --s:4px; --dur:2s; --d:0s; --drift: -15px;"></i>
+                <i style="--x:35%; --s:5px; --dur:1.8s; --d:0.4s; --drift: 10px;"></i>
+                <i style="--x:55%; --s:6px; --dur:2.2s; --d:0.8s; --drift: -20px;"></i>
+                <i style="--x:75%; --s:4px; --dur:1.5s; --d:0.2s; --drift: 25px;"></i>
+                <i style="--x:85%; --s:3px; --dur:2.5s; --d:1.2s; --drift: -10px;"></i>
+
+                <!-- Cenizas (Grises/Negras) -->
+                <i class="ash" style="--x:25%; --s:5px; --dur:2.4s; --d:0.5s; --drift: 20px;"></i>
+                <i class="ash" style="--x:45%; --s:4px; --dur:2.1s; --d:1.5s; --drift: -25px;"></i>
+                <i class="ash" style="--x:65%; --s:6px; --dur:2.8s; --d:0.7s; --drift: 15px;"></i>
+            </div>
+        </div>
+        <div class="card-title">1. Smoldering Embers</div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.card-container').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.remove('active');
+                void card.offsetWidth;
+                card.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

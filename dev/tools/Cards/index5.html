@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunshower Druid — Hostfall Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+        :root {
+            --gold-light: #ece0c0;
+            --gold-main: #c9b37e;
+            --gold-line: rgba(201, 179, 126, 0.55);
+            --gold-faint: rgba(201, 179, 126, 0.2);
+            --bg-deep: #0a100d;
+            --bg-mid: #13201a;
+            --olive: #2c3a22;
+            --text-bright: #f0ece0;
+            --text-dim: #a8b0a4;
+        }
+
+        body {
+            background: #0c1210;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Lora', serif;
+        }
+
+        .card {
+            width: 400px;
+            height: 580px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(201, 179, 126, 0.08);
+            background-color: var(--bg-mid);
+            background-image: url('image.png');
+            background-size: cover;
+            background-position: center 20%;
+        }
+
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                    rgba(8, 14, 11, 0.9) 0%,
+                    rgba(8, 14, 11, 0.4) 14%,
+                    rgba(8, 14, 11, 0) 30%,
+                    rgba(8, 14, 11, 0) 44%,
+                    rgba(8, 13, 10, 0.75) 62%,
+                    rgba(7, 11, 9, 0.97) 76%,
+                    rgba(6, 10, 8, 1) 100%);
+            z-index: 1;
+        }
+
+        .inner-border {
+            position: absolute;
+            inset: 8px;
+            border: 1px solid var(--gold-line);
+            border-radius: 7px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .inner-border-2 {
+            position: absolute;
+            inset: 12px;
+            border: 1px solid var(--gold-faint);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* Rombos en las esquinas del marco, como los del juego */
+        .corner {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            background: var(--gold-main);
+            transform: rotate(45deg);
+            z-index: 4;
+        }
+
+        .corner.tl {
+            top: 5px;
+            left: 5px;
+        }
+
+        .corner.tr {
+            top: 5px;
+            right: 5px;
+        }
+
+        .corner.bl {
+            bottom: 5px;
+            left: 5px;
+        }
+
+        .corner.br {
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 22px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .type-icon {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10, 16, 13, 0.8);
+            border-radius: 50%;
+            border: 1px solid var(--gold-main);
+            flex-shrink: 0;
+        }
+
+        .type-icon svg {
+            width: 19px;
+            height: 19px;
+            fill: var(--gold-light);
+        }
+
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .title {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .subtitle {
+            font-family: 'Lora', serif;
+            color: var(--text-dim);
+            font-size: 10px;
+            letter-spacing: 3.5px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .cost {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 25%, #4a5a38, #1d2716);
+            border: 1.5px solid var(--gold-light);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: 21px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .divider {
+            display: block;
+            margin: 0 auto 12px;
+        }
+
+        .text-box {
+            text-align: left;
+            padding: 0 6px;
+        }
+
+        .effect {
+            color: var(--text-bright);
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 500;
+            margin: 0;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .flavor {
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 12px;
+            line-height: 1.55;
+            margin: 6px 0 0;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 16px;
+        }
+
+        .credits {
+            color: rgba(168, 176, 164, 0.5);
+            font-size: 8.5px;
+            font-family: 'Lora', serif;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Placa de stat con rombo, como el contador del Horde Deck */
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(9, 15, 12, 0.9);
+            border: 1px solid var(--gold-line);
+            padding: 4px 12px 4px 8px;
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .stat .diamond {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .stat .diamond::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            transform: rotate(45deg);
+            border: 1px solid var(--gold-main);
+        }
+
+        .stat .diamond svg {
+            width: 9px;
+            height: 9px;
+            fill: var(--gold-main);
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <div class="card-overlay"></div>
+        <div class="inner-border"></div>
+        <div class="inner-border-2"></div>
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+
+        <div class="content">
+            <div class="header">
+                <div class="type-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12,3.25C12,3.25 6,10 6,14C6,17.32 8.69,20 12,20A6,6 0 0,0 18,14C18,10 12,3.25 12,3.25Z" />
+                    </svg>
+                </div>
+                <div class="title-container">
+                    <div class="title">SUNSHOWER DRUID</div>
+                    <svg viewBox="0 0 200 10" width="200" height="10" style="margin-top: 4px;">
+                        <line x1="10" y1="5" x2="88" y2="5" stroke="#c9b37e" stroke-width="0.8" opacity="0.7" />
+                        <line x1="112" y1="5" x2="190" y2="5" stroke="#c9b37e" stroke-width="0.8" opacity="0.7" />
+                        <circle cx="94" cy="5" r="1" fill="#c9b37e" />
+                        <circle cx="106" cy="5" r="1" fill="#c9b37e" />
+                        <rect x="97.5" y="2.5" width="5" height="5" transform="rotate(45 100 5)" fill="#c9b37e" />
+                    </svg>
+                    <div class="subtitle">Creature — Frog Druid</div>
+                </div>
+                <div class="cost">1</div>
+            </div>
+
+            <div class="spacer"></div>
+
+            <svg class="divider" viewBox="0 0 320 12" width="320" height="12">
+                <line x1="8" y1="6" x2="140" y2="6" stroke="#c9b37e" stroke-width="0.8" opacity="0.7" />
+                <line x1="180" y1="6" x2="312" y2="6" stroke="#c9b37e" stroke-width="0.8" opacity="0.7" />
+                <circle cx="147" cy="6" r="1" fill="#c9b37e" />
+                <circle cx="173" cy="6" r="1" fill="#c9b37e" />
+                <rect x="156.5" y="2.5" width="7" height="7" transform="rotate(45 160 6)" fill="none" stroke="#ece0c0"
+                    stroke-width="1" />
+                <rect x="158.5" y="4.5" width="3" height="3" transform="rotate(45 160 6)" fill="#c9b37e" />
+            </svg>
+
+            <div class="text-box">
+                <p class="effect">When Sunshower Druid enters, put a +1/+1 counter on target creature and you gain 1
+                    life.</p>
+                <p class="flavor">Apprentice augurs begin their studies by predicting where the rain will fall. Even
+                    those who don't succeed derive great joy from the process.</p>
+            </div>
+
+            <div class="footer">
+                <div class="credits">TXW 2/50</div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="diamond">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M6.92,14.22L15.41,5.73L16.83,4.32L19.66,1.49L22.49,4.32L19.66,7.15L18.24,8.57L9.76,17.06L6.92,14.22M4.1,17.05L2.68,18.46L1.27,19.88L4.1,22.71L5.51,21.29L6.93,19.88L4.1,17.05M5.51,12.81L11.17,18.46L8.34,21.3L2.68,15.63L5.51,12.81Z" />
+                            </svg>
+                        </span>
+                        0
+                    </div>
+                    <div class="stat">
+                        <span class="diamond">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z" />
+                            </svg>
+                        </span>
+                        2
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
