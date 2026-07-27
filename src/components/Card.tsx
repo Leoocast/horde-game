@@ -246,7 +246,10 @@ export function CardCostBadge({
 
   return (
     <div className="card-cost-badge" aria-hidden="true">
-      <span>{label}</span>
+      <span className="card-cost-energy-orb">
+        <span className="card-cost-energy-liquid" />
+      </span>
+      <span className="card-cost-value">{label}</span>
     </div>
   );
 }

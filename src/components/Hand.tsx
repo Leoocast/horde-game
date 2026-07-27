@@ -18,6 +18,7 @@ const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
+const HAND_HOVER_SCALE = 1.3 * (UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? 1.08 : 1);
 const handCardMotion: Variants = {
   initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
   animate: (custom: { index: number; stagger: boolean }) => ({
@@ -298,7 +299,6 @@ export function Hand({ game }: { game: GameState }) {
             ref={handCardsRef}
             className={[
               "player-hand-cards flex items-end justify-center overflow-visible",
-              UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? "player-hand-cards-adjusted-hover" : "",
               UI_FEATURE_FLAGS.useLargerPlayerHandCards ? "player-hand-cards-larger" : "",
             ].join(" ")}
             style={{
@@ -383,7 +383,6 @@ export function Hand({ game }: { game: GameState }) {
                   className={[
                     "hand-card",
                     useNativeHdRendering ? "hand-card-native-hd" : "",
-                    isHeld ? "hand-card-hovered" : "",
                     cardAvailable && draggingCardId !== card.instanceId ? "hand-card-available" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
                     energyRecycleAnimation?.card.instanceId === card.instanceId ? "opacity-0" : "",
@@ -401,6 +400,9 @@ export function Hand({ game }: { game: GameState }) {
                     x: "-50%",
                     y: isHeld ? -86 : 48 + fanDip,
                     rotate: isHeld ? 0 : fanAngle,
+                    // Keep the face and its cqw overlays on one composited layer. Changing the
+                    // real box size makes the cost and keyword positions reflow by subpixels.
+                    scale: isHeld ? HAND_HOVER_SCALE : 1,
                     transition: isHeld
                       ? { duration: 0.18, ease: [0.16, 1, 0.3, 1] }
                       : { duration: 0.3, ease: [0.22, 1, 0.36, 1] },

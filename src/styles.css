@@ -4991,7 +4991,8 @@
     letter-spacing: 0.01em;
   }
 
-  .counter-targetable-card > article {
+  .counter-targetable-card > article,
+  .counter-targetable-card > .hand-card-face-scale > article {
     border-color: rgb(207 190 116 / 0.92) !important;
     box-shadow:
       inset 0 0 0 1px rgb(236 226 167 / 0.34),
@@ -5000,7 +5001,8 @@
     animation: actionable-card-glow 1.5s ease-in-out infinite;
   }
 
-  .counter-target-locked-card > article {
+  .counter-target-locked-card > article,
+  .counter-target-locked-card > .hand-card-face-scale > article {
     border-color: rgb(145 245 143 / 0.98) !important;
     box-shadow:
       0 0 0 1.5px rgb(201 255 184 / 0.84),
@@ -7878,14 +7880,7 @@
     gap: 0;
     isolation: isolate;
     transform: translateY(84px);
-    --hand-hover-size-multiplier: 1;
-    --hand-expanded-scale: calc(1.3 * var(--hand-hover-size-multiplier));
-    --hand-html-resting-scale: calc(1 / var(--hand-expanded-scale));
     --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
-  }
-
-  .player-hand-cards.player-hand-cards-adjusted-hover {
-    --hand-hover-size-multiplier: 1.08;
   }
 
   .player-hand-cards.player-hand-cards-larger {
@@ -7911,27 +7906,19 @@
     position: absolute;
     left: 50%;
     bottom: 0;
-    --hand-hover-scale: 1;
-    width: calc(var(--hand-card-width) * var(--hand-hover-scale));
-    height: calc(var(--hand-card-width) * 1.393 * var(--hand-hover-scale));
+    width: var(--hand-card-width);
+    height: calc(var(--hand-card-width) * 1.393);
     z-index: var(--hand-z);
     transform-origin: 50% 100%;
     backface-visibility: hidden;
-    will-change: transform, width, height;
-    transition:
-      z-index 0ms,
-      width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-      height 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    transition: z-index 0ms;
   }
 
   .hand-card-native-hd,
   .hand-card-html {
     backface-visibility: visible;
     will-change: auto;
-  }
-
-  .hand-card-hovered {
-    --hand-hover-scale: var(--hand-expanded-scale);
   }
 
   .hand-card-available::before,
@@ -7982,24 +7969,6 @@
     height: 100%;
     container-type: inline-size;
     transform-origin: 50% 100%;
-  }
-
-  .hand-card-available .hand-card-face-scale:has(.card-cost-badge)::before {
-    position: absolute;
-    top: calc(-1.15cqw - 2px);
-    left: calc(-0.7cqw - 2px);
-    z-index: 44;
-    width: calc(14.5cqw + 4px);
-    height: calc(14.5cqw + 4px);
-    border: 3px solid rgb(54 216 250 / 0.78);
-    border-radius: 50%;
-    box-shadow: 0 0 5px rgb(53 203 239 / 0.42);
-    content: "";
-    filter: drop-shadow(0 0 2px rgb(86 224 251 / 0.52));
-    pointer-events: none;
-    -webkit-mask: conic-gradient(#000 0deg 30deg, transparent 30deg 202deg, #000 202deg 360deg);
-    mask: conic-gradient(#000 0deg 30deg, transparent 30deg 202deg, #000 202deg 360deg);
-    animation: hand-available-border-pulse 2.1s ease-in-out infinite;
   }
 
   .player-hand-cards-isolated-actionable-glow .hand-card-html .card-actionable {
@@ -8056,36 +8025,6 @@
     transform: translateZ(0);
     animation: hand-actionable-glow-opacity 1.5s ease-in-out infinite;
     will-change: opacity;
-  }
-
-  /*
-   * One geometry owner: `.hand-card` grows in real width/height, so the gem and every sibling
-   * keep following its visible corners. The HTML face itself is laid out once at the final hover
-   * resolution and inverse-scaled while resting; its viewport never resizes during hover.
-   */
-  .player-hand-cards-hover-resolution .hand-card-html .hand-card-face-scale {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: calc(var(--hand-card-width) * var(--hand-expanded-scale));
-    height: calc(var(--hand-card-width) * 1.393 * var(--hand-expanded-scale));
-    transform: translateX(-50%) scale(var(--hand-html-resting-scale));
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .player-hand-cards-hover-resolution .hand-card-html.hand-card-hovered .hand-card-face-scale {
-    transform: translateX(-50%) scale(1);
-  }
-
-  /*
-   * Framer's FLIP reorder moves the fixed slot with a temporary transform. Keep the 976x1360
-   * design canvas as the raster source so that movement composites one stable high-resolution
-   * texture instead of caching live text at an intermediate hand scale.
-   */
-  .player-hand-cards-hover-resolution .hand-card-html .mono-green-exact-card {
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    will-change: transform;
   }
 
   .hand-card:hover,
@@ -10658,108 +10597,126 @@
 
 .card-cost-badge {
   position: absolute;
-  top: -1.15cqw;
+  top: -1.7cqw;
   right: auto;
-  left: -0.7cqw;
+  left: -1.25cqw;
   z-index: 45;
   isolation: isolate;
   display: grid;
-  width: 14.5cqw;
-  height: 14.5cqw;
-  overflow: hidden;
+  width: 15.8cqw;
+  height: 15.8cqw;
+  overflow: visible;
   place-items: center;
-  border: 0.48cqw solid rgb(72 183 232 / 0.94);
+  border: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 24%, rgb(159 231 252 / 0.38), rgb(72 190 235 / 0.12) 16%, transparent 30%),
-    radial-gradient(circle at 48% 46%, #1e78b3 0%, #0e5996 42%, #07386a 70%, #02172f 100%);
-  box-shadow:
-    inset 0.25cqw 0.25cqw 0.45cqw rgb(224 249 255 / 0.24),
-    inset -0.8cqw -0.95cqw 1.35cqw rgb(1 14 35 / 0.72),
-    0 0 0 0.2cqw rgb(5 24 45 / 0.96),
-    0 0 0.85cqw rgb(71 205 242 / 0.48),
-    0 0 1.65cqw rgb(35 132 224 / 0.24),
-    0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+  background: transparent;
+  box-shadow: none;
   color: #fff;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-  font-size: 9.8cqw;
+  font-size: 9.2cqw;
   font-weight: 950;
   line-height: 1;
   pointer-events: none;
-  animation: card-cost-orb-idle 2.6s ease-in-out infinite;
   text-shadow: none;
 }
 
-.card-cost-badge::before {
+.card-cost-energy-orb {
   position: absolute;
-  left: 18%;
+  inset: 0.18cqw;
+  z-index: 2;
+  display: block;
+  overflow: hidden;
+  border: 0.14cqw solid rgb(185 232 255 / 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 28%, #b3e8f6 0%, #4eb8e9 20%, #196daf 53%, #06356c 80%, #01152f 100%);
+  box-shadow:
+    inset 0.32cqw 0.32cqw 0.62cqw rgb(220 247 255 / 0.38),
+    inset -0.9cqw -1.05cqw 1.35cqw rgb(3 24 58 / 0.76),
+    0 0 0.7cqw rgb(72 175 232 / 0.52),
+    0 0 1.55cqw rgb(24 88 190 / 0.34);
+  animation: card-cost-energy-orb-idle 9s ease-in-out infinite;
+}
+
+.card-cost-energy-orb::before {
+  position: absolute;
+  left: 17%;
   top: 10%;
   z-index: 3;
-  width: 29%;
-  height: 9%;
+  width: 31%;
+  height: 11%;
   border-radius: 50%;
-  background: rgb(202 246 255 / 0.72);
-  box-shadow: 0 0 0.48cqw rgb(104 219 248 / 0.58);
+  background: rgb(230 251 255 / 0.64);
+  box-shadow: 0 0 0.46cqw rgb(134 225 255 / 0.52);
   content: "";
   filter: blur(0.08cqw);
   pointer-events: none;
-  transform: rotate(-24deg);
+  transform: rotate(-25deg);
 }
 
-.card-cost-badge::after {
+.card-cost-energy-orb::after {
   position: absolute;
+  inset: 0.7cqw;
   z-index: 2;
-  inset: 0.58cqw;
-  border: 0.06cqw solid rgb(130 229 248 / 0.42);
+  border: 0.1cqw solid rgb(231 251 255 / 0.24);
   border-radius: 50%;
-  box-shadow:
-    0 0 0.92cqw rgb(72 205 238 / 0.46),
-    inset 0 0 0.78cqw rgb(123 228 247 / 0.34);
+  box-shadow: inset 0 0 0.72cqw rgb(184 234 255 / 0.26);
   content: "";
-  filter: blur(0.5cqw);
-  opacity: 0.94;
   pointer-events: none;
 }
 
-.card-cost-badge > span {
+.card-cost-energy-liquid {
+  position: absolute;
+  inset: 0.9cqw;
+  z-index: 1;
+  display: block;
+  border-radius: 42% 58% 55% 45% / 47% 41% 59% 53%;
+  background: conic-gradient(
+    from 20deg,
+    rgb(161 229 248 / 0.72),
+    rgb(43 144 216 / 0.1),
+    rgb(89 188 231 / 0.66),
+    rgb(11 72 164 / 0.16),
+    rgb(161 229 248 / 0.72)
+  );
+  box-shadow: inset 0 0 1cqw rgb(177 228 246 / 0.34);
+  opacity: 0.56;
+  transform-origin: 48% 53%;
+  animation: card-cost-energy-liquid-swirl 9s linear infinite;
+}
+
+.card-cost-value {
   position: relative;
-  z-index: 4;
-  color: #fff;
-  -webkit-text-stroke: 0.42cqw rgb(3 25 58 / 0.98);
+  z-index: 5;
+  color: #fff8df;
+  -webkit-text-stroke: 0.56cqw rgb(1 12 32 / 1);
+  font-variant-numeric: tabular-nums;
   paint-order: stroke fill;
   text-shadow:
-    0 0.35cqw 0.45cqw rgb(2 15 38 / 0.98),
-    0 0 0.22cqw rgb(225 248 255 / 0.18);
+    0 0.38cqw 0.34cqw rgb(0 5 18 / 1),
+    0 0 0.1cqw rgb(255 255 255 / 0.34);
   transform: translateY(-0.15cqw);
 }
 
-@keyframes card-cost-orb-idle {
+@keyframes card-cost-energy-orb-idle {
   0%,
   100% {
-    border-color: rgb(72 183 232 / 0.86);
-    box-shadow:
-      inset 0.25cqw 0.25cqw 0.45cqw rgb(224 249 255 / 0.2),
-      inset -0.8cqw -0.95cqw 1.35cqw rgb(1 14 35 / 0.72),
-      0 0 0 0.2cqw rgb(5 24 45 / 0.96),
-      0 0 0.75cqw rgb(71 205 242 / 0.38),
-      0 0 1.4cqw rgb(35 132 224 / 0.18),
-      0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+    filter: brightness(0.88) saturate(0.98);
+    transform: scale(0.99);
   }
 
   50% {
-    border-color: rgb(125 224 250 / 1);
-    box-shadow:
-      inset 0.25cqw 0.25cqw 0.45cqw rgb(236 253 255 / 0.3),
-      inset -0.8cqw -0.95cqw 1.35cqw rgb(1 14 35 / 0.68),
-      0 0 0 0.2cqw rgb(9 35 59 / 0.98),
-      0 0 1.1cqw rgb(91 220 249 / 0.62),
-      0 0 2cqw rgb(39 145 232 / 0.34),
-      0 1.2cqw 2.4cqw rgb(0 0 0 / 0.68);
+    filter: brightness(1.02) saturate(1.04);
+    transform: scale(1.015);
   }
 }
 
+@keyframes card-cost-energy-liquid-swirl {
+  to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card-cost-badge {
+  .card-cost-energy-orb,
+  .card-cost-energy-liquid {
     animation: none;
   }
 }
@@ -10778,7 +10735,6 @@
   align-items: center;
   padding: 1px 10px 0;
   border: 0;
-  border-bottom: 1px solid rgb(184 162 107 / 0.72);
   border-radius: 0;
   background:
     radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.16), transparent 47%),

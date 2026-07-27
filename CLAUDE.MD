@@ -657,8 +657,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   reducirlos y rotarlos en el abanico. El exportador apaga la sombra exterior de `.tcg-card` al
   capturar para que las cuatro esquinas terminen con alfa cero. La ruta `showFullImage` no debe
   heredar el fondo/sombra base de `Card` y la imagen se recorta con el radio equivalente
-  `4.918% / 3.529%`. El contenedor transparente de `Card` conserva ese mismo radio para que el glow
-  naranja de drag siga la silueta redondeada y no dibuje un panel rectangular detras. Los previews fuente de targeting
+  `4.918% / 3.529%`. El hover de mano escala `.hand-card` completa mediante Framer Motion; no debe
+  animar su ancho/alto reales porque obliga a recalcular por subpixel las unidades `cqw` del coste
+  y las keywords, que entonces parecen brincar. El contenedor transparente de `Card` conserva ese
+  mismo radio para que el glow naranja de drag siga la silueta redondeada y no dibuje un panel
+  rectangular detras. Los previews fuente de targeting
   (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
   `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
   generico de `Card`. Cuando usan la imagen completa tambien deben activar
@@ -687,10 +690,14 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   unos pixeles elevado; preview, mano y targeting comparten la pestana vegetal del `index`, con
   variantes legibles para dano y buff. Mano, mulligan, targeting y `CardPreview` tambien cubren el
   coste impreso con
-  `CardCostBadge`: un orbe azul proporcional
-  inspirado en los orbes de energia, mayor que el original, desplazado fuera de la esquina superior
-  izquierda, con azul saturado pero nucleo oscuro legible, borde exterior azul, aro cian interior
-  difuminado y el pulso concentrado en el edge.
+  `CardCostBadge`: un socket proporcional inspirado directamente en el HUD de energia, desplazado
+  fuera de la esquina superior izquierda. Replica el nucleo del HUD de energia: esfera azul con
+  liquido giratorio y respiracion de brillo, sin socket metalico ni arco cian exteriores. El nucleo
+  usa azules contenidos y el remolino tiene brillo tenue para no competir con el numero. Tanto el
+  giro del liquido como el pulso minimo de escala y brillo duran nueve segundos. El numero se
+  dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
+  sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
+  cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
   `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
   preview lateral o modal; `xN` permanece a la derecha.
 - Las criaturas cutted del battlefield usan siempre `--battlefield-card-width: 212px`, que era el
@@ -715,11 +722,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
   suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
   a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa
-  corona. En cartas con coste
-  superpuesto, un arco cian separado sigue solamente la circunferencia exterior expuesta del orbe;
-  nunca dibuja el tramo interior montado sobre la carta. Ese arco solo existe cuando el DOM contiene
-  realmente un `CardCostBadge`, por lo que no debe aparecer flotando sobre una tierra. Los estados de descarte, tutorial y
-  targeting conservan sus estilos separados; el rombo sigue detras del feature flag.
+  corona. El orbe de coste no recibe una segunda corona de disponibilidad: la indicacion visual
+  permanece solamente en el borde de la carta. Los estados de descarte, tutorial y targeting
+  conservan sus estilos separados; el rombo sigue detras del feature flag.
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
   defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
