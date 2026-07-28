@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { useGameStore } from "../store/useGameStore";
+import { useAudioStore } from "../store/useAudioStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
@@ -21,6 +22,7 @@ export function CardContextMenu() {
   const menu = useGameStore((state) => state.cardContextMenu);
   const closeMenu = useGameStore((state) => state.closeCardContextMenu);
   const activateAbility = useGameStore((state) => state.activateAbility);
+  const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
   const [detailsFontSize, setDetailsFontSize] = useState(20);
 
@@ -93,8 +95,17 @@ export function CardContextMenu() {
 
   function activateEffect() {
     if (!card || !firstAbility || !canActivate) return;
-    activateAbility(card.instanceId, firstAbility.id);
+    const cardId = card.instanceId;
+    const abilityId = firstAbility.id;
     closeMenu();
+    window.setTimeout(() => {
+      useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+      triggerEffectActivationPulse(cardId);
+    }, 180);
+    window.setTimeout(() => {
+      useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+      activateAbility(cardId, abilityId);
+    }, 620);
   }
 
   return (

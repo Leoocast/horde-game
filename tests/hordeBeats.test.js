@@ -84,6 +84,263 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
   }
 });
 
+test("combat reaction runners preserve player-before-Horde queue order and animate life gain", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { applyHordeAttackEvent, buildHordeAttackEvents },
+    { resetHordeSequence, scheduleQueuedHordeTriggers },
+    { resetPlayerTriggerSequence, scheduleQueuedPlayerTriggers },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/engine/CombatResolver"),
+    import("../src/store/hordeBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHordeSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("crypt-guardian-reaction-order");
+    game.player.life = 10;
+    const attacker = addCard(game, customCard("crypt_reaction_attacker", "horde", {
+      power: 1,
+      toughness: 2,
+    }));
+    const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+    game.activeSide = "horde";
+    game.phase = "combat";
+    game.combat.hordeAttackers = [attacker.instanceId];
+    game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
+    const [impact] = buildHordeAttackEvents(game);
+    const afterImpact = applyHordeAttackEvent(game, impact);
+
+    useGameStore.setState({
+      game: afterImpact,
+      hordeAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      lifeBuffAnimationId: undefined,
+      summoningAnimationCount: 0,
+    });
+
+    let hordeRunnerYielded = false;
+    scheduleQueuedHordeTriggers(() => {
+      hordeRunnerYielded = true;
+    });
+    assert.equal(hordeRunnerYielded, true);
+    assert.equal(useGameStore.getState().game.player.life, 10);
+    assert.equal(useGameStore.getState().game.eventQueue[0]?.type, "SURVIVED_BLOCKING");
+
+    let playerRunnerCompleted = false;
+    scheduleQueuedPlayerTriggers(() => {
+      playerRunnerCompleted = true;
+    });
+    timers.releaseExpiredAt(460);
+
+    const afterRecovery = useGameStore.getState();
+    assert.equal(afterRecovery.game.player.life, 12);
+    assert.equal(typeof afterRecovery.lifeBuffAnimationId, "number");
+    assert.deepEqual(
+      afterRecovery.game.eventQueue.map((event) => event.type),
+      ["THIS_DIES", "CREATURE_DIED"],
+    );
+    assert.equal(playerRunnerCompleted, false);
+
+    timers.releaseExpiredAt(2_000);
+    assert.equal(useGameStore.getState().playerAutoTriggerCount, 0);
+    assert.deepEqual(
+      useGameStore.getState().game.eventQueue.map((event) => event.type),
+      ["THIS_DIES", "CREATURE_DIED"],
+    );
+    assert.equal(playerRunnerCompleted, true);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHordeSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Blood Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const playedSfx = [];
+  useAudioStore.setState({ playSfx: (id) => playedSfx.push(id) });
+
+  try {
+    const game = createTestGame("blood-pact-store-presentation");
+    game.player.life = 10;
+    addForests(game, 2);
+    const page = addCard(game, cardFromDeck("blood_page", "player"));
+    const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
+    addCard(game, customCard("blood_pact_store_draw_one", "player", { zone: "library" }), "player", "library");
+    addCard(game, customCard("blood_pact_store_draw_two", "player", { zone: "library" }), "player", "library");
+    useGameStore.setState({
+      game,
+      lifeDamageAnimationId: undefined,
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().castCard(pact.instanceId);
+
+    const result = useGameStore.getState();
+    assert.equal(result.game.player.life, 6);
+    assert.equal(result.game.player.lifePaidThisTurn, 4);
+    assert.equal(typeof result.lifeDamageAnimationId, "number");
+    assert.equal(result.game.player.hand.length, 2);
+    assert.equal(
+      result.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      0,
+    );
+    assert.equal(result.activatingEffectCardId, page.instanceId);
+    assert.equal(playedSfx.includes("activateEffect"), true);
+    assert.equal(playedSfx.includes("defend"), true);
+    assert.equal(playedSfx.includes("drawOne"), true);
+
+    timers.releaseExpiredAt(460);
+    const afterPageTrigger = useGameStore.getState();
+    assert.equal(
+      afterPageTrigger.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      2,
+    );
+    assert.equal(afterPageTrigger.buffAnimationCardIds.includes(page.instanceId), true);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("targeted life-cost spells queue Blood Page after their target buff during the Horde turn", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetPlayerTriggerSequence();
+    const game = createTestGame("crimson-impulse-store-trigger");
+    game.player.life = 10;
+    addForests(game, 2);
+    const ally = addCard(game, customCard("crimson_impulse_store_ally", "player", {
+      power: 2,
+      toughness: 2,
+    }));
+    const attacker = addCard(game, customCard("crimson_impulse_store_attacker", "horde"), "horde");
+    const page = addCard(game, cardFromDeck("blood_page", "player"));
+    const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
+    game.activeSide = "horde";
+    game.phase = "combat";
+    game.combat.hordeAttackers = [attacker.instanceId];
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: impulse.instanceId,
+        stepIndex: 0,
+        targets: { targetCreature: ally.instanceId },
+        x: 0,
+        y: 0,
+      },
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const afterCast = useGameStore.getState();
+    assert.equal(afterCast.game.player.life, 8);
+    assert.equal(afterCast.game.player.lifePaidThisTurn, 2);
+    assert.equal(
+      afterCast.game.player.battlefield.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
+      2,
+    );
+    assert.equal(
+      afterCast.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      0,
+    );
+
+    timers.releaseExpiredAt(0);
+    assert.equal(useGameStore.getState().activatingEffectCardId, page.instanceId);
+
+    timers.releaseExpiredAt(460);
+    assert.equal(
+      useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      2,
+    );
+  } finally {
+    resetPlayerTriggerSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 function createThrottledTimerHarness() {
   let now = 0;
   let nextId = 1;

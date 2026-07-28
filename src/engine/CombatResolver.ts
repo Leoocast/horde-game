@@ -12,6 +12,7 @@ export type HordeAttackEvent = {
   blockerId?: string;
   blockerDies: boolean;
   playerDamage: number;
+  playerLifeGain: number;
   attackerDamageMarked?: number;
   blockerDamageMarked?: number;
 };
@@ -60,7 +61,10 @@ function failAction(game: GameState, reason: string): GameState {
   return log(game, reason);
 }
 
-export function resolvePlayerCombat(game: GameState): GameState {
+export function resolvePlayerCombat(
+  game: GameState,
+  options: { skipLifesteal?: boolean } = {},
+): GameState {
   const next = structuredClone(game) as GameState;
   let hordeDamage = 0;
   let poisonCounters = 0;
@@ -69,6 +73,7 @@ export function resolvePlayerCombat(game: GameState): GameState {
     if (!attacker) continue;
     const power = getPowerToughness(next, attacker).power;
     hordeDamage += power;
+    if (!options.skipLifesteal) applyCombatLifesteal(next, attacker, power);
     if (power > 0) poisonCounters += getToxicAmount(next, attacker);
   }
   const cardsToMill = Math.floor(hordeDamage / next.hordeRules.damagePerMill);
@@ -150,7 +155,13 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
     if (isEventCardDead(attacker, attackerStats.toughness, damageById, deathtouchById)) continue;
 
     if (blockerIds.length === 0 || (hasKeyword(game, attacker, "MENACE") && blockerIds.length < 2)) {
-      events.push({ attackerId, attackerDies: false, blockerDies: false, playerDamage: attackerStats.power });
+      events.push({
+        attackerId,
+        attackerDies: false,
+        blockerDies: false,
+        playerDamage: attackerStats.power,
+        playerLifeGain: 0,
+      });
       continue;
     }
 
@@ -166,6 +177,7 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       const blockerFirstStrike = hasKeyword(game, blocker, "FIRST_STRIKE");
       let attackerDamageMarked = eventVisualDamage(attacker, damageById);
       let blockerDamageMarked = eventVisualDamage(blocker, damageById);
+      let blockerDamageDealt = 0;
 
       if (attackerFirstStrike && !blockerFirstStrike) {
         blockerDamageMarked += attackerStats.power;
@@ -173,10 +185,12 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
         damageById.set(blocker.instanceId, blockerDamageMarked);
         if (!isEventCardDead(blocker, blockerStats.toughness, damageById, deathtouchById)) {
           attackerDamageMarked += blockerStats.power;
+          blockerDamageDealt = blockerStats.power;
           if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
         }
       } else if (blockerFirstStrike && !attackerFirstStrike) {
         attackerDamageMarked += blockerStats.power;
+        blockerDamageDealt = blockerStats.power;
         if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
         damageById.set(attacker.instanceId, attackerDamageMarked);
         if (!isEventCardDead(attacker, attackerStats.toughness, damageById, deathtouchById)) {
@@ -186,6 +200,7 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
       } else {
         attackerDamageMarked += blockerStats.power;
         blockerDamageMarked += attackerStats.power;
+        blockerDamageDealt = blockerStats.power;
         if (attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH")) deathtouchById.add(blocker.instanceId);
         if (blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH")) deathtouchById.add(attacker.instanceId);
       }
@@ -202,6 +217,9 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
         blockerId: blocker.instanceId,
         blockerDies,
         playerDamage: 0,
+        playerLifeGain: hasKeyword(game, blocker, "LIFESTEAL")
+          ? Math.max(0, blockerDamageDealt)
+          : 0,
         attackerDamageMarked,
         blockerDamageMarked,
       });
@@ -226,6 +244,24 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
     next.player.life -= event.playerDamage;
     log(next, `Horde deals ${event.playerDamage} damage to Player.`);
   }
+  if (event.playerLifeGain > 0) {
+    next.player.life += event.playerLifeGain;
+    log(next, `Player recovers ${event.playerLifeGain} life with Lifesteal.`);
+  }
+  // Survival is established at this impact, after damage is marked but before casualties enqueue
+  // their death reactions. This preserves the visible order: hit -> survivor -> deaths.
+  if (blocker && !event.blockerDies) {
+    enqueue(next, {
+      type: "SURVIVED_BLOCKING",
+      sourceId: blocker.instanceId,
+      triggerController: blocker.controller,
+      payload: {
+        controller: blocker.controller,
+        attackerId: attacker.instanceId,
+        blockerId: blocker.instanceId,
+      },
+    });
+  }
   if (event.blockerDies && blocker) destroyPermanent(next, blocker);
   if (event.attackerDies && attacker) destroyPermanent(next, attacker);
   return next;
@@ -243,6 +279,18 @@ export function finishHordeCombat(game: GameState, options: { deferTriggeredEven
   next.combat.blockers = {};
   if (!options.deferTriggeredEvents) drainEventQueue(next);
   checkWinLoss(next);
+  return next;
+}
+
+/** Commits one animated player's Lifesteal impact without resolving the rest of player combat.
+ *  The batch resolver uses the same rule by default; its `skipLifesteal` option prevents a second
+ *  gain after the store has already landed each attacker's recovery at its visual impact. */
+export function resolvePlayerAttackerLifesteal(game: GameState, attackerId: string): GameState {
+  const next = structuredClone(game) as GameState;
+  if (!next.combat.playerAttackers.includes(attackerId)) return next;
+  const attacker = next.player.battlefield.find((card) => card.instanceId === attackerId);
+  if (!attacker) return next;
+  applyCombatLifesteal(next, attacker, getPowerToughness(next, attacker).power);
   return next;
 }
 
@@ -278,6 +326,16 @@ export function resolvePendingHordeCombatDamageVolleys(game: GameState): GameSta
 
 function eventVisualDamage(card: CardInstance, damageById: Map<string, number>): number {
   return damageById.get(card.instanceId) ?? card.damageMarked;
+}
+
+function applyCombatLifesteal(game: GameState, source: CardInstance, damageDealt: number): number {
+  const amount = Math.max(0, damageDealt);
+  if (amount === 0 || source.controller !== "player" || !hasKeyword(game, source, "LIFESTEAL")) {
+    return 0;
+  }
+  game.player.life += amount;
+  log(game, `Player recovers ${amount} life with ${source.name}.`);
+  return amount;
 }
 
 function isEventCardDead(

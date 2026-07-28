@@ -49,6 +49,24 @@ export function findBattlefieldCard(game: GameState, id: string): CardInstance |
   return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
 }
 
+/** Cards whose temporary power/toughness increased between two committed engine states. Keeping
+ *  this diff shared lets casts and queued trigger beats use the same buff presentation rule. */
+export function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): string[] {
+  const previousStats = new Map(
+    [...previous.player.battlefield, ...previous.horde.battlefield].map((card) => [
+      card.instanceId,
+      { power: card.temporaryPower, toughness: card.temporaryToughness },
+    ]),
+  );
+  return [...next.player.battlefield, ...next.horde.battlefield]
+    .filter((card) => {
+      const before = previousStats.get(card.instanceId);
+      if (!before) return false;
+      return card.temporaryPower > before.power || card.temporaryToughness > before.toughness;
+    })
+    .map((card) => card.instanceId);
+}
+
 export function discardPauseInProgress(state: GameStore): boolean {
   return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
 }

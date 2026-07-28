@@ -23,6 +23,7 @@ export const ENGINE_TRIGGER_EVENTS = new Set([
   "LIFE_PAID",
   "ATTACK_DECLARED",
   "BEGIN_COMBAT",
+  "SURVIVED_BLOCKING",
 ]);
 
 /** Authoring-level trigger events normalizeDeck.normalizeTriggerEvent knows how to map. */

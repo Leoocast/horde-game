@@ -146,6 +146,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
   const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
   const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
@@ -203,7 +204,7 @@ export function Battlefield({ game, side, cards }: Props) {
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
   // let them all leave at once. This covers both animated Horde combat and the Horde's own
   // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
-  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0;
+  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
   const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));

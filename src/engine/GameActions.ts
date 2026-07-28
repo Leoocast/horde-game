@@ -1,10 +1,11 @@
-import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOptions, GameState } from "./GameTypes";
+import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordBattlefieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
 import { canPay, parseManaCost, payMana, payManaAutomatically, storedManaSpace } from "./ManaSystem";
+import { targetCandidatesWithSelectedTargets } from "./Targeting";
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
@@ -39,6 +40,8 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   if (!card) return fail(next, "That card is no longer in hand.", { silent: true });
   if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be cast right now.`);
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
+  const targetFailure = castTargetFailureReason(next, card, options.targets);
+  if (targetFailure) return fail(next, targetFailure);
   const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
   if (lifeFailure) return fail(next, lifeFailure);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
@@ -64,8 +67,33 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   // Always resolve the player's own reactive triggers now (so e.g. Beast-Kin's self-buff lands
   // in the same frame the new creature enters, never flickering through a same-stats stack).
   // When a Horde reaction is pending, defer only the Horde's triggers to glow after the cast.
-  drainEventQueue(next, options.deferReactiveTriggers ? { deferController: "horde" } : undefined);
+  const deferredControllers: Side[] = [];
+  if (options.deferPlayerTriggers) deferredControllers.push("player");
+  if (options.deferReactiveTriggers) deferredControllers.push("horde");
+  drainEventQueue(next, deferredControllers.length > 0 ? { deferControllers: deferredControllers } : undefined);
   return succeed(log(next, `Player casts ${card.name}.`));
+}
+
+function castTargetFailureReason(
+  game: GameState,
+  card: CardInstance,
+  targets?: Record<string, string | string[]>,
+): string | undefined {
+  const selectedTargets: Record<string, string | string[]> = {};
+  for (const requirement of card.requiresTargets) {
+    const selected = targets?.[requirement.id];
+    const selectedIds = Array.isArray(selected) ? selected : selected ? [selected] : [];
+    if (selectedIds.length === 0) return `Choose a valid target for ${card.name}.`;
+    const candidateIds = new Set(
+      targetCandidatesWithSelectedTargets(game, "player", requirement, selectedTargets)
+        .map((candidate) => candidate.instanceId),
+    );
+    if (selectedIds.some((id) => !candidateIds.has(id))) {
+      return `Choose a valid target for ${card.name}.`;
+    }
+    selectedTargets[requirement.id] = selectedIds.length === 1 ? selectedIds[0] : selectedIds;
+  }
+  return undefined;
 }
 
 function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").CardInstance): boolean {
@@ -91,7 +119,7 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   card.activatedThisTurn = true;
   if (ability.cost?.sacrificeSelf) destroyPermanent(next, card);
   resolveEffect(next, ability.effect, { source: card, side: "player", targets: options.targets });
-  drainEventQueue(next);
+  drainEventQueue(next, options.deferReactiveTriggers ? { deferController: "player" } : undefined);
   return succeed(log(next, `Player activates ${card.name}.`));
 }
 

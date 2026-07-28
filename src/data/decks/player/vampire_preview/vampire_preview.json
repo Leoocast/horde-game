@@ -60,8 +60,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you pay life during your turn, this creature gets +2/+0 until end of turn.",
-        "es": "La primera vez que pagues vida durante tu turno, esta criatura obtiene +2/+0 hasta el final del turno."
+        "en": "The first time you pay life each turn, this creature gets +2/+0 until end of turn.",
+        "es": "La primera vez que pagues vida en cada turno, esta criatura obtiene +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "The youngest learn to serve before they learn to feed.",
@@ -87,10 +87,6 @@
           },
           "targets": [],
           "conditions": [
-            {
-              "type": "ACTIVE_PLAYER_IS",
-              "player": "SELF"
-            },
             {
               "type": "FIRST_LIFE_PAYMENT_THIS_TURN"
             }
@@ -129,14 +125,7 @@
       "power": 1,
       "toughness": 2,
       "keywords": ["FLYING", "LIFESTEAL"],
-      "abilities": [
-        {
-          "id": "crimson_bat_lifesteal",
-          "kind": "STATIC",
-          "engineSupport": "pending",
-          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
-        }
-      ]
+      "abilities": []
     },
     {
       "id": "tithe_acolyte",
@@ -253,8 +242,20 @@
         {
           "id": "crypt_guardian_survives_block",
           "kind": "TRIGGERED",
-          "engineSupport": "pending",
-          "implementationNote": "Después del combate de defensa, si bloqueó y sigue en el campo, el jugador recupera 2 vidas."
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "SURVIVED_BLOCKING",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 2
+            }
+          ]
         }
       ]
     },
@@ -304,14 +305,7 @@
       "power": 2,
       "toughness": 4,
       "keywords": ["VIGILANCE", "LIFESTEAL"],
-      "abilities": [
-        {
-          "id": "blood_sentinel_lifesteal",
-          "kind": "STATIC",
-          "engineSupport": "pending",
-          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
-        }
-      ]
+      "abilities": []
     },
     {
       "id": "eternal_feast_countess",
@@ -335,22 +329,15 @@
       "power": 4,
       "toughness": 5,
       "keywords": ["FLYING", "LIFESTEAL"],
-      "abilities": [
-        {
-          "id": "eternal_feast_countess_lifesteal",
-          "kind": "STATIC",
-          "engineSupport": "pending",
-          "implementationNote": "Robo de vida debe recuperar vida por el daño de combate que haga esta criatura."
-        }
-      ]
+      "abilities": []
     },
     {
       "id": "blood_pact",
       "name": "Blood Pact",
       "displayNameEs": "Pacto de Sangre",
       "gameText": {
-        "en": "Lose 4 life. Draw 2 cards.",
-        "es": "Pierde 4 vidas. Roba 2 cartas."
+        "en": "As an additional cost, pay 4 life. Draw 2 cards.",
+        "es": "Como coste adicional, paga 4 vidas. Roba 2 cartas."
       },
       "flavorText": {
         "en": "Knowledge never asks whether the price was fair.",
@@ -370,8 +357,17 @@
         {
           "id": "blood_pact_spell",
           "kind": "SPELL",
-          "engineSupport": "pending",
-          "implementationNote": "Al resolver, el jugador pierde 4 vidas y roba 2 cartas."
+          "cost": {
+            "life": 4
+          },
+          "targets": [],
+          "effects": [
+            {
+              "type": "DRAW_CARD",
+              "player": "SELF",
+              "amount": 2
+            }
+          ]
         }
       ]
     },
@@ -401,8 +397,31 @@
         {
           "id": "crimson_impulse_spell",
           "kind": "SPELL",
-          "engineSupport": "pending",
-          "implementationNote": "Coste adicional de 2 vidas; hace objetivo a una criatura aliada y le da +2/+2 hasta fin de turno."
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "cost": {
+            "life": 2
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "SELF",
+              "filters": {
+                "cardTypes": ["Creature"]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 2,
+              "toughness": 2,
+              "duration": "END_OF_TURN"
+            }
+          ]
         }
       ]
     },
@@ -501,8 +520,6 @@
     }
   ],
   "engineSupportNeeded": [
-    "Robo de vida basado en daño de combate.",
-    "Triggers al sobrevivir bloqueando.",
     "Conceder Robo de vida hasta el final del turno.",
     "Hechizos que sólo pueden hacer objetivo a criaturas de la Horda."
   ]

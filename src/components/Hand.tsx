@@ -62,6 +62,8 @@ export function Hand({ game }: { game: GameState }) {
   const handLimitDiscardActive = useGameStore((state) => state.handLimitDiscardActive);
   const handLimitSelectionId = useGameStore((state) => state.handLimitSelectionId);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
+  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
+  const unresolvedTriggerCount = pendingTriggeredEffectCount + playerAutoTriggerCount;
   const selectHand = useGameStore((state) => state.selectHand);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
@@ -191,7 +193,7 @@ export function Hand({ game }: { game: GameState }) {
     const dragStart = dragStartPointers.current.get(card.instanceId);
     return (
       card.cardTypes.includes("Land") &&
-      isEnergyRecyclable(game, card, pendingTriggeredEffectCount) &&
+      isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
       pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
       pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
       Boolean(dragStart && pointerX - dragStart.x >= ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG)
@@ -233,7 +235,7 @@ export function Hand({ game }: { game: GameState }) {
     if (releasedInPlayZone && !playable) {
       pushToast({
         title: t("error.cannotPlay"),
-        message: getUnplayableReason(game, card, pendingTriggeredEffectCount, t),
+        message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
         tone: "warning",
       });
     }
@@ -255,7 +257,7 @@ export function Hand({ game }: { game: GameState }) {
       hordeAttackAnimating ||
       playerAttackAnimating ||
       energyRecycleAnimation ||
-      pendingTriggeredEffectCount > 0 ||
+      unresolvedTriggerCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,
   );
@@ -310,8 +312,8 @@ export function Hand({ game }: { game: GameState }) {
             onMouseLeave={handleHandPointerLeave}
           >
             {game.player.hand.map((card, index) => {
-            const playable = isPlayableFromHand(game, card, pendingTriggeredEffectCount);
-            const energyRecyclable = isEnergyRecyclable(game, card, pendingTriggeredEffectCount);
+            const playable = isPlayableFromHand(game, card, unresolvedTriggerCount);
+            const energyRecyclable = isEnergyRecyclable(game, card, unresolvedTriggerCount);
             const discardTargetable = smallpoxSelectionKind === "discard" && !smallpoxSelectionTargetId;
             const discardTargetLocked = smallpoxSelectionKind === "discard" && smallpoxSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;

@@ -650,6 +650,32 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
+- `LIFESTEAL` es una keyword real de combate del player: recupera vida igual al dano de combate
+  que la criatura hace al Host o a una criatura mientras bloquea. La recuperacion del ataque se
+  aplica por atacante en el punto de impacto de `PlayerAttackAnimator`; la defensa lleva
+  `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
+  muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
+  si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
+  Carmesi, Centinela de Sangre y Condesa del Banquete Eterno comparten esta regla generica.
+- Guardian de la Cripta usa el evento generico `SURVIVED_BLOCKING`: cada impacto de defensa lo
+  encola solamente para el blocker que sigue en campo, antes de las muertes causadas por ese
+  choque. El dispatcher de combate respeta una sola cola compartida y alterna runners por
+  controlador; la Horda nunca puede consumir una reaccion del player de forma invisible. El beat
+  pulsa al Guardian, resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`, y solo despues
+  entrega la cola a cualquier trigger de muerte de la Horda.
+- Pacto de Sangre paga 4 vidas como coste adicional y luego roba 2. El pago es atomico con el
+  mana, no se permite si dejaria al player en cero y emite `LIFE_PAID`; por eso puede consumir la
+  primera paga de cualquier turno y activar al Paje de Sangre. El contador se reinicia tanto al
+  comenzar el turno del player como el de la Horda. En el store el Paje queda diferido para hacer
+  pulso antes de recibir su buff. El pago usa el golpe generico del HUD
+  (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
+- Impulso Carmesi es Instant `{2}` con coste adicional de 2 vidas: solo puede elegir una criatura
+  aliada y le da +2/+2 hasta fin de turno. `castCard` valida ahora cada objetivo contra
+  `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
+  engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
+  un `LIFE_PAID` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
+  durante el turno de la Horda, igual que con habilidades activadas. El pase de polish de
+  animaciones de estos spells queda para despues de terminar sus reglas, por decision del usuario.
 - Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,

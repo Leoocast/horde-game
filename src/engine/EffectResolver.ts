@@ -233,6 +233,14 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       game.log.unshift(`Player gains ${amount} life.`);
     }
   },
+  LOSE_LIFE: (game, effect, context) => {
+    const side = effect.player === "OPPONENT" ? (context.side === "player" ? "horde" : "player") : context.side;
+    if (side !== "player") return;
+    const amount = Math.max(0, resolveNumericAmount(game, effect.amount ?? 1, context));
+    game.player.life -= amount;
+    game.log.unshift(`Player loses ${amount} life.`);
+    if (game.player.life <= 0) game.winner = "horde";
+  },
   PUMP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
@@ -385,7 +393,7 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
 export function resolveTriggeredEvent(
   game: GameState,
   event: EventItem,
-  deferController?: "player" | "horde",
+  deferController?: Side | Side[],
   onlySourceId?: string,
 ): boolean {
   if (event.type === "HORDE_GROUP_BUFF") {
@@ -405,12 +413,17 @@ export function resolveTriggeredEvent(
     return false;
   }
   let deferredAny = false;
+  const deferredControllers = Array.isArray(deferController)
+    ? deferController
+    : deferController
+      ? [deferController]
+      : [];
   const alreadyResolved = resolvedTriggerSourceIds(event);
   const pending: Array<{ source: CardInstance; wrapper: EffectDefinition }> = [];
   for (const source of triggeredSourcesForEvent(game, event)) {
     if (alreadyResolved.includes(source.instanceId)) continue;
     if (onlySourceId && source.instanceId !== onlySourceId) continue;
-    if (deferController && source.controller === deferController) {
+    if (deferredControllers.includes(source.controller)) {
       deferredAny = true;
       continue;
     }
@@ -468,8 +481,9 @@ function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
 }
 
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
-  // Self-scoped: only the card that entered reacts, never every other card with an ETB ability.
-  if (event.type === "ENTERS_BATTLEFIELD") {
+  // Self-scoped: only the permanent named by the event reacts, never every other card carrying
+  // the same ability. Both sources are still on the battlefield when these events resolve.
+  if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_BLOCKING") {
     const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(

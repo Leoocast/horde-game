@@ -325,7 +325,8 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
     const next = structuredClone(previous) as GameState;
     while (next.eventQueue.length > 0) {
       const candidate = next.eventQueue[0];
-      const candidateSources = pendingTriggerSources(next, candidate).filter((source) => source.controller === "horde");
+      const pendingSources = pendingTriggerSources(next, candidate);
+      const candidateSources = pendingSources.filter((source) => source.controller === "horde");
       const claimed = HORDE_BEAT_HANDLERS.find((item) => item.claims(candidate, candidateSources, next));
       if (claimed) {
         event = candidate;
@@ -333,6 +334,9 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
         handler = claimed;
         break;
       }
+      // A shared queue can park a player reaction in front of Horde work during combat. Yield
+      // without resolving it so the player beat can announce the source and land its animation.
+      if (pendingSources.some((source) => source.controller === "player")) break;
       next.eventQueue.shift();
       resolveTriggeredEvent(next, candidate);
     }
@@ -551,7 +555,7 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
           burnImpactCardIds: targetIds,
           burnImpactEventId: impactEventId,
           specialDeadCardIds: lethalTargetIds,
-          ...(targetPlayer ? { playerBurnImpactEventId: impactEventId } : {}),
+          ...(targetPlayer ? { lifeDamageAnimationId: impactEventId } : {}),
         });
         // Chainwhirler's damage is one simultaneous event. Earlier impacts are presentation;
         // the last impact commits the damage to the player and every surviving target together.

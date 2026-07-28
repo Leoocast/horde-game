@@ -7,7 +7,7 @@ import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
 import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, resolveHordeCombat, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, resolveHordeCombat, resolvePlayerAttackerLifesteal, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
@@ -504,6 +504,113 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
   assert.equal(result.player.battlefield.find((card) => card.instanceId === land.instanceId)?.tapped, false);
 });
 
+test("Blood Pact pays four life as an additional cost, draws two cards, and triggers Blood Page", () => {
+  const game = createTestGame("blood-pact-resolution");
+  game.player.life = 10;
+  addForests(game, 2);
+  const page = addCard(game, cardFromDeck("blood_page", "player"));
+  const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
+  addCard(game, customCard("blood_pact_draw_one", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("blood_pact_draw_two", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("blood_pact_library_tail", "player", { zone: "library" }), "player", "library");
+
+  const result = castCard(game, pact.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, true);
+  assert.equal(result.player.life, 6);
+  assert.equal(result.player.lifePaidThisTurn, 4);
+  assert.equal(
+    result.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+    2,
+  );
+  assert.deepEqual(
+    result.player.hand.map((card) => card.definitionId),
+    ["blood_pact_draw_one", "blood_pact_draw_two"],
+  );
+  assert.deepEqual(result.player.library.map((card) => card.definitionId), ["blood_pact_library_tail"]);
+  assert.equal(result.player.graveyard.some((card) => card.instanceId === pact.instanceId), true);
+});
+
+test("Blood Pact cannot be cast when paying four life would reduce the player to zero", () => {
+  const game = createTestGame("blood-pact-lethal");
+  game.player.life = 4;
+  addForests(game, 2);
+  const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
+  addCard(game, customCard("blood_pact_lethal_draw_one", "player", { zone: "library" }), "player", "library");
+  addCard(game, customCard("blood_pact_lethal_draw_two", "player", { zone: "library" }), "player", "library");
+
+  const result = castCard(game, pact.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, false);
+  assert.match(result.lastActionResult?.reason ?? "", /1 life/i);
+  assert.equal(result.player.life, 4);
+  assert.equal(result.player.lifePaidThisTurn, 0);
+  assert.equal(result.player.hand.some((card) => card.instanceId === pact.instanceId), true);
+  assert.equal(result.player.library.length, 2);
+  assert.equal(result.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
+  assert.equal(result.winner, undefined);
+});
+
+test("Crimson Impulse pays two life, targets only an allied creature, and grants +2/+2 for the turn", () => {
+  const game = createTestGame("crimson-impulse-resolution");
+  game.player.life = 10;
+  addForests(game, 2);
+  const ally = addCard(game, customCard("crimson_impulse_ally", "player", { power: 2, toughness: 3 }));
+  const page = addCard(game, cardFromDeck("blood_page", "player"));
+  const enemy = addCard(game, customCard("crimson_impulse_enemy", "horde"));
+  const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
+  const requirement = impulse.requiresTargets[0];
+
+  assert.ok(requirement);
+  assert.deepEqual(
+    targetCandidates(game, "player", requirement).map((card) => card.instanceId),
+    [ally.instanceId, page.instanceId],
+  );
+
+  const cast = castCard(game, impulse.instanceId, {
+    targets: { targetCreature: ally.instanceId },
+  });
+
+  assert.equal(cast.lastActionResult?.ok, true);
+  assert.equal(cast.player.life, 8);
+  assert.equal(cast.player.lifePaidThisTurn, 2);
+  assert.deepEqual(
+    getPowerToughness(cast, cast.player.battlefield.find((card) => card.instanceId === ally.instanceId)),
+    { power: 4, toughness: 5 },
+  );
+  assert.equal(
+    cast.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+    2,
+  );
+  assert.equal(cast.horde.battlefield.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
+
+  const cleaned = advancePhase(cast, "end");
+  assert.deepEqual(
+    getPowerToughness(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === ally.instanceId)),
+    { power: 2, toughness: 3 },
+  );
+});
+
+test("Crimson Impulse rejects an enemy target before spending mana or life", () => {
+  const game = createTestGame("crimson-impulse-illegal-target");
+  game.player.life = 10;
+  addForests(game, 2);
+  const enemy = addCard(game, customCard("crimson_impulse_illegal_enemy", "horde"));
+  const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
+
+  const result = castCard(game, impulse.instanceId, {
+    targets: { targetCreature: enemy.instanceId },
+  });
+
+  assert.equal(result.lastActionResult?.ok, false);
+  assert.match(result.lastActionResult?.reason ?? "", /target/i);
+  assert.equal(result.player.life, 10);
+  assert.equal(result.player.lifePaidThisTurn, 0);
+  assert.equal(result.player.hand.some((card) => card.instanceId === impulse.instanceId), true);
+  assert.equal(result.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
+  assert.equal(result.horde.battlefield.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
+});
+
 test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets next turn", () => {
   const unaffordable = createTestGame();
   unaffordable.player.life = 10;
@@ -688,7 +795,7 @@ test("Court Duelist pays life once per turn for a temporary +3/+0 buff", () => {
   assert.equal(usedAgain.player.lifePaidThisTurn, 3);
 });
 
-test("Blood Page gets +2/+0 only from the first life payment of its controller turn", () => {
+test("Blood Page gets +2/+0 from the first life payment of each turn", () => {
   const game = createTestGame();
   game.player.life = 20;
   const firstPage = addCard(game, cardFromDeck("blood_page", "player"));
@@ -721,11 +828,13 @@ test("Blood Page gets +2/+0 only from the first life payment of its controller t
   defense.player.life = 10;
   const defendingPage = addCard(defense, cardFromDeck("blood_page", "player"));
   const attacker = addCard(defense, customCard("life_payment_attacker", "horde"), "horde");
-  defense.activeSide = "horde";
-  defense.phase = "combat";
-  defense.combat.hordeAttackers = [attacker.instanceId];
+  defense.player.lifePaidThisTurn = 3;
+  const hordeTurn = endPlayerTurn(defense);
+  assert.equal(hordeTurn.player.lifePaidThisTurn, 0);
+  hordeTurn.phase = "combat";
+  hordeTurn.combat.hordeAttackers = [attacker.instanceId];
   const instant = addCard(
-    defense,
+    hordeTurn,
     customCard("defensive_life_payment", "player", {
       zone: "hand",
       cardTypes: ["Instant"],
@@ -735,11 +844,49 @@ test("Blood Page gets +2/+0 only from the first life payment of its controller t
     "hand",
   );
 
-  const paidDuringHordeTurn = castCard(defense, instant.instanceId);
+  const paidDuringHordeTurn = castCard(hordeTurn, instant.instanceId);
 
   assert.equal(paidDuringHordeTurn.lastActionResult?.ok, true);
   assert.equal(paidDuringHordeTurn.player.life, 8);
-  assert.equal(paidDuringHordeTurn.player.battlefield.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 0);
+  assert.equal(paidDuringHordeTurn.player.lifePaidThisTurn, 2);
+  assert.equal(paidDuringHordeTurn.player.battlefield.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 2);
+});
+
+test("player triggers can stay queued and resolve one source at a time for presentation beats", () => {
+  const game = createTestGame();
+  game.player.life = 20;
+  const firstPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const secondPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+
+  const deferred = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush", {
+    deferReactiveTriggers: true,
+  });
+  const queuedLifePayment = deferred.eventQueue.find((event) => event.type === "LIFE_PAID");
+
+  assert.equal(deferred.lastActionResult?.ok, true);
+  assert.equal(deferred.player.life, 17);
+  assert.equal(deferred.player.battlefield.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
+  assert.equal(deferred.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
+  assert.ok(queuedLifePayment);
+  assert.deepEqual(
+    pendingTriggerSources(deferred, queuedLifePayment).map((card) => card.instanceId),
+    [firstPage.instanceId, secondPage.instanceId],
+  );
+
+  resolveTriggeredEvent(deferred, queuedLifePayment, undefined, firstPage.instanceId);
+
+  assert.equal(deferred.player.battlefield.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 2);
+  assert.equal(deferred.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
+  assert.deepEqual(
+    pendingTriggerSources(deferred, queuedLifePayment).map((card) => card.instanceId),
+    [secondPage.instanceId],
+  );
+
+  resolveTriggeredEvent(deferred, queuedLifePayment, undefined, secondPage.instanceId);
+
+  assert.equal(deferred.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 2);
+  assert.deepEqual(pendingTriggerSources(deferred, queuedLifePayment), []);
 });
 
 test("a failed cast does not move cards, tap mana sources, or spend mana", () => {
@@ -895,6 +1042,127 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.horde.poisonCounters, 0);
   assert.equal(turnResult.horde.graveyard.length, 1);
   assert.equal(turnResult.horde.library.length, 2);
+});
+
+test("Lifesteal restores the combat damage a player attacker deals to the Horde", () => {
+  const game = createTestGame("lifesteal-player-attack");
+  game.player.life = 10;
+  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  bat.temporaryPower = 2;
+  game.combat.playerAttackers = [bat.instanceId];
+
+  const result = resolvePlayerCombat(game);
+  const animatedImpact = resolvePlayerAttackerLifesteal(game, bat.instanceId);
+  const animatedResult = resolvePlayerCombat(animatedImpact, { skipLifesteal: true });
+
+  assert.equal(result.player.life, 13);
+  assert.equal(result.combat.playerAttackers.length, 0);
+  assert.equal(animatedImpact.player.life, 13);
+  assert.equal(animatedResult.player.life, 13);
+  assert.equal(animatedResult.combat.playerAttackers.length, 0);
+});
+
+test("Lifesteal resolves on a blocking impact, including simultaneous lethal combat", () => {
+  const game = createTestGame("lifesteal-blocking");
+  game.player.life = 10;
+  const attacker = addCard(game, customCard("lifesteal_horde_attacker", "horde", {
+    power: 2,
+    toughness: 2,
+  }));
+  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [bat.instanceId] };
+
+  const [impact] = buildHordeAttackEvents(game);
+  const result = applyHordeAttackEvent(game, impact);
+
+  assert.equal(impact.playerLifeGain, 1);
+  assert.equal(result.player.life, 11);
+  assert.equal(result.player.battlefield.some((card) => card.instanceId === bat.instanceId), false);
+  assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 1);
+});
+
+test("Lifesteal gains nothing when first strike kills the blocker before it deals damage", () => {
+  const game = createTestGame("lifesteal-blocked-by-first-strike");
+  game.player.life = 10;
+  const attacker = addCard(game, customCard("first_strike_horde_attacker", "horde", {
+    keywords: ["FIRST_STRIKE"],
+    power: 2,
+    toughness: 2,
+  }));
+  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [bat.instanceId] };
+
+  const [impact] = buildHordeAttackEvents(game);
+  const result = applyHordeAttackEvent(game, impact);
+
+  assert.equal(impact.playerLifeGain, 0);
+  assert.equal(result.player.life, 10);
+  assert.equal(result.player.battlefield.some((card) => card.instanceId === bat.instanceId), false);
+  assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
+});
+
+test("Crypt Guardian reacts only when that Guardian survives blocking, before deaths from the same impact", () => {
+  const game = createTestGame("crypt-guardian-survives-blocking");
+  game.player.life = 10;
+  const attacker = addCard(game, customCard("crypt_attacker", "horde", {
+    power: 1,
+    toughness: 2,
+  }));
+  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const idleGuardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
+
+  const [impact] = buildHordeAttackEvents(game);
+  const afterImpact = applyHordeAttackEvent(game, impact);
+
+  assert.deepEqual(
+    afterImpact.eventQueue.map((event) => event.type),
+    ["SURVIVED_BLOCKING", "THIS_DIES", "CREATURE_DIED"],
+  );
+  assert.deepEqual(
+    pendingTriggerSources(afterImpact, afterImpact.eventQueue[0]).map((source) => source.instanceId),
+    [guardian.instanceId],
+  );
+  assert.equal(afterImpact.player.life, 10);
+
+  resolveTriggeredEvent(afterImpact, afterImpact.eventQueue[0], undefined, guardian.instanceId);
+  assert.equal(afterImpact.player.life, 12);
+  assert.equal(
+    pendingTriggerSources(afterImpact, afterImpact.eventQueue[0]).some(
+      (source) => source.instanceId === idleGuardian.instanceId,
+    ),
+    false,
+  );
+});
+
+test("Crypt Guardian does not react when combat damage kills it while blocking", () => {
+  const game = createTestGame("crypt-guardian-dies-blocking");
+  game.player.life = 10;
+  const attacker = addCard(game, customCard("crypt_lethal_attacker", "horde", {
+    power: 4,
+    toughness: 4,
+  }));
+  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  game.activeSide = "horde";
+  game.phase = "combat";
+  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
+
+  const [impact] = buildHordeAttackEvents(game);
+  const afterImpact = applyHordeAttackEvent(game, impact);
+
+  assert.equal(afterImpact.eventQueue.some((event) => event.type === "SURVIVED_BLOCKING"), false);
+  assert.equal(afterImpact.player.life, 10);
+  assert.equal(afterImpact.player.battlefield.some((card) => card.instanceId === guardian.instanceId), false);
 });
 
 test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () => {
