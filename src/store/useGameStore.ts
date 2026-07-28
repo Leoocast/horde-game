@@ -15,6 +15,7 @@ import {
   finishHordeCombat,
   isHordeAttackEventCurrent,
   pendingHordeCombatDamageVolley,
+  refreshHordeAttackEvent,
   resolvePendingHordeCombatDamageVolleys,
   resolvePlayerAttackerLifesteal,
   resolvePlayerCombat,
@@ -1127,12 +1128,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 }));
 
 function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number): void {
-  const event = events[index];
-  if (!event) {
+  const plannedEvent = events[index];
+  if (!plannedEvent) {
     runPendingHordeCombatVolleyOrFinish();
     return;
   }
-  if (!isHordeAttackEventCurrent(useGameStore.getState().game, event)) {
+  const currentGame = useGameStore.getState().game;
+  if (!isHordeAttackEventCurrent(currentGame, plannedEvent)) {
+    runHordeCombatEventSequence(events, index + 1);
+    return;
+  }
+  const event = refreshHordeAttackEvent(currentGame, plannedEvent);
+  if (!event) {
     runHordeCombatEventSequence(events, index + 1);
     return;
   }
@@ -1543,8 +1550,8 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
-      deferPlayerTriggers: lifeCostAmount(card.additionalCost) > 0 || isTargetDamageSpell,
-      deferReactiveTriggers: reactionSources.length > 0,
+      deferPlayerTriggers: lifeCostAmount(card.additionalCost) > 0 || isTargetDamageSpell || isDestroySpell,
+      deferReactiveTriggers: reactionSources.length > 0 || isDestroySpell,
     });
     const castSucceeded = next.lastActionResult?.ok === true;
     const lostLife = castSucceeded && next.player.life < latest.player.life;
@@ -1564,9 +1571,13 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const continueAfterPlayerTriggers = () => {
       if (reactionSources.length > 0) scheduleCardCastReaction(reactionSources, undefined);
     };
-    if (playerTriggersQueued) {
+    if (isDestroySpell && castSucceeded) {
+      // Destruction can queue opposing death reactions before a LIFE_LOST reaction. Let the
+      // shared runner preserve that queue order, then continue with reactions to the cast itself.
+      window.setTimeout(() => scheduleQueuedHordeTriggers(continueAfterPlayerTriggers), 0);
+    } else if (playerTriggersQueued) {
       // `resolveSpell` runs inside a Zustand state update. Start the player beat on the next task
-      // so it reads the just-committed LIFE_PAID event instead of the previous store snapshot.
+      // so it reads the just-committed LIFE_LOST event instead of the previous store snapshot.
       window.setTimeout(() => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers), 0);
     } else if (castSucceeded) {
       continueAfterPlayerTriggers();

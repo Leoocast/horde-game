@@ -13,6 +13,9 @@ export type ResolveContext = {
   side: Side;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
+  /** Last known battlefield stats, keyed by instance id. Destruction records them so later
+   *  effects in the same sequence can still use the destroyed object's effective stats. */
+  lastKnownStats?: Record<string, { power: number; toughness: number }>;
   tokenDefinitions?: CardInstance[] | never;
   event?: EventItem;
 };
@@ -237,9 +240,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const side = effect.player === "OPPONENT" ? (context.side === "player" ? "horde" : "player") : context.side;
     if (side !== "player") return;
     const amount = Math.max(0, resolveNumericAmount(game, effect.amount ?? 1, context));
-    game.player.life -= amount;
+    losePlayerLife(game, amount, context.source?.instanceId);
     game.log.unshift(`Player loses ${amount} life.`);
-    if (game.player.life <= 0) game.winner = "horde";
   },
   PUMP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
@@ -329,7 +331,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       });
       return;
     }
-    game.player.life -= amount;
+    losePlayerLife(game, amount, context.source?.instanceId);
     game.log.unshift(`Player loses ${amount} life.`);
   },
 };
@@ -349,6 +351,26 @@ const EFFECT_PRESENTATIONS: Partial<Record<string, EffectPresentation>> = {
 
 export function hasEffectPresentation(effects: EffectDefinition[] | undefined, kind: EffectPresentation): boolean {
   return (effects ?? []).some((effect) => effectHasPresentation(effect, kind));
+}
+
+/** Applies every kind of player life loss through one rules path. Payments call this too, then
+ * emit their more specific LIFE_PAID event so cards may still distinguish costs from damage. */
+export function losePlayerLife(game: GameState, amount: number, sourceId?: string): void {
+  const lost = Math.max(0, Number(amount) || 0);
+  if (lost <= 0) return;
+  const lostBefore = game.player.lifeLostThisTurn ?? 0;
+  game.player.life -= lost;
+  game.player.lifeLostThisTurn = lostBefore + lost;
+  enqueue(game, {
+    type: "LIFE_LOST",
+    sourceId,
+    payload: {
+      amount: lost,
+      firstLossThisTurn: lostBefore === 0,
+      totalLostThisTurn: game.player.lifeLostThisTurn,
+    },
+  });
+  if (game.player.life <= 0) game.winner = "horde";
 }
 
 function effectHasPresentation(effect: unknown, kind: EffectPresentation): boolean {
@@ -372,7 +394,11 @@ export const EFFECT_ANNOUNCEMENTS: Partial<Record<string, EffectAnnouncement>> =
 
 function handleDestroy(game: GameState, effect: EffectDefinition, context: ResolveContext): void {
   const targets = resolveTargetCards(game, effect, context);
-  for (const target of targets) destroyPermanent(game, target);
+  for (const target of targets) {
+    context.lastKnownStats ??= {};
+    context.lastKnownStats[target.instanceId] = getPowerToughness(game, target);
+    destroyPermanent(game, target);
+  }
 }
 
 function handleMillSelf(game: GameState, effect: EffectDefinition): void {
@@ -385,10 +411,11 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
   const data = amount as Record<string, unknown>;
   if (data.type === "STAT") {
     const objectRef = String(data.object ?? "");
-    const source = findPermanent(game, String(context.targets?.[objectRef] ?? ""));
-    if (!source) return 0;
+    const instanceId = String(context.targets?.[objectRef] ?? "");
+    const source = findPermanent(game, instanceId);
     const stat = String(data.stat ?? "").toUpperCase();
-    const stats = getPowerToughness(game, source);
+    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    if (!stats) return 0;
     return stat === "TOUGHNESS" ? stats.toughness : stats.power;
   }
   return Number(amount) || 0;
@@ -768,6 +795,9 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   if (condition.type === "FIRST_LIFE_PAYMENT_THIS_TURN") {
     return event.type === "LIFE_PAID" && event.payload?.firstPaymentThisTurn === true;
   }
+  if (condition.type === "FIRST_LIFE_LOSS_THIS_TURN") {
+    return event.type === "LIFE_LOST" && event.payload?.firstLossThisTurn === true;
+  }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);
   }
@@ -833,7 +863,7 @@ function declaredAttackerIds(event?: EventItem): string[] {
 function dealDamageToOpponent(game: GameState, sourceSide: Side, amount: number): void {
   if (amount <= 0) return;
   if (sourceSide === "horde") {
-    game.player.life -= amount;
+    losePlayerLife(game, amount);
     game.log.unshift(`Horde deals ${amount} damage to Player.`);
   }
 }
@@ -911,7 +941,7 @@ function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void
   const amount = Math.max(0, Number(event.payload?.amount ?? 0));
   const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
   if (sourceSide !== "horde" || event.payload?.targetPlayer !== true || amount <= 0) return;
-  game.player.life -= amount;
+  losePlayerLife(game, amount, event.sourceId);
   const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Horde effect"} causes Player to lose ${amount} life.`);
@@ -923,11 +953,12 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
   const data = amount as Record<string, unknown>;
   if (data.type === "STAT") {
     const objectRef = String(data.object ?? "");
-    const source = objectRef === "SELF"
-      ? context.source
-      : findPermanent(game, String(context.targets?.[objectRef] ?? ""));
-    if (!source) return 0;
-    const stats = getPowerToughness(game, source);
+    const instanceId = objectRef === "SELF"
+      ? context.source?.instanceId ?? ""
+      : String(context.targets?.[objectRef] ?? "");
+    const source = objectRef === "SELF" ? context.source : findPermanent(game, instanceId);
+    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    if (!stats) return 0;
     return String(data.stat ?? "").toUpperCase() === "TOUGHNESS" ? stats.toughness : stats.power;
   }
   if (data.type === "COUNT_PERMANENTS") {

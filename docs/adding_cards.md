@@ -217,8 +217,10 @@ Limitaciones actuales:
 - Los costes runtime soportados hoy son los que lee `GameActions.ts`: `tap`, `genericMana`,
   `coloredMana` (`G`, `R`, `U`, `W`, `B`), `sacrificeSelf` y `life`.
 - `life` debe ser un entero positivo (el deck lint lo valida), se paga atómicamente con el resto
-  del coste y nunca puede reducir al player por debajo de 1. Cada pago emite `LIFE_PAID` y se
-  acumula en `player.lifePaidThisTurn` hasta el siguiente turno del player.
+  del coste y nunca puede reducir al player por debajo de 1. Cada pago pasa por la ruta genérica de
+  pérdida, por lo que emite `LIFE_LOST` y `LIFE_PAID`: se acumula en
+  `player.lifeLostThisTurn` y `player.lifePaidThisTurn`, respectivamente. Ambos contadores se
+  reinician cada vez que comienza un turno, sea del player o de la Horda.
 - Una habilidad que sólo tiene sentido cuando su criatura ya puede atacar puede declarar
   `requiresNoSummoningSickness: true`. Engine y UI la bloquean mientras la fuente tenga fatiga de
   invocación, antes de cobrar cualquier coste.

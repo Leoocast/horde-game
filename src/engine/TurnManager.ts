@@ -39,6 +39,7 @@ export function startPlayerTurn(game: GameState): void {
   game.player.pendingStoredMana = 0;
   game.player.energyActionUsedThisTurn = false;
   game.player.lifePaidThisTurn = 0;
+  game.player.lifeLostThisTurn = 0;
   game.turnNumber += 1;
 }
 

@@ -334,6 +334,181 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
   }
 });
 
+test("Predatory Thirst presents one allied buff containing its stat and temporary Lifesteal", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { hasKeyword },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/engine/Keywords"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("predatory-thirst-store");
+    addForests(game, 3);
+    const ally = addCard(game, customCard("predatory_thirst_store_ally", "player", {
+      power: 2,
+      toughness: 3,
+    }));
+    const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: thirst.instanceId,
+        stepIndex: 0,
+        targets: { targetCreature: ally.instanceId },
+        x: 0,
+        y: 0,
+      },
+      buffAnimationCardIds: [],
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const result = useGameStore.getState();
+    const buffed = result.game.player.battlefield.find((card) => card.instanceId === ally.instanceId);
+    assert.equal(buffed?.temporaryPower, 1);
+    assert.equal(hasKeyword(result.game, buffed, "LIFESTEAL"), true);
+    assert.deepEqual(result.buffAnimationCardIds, [ally.instanceId]);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Final Banquet fades the target, presents its death reaction, then triggers Blood Page from life loss", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHordeSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hordeBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHordeSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("final-banquet-store");
+    game.player.life = 10;
+    addForests(game, 5);
+    const page = addCard(game, cardFromDeck("blood_page", "player"));
+    const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+    addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+    const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: banquet.instanceId,
+        stepIndex: 0,
+        targets: { targetCreature: rundvelt.instanceId },
+        x: 0,
+        y: 0,
+      },
+      deathRevealCard: undefined,
+      lifeDamageAnimationId: undefined,
+      pendingSpellHandId: undefined,
+      specialDeadCardIds: [],
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+      hordeAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const beforeDeath = useGameStore.getState();
+    assert.equal(beforeDeath.game.player.life, 10);
+    assert.equal(beforeDeath.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.deepEqual(beforeDeath.specialDeadCardIds, [rundvelt.instanceId]);
+    assert.equal(beforeDeath.pendingSpellHandId, banquet.instanceId);
+
+    timers.releaseExpiredAt(260);
+
+    const afterBanquet = useGameStore.getState();
+    assert.equal(afterBanquet.game.player.life, 9);
+    assert.equal(afterBanquet.game.player.lifePaidThisTurn, 0);
+    assert.equal(afterBanquet.game.player.lifeLostThisTurn, 1);
+    assert.equal(afterBanquet.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
+    assert.equal(afterBanquet.game.horde.graveyard.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(typeof afterBanquet.lifeDamageAnimationId, "number");
+    assert.equal(afterBanquet.hordeAutoTriggerCount, 1);
+
+    timers.releaseExpiredAt(380);
+    assert.equal(useGameStore.getState().deathRevealCard?.instanceId, rundvelt.instanceId);
+
+    timers.releaseExpiredAt(1_340);
+    const afterDeathTrigger = useGameStore.getState();
+    assert.equal(afterDeathTrigger.game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+    assert.equal(afterDeathTrigger.game.horde.library.length, 0);
+    assert.equal(afterDeathTrigger.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
+    // Battlefield is not mounted in this store test, so release the summoned token's entry hold
+    // exactly where the real card animation would decrement it.
+    useGameStore.setState({ summoningAnimationCount: 0 });
+
+    timers.releaseExpiredAt(1_900);
+    assert.equal(useGameStore.getState().activatingEffectCardId, page.instanceId);
+    assert.equal(useGameStore.getState().playerAutoTriggerCount, 1);
+
+    timers.releaseExpiredAt(2_360);
+    assert.equal(useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
+
+    timers.releaseExpiredAt(3_500);
+    assert.equal(useGameStore.getState().playerAutoTriggerCount, 0);
+    assert.deepEqual(useGameStore.getState().game.eventQueue, []);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHordeSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Drain Essence heals through the HUD and can kill an allied creature", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

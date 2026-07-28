@@ -1,11 +1,12 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { destroyPermanent, millHorde } from "../engine/EffectResolver";
+import { destroyPermanent, losePlayerLife, millHorde } from "../engine/EffectResolver";
 import { weakestCreature } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type SmallpoxSelectionState } from "./useGameStore";
 import { hordeSequenceEpoch, scheduleQueuedHordeTriggers, startHordeCombatSequence } from "./hordeBeats";
 import { appendHordeMillAnimations, uiCardName, uiText } from "./presentationEffects";
+import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
 
 // Smallpox: revealed by the Horde but parked unresolved by HordeController (see `pendingCard`)
 // because it needs a bespoke, multi-step, player-interactive resolution — first the Horde afflicts
@@ -70,15 +71,20 @@ function beginSmallpoxPlayerRound(resetEpoch: number): void {
     if (resetEpoch !== hordeSequenceEpoch()) return;
     useGameStore.setState((state) => {
       const next = structuredClone(state.game) as GameState;
-      next.player.life -= 1;
+      losePlayerLife(next, 1, card?.instanceId);
       next.log.unshift("Player loses 1 life.");
-      return { game: next };
+      return { game: next, lifeDamageAnimationId: Date.now() };
     });
-    window.setTimeout(() => {
+    const continueAfterLifeLoss = () => window.setTimeout(() => {
       if (resetEpoch !== hordeSequenceEpoch()) return;
       if (useGameStore.getState().game.player.hand.length > 0) startSmallpoxSelectionStep("discard");
       else advanceSmallpoxSequence("after-discard");
     }, 480);
+    if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
+      scheduleQueuedPlayerTriggers(continueAfterLifeLoss);
+    } else {
+      continueAfterLifeLoss();
+    }
   }, 700);
 }
 

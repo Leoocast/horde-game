@@ -202,6 +202,8 @@ export type PlayerState = {
   energyActionUsedThisTurn: boolean;
   /** Life paid as a cost during the current active turn. Reset whenever either side starts a turn. */
   lifePaidThisTurn: number;
+  /** Life lost for any reason during the current active turn. Reset whenever either side starts a turn. */
+  lifeLostThisTurn: number;
 };
 
 export type HordeState = {
@@ -282,7 +284,7 @@ export type CastOptions = {
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
   /** Leaves automatic player reactions in `eventQueue` so the store can present their source
-   *  before committing the effect. Used by spells that pay life and trigger Blood Page. */
+   *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
   deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
 };

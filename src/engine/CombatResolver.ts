@@ -1,7 +1,7 @@
 import type { GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker, getToxicAmount, hasKeyword } from "./Keywords";
-import { destroyPermanent, enqueueSurvivedDamageEvent, millHorde } from "./EffectResolver";
+import { destroyPermanent, enqueueSurvivedDamageEvent, losePlayerLife, millHorde } from "./EffectResolver";
 import { getPowerToughness } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
@@ -229,6 +229,72 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
   return events;
 }
 
+/** Re-evaluates one planned animated impact against the current board. Player reactions resolve
+ * between Horde attackers, so a later blocker may have different power or keywords than it had
+ * when the combat sequence was first planned (Blood Page is the common case). */
+export function refreshHordeAttackEvent(game: GameState, planned: HordeAttackEvent): HordeAttackEvent | undefined {
+  const attacker = game.horde.battlefield.find((card) => card.instanceId === planned.attackerId);
+  if (!attacker) return undefined;
+  const attackerStats = getPowerToughness(game, attacker);
+
+  if (!planned.blockerId) {
+    return {
+      ...planned,
+      attackerDies: false,
+      blockerDies: false,
+      playerDamage: attackerStats.power,
+      playerLifeGain: 0,
+      attackerDamageMarked: undefined,
+      blockerDamageMarked: undefined,
+    };
+  }
+
+  const blocker = game.player.battlefield.find((card) => card.instanceId === planned.blockerId);
+  if (!blocker) return undefined;
+  const blockerStats = getPowerToughness(game, blocker);
+  let attackerDamageMarked = attacker.damageMarked;
+  let blockerDamageMarked = blocker.damageMarked;
+  let blockerDamageDealt = 0;
+  let attackerTookDeathtouch = attacker.deathtouchDamage;
+  let blockerTookDeathtouch = blocker.deathtouchDamage;
+  const attackerFirstStrike = hasKeyword(game, attacker, "FIRST_STRIKE");
+  const blockerFirstStrike = hasKeyword(game, blocker, "FIRST_STRIKE");
+
+  if (attackerFirstStrike && !blockerFirstStrike) {
+    blockerDamageMarked += attackerStats.power;
+    blockerTookDeathtouch ||= attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH");
+    if (!blockerTookDeathtouch && blockerDamageMarked < blockerStats.toughness) {
+      attackerDamageMarked += blockerStats.power;
+      blockerDamageDealt = blockerStats.power;
+      attackerTookDeathtouch ||= blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH");
+    }
+  } else if (blockerFirstStrike && !attackerFirstStrike) {
+    attackerDamageMarked += blockerStats.power;
+    blockerDamageDealt = blockerStats.power;
+    attackerTookDeathtouch ||= blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH");
+    if (!attackerTookDeathtouch && attackerDamageMarked < attackerStats.toughness) {
+      blockerDamageMarked += attackerStats.power;
+      blockerTookDeathtouch ||= attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH");
+    }
+  } else {
+    attackerDamageMarked += blockerStats.power;
+    blockerDamageMarked += attackerStats.power;
+    blockerDamageDealt = blockerStats.power;
+    attackerTookDeathtouch ||= blockerStats.power > 0 && hasKeyword(game, blocker, "DEATHTOUCH");
+    blockerTookDeathtouch ||= attackerStats.power > 0 && hasKeyword(game, attacker, "DEATHTOUCH");
+  }
+
+  return {
+    ...planned,
+    attackerDies: attackerTookDeathtouch || attackerDamageMarked >= attackerStats.toughness,
+    blockerDies: blockerTookDeathtouch || blockerDamageMarked >= blockerStats.toughness,
+    playerDamage: 0,
+    playerLifeGain: hasKeyword(game, blocker, "LIFESTEAL") ? Math.max(0, blockerDamageDealt) : 0,
+    attackerDamageMarked,
+    blockerDamageMarked,
+  };
+}
+
 export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent): GameState {
   const next = structuredClone(game) as GameState;
   const attacker = next.horde.battlefield.find((card) => card.instanceId === event.attackerId);
@@ -243,7 +309,7 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
   if (attacker && event.attackerDamageMarked !== undefined) attacker.damageMarked = event.attackerDamageMarked;
   if (blocker && event.blockerDamageMarked !== undefined) blocker.damageMarked = event.blockerDamageMarked;
   if (event.playerDamage > 0) {
-    next.player.life -= event.playerDamage;
+    losePlayerLife(next, event.playerDamage, attacker.instanceId);
     log(next, `Horde deals ${event.playerDamage} damage to Player.`);
   }
   if (event.playerLifeGain > 0) {
@@ -322,7 +388,7 @@ export function resolvePendingHordeCombatDamageVolleys(game: GameState): GameSta
   const pending = pendingHordeCombatDamageVolley(next);
   next.combat.pendingDamageVolleys = [];
   if (!pending || pending.damage <= 0) return next;
-  next.player.life -= pending.damage;
+  losePlayerLife(next, pending.damage, pending.sourceId);
   log(next, `Horde combat volley deals ${pending.damage} damage to Player.`);
   checkWinLoss(next);
   return next;

@@ -153,8 +153,9 @@ Puede:
 - atacar a la Horda
 - bloquear ataques de Horda
 - usar habilidades activadas genericas con costes de tap, mana, sacrificio propio o vida
-- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_PAID`
-  y se acumula en `player.lifePaidThisTurn` hasta el siguiente turno
+- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_LOST`
+  ademas de `LIFE_PAID`, y se acumula por separado en `player.lifeLostThisTurn` y
+  `player.lifePaidThisTurn` hasta el siguiente turno
 - una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
   inactiva mientras su criatura tenga fatiga, sin cobrar costes
 
@@ -664,17 +665,22 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   automaticamente runners por controlador, incluso cuando el trigger nace de un Burn de la Horda,
   para que ninguna reaccion del player se consuma de forma invisible. El beat pulsa al Guardian,
   resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
+- Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno. Toda ruta
+  de perdida —dano de combate, Burn, efectos `LOSE_LIFE` y pagos— pasa por `losePlayerLife`, que
+  emite `LIFE_LOST` y acumula `player.lifeLostThisTurn`; el contador se reinicia al comenzar tanto
+  el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
+  `LIFE_PAID`. Los impactos animados posteriores se recalculan contra el board actual, de modo que
+  dejar pasar un atacante puede buffear al Paje antes de que haga dano como bloqueador de otro.
 - Pacto de Sangre paga 4 vidas como coste adicional y luego roba 2. El pago es atomico con el
-  mana, no se permite si dejaria al player en cero y emite `LIFE_PAID`; por eso puede consumir la
-  primera paga de cualquier turno y activar al Paje de Sangre. El contador se reinicia tanto al
-  comenzar el turno del player como el de la Horda. En el store el Paje queda diferido para hacer
-  pulso antes de recibir su buff. El pago usa el golpe generico del HUD
+  mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
+  consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
+  queda diferido para hacer pulso antes de recibir su buff. El pago usa el golpe generico del HUD
   (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
 - Impulso Carmesi es Instant `{2}` con coste adicional de 2 vidas: solo puede elegir una criatura
   aliada y le da +2/+2 hasta fin de turno. `castCard` valida ahora cada objetivo contra
   `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
   engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
-  un `LIFE_PAID` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
+  un `LIFE_LOST` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
   durante el turno de la Horda, igual que con habilidades activadas. El pase de polish de
   animaciones de estos spells queda para despues de terminar sus reglas, por decision del usuario.
 - Drenar la Esencia es Instant `{3}` y, por decision del usuario, puede elegir cualquier criatura,
@@ -684,6 +690,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   dirigido por un spell usa `DEAL_DAMAGE_TO_TARGET`, conserva el dano marcado si no es letal y
   entrega las muertes letales a la cola compartida de reacciones. La recuperacion activa el beat
   generico de vida del HUD.
+- Sed Depredadora es Instant `{3}`: solo elige una criatura aliada y le concede +1/+0 y `LIFESTEAL`
+  hasta fin de turno. Usa los efectos genericos `PUMP_UNTIL_END_OF_TURN` y
+  `GRANT_KEYWORD_UNTIL_END_OF_TURN`; por eso el poder adicional cuenta para la recuperacion al
+  atacar al Host y la keyword temporal tambien funciona al bloquear durante el turno de la Horda.
+  `cleanupEndStep` elimina tanto el stat temporal como la keyword.
+- Banquete Final es Sorcery `{5}`: solo elige una criatura de la Horda, registra su fuerza efectiva
+  (incluidos contadores, auras y buffs temporales), la destruye y despues hace perder esa cantidad
+  de vida al player. `ResolveContext.lastKnownStats` conserva esa informacion entre los efectos
+  `DESTROY_TARGET` y `LOSE_LIFE`. Es perdida, no pago: puede llevar al player a cero y no incrementa
+  `lifePaidThisTurn`, pero si activa al Paje cuando es la primera perdida del turno. El store difiere
+  tanto esa reaccion como los triggers de muerte hasta despues del fade y respeta el orden de la
+  cola antes de presentar cada beat.
 - Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,

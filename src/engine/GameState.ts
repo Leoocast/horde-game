@@ -91,6 +91,7 @@ export function createInitialGame(
       pendingStoredMana: 0,
       energyActionUsedThisTurn: false,
       lifePaidThisTurn: 0,
+      lifeLostThisTurn: 0,
     },
     horde: {
       library: hordeLibrary,

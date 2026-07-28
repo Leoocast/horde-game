@@ -2,7 +2,7 @@ import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOp
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordBattlefieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
-import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { destroyPermanent, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
 import { canPay, parseManaCost, payMana, payManaAutomatically, storedManaSpace } from "./ManaSystem";
 import { targetCandidatesWithSelectedTargets } from "./Targeting";
@@ -158,7 +158,7 @@ function payLifeCost(game: GameState, cost: ActionCost | undefined, sourceId: st
   const amount = lifeCostAmount(cost);
   if (amount === 0) return;
   const paidBefore = game.player.lifePaidThisTurn ?? 0;
-  game.player.life -= amount;
+  losePlayerLife(game, amount, sourceId);
   game.player.lifePaidThisTurn = paidBefore + amount;
   enqueue(game, {
     type: "LIFE_PAID",

@@ -60,8 +60,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you pay life each turn, this creature gets +2/+0 until end of turn.",
-        "es": "La primera vez que pagues vida en cada turno, esta criatura obtiene +2/+0 hasta el final del turno."
+        "en": "The first time you lose life each turn, this creature gets +2/+0 until end of turn.",
+        "es": "La primera vez que pierdas vida en cada turno, esta criatura obtiene +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "The youngest learn to serve before they learn to feed.",
@@ -79,16 +79,16 @@
       "keywords": [],
       "abilities": [
         {
-          "id": "blood_page_first_life_payment",
+          "id": "blood_page_first_life_loss",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "LIFE_PAID"
+            "event": "LIFE_LOST"
           },
           "targets": [],
           "conditions": [
             {
-              "type": "FIRST_LIFE_PAYMENT_THIS_TURN"
+              "type": "FIRST_LIFE_LOSS_THIS_TURN"
             }
           ],
           "effects": [
@@ -506,8 +506,33 @@
         {
           "id": "predatory_thirst_spell",
           "kind": "SPELL",
-          "engineSupport": "pending",
-          "implementationNote": "Hace objetivo a una criatura aliada y le da +1/+0 y Robo de vida hasta fin de turno."
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "SELF",
+              "filters": {
+                "cardTypes": ["Creature"]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 1,
+              "toughness": 0,
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+              "target": "targetCreature",
+              "keyword": "LIFESTEAL"
+            }
+          ]
         }
       ]
     },
@@ -537,14 +562,36 @@
         {
           "id": "final_banquet_spell",
           "kind": "SPELL",
-          "engineSupport": "pending",
-          "implementationNote": "Hace objetivo únicamente a una criatura de la Horda, registra su fuerza, la destruye y hace perder esa cantidad de vida al jugador."
+          "zone": "HAND",
+          "speed": "SORCERY",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "OPPONENT",
+              "filters": {
+                "cardTypes": ["Creature"]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY_TARGET",
+              "target": "targetCreature"
+            },
+            {
+              "type": "LOSE_LIFE",
+              "player": "SELF",
+              "amount": {
+                "type": "STAT",
+                "object": "targetCreature",
+                "stat": "POWER"
+              }
+            }
+          ]
         }
       ]
     }
-  ],
-  "engineSupportNeeded": [
-    "Conceder Robo de vida hasta el final del turno.",
-    "Hechizos que sólo pueden hacer objetivo a criaturas de la Horda."
   ]
 }

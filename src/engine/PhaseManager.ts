@@ -29,6 +29,7 @@ export function endPlayerTurn(game: GameState): GameState {
   if (next.winner) return next;
   clearPlayerSummoningSickness(next);
   next.player.lifePaidThisTurn = 0;
+  next.player.lifeLostThisTurn = 0;
   if (next.setupTurnsRemaining > 1) {
     next.setupTurnsRemaining -= 1;
     startPlayerTurnReady(next);
