@@ -285,6 +285,7 @@ export function CardStatsBadge({
         stats.buffed ? "is-buffed" : "",
       ].join(" ")}
     >
+      <span className="card-stat-motif" aria-hidden="true" />
       <span className="card-stat-segment card-stat-attack">
         {preferSingleSword ? <Sword aria-hidden="true" /> : <Swords aria-hidden="true" />}
         <b>{stats.power}</b>
