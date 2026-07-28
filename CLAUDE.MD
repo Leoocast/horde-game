@@ -657,12 +657,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
   si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
   Carmesi, Centinela de Sangre y Condesa del Banquete Eterno comparten esta regla generica.
-- Guardian de la Cripta usa el evento generico `SURVIVED_BLOCKING`: cada impacto de defensa lo
-  encola solamente para el blocker que sigue en campo, antes de las muertes causadas por ese
-  choque. El dispatcher de combate respeta una sola cola compartida y alterna runners por
-  controlador; la Horda nunca puede consumir una reaccion del player de forma invisible. El beat
-  pulsa al Guardian, resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`, y solo despues
-  entrega la cola a cualquier trigger de muerte de la Horda.
+- Guardian de la Cripta usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
+  de combate o no, lo encola solamente si sigue en campo despues del impacto. No tiene limite por
+  turno, por decision del usuario; varios impactos que sobreviva crean varios triggers. El evento
+  queda antes de las muertes causadas por el mismo impacto. El dispatcher compartido alterna
+  automaticamente runners por controlador, incluso cuando el trigger nace de un Burn de la Horda,
+  para que ninguna reaccion del player se consuma de forma invisible. El beat pulsa al Guardian,
+  resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
 - Pacto de Sangre paga 4 vidas como coste adicional y luego roba 2. El pago es atomico con el
   mana, no se permite si dejaria al player en cero y emite `LIFE_PAID`; por eso puede consumir la
   primera paga de cualquier turno y activar al Paje de Sangre. El contador se reinicia tanto al
@@ -676,6 +677,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   un `LIFE_PAID` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
   durante el turno de la Horda, igual que con habilidades activadas. El pase de polish de
   animaciones de estos spells queda para despues de terminar sus reglas, por decision del usuario.
+- Drenar la Esencia es Instant `{3}` y, por decision del usuario, puede elegir cualquier criatura,
+  no solo una de la Horda. Le hace 3 de dano no de combate y luego recupera 2 vidas aunque la
+  criatura sobreviva; esto permite usarlo sobre criaturas propias, incluido el Guardian de la
+  Cripta, que ademas dispara su propia recuperacion si sobrevive: son 4 vidas en total. El dano
+  dirigido por un spell usa `DEAL_DAMAGE_TO_TARGET`, conserva el dano marcado si no es letal y
+  entrega las muertes letales a la cola compartida de reacciones. La recuperacion activa el beat
+  generico de vida del HUD.
 - Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,

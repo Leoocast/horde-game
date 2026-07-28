@@ -14,6 +14,7 @@ import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManif
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
+import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
 import {
   BUFF_ANIMATION_MS,
   appendHordeMillAnimations,
@@ -351,6 +352,10 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
   const claimedEvent = event;
   const claimedHandler = handler;
   if (!claimedEvent || !claimedHandler) {
+    if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
+      scheduleQueuedPlayerTriggers(() => scheduleQueuedHordeTriggers(onComplete));
+      return;
+    }
     onComplete?.();
     return;
   }

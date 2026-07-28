@@ -84,7 +84,7 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
   }
 });
 
-test("combat reaction runners preserve player-before-Horde queue order and animate life gain", async () => {
+test("the shared reaction runner hands surviving damage to the player and animates life gain", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -102,7 +102,7 @@ test("combat reaction runners preserve player-before-Horde queue order and anima
   const [
     { applyHordeAttackEvent, buildHordeAttackEvents },
     { resetHordeSequence, scheduleQueuedHordeTriggers },
-    { resetPlayerTriggerSequence, scheduleQueuedPlayerTriggers },
+    { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, cardFromDeck, createTestGame, customCard },
@@ -143,18 +143,14 @@ test("combat reaction runners preserve player-before-Horde queue order and anima
       summoningAnimationCount: 0,
     });
 
-    let hordeRunnerYielded = false;
+    let sharedRunnerCompleted = false;
     scheduleQueuedHordeTriggers(() => {
-      hordeRunnerYielded = true;
+      sharedRunnerCompleted = true;
     });
-    assert.equal(hordeRunnerYielded, true);
+    assert.equal(sharedRunnerCompleted, false);
     assert.equal(useGameStore.getState().game.player.life, 10);
-    assert.equal(useGameStore.getState().game.eventQueue[0]?.type, "SURVIVED_BLOCKING");
-
-    let playerRunnerCompleted = false;
-    scheduleQueuedPlayerTriggers(() => {
-      playerRunnerCompleted = true;
-    });
+    assert.equal(useGameStore.getState().game.eventQueue[0]?.type, "SURVIVED_DAMAGE");
+    assert.equal(useGameStore.getState().activatingEffectCardId, guardian.instanceId);
     timers.releaseExpiredAt(460);
 
     const afterRecovery = useGameStore.getState();
@@ -164,15 +160,12 @@ test("combat reaction runners preserve player-before-Horde queue order and anima
       afterRecovery.game.eventQueue.map((event) => event.type),
       ["THIS_DIES", "CREATURE_DIED"],
     );
-    assert.equal(playerRunnerCompleted, false);
+    assert.equal(sharedRunnerCompleted, false);
 
     timers.releaseExpiredAt(2_000);
     assert.equal(useGameStore.getState().playerAutoTriggerCount, 0);
-    assert.deepEqual(
-      useGameStore.getState().game.eventQueue.map((event) => event.type),
-      ["THIS_DIES", "CREATURE_DIED"],
-    );
-    assert.equal(playerRunnerCompleted, true);
+    assert.deepEqual(useGameStore.getState().game.eventQueue, []);
+    assert.equal(sharedRunnerCompleted, true);
   } finally {
     resetPlayerTriggerSequence();
     resetHordeSequence();
@@ -336,6 +329,175 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     );
   } finally {
     resetPlayerTriggerSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Drain Essence heals through the HUD and can kill an allied creature", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHordeSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hordeBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const playedSfx = [];
+  useAudioStore.setState({ playSfx: (id) => playedSfx.push(id) });
+
+  try {
+    resetHordeSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("drain-essence-store");
+    game.player.life = 10;
+    addForests(game, 3);
+    const page = addCard(game, cardFromDeck("blood_page", "player"));
+    const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: drain.instanceId,
+        stepIndex: 0,
+        targets: { targetCreature: page.instanceId },
+        x: 0,
+        y: 0,
+      },
+      lifeBuffAnimationId: undefined,
+      specialDeadCardIds: [],
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+      hordeAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const afterImpact = useGameStore.getState();
+    assert.equal(afterImpact.game.player.life, 12);
+    assert.equal(typeof afterImpact.lifeBuffAnimationId, "number");
+    assert.equal(
+      afterImpact.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.damageMarked,
+      3,
+    );
+    assert.deepEqual(afterImpact.specialDeadCardIds, [page.instanceId]);
+    assert.equal(playedSfx.includes("attack"), true);
+    assert.equal(playedSfx.includes("buff"), true);
+
+    timers.releaseExpiredAt(260);
+
+    const afterDeath = useGameStore.getState();
+    assert.equal(afterDeath.game.player.battlefield.some((card) => card.instanceId === page.instanceId), false);
+    assert.equal(afterDeath.game.player.graveyard.some((card) => card.instanceId === page.instanceId), true);
+    assert.deepEqual(afterDeath.specialDeadCardIds, []);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHordeSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Drain Essence presents the Guardian trigger after its own recovery", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHordeSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hordeBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHordeSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("drain-essence-guardian-trigger");
+    game.player.life = 10;
+    addForests(game, 3);
+    const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+    const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: drain.instanceId,
+        stepIndex: 0,
+        targets: { targetCreature: guardian.instanceId },
+        x: 0,
+        y: 0,
+      },
+      activatingEffectCardId: undefined,
+      lifeBuffAnimationId: undefined,
+      specialDeadCardIds: [],
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+      hordeAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const afterDrain = useGameStore.getState();
+    assert.equal(afterDrain.game.player.life, 12);
+    assert.equal(
+      afterDrain.game.player.battlefield.find((card) => card.instanceId === guardian.instanceId)?.damageMarked,
+      3,
+    );
+    assert.equal(afterDrain.playerAutoTriggerCount, 1);
+
+    timers.releaseExpiredAt(0);
+    assert.equal(useGameStore.getState().activatingEffectCardId, guardian.instanceId);
+
+    timers.releaseExpiredAt(460);
+    const afterGuardian = useGameStore.getState();
+    assert.equal(afterGuardian.game.player.life, 14);
+    assert.equal(typeof afterGuardian.lifeBuffAnimationId, "number");
+    assert.equal(afterGuardian.game.player.battlefield.some((card) => card.instanceId === guardian.instanceId), true);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHordeSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }

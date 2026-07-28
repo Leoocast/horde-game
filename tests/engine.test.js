@@ -9,7 +9,7 @@ import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engin
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, resolveHordeCombat, resolvePlayerAttackerLifesteal, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
-import { drainEventQueue } from "../src/engine/EventQueue";
+import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
 import { finishHordeTurn, revealHordeCardFromTop, runHordeMain } from "../src/engine/HordeController";
@@ -611,6 +611,78 @@ test("Crimson Impulse rejects an enemy target before spending mana or life", () 
   assert.equal(result.horde.battlefield.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
 });
 
+test("Drain Essence can damage either side and always recovers two life", () => {
+  const game = createTestGame("drain-essence-any-creature");
+  game.player.life = 10;
+  addForests(game, 3);
+  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const enemy = addCard(game, customCard("drain_essence_enemy", "horde", { toughness: 3 }));
+  const land = game.player.battlefield.find((card) => card.cardTypes.includes("Land"));
+  const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+  const requirement = drain.requiresTargets[0];
+
+  assert.ok(requirement);
+  assert.deepEqual(
+    targetCandidates(game, "player", requirement).map((card) => card.instanceId),
+    [guardian.instanceId, enemy.instanceId],
+  );
+  assert.equal(targetCandidates(game, "player", requirement).some((card) => card.instanceId === land?.instanceId), false);
+
+  const guardianDrain = castCard(game, drain.instanceId, {
+    targets: { targetCreature: guardian.instanceId },
+  });
+  const damagedGuardian = guardianDrain.player.battlefield.find((card) => card.instanceId === guardian.instanceId);
+
+  assert.equal(guardianDrain.lastActionResult?.ok, true);
+  assert.equal(guardianDrain.player.life, 14);
+  assert.equal(damagedGuardian?.damageMarked, 3);
+  assert.equal(guardianDrain.player.battlefield.some((card) => card.instanceId === guardian.instanceId), true);
+
+  const enemyGame = createTestGame("drain-essence-enemy-kill");
+  enemyGame.player.life = 10;
+  addForests(enemyGame, 3);
+  const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "horde", { toughness: 3 }));
+  const secondDrain = addCard(enemyGame, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+  const enemyDrain = castCard(enemyGame, secondDrain.instanceId, {
+    targets: { targetCreature: lethalEnemy.instanceId },
+  });
+
+  assert.equal(enemyDrain.player.life, 12);
+  assert.equal(enemyDrain.horde.battlefield.find((card) => card.instanceId === lethalEnemy.instanceId)?.damageMarked, 3);
+  destroyMarkedCreatures(enemyDrain);
+  assert.equal(enemyDrain.horde.graveyard.some((card) => card.instanceId === lethalEnemy.instanceId), true);
+});
+
+test("Drain Essence can kill an allied creature but rejects noncreature targets atomically", () => {
+  const game = createTestGame("drain-essence-allied-kill");
+  game.player.life = 10;
+  addForests(game, 3);
+  const page = addCard(game, cardFromDeck("blood_page", "player"));
+  const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+
+  const alliedDrain = castCard(game, drain.instanceId, {
+    targets: { targetCreature: page.instanceId },
+  });
+
+  assert.equal(alliedDrain.player.life, 12);
+  assert.equal(alliedDrain.player.battlefield.find((card) => card.instanceId === page.instanceId)?.damageMarked, 3);
+  destroyMarkedCreatures(alliedDrain);
+  assert.equal(alliedDrain.player.graveyard.some((card) => card.instanceId === page.instanceId), true);
+
+  const invalid = createTestGame("drain-essence-invalid-target");
+  invalid.player.life = 10;
+  const [land] = addForests(invalid, 3);
+  const invalidDrain = addCard(invalid, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
+  const rejected = castCard(invalid, invalidDrain.instanceId, {
+    targets: { targetCreature: land.instanceId },
+  });
+
+  assert.equal(rejected.lastActionResult?.ok, false);
+  assert.equal(rejected.player.life, 10);
+  assert.equal(rejected.player.hand.some((card) => card.instanceId === invalidDrain.instanceId), true);
+  assert.equal(rejected.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
+});
+
 test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets next turn", () => {
   const unaffordable = createTestGame();
   unaffordable.player.life = 10;
@@ -1107,7 +1179,7 @@ test("Lifesteal gains nothing when first strike kills the blocker before it deal
   assert.equal(result.horde.battlefield.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("Crypt Guardian reacts only when that Guardian survives blocking, before deaths from the same impact", () => {
+test("Crypt Guardian reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
   const game = createTestGame("crypt-guardian-survives-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_attacker", "horde", {
@@ -1126,7 +1198,7 @@ test("Crypt Guardian reacts only when that Guardian survives blocking, before de
 
   assert.deepEqual(
     afterImpact.eventQueue.map((event) => event.type),
-    ["SURVIVED_BLOCKING", "THIS_DIES", "CREATURE_DIED"],
+    ["SURVIVED_DAMAGE", "THIS_DIES", "CREATURE_DIED"],
   );
   assert.deepEqual(
     pendingTriggerSources(afterImpact, afterImpact.eventQueue[0]).map((source) => source.instanceId),
@@ -1144,7 +1216,7 @@ test("Crypt Guardian reacts only when that Guardian survives blocking, before de
   );
 });
 
-test("Crypt Guardian does not react when combat damage kills it while blocking", () => {
+test("Crypt Guardian does not react when the damage event kills it", () => {
   const game = createTestGame("crypt-guardian-dies-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_lethal_attacker", "horde", {
@@ -1160,9 +1232,41 @@ test("Crypt Guardian does not react when combat damage kills it while blocking",
   const [impact] = buildHordeAttackEvents(game);
   const afterImpact = applyHordeAttackEvent(game, impact);
 
-  assert.equal(afterImpact.eventQueue.some((event) => event.type === "SURVIVED_BLOCKING"), false);
+  assert.equal(
+    afterImpact.eventQueue.some(
+      (event) => event.type === "SURVIVED_DAMAGE" && event.sourceId === guardian.instanceId,
+    ),
+    false,
+  );
   assert.equal(afterImpact.player.life, 10);
   assert.equal(afterImpact.player.battlefield.some((card) => card.instanceId === guardian.instanceId), false);
+});
+
+test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
+  const game = createTestGame("crypt-guardian-unlimited-goblin-damage");
+  game.player.life = 10;
+  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const goblin = addCard(game, customCard("crypt_guardian_burn_goblin", "horde", {
+    subtypes: ["Goblin"],
+  }));
+  for (let index = 0; index < 2; index += 1) {
+    enqueue(game, {
+      type: "BURN_VOLLEY_DAMAGE",
+      sourceId: goblin.instanceId,
+      payload: {
+        sourceSide: "horde",
+        targetPlayer: true,
+        targetIds: [guardian.instanceId],
+        amount: 1,
+      },
+    });
+  }
+
+  drainEventQueue(game);
+
+  assert.equal(game.player.battlefield.find((card) => card.instanceId === guardian.instanceId)?.damageMarked, 2);
+  assert.equal(game.player.life, 12);
+  assert.equal(game.eventQueue.length, 0);
 });
 
 test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () => {

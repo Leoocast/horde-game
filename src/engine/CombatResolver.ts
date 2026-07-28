@@ -1,7 +1,7 @@
 import type { GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker, getToxicAmount, hasKeyword } from "./Keywords";
-import { destroyPermanent, millHorde } from "./EffectResolver";
+import { destroyPermanent, enqueueSurvivedDamageEvent, millHorde } from "./EffectResolver";
 import { getPowerToughness } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
@@ -238,6 +238,8 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
   // Triggers resolve between animated combat impacts and may remove a later
   // participant. Removed cards must never deal "ghost" combat damage.
   if (!attacker || (event.blockerId && !blocker)) return next;
+  const attackerDamageBefore = attacker.damageMarked;
+  const blockerDamageBefore = blocker?.damageMarked ?? 0;
   if (attacker && event.attackerDamageMarked !== undefined) attacker.damageMarked = event.attackerDamageMarked;
   if (blocker && event.blockerDamageMarked !== undefined) blocker.damageMarked = event.blockerDamageMarked;
   if (event.playerDamage > 0) {
@@ -249,17 +251,19 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
     log(next, `Player recovers ${event.playerLifeGain} life with Lifesteal.`);
   }
   // Survival is established at this impact, after damage is marked but before casualties enqueue
-  // their death reactions. This preserves the visible order: hit -> survivor -> deaths.
-  if (blocker && !event.blockerDies) {
-    enqueue(next, {
-      type: "SURVIVED_BLOCKING",
-      sourceId: blocker.instanceId,
-      triggerController: blocker.controller,
-      payload: {
-        controller: blocker.controller,
-        attackerId: attacker.instanceId,
-        blockerId: blocker.instanceId,
-      },
+  // their death reactions. Zero-power hits do not count as receiving damage.
+  if (!event.attackerDies && event.attackerDamageMarked !== undefined) {
+    enqueueSurvivedDamageEvent(next, attacker, event.attackerDamageMarked - attackerDamageBefore, {
+      damageSourceId: blocker?.instanceId,
+      combat: true,
+    });
+  }
+  if (blocker && !event.blockerDies && event.blockerDamageMarked !== undefined) {
+    enqueueSurvivedDamageEvent(next, blocker, event.blockerDamageMarked - blockerDamageBefore, {
+      damageSourceId: attacker.instanceId,
+      attackerId: attacker.instanceId,
+      blockerId: blocker.instanceId,
+      combat: true,
     });
   }
   if (event.blockerDies && blocker) destroyPermanent(next, blocker);

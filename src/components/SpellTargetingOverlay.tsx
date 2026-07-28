@@ -125,7 +125,11 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
 
   const showFullSourceImage = shouldShowFullCardImage(spell.definitionId);
   const followArrow = makeTargetArrow(start, followEnd);
-  const currentLabel = activeReq.controller === "SELF" ? t("target.chooseAlly") : t("target.chooseEnemy");
+  const currentLabel = activeReq.controller === "SELF"
+    ? t("target.chooseAlly")
+    : activeReq.controller === "OPPONENT"
+      ? t("target.chooseEnemy")
+      : t("target.chooseCreature");
   const lockedArrows = requirements
     .map((req) => {
       const end = lockedEnds[req.id];

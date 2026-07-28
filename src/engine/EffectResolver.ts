@@ -272,6 +272,13 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
     }
   },
+  DEAL_DAMAGE_TO_TARGET: (game, effect, context) => {
+    const amount = resolveDamageAmount(game, effect.amount, context);
+    for (const target of resolveTargetCards(game, effect, context)) {
+      dealDamageToCreature(game, target, amount, false);
+      game.log.unshift(`${context.source?.name ?? "Spell"} deals ${amount} damage to ${target.name}.`);
+    }
+  },
   FIGHT_SIMULTANEOUS: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
@@ -327,7 +334,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
 };
 
-export type EffectPresentation = "fight" | "sourceDamage" | "destroy";
+export type EffectPresentation = "fight" | "sourceDamage" | "targetDamage" | "destroy";
 
 // Which battle animation a spell's resolution should play. Registry metadata: the store asks
 // for a presentation kind instead of re-learning effect types.
@@ -335,6 +342,7 @@ const EFFECT_PRESENTATIONS: Partial<Record<string, EffectPresentation>> = {
   FIGHT_SIMULTANEOUS: "fight",
   DEAL_DAMAGE: "sourceDamage",
   DEAL_DAMAGE_FROM_SOURCE_POWER: "sourceDamage",
+  DEAL_DAMAGE_TO_TARGET: "targetDamage",
   DESTROY: "destroy",
   DESTROY_TARGET: "destroy",
 };
@@ -483,7 +491,7 @@ function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
   // Self-scoped: only the permanent named by the event reacts, never every other card carrying
   // the same ability. Both sources are still on the battlefield when these events resolve.
-  if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_BLOCKING") {
+  if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_DAMAGE") {
     const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(
@@ -561,9 +569,34 @@ export function runEnterBattlefieldTriggers(
   });
 }
 
-export function dealDamageToCreature(_game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
-  target.damageMarked += amount;
-  if (deathtouch && amount > 0) target.deathtouchDamage = true;
+export function dealDamageToCreature(game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
+  const damage = Math.max(0, amount);
+  target.damageMarked += damage;
+  if (deathtouch && damage > 0) target.deathtouchDamage = true;
+  enqueueSurvivedDamageEvent(game, target, damage);
+}
+
+export function enqueueSurvivedDamageEvent(
+  game: GameState,
+  target: CardInstance,
+  amount: number,
+  payload: Record<string, unknown> = {},
+): void {
+  if (amount <= 0 || !target.cardTypes.includes("Creature")) return;
+  if (!game[target.controller].battlefield.some((card) => card.instanceId === target.instanceId)) return;
+  const { toughness } = getPowerToughness(game, target);
+  if (target.damageMarked >= toughness || target.deathtouchDamage) return;
+  enqueue(game, {
+    type: "SURVIVED_DAMAGE",
+    sourceId: target.instanceId,
+    triggerController: target.controller,
+    payload: {
+      controller: target.controller,
+      targetId: target.instanceId,
+      amount,
+      ...payload,
+    },
+  });
 }
 
 export function destroyMarkedCreatures(game: GameState): void {

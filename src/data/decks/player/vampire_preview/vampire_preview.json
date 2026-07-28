@@ -221,8 +221,8 @@
       "name": "Crypt Guardian",
       "displayNameEs": "Guardián de la Cripta",
       "gameText": {
-        "en": "Whenever this creature survives blocking, recover 2 life.",
-        "es": "Cuando esta criatura sobreviva bloqueando, recuperas 2 vidas."
+        "en": "Whenever this creature is dealt damage and survives, recover 2 life.",
+        "es": "Siempre que esta criatura reciba daño y sobreviva, recuperas 2 vidas."
       },
       "flavorText": {
         "en": "Nothing leaves the crypt without his permission.",
@@ -240,11 +240,11 @@
       "keywords": [],
       "abilities": [
         {
-          "id": "crypt_guardian_survives_block",
+          "id": "crypt_guardian_survives_damage",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
-            "event": "SURVIVED_BLOCKING",
+            "event": "SURVIVED_DAMAGE",
             "source": "SELF"
           },
           "targets": [],
@@ -430,8 +430,8 @@
       "name": "Drain Essence",
       "displayNameEs": "Drenar la Esencia",
       "gameText": {
-        "en": "Deal 3 damage to a Horde creature. Recover 2 life.",
-        "es": "Haz 3 de daño a una criatura de la Horda. Recupera 2 vidas."
+        "en": "Deal 3 damage to a creature. Recover 2 life.",
+        "es": "Haz 3 de daño a una criatura. Recupera 2 vidas."
       },
       "flavorText": {
         "en": "Even the dead have something left to surrender.",
@@ -451,8 +451,32 @@
         {
           "id": "drain_essence_spell",
           "kind": "SPELL",
-          "engineSupport": "pending",
-          "implementationNote": "Hace objetivo únicamente a una criatura de la Horda, le hace 3 de daño y luego recupera 2 vidas."
+          "zone": "HAND",
+          "speed": "INSTANT",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "BATTLEFIELD",
+              "controller": "ANY",
+              "filters": {
+                "cardTypes": ["Creature"]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE_TO_TARGET",
+              "target": "targetCreature",
+              "amount": 3,
+              "damageKind": "NON_COMBAT"
+            },
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 2
+            }
+          ]
         }
       ]
     },

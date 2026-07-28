@@ -1535,6 +1535,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const handId = spellTargeting.handId;
   const isFightSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "fight"));
   const isSourceDamageSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "sourceDamage"));
+  const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (latest: GameState) => {
@@ -1542,14 +1543,16 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
-      deferPlayerTriggers: lifeCostAmount(card.additionalCost) > 0,
+      deferPlayerTriggers: lifeCostAmount(card.additionalCost) > 0 || isTargetDamageSpell,
       deferReactiveTriggers: reactionSources.length > 0,
     });
     const castSucceeded = next.lastActionResult?.ok === true;
     const lostLife = castSucceeded && next.player.life < latest.player.life;
+    const gainedLife = castSucceeded && next.player.life > latest.player.life;
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     if (lostLife) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+    if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(latest, next);
     if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
@@ -1557,6 +1560,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
     const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
+    const lifeBuffBeat = gainedLife ? startLifeBuffBeat() : undefined;
     const continueAfterPlayerTriggers = () => {
       if (reactionSources.length > 0) scheduleCardCastReaction(reactionSources, undefined);
     };
@@ -1577,6 +1581,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       playerAutoTriggerCount: playerTriggersQueued ? 1 : useGameStore.getState().playerAutoTriggerCount,
       autoPaidLandAnimation,
       ...(buffBeat ?? {}),
+      ...(lifeBuffBeat ?? {}),
     };
   };
   if (!isFightSpell) {
@@ -1595,6 +1600,28 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         focusedCardId: undefined,
         pendingSpellHandId: handId,
         specialDeadCardIds: destroyTargetIds,
+      };
+    }
+    if (isTargetDamageSpell) {
+      useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+      const resolved = resolveSpell(game);
+      const deadCardIds = findMarkedCreatureIds(resolved.game);
+      if (deadCardIds.length > 0) {
+        window.setTimeout(() => {
+          useGameStore.setState(({ game }) => {
+            const next = structuredClone(game) as GameState;
+            destroyMarkedCreatures(next);
+            return { game: next, specialDeadCardIds: [] };
+          });
+          scheduleQueuedCombatReactions(() => undefined);
+        }, 260);
+      }
+      return {
+        ...resolved,
+        spellTargeting: undefined,
+        selectedHandId: undefined,
+        focusedCardId: undefined,
+        specialDeadCardIds: deadCardIds,
       };
     }
     if (isSourceDamageSpell) {
