@@ -1,4 +1,5 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
+import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -824,12 +825,12 @@ export function Battlefield({ game, side, cards }: Props) {
       (playerCombat && side === "horde") ||
       (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
-    const effectAvailable = canUseTapActivatedAbility(card);
+    const primaryAbility = card.activatedAbilities[0];
+    const effectAvailable = canUseActivatedAbility(card, primaryAbility);
     const showActivatedAbilityChrome = effectAvailable && !isLand;
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
     const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("Creature"));
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
@@ -1185,15 +1186,10 @@ export function Battlefield({ game, side, cards }: Props) {
     return Math.max(index, 0) * 0.04;
   }
 
-  function canUseTapActivatedAbility(card: CardInstance): boolean {
+  function canUseActivatedAbility(card: CardInstance, ability: CardInstance["activatedAbilities"][number] | undefined): boolean {
     if (spellTargetingActive) return false;
-    if (game.activeSide !== "player" || game.phase !== "main") return false;
     if (side !== "player") return false;
-    if (card.zone !== "battlefield") return false;
-    if (card.tapped) return false;
-    if (card.activatedThisTurn) return false;
-    if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
-    return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
+    return Boolean(ability && !activatedAbilityFailureReason(game, card, ability));
   }
 
   function beginBlockDrag(blockerId: string, event: PointerEvent<HTMLElement>): void {
@@ -1333,6 +1329,14 @@ function abilityButtonText(ability: CardInstance["activatedAbilities"][number]):
     const color = entry?.[0] === "chosenColor" ? "chosen" : entry?.[0] ?? String(ability.effect.manaColor ?? "G");
     const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
     return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
+  }
+  if (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" && ability.effect.target === "SELF") {
+    const language = useLanguageStore.getState().language;
+    const life = Number(ability.cost?.life ?? 0);
+    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
+    return language === "es"
+      ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} este turno.`
+      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} this turn.`;
   }
   return String(ability.effect.type).replaceAll("_", " ");
 }

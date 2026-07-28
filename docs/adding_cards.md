@@ -215,7 +215,13 @@ Limitaciones actuales:
 - El normalizador sólo admite un efecto por habilidad activada; el lint falla si se declaran más.
 - El flujo genérico de `GameActions.activateAbility` es para el player, durante su main phase.
 - Los costes runtime soportados hoy son los que lee `GameActions.ts`: `tap`, `genericMana`,
-  `coloredMana.G` y `sacrificeSelf`.
+  `coloredMana` (`G`, `R`, `U`, `W`, `B`), `sacrificeSelf` y `life`.
+- `life` debe ser un entero positivo (el deck lint lo valida), se paga atómicamente con el resto
+  del coste y nunca puede reducir al player por debajo de 1. Cada pago emite `LIFE_PAID` y se
+  acumula en `player.lifePaidThisTurn` hasta el siguiente turno del player.
+- Una habilidad que sólo tiene sentido cuando su criatura ya puede atacar puede declarar
+  `requiresNoSummoningSickness: true`. Engine y UI la bloquean mientras la fuente tenga fatiga de
+  invocación, antes de cobrar cualquier coste.
 - La Horda no tiene una política genérica que decida cuándo activar habilidades. Una habilidad
   puede normalizar correctamente y aun así no ser invocada durante una partida de Horda.
 - Si una activación todavía no tiene flujo ejecutable, marcarla `engineSupport: "pending"` en vez

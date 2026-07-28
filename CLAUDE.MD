@@ -152,7 +152,11 @@ Puede:
 - castear criaturas, instants y sorceries segun fase
 - atacar a la Horda
 - bloquear ataques de Horda
-- usar algunas habilidades activadas con tap
+- usar habilidades activadas genericas con costes de tap, mana, sacrificio propio o vida
+- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_PAID`
+  y se acumula en `player.lifePaidThisTurn` hasta el siguiente turno
+- una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
+  inactiva mientras su criatura tenga fatiga, sin cobrar costes
 
 ### Horde
 

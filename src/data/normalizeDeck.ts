@@ -1,4 +1,4 @@
-import type { ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Keyword, Side } from "../engine/GameTypes";
+import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Keyword, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {
@@ -40,10 +40,16 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     variableCost: card.variableCost,
     requiresDistribution: card.requiresDistribution,
     keywords: normalizeKeywords(card, abilities),
+    additionalCost: normalizeSpellCost(abilities),
     activatedAbilities: normalizeActivatedAbilities(abilities),
     effects: normalizeEffects(abilities),
     requiresTargets: normalizeTargets(abilities),
   };
+}
+
+function normalizeSpellCost(abilities: NewDeckAbility[]): ActionCost | undefined {
+  const cost = abilities.find((ability) => ability.kind === "SPELL")?.cost;
+  return cost && Object.keys(cost).length > 0 ? { ...cost } as ActionCost : undefined;
 }
 
 function normalizeKeywords(card: NewDeckCard, abilities: NewDeckAbility[]): Keyword[] {
@@ -67,7 +73,8 @@ function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbil
       const firstEffect = ability.effects?.[0] as EffectDefinition | undefined;
       return {
         id: ability.id ?? "activated_ability",
-        cost: ability.cost,
+        cost: ability.cost as ActionCost | undefined,
+        requiresNoSummoningSickness: ability.requiresNoSummoningSickness,
         requiresTargets: [],
         effect: firstEffect ?? { type: "UNSUPPORTED" },
       };

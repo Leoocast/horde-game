@@ -32,9 +32,18 @@ export type EffectDefinition = {
   [key: string]: unknown;
 };
 
+export type ActionCost = {
+  tap?: boolean;
+  sacrificeSelf?: boolean;
+  genericMana?: number;
+  coloredMana?: Partial<Record<Color, number>>;
+  life?: number;
+};
+
 export type ActivatedAbility = {
   id: string;
-  cost?: Record<string, unknown>;
+  cost?: ActionCost;
+  requiresNoSummoningSickness?: boolean;
   requiresTargets?: TargetRequirement[];
   effect: EffectDefinition;
 };
@@ -81,6 +90,7 @@ export type CardDefinition = {
   triggerMessage?: string;
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
+  additionalCost?: ActionCost;
   activatedAbilities?: ActivatedAbility[];
   effects?: EffectDefinition[];
   requiresTargets?: TargetRequirement[];
@@ -156,6 +166,7 @@ export type CardInstance = {
   chaosKeywords: Keyword[];
   triggerMessage?: string;
   effects: EffectDefinition[];
+  additionalCost?: ActionCost;
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
   tapped: boolean;
@@ -189,6 +200,8 @@ export type PlayerState = {
   manaPool: ManaPool;
   pendingStoredMana: number;
   energyActionUsedThisTurn: boolean;
+  /** Life paid as a cost during the current player turn. Reset at the next player turn. */
+  lifePaidThisTurn: number;
 };
 
 export type HordeState = {

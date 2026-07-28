@@ -38,6 +38,7 @@ export function startPlayerTurn(game: GameState): void {
   // so an older setup turn must never refill stored mana later.
   game.player.pendingStoredMana = 0;
   game.player.energyActionUsedThisTurn = false;
+  game.player.lifePaidThisTurn = 0;
   game.turnNumber += 1;
 }
 

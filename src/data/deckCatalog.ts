@@ -49,6 +49,7 @@ export type NewDeckAbility = {
   kind?: string;
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
+  requiresNoSummoningSickness?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;
   effects?: Array<Record<string, unknown>>;

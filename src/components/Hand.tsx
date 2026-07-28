@@ -1,6 +1,7 @@
 import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
+import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
@@ -465,6 +466,7 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.cardTypes.includes("Land")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
+  if (!canPayLifeCost(game, card.additionalCost)) return false;
   if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
@@ -484,6 +486,9 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     if (!canPlayerPutAnotherLand(game)) return t("error.landLimit", { count: MAX_PLAYER_LANDS });
     if (game.player.energyActionUsedThisTurn) return t("error.energyUsed");
     return t("error.landUnavailable");
+  }
+  if (!canPayLifeCost(game, card.additionalCost)) {
+    return t("error.notEnoughLife", { amount: lifeCostAmount(card.additionalCost), card: card.displayName });
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return t("error.noTargets", { card: card.displayName });
   return t("error.notEnoughMana", { card: card.displayName });

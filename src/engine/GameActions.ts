@@ -1,4 +1,5 @@
-import type { AbilityOptions, CastOptions, GameState } from "./GameTypes";
+import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOptions, GameState } from "./GameTypes";
+import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordBattlefieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
@@ -38,8 +39,11 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   if (!card) return fail(next, "That card is no longer in hand.", { silent: true });
   if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be cast right now.`);
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
+  const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
+  if (lifeFailure) return fail(next, lifeFailure);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
   if (!payManaAutomatically(next, cost)) return fail(next, `Not enough available mana to cast ${card.name}.`);
+  payLifeCost(next, card.additionalCost, card.instanceId, card.name);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {
@@ -75,30 +79,69 @@ function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").Car
 
 export function activateAbility(game: GameState, permanentId: string, abilityId: string, options: AbilityOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Abilities can only be activated during your main phase.");
   const card = next.player.battlefield.find((item) => item.instanceId === permanentId);
   const ability = card?.activatedAbilities.find((item) => item.id === abilityId);
   if (!card || !ability) return fail(next, "That ability is not available.", { silent: true });
-  if (card.activatedThisTurn) return fail(next, `${card.name} has already activated an ability this turn.`);
-  if (card.cardTypes.includes("Creature") && ability.effect.type === "ADD_MANA" && storedManaSpace(next) === 0) {
-    return fail(next, "Stored mana is already full.");
-  }
-  if (ability.cost?.tap) {
-    if (card.tapped) return fail(next, `${card.name} is already tapped.`);
-    if (card.summoningSickness && card.cardTypes.includes("Creature")) return fail(next, `${card.name} has summoning sickness.`);
-  }
-  const generic = Number(ability.cost?.genericMana ?? 0);
-  const colored = ability.cost?.coloredMana as Record<string, number> | undefined;
-  const cost = { ...parseManaCost(""), colorless: generic };
-  if (colored?.G) cost.green = colored.G;
-  if (!canPay(next.player.manaPool, cost)) return fail(next, `Not enough mana to activate ${card.name}.`);
+  const failure = activatedAbilityFailureReason(next, card, ability);
+  if (failure) return fail(next, failure);
+  const cost = activatedAbilityManaCost(ability.cost);
   next.player.manaPool = payMana(next.player.manaPool, cost);
+  payLifeCost(next, ability.cost, card.instanceId, card.name);
   if (ability.cost?.tap) card.tapped = true;
   card.activatedThisTurn = true;
   if (ability.cost?.sacrificeSelf) destroyPermanent(next, card);
   resolveEffect(next, ability.effect, { source: card, side: "player", targets: options.targets });
   drainEventQueue(next);
   return succeed(log(next, `Player activates ${card.name}.`));
+}
+
+export function activatedAbilityFailureReason(game: GameState, card: CardInstance, ability: ActivatedAbility): string | undefined {
+  if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Abilities can only be activated during your main phase.";
+  if (card.controller !== "player" || card.zone !== "battlefield") return "That ability is not available.";
+  if (card.activatedThisTurn) return `${card.name} has already activated an ability this turn.`;
+  if (ability.requiresNoSummoningSickness && card.cardTypes.includes("Creature") && card.summoningSickness) {
+    return `${card.name} cannot activate this ability while it has summoning sickness.`;
+  }
+  if (card.cardTypes.includes("Creature") && ability.effect.type === "ADD_MANA" && storedManaSpace(game) === 0) {
+    return "Stored mana is already full.";
+  }
+  if (ability.cost?.tap) {
+    if (card.tapped) return `${card.name} is already tapped.`;
+    if (card.summoningSickness && card.cardTypes.includes("Creature")) return `${card.name} has summoning sickness.`;
+  }
+  const cost = activatedAbilityManaCost(ability.cost);
+  if (!canPay(game.player.manaPool, cost)) return `Not enough mana to activate ${card.name}.`;
+  return lifeCostFailureReason(game, ability.cost, card.name);
+}
+
+function activatedAbilityManaCost(actionCost?: ActionCost) {
+  const generic = Number(actionCost?.genericMana ?? 0);
+  const colored = actionCost?.coloredMana;
+  const cost = { ...parseManaCost(""), colorless: generic };
+  cost.green = Number(colored?.G ?? 0);
+  cost.red = Number(colored?.R ?? 0);
+  cost.blue = Number(colored?.U ?? 0);
+  cost.white = Number(colored?.W ?? 0);
+  cost.black = Number(colored?.B ?? 0);
+  return cost;
+}
+
+function payLifeCost(game: GameState, cost: ActionCost | undefined, sourceId: string, sourceName: string): void {
+  const amount = lifeCostAmount(cost);
+  if (amount === 0) return;
+  const paidBefore = game.player.lifePaidThisTurn ?? 0;
+  game.player.life -= amount;
+  game.player.lifePaidThisTurn = paidBefore + amount;
+  enqueue(game, {
+    type: "LIFE_PAID",
+    sourceId,
+    payload: {
+      amount,
+      firstPaymentThisTurn: paidBefore === 0,
+      totalPaidThisTurn: game.player.lifePaidThisTurn,
+    },
+  });
+  game.log.unshift(`Player pays ${amount} life for ${sourceName}.`);
 }
 
 function moveHandToBattlefield(game: GameState, card: { instanceId: string; zone: string }): void {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { getHordeDeck, hordeDeck, playerDeck } from "../src/data/decks";
+import { normalizeDeck } from "../src/data/normalizeDeck";
 import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
 import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
@@ -17,7 +18,7 @@ import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalMana, releasePendingStoredMana } from "../src/engine/ManaSystem";
-import { performPlayerDraw } from "../src/engine/TurnManager";
+import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("same seed produces the same player and Horde deck order", () => {
@@ -428,6 +429,317 @@ test("automatic payment spends normal land mana before stored yellow mana", () =
     black: 0,
     colorless: 1,
   });
+});
+
+test("Crimson Energy is a universal source that pays generic costs before stored energy", () => {
+  const game = createTestGame();
+  game.player.manaPool.colorless = 1;
+  const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
+  const secondEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
+  const spell = addCard(
+    game,
+    customCard("crimson_two_energy_spell", "player", {
+      zone: "hand",
+      cardTypes: ["Sorcery"],
+      manaCost: "{2}",
+    }),
+    "player",
+    "hand",
+  );
+
+  const result = castCard(game, spell.instanceId);
+
+  assert.equal(firstEnergy.cardTypes.includes("Land"), true);
+  assert.equal(result.player.graveyard.some((card) => card.instanceId === spell.instanceId), true);
+  assert.equal(result.player.battlefield.find((card) => card.instanceId === firstEnergy.instanceId)?.tapped, true);
+  assert.equal(result.player.battlefield.find((card) => card.instanceId === secondEnergy.instanceId)?.tapped, true);
+  assert.equal(result.player.manaPool.colorless, 1);
+});
+
+test("spell life costs normalize from deck abilities and can never reduce the player to zero", () => {
+  const normalized = normalizeDeck({
+    id: "life-cost-normalization",
+    name: "Life Cost Normalization",
+    side: "player",
+    cards: [
+      {
+        id: "normalized_life_spell",
+        name: "Normalized Life Spell",
+        cardTypes: ["Sorcery"],
+        abilities: [
+          {
+            id: "normalized_life_spell_cast",
+            kind: "SPELL",
+            cost: { life: 3 },
+            effects: [{ type: "DRAW_CARD", amount: 1 }],
+          },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(normalized.cards[0].additionalCost, { life: 3 });
+
+  const game = createTestGame();
+  game.player.life = 3;
+  const [land] = addForests(game, 1);
+  const spell = addCard(
+    game,
+    customCard("life_spell_at_zero", "player", {
+      zone: "hand",
+      cardTypes: ["Sorcery"],
+      manaCost: "{G}",
+      additionalCost: { life: 3 },
+    }),
+    "player",
+    "hand",
+  );
+
+  const result = castCard(game, spell.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, false);
+  assert.match(result.lastActionResult?.reason ?? "", /1 life/i);
+  assert.equal(result.player.life, 3);
+  assert.equal(result.player.lifePaidThisTurn, 0);
+  assert.equal(result.player.hand.some((card) => card.instanceId === spell.instanceId), true);
+  assert.equal(result.player.battlefield.find((card) => card.instanceId === land.instanceId)?.tapped, false);
+});
+
+test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets next turn", () => {
+  const unaffordable = createTestGame();
+  unaffordable.player.life = 10;
+  const manaLockedSpell = addCard(
+    unaffordable,
+    customCard("mana_locked_life_spell", "player", {
+      zone: "hand",
+      cardTypes: ["Sorcery"],
+      manaCost: "{G}",
+      additionalCost: { life: 3 },
+    }),
+    "player",
+    "hand",
+  );
+
+  const failedForMana = castCard(unaffordable, manaLockedSpell.instanceId);
+
+  assert.equal(failedForMana.player.life, 10);
+  assert.equal(failedForMana.player.lifePaidThisTurn, 0);
+
+  const game = createTestGame();
+  game.player.life = 4;
+  addForests(game, 1);
+  const witness = addCard(
+    game,
+    customCard("life_payment_witness", "player", {
+      effects: [
+        {
+          type: "TRIGGERED_ABILITY",
+          trigger: "LIFE_PAID",
+          effect: { type: "PUT_COUNTER", target: "SELF", counterType: "+1/+1", amount: 1 },
+        },
+      ],
+    }),
+  );
+  const spell = addCard(
+    game,
+    customCard("pay_three_life_spell", "player", {
+      zone: "hand",
+      cardTypes: ["Sorcery"],
+      manaCost: "{G}",
+      additionalCost: { life: 3 },
+    }),
+    "player",
+    "hand",
+  );
+
+  const paid = castCard(game, spell.instanceId);
+
+  assert.equal(paid.lastActionResult?.ok, true);
+  assert.equal(paid.player.life, 1);
+  assert.equal(paid.player.lifePaidThisTurn, 3);
+  assert.equal(paid.player.battlefield.find((card) => card.instanceId === witness.instanceId)?.counters["+1/+1"], 1);
+
+  const nextTurn = structuredClone(paid);
+  startPlayerTurn(nextTurn);
+  assert.equal(nextTurn.player.lifePaidThisTurn, 0);
+});
+
+test("activated life costs are atomic and obey the one-life minimum", () => {
+  const game = createTestGame();
+  game.player.life = 3;
+  game.player.manaPool.colorless = 1;
+  const acolyte = addCard(
+    game,
+    customCard("life_cost_activator", "player", {
+      activatedAbilities: [
+        {
+          id: "pay_life_activation",
+          cost: { tap: true, genericMana: 1, life: 3 },
+          effect: { type: "PUMP_UNTIL_END_OF_TURN", target: "SELF", power: 1, toughness: 1 },
+        },
+      ],
+    }),
+  );
+
+  const blocked = activateAbility(game, acolyte.instanceId, "pay_life_activation");
+
+  assert.equal(blocked.lastActionResult?.ok, false);
+  assert.equal(blocked.player.life, 3);
+  assert.equal(blocked.player.lifePaidThisTurn, 0);
+  assert.equal(blocked.player.manaPool.colorless, 1);
+  assert.equal(blocked.player.battlefield.find((card) => card.instanceId === acolyte.instanceId)?.tapped, false);
+  assert.equal(blocked.player.battlefield.find((card) => card.instanceId === acolyte.instanceId)?.activatedThisTurn, false);
+
+  game.player.life = 4;
+  const paid = activateAbility(game, acolyte.instanceId, "pay_life_activation");
+  const activated = paid.player.battlefield.find((card) => card.instanceId === acolyte.instanceId);
+
+  assert.equal(paid.lastActionResult?.ok, true);
+  assert.equal(paid.player.life, 1);
+  assert.equal(paid.player.lifePaidThisTurn, 3);
+  assert.equal(paid.player.manaPool.colorless, 0);
+  assert.equal(activated?.tapped, true);
+  assert.equal(activated?.activatedThisTurn, true);
+  assert.equal(activated?.temporaryPower, 1);
+});
+
+test("Tithe Acolyte exhausts and pays three life to generate one stored Energy", () => {
+  const game = createTestGame();
+  game.player.life = 10;
+  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+
+  const result = activateAbility(game, acolyte.instanceId, "tithe_acolyte_generate");
+  const activated = result.player.battlefield.find((card) => card.instanceId === acolyte.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, true);
+  assert.equal(result.player.life, 7);
+  assert.equal(result.player.lifePaidThisTurn, 3);
+  assert.equal(result.player.manaPool.colorless, 1);
+  assert.equal(activated?.tapped, true);
+  assert.equal(activated?.activatedThisTurn, true);
+
+  const fullReserve = createTestGame();
+  fullReserve.player.life = 10;
+  fullReserve.player.manaPool.colorless = 3;
+  const blockedAcolyte = addCard(fullReserve, cardFromDeck("tithe_acolyte", "player"));
+
+  const blocked = activateAbility(fullReserve, blockedAcolyte.instanceId, "tithe_acolyte_generate");
+  const unchanged = blocked.player.battlefield.find((card) => card.instanceId === blockedAcolyte.instanceId);
+
+  assert.equal(blocked.lastActionResult?.ok, false);
+  assert.equal(blocked.player.life, 10);
+  assert.equal(blocked.player.lifePaidThisTurn, 0);
+  assert.equal(blocked.player.manaPool.colorless, 3);
+  assert.equal(unchanged?.tapped, false);
+  assert.equal(unchanged?.activatedThisTurn, false);
+});
+
+test("Court Duelist pays life once per turn for a temporary +3/+0 buff", () => {
+  const freshGame = createTestGame();
+  freshGame.player.life = 10;
+  const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
+  freshDuelist.summoningSickness = true;
+
+  const blockedBySickness = activateAbility(freshGame, freshDuelist.instanceId, "court_duelist_blood_rush");
+  const unchangedFreshDuelist = blockedBySickness.player.battlefield.find((card) => card.instanceId === freshDuelist.instanceId);
+
+  assert.equal(blockedBySickness.lastActionResult?.ok, false);
+  assert.equal(blockedBySickness.player.life, 10);
+  assert.equal(blockedBySickness.player.lifePaidThisTurn, 0);
+  assert.equal(unchangedFreshDuelist?.temporaryPower, 0);
+  assert.equal(unchangedFreshDuelist?.activatedThisTurn, false);
+
+  const game = createTestGame();
+  game.player.life = 10;
+  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+
+  const buffed = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+  const activeDuelist = buffed.player.battlefield.find((card) => card.instanceId === duelist.instanceId);
+
+  assert.equal(buffed.lastActionResult?.ok, true);
+  assert.equal(buffed.player.life, 7);
+  assert.equal(buffed.player.lifePaidThisTurn, 3);
+  assert.equal(activeDuelist?.tapped, false);
+  assert.equal(activeDuelist?.activatedThisTurn, true);
+  assert.deepEqual(getPowerToughness(buffed, activeDuelist), { power: 6, toughness: 2 });
+
+  const repeated = activateAbility(buffed, duelist.instanceId, "court_duelist_blood_rush");
+  assert.equal(repeated.lastActionResult?.ok, false);
+  assert.equal(repeated.player.life, 7);
+  assert.equal(repeated.player.lifePaidThisTurn, 3);
+  assert.deepEqual(
+    getPowerToughness(repeated, repeated.player.battlefield.find((card) => card.instanceId === duelist.instanceId)),
+    { power: 6, toughness: 2 },
+  );
+
+  const cleaned = advancePhase(repeated, "end");
+  assert.deepEqual(
+    getPowerToughness(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === duelist.instanceId)),
+    { power: 3, toughness: 2 },
+  );
+
+  const nextTurn = structuredClone(cleaned);
+  startPlayerTurnReady(nextTurn);
+  const readyDuelist = nextTurn.player.battlefield.find((card) => card.instanceId === duelist.instanceId);
+  assert.equal(readyDuelist?.activatedThisTurn, false);
+
+  const usedAgain = activateAbility(nextTurn, duelist.instanceId, "court_duelist_blood_rush");
+  assert.equal(usedAgain.lastActionResult?.ok, true);
+  assert.equal(usedAgain.player.life, 4);
+  assert.equal(usedAgain.player.lifePaidThisTurn, 3);
+});
+
+test("Blood Page gets +2/+0 only from the first life payment of its controller turn", () => {
+  const game = createTestGame();
+  game.player.life = 20;
+  const firstPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const secondPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+
+  const firstPayment = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+
+  for (const page of [firstPage, secondPage]) {
+    const current = firstPayment.player.battlefield.find((card) => card.instanceId === page.instanceId);
+    assert.equal(current?.temporaryPower, 2);
+    assert.deepEqual(getPowerToughness(firstPayment, current), { power: 3, toughness: 2 });
+  }
+
+  const latePage = addCard(firstPayment, cardFromDeck("blood_page", "player"));
+  const secondPayment = activateAbility(firstPayment, acolyte.instanceId, "tithe_acolyte_generate");
+
+  assert.equal(secondPayment.player.life, 14);
+  assert.equal(secondPayment.player.lifePaidThisTurn, 6);
+  assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 2);
+  assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 2);
+  assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === latePage.instanceId)?.temporaryPower, 0);
+
+  const cleaned = advancePhase(secondPayment, "end");
+  assert.equal(cleaned.player.battlefield.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
+  assert.equal(cleaned.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
+
+  const defense = createTestGame();
+  defense.player.life = 10;
+  const defendingPage = addCard(defense, cardFromDeck("blood_page", "player"));
+  const attacker = addCard(defense, customCard("life_payment_attacker", "horde"), "horde");
+  defense.activeSide = "horde";
+  defense.phase = "combat";
+  defense.combat.hordeAttackers = [attacker.instanceId];
+  const instant = addCard(
+    defense,
+    customCard("defensive_life_payment", "player", {
+      zone: "hand",
+      cardTypes: ["Instant"],
+      additionalCost: { life: 2 },
+    }),
+    "player",
+    "hand",
+  );
+
+  const paidDuringHordeTurn = castCard(defense, instant.instanceId);
+
+  assert.equal(paidDuringHordeTurn.lastActionResult?.ok, true);
+  assert.equal(paidDuringHordeTurn.player.life, 8);
+  assert.equal(paidDuringHordeTurn.player.battlefield.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 0);
 });
 
 test("a failed cast does not move cards, tap mana sources, or spend mana", () => {

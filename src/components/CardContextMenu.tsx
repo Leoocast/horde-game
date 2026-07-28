@@ -1,6 +1,7 @@
 import { Info, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -82,7 +83,7 @@ export function CardContextMenu() {
 
   const firstAbility = card.activatedAbilities.find((ability) => !isManaAbility(ability));
   const hasActivatedEffect = Boolean(firstAbility);
-  const canActivate = Boolean(firstAbility && canActivateNow(game, card));
+  const canActivate = Boolean(firstAbility && !activatedAbilityFailureReason(game, card, firstAbility));
   const activateLabel = firstAbility?.cost?.tap ? t("card.tapForEffect") : t("card.activateEffect");
 
   function openDetails() {
@@ -133,18 +134,6 @@ export function CardContextMenu() {
       )}
     </>
   );
-}
-
-function canActivateNow(game: GameState, card: CardInstance): boolean {
-  if (game.winner) return false;
-  if (game.activeSide !== "player") return false;
-  if (game.phase !== "main") return false;
-  if (card.controller !== "player") return false;
-  if (card.zone !== "battlefield") return false;
-  if (card.tapped) return false;
-  if (card.activatedThisTurn) return false;
-  if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
-  return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
 }
 
 function isManaAbility(ability: CardInstance["activatedAbilities"][number]): boolean {

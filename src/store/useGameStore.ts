@@ -798,7 +798,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       return buildCastCardPatch(state, id, options);
     }),
-  activateAbility: (id, abilityId, options) => set(({ game }) => ({ game: activateAbility(game, id, abilityId, options), activeEffectCardId: undefined })),
+  activateAbility: (id, abilityId, options) =>
+    set(({ game }) => {
+      const next = activateAbility(game, id, abilityId, options);
+      if (next.lastActionResult?.ok === false) showActionToast(next.lastActionResult.reason);
+      return { game: next, activeEffectCardId: undefined };
+    }),
   toggleAttacker: (id) =>
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);

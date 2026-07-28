@@ -125,6 +125,15 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
   if (kind === "ACTIVATED" && (ability.effects ?? []).length > 1) {
     report(`Activated abilities support a single effect today; ${ability.effects?.length} declared (the rest would be dropped).`);
   }
+  if (ability.requiresNoSummoningSickness !== undefined && typeof ability.requiresNoSummoningSickness !== "boolean") {
+    report(`requiresNoSummoningSickness must be boolean.`);
+  }
+  if (ability.cost?.life !== undefined) {
+    const life = Number(ability.cost.life);
+    if (!Number.isInteger(life) || life <= 0) {
+      report(`Life cost must be a positive integer; received "${String(ability.cost.life)}".`);
+    }
+  }
 
   // Run the ability through the real pipeline, isolated on a synthetic one-ability card, and
   // inspect what actually reaches the engine. This catches every silent drop for real.

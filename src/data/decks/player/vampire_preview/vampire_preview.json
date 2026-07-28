@@ -31,7 +31,7 @@
       "manaValue": 0,
       "colors": [],
       "colorIdentity": [],
-      "cardTypes": ["Energy"],
+      "cardTypes": ["Land", "Energy"],
       "subtypes": ["Sanctuary"],
       "power": null,
       "toughness": null,
@@ -40,8 +40,18 @@
         {
           "id": "crimson_energy_generate",
           "kind": "ACTIVATED",
-          "engineSupport": "pending",
-          "implementationNote": "Agotar esta carta genera 1 de la Energía universal de Hostfall."
+          "cost": {
+            "tap": true
+          },
+          "effects": [
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "C": 1
+              }
+            }
+          ]
         }
       ]
     },
@@ -50,8 +60,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you pay life during your turn, this creature gets +1/+0 until end of turn.",
-        "es": "La primera vez que pagues vida durante tu turno, esta criatura obtiene +1/+0 hasta el final del turno."
+        "en": "The first time you pay life during your turn, this creature gets +2/+0 until end of turn.",
+        "es": "La primera vez que pagues vida durante tu turno, esta criatura obtiene +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "The youngest learn to serve before they learn to feed.",
@@ -71,8 +81,29 @@
         {
           "id": "blood_page_first_life_payment",
           "kind": "TRIGGERED",
-          "engineSupport": "pending",
-          "implementationNote": "Una vez por turno propio, detecta el primer coste de vida pagado y obtiene +1/+0 hasta fin de turno."
+          "zone": "BATTLEFIELD",
+          "trigger": {
+            "event": "LIFE_PAID"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "ACTIVE_PLAYER_IS",
+              "player": "SELF"
+            },
+            {
+              "type": "FIRST_LIFE_PAYMENT_THIS_TURN"
+            }
+          ],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "SELF",
+              "power": 2,
+              "toughness": 0,
+              "duration": "END_OF_TURN"
+            }
+          ]
         }
       ]
     },
@@ -133,8 +164,22 @@
         {
           "id": "tithe_acolyte_generate",
           "kind": "ACTIVATED",
-          "engineSupport": "pending",
-          "implementationNote": "Coste: agotar y pagar 3 vidas. Efecto: generar 1 de Energía universal."
+          "zone": "BATTLEFIELD",
+          "cost": {
+            "tap": true,
+            "life": 3
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_MANA",
+              "player": "SELF",
+              "mana": {
+                "C": 1
+              }
+            }
+          ]
         }
       ]
     },
@@ -143,8 +188,8 @@
       "name": "Court Duelist",
       "displayNameEs": "Duelista de la Corte",
       "gameText": {
-        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +2/+0 until end of turn.",
-        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +2/+0 hasta el final del turno."
+        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +3/+0 until end of turn.",
+        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "Courtesy ends at the first drawn blade.",
@@ -164,8 +209,21 @@
         {
           "id": "court_duelist_blood_rush",
           "kind": "ACTIVATED",
-          "engineSupport": "pending",
-          "implementationNote": "Una vez durante el turno propio, pagar 3 vidas da +2/+0 hasta fin de turno."
+          "zone": "BATTLEFIELD",
+          "requiresNoSummoningSickness": true,
+          "cost": {
+            "life": 3
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "PUMP_UNTIL_END_OF_TURN",
+              "target": "SELF",
+              "power": 3,
+              "toughness": 0
+            }
+          ]
         }
       ]
     },
@@ -443,10 +501,8 @@
     }
   ],
   "engineSupportNeeded": [
-    "Energía universal y costes numéricos sin colores.",
-    "Costes de vida que no pueden reducir al jugador por debajo de 1.",
     "Robo de vida basado en daño de combate.",
-    "Triggers al pagar vida y al sobrevivir bloqueando.",
+    "Triggers al sobrevivir bloqueando.",
     "Conceder Robo de vida hasta el final del turno.",
     "Hechizos que sólo pueden hacer objetivo a criaturas de la Horda."
   ]

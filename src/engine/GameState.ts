@@ -90,6 +90,7 @@ export function createInitialGame(
       manaPool: emptyManaPool(),
       pendingStoredMana: 0,
       energyActionUsedThisTurn: false,
+      lifePaidThisTurn: 0,
     },
     horde: {
       library: hordeLibrary,
@@ -275,6 +276,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     chaosKeywords: chaosKeywords ? [...chaosKeywords] : [],
     triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
+    additionalCost: definition.additionalCost,
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: definition.requiresTargets ?? [],
     tapped: false,
