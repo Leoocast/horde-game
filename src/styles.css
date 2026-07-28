@@ -10326,8 +10326,8 @@
 
 .card-defense-badge-horde {
   top: 3px;
-  right: 3px;
-  border-radius: 7px 0 8px;
+  left: 3px;
+  border-radius: 0 7px 8px;
 }
 
 .card-defense-badge-player {
@@ -10350,7 +10350,7 @@
 }
 
 .card-visual:has(> .card-defense-badge-horde) > .card-cropped-title {
-  padding-right: 49px;
+  padding-left: 49px;
 }
 
 /* Shared stats palette: matches the printed mono-green card generator. */

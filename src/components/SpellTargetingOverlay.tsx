@@ -186,6 +186,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
             card={spell}
             selectionDisabled
             suppressContextMenu
+            suppressHoverOverlay
             suppressCardId
             suppressSummoningSickness
             highRes

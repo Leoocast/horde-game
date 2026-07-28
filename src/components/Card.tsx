@@ -208,7 +208,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
           {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
-          {attacking && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
+          {attacking && !(card.controller === "horde" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : null}

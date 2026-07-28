@@ -1360,6 +1360,8 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
         x: window.innerWidth * 0.62,
         y: window.innerHeight * 0.48,
       },
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
     });
   }, 520);
 }

@@ -139,6 +139,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             card={source}
             selectionDisabled
             suppressContextMenu
+            suppressHoverOverlay
             suppressCardId
             suppressSummoningSickness
             highRes

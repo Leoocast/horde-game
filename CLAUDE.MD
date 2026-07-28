@@ -469,8 +469,8 @@ Durante Defend:
   - debe respetar izquierda/derecha segun regla actual
   - cada blocker muestra su orden real (1, 2, ...) en el badge azul, incluso si es el unico
 - cada atacante de la Horda con bloqueadores asignados muestra su cantidad en un badge azul con
-  escudo anclado top-right; aplica por igual a Zombies y Goblins, y el header cutted reserva ese
-  espacio
+  escudo anclado top-left, la zona expuesta de los stacks; aplica por igual a Zombies y Goblins,
+  y el header cutted reserva ese espacio
 
 Animacion:
 - atacante y defensor se mueven un poco hacia adelante en queue

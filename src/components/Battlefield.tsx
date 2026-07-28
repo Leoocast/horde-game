@@ -998,7 +998,7 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        suppressHoverOverlay={spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (tutorialAwaitingContinue) return;
