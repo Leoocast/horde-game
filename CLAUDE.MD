@@ -682,8 +682,14 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
   mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
   consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
-  queda diferido para hacer pulso antes de recibir su buff. El pago usa el golpe generico del HUD
-  (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
+  queda diferido hasta terminar su presentacion dedicada `BLOOD_PACT`: la carta real sale desde su
+  posicion en la mano hacia un punto entre el centro y el lateral derecho, el mordisco golpea el
+  emblema de vida con `blood_splash2.mp3` y `punch.mp3` superpuestos, y un flujo Three.js mancha y
+  disuelve la carta. La simulacion usa delta time normalizado para conservar la forma de los orbes
+  en monitores de alta frecuencia. El
+  fade queda debajo del HUD de vida y de la sangre. La mano sigue su sistema normal, sin copiar la
+  reorganizacion ni las cartas dummy del laboratorio; las dos cartas robadas se mantienen ocultas
+  hasta que Pacto termina de consumirse y entonces entran juntas con `draw_one.wav`.
 - Condesa del Banquete Eterno usa un coste de vida `CURRENT_LIFE_FRACTION` 1/2 con redondeo `UP`.
   `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
   Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas

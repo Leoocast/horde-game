@@ -223,16 +223,37 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     const result = useGameStore.getState();
     assert.equal(result.game.player.life, 5);
     assert.equal(result.game.player.lifePaidThisTurn, 5);
-    assert.equal(typeof result.lifeDamageAnimationId, "number");
+    assert.equal(result.lifeDamageAnimationId, undefined);
     assert.equal(result.game.player.hand.length, 2);
     assert.equal(
       result.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       0,
     );
-    assert.equal(result.activatingEffectCardId, page.instanceId);
-    assert.equal(playedSfx.includes("activateEffect"), true);
-    assert.equal(playedSfx.includes("defend"), true);
+    assert.equal(result.bloodPactAnimation?.card.instanceId, pact.instanceId);
+    assert.equal(result.bloodPactAnimation?.phase, "casting");
+    assert.equal(result.bloodPactAnimation?.drawnCardIds.length, 2);
+    assert.equal(
+      result.bloodPactAnimation?.drawnCardIds.every((id) =>
+        result.game.player.hand.some((card) => card.instanceId === id)),
+      true,
+    );
+    assert.equal(result.bloodPactAnimation?.lifeBefore, 10);
+    assert.equal(result.bloodPactAnimation?.lifeAfter, 5);
+    assert.equal(result.activatingEffectCardId, undefined);
+    assert.equal(playedSfx.includes("activateEffect"), false);
+    assert.equal(playedSfx.includes("drawOne"), false);
+
+    useGameStore.getState().setBloodPactAnimationPhase(result.bloodPactAnimation.id, "impact");
+    assert.equal(useGameStore.getState().bloodPactAnimation?.phase, "impact");
+    assert.equal(playedSfx.includes("drawOne"), false);
+    useGameStore.getState().setBloodPactAnimationPhase(result.bloodPactAnimation.id, "consumed");
+    assert.equal(useGameStore.getState().bloodPactAnimation?.phase, "consumed");
     assert.equal(playedSfx.includes("drawOne"), true);
+    useGameStore.getState().completeBloodPactAnimation(result.bloodPactAnimation.id);
+    assert.equal(useGameStore.getState().bloodPactAnimation, undefined);
+    assert.equal(playedSfx.filter((sfx) => sfx === "drawOne").length, 1);
+    assert.equal(useGameStore.getState().activatingEffectCardId, page.instanceId);
+    assert.equal(playedSfx.includes("activateEffect"), true);
 
     timers.releaseExpiredAt(460);
     const afterPageTrigger = useGameStore.getState();

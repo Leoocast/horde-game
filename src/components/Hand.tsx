@@ -59,6 +59,8 @@ export function Hand({ game }: { game: GameState }) {
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
+  const bloodPactAnimating = Boolean(bloodPactAnimation);
   const energyRecycleAnimation = useGameStore((state) => state.energyRecycleAnimation);
   const handLimitDiscardActive = useGameStore((state) => state.handLimitDiscardActive);
   const handLimitSelectionId = useGameStore((state) => state.handLimitSelectionId);
@@ -88,8 +90,14 @@ export function Hand({ game }: { game: GameState }) {
   const dragStartPointers = useRef(new Map<string, { x: number; y: number }>());
   const [handStackMargin, setHandStackMargin] = useState(0);
   const initialHandIds = useRef(new Set(game.player.hand.map((card) => card.instanceId)));
-  const handSize = game.player.hand.length;
-  const handLayoutSignature = game.player.hand.map((card) => card.instanceId).join("|");
+  const hiddenBloodPactDrawIds = new Set(
+    bloodPactAnimation && bloodPactAnimation.phase !== "consumed"
+      ? bloodPactAnimation.drawnCardIds
+      : [],
+  );
+  const visibleHand = game.player.hand.filter((card) => !hiddenBloodPactDrawIds.has(card.instanceId));
+  const handSize = visibleHand.length;
+  const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
 
   useEffect(() => () => setEnergyRecycleDragActive(false), [setEnergyRecycleDragActive]);
 
@@ -257,6 +265,7 @@ export function Hand({ game }: { game: GameState }) {
       playerDiscardAnimating ||
       hordeAttackAnimating ||
       playerAttackAnimating ||
+      bloodPactAnimating ||
       energyRecycleAnimation ||
       unresolvedTriggerCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode) ||
@@ -312,7 +321,7 @@ export function Hand({ game }: { game: GameState }) {
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
           >
-            {game.player.hand.map((card, index) => {
+            {visibleHand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, unresolvedTriggerCount);
             const energyRecyclable = isEnergyRecyclable(game, card, unresolvedTriggerCount);
             const discardTargetable = smallpoxSelectionKind === "discard" && !smallpoxSelectionTargetId;

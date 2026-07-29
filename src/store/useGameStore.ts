@@ -76,6 +76,7 @@ export type GameStore = {
   burnImpactCardIds: string[];
   burnImpactEventId?: number;
   lifeDamageAnimationId?: number;
+  bloodPactAnimation?: BloodPactAnimationState;
   deathRevealCard?: CardInstance;
   hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
@@ -165,6 +166,8 @@ export type GameStore = {
   setEnergyRecycleDragActive: (active: boolean) => void;
   completeEnergyRecycleAnimation: () => void;
   castCard: (id: string, options?: CastOptions) => void;
+  setBloodPactAnimationPhase: (id: string, phase: BloodPactAnimationState["phase"]) => void;
+  completeBloodPactAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -215,10 +218,13 @@ const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
 const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
+const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
 let landPlaySummoningSafetyTimer: number | undefined;
+let bloodPactAnimationSafetyTimer: number | undefined;
+let bloodPactAfterCommit: (() => void) | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -264,6 +270,17 @@ export type EnergyRecycleAnimation = {
   id: string;
   card: CardInstance;
   origin: { x: number; y: number };
+};
+
+export type BloodPactAnimationState = {
+  id: string;
+  card: CardInstance;
+  origin?: { left: number; top: number; width: number; height: number };
+  drawnCardIds: string[];
+  lifeBefore: number;
+  lifeAfter: number;
+  amount: number;
+  phase: "casting" | "impact" | "settling" | "consumed";
 };
 
 export type BurnAnimationState = {
@@ -353,6 +370,7 @@ function createCleanUiState(): Partial<GameStore> {
     burnImpactCardIds: [],
     burnImpactEventId: undefined,
     lifeDamageAnimationId: undefined,
+    bloodPactAnimation: undefined,
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
     pendingStaticAuras: [],
@@ -402,6 +420,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   burnImpactCardIds: [],
   burnImpactEventId: undefined,
   lifeDamageAnimationId: undefined,
+  bloodPactAnimation: undefined,
   deathRevealCard: undefined,
   hordeSpellCard: undefined,
   pendingStaticAuras: [],
@@ -443,7 +462,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) =>
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
+    clearBloodPactPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -458,8 +478,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerDeckId,
         hordeDeckId,
       };
-    }),
-  loadScenario: (game, deckIds) =>
+    });
+  },
+  loadScenario: (game, deckIds) => {
+    clearBloodPactPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -472,7 +494,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerDeckId: deckIds.playerDeckId,
         hordeDeckId: deckIds.hordeDeckId,
       };
-    }),
+    });
+  },
   setSeed: (seed) => {
     persistSeed(seed);
     set({ seed });
@@ -699,7 +722,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -714,7 +737,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -806,16 +829,59 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   castCard: (id, options) => {
     let afterCommit: (() => void) | undefined;
+    let startedBloodPactAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
         showActionToast("Resolve the triggered effect before playing another card.");
         return {};
       }
-      const result = buildCastCardPatch(state, id, options);
-      afterCommit = result.afterCommit;
+      const handCardRect = typeof document === "undefined"
+        ? undefined
+        : document.querySelector<HTMLElement>(`[data-hand-card-id="${id}"]`)?.getBoundingClientRect();
+      const animationOrigin = handCardRect
+        ? { left: handCardRect.left, top: handCardRect.top, width: handCardRect.width, height: handCardRect.height }
+        : undefined;
+      const result = buildCastCardPatch(state, id, options, animationOrigin);
+      const bloodPactAnimation = result.patch.bloodPactAnimation;
+      if (bloodPactAnimation) {
+        bloodPactAfterCommit = result.afterCommit;
+        startedBloodPactAnimationId = bloodPactAnimation.id;
+      } else {
+        afterCommit = result.afterCommit;
+      }
       return result.patch;
     });
+    afterCommit?.();
+    if (startedBloodPactAnimationId) scheduleBloodPactAnimationSafetyClear(startedBloodPactAnimationId);
+  },
+  setBloodPactAnimationPhase: (id, phase) => {
+    let revealDraw = false;
+    set((state) => {
+      const animation = state.bloodPactAnimation;
+      if (animation?.id !== id) return {};
+      revealDraw = phase === "consumed" && animation.phase !== "consumed" && animation.drawnCardIds.length > 0;
+      return { bloodPactAnimation: { ...animation, phase } };
+    });
+    if (revealDraw) useAudioStore.getState().playSfx("drawOne");
+  },
+  completeBloodPactAnimation: (id) => {
+    let afterCommit: (() => void) | undefined;
+    let revealDraw = false;
+    set((state) => {
+      if (state.bloodPactAnimation?.id !== id) return {};
+      if (bloodPactAnimationSafetyTimer) {
+        window.clearTimeout(bloodPactAnimationSafetyTimer);
+        bloodPactAnimationSafetyTimer = undefined;
+      }
+      revealDraw =
+        state.bloodPactAnimation.phase !== "consumed" &&
+        state.bloodPactAnimation.drawnCardIds.length > 0;
+      afterCommit = bloodPactAfterCommit;
+      bloodPactAfterCommit = undefined;
+      return { bloodPactAnimation: undefined };
+    });
+    if (revealDraw) useAudioStore.getState().playSfx("drawOne");
     afterCommit?.();
   },
   activateAbility: (id, abilityId, options) => {
@@ -1300,11 +1366,27 @@ function persistSeed(seed: string): void {
   window.localStorage.setItem(SEED_STORAGE_KEY, seed);
 }
 
+function clearBloodPactPresentation(): void {
+  if (bloodPactAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(bloodPactAnimationSafetyTimer);
+  }
+  bloodPactAnimationSafetyTimer = undefined;
+  bloodPactAfterCommit = undefined;
+}
+
+function scheduleBloodPactAnimationSafetyClear(id: string): void {
+  if (bloodPactAnimationSafetyTimer) window.clearTimeout(bloodPactAnimationSafetyTimer);
+  bloodPactAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completeBloodPactAnimation(id);
+  }, BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
       state.hordeAttackAnimation ||
       state.burnAnimation ||
+      state.bloodPactAnimation ||
       state.resolvingHordeCombat ||
       state.playerAutoTriggerCount > 0 ||
       state.energyRecycleAnimation ||
@@ -1366,6 +1448,20 @@ function findMarkedCreatureIds(game: GameState): string[] {
 
 function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
   return Boolean(card && findManualEnterTargetTrigger(card));
+}
+
+function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation: string): boolean {
+  return (effects ?? []).some((effect) => {
+    if (effect.animation === animation) return true;
+    if (effect.type === "SEQUENCE") {
+      return effectsUseAnimation(effect.effects as EffectDefinition[] | undefined, animation);
+    }
+    if (effect.type === "CHOOSE") {
+      return ((effect.options as Array<{ effects?: EffectDefinition[] }> | undefined) ?? [])
+        .some((option) => effectsUseAnimation(option.effects, animation));
+    }
+    return false;
+  });
 }
 
 function findCardCastReactionSources(game: GameState, card: CardInstance): CardInstance[] {
@@ -1473,9 +1569,11 @@ function buildCastCardPatch(
   state: GameStore,
   id: string,
   options?: CastOptions,
+  animationOrigin?: BloodPactAnimationState["origin"],
 ): { patch: Partial<GameStore>; afterCommit?: () => void } {
   const { game } = state;
   const card = game.player.hand.find((item) => item.instanceId === id);
+  const usesBloodPactAnimation = Boolean(card && effectsUseAnimation(card.effects, "BLOOD_PACT"));
   const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
   const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
   const reactionSources = card ? findCardCastReactionSources(game, card) : [];
@@ -1485,13 +1583,18 @@ function buildCastCardPatch(
     deferReactiveTriggers: reactionSources.length > 0,
   });
   const castSucceeded = next.lastActionResult?.ok === true;
+  const previousHandIds = new Set(game.player.hand.map((item) => item.instanceId));
+  const drawnCardIds = castSucceeded
+    ? next.player.hand.filter((item) => !previousHandIds.has(item.instanceId)).map((item) => item.instanceId)
+    : [];
   const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
   const lostLife = castSucceeded && next.player.life < game.player.life;
+  const lifeLost = Math.max(0, game.player.life - next.player.life);
   const triggeredBuffCardIds = findTemporaryBuffedCardIds(game, next);
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
-  if (lostLife) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
-  if (castSucceeded) playDrawOneIfPlayerDrew(game, next);
+  if (lostLife && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+  if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
   if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
   const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
   const autoPaidLandIds = castSucceeded
@@ -1511,6 +1614,18 @@ function buildCastCardPatch(
   const afterCommit = playerTriggersQueued
     ? () => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers)
     : continueAfterPlayerTriggers;
+  const bloodPactAnimation = castSucceeded && usesBloodPactAnimation && card
+    ? {
+        id: `blood-pact-${card.instanceId}-${Date.now()}`,
+        card,
+        origin: animationOrigin,
+        drawnCardIds,
+        lifeBefore: game.player.life,
+        lifeAfter: next.player.life,
+        amount: lifeLost,
+        phase: "casting" as const,
+      }
+    : undefined;
   return {
     patch: {
       game: next,
@@ -1519,7 +1634,8 @@ function buildCastCardPatch(
       focusedCardId: undefined,
       activeEffectCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
-      lifeDamageAnimationId: lostLife ? Date.now() : state.lifeDamageAnimationId,
+      lifeDamageAnimationId: lostLife && !bloodPactAnimation ? Date.now() : state.lifeDamageAnimationId,
+      bloodPactAnimation,
       autoPaidLandAnimation,
       ...(buffBeat ?? {}),
       summoningAnimationCount: startsSummoningAnimation ? state.summoningAnimationCount + 1 : state.summoningAnimationCount,

@@ -401,7 +401,8 @@
             {
               "type": "DRAW_CARD",
               "player": "SELF",
-              "amount": 2
+              "amount": 2,
+              "animation": "BLOOD_PACT"
             }
           ]
         }

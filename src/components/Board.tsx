@@ -32,6 +32,7 @@ import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
+import { BloodPactAnimator } from "./BloodSiphonAnimator";
 
 type Props = {
   playerName: string;
@@ -48,6 +49,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
+  const bloodPactAnimationActive = useGameStore((state) => Boolean(state.bloodPactAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
@@ -104,7 +106,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       <BurnAnimator />
-      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      <BloodPactAnimator />
+      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || bloodPactAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

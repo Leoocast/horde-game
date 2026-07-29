@@ -16403,3 +16403,251 @@ body.playground-active .phase-banner-shell {
 .playground-dock-host .playground-amount-control {
   font-size: 13px;
 }
+
+/* Blood Pact uses the real hand card and player HUD; only its cast VFX lives in this portal. */
+.blood-pact-animation-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blood-pact-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background:
+    radial-gradient(circle at 50% 48%, rgb(45 0 8 / 0.06) 24%, rgb(0 0 0 / 0.72) 100%);
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.blood-pact-three-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+.blood-pact-card-host {
+  position: fixed;
+  z-index: 4;
+  border-radius: 4.918% / 3.529%;
+  transform-style: preserve-3d;
+  will-change: left, top, transform, opacity, filter;
+}
+
+.blood-pact-card-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.blood-pact-card-shell > article {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.blood-pact-stain-canvas,
+.blood-pact-card-veins {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.blood-pact-stain-canvas {
+  z-index: 16;
+  mix-blend-mode: multiply;
+}
+
+.blood-pact-card-veins {
+  z-index: 15;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(170 0 28 / 0.72) 0%, rgb(92 0 15 / 0.38) 42%, transparent 80%);
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.blood-pact-card-host.is-absorbing {
+  filter:
+    drop-shadow(0 0 22px rgb(230 0 35 / 0.9))
+    drop-shadow(0 0 52px rgb(148 0 23 / 0.72));
+}
+
+.blood-pact-card-host.is-absorbing .blood-pact-card-veins {
+  opacity: 1;
+}
+
+.blood-pact-vampire-bite {
+  position: fixed;
+  z-index: 5;
+  width: 170px;
+  height: 170px;
+  overflow: visible;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 300ms ease-out,
+    transform 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.blood-pact-vampire-bite svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 20px #ff002b)
+    drop-shadow(0 0 40px #800010);
+}
+
+.blood-pact-vampire-bite.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.blood-pact-jaw-upper,
+.blood-pact-jaw-lower {
+  transform-origin: center;
+  transition: transform 220ms cubic-bezier(0.6, -0.28, 0.735, 0.045);
+}
+
+.blood-pact-jaw-upper {
+  transform: translateY(-38px);
+}
+
+.blood-pact-jaw-lower {
+  transform: translateY(38px);
+}
+
+.blood-pact-vampire-bite.is-biting .blood-pact-jaw-upper {
+  transform: translateY(12px);
+}
+
+.blood-pact-vampire-bite.is-biting .blood-pact-jaw-lower {
+  transform: translateY(-12px);
+}
+
+.game-screen .player-life-counter {
+  isolation: isolate;
+}
+
+.blood-pact-life-wave {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 84% 50%, #c8001a 0%, #7a0010 48%, #3a0007 84%);
+  clip-path: circle(0% at 84% 50%);
+  opacity: 0;
+  transition:
+    clip-path 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms ease;
+  pointer-events: none;
+}
+
+.blood-pact-life-corrupted .blood-pact-life-wave {
+  clip-path: circle(180% at 84% 50%);
+  opacity: 1;
+}
+
+.blood-pact-life-corrupted {
+  border-color: #c8001a !important;
+  animation: blood-pact-life-impact 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  box-shadow:
+    inset 0 0 25px rgb(90 0 10 / 0.92),
+    0 0 42px rgb(158 0 21 / 0.88) !important;
+}
+
+.blood-pact-life-corrupted .player-life-copy,
+.blood-pact-life-corrupted .player-life-emblem {
+  position: relative;
+  z-index: 2;
+}
+
+.blood-pact-life-corrupted .player-life-count {
+  color: #fff;
+  text-shadow:
+    0 0 14px #9e0015,
+    0 2px 6px rgb(0 0 0 / 0.72);
+  transform: scale(1.18);
+  transform-origin: left center;
+}
+
+.blood-pact-life-corrupted .player-life-emblem {
+  border-color: #c8001a !important;
+  background: linear-gradient(145deg, #5c0a18, #27040b) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 0 0 3px rgb(7 12 14 / 0.26),
+    0 0 30px #9e0015;
+}
+
+.blood-pact-life-damage-number {
+  position: absolute;
+  top: -34px;
+  left: 38px;
+  z-index: 6;
+  color: #b80018;
+  font-family: "Hostfall Card Lora", Georgia, serif;
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow:
+    0 0 14px #9e0015,
+    0 0 28px #4a000a;
+  pointer-events: none;
+  animation: blood-pact-damage-number 630ms both;
+}
+
+@keyframes blood-pact-life-impact {
+  10%,
+  90% {
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(4px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-6px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(6px, 0, 0);
+  }
+}
+
+@keyframes blood-pact-damage-number {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.3);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-45px) scale(1.3);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-75px) scale(1.12);
+  }
+}

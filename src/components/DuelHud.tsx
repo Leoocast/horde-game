@@ -300,6 +300,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const lifeDamageAnimationId = useGameStore((state) => state.lifeDamageAnimationId);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
+  const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
@@ -309,13 +310,36 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const [takingDamage, setTakingDamage] = useState(false);
   const lastEventId = useRef<number | undefined>(undefined);
   const lastLifeDamageAnimationId = useRef<number | undefined>(undefined);
+  const bloodPactLifeFrame = useRef<number | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
 
   useEffect(() => {
-    setVisualLife(game.player.life);
+    setVisualLife(bloodPactAnimation?.lifeBefore ?? game.player.life);
     lastEventId.current = undefined;
-  }, [game.player.life]);
+  }, [bloodPactAnimation?.id, bloodPactAnimation?.lifeBefore, game.player.life]);
+
+  useEffect(() => {
+    if (bloodPactLifeFrame.current) {
+      window.cancelAnimationFrame(bloodPactLifeFrame.current);
+      bloodPactLifeFrame.current = undefined;
+    }
+    if (!bloodPactAnimation || bloodPactAnimation.phase !== "impact") return;
+    const startedAt = performance.now();
+    const duration = 300;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      setVisualLife(Math.round(bloodPactAnimation.lifeBefore + (bloodPactAnimation.lifeAfter - bloodPactAnimation.lifeBefore) * eased));
+      if (progress < 1) bloodPactLifeFrame.current = window.requestAnimationFrame(tick);
+      else bloodPactLifeFrame.current = undefined;
+    };
+    bloodPactLifeFrame.current = window.requestAnimationFrame(tick);
+    return () => {
+      if (bloodPactLifeFrame.current) window.cancelAnimationFrame(bloodPactLifeFrame.current);
+      bloodPactLifeFrame.current = undefined;
+    };
+  }, [bloodPactAnimation?.id, bloodPactAnimation?.lifeAfter, bloodPactAnimation?.lifeBefore, bloodPactAnimation?.phase]);
 
   useEffect(() => {
     if (!hordeAttackAnimation || hordeAttackAnimation.eventId === lastEventId.current || hordeAttackAnimation.playerDamage <= 0) return;
@@ -347,7 +371,11 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
       <div
         className={[
           "player-life-dock fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
-          tutorialOverlayActive ? "z-[91]" : "z-[75]",
+          bloodPactAnimation
+            ? "pointer-events-none z-[195]"
+            : tutorialOverlayActive
+              ? "z-[91]"
+              : "z-[75]",
         ].join(" ")}
       >
         <div className="player-life-cluster">
@@ -387,8 +415,15 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
+              bloodPactAnimation?.phase === "impact" ? "blood-pact-life-corrupted" : "",
             ].join(" ")}
           >
+            {bloodPactAnimation && <span className="blood-pact-life-wave" aria-hidden="true" />}
+            {bloodPactAnimation?.phase === "impact" && (
+              <strong key={bloodPactAnimation.id} className="blood-pact-life-damage-number" aria-hidden="true">
+                -{bloodPactAnimation.amount}
+              </strong>
+            )}
             {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
             <div className="player-life-copy">
               <input
@@ -403,7 +438,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
                 <div className="player-life-count">{visualLife}</div>
               </div>
             </div>
-            <div data-player-discard-origin="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
+            <div data-player-discard-origin="true" data-player-life-emblem="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
               <Heart size={24} />
             </div>
           </div>
