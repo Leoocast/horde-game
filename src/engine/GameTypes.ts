@@ -37,7 +37,12 @@ export type ActionCost = {
   sacrificeSelf?: boolean;
   genericMana?: number;
   coloredMana?: Partial<Record<Color, number>>;
-  life?: number;
+  life?: number | {
+    type: "CURRENT_LIFE_FRACTION";
+    numerator: number;
+    denominator: number;
+    rounding: "UP" | "DOWN";
+  };
 };
 
 export type ActivatedAbility = {

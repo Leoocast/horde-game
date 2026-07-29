@@ -58,27 +58,43 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
   assert.equal(game.player.hand.length, 7);
   assert.equal(playerCards.filter((candidate) => candidate.definitionId === "crimson_energy").length, 12);
   assert.deepEqual(
-    ["crimson_energy", "blood_pact", "crimson_impulse", "predatory_thirst"].map(
+    ["crimson_energy", "tithe_acolyte", "eternal_feast_countess", "blood_pact", "crimson_impulse", "predatory_thirst"].map(
       (definitionId) => [definitionId, card(definitionId).quantity],
     ),
     [
       ["crimson_energy", 12],
+      ["tithe_acolyte", 2],
+      ["eternal_feast_countess", 2],
       ["blood_pact", 2],
       ["crimson_impulse", 2],
       ["predatory_thirst", 1],
     ],
   );
   assert.deepEqual(
-    ["blood_page", "crimson_bat", "court_duelist", "blood_sentinel"].map(
+    ["tithe_acolyte", "crimson_impulse", "drain_essence"].map(
+      (definitionId) => [definitionId, card(definitionId).manaValue],
+    ),
+    [
+      ["tithe_acolyte", 1],
+      ["crimson_impulse", 1],
+      ["drain_essence", 2],
+    ],
+  );
+  assert.deepEqual(card("crypt_guardian").keywords, ["REACH"]);
+  assert.deepEqual(
+    ["blood_page", "crimson_bat", "court_duelist", "blood_sentinel", "eternal_feast_countess"].map(
       (definitionId) => [definitionId, card(definitionId).power, card(definitionId).toughness],
     ),
     [
       ["blood_page", 1, 3],
       ["crimson_bat", 2, 2],
       ["court_duelist", 3, 3],
-      ["blood_sentinel", 3, 5],
+      ["blood_sentinel", 3, 4],
+      ["eternal_feast_countess", 5, 5],
     ],
   );
+  assert.deepEqual(card("blood_sentinel").keywords, ["VIGILANCE"]);
+  assert.deepEqual(card("eternal_feast_countess").keywords, ["FLYING", "LIFESTEAL", "VIGILANCE"]);
 });
 
 test("Developer Mode uses the selected player deck's own Energy cards", () => {
@@ -565,7 +581,45 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
   assert.equal(result.player.battlefield.find((card) => card.instanceId === land.instanceId)?.tapped, false);
 });
 
-test("Blood Pact pays four life as an additional cost, draws two cards, and triggers Blood Page", () => {
+test("Countess pays half the player's life rounded up as an additional cost", () => {
+  const game = createTestGame("countess-half-life-cost");
+  game.player.life = 11;
+  addForests(game, 6);
+  const page = addCard(game, cardFromDeck("blood_page", "player"));
+  const countess = addCard(game, cardFromDeck("eternal_feast_countess", "player", "hand"), "player", "hand");
+
+  const result = castCard(game, countess.instanceId);
+  const permanent = result.player.battlefield.find((card) => card.instanceId === countess.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, true);
+  assert.equal(result.player.life, 5);
+  assert.equal(result.player.lifePaidThisTurn, 6);
+  assert.deepEqual(getPowerToughness(result, permanent), { power: 5, toughness: 5 });
+  assert.equal(hasKeyword(result, permanent, "FLYING"), true);
+  assert.equal(hasKeyword(result, permanent, "LIFESTEAL"), true);
+  assert.equal(hasKeyword(result, permanent, "VIGILANCE"), true);
+  assert.equal(result.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
+
+  const lethal = createTestGame("countess-half-life-cost-at-one");
+  lethal.player.life = 1;
+  addForests(lethal, 6);
+  const blockedCountess = addCard(
+    lethal,
+    cardFromDeck("eternal_feast_countess", "player", "hand"),
+    "player",
+    "hand",
+  );
+  const rejected = castCard(lethal, blockedCountess.instanceId);
+
+  assert.equal(rejected.lastActionResult?.ok, false);
+  assert.match(rejected.lastActionResult?.reason ?? "", /1 life/i);
+  assert.equal(rejected.player.life, 1);
+  assert.equal(rejected.player.lifePaidThisTurn, 0);
+  assert.equal(rejected.player.hand.some((card) => card.instanceId === blockedCountess.instanceId), true);
+  assert.equal(rejected.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
+});
+
+test("Blood Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
   const game = createTestGame("blood-pact-resolution");
   game.player.life = 10;
   addForests(game, 1);
@@ -578,8 +632,8 @@ test("Blood Pact pays four life as an additional cost, draws two cards, and trig
   const result = castCard(game, pact.instanceId);
 
   assert.equal(result.lastActionResult?.ok, true);
-  assert.equal(result.player.life, 6);
-  assert.equal(result.player.lifePaidThisTurn, 4);
+  assert.equal(result.player.life, 5);
+  assert.equal(result.player.lifePaidThisTurn, 5);
   assert.equal(
     result.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
     2,
@@ -592,9 +646,9 @@ test("Blood Pact pays four life as an additional cost, draws two cards, and trig
   assert.equal(result.player.graveyard.some((card) => card.instanceId === pact.instanceId), true);
 });
 
-test("Blood Pact cannot be cast when paying four life would reduce the player to zero", () => {
+test("Blood Pact cannot be cast when paying five life would reduce the player to zero", () => {
   const game = createTestGame("blood-pact-lethal");
-  game.player.life = 4;
+  game.player.life = 5;
   addForests(game, 1);
   const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
   addCard(game, customCard("blood_pact_lethal_draw_one", "player", { zone: "library" }), "player", "library");
@@ -604,7 +658,7 @@ test("Blood Pact cannot be cast when paying four life would reduce the player to
 
   assert.equal(result.lastActionResult?.ok, false);
   assert.match(result.lastActionResult?.reason ?? "", /1 life/i);
-  assert.equal(result.player.life, 4);
+  assert.equal(result.player.life, 5);
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === pact.instanceId), true);
   assert.equal(result.player.library.length, 2);
@@ -612,10 +666,10 @@ test("Blood Pact cannot be cast when paying four life would reduce the player to
   assert.equal(result.winner, undefined);
 });
 
-test("Crimson Impulse pays two life, targets only an allied creature, and grants +3/+3 for the turn", () => {
+test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the turn", () => {
   const game = createTestGame("crimson-impulse-resolution");
   game.player.life = 10;
-  addForests(game, 2);
+  addForests(game, 1);
   const ally = addCard(game, customCard("crimson_impulse_ally", "player", { power: 2, toughness: 3 }));
   const page = addCard(game, cardFromDeck("blood_page", "player"));
   const enemy = addCard(game, customCard("crimson_impulse_enemy", "horde"));
@@ -637,8 +691,9 @@ test("Crimson Impulse pays two life, targets only an allied creature, and grants
   assert.equal(cast.player.lifePaidThisTurn, 2);
   assert.deepEqual(
     getPowerToughness(cast, cast.player.battlefield.find((card) => card.instanceId === ally.instanceId)),
-    { power: 5, toughness: 6 },
+    { power: 4, toughness: 5 },
   );
+  assert.equal(hasKeyword(cast, cast.player.battlefield.find((card) => card.instanceId === ally.instanceId), "FLYING"), true);
   assert.equal(
     cast.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
     2,
@@ -650,12 +705,13 @@ test("Crimson Impulse pays two life, targets only an allied creature, and grants
     getPowerToughness(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === ally.instanceId)),
     { power: 2, toughness: 3 },
   );
+  assert.equal(hasKeyword(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
 });
 
 test("Crimson Impulse rejects an enemy target before spending mana or life", () => {
   const game = createTestGame("crimson-impulse-illegal-target");
   game.player.life = 10;
-  addForests(game, 2);
+  addForests(game, 1);
   const enemy = addCard(game, customCard("crimson_impulse_illegal_enemy", "horde"));
   const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
 
@@ -675,7 +731,7 @@ test("Crimson Impulse rejects an enemy target before spending mana or life", () 
 test("Drain Essence can damage either side and always recovers two life", () => {
   const game = createTestGame("drain-essence-any-creature");
   game.player.life = 10;
-  addForests(game, 3);
+  addForests(game, 2);
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
   const enemy = addCard(game, customCard("drain_essence_enemy", "horde", { toughness: 3 }));
   const land = game.player.battlefield.find((card) => card.cardTypes.includes("Land"));
@@ -701,7 +757,7 @@ test("Drain Essence can damage either side and always recovers two life", () => 
 
   const enemyGame = createTestGame("drain-essence-enemy-kill");
   enemyGame.player.life = 10;
-  addForests(enemyGame, 3);
+  addForests(enemyGame, 2);
   const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "horde", { toughness: 3 }));
   const secondDrain = addCard(enemyGame, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const enemyDrain = castCard(enemyGame, secondDrain.instanceId, {
@@ -717,7 +773,7 @@ test("Drain Essence can damage either side and always recovers two life", () => 
 test("Drain Essence can kill an allied creature but rejects noncreature targets atomically", () => {
   const game = createTestGame("drain-essence-allied-kill");
   game.player.life = 10;
-  addForests(game, 3);
+  addForests(game, 2);
   const page = addCard(game, cardFromDeck("blood_page", "player"));
   const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
 
@@ -732,7 +788,7 @@ test("Drain Essence can kill an allied creature but rejects noncreature targets 
 
   const invalid = createTestGame("drain-essence-invalid-target");
   invalid.player.life = 10;
-  const [land] = addForests(invalid, 3);
+  const [land] = addForests(invalid, 2);
   const invalidDrain = addCard(invalid, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const rejected = castCard(invalid, invalidDrain.instanceId, {
     targets: { targetCreature: land.instanceId },
@@ -744,46 +800,44 @@ test("Drain Essence can kill an allied creature but rejects noncreature targets 
   assert.equal(rejected.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
 });
 
-test("Predatory Thirst grants +2/+1 and Lifesteal for an allied attack, then cleans both up", () => {
+test("Predatory Thirst grants temporary Lifesteal to every allied creature", () => {
   const game = createTestGame("predatory-thirst-attack");
   game.player.life = 10;
   addForests(game, 2);
-  const ally = addCard(game, customCard("predatory_thirst_attacker", "player", {
+  const firstAlly = addCard(game, customCard("predatory_thirst_attacker_one", "player", {
     power: 2,
     toughness: 3,
   }));
+  const secondAlly = addCard(game, customCard("predatory_thirst_attacker_two", "player", {
+    power: 1,
+    toughness: 2,
+  }));
   const enemy = addCard(game, customCard("predatory_thirst_enemy", "horde"));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
-  const requirement = thirst.requiresTargets[0];
 
-  assert.ok(requirement);
-  assert.deepEqual(
-    targetCandidates(game, "player", requirement).map((card) => card.instanceId),
-    [ally.instanceId],
-  );
-  assert.equal(targetCandidates(game, "player", requirement).some((card) => card.instanceId === enemy.instanceId), false);
-
-  const cast = castCard(game, thirst.instanceId, {
-    targets: { targetCreature: ally.instanceId },
-  });
-  const buffed = cast.player.battlefield.find((card) => card.instanceId === ally.instanceId);
+  assert.deepEqual(thirst.requiresTargets, []);
+  const cast = castCard(game, thirst.instanceId);
+  const firstBuffed = cast.player.battlefield.find((card) => card.instanceId === firstAlly.instanceId);
+  const secondBuffed = cast.player.battlefield.find((card) => card.instanceId === secondAlly.instanceId);
 
   assert.equal(cast.lastActionResult?.ok, true);
-  assert.deepEqual(getPowerToughness(cast, buffed), { power: 4, toughness: 4 });
-  assert.equal(hasKeyword(cast, buffed, "LIFESTEAL"), true);
+  assert.deepEqual(getPowerToughness(cast, firstBuffed), { power: 2, toughness: 3 });
+  assert.deepEqual(getPowerToughness(cast, secondBuffed), { power: 1, toughness: 2 });
+  assert.equal(hasKeyword(cast, firstBuffed, "LIFESTEAL"), true);
+  assert.equal(hasKeyword(cast, secondBuffed, "LIFESTEAL"), true);
+  assert.equal(hasKeyword(cast, cast.horde.battlefield.find((card) => card.instanceId === enemy.instanceId), "LIFESTEAL"), false);
 
   cast.phase = "combat";
-  cast.combat.playerAttackers = [ally.instanceId];
+  cast.combat.playerAttackers = [firstAlly.instanceId, secondAlly.instanceId];
   const combat = resolvePlayerCombat(cast);
-  assert.equal(combat.player.life, 14);
+  assert.equal(combat.player.life, 13);
 
   const cleaned = advancePhase(combat, "end");
-  const restored = cleaned.player.battlefield.find((card) => card.instanceId === ally.instanceId);
-  assert.deepEqual(getPowerToughness(cleaned, restored), { power: 2, toughness: 3 });
-  assert.equal(hasKeyword(cleaned, restored, "LIFESTEAL"), false);
+  assert.equal(hasKeyword(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === firstAlly.instanceId), "LIFESTEAL"), false);
+  assert.equal(hasKeyword(cleaned, cleaned.player.battlefield.find((card) => card.instanceId === secondAlly.instanceId), "LIFESTEAL"), false);
 });
 
-test("Predatory Thirst grants defensive Lifesteal and rejects Horde targets atomically", () => {
+test("Predatory Thirst grants defensive Lifesteal without requiring a target", () => {
   const game = createTestGame("predatory-thirst-defense");
   game.player.life = 10;
   addForests(game, 2);
@@ -800,30 +854,15 @@ test("Predatory Thirst grants defensive Lifesteal and rejects Horde targets atom
   game.phase = "combat";
   game.combat.hordeAttackers = [attacker.instanceId];
 
-  const cast = castCard(game, thirst.instanceId, {
-    targets: { targetCreature: ally.instanceId },
-  });
+  const cast = castCard(game, thirst.instanceId);
   cast.combat.blockers = { [attacker.instanceId]: [ally.instanceId] };
   const [impact] = buildHordeAttackEvents(cast);
   const afterImpact = applyHordeAttackEvent(cast, impact);
 
   assert.equal(cast.lastActionResult?.ok, true);
-  assert.equal(impact.playerLifeGain, 4);
-  assert.equal(afterImpact.player.life, 14);
+  assert.equal(impact.playerLifeGain, 2);
+  assert.equal(afterImpact.player.life, 12);
   assert.equal(afterImpact.player.battlefield.some((card) => card.instanceId === ally.instanceId), true);
-
-  const invalid = createTestGame("predatory-thirst-invalid-target");
-  invalid.player.life = 10;
-  addForests(invalid, 3);
-  const invalidEnemy = addCard(invalid, customCard("predatory_thirst_invalid_enemy", "horde"));
-  const invalidThirst = addCard(invalid, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
-  const rejected = castCard(invalid, invalidThirst.instanceId, {
-    targets: { targetCreature: invalidEnemy.instanceId },
-  });
-
-  assert.equal(rejected.lastActionResult?.ok, false);
-  assert.equal(rejected.player.hand.some((card) => card.instanceId === invalidThirst.instanceId), true);
-  assert.equal(rejected.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
 });
 
 test("Final Banquet destroys only a Horde creature and loses its last known effective power", () => {
@@ -1044,7 +1083,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(activated?.temporaryPower, 1);
 });
 
-test("Tithe Acolyte exhausts and pays three life to generate one stored Energy", () => {
+test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", () => {
   const game = createTestGame();
   game.player.life = 10;
   const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
@@ -1053,8 +1092,8 @@ test("Tithe Acolyte exhausts and pays three life to generate one stored Energy",
   const activated = result.player.battlefield.find((card) => card.instanceId === acolyte.instanceId);
 
   assert.equal(result.lastActionResult?.ok, true);
-  assert.equal(result.player.life, 7);
-  assert.equal(result.player.lifePaidThisTurn, 3);
+  assert.equal(result.player.life, 5);
+  assert.equal(result.player.lifePaidThisTurn, 5);
   assert.equal(result.player.manaPool.colorless, 1);
   assert.equal(activated?.tapped, true);
   assert.equal(activated?.activatedThisTurn, true);
@@ -1075,7 +1114,7 @@ test("Tithe Acolyte exhausts and pays three life to generate one stored Energy",
   assert.equal(unchanged?.activatedThisTurn, false);
 });
 
-test("Court Duelist keeps +3/+0 through Horde combat and loses it at the next player turn", () => {
+test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next player turn", () => {
   const freshGame = createTestGame();
   freshGame.player.life = 10;
   const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
@@ -1102,7 +1141,7 @@ test("Court Duelist keeps +3/+0 through Horde combat and loses it at the next pl
   assert.equal(buffed.player.lifePaidThisTurn, 3);
   assert.equal(activeDuelist?.tapped, false);
   assert.equal(activeDuelist?.activatedThisTurn, true);
-  assert.deepEqual(getPowerToughness(buffed, activeDuelist), { power: 6, toughness: 3 });
+  assert.deepEqual(getPowerToughness(buffed, activeDuelist), { power: 6, toughness: 4 });
 
   const repeated = activateAbility(buffed, duelist.instanceId, "court_duelist_blood_rush");
   assert.equal(repeated.lastActionResult?.ok, false);
@@ -1110,13 +1149,13 @@ test("Court Duelist keeps +3/+0 through Horde combat and loses it at the next pl
   assert.equal(repeated.player.lifePaidThisTurn, 3);
   assert.deepEqual(
     getPowerToughness(repeated, repeated.player.battlefield.find((card) => card.instanceId === duelist.instanceId)),
-    { power: 6, toughness: 3 },
+    { power: 6, toughness: 4 },
   );
 
   const hordeTurn = endPlayerTurn(repeated);
   assert.deepEqual(
     getPowerToughness(hordeTurn, hordeTurn.player.battlefield.find((card) => card.instanceId === duelist.instanceId)),
-    { power: 6, toughness: 3 },
+    { power: 6, toughness: 4 },
   );
   const attacker = addCard(hordeTurn, customCard("court_duelist_defended_attacker", "horde", {
     power: 1,
@@ -1160,9 +1199,9 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   const latePage = addCard(firstPayment, cardFromDeck("blood_page", "player"));
   const secondPayment = activateAbility(firstPayment, acolyte.instanceId, "tithe_acolyte_generate");
 
-  assert.equal(secondPayment.player.life, 14);
-  assert.equal(secondPayment.player.lifePaidThisTurn, 6);
-  assert.equal(secondPayment.player.lifeLostThisTurn, 6);
+  assert.equal(secondPayment.player.life, 12);
+  assert.equal(secondPayment.player.lifePaidThisTurn, 8);
+  assert.equal(secondPayment.player.lifeLostThisTurn, 8);
   assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 2);
   assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 2);
   assert.equal(secondPayment.player.battlefield.find((card) => card.instanceId === latePage.instanceId)?.temporaryPower, 0);

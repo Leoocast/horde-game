@@ -490,7 +490,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return t("error.landUnavailable");
   }
   if (!canPayLifeCost(game, card.additionalCost)) {
-    return t("error.notEnoughLife", { amount: lifeCostAmount(card.additionalCost), card: card.displayName });
+    return t("error.notEnoughLife", { amount: lifeCostAmount(card.additionalCost, game.player.life), card: card.displayName });
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return t("error.noTargets", { card: card.displayName });
   return t("error.notEnoughMana", { card: card.displayName });

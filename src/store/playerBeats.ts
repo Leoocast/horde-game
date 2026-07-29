@@ -7,7 +7,7 @@ import { useGameStore } from "./useGameStore";
 import {
   BUFF_ANIMATION_MS,
   appendHordeMillAnimations,
-  findTemporaryStatBuffedCardIds,
+  findTemporaryBuffedCardIds,
   notifyDiscardEffects,
   startBuffBeat,
   startLifeBuffBeat,
@@ -133,7 +133,7 @@ function resolvePlayerTriggerBeat(eventId: string, sourceId: string): {
       ];
     }
 
-    const buffedCardIds = findTemporaryStatBuffedCardIds(previous, next);
+    const buffedCardIds = findTemporaryBuffedCardIds(previous, next);
     const buffLanded = buffedCardIds.length > 0;
     const lifeGainLanded = next.player.life > previous.player.life;
     presentationLanded = buffLanded || lifeGainLanded;

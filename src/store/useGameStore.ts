@@ -54,7 +54,7 @@ import {
   appendHordeMillAnimations,
   discardPauseInProgress,
   findBattlefieldCard,
-  findTemporaryStatBuffedCardIds,
+  findTemporaryBuffedCardIds,
   flashAutoPaidLands,
   monsterSfx,
   notifyDiscardEffects,
@@ -1451,7 +1451,7 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       const previous = state.game;
       const next = structuredClone(previous) as GameState;
       drainEventQueue(next);
-      const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(previous, next);
+      const triggeredBuffCardIds = findTemporaryBuffedCardIds(previous, next);
       if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
       const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
       const newHordeCreatures = next.horde.battlefield.filter((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
@@ -1481,13 +1481,13 @@ function buildCastCardPatch(
   const reactionSources = card ? findCardCastReactionSources(game, card) : [];
   const next = castCard(game, id, {
     ...options,
-    deferPlayerTriggers: Boolean(card && lifeCostAmount(card.additionalCost) > 0),
+    deferPlayerTriggers: Boolean(card && lifeCostAmount(card.additionalCost, game.player.life) > 0),
     deferReactiveTriggers: reactionSources.length > 0,
   });
   const castSucceeded = next.lastActionResult?.ok === true;
   const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
   const lostLife = castSucceeded && next.player.life < game.player.life;
-  const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(game, next);
+  const triggeredBuffCardIds = findTemporaryBuffedCardIds(game, next);
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
   if (lostLife) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
@@ -1550,7 +1550,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
-      deferPlayerTriggers: lifeCostAmount(card.additionalCost) > 0 || isTargetDamageSpell || isDestroySpell,
+      deferPlayerTriggers: lifeCostAmount(card.additionalCost, latest.player.life) > 0 || isTargetDamageSpell || isDestroySpell,
       deferReactiveTriggers: reactionSources.length > 0 || isDestroySpell,
     });
     const castSucceeded = next.lastActionResult?.ok === true;
@@ -1560,7 +1560,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     if (lostLife) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
     if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-    const triggeredBuffCardIds = findTemporaryStatBuffedCardIds(latest, next);
+    const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
     if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
     const autoPaidLandIds = castSucceeded

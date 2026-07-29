@@ -32,6 +32,19 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const raidBombardment = formatEffectText(
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
   );
+  const lifeCost = formatEffectText(
+    "Coste adicional: Paga 5 vidas.\nRoba 2 cartas.",
+  );
+  const fractionalLifeCost = formatEffectText(
+    "Coste adicional: Paga la mitad de tu vida.",
+  );
+  const inlineKeywords = formatEffectText(
+    "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tu vida.",
+  );
+  const acolyteCost = formatEffectText(
+    "{{T}}: Paga 5 vidas. Genera 1 de Energía.",
+    { tapIconHtml: '<span class="tap-icon"></span>' },
+  );
 
   assert.match(captain, /class="effect-keyword">Toque mortal<\/strong>/);
   assert.match(captain, /class="effect-stat">\+1\/\+1<\/strong>/);
@@ -49,6 +62,20 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
   assert.match(raidBombardment, /class="effect-danger">fuerza 2 o menos<\/strong>/);
   assert.match(raidBombardment, /class="effect-danger">1 de daño<\/strong>/);
+  assert.match(lifeCost, /class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.match(lifeCost, /Coste adicional: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.equal((lifeCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.match(
+    fractionalLifeCost,
+    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tu vida\.<\/strong>/,
+  );
+  assert.match(
+    inlineKeywords,
+    /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Robo de vida<\/strong>\. <strong class="effect-keyword">Vigilancia<\/strong>\./,
+  );
+  assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.match(acolyteCost, /<span class="tap-icon"><\/span>: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
@@ -110,6 +137,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
     DEATHTOUCH: "Toque mortal",
     FLYING: "Volar",
     LIFESTEAL: "Robo de vida",
+    REACH: "Alcance",
     VIGILANCE: "Vigilancia",
   };
 
@@ -117,10 +145,10 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
     const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
       ? []
       : [runtimeCard.gameText?.es];
-    const expected = [
-      ...(runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword),
-      ...rulesText,
-    ].filter(Boolean).join("\n");
+    const keywordText = (runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
+    const expected = runtimeCard.id === "eternal_feast_countess"
+      ? [`${keywordText.join(". ")}.`, ...rulesText].filter(Boolean).join("\n")
+      : [...keywordText, ...rulesText].filter(Boolean).join("\n");
 
     for (const source of studioSources) {
       const studioCard = source.cards.find((card) => card.id === runtimeCard.id);

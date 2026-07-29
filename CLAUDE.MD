@@ -657,8 +657,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
   muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
   si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
-  Carmesi, Centinela de Sangre y Condesa del Banquete Eterno comparten esta regla generica.
-- Guardian de la Cripta usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
+  Carmesi y Condesa del Banquete Eterno comparten esta regla generica; Centinela de Sangre conserva
+  solo `VIGILANCE`.
+- Guardian de la Cripta tiene `REACH` y usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
   de combate o no, lo encola solamente si sigue en campo despues del impacto. No tiene limite por
   turno, por decision del usuario; varios impactos que sobreviva crean varios triggers. El evento
   queda antes de las muertes causadas por el mismo impacto. El dispatcher compartido alterna
@@ -671,31 +672,36 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
   `LIFE_PAID`. Los impactos animados posteriores se recalculan contra el board actual, de modo que
   dejar pasar un atacante puede buffear al Paje antes de que haga dano como bloqueador de otro.
-- Pacto de Sangre paga 4 vidas como coste adicional y luego roba 2. El pago es atomico con el
+- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
   mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
   consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
   queda diferido para hacer pulso antes de recibir su buff. El pago usa el golpe generico del HUD
   (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
-- Impulso Carmesi es Instant `{2}` con coste adicional de 2 vidas: solo puede elegir una criatura
-  aliada y le da +2/+2 hasta fin de turno. `castCard` valida ahora cada objetivo contra
+- Condesa del Banquete Eterno usa un coste de vida `CURRENT_LIFE_FRACTION` 1/2 con redondeo `UP`.
+  `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
+  Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas
+  reacciones y beats de presentacion que los pagos numericos. La carta omite el redondeo para
+  mantener el texto corto; el estudio imprime `Volar. Robo de vida. Vigilancia.` en una sola linea.
+- Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
+  aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
+  bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
   `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
   engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
   un `LIFE_LOST` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
-  durante el turno de la Horda, igual que con habilidades activadas. El pase de polish de
-  animaciones de estos spells queda para despues de terminar sus reglas, por decision del usuario.
-- Drenar la Esencia es Instant `{3}` y, por decision del usuario, puede elegir cualquier criatura,
+  durante el turno de la Horda, igual que con habilidades activadas.
+- Drenar la Esencia es Instant `{2}` y, por decision del usuario, puede elegir cualquier criatura,
   no solo una de la Horda. Le hace 3 de dano no de combate y luego recupera 2 vidas aunque la
   criatura sobreviva; esto permite usarlo sobre criaturas propias, incluido el Guardian de la
   Cripta, que ademas dispara su propia recuperacion si sobrevive: son 4 vidas en total. El dano
   dirigido por un spell usa `DEAL_DAMAGE_TO_TARGET`, conserva el dano marcado si no es letal y
   entrega las muertes letales a la cola compartida de reacciones. La recuperacion activa el beat
   generico de vida del HUD.
-- Sed Depredadora es Instant `{3}`: solo elige una criatura aliada y le concede +1/+0 y `LIFESTEAL`
-  hasta fin de turno. Usa los efectos genericos `PUMP_UNTIL_END_OF_TURN` y
-  `GRANT_KEYWORD_UNTIL_END_OF_TURN`; por eso el poder adicional cuenta para la recuperacion al
-  atacar al Host y la keyword temporal tambien funciona al bloquear durante el turno de la Horda.
-  `cleanupEndStep` elimina tanto el stat temporal como la keyword.
-- Banquete Final es Sorcery `{5}`: solo elige una criatura de la Horda, registra su fuerza efectiva
+- Sed Depredadora conserva su nombre, arte, coste `{2}` y tipo Instant, pero ya no elige objetivo:
+  concede `LIFESTEAL` a todas las criaturas aliadas hasta fin de turno. Reutiliza
+  `GRANT_KEYWORD_UNTIL_END_OF_TURN` con el target generico `ALL_CREATURES/SELF`; el diff de
+  presentacion detecta keywords temporales nuevas y pulsa todas las criaturas afectadas.
+  `cleanupEndStep` elimina la keyword.
+- Banquete Final es Instant `{3}`: solo elige una criatura de la Horda, registra su fuerza efectiva
   (incluidos contadores, auras y buffs temporales), la destruye y despues hace perder esa cantidad
   de vida al player. `ResolveContext.lastKnownStats` conserva esa informacion entre los efectos
   `DESTROY_TARGET` y `LOSE_LIFE`. Es perdida, no pago: puede llevar al player a cero y no incrementa
@@ -711,6 +717,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
   de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
+  frase explicita `Paga N vidas.` tambien se imprime en rojo y negrita. En Vampiros, los spells con
+  pago adicional mantienen `Coste adicional: Paga N vidas.` en una sola linea y separan el efecto; Acólito usa
+  `{{T}}: Paga 5 vidas. Genera 1 de Energía.` para mostrar primero el icono de agotar.
+  Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
   usa `quita ... y crea ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
@@ -728,15 +738,19 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   el JPG de resolucion completa para exportar. Developer Mode coloca cuatro tierras del player deck
   seleccionado, asi que Vampires inicia con cuatro Energias Carmesi en vez de Forests. El primer
   pase de balance subio `gameplayLandCount` a 12 (Mono Green conserva el default de 9), hizo
-  1/3 al Paje, 2/2 al Murcielago, 3/3 al Duelista y 3/5 al Centinela; Impulso da +3/+3, Sed cuesta
-  2 y da +2/+1 mas Robo de vida, y Banquete Final cuesta 3. Para conservar 40 cartas, Pacto e
-  Impulso bajaron a dos copias y Sed a una. La regresion del estudio compara ahora coste, stats,
-  cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
+  1/3 al Paje, 2/2 al Murcielago, 3/3 al Duelista y 3/5 al Centinela. El ajuste siguiente dejo
+  Acólito en coste 1, stats 1/2, pago de 5 vidas y dos copias; dejo al Duelista en 3/3 con buff
+  +3/+1, retiro Robo de vida y bajo a 3/4 al Centinela, subio la Condesa a dos copias y la hizo
+  5/5 con `FLYING`, `LIFESTEAL`, `VIGILANCE` y pago adicional de media vida redondeada hacia arriba.
+  El mismo ajuste bajo Impulso a coste 1 con
+  +2/+2 y Volar, bajo Drenar a coste 2 y convirtio Sed en Robo de vida global hasta fin de turno.
+  Pacto e Impulso permanecen en dos copias, Sed en una y Banquete Final cuesta 3. La regresion del
+  estudio compara coste, stats, cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
   `.command`, escribe cada PNG en `exported-png/` y tambien lo sincroniza directamente con la
   carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente.
-  El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+0 sobrevive la limpieza del turno del
+  El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+1 sobrevive la limpieza del turno del
   player, aplica al bloquear durante el combate de la Horda y se elimina al comenzar el siguiente
-  turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 4 vidas.
+  turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 5 vidas.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto

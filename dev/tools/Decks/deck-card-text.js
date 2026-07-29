@@ -9,6 +9,10 @@
         /\b(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)?contador(?:es)?(?:\s+(?:de\s+[\p{L}\p{M}-]+|[+-]\d+\/[+-]\d+))?/giu;
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
     const DANGER_PATTERN = /\b(?:fuerza \d+ o menos|\d+ de daño)\b/giu;
+    const LIFE_PAYMENT_PATTERN =
+        /\bPaga\s+(?:\d+\s+vidas|la mitad de tu vida)\./giu;
+    const INLINE_KEYWORD_SEPARATOR_PATTERN =
+        /(\b(?:Volar|Robo de vida|Vigilancia)\.)\s+(?=(?:Volar|Robo de vida|Vigilancia)\.)/giu;
     const SEQUENTIAL_EFFECT_BREAK_PATTERN =
         /\s+y\s+luego\s+(?=(?:crea|lucha)\b)/giu;
     const SENTENCE_BREAK_PATTERN = /([.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ])/gu;
@@ -49,6 +53,7 @@
         protect(TOKEN_CREATION_PATTERN, (match) => strong("effect-token", match));
         protect(COUNTER_PATTERN, (match) => strong("effect-counter", match));
         protect(KEYWORD_PATTERN, (match) => strong("effect-keyword", match));
+        protect(LIFE_PAYMENT_PATTERN, (match) => strong("effect-life-cost", match));
         protect(DANGER_PATTERN, (match) => strong("effect-danger", match));
         protect(STAT_PATTERN, (match) => strong("effect-stat", match));
 
@@ -61,10 +66,11 @@
     function formatEffectText(value, options = {}) {
         const paragraphs = String(value ?? "")
             .trim()
+            .replace(INLINE_KEYWORD_SEPARATOR_PATTERN, "$1\uE100")
             .replace(SEQUENTIAL_EFFECT_BREAK_PATTERN, ".\nLuego ")
             .replace(SENTENCE_BREAK_PATTERN, "$1\n")
             .split(/\r?\n+/)
-            .map((paragraph) => paragraph.trim())
+            .map((paragraph) => paragraph.replaceAll("\uE100", " ").trim())
             .filter(Boolean);
 
         return paragraphs

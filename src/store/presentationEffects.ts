@@ -49,20 +49,29 @@ export function findBattlefieldCard(game: GameState, id: string): CardInstance |
   return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
 }
 
-/** Cards whose temporary power/toughness increased between two committed engine states. Keeping
- *  this diff shared lets casts and queued trigger beats use the same buff presentation rule. */
-export function findTemporaryStatBuffedCardIds(previous: GameState, next: GameState): string[] {
-  const previousStats = new Map(
+/** Cards whose temporary stats increased or that gained a temporary keyword between two
+ *  committed engine states. Keeping this diff shared lets targeted and group buffs use the same
+ *  presentation rule without teaching the store individual effect types. */
+export function findTemporaryBuffedCardIds(previous: GameState, next: GameState): string[] {
+  const previousBuffs = new Map(
     [...previous.player.battlefield, ...previous.horde.battlefield].map((card) => [
       card.instanceId,
-      { power: card.temporaryPower, toughness: card.temporaryToughness },
+      {
+        power: card.temporaryPower,
+        toughness: card.temporaryToughness,
+        keywords: new Set(card.temporaryKeywords),
+      },
     ]),
   );
   return [...next.player.battlefield, ...next.horde.battlefield]
     .filter((card) => {
-      const before = previousStats.get(card.instanceId);
+      const before = previousBuffs.get(card.instanceId);
       if (!before) return false;
-      return card.temporaryPower > before.power || card.temporaryToughness > before.toughness;
+      return (
+        card.temporaryPower > before.power ||
+        card.temporaryToughness > before.toughness ||
+        card.temporaryKeywords.some((keyword) => !before.keywords.has(keyword))
+      );
     })
     .map((card) => card.instanceId);
 }

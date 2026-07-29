@@ -129,9 +129,22 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
     report(`requiresNoSummoningSickness must be boolean.`);
   }
   if (ability.cost?.life !== undefined) {
-    const life = Number(ability.cost.life);
-    if (!Number.isInteger(life) || life <= 0) {
-      report(`Life cost must be a positive integer; received "${String(ability.cost.life)}".`);
+    const life = ability.cost.life;
+    if (typeof life === "number") {
+      if (!Number.isInteger(life) || life <= 0) {
+        report(`Life cost must be a positive integer; received "${String(life)}".`);
+      }
+    } else if (
+      !life
+      || typeof life !== "object"
+      || (life as Record<string, unknown>).type !== "CURRENT_LIFE_FRACTION"
+      || !Number.isInteger((life as Record<string, unknown>).numerator)
+      || Number((life as Record<string, unknown>).numerator) <= 0
+      || !Number.isInteger((life as Record<string, unknown>).denominator)
+      || Number((life as Record<string, unknown>).denominator) <= 0
+      || !["UP", "DOWN"].includes(String((life as Record<string, unknown>).rounding))
+    ) {
+      report("Fractional life cost must declare CURRENT_LIFE_FRACTION with positive integer numerator/denominator and UP or DOWN rounding.");
     }
   }
 
@@ -142,7 +155,8 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
     normalized.effects.length +
     normalized.activatedAbilities.length +
     normalized.requiresTargets.length +
-    normalized.extraKeywords;
+    normalized.extraKeywords +
+    (normalized.hasAdditionalCost ? 1 : 0);
   if (produced === 0) {
     report(`Ability produces nothing after normalization — it would silently not exist in game.`);
     return;
@@ -160,6 +174,7 @@ type NormalizedView = {
   activatedAbilities: Array<{ effect: unknown }>;
   requiresTargets: Array<{ id: string }>;
   extraKeywords: number;
+  hasAdditionalCost: boolean;
 };
 
 function normalizeIsolated(card: NewDeckCard, ability: NewDeckAbility): NormalizedView {
@@ -176,6 +191,7 @@ function normalizeIsolated(card: NewDeckCard, ability: NewDeckAbility): Normaliz
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: (definition.requiresTargets ?? []) as Array<{ id: string }>,
     extraKeywords: Math.max(0, (definition.keywords?.length ?? 0) - baseKeywords),
+    hasAdditionalCost: Boolean(definition.additionalCost),
   };
 }
 

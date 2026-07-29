@@ -221,8 +221,8 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     useGameStore.getState().castCard(pact.instanceId);
 
     const result = useGameStore.getState();
-    assert.equal(result.game.player.life, 6);
-    assert.equal(result.game.player.lifePaidThisTurn, 4);
+    assert.equal(result.game.player.life, 5);
+    assert.equal(result.game.player.lifePaidThisTurn, 5);
     assert.equal(typeof result.lifeDamageAnimationId, "number");
     assert.equal(result.game.player.hand.length, 2);
     assert.equal(
@@ -281,7 +281,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     resetPlayerTriggerSequence();
     const game = createTestGame("crimson-impulse-store-trigger");
     game.player.life = 10;
-    addForests(game, 2);
+    addForests(game, 1);
     const ally = addCard(game, customCard("crimson_impulse_store_ally", "player", {
       power: 2,
       toughness: 2,
@@ -312,7 +312,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     assert.equal(afterCast.game.player.lifePaidThisTurn, 2);
     assert.equal(
       afterCast.game.player.battlefield.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
-      3,
+      2,
     );
     assert.equal(
       afterCast.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
@@ -334,7 +334,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
   }
 });
 
-test("Predatory Thirst presents one allied buff containing its stat and temporary Lifesteal", async () => {
+test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -367,33 +367,36 @@ test("Predatory Thirst presents one allied buff containing its stat and temporar
   try {
     const game = createTestGame("predatory-thirst-store");
     addForests(game, 2);
-    const ally = addCard(game, customCard("predatory_thirst_store_ally", "player", {
+    const firstAlly = addCard(game, customCard("predatory_thirst_store_ally_one", "player", {
       power: 2,
       toughness: 3,
     }));
+    const secondAlly = addCard(game, customCard("predatory_thirst_store_ally_two", "player", {
+      power: 1,
+      toughness: 2,
+    }));
+    const enemy = addCard(game, customCard("predatory_thirst_store_enemy", "horde"));
     const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
-      spellTargeting: {
-        handId: thirst.instanceId,
-        stepIndex: 0,
-        targets: { targetCreature: ally.instanceId },
-        x: 0,
-        y: 0,
-      },
+      spellTargeting: undefined,
       buffAnimationCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
     });
 
-    useGameStore.getState().confirmSpellTargeting();
+    useGameStore.getState().castCard(thirst.instanceId);
 
     const result = useGameStore.getState();
-    const buffed = result.game.player.battlefield.find((card) => card.instanceId === ally.instanceId);
-    assert.equal(buffed?.temporaryPower, 2);
-    assert.equal(buffed?.temporaryToughness, 1);
-    assert.equal(hasKeyword(result.game, buffed, "LIFESTEAL"), true);
-    assert.deepEqual(result.buffAnimationCardIds, [ally.instanceId]);
+    const firstBuffed = result.game.player.battlefield.find((card) => card.instanceId === firstAlly.instanceId);
+    const secondBuffed = result.game.player.battlefield.find((card) => card.instanceId === secondAlly.instanceId);
+    assert.equal(hasKeyword(result.game, firstBuffed, "LIFESTEAL"), true);
+    assert.equal(hasKeyword(result.game, secondBuffed, "LIFESTEAL"), true);
+    assert.equal(
+      hasKeyword(result.game, result.game.horde.battlefield.find((card) => card.instanceId === enemy.instanceId), "LIFESTEAL"),
+      false,
+    );
+    assert.deepEqual(result.buffAnimationCardIds, [firstAlly.instanceId, secondAlly.instanceId]);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;

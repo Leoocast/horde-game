@@ -603,6 +603,11 @@ input {
     font-weight: 800;
 }
 
+.tcg-effect strong.effect-life-cost {
+    color: #a61b12 !important;
+    font-weight: 800;
+}
+
 .symbol-badge {
     display: inline-grid;
     width: 43px;
@@ -2467,6 +2472,21 @@ body[data-theme="vampires"] .tcg-flavor {
     font-style: normal;
     text-align: left;
     text-shadow: none;
+}
+
+body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-body {
+    gap: 12px;
+    padding: 22px 36px 58px;
+}
+
+body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-effect {
+    font-size: 38px;
+    line-height: 1.32;
+}
+
+body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-flavor {
+    font-size: 40px;
+    line-height: 1.35;
 }
 
 body[data-theme="vampires"] .tcg-footer-info {

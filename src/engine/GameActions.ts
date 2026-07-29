@@ -155,7 +155,7 @@ function activatedAbilityManaCost(actionCost?: ActionCost) {
 }
 
 function payLifeCost(game: GameState, cost: ActionCost | undefined, sourceId: string, sourceName: string): void {
-  const amount = lifeCostAmount(cost);
+  const amount = lifeCostAmount(cost, game.player.life);
   if (amount === 0) return;
   const paidBefore = game.player.lifePaidThisTurn ?? 0;
   losePlayerLife(game, amount, sourceId);
