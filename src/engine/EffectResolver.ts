@@ -13,6 +13,9 @@ export type ResolveContext = {
   side: Side;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
+  /** Last known battlefield stats, keyed by instance id. Destruction records them so later
+   *  effects in the same sequence can still use the destroyed object's effective stats. */
+  lastKnownStats?: Record<string, { power: number; toughness: number }>;
   tokenDefinitions?: CardInstance[] | never;
   event?: EventItem;
 };
@@ -233,12 +236,31 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       game.log.unshift(`Player gains ${amount} life.`);
     }
   },
+  LOSE_LIFE: (game, effect, context) => {
+    const side = effect.player === "OPPONENT" ? (context.side === "player" ? "horde" : "player") : context.side;
+    if (side !== "player") return;
+    const amount = Math.max(0, resolveNumericAmount(game, effect.amount ?? 1, context));
+    losePlayerLife(game, amount, context.source?.instanceId);
+    game.log.unshift(`Player loses ${amount} life.`);
+  },
   PUMP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
       target.temporaryToughness += Number(effect.toughness ?? 0);
       game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until end of turn.`);
+    }
+  },
+  PUMP_UNTIL_NEXT_PLAYER_TURN: (game, effect, context) => {
+    const targets = resolveTargetCards(game, effect, context);
+    for (const target of targets) {
+      target.untilNextPlayerTurnPower =
+        (target.untilNextPlayerTurnPower ?? 0) + Number(effect.power ?? 0);
+      target.untilNextPlayerTurnToughness =
+        (target.untilNextPlayerTurnToughness ?? 0) + Number(effect.toughness ?? 0);
+      game.log.unshift(
+        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until the next player turn.`,
+      );
     }
   },
   GRANT_KEYWORD_UNTIL_END_OF_TURN: (game, effect, context) => {
@@ -262,6 +284,13 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       const amount = resolveDamageAmount(game, effect.amount, context);
       dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
+    }
+  },
+  DEAL_DAMAGE_TO_TARGET: (game, effect, context) => {
+    const amount = resolveDamageAmount(game, effect.amount, context);
+    for (const target of resolveTargetCards(game, effect, context)) {
+      dealDamageToCreature(game, target, amount, false);
+      game.log.unshift(`${context.source?.name ?? "Spell"} deals ${amount} damage to ${target.name}.`);
     }
   },
   FIGHT_SIMULTANEOUS: (game, effect, context) => {
@@ -314,12 +343,12 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       });
       return;
     }
-    game.player.life -= amount;
+    losePlayerLife(game, amount, context.source?.instanceId);
     game.log.unshift(`Player loses ${amount} life.`);
   },
 };
 
-export type EffectPresentation = "fight" | "sourceDamage" | "destroy";
+export type EffectPresentation = "fight" | "sourceDamage" | "targetDamage" | "destroy";
 
 // Which battle animation a spell's resolution should play. Registry metadata: the store asks
 // for a presentation kind instead of re-learning effect types.
@@ -327,12 +356,33 @@ const EFFECT_PRESENTATIONS: Partial<Record<string, EffectPresentation>> = {
   FIGHT_SIMULTANEOUS: "fight",
   DEAL_DAMAGE: "sourceDamage",
   DEAL_DAMAGE_FROM_SOURCE_POWER: "sourceDamage",
+  DEAL_DAMAGE_TO_TARGET: "targetDamage",
   DESTROY: "destroy",
   DESTROY_TARGET: "destroy",
 };
 
 export function hasEffectPresentation(effects: EffectDefinition[] | undefined, kind: EffectPresentation): boolean {
   return (effects ?? []).some((effect) => effectHasPresentation(effect, kind));
+}
+
+/** Applies every kind of player life loss through one rules path. Payments call this too, then
+ * emit their more specific LIFE_PAID event so cards may still distinguish costs from damage. */
+export function losePlayerLife(game: GameState, amount: number, sourceId?: string): void {
+  const lost = Math.max(0, Number(amount) || 0);
+  if (lost <= 0) return;
+  const lostBefore = game.player.lifeLostThisTurn ?? 0;
+  game.player.life -= lost;
+  game.player.lifeLostThisTurn = lostBefore + lost;
+  enqueue(game, {
+    type: "LIFE_LOST",
+    sourceId,
+    payload: {
+      amount: lost,
+      firstLossThisTurn: lostBefore === 0,
+      totalLostThisTurn: game.player.lifeLostThisTurn,
+    },
+  });
+  if (game.player.life <= 0) game.winner = "horde";
 }
 
 function effectHasPresentation(effect: unknown, kind: EffectPresentation): boolean {
@@ -356,7 +406,11 @@ export const EFFECT_ANNOUNCEMENTS: Partial<Record<string, EffectAnnouncement>> =
 
 function handleDestroy(game: GameState, effect: EffectDefinition, context: ResolveContext): void {
   const targets = resolveTargetCards(game, effect, context);
-  for (const target of targets) destroyPermanent(game, target);
+  for (const target of targets) {
+    context.lastKnownStats ??= {};
+    context.lastKnownStats[target.instanceId] = getPowerToughness(game, target);
+    destroyPermanent(game, target);
+  }
 }
 
 function handleMillSelf(game: GameState, effect: EffectDefinition): void {
@@ -369,10 +423,11 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
   const data = amount as Record<string, unknown>;
   if (data.type === "STAT") {
     const objectRef = String(data.object ?? "");
-    const source = findPermanent(game, String(context.targets?.[objectRef] ?? ""));
-    if (!source) return 0;
+    const instanceId = String(context.targets?.[objectRef] ?? "");
+    const source = findPermanent(game, instanceId);
     const stat = String(data.stat ?? "").toUpperCase();
-    const stats = getPowerToughness(game, source);
+    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    if (!stats) return 0;
     return stat === "TOUGHNESS" ? stats.toughness : stats.power;
   }
   return Number(amount) || 0;
@@ -385,7 +440,7 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
 export function resolveTriggeredEvent(
   game: GameState,
   event: EventItem,
-  deferController?: "player" | "horde",
+  deferController?: Side | Side[],
   onlySourceId?: string,
 ): boolean {
   if (event.type === "HORDE_GROUP_BUFF") {
@@ -405,12 +460,17 @@ export function resolveTriggeredEvent(
     return false;
   }
   let deferredAny = false;
+  const deferredControllers = Array.isArray(deferController)
+    ? deferController
+    : deferController
+      ? [deferController]
+      : [];
   const alreadyResolved = resolvedTriggerSourceIds(event);
   const pending: Array<{ source: CardInstance; wrapper: EffectDefinition }> = [];
   for (const source of triggeredSourcesForEvent(game, event)) {
     if (alreadyResolved.includes(source.instanceId)) continue;
     if (onlySourceId && source.instanceId !== onlySourceId) continue;
-    if (deferController && source.controller === deferController) {
+    if (deferredControllers.includes(source.controller)) {
       deferredAny = true;
       continue;
     }
@@ -468,8 +528,9 @@ function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
 }
 
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
-  // Self-scoped: only the card that entered reacts, never every other card with an ETB ability.
-  if (event.type === "ENTERS_BATTLEFIELD") {
+  // Self-scoped: only the permanent named by the event reacts, never every other card carrying
+  // the same ability. Both sources are still on the battlefield when these events resolve.
+  if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_DAMAGE") {
     const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(
@@ -547,9 +608,34 @@ export function runEnterBattlefieldTriggers(
   });
 }
 
-export function dealDamageToCreature(_game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
-  target.damageMarked += amount;
-  if (deathtouch && amount > 0) target.deathtouchDamage = true;
+export function dealDamageToCreature(game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
+  const damage = Math.max(0, amount);
+  target.damageMarked += damage;
+  if (deathtouch && damage > 0) target.deathtouchDamage = true;
+  enqueueSurvivedDamageEvent(game, target, damage);
+}
+
+export function enqueueSurvivedDamageEvent(
+  game: GameState,
+  target: CardInstance,
+  amount: number,
+  payload: Record<string, unknown> = {},
+): void {
+  if (amount <= 0 || !target.cardTypes.includes("Creature")) return;
+  if (!game[target.controller].battlefield.some((card) => card.instanceId === target.instanceId)) return;
+  const { toughness } = getPowerToughness(game, target);
+  if (target.damageMarked >= toughness || target.deathtouchDamage) return;
+  enqueue(game, {
+    type: "SURVIVED_DAMAGE",
+    sourceId: target.instanceId,
+    triggerController: target.controller,
+    payload: {
+      controller: target.controller,
+      targetId: target.instanceId,
+      amount,
+      ...payload,
+    },
+  });
 }
 
 export function destroyMarkedCreatures(game: GameState): void {
@@ -718,6 +804,15 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   if (condition.type === "ACTIVE_PLAYER_IS") {
     return condition.player !== "SELF" || game.activeSide === source.controller;
   }
+  if (condition.type === "FIRST_LIFE_PAYMENT_THIS_TURN") {
+    return event.type === "LIFE_PAID" && event.payload?.firstPaymentThisTurn === true;
+  }
+  if (condition.type === "FIRST_LIFE_LOSS_THIS_TURN") {
+    return event.type === "LIFE_LOST" && event.payload?.firstLossThisTurn === true;
+  }
+  if (condition.type === "SOURCE_IS_UNTAPPED") {
+    return !source.tapped;
+  }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);
   }
@@ -783,7 +878,7 @@ function declaredAttackerIds(event?: EventItem): string[] {
 function dealDamageToOpponent(game: GameState, sourceSide: Side, amount: number): void {
   if (amount <= 0) return;
   if (sourceSide === "horde") {
-    game.player.life -= amount;
+    losePlayerLife(game, amount);
     game.log.unshift(`Horde deals ${amount} damage to Player.`);
   }
 }
@@ -861,7 +956,7 @@ function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void
   const amount = Math.max(0, Number(event.payload?.amount ?? 0));
   const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
   if (sourceSide !== "horde" || event.payload?.targetPlayer !== true || amount <= 0) return;
-  game.player.life -= amount;
+  losePlayerLife(game, amount, event.sourceId);
   const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Horde effect"} causes Player to lose ${amount} life.`);
@@ -873,11 +968,12 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
   const data = amount as Record<string, unknown>;
   if (data.type === "STAT") {
     const objectRef = String(data.object ?? "");
-    const source = objectRef === "SELF"
-      ? context.source
-      : findPermanent(game, String(context.targets?.[objectRef] ?? ""));
-    if (!source) return 0;
-    const stats = getPowerToughness(game, source);
+    const instanceId = objectRef === "SELF"
+      ? context.source?.instanceId ?? ""
+      : String(context.targets?.[objectRef] ?? "");
+    const source = objectRef === "SELF" ? context.source : findPermanent(game, instanceId);
+    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    if (!stats) return 0;
     return String(data.stat ?? "").toUpperCase() === "TOUGHNESS" ? stats.toughness : stats.power;
   }
   if (data.type === "COUNT_PERMANENTS") {

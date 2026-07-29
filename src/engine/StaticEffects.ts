@@ -26,6 +26,10 @@ export function resolveAffectedController(sourceController: Side, controller: un
 export function staticConditionMet(game: GameState, condition: unknown, source: CardInstance): boolean {
   if (!condition || typeof condition !== "object") return true;
   const data = condition as Record<string, unknown>;
+  if (data.type === "ACTIVE_PLAYER_IS") {
+    const side = resolveAffectedController(source.controller, data.player);
+    return side !== undefined && game.activeSide === side;
+  }
   if (data.type === "GRAVEYARD_COUNT_AT_LEAST") {
     const side = resolveAffectedController(source.controller, data.controller) ?? source.controller;
     return game[side].graveyard.length >= Number(data.amount ?? 0);
@@ -38,8 +42,16 @@ export function getPowerToughness(
   card: CardInstance,
   excludedBuffSourceIds?: Set<string>,
 ): { power: number; toughness: number } {
-  let power = card.basePower + (card.counters["+1/+1"] ?? 0) + card.temporaryPower;
-  let toughness = card.baseToughness + (card.counters["+1/+1"] ?? 0) + card.temporaryToughness;
+  let power =
+    card.basePower +
+    (card.counters["+1/+1"] ?? 0) +
+    card.temporaryPower +
+    (card.untilNextPlayerTurnPower ?? 0);
+  let toughness =
+    card.baseToughness +
+    (card.counters["+1/+1"] ?? 0) +
+    card.temporaryToughness +
+    (card.untilNextPlayerTurnToughness ?? 0);
 
   const surgeBonus = game.hordeRules.surgeBonus;
   if (

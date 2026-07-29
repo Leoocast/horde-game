@@ -20,8 +20,11 @@ export const ENGINE_TRIGGER_EVENTS = new Set([
   "THIS_DIES",
   "CREATURE_DIED",
   "CARD_CAST",
+  "LIFE_PAID",
+  "LIFE_LOST",
   "ATTACK_DECLARED",
   "BEGIN_COMBAT",
+  "SURVIVED_DAMAGE",
 ]);
 
 /** Authoring-level trigger events normalizeDeck.normalizeTriggerEvent knows how to map. */
@@ -35,6 +38,9 @@ export const AUTHORING_TRIGGER_EVENTS = new Set([
 export const TRIGGER_CONDITION_TYPES = new Set([
   "ALL_OF",
   "ACTIVE_PLAYER_IS",
+  "FIRST_LIFE_PAYMENT_THIS_TURN",
+  "FIRST_LIFE_LOSS_THIS_TURN",
+  "SOURCE_IS_UNTAPPED",
   "SOURCE_IS_ATTACKING",
   "CAST_CARD_IS_NON_TOKEN",
   "ANOTHER_CREATURE_YOU_CONTROL_DIED",
@@ -52,6 +58,7 @@ export const EFFECT_CONDITION_TYPES = new Set([
 
 /** Mirrors StaticEffects.staticConditionMet (conditions on STATIC_CONDITIONAL_* effects). */
 export const STATIC_CONDITION_TYPES = new Set([
+  "ACTIVE_PLAYER_IS",
   "GRAVEYARD_COUNT_AT_LEAST",
 ]);
 

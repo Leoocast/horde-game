@@ -5041,37 +5041,121 @@
   }
 
   .counter-target-stat-preview {
+    --buff-stat-background:
+      radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(239 248 226 / 0.02) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
+    --buff-stat-border: rgb(184 216 151 / 0.76);
+    --buff-stat-glow: rgb(129 176 103 / 0.38);
+    --buff-stat-motif: url("../dev/tools/Decks/monogreen/motivo.avif");
+    --buff-stat-number: #e0f0cf;
+    --buff-stat-separator: #9eb38e;
     position: absolute;
-    bottom: -0.72rem;
-    right: -0.38rem;
+    right: 3px;
+    bottom: -22px;
     z-index: 112;
-    display: flex;
-    min-width: 2.8rem;
-    height: 1.4rem;
-    align-items: center;
+    isolation: isolate;
+    display: grid;
+    width: 64px;
+    height: 27px;
+    overflow: hidden;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
     justify-content: center;
-    gap: 0.28rem;
-    border: 1px solid rgb(155 198 132 / 0.78);
-    border-radius: 0;
-    background: linear-gradient(135deg, rgb(27 43 35 / 0.98), rgb(6 13 12 / 0.99));
-    padding: 0 0.5rem;
-    color: #d8efc9;
-    font-size: 0.76rem;
+    gap: 3px;
+    border: 1px solid var(--buff-stat-border);
+    border-radius: 10px 0 8px;
+    background: var(--buff-stat-background);
+    padding: 0 8px;
+    color: var(--buff-stat-number);
+    font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
     font-weight: 950;
     line-height: 1;
     box-shadow:
-      inset 0 1px 0 rgb(226 255 210 / 0.15),
-      inset 3px 0 0 rgb(119 176 91 / 0.66),
-      0 0 11px rgb(91 177 86 / 0.28),
-      0 4px 9px rgb(0 0 0 / 0.58);
-    clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+      inset 0 1px 0 rgb(255 255 255 / 0.14),
+      inset 0 -2px 4px rgb(0 0 0 / 0.4),
+      0 0 9px var(--buff-stat-glow),
+      0 3px 7px rgb(0 0 0 / 0.56);
+    clip-path: none;
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 5px var(--buff-stat-glow);
+  }
+
+  .counter-target-stat-preview::before {
+    position: absolute;
+    z-index: 0;
+    inset: 1px;
+    border-radius: 9px 0 7px;
+    background: var(--buff-stat-motif) center 58% / cover no-repeat;
+    content: "";
+    mix-blend-mode: multiply;
+    opacity: 0.28;
+    pointer-events: none;
   }
 
   .counter-target-stat-preview::after {
     content: "\25B2";
-    color: #91bf78;
-    font-size: 0.55rem;
-    text-shadow: 0 0 7px rgb(134 218 101 / 0.64);
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    z-index: 2;
+    color: var(--buff-stat-number);
+    font-size: 6px;
+    text-shadow: 0 0 4px var(--buff-stat-glow);
+  }
+
+  .counter-target-stat-preview > b,
+  .counter-target-stat-preview > i {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+  }
+
+  .counter-target-stat-preview > i {
+    color: var(--buff-stat-separator);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .counter-target-stat-preview.card-theme-zombie {
+    --buff-stat-background:
+      radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.2), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(226 241 230 / 0.02) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
+    --buff-stat-border: rgb(165 208 168 / 0.78);
+    --buff-stat-glow: rgb(113 181 157 / 0.4);
+    --buff-stat-motif: url("../dev/tools/Decks/zombies/motivo.avif");
+    --buff-stat-number: #eff6e8;
+    --buff-stat-separator: #a8c6b6;
+  }
+
+  .counter-target-stat-preview.card-theme-goblin {
+    --buff-stat-background:
+      radial-gradient(ellipse at 24% 0%, rgb(255 204 126 / 0.22), transparent 46%),
+      repeating-linear-gradient(133deg, rgb(255 211 141 / 0.024) 0 1px, transparent 1px 6px),
+      linear-gradient(180deg, #bd4a1f 0%, #873018 54%, #401108 100%);
+    --buff-stat-border: rgb(255 191 99 / 0.82);
+    --buff-stat-glow: rgb(230 113 46 / 0.46);
+    --buff-stat-motif: url("../dev/tools/Decks/goblins/motivo.avif");
+    --buff-stat-number: #fff1dc;
+    --buff-stat-separator: #e4a06e;
+  }
+
+  .counter-target-stat-preview.card-theme-vampire {
+    --buff-stat-background:
+      radial-gradient(ellipse at 24% 0%, rgb(246 197 205 / 0.22), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(255 231 235 / 0.025) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #a82748 0%, #801937 54%, #350813 100%);
+    --buff-stat-border: rgb(225 190 119 / 0.78);
+    --buff-stat-glow: rgb(172 43 77 / 0.44);
+    --buff-stat-motif: url("../dev/tools/Decks/vampires/motivo.avif");
+    --buff-stat-number: #f9e8e9;
+    --buff-stat-separator: #c88c9b;
   }
 
   .combat-card-visually-dead {
@@ -5316,6 +5400,26 @@
     filter:
       drop-shadow(0 22px 26px rgb(0 0 0 / 0.62))
       brightness(1.08);
+    transition:
+      opacity 170ms ease,
+      filter 170ms ease;
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] {
+    pointer-events: none;
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-source-card {
+    opacity: 0.34;
+    filter:
+      drop-shadow(0 14px 18px rgb(0 0 0 / 0.38))
+      brightness(0.9)
+      saturate(0.78);
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-preview,
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-actions {
+    pointer-events: auto;
   }
 
   .horde-special-card {
@@ -5388,17 +5492,21 @@
   }
 
   .smallpox-selection-panel-inline {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 9rem);
+    z-index: 2;
     display: flex;
-    width: min(18rem, calc(100vw - 2rem));
-    margin-top: 1.5rem;
+    width: clamp(13rem, 17vw, 18rem);
+    margin-top: 0;
     flex-direction: column;
     align-items: center;
-    align-self: center;
     gap: 0.4rem;
     padding: 0.55rem 0.85rem;
     text-align: center;
     font-size: 0.88rem;
     font-weight: 850;
+    transform: translateY(-50%);
   }
 
   .counter-target-actions {
@@ -5640,7 +5748,7 @@
   .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-image-native-hd > img {
     width: 140%;
     height: 140%;
-    transform: translate(calc(-20% + 18px), calc(-20% + 46px));
+    transform: translate(calc(-20% + 18px), calc(-20% + 42px));
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
@@ -10326,8 +10434,8 @@
 
 .card-defense-badge-horde {
   top: 3px;
-  right: 3px;
-  border-radius: 7px 0 8px;
+  left: 3px;
+  border-radius: 0 7px 8px;
 }
 
 .card-defense-badge-player {
@@ -10350,10 +10458,14 @@
 }
 
 .card-visual:has(> .card-defense-badge-horde) > .card-cropped-title {
-  padding-right: 49px;
+  padding-left: 49px;
 }
 
 /* Shared stats palette: matches the printed mono-green card generator. */
+.card-stat-motif {
+  display: none;
+}
+
 .card-stat-badge {
   --card-stat-background: linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
   --card-stat-border: rgb(201 177 111 / 0.48);
@@ -10417,7 +10529,7 @@
   box-shadow: inset 0 0 0 1px rgb(179 205 159 / 0.1), 0 0 8px rgb(111 157 94 / 0.28), 0 4px 12px rgb(0 0 0 / 0.68);
 }
 
-/* Full mono-green cards already print a stats tab into the PNG/HTML face. This dynamic tab sits
+/* Full player cards already print a stats tab into the PNG/HTML face. This dynamic tab sits
    exactly over it so counters, damage and buffs never disagree with the visible card. */
 .card-visual.card-image-full > .card-stat-badge,
 .card-preview-full-card-frame > .card-stat-badge,
@@ -10724,11 +10836,15 @@
 /* Cropped battlefield cards use compact game chrome instead of the printed-card tab used by hand
    and previews. The title stays integrated into the card while the stats remain a readable HUD. */
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
+  --card-cropped-title-motif: url("../dev/tools/Decks/monogreen/motivo.avif");
+  --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, transparent 98%);
   position: absolute;
   top: 0;
   right: 0;
-  left: 0;
+  left: -1px;
   z-index: 15;
+  isolation: isolate;
   display: flex;
   height: 29px;
   overflow: hidden;
@@ -10736,12 +10852,7 @@
   padding: 1px 10px 0;
   border: 0;
   border-radius: 0;
-  background:
-    radial-gradient(ellipse at 24% 0%, rgb(205 228 182 / 0.16), transparent 47%),
-    radial-gradient(ellipse at 88% 125%, rgb(91 142 96 / 0.11), transparent 52%),
-    linear-gradient(90deg, rgb(232 222 174 / 0.025), transparent 34%, rgb(0 0 0 / 0.1)),
-    repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, rgb(47 75 53 / 0.99), rgb(20 47 29 / 0.99) 58%, rgb(9 28 16 / 1));
+  background: transparent;
   color: #f0ead7;
   font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
   font-size: clamp(12px, 6.6cqw, 14px);
@@ -10750,13 +10861,50 @@
   line-height: 1;
   pointer-events: none;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.92);
+  box-shadow: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-top: 1px solid rgb(184 162 107 / 0.55);
+  border-bottom: 1px solid rgb(184 162 107 / 0.55);
+  border-left: 1px solid rgb(184 162 107 / 0.55);
+  border-radius: 5px 0 0 3px;
+  background-image:
+    var(--card-cropped-title-noise),
+    var(--card-cropped-title-gradient);
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
+  background-blend-mode: soft-light, normal;
   box-shadow:
-    inset 0 1px 0 rgb(232 222 174 / 0.12),
-    inset 0 -2px 3px rgb(0 0 0 / 0.36),
+    inset 0 1px 0 rgb(235 222 174 / 0.1),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
     0 2px 4px rgb(0 0 0 / 0.42);
+  content: "";
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title::after {
+  position: absolute;
+  inset: 1px 0 1px 1px;
+  z-index: 0;
+  border-radius: 4px 0 0 2px;
+  background: var(--card-cropped-title-motif) center 38% / cover no-repeat;
+  content: "";
+  mix-blend-mode: multiply;
+  opacity: 0.33;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title > span {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -10764,6 +10912,7 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
+  --card-stat-motif-image: url("../dev/tools/Decks/monogreen/motivo.avif");
   --card-stat-border: rgb(201 177 111 / 0.52);
   isolation: isolate;
   right: 3px;
@@ -10790,6 +10939,18 @@
     0 3px 7px rgb(0 0 0 / 0.56);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   clip-path: none;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge > .card-stat-motif {
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  display: block;
+  border-radius: 10px 0 8px;
+  background: var(--card-stat-motif-image) center 58% / cover no-repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.33;
+  pointer-events: none;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge::after {
@@ -10883,16 +11044,10 @@
 /* Zombie chrome follows the palette authored in dev/tools/Decks/zombies/index.html. The damaged
    state keeps that faction material and signals damage through its edge and life value. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
-  background:
-    radial-gradient(circle at 20% 30%, rgb(165 208 168 / 0.07) 0 1px, transparent 2px),
-    radial-gradient(circle at 80% 68%, rgb(0 0 0 / 0.14) 0 2px, transparent 3px),
-    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px),
-    linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #102822 100%);
+  --card-cropped-title-motif: url("../dev/tools/Decks/zombies/motivo.avif");
+  --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, transparent 98%);
   color: #f2f5e8;
-  box-shadow:
-    inset 0 1px 0 rgb(235 222 174 / 0.12),
-    inset 0 -2px 3px rgb(0 0 0 / 0.36),
-    0 2px 4px rgb(0 0 0 / 0.42);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge,
@@ -10902,6 +11057,10 @@
     radial-gradient(ellipse at 24% 0%, rgb(165 208 168 / 0.13), transparent 46%),
     repeating-linear-gradient(112deg, rgb(220 235 224 / 0.018) 0 1px, transparent 1px 5px),
     linear-gradient(180deg, #3f7569 0%, #315f55 54%, #102822 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge {
+  --card-stat-motif-image: url("../dev/tools/Decks/zombies/motivo.avif");
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-damaged,
@@ -10926,16 +11085,10 @@
 
 /* Goblin chrome mirrors the forged-red palette from dev/tools/Decks/goblins/index.html. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-cropped-title {
-  background:
-    radial-gradient(circle at 22% 28%, rgb(255 173 76 / 0.09) 0 1px, transparent 2px),
-    radial-gradient(circle at 81% 70%, rgb(0 0 0 / 0.15) 0 2px, transparent 3px),
-    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px),
-    linear-gradient(90deg, #a63216 0%, #5e180d 65%, #3a0e08 100%);
+  --card-cropped-title-motif: url("../dev/tools/Decks/goblins/motivo.avif");
+  --card-cropped-title-noise: repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px);
+  --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, transparent 98%);
   color: #f8eedc;
-  box-shadow:
-    inset 0 1px 0 rgb(235 222 174 / 0.12),
-    inset 0 -2px 3px rgb(0 0 0 / 0.38),
-    0 2px 4px rgb(0 0 0 / 0.44);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge,
@@ -10945,6 +11098,10 @@
     radial-gradient(ellipse at 24% 0%, rgb(255 173 76 / 0.15), transparent 46%),
     repeating-linear-gradient(133deg, rgb(255 187 91 / 0.02) 0 1px, transparent 1px 6px),
     linear-gradient(180deg, #a63216 0%, #76220f 54%, #3a0e08 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge {
+  --card-stat-motif-image: url("../dev/tools/Decks/goblins/motivo.avif");
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-damaged,
@@ -10965,6 +11122,72 @@
     radial-gradient(ellipse at 24% 0%, rgb(255 204 126 / 0.22), transparent 46%),
     repeating-linear-gradient(133deg, rgb(255 211 141 / 0.024) 0 1px, transparent 1px 6px),
     linear-gradient(180deg, #bd4a1f 0%, #873018 54%, #401108 100%);
+}
+
+/* Vampire chrome comes from the authored Crimson Court generator. The cropped title uses the
+   same motif and lacquer palette as dev/tools/Decks/vampires/index.html. */
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-cropped-title {
+  --card-cropped-title-motif: url("../dev/tools/Decks/vampires/motivo.avif");
+  --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(246 221 227 / 0.018) 0 1px, transparent 1px 5px);
+  --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, transparent 98%);
+  color: #f6ece7;
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge,
+.card-visual.card-image-full.card-theme-vampire > .card-stat-badge,
+.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge {
+  --card-stat-separator: #c88c9b;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(228 147 158 / 0.16), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(246 221 227 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #8d1b3a 0%, #77152f 54%, #260712 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge {
+  --card-stat-motif-image: url("../dev/tools/Decks/vampires/motivo.avif");
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge > i,
+.card-visual.card-image-full.card-theme-vampire > .card-stat-badge > i,
+.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge > i {
+  color: var(--card-stat-separator);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge.is-damaged,
+.card-visual.card-image-full.card-theme-vampire > .card-stat-badge.is-damaged,
+.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge.is-damaged {
+  --card-stat-border: rgb(232 137 151 / 0.76);
+  background:
+    radial-gradient(ellipse at 82% 46%, rgb(232 112 130 / 0.17), transparent 52%),
+    repeating-linear-gradient(112deg, rgb(246 221 227 / 0.016) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #671329 0%, #400b1a 54%, #19040a 100%);
+}
+
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge.is-buffed,
+.card-visual.card-image-full.card-theme-vampire > .card-stat-badge.is-buffed,
+.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge.is-buffed {
+  --card-stat-border: rgb(225 190 119 / 0.78);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(246 197 205 / 0.22), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(255 231 235 / 0.025) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #a82748 0%, #801937 54%, #350813 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 239 225 / 0.16),
+    inset 0 -2px 4px rgb(0 0 0 / 0.4),
+    0 0 9px rgb(172 43 77 / 0.42),
+    0 3px 7px rgb(0 0 0 / 0.56);
+}
+
+/* Damage wins over the higher-specificity faction/base number colors. The badge backgrounds
+   were already changing correctly; without this final override, enemy life still computed white. */
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b,
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b,
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b {
+  color: #ffad98;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.92), 0 0 5px rgb(215 72 53 / 0.58);
 }
 
 /* Full-art exports move the printed stats tab above the type band. The manifest marks this
@@ -13488,6 +13711,21 @@
     0 2px 5px rgb(0 0 0 / 0.46);
 }
 
+.card-keyword-badge-vampire,
+.card-preview-keyword-explanations.is-vampire:not(.is-chaos) .card-preview-keyword-badge {
+  border-color: rgb(225 190 119 / 0.7);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(228 147 158 / 0.19), transparent 47%),
+    linear-gradient(90deg, rgb(246 221 227 / 0.025), transparent 34%, rgb(0 0 0 / 0.14)),
+    repeating-linear-gradient(112deg, rgb(246 221 227 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(141 27 58 / 0.99), rgb(119 21 47 / 0.99) 54%, rgb(38 7 18 / 1));
+  color: #f6ece7;
+  box-shadow:
+    inset 0 1px 0 rgb(246 221 227 / 0.14),
+    inset 0 -2px 3px rgb(0 0 0 / 0.4),
+    0 2px 5px rgb(0 0 0 / 0.48);
+}
+
 .card-keyword-stack {
   z-index: 16;
   max-width: 7.6rem;
@@ -13521,10 +13759,6 @@
 .battlefield-side-horde .battlefield-row-overflow .card-keyword-stack {
   top: 37px;
   left: 10px;
-}
-
-.card-visual:has(> .card-defense-badge-player) > .card-keyword-stack {
-  top: 42px;
 }
 
 .card-keyword-deathtouch {

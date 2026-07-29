@@ -28,11 +28,18 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || resolvingHordeCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
-  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(summoningAnimationCount, pendingTriggeredEffectCount, hordeAutoTriggerCount, t);
+  const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(
+    summoningAnimationCount,
+    pendingTriggeredEffectCount,
+    hordeAutoTriggerCount,
+    playerAutoTriggerCount,
+    t,
+  );
   const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason) || tutorialAwaitingContinue;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
@@ -177,8 +184,15 @@ function hasAvailableAttackers(game: GameState): boolean {
   return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }
 
-function getPendingActionBlockedReason(summoningAnimationCount: number, pendingTriggeredEffectCount: number, hordeAutoTriggerCount: number, t: ReturnType<typeof useTranslation>): string | undefined {
+function getPendingActionBlockedReason(
+  summoningAnimationCount: number,
+  pendingTriggeredEffectCount: number,
+  hordeAutoTriggerCount: number,
+  playerAutoTriggerCount: number,
+  t: ReturnType<typeof useTranslation>,
+): string | undefined {
   if (hordeAutoTriggerCount > 0) return t("orb.hordeResolving");
+  if (playerAutoTriggerCount > 0) return t("orb.playerResolving");
   if (pendingTriggeredEffectCount > 0) return t("orb.resolveTrigger");
   if (summoningAnimationCount > 0) return t("orb.waitSummon");
   return undefined;

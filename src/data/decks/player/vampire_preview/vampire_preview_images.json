@@ -2,7 +2,8 @@
   "schemaVersion": "1.0.0",
   "provider": "local",
   "defaults": {
-    "cacheKey": "vampire-early-access-v2"
+    "cacheKey": "vampire-chronicle-local-v1",
+    "showFullCardImage": true
   },
   "cards": {
     "crimson_energy": {

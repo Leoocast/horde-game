@@ -5,7 +5,7 @@ import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, loca
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { shouldShowFullCardImage, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, shouldShowFullCardImage, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
@@ -162,13 +162,8 @@ export function CardPreview() {
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
   const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
   const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
-  const hordeTheme = card.controller === "horde"
-    ? card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie")
-      ? "zombie"
-      : card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin")
-        ? "goblin"
-        : undefined
-    : undefined;
+  const deckTheme = cardThemeForDefinition(card.definitionId);
+  const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
   const usesFullArtLayout = usesFullArtCardImage(card.definitionId);
   const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
   const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
@@ -188,7 +183,7 @@ export function CardPreview() {
             className={[
               "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
               showFullCardPresentation ? "card-preview-full-card-frame" : "",
-              hordeTheme ? `card-theme-${hordeTheme}` : "",
+              cardTheme ? `card-theme-${cardTheme}` : "",
               usesFullArtLayout ? "card-layout-full-art" : "",
             ].join(" ")}
           >
@@ -197,7 +192,7 @@ export function CardPreview() {
           </div>
           {keywords && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
-              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} hordeTheme={hordeTheme} />
+              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
             </div>
           )}
         </aside>
@@ -216,7 +211,7 @@ export function CardPreview() {
       className={[
         "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
         showFullCardPresentation ? "card-preview-full-card-frame" : "",
-        hordeTheme ? `card-theme-${hordeTheme}` : "",
+        cardTheme ? `card-theme-${cardTheme}` : "",
         usesFullArtLayout ? "card-layout-full-art" : "",
       ].join(" ")}
       style={hoverStyle}
@@ -340,11 +335,11 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
 function KeywordExplanations({
   keywords,
   chaos = false,
-  hordeTheme,
+  cardTheme,
 }: {
   keywords: string;
   chaos?: boolean;
-  hordeTheme?: "zombie" | "goblin";
+  cardTheme?: "zombie" | "goblin" | "vampire";
 }) {
   const language = useLanguageStore((state) => state.language);
   const entries = keywords
@@ -355,7 +350,7 @@ function KeywordExplanations({
   if (entries.length === 0) return null;
 
   return (
-    <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", hordeTheme ? `is-${hordeTheme}` : ""].join(" ")}>
+    <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
           <div className="keyword-pill card-preview-keyword-badge">{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}</div>

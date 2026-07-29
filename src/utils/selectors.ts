@@ -34,10 +34,45 @@ export function cardStatState(
 }
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
-  return getKeywords(game, card)
+  return sortKeywordsForDisplay(getKeywords(game, card))
     .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller !== "horde"))
     .map(formatKeyword)
     .join(", ");
+}
+
+const KEYWORD_DISPLAY_ORDER = [
+  "MENACE",
+  "FLYING",
+  "REACH",
+  "FIRST_STRIKE",
+  "DEATHTOUCH",
+  "LIFESTEAL",
+  "VIGILANCE",
+  "TRAMPLE",
+  "SKULK",
+  "HEXPROOF",
+  "INDESTRUCTIBLE",
+  "HASTE",
+  "TOXIC",
+] as const;
+
+function keywordDisplayKey(keyword: string): string {
+  const normalized = String(keyword).trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return normalized.startsWith("TOXIC_") ? "TOXIC" : normalized;
+}
+
+export function sortKeywordsForDisplay(keywords: string[]): string[] {
+  return [...keywords].sort((left, right) => {
+    const leftKey = keywordDisplayKey(left);
+    const rightKey = keywordDisplayKey(right);
+    const leftPriority = KEYWORD_DISPLAY_ORDER.indexOf(leftKey as (typeof KEYWORD_DISPLAY_ORDER)[number]);
+    const rightPriority = KEYWORD_DISPLAY_ORDER.indexOf(rightKey as (typeof KEYWORD_DISPLAY_ORDER)[number]);
+    const leftRank = leftPriority === -1 ? KEYWORD_DISPLAY_ORDER.length : leftPriority;
+    const rightRank = rightPriority === -1 ? KEYWORD_DISPLAY_ORDER.length : rightPriority;
+
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
 }
 
 function formatKeyword(keyword: string): string {

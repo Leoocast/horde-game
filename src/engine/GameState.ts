@@ -7,14 +7,12 @@ import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 const DEVELOPER_SEED = "developer";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
-const PLAYER_DECK_LAND_COUNT = 9;
+const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
 const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
 const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
-const DEVELOPER_STARTING_BATTLEFIELD = [
-  { definitionId: "forest", amount: 4 },
-] as const;
+const DEVELOPER_STARTING_LAND_COUNT = 4;
 
 const TUTORIAL_SEED = "tutorial";
 const TUTORIAL_OPENING_HAND = ["forest", "llanowar_elves"];
@@ -47,7 +45,7 @@ export function createInitialGame(
     : { player: {}, horde: {} };
   const playerCards = limitPlayerDeckLands(
     expandDeck(activePlayerDeck, "player", chaosMutations.player),
-    PLAYER_DECK_LAND_COUNT,
+    activePlayerDeck.gameplayLandCount ?? DEFAULT_PLAYER_DECK_LAND_COUNT,
   );
   const hordeCards = expandDeck(activeHordeDeck, "horde", chaosMutations.horde);
   const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
@@ -90,6 +88,8 @@ export function createInitialGame(
       manaPool: emptyManaPool(),
       pendingStoredMana: 0,
       energyActionUsedThisTurn: false,
+      lifePaidThisTurn: 0,
+      lifeLostThisTurn: 0,
     },
     horde: {
       library: hordeLibrary,
@@ -210,7 +210,9 @@ function placeOnBattlefield(game: GameState, entries: readonly { definitionId: s
 
 function applyDeveloperStartingBattlefield(game: GameState): void {
   if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
-  placeOnBattlefield(game, DEVELOPER_STARTING_BATTLEFIELD);
+  const landId = game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId;
+  if (!landId) return;
+  placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
 }
 
 function applyTutorialStartingBattlefield(game: GameState): void {
@@ -275,6 +277,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     chaosKeywords: chaosKeywords ? [...chaosKeywords] : [],
     triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
+    additionalCost: definition.additionalCost,
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: definition.requiresTargets ?? [],
     tapped: false,
@@ -286,6 +289,8 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     counters,
     temporaryPower: 0,
     temporaryToughness: 0,
+    untilNextPlayerTurnPower: 0,
+    untilNextPlayerTurnToughness: 0,
     temporaryKeywords: [],
     chosenColor,
     attachTo: definition.attachTo,

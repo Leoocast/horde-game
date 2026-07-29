@@ -221,6 +221,7 @@ export function isPlaygroundBusy(): boolean {
     state.resolvingHordeCombat ||
     state.summoningAnimationCount > 0 ||
     state.hordeAutoTriggerCount > 0 ||
+    state.playerAutoTriggerCount > 0 ||
     state.pendingTriggeredEffectCount > 0 ||
     state.hordeMillAnimationQueue.length > 0 ||
     state.playerDiscardAnimationQueue.length > 0 ||

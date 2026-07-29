@@ -1,4 +1,5 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
+import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from "../engine/Keywords";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
@@ -11,7 +12,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
-import { shouldShowFullCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
@@ -145,6 +146,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
   const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
   const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
@@ -202,7 +204,7 @@ export function Battlefield({ game, side, cards }: Props) {
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
   // let them all leave at once. This covers both animated Horde combat and the Horde's own
   // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
-  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0;
+  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
   const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
@@ -824,12 +826,12 @@ export function Battlefield({ game, side, cards }: Props) {
       (playerCombat && side === "horde") ||
       (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
-    const effectAvailable = canUseTapActivatedAbility(card);
+    const primaryAbility = card.activatedAbilities[0];
+    const effectAvailable = canUseActivatedAbility(card, primaryAbility);
     const showActivatedAbilityChrome = effectAvailable && !isLand;
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const primaryAbility = card.activatedAbilities.find((ability) => ability.cost?.tap === true);
     const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("Creature"));
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
@@ -847,6 +849,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellTargetLockedIsBuff = Boolean(spellTargetLocked && spellCard && spellLockedReq && targetRequirementIsBuff(spellCard, spellLockedReq));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
+    const counterBuffPreview = counterTargetLocked ? counterBuffedStats(game, card) : undefined;
     const tutorialTargetable = tutorialZones.some(
       (zone) =>
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
@@ -877,7 +880,12 @@ export function Battlefield({ game, side, cards }: Props) {
             ? "defense"
             : undefined;
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
-    const showActionGem = !combatAvailabilityTone && !showEffectAvailabilityBorder && (blockDragActive ? false : cardActionable);
+    const showActionGem =
+      !smallpoxSelectionActive &&
+      !spellTargetingActive &&
+      !combatAvailabilityTone &&
+      !showEffectAvailabilityBorder &&
+      (blockDragActive ? false : cardActionable);
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable
@@ -912,8 +920,7 @@ export function Battlefield({ game, side, cards }: Props) {
         !combatAnimationActive &&
         !interactionElevated &&
         !visuallyDead &&
-        !speciallyDead &&
-        !resolvingHordeCombat,
+        !speciallyDead,
     );
 
     return (
@@ -998,7 +1005,7 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        suppressHoverOverlay={spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (tutorialAwaitingContinue) return;
@@ -1138,8 +1145,8 @@ export function Battlefield({ game, side, cards }: Props) {
           )}
         </button>
       )}
-      {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
-      {spellBuffPreview && <span className="counter-target-stat-preview">{spellBuffPreview}</span>}
+      {counterBuffPreview && <BuffStatPreview card={card} stats={counterBuffPreview} />}
+      {spellBuffPreview && <BuffStatPreview card={card} stats={spellBuffPreview} />}
       </div>
       </div>
       </motion.div>
@@ -1185,15 +1192,10 @@ export function Battlefield({ game, side, cards }: Props) {
     return Math.max(index, 0) * 0.04;
   }
 
-  function canUseTapActivatedAbility(card: CardInstance): boolean {
+  function canUseActivatedAbility(card: CardInstance, ability: CardInstance["activatedAbilities"][number] | undefined): boolean {
     if (spellTargetingActive) return false;
-    if (game.activeSide !== "player" || game.phase !== "main") return false;
     if (side !== "player") return false;
-    if (card.zone !== "battlefield") return false;
-    if (card.tapped) return false;
-    if (card.activatedThisTurn) return false;
-    if (card.summoningSickness && card.cardTypes.includes("Creature")) return false;
-    return card.activatedAbilities.some((ability) => ability.cost?.tap === true);
+    return Boolean(ability && !activatedAbilityFailureReason(game, card, ability));
   }
 
   function beginBlockDrag(blockerId: string, event: PointerEvent<HTMLElement>): void {
@@ -1296,12 +1298,34 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
   } as CSSProperties;
 }
 
-function counterBuffedStats(game: GameState, card: CardInstance): string {
-  const stats = getPowerToughness(game, card);
-  return `${stats.power + 1}/${stats.toughness + 1}`;
+type BuffStatPreviewValue = {
+  power: number;
+  toughness: number;
+};
+
+function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatPreviewValue }) {
+  const theme = cardThemeForDefinition(card.definitionId);
+  return (
+    <span
+      aria-label={`${stats.power} attack, ${stats.toughness} life after buff`}
+      className={[
+        "counter-target-stat-preview",
+        theme ? `card-theme-${theme}` : "",
+      ].join(" ")}
+    >
+      <b>{stats.power}</b>
+      <i aria-hidden="true">/</i>
+      <b>{stats.toughness}</b>
+    </span>
+  );
 }
 
-function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string | undefined {
+function counterBuffedStats(game: GameState, card: CardInstance): BuffStatPreviewValue {
+  const stats = getPowerToughness(game, card);
+  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+}
+
+function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): BuffStatPreviewValue | undefined {
   const stats = getPowerToughness(game, card);
   let powerDelta = 0;
   let toughnessDelta = 0;
@@ -1323,7 +1347,10 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
 
   for (const effect of spell.effects) collect(effect);
   if (powerDelta === 0 && toughnessDelta === 0) return undefined;
-  return `${stats.power + powerDelta}/${stats.toughness + toughnessDelta}`;
+  return {
+    power: stats.power + powerDelta,
+    toughness: stats.toughness + toughnessDelta,
+  };
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
@@ -1333,6 +1360,19 @@ function abilityButtonText(ability: CardInstance["activatedAbilities"][number]):
     const color = entry?.[0] === "chosenColor" ? "chosen" : entry?.[0] ?? String(ability.effect.manaColor ?? "G");
     const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
     return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
+  }
+  if (
+    (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" ||
+      ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN") &&
+    ability.effect.target === "SELF"
+  ) {
+    const language = useLanguageStore.getState().language;
+    const life = Number(ability.cost?.life ?? 0);
+    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
+    const untilNextTurn = ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN";
+    return language === "es"
+      ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} ${untilNextTurn ? "hasta tu próximo turno" : "este turno"}.`
+      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`;
   }
   return String(ability.effect.type).replaceAll("_", " ");
 }

@@ -32,9 +32,23 @@ export type EffectDefinition = {
   [key: string]: unknown;
 };
 
+export type ActionCost = {
+  tap?: boolean;
+  sacrificeSelf?: boolean;
+  genericMana?: number;
+  coloredMana?: Partial<Record<Color, number>>;
+  life?: number | {
+    type: "CURRENT_LIFE_FRACTION";
+    numerator: number;
+    denominator: number;
+    rounding: "UP" | "DOWN";
+  };
+};
+
 export type ActivatedAbility = {
   id: string;
-  cost?: Record<string, unknown>;
+  cost?: ActionCost;
+  requiresNoSummoningSickness?: boolean;
   requiresTargets?: TargetRequirement[];
   effect: EffectDefinition;
 };
@@ -81,6 +95,7 @@ export type CardDefinition = {
   triggerMessage?: string;
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
+  additionalCost?: ActionCost;
   activatedAbilities?: ActivatedAbility[];
   effects?: EffectDefinition[];
   requiresTargets?: TargetRequirement[];
@@ -100,6 +115,8 @@ export type DeckList = {
   name: string;
   side: Side;
   deckSize: number;
+  /** Player decks may opt into a different runtime land count than the default nine. */
+  gameplayLandCount?: number;
   cards: CardDefinition[];
   tokens?: CardDefinition[];
   /** Raw per-deck horde rules from the deck JSON; parsed by buildHordeRules at game start. */
@@ -156,6 +173,7 @@ export type CardInstance = {
   chaosKeywords: Keyword[];
   triggerMessage?: string;
   effects: EffectDefinition[];
+  additionalCost?: ActionCost;
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
   tapped: boolean;
@@ -170,6 +188,9 @@ export type CardInstance = {
   counters: Record<string, number>;
   temporaryPower: number;
   temporaryToughness: number;
+  /** Stats that survive end-step cleanup and expire when the next player turn begins. */
+  untilNextPlayerTurnPower?: number;
+  untilNextPlayerTurnToughness?: number;
   temporaryKeywords: Keyword[];
   chosenColor?: Color;
   xValuePaid?: number;
@@ -189,6 +210,10 @@ export type PlayerState = {
   manaPool: ManaPool;
   pendingStoredMana: number;
   energyActionUsedThisTurn: boolean;
+  /** Life paid as a cost during the current active turn. Reset whenever either side starts a turn. */
+  lifePaidThisTurn: number;
+  /** Life lost for any reason during the current active turn. Reset whenever either side starts a turn. */
+  lifeLostThisTurn: number;
 };
 
 export type HordeState = {
@@ -268,9 +293,15 @@ export type CastOptions = {
   xValue?: number;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
+  /** Leaves automatic player reactions in `eventQueue` so the store can present their source
+   *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
+  deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
 };
 
 export type AbilityOptions = {
   targets?: Record<string, string | string[]>;
+  /** Leaves automatic player reactions in `eventQueue` so the store can present them one source
+   *  at a time before committing their effects. Pure engine callers remain synchronous by default. */
+  deferReactiveTriggers?: boolean;
 };

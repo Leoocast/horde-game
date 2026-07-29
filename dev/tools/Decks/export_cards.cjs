@@ -9,6 +9,12 @@ const DECKS = new Set([
     'goblins',
     'vampires'
 ]);
+const PUBLIC_CARD_FOLDERS = {
+    monogreen: 'mono_green_ramp',
+    zombies: 'zombies',
+    goblins: 'goblins',
+    vampires: 'vampires'
+};
 
 function requireExporterDependency(name) {
     try {
@@ -28,11 +34,27 @@ function requireExporterDependency(name) {
 }
 
 function findBrowser() {
-    const candidates = [
+    const configuredCandidates = [
+        process.env.HOSTFALL_BROWSER_PATH,
+        process.env.CHROME_PATH
+    ];
+    const windowsCandidates = [
         path.join(process.env.PROGRAMFILES_X86 || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
         path.join(process.env.PROGRAMFILES || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
         path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
         path.join(process.env.PROGRAMFILES_X86 || '', 'Google', 'Chrome', 'Application', 'chrome.exe')
+    ];
+    const macCandidates = [
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+        '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        path.join(os.homedir(), 'Applications', 'Google Chrome.app', 'Contents', 'MacOS', 'Google Chrome'),
+        path.join(os.homedir(), 'Applications', 'Microsoft Edge.app', 'Contents', 'MacOS', 'Microsoft Edge'),
+        path.join(os.homedir(), 'Applications', 'Chromium.app', 'Contents', 'MacOS', 'Chromium')
+    ];
+    const candidates = [
+        ...configuredCandidates,
+        ...(process.platform === 'darwin' ? macCandidates : windowsCandidates)
     ];
 
     return candidates.find((candidate) => candidate && fs.existsSync(candidate));
@@ -119,18 +141,31 @@ async function main() {
     const executablePath = findBrowser();
 
     if (!executablePath) {
-        throw new Error('No se encontro Microsoft Edge ni Google Chrome.');
+        throw new Error(
+            'No se encontro Google Chrome, Microsoft Edge ni Chromium. '
+            + 'Instala uno o define HOSTFALL_BROWSER_PATH con la ruta del ejecutable.'
+        );
     }
 
     const deckDir = path.join(__dirname, deckId);
     const htmlPath = path.join(deckDir, 'index.html');
     const outputDir = path.join(deckDir, 'exported-png');
+    const publicCardsDir = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'public',
+        'cards',
+        PUBLIC_CARD_FOLDERS[deckId]
+    );
 
     if (!fs.existsSync(htmlPath)) {
         throw new Error(`No se encontro el index del deck: ${htmlPath}`);
     }
 
     await fs.promises.mkdir(outputDir, { recursive: true });
+    await fs.promises.mkdir(publicCardsDir, { recursive: true });
 
     const browser = await chromium.launch({
         executablePath,
@@ -239,11 +274,13 @@ async function main() {
         for (let index = 0; index < pendingPngs.length; index++) {
             const { fileName, png } = pendingPngs[index];
             await writeFileWithRetry(path.join(outputDir, fileName), png);
+            await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
         console.log('');
-        console.log(`Listo: ${outputDir}`);
+        console.log(`Copia de trabajo: ${outputDir}`);
+        console.log(`Juego actualizado: ${publicCardsDir}`);
     } finally {
         await browser.close();
     }

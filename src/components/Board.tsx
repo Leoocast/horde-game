@@ -46,6 +46,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
@@ -103,7 +104,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <PlayerAttackAnimator />
       <SpellFightAnimator />
       <BurnAnimator />
-      {(hordeAutoTriggerCount > 0 || burnAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

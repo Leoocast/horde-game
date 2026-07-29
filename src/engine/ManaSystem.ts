@@ -110,7 +110,10 @@ export function payManaAutomatically(game: GameState, cost: ManaPool): boolean {
     if (canPay(simulatedPool, cost)) break;
   }
 
-  const poolWithStoredMana = { ...simulatedPool, colorless: storedMana };
+  // Universal land energy and stored energy both use the colorless channel at payment time.
+  // Keep them separate while selecting normal sources so normal energy is spent first, then
+  // combine both pools for the final affordability check and payment.
+  const poolWithStoredMana = { ...simulatedPool, colorless: simulatedPool.colorless + storedMana };
   if (!canPay(poolWithStoredMana, cost)) return false;
 
   for (const { card, produced } of selected) {

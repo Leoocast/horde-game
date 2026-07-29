@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
+import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
 
 function loadDeckCardTextFormatter() {
   const source = fs.readFileSync(
@@ -31,6 +32,22 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const raidBombardment = formatEffectText(
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
   );
+  const lifeCost = formatEffectText(
+    "Coste adicional: Paga 5 vidas.\nRoba 2 cartas.",
+  );
+  const fractionalLifeCost = formatEffectText(
+    "Coste adicional: Paga la mitad de tus vidas.",
+  );
+  const inlineKeywords = formatEffectText(
+    "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tus vidas.",
+  );
+  const acolyteCost = formatEffectText(
+    "{{T}}: Paga 5 vidas. Agrega {G}.",
+    {
+      tapIconHtml: '<span class="tap-icon"></span>',
+      energyIconHtml: '<span class="energy-icon"></span>',
+    },
+  );
 
   assert.match(captain, /class="effect-keyword">Toque mortal<\/strong>/);
   assert.match(captain, /class="effect-stat">\+1\/\+1<\/strong>/);
@@ -48,6 +65,21 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
   assert.match(raidBombardment, /class="effect-danger">fuerza 2 o menos<\/strong>/);
   assert.match(raidBombardment, /class="effect-danger">1 de daño<\/strong>/);
+  assert.match(lifeCost, /class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.match(lifeCost, /Coste adicional: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.equal((lifeCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.match(
+    fractionalLifeCost,
+    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tus vidas\.<\/strong>/,
+  );
+  assert.match(
+    inlineKeywords,
+    /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Robo de vida<\/strong>\. <strong class="effect-keyword">Vigilancia<\/strong>\./,
+  );
+  assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.match(acolyteCost, /<span class="tap-icon"><\/span>: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.match(acolyteCost, /Agrega <span class="energy-icon"><\/span>\./);
+  assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
@@ -78,3 +110,95 @@ test("local Vampire studio art paths resolve to real files", () => {
     }
   }
 });
+
+test("Vampire studio cards stay aligned with the runtime deck", () => {
+  const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(
+    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
+
+  const runtimeDeck = JSON.parse(
+    fs.readFileSync(
+      new URL("../src/data/decks/player/vampire_preview/vampire_preview.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const studioSources = [
+    { label: "embedded index", cards: JSON.parse(embeddedJson), includesQuantity: true },
+    {
+      label: "vampires.json",
+      cards: JSON.parse(
+        fs.readFileSync(
+          new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    },
+  ];
+  const keywordLabels = {
+    DEATHTOUCH: "Toque mortal",
+    FLYING: "Volar",
+    LIFESTEAL: "Robo de vida",
+    REACH: "Alcance",
+    VIGILANCE: "Vigilancia",
+  };
+
+  for (const runtimeCard of runtimeDeck.cards) {
+    const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
+      ? []
+      : [runtimeCard.gameText?.es];
+    const keywordText = (runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
+    const expected = runtimeCard.id === "eternal_feast_countess"
+      ? [
+          ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(0, 1),
+          `${keywordText.join(". ")}.`,
+          ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(1),
+        ].filter(Boolean).join("\n")
+      : [...keywordText, ...rulesText].filter(Boolean).join("\n");
+
+    for (const source of studioSources) {
+      const studioCard = source.cards.find((card) => card.id === runtimeCard.id);
+      assert.ok(studioCard, `${source.label} is missing ${runtimeCard.id}`);
+      assert.equal(studioCard.costo, runtimeCard.manaValue, `${source.label} has a stale cost for ${runtimeCard.id}`);
+      assert.equal(studioCard.atk, runtimeCard.power, `${source.label} has stale power for ${runtimeCard.id}`);
+      assert.equal(studioCard.def, runtimeCard.toughness, `${source.label} has stale toughness for ${runtimeCard.id}`);
+      if (source.includesQuantity) {
+        assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
+      }
+      if (runtimeCard.id === "blood_pact") {
+        assert.equal(studioCard.tipo, "Conjuro", `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
+      if (runtimeCard.id === "final_banquet") {
+        assert.equal(studioCard.tipo, "Instantáneo", `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
+      assert.equal(
+        normalizeVampireEffect(studioCard.desc),
+        normalizeVampireEffect(expected),
+        `${source.label} has stale rules for ${runtimeCard.id}`,
+      );
+    }
+  }
+});
+
+test("Vampire gameplay cards use their full-image faction presentation", () => {
+  for (const definitionId of [
+    "crimson_energy",
+    "blood_page",
+    "crimson_bat",
+    "eternal_feast_countess",
+    "blood_pact",
+  ]) {
+    assert.equal(shouldShowFullCardImage(definitionId), true);
+    assert.equal(cardThemeForDefinition(definitionId), "vampire");
+  }
+});
+
+function normalizeVampireEffect(text) {
+  return String(text ?? "")
+    .replaceAll("{{T}}", "Agota")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}

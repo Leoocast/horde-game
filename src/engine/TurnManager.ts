@@ -30,6 +30,10 @@ export function clearPlayerSummoningSickness(game: GameState): void {
 }
 
 export function startPlayerTurn(game: GameState): void {
+  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+    card.untilNextPlayerTurnPower = 0;
+    card.untilNextPlayerTurnToughness = 0;
+  }
   game.activeSide = "player";
   game.phase = "untap";
   game.battlefieldEntriesThisTurn = [];
@@ -38,6 +42,8 @@ export function startPlayerTurn(game: GameState): void {
   // so an older setup turn must never refill stored mana later.
   game.player.pendingStoredMana = 0;
   game.player.energyActionUsedThisTurn = false;
+  game.player.lifePaidThisTurn = 0;
+  game.player.lifeLostThisTurn = 0;
   game.turnNumber += 1;
 }
 

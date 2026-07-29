@@ -49,6 +49,7 @@ export type NewDeckAbility = {
   kind?: string;
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
+  requiresNoSummoningSickness?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;
   effects?: Array<Record<string, unknown>>;
@@ -62,6 +63,8 @@ export type NewDeckList = {
   name: string;
   side?: string;
   deckSize?: number;
+  /** Number of authored Land copies kept when the runtime prepares this player deck. */
+  gameplayLandCount?: number;
   rulesProfile?: Record<string, unknown>;
   cards: NewDeckCard[];
   tokens?: NewDeckCard[];

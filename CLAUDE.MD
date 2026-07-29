@@ -152,7 +152,12 @@ Puede:
 - castear criaturas, instants y sorceries segun fase
 - atacar a la Horda
 - bloquear ataques de Horda
-- usar algunas habilidades activadas con tap
+- usar habilidades activadas genericas con costes de tap, mana, sacrificio propio o vida
+- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_LOST`
+  ademas de `LIFE_PAID`, y se acumula por separado en `player.lifeLostThisTurn` y
+  `player.lifePaidThisTurn` hasta el siguiente turno
+- una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
+  inactiva mientras su criatura tenga fatiga, sin cobrar costes
 
 ### Horde
 
@@ -270,6 +275,9 @@ Usado por spells con targets:
 Flujo:
 - carta de la mano queda invisible dejando hueco
 - overlay con carta grande fuente
+- si la carta fuente se superpone con un objetivo valido o ya elegido, al pasar el cursor sobre
+  ella baja a 34% de opacidad y deja pasar el click; al salir recupera su opacidad, mientras el
+  preview y los botones siguen interactivos
 - elegir targets en orden
 - flechas lockeadas visibles
 - confirm resuelve
@@ -469,8 +477,8 @@ Durante Defend:
   - debe respetar izquierda/derecha segun regla actual
   - cada blocker muestra su orden real (1, 2, ...) en el badge azul, incluso si es el unico
 - cada atacante de la Horda con bloqueadores asignados muestra su cantidad en un badge azul con
-  escudo anclado top-right; aplica por igual a Zombies y Goblins, y el header cutted reserva ese
-  espacio
+  escudo anclado top-left, la zona expuesta de los stacks; aplica por igual a Zombies y Goblins,
+  y el header cutted reserva ese espacio
 
 Animacion:
 - atacante y defensor se mueven un poco hacia adelante en queue
@@ -646,6 +654,71 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
+- `LIFESTEAL` es una keyword real de combate del player: recupera vida igual al dano de combate
+  que la criatura hace al Host o a una criatura mientras bloquea. La recuperacion del ataque se
+  aplica por atacante en el punto de impacto de `PlayerAttackAnimator`; la defensa lleva
+  `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
+  muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
+  si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
+  Carmesi usa esta regla generica en ataque y defensa. Condesa del Banquete Eterno la recibe
+  mediante una condicion estatica solo durante el turno del player, de modo que recupera vida al
+  atacar pero nunca al bloquear; Centinela de Sangre conserva solo `VIGILANCE`.
+- Guardian de la Cripta tiene `REACH` y usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
+  de combate o no, lo encola solamente si sigue en campo despues del impacto. No tiene limite por
+  turno, por decision del usuario; varios impactos que sobreviva crean varios triggers. El evento
+  queda antes de las muertes causadas por el mismo impacto. El dispatcher compartido alterna
+  automaticamente runners por controlador, incluso cuando el trigger nace de un Burn de la Horda,
+  para que ninguna reaccion del player se consuma de forma invisible. El beat pulsa al Guardian,
+  resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
+- Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno solamente
+  si el Paje esta enderezado cuando ocurre la perdida. La condicion generica
+  `SOURCE_IS_UNTAPPED` evita que una fuente agotada entre siquiera a la cola de reacciones. Por
+  decision del usuario, esta restriccion es una regla interna y no se agrega al texto impreso. Toda ruta
+  de perdida —dano de combate, Burn, efectos `LOSE_LIFE` y pagos— pasa por `losePlayerLife`, que
+  emite `LIFE_LOST` y acumula `player.lifeLostThisTurn`; el contador se reinicia al comenzar tanto
+  el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
+  `LIFE_PAID`. Los impactos animados posteriores se recalculan contra el board actual, de modo que
+  dejar pasar un atacante puede buffear al Paje antes de que haga dano como bloqueador de otro.
+- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
+  mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
+  consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
+  queda diferido para hacer pulso antes de recibir su buff. El pago usa el golpe generico del HUD
+  (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
+- Condesa del Banquete Eterno usa un coste de vida `CURRENT_LIFE_FRACTION` 1/2 con redondeo `UP`.
+  `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
+  Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas
+  reacciones y beats de presentacion que los pagos numericos. La carta omite el redondeo para
+  mantener el texto corto. El estudio imprime primero `Coste adicional: Paga la mitad de tus
+  vidas.`, despues `Volar. Vigilancia.` en una sola linea y al final aclara que tiene Robo de vida
+  durante tu turno. La regla conserva el tamano normal del texto de Vampiros; para ganar espacio
+  solamente se reduce el lore. El titulo de la Condesa usa un tamano intermedio mayor que el
+  preset normal de nombres largos.
+- Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
+  aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
+  bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
+  `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
+  engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
+  un `LIFE_LOST` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
+  durante el turno de la Horda, igual que con habilidades activadas.
+- Drenar la Esencia es Instant `{2}` y, por decision del usuario, puede elegir cualquier criatura,
+  no solo una de la Horda. Le hace 3 de dano no de combate y luego recupera 2 vidas aunque la
+  criatura sobreviva; esto permite usarlo sobre criaturas propias, incluido el Guardian de la
+  Cripta, que ademas dispara su propia recuperacion si sobrevive: son 4 vidas en total. El dano
+  dirigido por un spell usa `DEAL_DAMAGE_TO_TARGET`, conserva el dano marcado si no es letal y
+  entrega las muertes letales a la cola compartida de reacciones. La recuperacion activa el beat
+  generico de vida del HUD.
+- Sed Depredadora conserva su nombre, arte, coste `{2}` y tipo Instant, pero ya no elige objetivo:
+  concede `LIFESTEAL` a todas las criaturas aliadas hasta fin de turno. Reutiliza
+  `GRANT_KEYWORD_UNTIL_END_OF_TURN` con el target generico `ALL_CREATURES/SELF`; el diff de
+  presentacion detecta keywords temporales nuevas y pulsa todas las criaturas afectadas.
+  `cleanupEndStep` elimina la keyword.
+- Banquete Final es Instant `{3}`: solo elige una criatura de la Horda, registra su fuerza efectiva
+  (incluidos contadores, auras y buffs temporales), la destruye y despues hace perder esa cantidad
+  de vida al player. `ResolveContext.lastKnownStats` conserva esa informacion entre los efectos
+  `DESTROY_TARGET` y `LOSE_LIFE`. Es perdida, no pago: puede llevar al player a cero y no incrementa
+  `lifePaidThisTurn`, pero si activa al Paje cuando es la primera perdida del turno. El store difiere
+  tanto esa reaccion como los triggers de muerte hasta despues del fade y respeta el orden de la
+  cola antes de presentar cada beat.
 - Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
@@ -655,6 +728,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
   de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
+  frase explicita `Paga N vidas.` tambien se imprime en rojo y negrita. En Vampiros, los spells con
+  pago adicional mantienen `Coste adicional: Paga N vidas.` en una sola linea y separan el efecto; Acólito usa
+  `{{T}}: Paga 5 vidas. Agrega {G}.` para mostrar primero el icono de agotar y luego el mismo
+  orbe azul de Energia que usan los Druidas del deck verde.
+  Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
   usa `quita ... y crea ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
@@ -662,7 +740,30 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - El generador de Vampires toma sus WebP de arte recortado desde
   `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
   `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
-  PNG de la raiz, no a los WebP de `art/`.
+  PNG de la raiz, no a los WebP de `art/`. La Corte Carmesi ya es un deck jugable de 40 cartas;
+  conserva el id interno `vampire_chronicle_preview` para no romper escenarios guardados, pero su
+  metadata visible ya no dice Preview/Early Access. El manifest activa `showFullCardImage` para que
+  mano, targeting y previews usen la carta completa. `cardThemeForDefinition` deriva el tema
+  `vampire` desde `DECK_REGISTRY`; el header recortado, los stats dinamicos y los badges de keywords
+  usan la paleta borgona del generador. El motivo del header/runtime es
+  `dev/tools/Decks/vampires/motivo.avif`, una copia optimizada del JPG fuente; el generador conserva
+  el JPG de resolucion completa para exportar. Developer Mode coloca cuatro tierras del player deck
+  seleccionado, asi que Vampires inicia con cuatro Energias Carmesi en vez de Forests. El primer
+  pase de balance subio `gameplayLandCount` a 12 (Mono Green conserva el default de 9), hizo
+  1/3 al Paje, 2/2 al Murcielago, 3/3 al Duelista y 3/5 al Centinela. El ajuste siguiente dejo
+  Acólito en coste 1, stats 1/2, pago de 5 vidas y dos copias; dejo al Duelista en 3/3 con buff
+  +3/+1, retiro Robo de vida y bajo a 3/4 al Centinela, subio la Condesa a dos copias y la hizo
+  5/5 con `FLYING`, `VIGILANCE`, Robo de vida solo durante el turno del player y pago adicional de
+  media vida redondeada hacia arriba.
+  El mismo ajuste bajo Impulso a coste 1 con
+  +2/+2 y Volar, bajo Drenar a coste 2 y convirtio Sed en Robo de vida global hasta fin de turno.
+  Pacto e Impulso permanecen en dos copias, Sed en una y Banquete Final cuesta 3. La regresion del
+  estudio compara coste, stats, cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
+  `.command`, escribe cada PNG en `exported-png/` y tambien lo sincroniza directamente con la
+  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente.
+  El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+1 sobrevive la limpieza del turno del
+  player, aplica al bloquear durante el combate de la Horda y se elimina al comenzar el siguiente
+  turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 5 vidas.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto
@@ -707,7 +808,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   El preview fijado con click derecho muestra el PNG limpio, sin superponer stats; el hover conserva
   los stats vivos y su estado buffed. En el hover queda unos pixeles elevado; preview, mano y
   targeting comparten la pestana del `index` correspondiente, con variantes legibles para dano y
-  buff. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
+  buff. El preview compacto de stats que aparece debajo al fijar el objetivo de una carta de buff
+  usa la misma pestana redondeada y la paleta de stats del arquetipo objetivo; no vuelve al
+  rectangulo verde generico con esquinas cortadas. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
   desplazamiento del generador (58px desde la derecha y 136px desde abajo sobre 976px) para cubrir
   los stats horneados encima de la banda de tipo. No inferir esa composicion por nombre.
   Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
@@ -722,7 +825,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
   `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
   Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
-  generica. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
+  generica. Cuando un enemigo tiene dano marcado, el valor de resistencia visible gana el rojo
+  de dano incluso sobre las reglas de color mas especificas de Zombies/Goblins; el ataque permanece
+  blanco. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
   composicion ni cantidades duplicadas dentro del manifest visual.
   `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
   preview lateral o modal; `xN` permanece a la derecha.
@@ -732,7 +837,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   independiente de `92-118px`.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
-  layout siga apilando copias iguales.
+  layout siga apilando copias iguales. La secuencia de combate no apaga globalmente el idle de
+  `FLYING`: solo la carta que participa en el impacto actual pausa su vuelo; las demas siguen
+  flotando mientras atacan otras criaturas.
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
@@ -743,9 +850,20 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   material verde petroleo o rojo forja de sus respectivos generadores; otros enemigos conservan
   la variante borgona generica y Chaos su magenta. El badge de keyword junto al preview fijado
   comparte este mismo material, tipografia y capitalizacion.
-  Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
+  El orden visual de keywords es estable y empieza siempre por `MENACE`; no depende de si la
+  keyword es impresa, temporal o concedida por un efecto estatico. La aparicion del badge de orden
+  de defensa de la Horda o del jugador nunca debe desplazar las keywords: ambas capas conservan
+  anclas independientes. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
+- La seleccion bespoke de Smallpox conserva el borde de target y la flecha, pero nunca muestra
+  `card-actionable-gem`: ni sobre permanentes del battlefield ni sobre cartas de la mano. Durante
+  Smallpox o el descarte por limite, la carta seleccionada permanece elevada; el hover de otra
+  carta tambien se eleva y usa una capa superior a la seleccionada. El panel de confirmacion de
+  Smallpox se ancla fuera del centro derecho de la propia carta de Smallpox; no va
+  debajo de ella ni junto a la carta elegida.
+- El targeting de hechizos tampoco muestra `card-actionable-gem` sobre sus objetivos: el borde,
+  la elevacion y la flecha ya comunican que cartas se pueden elegir.
 - La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
   suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
   a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa
