@@ -36,7 +36,6 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     keyCardId: "eternal_feast_countess",
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
-    playable: false,
   }),
   register("Zombie Horde 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
     keyCardId: "zombie_token",

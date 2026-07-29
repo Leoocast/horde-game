@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DECK_REGISTRY } from "../data/decks";
-import type { DeckImageManifest } from "../data/deckCatalog";
+import type { DeckImageManifest, DeckTheme } from "../data/deckCatalog";
 import { useLanguageStore } from "../store/useLanguageStore";
 import type { AppLanguage } from "../i18n/translations";
 import { fetchScryfallCardJson } from "./scryfall";
@@ -35,6 +35,13 @@ const showFullCardImageById = new Map<string, boolean>(
 const fullArtCardImageIds = new Set<string>(
   DECK_REGISTRY.flatMap((entry) =>
     Object.entries(entry.images.cards).flatMap(([id, image]) => image.fullArt ? [id] : []),
+  ),
+);
+const cardThemeByDefinitionId = new Map<string, DeckTheme>(
+  DECK_REGISTRY.flatMap((entry) =>
+    [...(entry.deck.cards ?? []), ...(entry.deck.tokens ?? [])].map(
+      (card) => [card.id, entry.presentation.theme] as [string, DeckTheme],
+    ),
   ),
 );
 const directDetailsById = new Map<string, CardRemoteDetails>([
@@ -79,6 +86,10 @@ export function shouldShowFullCardImage(definitionId: string): boolean {
 
 export function usesFullArtCardImage(definitionId: string): boolean {
   return fullArtCardImageIds.has(definitionId);
+}
+
+export function cardThemeForDefinition(definitionId: string): DeckTheme | undefined {
+  return cardThemeByDefinitionId.get(definitionId);
 }
 
 const SCRYFALL_RESOLUTION_PATTERN = /\/(small|normal|large)\//;

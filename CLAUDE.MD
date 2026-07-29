@@ -718,7 +718,15 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - El generador de Vampires toma sus WebP de arte recortado desde
   `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
   `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
-  PNG de la raiz, no a los WebP de `art/`.
+  PNG de la raiz, no a los WebP de `art/`. La Corte Carmesi ya es un deck jugable de 40 cartas;
+  conserva el id interno `vampire_chronicle_preview` para no romper escenarios guardados, pero su
+  metadata visible ya no dice Preview/Early Access. El manifest activa `showFullCardImage` para que
+  mano, targeting y previews usen la carta completa. `cardThemeForDefinition` deriva el tema
+  `vampire` desde `DECK_REGISTRY`; el header recortado, los stats dinamicos y los badges de keywords
+  usan la paleta borgona del generador. El motivo del header/runtime es
+  `dev/tools/Decks/vampires/motivo.avif`, una copia optimizada del JPG fuente; el generador conserva
+  el JPG de resolucion completa para exportar. Developer Mode coloca cuatro tierras del player deck
+  seleccionado, asi que Vampires inicia con cuatro Energias Carmesi en vez de Forests.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto

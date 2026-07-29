@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { getHordeDeck, hordeDeck, playerDeck } from "../src/data/decks";
+import { getHordeDeck, getPlayerDeck, hordeDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
 import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
 import { buildHordeRules } from "../src/engine/HordeRules";
@@ -34,6 +34,40 @@ test("same seed produces the same player and Horde deck order", () => {
     second.horde.library.map((card) => card.definitionId),
   );
   assert.equal(first.currentRandomState, second.currentRandomState);
+});
+
+test("the registered Vampire chronicle starts as its complete playable deck", () => {
+  const vampireDeck = getPlayerDeck("vampire_chronicle_preview");
+  const game = createInitialGame(vampireDeck, hordeDeck, "vampire-integration", 3);
+  const playerCards = [
+    ...game.player.library,
+    ...game.player.hand,
+    ...game.player.battlefield,
+    ...game.player.graveyard,
+    ...game.player.exile,
+  ];
+
+  assert.equal(vampireDeck.id, "vampire_chronicle_preview");
+  assert.equal(vampireDeck.name, "La Corte Carmesí");
+  assert.equal(playerCards.length, 40);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(playerCards.filter((card) => card.definitionId === "crimson_energy").length, 9);
+});
+
+test("Developer Mode uses the selected player deck's own Energy cards", () => {
+  const vampireDeck = getPlayerDeck("vampire_chronicle_preview");
+  const game = createInitialGame(vampireDeck, hordeDeck, "developer", 3);
+
+  assert.deepEqual(
+    game.player.battlefield.map((card) => card.definitionId),
+    ["crimson_energy", "crimson_energy", "crimson_energy", "crimson_energy"],
+  );
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(
+    [...game.player.hand, ...game.player.library, ...game.player.battlefield]
+      .some((card) => card.definitionId === "forest" || card.definitionId === "broken_wings"),
+    false,
+  );
 });
 
 test("every expanded card copy has a unique instance id", () => {

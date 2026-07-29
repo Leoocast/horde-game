@@ -1,8 +1,8 @@
 {
   "schemaVersion": "0.2.0",
   "id": "vampire_chronicle_preview",
-  "name": "La Corte Carmesí — Early Access",
-  "format": "early-access-preview",
+  "name": "La Corte Carmesí",
+  "format": "casual",
   "side": "PLAYER",
   "deckSize": 40,
   "archetype": "life-payment-lifesteal",

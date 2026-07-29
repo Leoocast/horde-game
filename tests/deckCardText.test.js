@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
+import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
 
 function loadDeckCardTextFormatter() {
   const source = fs.readFileSync(
@@ -78,3 +79,78 @@ test("local Vampire studio art paths resolve to real files", () => {
     }
   }
 });
+
+test("Vampire studio effects stay aligned with the runtime deck", () => {
+  const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(
+    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
+
+  const runtimeDeck = JSON.parse(
+    fs.readFileSync(
+      new URL("../src/data/decks/player/vampire_preview/vampire_preview.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const studioSources = [
+    { label: "embedded index", cards: JSON.parse(embeddedJson) },
+    {
+      label: "vampires.json",
+      cards: JSON.parse(
+        fs.readFileSync(
+          new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    },
+  ];
+  const keywordLabels = {
+    DEATHTOUCH: "Toque mortal",
+    FLYING: "Volar",
+    LIFESTEAL: "Robo de vida",
+    VIGILANCE: "Vigilancia",
+  };
+
+  for (const runtimeCard of runtimeDeck.cards) {
+    const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
+      ? []
+      : [runtimeCard.gameText?.es];
+    const expected = [
+      ...(runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword),
+      ...rulesText,
+    ].filter(Boolean).join("\n");
+
+    for (const source of studioSources) {
+      const studioCard = source.cards.find((card) => card.id === runtimeCard.id);
+      assert.ok(studioCard, `${source.label} is missing ${runtimeCard.id}`);
+      assert.equal(
+        normalizeVampireEffect(studioCard.desc),
+        normalizeVampireEffect(expected),
+        `${source.label} has stale rules for ${runtimeCard.id}`,
+      );
+    }
+  }
+});
+
+test("Vampire gameplay cards use their full-image faction presentation", () => {
+  for (const definitionId of [
+    "crimson_energy",
+    "blood_page",
+    "crimson_bat",
+    "eternal_feast_countess",
+    "blood_pact",
+  ]) {
+    assert.equal(shouldShowFullCardImage(definitionId), true);
+    assert.equal(cardThemeForDefinition(definitionId), "vampire");
+  }
+});
+
+function normalizeVampireEffect(text) {
+  return String(text ?? "")
+    .replaceAll("{{T}}", "Agota")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}

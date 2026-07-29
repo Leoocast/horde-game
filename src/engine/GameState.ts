@@ -12,9 +12,7 @@ const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
 const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
 const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
-const DEVELOPER_STARTING_BATTLEFIELD = [
-  { definitionId: "forest", amount: 4 },
-] as const;
+const DEVELOPER_STARTING_LAND_COUNT = 4;
 
 const TUTORIAL_SEED = "tutorial";
 const TUTORIAL_OPENING_HAND = ["forest", "llanowar_elves"];
@@ -212,7 +210,9 @@ function placeOnBattlefield(game: GameState, entries: readonly { definitionId: s
 
 function applyDeveloperStartingBattlefield(game: GameState): void {
   if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
-  placeOnBattlefield(game, DEVELOPER_STARTING_BATTLEFIELD);
+  const landId = game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId;
+  if (!landId) return;
+  placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
 }
 
 function applyTutorialStartingBattlefield(game: GameState): void {

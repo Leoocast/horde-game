@@ -2,7 +2,7 @@ import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
-import { toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -64,20 +64,14 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           .filter(Boolean)
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
-  const isGoblin = card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin");
-  const hordeTheme = card.controller === "horde"
-    ? isZombie
-      ? "zombie"
-      : isGoblin
-        ? "goblin"
-        : undefined
-    : undefined;
+  const deckTheme = cardThemeForDefinition(card.definitionId);
+  const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
   // Horde creatures tap as a rule of the mode, not as a choice the player made, so they never get
   // the grey "spent" treatment or the Tapped badge. They DO lean, and they lean the moment they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
   const usesHordeTappedStyle = card.controller === "horde" && card.cardTypes.includes("Creature");
-  const keywordToneClass = hordeTheme
-    ? `card-keyword-badge-${hordeTheme}`
+  const keywordToneClass = cardTheme
+    ? `card-keyword-badge-${cardTheme}`
     : card.controller === "horde"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
@@ -158,7 +152,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         cropTopHalf ? "battlefield-land-card-crop" : "",
         showFullImage ? "card-image-full" : "",
         preferNativeImageRendering ? "card-image-native-hd" : "",
-        hordeTheme ? `card-theme-${hordeTheme}` : "",
+        cardTheme ? `card-theme-${cardTheme}` : "",
         usesFullArtCardImage(card.definitionId) ? "card-layout-full-art" : "",
         stats.buffed ? "card-stats-buffed" : "",
         stats.damaged ? "card-stats-damaged" : "",
