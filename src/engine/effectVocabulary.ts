@@ -58,6 +58,7 @@ export const EFFECT_CONDITION_TYPES = new Set([
 
 /** Mirrors StaticEffects.staticConditionMet (conditions on STATIC_CONDITIONAL_* effects). */
 export const STATIC_CONDITION_TYPES = new Set([
+  "ACTIVE_PLAYER_IS",
   "GRAVEYARD_COUNT_AT_LEAST",
 ]);
 

@@ -12,7 +12,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
-import { shouldShowFullCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
@@ -849,6 +849,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellTargetLockedIsBuff = Boolean(spellTargetLocked && spellCard && spellLockedReq && targetRequirementIsBuff(spellCard, spellLockedReq));
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
+    const counterBuffPreview = counterTargetLocked ? counterBuffedStats(game, card) : undefined;
     const tutorialTargetable = tutorialZones.some(
       (zone) =>
         (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
@@ -881,6 +882,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem =
       !smallpoxSelectionActive &&
+      !spellTargetingActive &&
       !combatAvailabilityTone &&
       !showEffectAvailabilityBorder &&
       (blockDragActive ? false : cardActionable);
@@ -1143,8 +1145,8 @@ export function Battlefield({ game, side, cards }: Props) {
           )}
         </button>
       )}
-      {counterTargetLocked && <span className="counter-target-stat-preview">{counterBuffedStats(game, card)}</span>}
-      {spellBuffPreview && <span className="counter-target-stat-preview">{spellBuffPreview}</span>}
+      {counterBuffPreview && <BuffStatPreview card={card} stats={counterBuffPreview} />}
+      {spellBuffPreview && <BuffStatPreview card={card} stats={spellBuffPreview} />}
       </div>
       </div>
       </motion.div>
@@ -1296,12 +1298,34 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
   } as CSSProperties;
 }
 
-function counterBuffedStats(game: GameState, card: CardInstance): string {
-  const stats = getPowerToughness(game, card);
-  return `${stats.power + 1}/${stats.toughness + 1}`;
+type BuffStatPreviewValue = {
+  power: number;
+  toughness: number;
+};
+
+function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatPreviewValue }) {
+  const theme = cardThemeForDefinition(card.definitionId);
+  return (
+    <span
+      aria-label={`${stats.power} attack, ${stats.toughness} life after buff`}
+      className={[
+        "counter-target-stat-preview",
+        theme ? `card-theme-${theme}` : "",
+      ].join(" ")}
+    >
+      <b>{stats.power}</b>
+      <i aria-hidden="true">/</i>
+      <b>{stats.toughness}</b>
+    </span>
+  );
 }
 
-function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): string | undefined {
+function counterBuffedStats(game: GameState, card: CardInstance): BuffStatPreviewValue {
+  const stats = getPowerToughness(game, card);
+  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+}
+
+function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): BuffStatPreviewValue | undefined {
   const stats = getPowerToughness(game, card);
   let powerDelta = 0;
   let toughnessDelta = 0;
@@ -1323,7 +1347,10 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
 
   for (const effect of spell.effects) collect(effect);
   if (powerDelta === 0 && toughnessDelta === 0) return undefined;
-  return `${stats.power + powerDelta}/${stats.toughness + toughnessDelta}`;
+  return {
+    power: stats.power + powerDelta,
+    toughness: stats.toughness + toughnessDelta,
+  };
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {

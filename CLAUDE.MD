@@ -657,8 +657,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
   muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
   si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
-  Carmesi y Condesa del Banquete Eterno comparten esta regla generica; Centinela de Sangre conserva
-  solo `VIGILANCE`.
+  Carmesi usa esta regla generica en ataque y defensa. Condesa del Banquete Eterno la recibe
+  mediante una condicion estatica solo durante el turno del player, de modo que recupera vida al
+  atacar pero nunca al bloquear; Centinela de Sangre conserva solo `VIGILANCE`.
 - Guardian de la Cripta tiene `REACH` y usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
   de combate o no, lo encola solamente si sigue en campo despues del impacto. No tiene limite por
   turno, por decision del usuario; varios impactos que sobreviva crean varios triggers. El evento
@@ -684,9 +685,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
   Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas
   reacciones y beats de presentacion que los pagos numericos. La carta omite el redondeo para
-  mantener el texto corto; imprime `Paga la mitad de tus vidas.` y el estudio mantiene
-  `Volar. Robo de vida. Vigilancia.` en una sola linea. Usa el tamano normal del texto de Vampiros;
-  solamente conserva espaciado compacto para que toda la caja respire.
+  mantener el texto corto. El estudio imprime primero `Coste adicional: Paga la mitad de tus
+  vidas.`, despues `Volar. Vigilancia.` en una sola linea y al final aclara que tiene Robo de vida
+  durante tu turno. La regla conserva el tamano normal del texto de Vampiros; para ganar espacio
+  solamente se reduce el lore. El titulo de la Condesa usa un tamano intermedio mayor que el
+  preset normal de nombres largos.
 - Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
   aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
   bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
@@ -747,7 +750,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   1/3 al Paje, 2/2 al Murcielago, 3/3 al Duelista y 3/5 al Centinela. El ajuste siguiente dejo
   Acólito en coste 1, stats 1/2, pago de 5 vidas y dos copias; dejo al Duelista en 3/3 con buff
   +3/+1, retiro Robo de vida y bajo a 3/4 al Centinela, subio la Condesa a dos copias y la hizo
-  5/5 con `FLYING`, `LIFESTEAL`, `VIGILANCE` y pago adicional de media vida redondeada hacia arriba.
+  5/5 con `FLYING`, `VIGILANCE`, Robo de vida solo durante el turno del player y pago adicional de
+  media vida redondeada hacia arriba.
   El mismo ajuste bajo Impulso a coste 1 con
   +2/+2 y Volar, bajo Drenar a coste 2 y convirtio Sed en Robo de vida global hasta fin de turno.
   Pacto e Impulso permanecen en dos copias, Sed en una y Banquete Final cuesta 3. La regresion del
@@ -801,7 +805,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   El preview fijado con click derecho muestra el PNG limpio, sin superponer stats; el hover conserva
   los stats vivos y su estado buffed. En el hover queda unos pixeles elevado; preview, mano y
   targeting comparten la pestana del `index` correspondiente, con variantes legibles para dano y
-  buff. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
+  buff. El preview compacto de stats que aparece debajo al fijar el objetivo de una carta de buff
+  usa la misma pestana redondeada y la paleta de stats del arquetipo objetivo; no vuelve al
+  rectangulo verde generico con esquinas cortadas. Las cartas full art se marcan con `fullArt` en el manifest: su badge dinamico replica el
   desplazamiento del generador (58px desde la derecha y 136px desde abajo sobre 976px) para cubrir
   los stats horneados encima de la banda de tipo. No inferir esa composicion por nombre.
   Mano, mulligan, targeting y `CardPreview` tambien cubren el coste impreso con
@@ -842,8 +848,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   la variante borgona generica y Chaos su magenta. El badge de keyword junto al preview fijado
   comparte este mismo material, tipografia y capitalizacion.
   El orden visual de keywords es estable y empieza siempre por `MENACE`; no depende de si la
-  keyword es impresa, temporal o concedida por un efecto estatico. Si aparece el badge de orden de
-  defensa de la Horda o del jugador, las keywords bajan hasta `42px`. No mostrar `HASTE`.
+  keyword es impresa, temporal o concedida por un efecto estatico. La aparicion del badge de orden
+  de defensa de la Horda o del jugador nunca debe desplazar las keywords: ambas capas conservan
+  anclas independientes. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
 - La seleccion bespoke de Smallpox conserva el borde de target y la flecha, pero nunca muestra
@@ -852,6 +859,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   carta tambien se eleva y usa una capa superior a la seleccionada. El panel de confirmacion de
   Smallpox se ancla fuera del centro derecho de la propia carta de Smallpox; no va
   debajo de ella ni junto a la carta elegida.
+- El targeting de hechizos tampoco muestra `card-actionable-gem` sobre sus objetivos: el borde,
+  la elevacion y la flecha ya comunican que cartas se pueden elegir.
 - La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
   suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
   a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa

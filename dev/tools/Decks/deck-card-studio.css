@@ -2492,6 +2492,15 @@ body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tc
     padding: 22px 36px 58px;
 }
 
+body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-title {
+    font-size: 39px;
+}
+
+body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-flavor {
+    font-size: 34px;
+    line-height: 1.3;
+}
+
 body[data-theme="vampires"] .tcg-footer-info {
     bottom: 18px;
     left: 30px;

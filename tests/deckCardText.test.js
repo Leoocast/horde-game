@@ -151,7 +151,11 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
       : [runtimeCard.gameText?.es];
     const keywordText = (runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
     const expected = runtimeCard.id === "eternal_feast_countess"
-      ? [`${keywordText.join(". ")}.`, ...rulesText].filter(Boolean).join("\n")
+      ? [
+          ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(0, 1),
+          `${keywordText.join(". ")}.`,
+          ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(1),
+        ].filter(Boolean).join("\n")
       : [...keywordText, ...rulesText].filter(Boolean).join("\n");
 
     for (const source of studioSources) {

@@ -96,7 +96,7 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
     ],
   );
   assert.deepEqual(card("blood_sentinel").keywords, ["VIGILANCE"]);
-  assert.deepEqual(card("eternal_feast_countess").keywords, ["FLYING", "LIFESTEAL", "VIGILANCE"]);
+  assert.deepEqual(card("eternal_feast_countess").keywords, ["FLYING", "VIGILANCE"]);
 });
 
 test("Developer Mode uses the selected player deck's own Energy cards", () => {
@@ -641,6 +641,33 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   assert.equal(rejected.player.lifePaidThisTurn, 0);
   assert.equal(rejected.player.hand.some((card) => card.instanceId === blockedCountess.instanceId), true);
   assert.equal(rejected.player.battlefield.filter((card) => card.cardTypes.includes("Land")).every((card) => !card.tapped), true);
+});
+
+test("Countess has Lifesteal while attacking but not while blocking", () => {
+  const attack = createTestGame("countess-turn-lifesteal-attack");
+  attack.player.life = 10;
+  const attackingCountess = addCard(attack, cardFromDeck("eternal_feast_countess", "player"));
+  attack.combat.playerAttackers = [attackingCountess.instanceId];
+
+  assert.equal(hasKeyword(attack, attackingCountess, "LIFESTEAL"), true);
+  assert.equal(resolvePlayerCombat(attack).player.life, 15);
+
+  const defense = createTestGame("countess-turn-lifesteal-defense");
+  defense.player.life = 10;
+  defense.activeSide = "horde";
+  defense.phase = "combat";
+  const attacker = addCard(defense, customCard("countess_horde_attacker", "horde", {
+    power: 2,
+    toughness: 6,
+  }));
+  const blockingCountess = addCard(defense, cardFromDeck("eternal_feast_countess", "player"));
+  defense.combat.hordeAttackers = [attacker.instanceId];
+  defense.combat.blockers = { [attacker.instanceId]: [blockingCountess.instanceId] };
+
+  assert.equal(hasKeyword(defense, blockingCountess, "LIFESTEAL"), false);
+  const [impact] = buildHordeAttackEvents(defense);
+  assert.equal(impact.playerLifeGain, 0);
+  assert.equal(applyHordeAttackEvent(defense, impact).player.life, 10);
 });
 
 test("Blood Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {

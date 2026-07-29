@@ -316,8 +316,8 @@
       "name": "Countess of the Eternal Feast",
       "displayNameEs": "Condesa del Banquete Eterno",
       "gameText": {
-        "en": "Additional cost: Pay half your life.",
-        "es": "Coste adicional: Paga la mitad de tus vidas."
+        "en": "Additional cost: Pay half your life.\nDuring your turn, this creature has Lifesteal.",
+        "es": "Coste adicional: Paga la mitad de tus vidas.\nDurante tu turno, esta criatura tiene Robo de vida."
       },
       "flavorText": {
         "en": "Her court has waited centuries for the final guest.",
@@ -332,8 +332,25 @@
       "subtypes": ["Vampire", "Noble"],
       "power": 5,
       "toughness": 5,
-      "keywords": ["FLYING", "LIFESTEAL", "VIGILANCE"],
+      "keywords": ["FLYING", "VIGILANCE"],
       "abilities": [
+        {
+          "id": "eternal_feast_countess_lifesteal",
+          "kind": "STATIC",
+          "zone": "BATTLEFIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "ACTIVE_PLAYER_IS",
+                "player": "SELF"
+              },
+              "keyword": "LIFESTEAL"
+            }
+          ]
+        },
         {
           "id": "eternal_feast_countess_spell",
           "kind": "SPELL",
