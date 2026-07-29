@@ -828,7 +828,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   independiente de `92-118px`.
 - El orden de ataque de la Horda ya no se deriva de familias visuales: sigue el orden real de
   invocacion. Dos grupos de tokens separados por un lord atacan grupo 1, lord, grupo 2 aunque el
-  layout siga apilando copias iguales.
+  layout siga apilando copias iguales. La secuencia de combate no apaga globalmente el idle de
+  `FLYING`: solo la carta que participa en el impacto actual pausa su vuelo; las demas siguen
+  flotando mientras atacan otras criaturas.
 - En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
   queda explícitamente fuera de esas dos posiciones protegidas.
 - `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.

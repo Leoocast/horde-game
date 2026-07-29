@@ -918,8 +918,7 @@ export function Battlefield({ game, side, cards }: Props) {
         !combatAnimationActive &&
         !interactionElevated &&
         !visuallyDead &&
-        !speciallyDead &&
-        !resolvingHordeCombat,
+        !speciallyDead,
     );
 
     return (
