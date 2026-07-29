@@ -35,7 +35,7 @@ export function targetRequirementIsBuff(card: CardInstance, requirement: TargetR
 }
 
 function effectBuffsTarget(effect: Record<string, unknown>, targetId: string): boolean {
-  const buffTypes = new Set(["MODIFY_STATS", "PUMP", "PUMP_UNTIL_END_OF_TURN", "ADD_COUNTERS", "PUT_COUNTER", "GRANT_KEYWORD"]);
+  const buffTypes = new Set(["MODIFY_STATS", "PUMP", "PUMP_UNTIL_END_OF_TURN", "PUMP_UNTIL_NEXT_PLAYER_TURN", "ADD_COUNTERS", "PUT_COUNTER", "GRANT_KEYWORD"]);
   const referencedTarget = effect.targetRef ?? effect.target;
   if (buffTypes.has(String(effect.type)) && String(referencedTarget ?? "") === targetId) return true;
   for (const nestedKey of ["steps", "effects"] as const) {

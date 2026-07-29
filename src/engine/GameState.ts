@@ -7,7 +7,7 @@ import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 const DEVELOPER_SEED = "developer";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
-const PLAYER_DECK_LAND_COUNT = 9;
+const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
 const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
@@ -45,7 +45,7 @@ export function createInitialGame(
     : { player: {}, horde: {} };
   const playerCards = limitPlayerDeckLands(
     expandDeck(activePlayerDeck, "player", chaosMutations.player),
-    PLAYER_DECK_LAND_COUNT,
+    activePlayerDeck.gameplayLandCount ?? DEFAULT_PLAYER_DECK_LAND_COUNT,
   );
   const hordeCards = expandDeck(activeHordeDeck, "horde", chaosMutations.horde);
   const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
@@ -289,6 +289,8 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     counters,
     temporaryPower: 0,
     temporaryToughness: 0,
+    untilNextPlayerTurnPower: 0,
+    untilNextPlayerTurnToughness: 0,
     temporaryKeywords: [],
     chosenColor,
     attachTo: definition.attachTo,

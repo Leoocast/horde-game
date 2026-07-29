@@ -63,6 +63,8 @@ export type NewDeckList = {
   name: string;
   side?: string;
   deckSize?: number;
+  /** Number of authored Land copies kept when the runtime prepares this player deck. */
+  gameplayLandCount?: number;
   rulesProfile?: Record<string, unknown>;
   cards: NewDeckCard[];
   tokens?: NewDeckCard[];

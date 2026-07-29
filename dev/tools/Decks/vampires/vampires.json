@@ -17,7 +17,7 @@
     "tipo": "Criatura — Vampiro Sirviente",
     "costo": 1,
     "atk": 1,
-    "def": 2,
+    "def": 3,
     "desc": "La primera vez que pierdas vida en cada turno, esta criatura obtiene +2/+0 hasta el final del turno.",
     "lore": "Los más jóvenes aprenden a servir antes que a alimentarse."
   },
@@ -27,7 +27,7 @@
     "nombre": "Murciélago Carmesí",
     "tipo": "Criatura — Murciélago Vampiro",
     "costo": 2,
-    "atk": 1,
+    "atk": 2,
     "def": 2,
     "desc": "Volar\nRobo de vida",
     "lore": "Las campanas callan antes de que lleguen sus alas."
@@ -50,8 +50,8 @@
     "tipo": "Criatura — Vampiro Guerrero",
     "costo": 3,
     "atk": 3,
-    "def": 2,
-    "desc": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+0 hasta el final del turno.",
+    "def": 3,
+    "desc": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+0 hasta tu próximo turno.",
     "lore": "La cortesía termina con la primera hoja desenvainada."
   },
   {
@@ -82,8 +82,8 @@
     "nombre": "Centinela de Sangre",
     "tipo": "Criatura — Vampiro Caballero",
     "costo": 4,
-    "atk": 2,
-    "def": 4,
+    "atk": 3,
+    "def": 5,
     "desc": "Vigilancia\nRobo de vida",
     "lore": "El deber mantiene el hambre atada con una cadena corta."
   },
@@ -103,7 +103,7 @@
     "art_crop": "../../../../public/cards/vampires/art/blood_pact.webp",
     "nombre": "Pacto de Sangre",
     "tipo": "Conjuro",
-    "costo": 2,
+    "costo": 1,
     "atk": null,
     "def": null,
     "desc": "Como coste adicional, paga 4 vidas. Roba 2 cartas.",
@@ -117,7 +117,7 @@
     "costo": 2,
     "atk": null,
     "def": null,
-    "desc": "Como coste adicional, paga 2 vidas. Una criatura aliada obtiene +2/+2 hasta el final del turno.",
+    "desc": "Como coste adicional, paga 2 vidas. Una criatura aliada obtiene +3/+3 hasta el final del turno.",
     "lore": "El dolor sólo es fuerza esperando una dirección."
   },
   {
@@ -136,18 +136,18 @@
     "art_crop": "../../../../public/cards/vampires/art/predatory_thirst.webp",
     "nombre": "Sed Depredadora",
     "tipo": "Instantáneo",
-    "costo": 3,
+    "costo": 2,
     "atk": null,
     "def": null,
-    "desc": "Una criatura aliada obtiene +1/+0 y Robo de vida hasta el final del turno.",
+    "desc": "Una criatura aliada obtiene +2/+1 y Robo de vida hasta el final del turno.",
     "lore": "El hambre afila cada paso hacia el Host."
   },
   {
     "id": "final_banquet",
     "art_crop": "../../../../public/cards/vampires/art/final_banquet.webp",
     "nombre": "Banquete Final",
-    "tipo": "Conjuro",
-    "costo": 5,
+    "tipo": "Instantáneo",
+    "costo": 3,
     "atk": null,
     "def": null,
     "desc": "Destruye una criatura de la Horda. Pierde vidas igual a su fuerza.",

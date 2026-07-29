@@ -726,7 +726,17 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   usan la paleta borgona del generador. El motivo del header/runtime es
   `dev/tools/Decks/vampires/motivo.avif`, una copia optimizada del JPG fuente; el generador conserva
   el JPG de resolucion completa para exportar. Developer Mode coloca cuatro tierras del player deck
-  seleccionado, asi que Vampires inicia con cuatro Energias Carmesi en vez de Forests.
+  seleccionado, asi que Vampires inicia con cuatro Energias Carmesi en vez de Forests. El primer
+  pase de balance subio `gameplayLandCount` a 12 (Mono Green conserva el default de 9), hizo
+  1/3 al Paje, 2/2 al Murcielago, 3/3 al Duelista y 3/5 al Centinela; Impulso da +3/+3, Sed cuesta
+  2 y da +2/+1 mas Robo de vida, y Banquete Final cuesta 3. Para conservar 40 cartas, Pacto e
+  Impulso bajaron a dos copias y Sed a una. La regresion del estudio compara ahora coste, stats,
+  cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
+  `.command`, escribe cada PNG en `exported-png/` y tambien lo sincroniza directamente con la
+  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente.
+  El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+0 sobrevive la limpieza del turno del
+  player, aplica al bloquear durante el combate de la Horda y se elimina al comenzar el siguiente
+  turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 4 vidas.
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto

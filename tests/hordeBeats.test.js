@@ -206,7 +206,7 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
   try {
     const game = createTestGame("blood-pact-store-presentation");
     game.player.life = 10;
-    addForests(game, 2);
+    addForests(game, 1);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
     const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
     addCard(game, customCard("blood_pact_store_draw_one", "player", { zone: "library" }), "player", "library");
@@ -312,7 +312,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     assert.equal(afterCast.game.player.lifePaidThisTurn, 2);
     assert.equal(
       afterCast.game.player.battlefield.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
-      2,
+      3,
     );
     assert.equal(
       afterCast.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
@@ -366,7 +366,7 @@ test("Predatory Thirst presents one allied buff containing its stat and temporar
 
   try {
     const game = createTestGame("predatory-thirst-store");
-    addForests(game, 3);
+    addForests(game, 2);
     const ally = addCard(game, customCard("predatory_thirst_store_ally", "player", {
       power: 2,
       toughness: 3,
@@ -390,7 +390,8 @@ test("Predatory Thirst presents one allied buff containing its stat and temporar
 
     const result = useGameStore.getState();
     const buffed = result.game.player.battlefield.find((card) => card.instanceId === ally.instanceId);
-    assert.equal(buffed?.temporaryPower, 1);
+    assert.equal(buffed?.temporaryPower, 2);
+    assert.equal(buffed?.temporaryToughness, 1);
     assert.equal(hasKeyword(result.game, buffed, "LIFESTEAL"), true);
     assert.deepEqual(result.buffAnimationCardIds, [ally.instanceId]);
   } finally {
@@ -436,7 +437,7 @@ test("Final Banquet fades the target, presents its death reaction, then triggers
     resetPlayerTriggerSequence();
     const game = createTestGame("final-banquet-store");
     game.player.life = 10;
-    addForests(game, 5);
+    addForests(game, 3);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
     const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
     addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");

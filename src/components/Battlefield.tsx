@@ -1331,13 +1331,18 @@ function abilityButtonText(ability: CardInstance["activatedAbilities"][number]):
     const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
     return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
   }
-  if (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" && ability.effect.target === "SELF") {
+  if (
+    (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" ||
+      ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN") &&
+    ability.effect.target === "SELF"
+  ) {
     const language = useLanguageStore.getState().language;
     const life = Number(ability.cost?.life ?? 0);
     const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
+    const untilNextTurn = ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN";
     return language === "es"
-      ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} este turno.`
-      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} this turn.`;
+      ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} ${untilNextTurn ? "hasta tu próximo turno" : "este turno"}.`
+      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`;
   }
   return String(ability.effect.type).replaceAll("_", " ");
 }

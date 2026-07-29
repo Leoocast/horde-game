@@ -9,6 +9,12 @@ const DECKS = new Set([
     'goblins',
     'vampires'
 ]);
+const PUBLIC_CARD_FOLDERS = {
+    monogreen: 'mono_green_ramp',
+    zombies: 'zombies',
+    goblins: 'goblins',
+    vampires: 'vampires'
+};
 
 function requireExporterDependency(name) {
     try {
@@ -144,12 +150,22 @@ async function main() {
     const deckDir = path.join(__dirname, deckId);
     const htmlPath = path.join(deckDir, 'index.html');
     const outputDir = path.join(deckDir, 'exported-png');
+    const publicCardsDir = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'public',
+        'cards',
+        PUBLIC_CARD_FOLDERS[deckId]
+    );
 
     if (!fs.existsSync(htmlPath)) {
         throw new Error(`No se encontro el index del deck: ${htmlPath}`);
     }
 
     await fs.promises.mkdir(outputDir, { recursive: true });
+    await fs.promises.mkdir(publicCardsDir, { recursive: true });
 
     const browser = await chromium.launch({
         executablePath,
@@ -258,11 +274,13 @@ async function main() {
         for (let index = 0; index < pendingPngs.length; index++) {
             const { fileName, png } = pendingPngs[index];
             await writeFileWithRetry(path.join(outputDir, fileName), png);
+            await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
         console.log('');
-        console.log(`Listo: ${outputDir}`);
+        console.log(`Copia de trabajo: ${outputDir}`);
+        console.log(`Juego actualizado: ${publicCardsDir}`);
     } finally {
         await browser.close();
     }

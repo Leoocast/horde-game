@@ -60,7 +60,8 @@ esac
 
 echo
 echo "Exportando $DECK..."
-echo "Destino: $DECKS_DIR/$DECK/exported-png"
+echo "Copia de trabajo: $DECKS_DIR/$DECK/exported-png"
+echo "El juego se actualizara automaticamente bajo public/cards."
 echo
 
 "$NODE_EXE" "$DECKS_DIR/export_cards.cjs" "$DECK"

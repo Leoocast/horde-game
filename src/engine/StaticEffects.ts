@@ -38,8 +38,16 @@ export function getPowerToughness(
   card: CardInstance,
   excludedBuffSourceIds?: Set<string>,
 ): { power: number; toughness: number } {
-  let power = card.basePower + (card.counters["+1/+1"] ?? 0) + card.temporaryPower;
-  let toughness = card.baseToughness + (card.counters["+1/+1"] ?? 0) + card.temporaryToughness;
+  let power =
+    card.basePower +
+    (card.counters["+1/+1"] ?? 0) +
+    card.temporaryPower +
+    (card.untilNextPlayerTurnPower ?? 0);
+  let toughness =
+    card.baseToughness +
+    (card.counters["+1/+1"] ?? 0) +
+    card.temporaryToughness +
+    (card.untilNextPlayerTurnToughness ?? 0);
 
   const surgeBonus = game.hordeRules.surgeBonus;
   if (

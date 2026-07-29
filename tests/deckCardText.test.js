@@ -80,7 +80,7 @@ test("local Vampire studio art paths resolve to real files", () => {
   }
 });
 
-test("Vampire studio effects stay aligned with the runtime deck", () => {
+test("Vampire studio cards stay aligned with the runtime deck", () => {
   const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
   const indexHtml = fs.readFileSync(indexUrl, "utf8");
   const embeddedJson = indexHtml.match(
@@ -95,7 +95,7 @@ test("Vampire studio effects stay aligned with the runtime deck", () => {
     ),
   );
   const studioSources = [
-    { label: "embedded index", cards: JSON.parse(embeddedJson) },
+    { label: "embedded index", cards: JSON.parse(embeddedJson), includesQuantity: true },
     {
       label: "vampires.json",
       cards: JSON.parse(
@@ -125,6 +125,18 @@ test("Vampire studio effects stay aligned with the runtime deck", () => {
     for (const source of studioSources) {
       const studioCard = source.cards.find((card) => card.id === runtimeCard.id);
       assert.ok(studioCard, `${source.label} is missing ${runtimeCard.id}`);
+      assert.equal(studioCard.costo, runtimeCard.manaValue, `${source.label} has a stale cost for ${runtimeCard.id}`);
+      assert.equal(studioCard.atk, runtimeCard.power, `${source.label} has stale power for ${runtimeCard.id}`);
+      assert.equal(studioCard.def, runtimeCard.toughness, `${source.label} has stale toughness for ${runtimeCard.id}`);
+      if (source.includesQuantity) {
+        assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
+      }
+      if (runtimeCard.id === "blood_pact") {
+        assert.equal(studioCard.tipo, "Conjuro", `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
+      if (runtimeCard.id === "final_banquet") {
+        assert.equal(studioCard.tipo, "Instantáneo", `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
       assert.equal(
         normalizeVampireEffect(studioCard.desc),
         normalizeVampireEffect(expected),

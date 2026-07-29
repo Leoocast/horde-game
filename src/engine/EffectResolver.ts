@@ -251,6 +251,18 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until end of turn.`);
     }
   },
+  PUMP_UNTIL_NEXT_PLAYER_TURN: (game, effect, context) => {
+    const targets = resolveTargetCards(game, effect, context);
+    for (const target of targets) {
+      target.untilNextPlayerTurnPower =
+        (target.untilNextPlayerTurnPower ?? 0) + Number(effect.power ?? 0);
+      target.untilNextPlayerTurnToughness =
+        (target.untilNextPlayerTurnToughness ?? 0) + Number(effect.toughness ?? 0);
+      game.log.unshift(
+        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until the next player turn.`,
+      );
+    }
+  },
   GRANT_KEYWORD_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) target.temporaryKeywords.push(String(effect.keyword));

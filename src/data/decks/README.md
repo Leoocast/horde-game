@@ -30,6 +30,8 @@ Required top-level fields:
 - `name`: display name.
 - `side`: `"PLAYER"` or `"HORDE"`.
 - `deckSize`: total card count.
+- `gameplayLandCount`: optional player-deck override for the number of authored Land copies kept
+  when a game is created; decks without it keep the default of nine.
 - `cards`: card definitions.
 - `tokens`: token definitions, if any.
 

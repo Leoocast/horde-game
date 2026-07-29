@@ -30,6 +30,10 @@ export function clearPlayerSummoningSickness(game: GameState): void {
 }
 
 export function startPlayerTurn(game: GameState): void {
+  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+    card.untilNextPlayerTurnPower = 0;
+    card.untilNextPlayerTurnToughness = 0;
+  }
   game.activeSide = "player";
   game.phase = "untap";
   game.battlefieldEntriesThisTurn = [];

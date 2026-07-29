@@ -110,6 +110,8 @@ export type DeckList = {
   name: string;
   side: Side;
   deckSize: number;
+  /** Player decks may opt into a different runtime land count than the default nine. */
+  gameplayLandCount?: number;
   cards: CardDefinition[];
   tokens?: CardDefinition[];
   /** Raw per-deck horde rules from the deck JSON; parsed by buildHordeRules at game start. */
@@ -181,6 +183,9 @@ export type CardInstance = {
   counters: Record<string, number>;
   temporaryPower: number;
   temporaryToughness: number;
+  /** Stats that survive end-step cleanup and expire when the next player turn begins. */
+  untilNextPlayerTurnPower?: number;
+  untilNextPlayerTurnToughness?: number;
   temporaryKeywords: Keyword[];
   chosenColor?: Color;
   xValuePaid?: number;

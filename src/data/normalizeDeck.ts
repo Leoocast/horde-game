@@ -7,6 +7,7 @@ export function normalizeDeck(rawDeck: NewDeckList): DeckList {
     name: rawDeck.name,
     side: normalizeSide(rawDeck.side),
     deckSize: rawDeck.deckSize ?? rawDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
+    gameplayLandCount: rawDeck.gameplayLandCount,
     cards: rawDeck.cards.map(normalizeCard),
     tokens: rawDeck.tokens?.map(normalizeCard),
     rulesProfile: rawDeck.rulesProfile,

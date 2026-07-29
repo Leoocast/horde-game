@@ -5,6 +5,7 @@
   "format": "casual",
   "side": "PLAYER",
   "deckSize": 40,
+  "gameplayLandCount": 12,
   "archetype": "life-payment-lifesteal",
   "gamePlan": "Paga vida para acelerar tu desarrollo y convertirla en poder. Ataca directamente al Host para recuperar vida, pero conserva bloqueadores cuando la Horda amenace con devolverte el golpe.",
   "mechanics": {
@@ -26,7 +27,7 @@
         "en": "Every vow leaves something behind.",
         "es": "Todo juramento deja algo atrás."
       },
-      "quantity": 9,
+      "quantity": 12,
       "manaCost": null,
       "manaValue": 0,
       "colors": [],
@@ -75,7 +76,7 @@
       "cardTypes": ["Creature"],
       "subtypes": ["Vampire", "Servant"],
       "power": 1,
-      "toughness": 2,
+      "toughness": 3,
       "keywords": [],
       "abilities": [
         {
@@ -122,7 +123,7 @@
       "colorIdentity": [],
       "cardTypes": ["Creature"],
       "subtypes": ["Bat", "Vampire"],
-      "power": 1,
+      "power": 2,
       "toughness": 2,
       "keywords": ["FLYING", "LIFESTEAL"],
       "abilities": []
@@ -177,8 +178,8 @@
       "name": "Court Duelist",
       "displayNameEs": "Duelista de la Corte",
       "gameText": {
-        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +3/+0 until end of turn.",
-        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+0 hasta el final del turno."
+        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +3/+0 until your next turn.",
+        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+0 hasta tu próximo turno."
       },
       "flavorText": {
         "en": "Courtesy ends at the first drawn blade.",
@@ -192,7 +193,7 @@
       "cardTypes": ["Creature"],
       "subtypes": ["Vampire", "Warrior"],
       "power": 3,
-      "toughness": 2,
+      "toughness": 3,
       "keywords": [],
       "abilities": [
         {
@@ -207,7 +208,7 @@
           "conditions": [],
           "effects": [
             {
-              "type": "PUMP_UNTIL_END_OF_TURN",
+              "type": "PUMP_UNTIL_NEXT_PLAYER_TURN",
               "target": "SELF",
               "power": 3,
               "toughness": 0
@@ -302,8 +303,8 @@
       "colorIdentity": [],
       "cardTypes": ["Creature"],
       "subtypes": ["Vampire", "Knight"],
-      "power": 2,
-      "toughness": 4,
+      "power": 3,
+      "toughness": 5,
       "keywords": ["VIGILANCE", "LIFESTEAL"],
       "abilities": []
     },
@@ -343,9 +344,9 @@
         "en": "Knowledge never asks whether the price was fair.",
         "es": "El conocimiento nunca pregunta si el precio fue justo."
       },
-      "quantity": 3,
-      "manaCost": "{2}",
-      "manaValue": 2,
+      "quantity": 2,
+      "manaCost": "{1}",
+      "manaValue": 1,
       "colors": [],
       "colorIdentity": [],
       "cardTypes": ["Sorcery"],
@@ -376,14 +377,14 @@
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
-        "en": "As an additional cost, pay 2 life. An allied creature gets +2/+2 until end of turn.",
-        "es": "Como coste adicional, paga 2 vidas. Una criatura aliada obtiene +2/+2 hasta el final del turno."
+        "en": "As an additional cost, pay 2 life. An allied creature gets +3/+3 until end of turn.",
+        "es": "Como coste adicional, paga 2 vidas. Una criatura aliada obtiene +3/+3 hasta el final del turno."
       },
       "flavorText": {
         "en": "Pain is merely strength waiting for direction.",
         "es": "El dolor sólo es fuerza esperando una dirección."
       },
-      "quantity": 3,
+      "quantity": 2,
       "manaCost": "{2}",
       "manaValue": 2,
       "colors": [],
@@ -417,8 +418,8 @@
             {
               "type": "MODIFY_STATS",
               "target": "targetCreature",
-              "power": 2,
-              "toughness": 2,
+              "power": 3,
+              "toughness": 3,
               "duration": "END_OF_TURN"
             }
           ]
@@ -485,16 +486,16 @@
       "name": "Predatory Thirst",
       "displayNameEs": "Sed Depredadora",
       "gameText": {
-        "en": "An allied creature gets +1/+0 and Lifesteal until end of turn.",
-        "es": "Una criatura aliada obtiene +1/+0 y Robo de vida hasta el final del turno."
+        "en": "An allied creature gets +2/+1 and Lifesteal until end of turn.",
+        "es": "Una criatura aliada obtiene +2/+1 y Robo de vida hasta el final del turno."
       },
       "flavorText": {
         "en": "Hunger sharpens every step toward the Host.",
         "es": "El hambre afila cada paso hacia el Host."
       },
-      "quantity": 2,
-      "manaCost": "{3}",
-      "manaValue": 3,
+      "quantity": 1,
+      "manaCost": "{2}",
+      "manaValue": 2,
       "colors": [],
       "colorIdentity": [],
       "cardTypes": ["Instant"],
@@ -523,8 +524,8 @@
             {
               "type": "MODIFY_STATS",
               "target": "targetCreature",
-              "power": 1,
-              "toughness": 0,
+              "power": 2,
+              "toughness": 1,
               "duration": "END_OF_TURN"
             },
             {
@@ -549,11 +550,11 @@
         "es": "El último invitado siempre paga el banquete."
       },
       "quantity": 1,
-      "manaCost": "{5}",
-      "manaValue": 5,
+      "manaCost": "{3}",
+      "manaValue": 3,
       "colors": [],
       "colorIdentity": [],
-      "cardTypes": ["Sorcery"],
+      "cardTypes": ["Instant"],
       "subtypes": [],
       "power": null,
       "toughness": null,
@@ -563,7 +564,7 @@
           "id": "final_banquet_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "SORCERY",
+          "speed": "INSTANT",
           "targets": [
             {
               "id": "targetCreature",
