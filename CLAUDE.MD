@@ -275,6 +275,9 @@ Usado por spells con targets:
 Flujo:
 - carta de la mano queda invisible dejando hueco
 - overlay con carta grande fuente
+- si la carta fuente se superpone con un objetivo valido o ya elegido, al pasar el cursor sobre
+  ella baja a 34% de opacidad y deja pasar el click; al salir recupera su opacidad, mientras el
+  preview y los botones siguen interactivos
 - elegir targets en orden
 - flechas lockeadas visibles
 - confirm resuelve

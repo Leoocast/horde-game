@@ -13,6 +13,7 @@ try {
   await server.ssrLoadModule("/tests/deckLint.test.js");
   await server.ssrLoadModule("/tests/deckCardText.test.js");
   await server.ssrLoadModule("/tests/battlefieldLayout.test.js");
+  await server.ssrLoadModule("/tests/targetingGeometry.test.js");
   await server.ssrLoadModule("/tests/playgroundScenario.test.js");
   await server.ssrLoadModule("/tests/playgroundActions.test.js");
   await server.ssrLoadModule("/tests/playgroundStorage.test.js");

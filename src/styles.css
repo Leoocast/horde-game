@@ -5400,6 +5400,26 @@
     filter:
       drop-shadow(0 22px 26px rgb(0 0 0 / 0.62))
       brightness(1.08);
+    transition:
+      opacity 170ms ease,
+      filter 170ms ease;
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] {
+    pointer-events: none;
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-source-card {
+    opacity: 0.34;
+    filter:
+      drop-shadow(0 14px 18px rgb(0 0 0 / 0.38))
+      brightness(0.9)
+      saturate(0.78);
+  }
+
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-preview,
+  .counter-target-source-panel[data-source-overlap="true"] .counter-target-actions {
+    pointer-events: auto;
   }
 
   .horde-special-card {

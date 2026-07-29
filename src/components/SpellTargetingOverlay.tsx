@@ -9,6 +9,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
+import { shouldRevealOverlappedTargets } from "./targetingGeometry";
 
 const FRIENDLY_ARROW = "#4ade80";
 const ENEMY_ARROW = "#f04438";
@@ -22,9 +23,11 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const deselectTarget = useGameStore((state) => state.deselectSpellTarget);
   const cancelTargeting = useGameStore((state) => state.cancelSpellTargeting);
   const confirmTargeting = useGameStore((state) => state.confirmSpellTargeting);
+  const panelRef = useRef<HTMLElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [lockedEnds, setLockedEnds] = useState<Record<string, { x: number; y: number }>>({});
+  const [sourceRevealsTargets, setSourceRevealsTargets] = useState(false);
 
   const spell = spellTargeting ? game.player.hand.find((card) => card.instanceId === spellTargeting.handId) : undefined;
   const requirements = spell?.requiresTargets ?? [];
@@ -35,13 +38,36 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   const activeTarget = activeTargetId ? findBattlefieldCard(game, activeTargetId) : undefined;
   const arrowColor = spell && activeReq && targetRequirementIsBuff(spell, activeReq) ? FRIENDLY_ARROW : ENEMY_ARROW;
   const followEnd = spellTargeting ? { x: spellTargeting.x, y: spellTargeting.y } : undefined;
+  const targetingTargets = spellTargeting?.targets;
+  const activeCandidateIds = spellTargeting && activeReq
+    ? targetCandidatesWithSelectedTargets(game, "player", activeReq, spellTargeting.targets).map((candidate) => candidate.instanceId)
+    : [];
+  const selectedTargetIds = spellTargeting
+    ? Object.values(spellTargeting.targets).flatMap((target) => Array.isArray(target) ? target : [target])
+    : [];
+  const overlapTargetIds = [...new Set([...activeCandidateIds, ...selectedTargetIds])];
+  const overlapTargetSignature = overlapTargetIds.join("|");
+  const targetingActive = Boolean(spellTargeting);
 
   useEffect(() => {
     if (!spellTargeting || !spell) return;
     const activeSpell = spell;
+    const currentOverlapTargetIds = overlapTargetIds;
 
     function move(event: MouseEvent) {
       updatePointer(event.clientX, event.clientY);
+      const sourceRect = sourceRef.current?.getBoundingClientRect();
+      const targetRects = currentOverlapTargetIds
+        .map((targetId) => findBattlefieldSlot(targetId)?.getBoundingClientRect())
+        .filter((rect): rect is DOMRect => Boolean(rect));
+      setSourceRevealsTargets(Boolean(
+        sourceRect &&
+        shouldRevealOverlappedTargets(
+          sourceRect,
+          targetRects,
+          { x: event.clientX, y: event.clientY },
+        ),
+      ));
     }
 
     function click(event: MouseEvent) {
@@ -76,11 +102,17 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
       window.removeEventListener("click", click, true);
       window.removeEventListener("contextmenu", contextMenu);
     };
-  }, [cancelTargeting, deselectTarget, hasAnyTarget, lockTarget, spell, spellTargeting, updatePointer]);
+  }, [cancelTargeting, deselectTarget, hasAnyTarget, lockTarget, overlapTargetSignature, spell, targetingActive, updatePointer]);
+
+  useEffect(() => {
+    if (!targetingActive) setSourceRevealsTargets(false);
+  }, [targetingActive]);
 
   useLayoutEffect(() => {
-    if (!spellTargeting) return;
-    const currentTargeting = spellTargeting;
+    if (!targetingTargets) {
+      return;
+    }
+    const currentTargets = targetingTargets;
     let frame = 0;
 
     function measure() {
@@ -92,7 +124,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
         });
       }
       const nextLockedEnds: Record<string, { x: number; y: number }> = {};
-      for (const [reqId, rawTarget] of Object.entries(currentTargeting.targets)) {
+      for (const [reqId, rawTarget] of Object.entries(currentTargets)) {
         const targetId = Array.isArray(rawTarget) ? rawTarget[0] : rawTarget;
         const targetElement = document.querySelector<HTMLElement>(`[data-card-id="${targetId}"]`);
         const rect = targetElement?.getBoundingClientRect();
@@ -112,14 +144,17 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     }
 
     schedule();
+    const panel = panelRef.current;
+    panel?.addEventListener("animationend", schedule);
     window.addEventListener("resize", schedule);
     window.addEventListener("scroll", schedule, true);
     return () => {
       window.cancelAnimationFrame(frame);
+      panel?.removeEventListener("animationend", schedule);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule, true);
     };
-  }, [activeTargetId, spellTargeting]);
+  }, [activeTargetId, targetingTargets]);
 
   if (!spellTargeting || !spell || !activeReq || !followEnd) return null;
 
@@ -183,7 +218,12 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           </g>
         )}
       </svg>
-      <aside data-spell-targeting-ui="true" className="counter-target-source-panel">
+      <aside
+        ref={panelRef}
+        data-spell-targeting-ui="true"
+        data-source-overlap={sourceRevealsTargets ? "true" : undefined}
+        className="counter-target-source-panel"
+      >
         <div ref={sourceRef} className="counter-target-source-card">
           <Card
             game={game}
@@ -232,6 +272,11 @@ function findCardIdAtPoint(x: number, y: number): string | undefined {
     if (cardElement?.dataset.cardId) return cardElement.dataset.cardId;
   }
   return undefined;
+}
+
+function findBattlefieldSlot(cardId: string): HTMLElement | undefined {
+  return Array.from(document.querySelectorAll<HTMLElement>("[data-card-slot-id]"))
+    .find((element) => element.dataset.cardSlotId === cardId);
 }
 
 function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {
