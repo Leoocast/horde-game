@@ -681,7 +681,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
   Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas
   reacciones y beats de presentacion que los pagos numericos. La carta omite el redondeo para
-  mantener el texto corto; el estudio imprime `Volar. Robo de vida. Vigilancia.` en una sola linea.
+  mantener el texto corto; imprime `Paga la mitad de tus vidas.` y el estudio mantiene
+  `Volar. Robo de vida. Vigilancia.` en una sola linea. Usa el tamano normal del texto de Vampiros;
+  solamente conserva espaciado compacto para que toda la caja respire.
 - Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
   aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
   bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
@@ -719,7 +721,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
   frase explicita `Paga N vidas.` tambien se imprime en rojo y negrita. En Vampiros, los spells con
   pago adicional mantienen `Coste adicional: Paga N vidas.` en una sola linea y separan el efecto; Acólito usa
-  `{{T}}: Paga 5 vidas. Genera 1 de Energía.` para mostrar primero el icono de agotar.
+  `{{T}}: Paga 5 vidas. Agrega {G}.` para mostrar primero el icono de agotar y luego el mismo
+  orbe azul de Energia que usan los Druidas del deck verde.
   Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf

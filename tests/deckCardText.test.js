@@ -36,14 +36,17 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     "Coste adicional: Paga 5 vidas.\nRoba 2 cartas.",
   );
   const fractionalLifeCost = formatEffectText(
-    "Coste adicional: Paga la mitad de tu vida.",
+    "Coste adicional: Paga la mitad de tus vidas.",
   );
   const inlineKeywords = formatEffectText(
-    "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tu vida.",
+    "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tus vidas.",
   );
   const acolyteCost = formatEffectText(
-    "{{T}}: Paga 5 vidas. Genera 1 de Energía.",
-    { tapIconHtml: '<span class="tap-icon"></span>' },
+    "{{T}}: Paga 5 vidas. Agrega {G}.",
+    {
+      tapIconHtml: '<span class="tap-icon"></span>',
+      energyIconHtml: '<span class="energy-icon"></span>',
+    },
   );
 
   assert.match(captain, /class="effect-keyword">Toque mortal<\/strong>/);
@@ -67,7 +70,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.equal((lifeCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(
     fractionalLifeCost,
-    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tu vida\.<\/strong>/,
+    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tus vidas\.<\/strong>/,
   );
   assert.match(
     inlineKeywords,
@@ -75,6 +78,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   );
   assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(acolyteCost, /<span class="tap-icon"><\/span>: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.match(acolyteCost, /Agrega <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
 });
 

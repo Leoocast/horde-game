@@ -10,7 +10,7 @@
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
     const DANGER_PATTERN = /\b(?:fuerza \d+ o menos|\d+ de daño)\b/giu;
     const LIFE_PAYMENT_PATTERN =
-        /\bPaga\s+(?:\d+\s+vidas|la mitad de tu vida)\./giu;
+        /\bPaga\s+(?:\d+\s+vidas|la mitad de tus vidas)\./giu;
     const INLINE_KEYWORD_SEPARATOR_PATTERN =
         /(\b(?:Volar|Robo de vida|Vigilancia)\.)\s+(?=(?:Volar|Robo de vida|Vigilancia)\.)/giu;
     const SEQUENTIAL_EFFECT_BREAK_PATTERN =

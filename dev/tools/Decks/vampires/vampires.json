@@ -40,7 +40,7 @@
     "costo": 1,
     "atk": 1,
     "def": 2,
-    "desc": "{{T}}: Paga 5 vidas. Genera 1 de Energía.",
+    "desc": "{{T}}: Paga 5 vidas. Agrega {G}.",
     "lore": "La corte acepta toda moneda, especialmente la que duele."
   },
   {
@@ -95,7 +95,7 @@
     "costo": 6,
     "atk": 5,
     "def": 5,
-    "desc": "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tu vida.",
+    "desc": "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tus vidas.",
     "lore": "Su corte ha esperado siglos al último invitado."
   },
   {

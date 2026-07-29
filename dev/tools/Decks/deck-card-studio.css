@@ -629,7 +629,25 @@ input {
 }
 
 .symbol-energy {
+    border: 3px solid rgba(137, 198, 213, 0.66);
     border-radius: 50%;
+    color: #dceff0;
+    background:
+        radial-gradient(circle at 36% 27%, rgba(213, 239, 242, 0.18), transparent 32%),
+        linear-gradient(145deg, #47788a 0%, #285166 48%, #142c3c 100%);
+    box-shadow:
+        inset 0 1px 2px rgba(222, 245, 247, 0.24),
+        inset 0 -3px 5px rgba(3, 17, 28, 0.48),
+        0 3px 7px rgba(0, 0, 0, 0.42);
+    font-size: 29px;
+    text-shadow: 0 1px 2px rgba(3, 16, 27, 0.95);
+}
+
+.symbol-badge > svg {
+    display: block;
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
 }
 
 .tcg-divider {
@@ -2428,11 +2446,6 @@ body[data-theme="vampires"] .symbol-badge {
     transform: translateY(-5px);
 }
 
-body[data-theme="vampires"] .symbol-tap .fa-hourglass-half {
-    color: inherit;
-    font-size: 27px;
-}
-
 body[data-theme="vampires"] .tcg-divider {
     width: 100%;
     height: 3px;
@@ -2477,16 +2490,6 @@ body[data-theme="vampires"] .tcg-flavor {
 body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-body {
     gap: 12px;
     padding: 22px 36px 58px;
-}
-
-body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-effect {
-    font-size: 38px;
-    line-height: 1.32;
-}
-
-body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-flavor {
-    font-size: 40px;
-    line-height: 1.35;
 }
 
 body[data-theme="vampires"] .tcg-footer-info {

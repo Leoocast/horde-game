@@ -39,9 +39,9 @@
     function formatEffectText(value) {
         return cardText.formatEffectText(value, {
             tapIconHtml:
-                '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>',
+                '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>',
             energyIconHtml:
-                '<span class="symbol-badge symbol-energy" title="Energía">ϟ</span>',
+                '<span class="symbol-badge symbol-energy" title="Energía"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>',
         });
     }
 

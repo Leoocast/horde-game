@@ -133,8 +133,8 @@
       "name": "Tithe Acolyte",
       "displayNameEs": "Acólito del Diezmo",
       "gameText": {
-        "en": "Exhaust: Pay 5 life. Generate 1 Energy.",
-        "es": "Agota: Paga 5 vidas. Genera 1 de Energía."
+        "en": "Exhaust: Pay 5 life. Add {G}.",
+        "es": "Agota: Paga 5 vidas. Agrega {G}."
       },
       "flavorText": {
         "en": "The court accepts every currency, especially the one that hurts.",
@@ -314,7 +314,7 @@
       "displayNameEs": "Condesa del Banquete Eterno",
       "gameText": {
         "en": "Additional cost: Pay half your life.",
-        "es": "Coste adicional: Paga la mitad de tu vida."
+        "es": "Coste adicional: Paga la mitad de tus vidas."
       },
       "flavorText": {
         "en": "Her court has waited centuries for the final guest.",
