@@ -19,6 +19,8 @@ import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalMana, releasePendingStoredMana } from "../src/engine/ManaSystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
+import { sortKeywordsForDisplay } from "../src/utils/selectors";
+import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("same seed produces the same player and Horde deck order", () => {
@@ -292,6 +294,28 @@ test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first s
 test("multi-word keywords render as words instead of engine identifiers", () => {
   assert.equal(localizedKeywordLabel("FIRST_STRIKE", "en"), "FIRST STRIKE");
   assert.equal(localizedKeywordLabel("FIRST_STRIKE", "es"), "DAÑAR PRIMERO");
+});
+
+test("keyword display order keeps Menace first and remains stable", () => {
+  assert.deepEqual(
+    sortKeywordsForDisplay(["VIGILANCE", "TOXIC_1", "MENACE", "DEATHTOUCH", "FLYING"]),
+    ["MENACE", "FLYING", "DEATHTOUCH", "VIGILANCE", "TOXIC_1"],
+  );
+});
+
+test("discard selection stays raised while the hovered hand card layers above it", () => {
+  assert.deepEqual(
+    getHandCardPresentationState({ index: 1, hovered: false, selectedForDiscard: true, dragging: false }),
+    { raised: true, zIndex: 90 },
+  );
+  assert.deepEqual(
+    getHandCardPresentationState({ index: 3, hovered: true, selectedForDiscard: false, dragging: false }),
+    { raised: true, zIndex: 100 },
+  );
+  assert.deepEqual(
+    getHandCardPresentationState({ index: 4, hovered: false, selectedForDiscard: false, dragging: false }),
+    { raised: false, zIndex: 5 },
+  );
 });
 
 test("standard games keep nine energy cards in the player deck", () => {
@@ -1239,6 +1263,27 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   assert.equal(paidDuringHordeTurn.player.lifePaidThisTurn, 2);
   assert.equal(paidDuringHordeTurn.player.lifeLostThisTurn, 2);
   assert.equal(paidDuringHordeTurn.player.battlefield.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 2);
+});
+
+test("Blood Page does not trigger from the first life loss while exhausted", () => {
+  const game = createTestGame("blood-page-exhausted");
+  game.player.life = 20;
+  const exhaustedPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const readyPage = addCard(game, cardFromDeck("blood_page", "player"));
+  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+  exhaustedPage.tapped = true;
+
+  const result = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+
+  assert.equal(result.lastActionResult?.ok, true);
+  assert.equal(
+    result.player.battlefield.find((card) => card.instanceId === exhaustedPage.instanceId)?.temporaryPower,
+    0,
+  );
+  assert.equal(
+    result.player.battlefield.find((card) => card.instanceId === readyPage.instanceId)?.temporaryPower,
+    2,
+  );
 });
 
 test("Blood Page can take an early Horde hit and use the buff against a later attacker", () => {

@@ -666,7 +666,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   automaticamente runners por controlador, incluso cuando el trigger nace de un Burn de la Horda,
   para que ninguna reaccion del player se consuma de forma invisible. El beat pulsa al Guardian,
   resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
-- Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno. Toda ruta
+- Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno solamente
+  si el Paje esta enderezado cuando ocurre la perdida. La condicion generica
+  `SOURCE_IS_UNTAPPED` evita que una fuente agotada entre siquiera a la cola de reacciones. Por
+  decision del usuario, esta restriccion es una regla interna y no se agrega al texto impreso. Toda ruta
   de perdida —dano de combate, Burn, efectos `LOSE_LIFE` y pagos— pasa por `losePlayerLife`, que
   emite `LIFE_LOST` y acumula `player.lifeLostThisTurn`; el contador se reinicia al comenzar tanto
   el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
@@ -813,7 +816,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
   `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
   Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
-  generica. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
+  generica. Cuando un enemigo tiene dano marcado, el valor de resistencia visible gana el rojo
+  de dano incluso sobre las reglas de color mas especificas de Zombies/Goblins; el ataque permanece
+  blanco. Los manifests locales de ambas Hordas son la unica fuente de sus PNG; no conservar
   composicion ni cantidades duplicadas dentro del manifest visual.
   `DeckInspector` muestra el PNG completo limpio, sin `CardCostBadge` ni `CardStatsBadge` en grid,
   preview lateral o modal; `xN` permanece a la derecha.
@@ -834,9 +839,17 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   material verde petroleo o rojo forja de sus respectivos generadores; otros enemigos conservan
   la variante borgona generica y Chaos su magenta. El badge de keyword junto al preview fijado
   comparte este mismo material, tipografia y capitalizacion.
-  Si aparece el badge de orden de defensa, las keywords bajan hasta `42px`. No mostrar `HASTE`.
+  El orden visual de keywords es estable y empieza siempre por `MENACE`; no depende de si la
+  keyword es impresa, temporal o concedida por un efecto estatico. Si aparece el badge de orden de
+  defensa de la Horda o del jugador, las keywords bajan hasta `42px`. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
+- La seleccion bespoke de Smallpox conserva el borde de target y la flecha, pero nunca muestra
+  `card-actionable-gem`: ni sobre permanentes del battlefield ni sobre cartas de la mano. Durante
+  Smallpox o el descarte por limite, la carta seleccionada permanece elevada; el hover de otra
+  carta tambien se eleva y usa una capa superior a la seleccionada. El panel de confirmacion de
+  Smallpox se ancla fuera del centro derecho de la propia carta de Smallpox; no va
+  debajo de ella ni junto a la carta elegida.
 - La disponibilidad normal en la mano no reutiliza el borde generico de `Card.actionable`: `Hand`
   suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
   a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa

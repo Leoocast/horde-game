@@ -11,6 +11,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import { getHandCardPresentationState } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
@@ -261,7 +262,7 @@ export function Hand({ game }: { game: GameState }) {
       (smallpoxSelectionActive && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,
   );
-  const hoverSuppressed = smallpoxSelectionActive || handLimitDiscardActive || Boolean(tutorialStepId);
+  const hoverSuppressed = Boolean(tutorialStepId);
 
   function handleHandPointerMove(event: React.MouseEvent<HTMLDivElement>) {
     if (handInteractionBlocked || hoverSuppressed || draggingCardId) return;
@@ -332,7 +333,13 @@ export function Hand({ game }: { game: GameState }) {
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
             const isHovered = hoveredHandId === card.instanceId;
-            const isHeld = isHovered || draggingCardId === card.instanceId;
+            const selectedForDiscard = discardTargetLocked || handLimitTargetLocked;
+            const { raised: isHeld, zIndex: handZIndex } = getHandCardPresentationState({
+              index,
+              hovered: isHovered,
+              selectedForDiscard,
+              dragging: draggingCardId === card.instanceId,
+            });
             const showFullImage = shouldShowFullCardImage(card.definitionId);
             const useNativeHdRendering =
               showFullImage &&
@@ -352,7 +359,7 @@ export function Hand({ game }: { game: GameState }) {
                   layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.55 },
                 }}
                 className="hand-card-slot"
-                style={{ position: "relative", zIndex: isHeld ? 80 : index + 1, x: dragX, y: dragY }}
+                style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
                 drag={!smallpoxSelectionActive && !handLimitDiscardActive && !tutorialDimmed && !hordeAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
@@ -446,6 +453,7 @@ export function Hand({ game }: { game: GameState }) {
                     />
                   </div>
                   {UI_FEATURE_FLAGS.showPlayerHandActionableGems &&
+                    !smallpoxSelectionActive &&
                     cardActionable &&
                     draggingCardId !== card.instanceId && (
                       <span

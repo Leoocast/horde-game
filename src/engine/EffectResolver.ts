@@ -810,6 +810,9 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   if (condition.type === "FIRST_LIFE_LOSS_THIS_TURN") {
     return event.type === "LIFE_LOST" && event.payload?.firstLossThisTurn === true;
   }
+  if (condition.type === "SOURCE_IS_UNTAPPED") {
+    return !source.tapped;
+  }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);
   }

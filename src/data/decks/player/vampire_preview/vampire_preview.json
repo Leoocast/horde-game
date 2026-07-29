@@ -90,6 +90,9 @@
           "conditions": [
             {
               "type": "FIRST_LIFE_LOSS_THIS_TURN"
+            },
+            {
+              "type": "SOURCE_IS_UNTAPPED"
             }
           ],
           "effects": [

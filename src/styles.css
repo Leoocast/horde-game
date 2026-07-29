@@ -5388,17 +5388,21 @@
   }
 
   .smallpox-selection-panel-inline {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 9rem);
+    z-index: 2;
     display: flex;
-    width: min(18rem, calc(100vw - 2rem));
-    margin-top: 1.5rem;
+    width: clamp(13rem, 17vw, 18rem);
+    margin-top: 0;
     flex-direction: column;
     align-items: center;
-    align-self: center;
     gap: 0.4rem;
     padding: 0.55rem 0.85rem;
     text-align: center;
     font-size: 0.88rem;
     font-weight: 850;
+    transform: translateY(-50%);
   }
 
   .counter-target-actions {
@@ -11070,6 +11074,18 @@
     0 3px 7px rgb(0 0 0 / 0.56);
 }
 
+/* Damage wins over the higher-specificity faction/base number colors. The badge backgrounds
+   were already changing correctly; without this final override, enemy life still computed white. */
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-damaged .card-stat-life b,
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b,
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b,
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-damaged .card-stat-life b {
+  color: #ffad98;
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 0.92), 0 0 5px rgb(215 72 53 / 0.58);
+}
+
 /* Full-art exports move the printed stats tab above the type band. The manifest marks this
    layout explicitly; 58/976 and 136/976 preserve the generator's authored offsets at any size. */
 .card-visual.card-image-full.card-layout-full-art > .card-stat-badge,
@@ -13641,7 +13657,8 @@
   left: 10px;
 }
 
-.card-visual:has(> .card-defense-badge-player) > .card-keyword-stack {
+.card-visual:has(> .card-defense-badge-player) > .card-keyword-stack,
+.card-visual:has(> .card-defense-badge-horde) > .card-keyword-stack {
   top: 42px;
 }
 

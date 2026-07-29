@@ -879,7 +879,11 @@ export function Battlefield({ game, side, cards }: Props) {
             ? "defense"
             : undefined;
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
-    const showActionGem = !combatAvailabilityTone && !showEffectAvailabilityBorder && (blockDragActive ? false : cardActionable);
+    const showActionGem =
+      !smallpoxSelectionActive &&
+      !combatAvailabilityTone &&
+      !showEffectAvailabilityBorder &&
+      (blockDragActive ? false : cardActionable);
     const actionGemTone = isDraggedDefender || dragDefenseTargetable
       ? "card-defense-gem"
       : cardTargetable
