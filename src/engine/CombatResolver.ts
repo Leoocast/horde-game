@@ -71,6 +71,7 @@ export function resolvePlayerCombat(
   for (const id of next.combat.playerAttackers) {
     const attacker = next.player.battlefield.find((card) => card.instanceId === id);
     if (!attacker) continue;
+    attacker.attacksMade = (attacker.attacksMade ?? 0) + 1;
     const power = getPowerToughness(next, attacker).power;
     hordeDamage += power;
     if (!options.skipLifesteal) applyCombatLifesteal(next, attacker, power);

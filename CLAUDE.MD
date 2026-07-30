@@ -682,8 +682,20 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
   mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
   consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
-  queda diferido para hacer pulso antes de recibir su buff. El pago usa el golpe generico del HUD
-  (`lifeDamageAnimationId`) con `defend.wav`, y el robo usa un `draw_one.wav`.
+  queda diferido hasta terminar su presentacion dedicada `BLOOD_PACT`: la carta real sale desde su
+  posicion en la mano hacia un punto entre el centro y el lateral derecho, el mordisco golpea el
+  emblema de vida con `blood_splash2.mp3` y `punch.mp3` superpuestos,
+  `countess/countess_laugh_short.mp3` entra a los 0.2 s, y el flujo Three.js mancha y disuelve la
+  carta. La simulacion usa delta time normalizado para conservar la forma de los orbes en monitores
+  de alta frecuencia. El
+  fade queda debajo del HUD de vida y de la sangre. La mano sigue su sistema normal, sin copiar la
+  reorganizacion ni las cartas dummy del laboratorio; las dos cartas robadas se mantienen ocultas
+  hasta que Pacto termina de consumirse y entonces entran juntas con `draw_one.wav`.
+- Todo pago de vida que no usa la presentacion completa de Pacto dispara el beat reutilizable
+  `lifePaymentAnimation`: colmillos y splash de gotas sobre el emblema, ola roja en el HUD,
+  `blood_splash.mp3` a volumen 0.2058 y el numero `-N` con contorno oscuro; este beat no reproduce
+  `punch.mp3`. Se detecta por el incremento real de `lifePaidThisTurn`, asi que dano de combate,
+  Burn y efectos `LOSE_LIFE` conservan su presentacion normal.
 - Condesa del Banquete Eterno usa un coste de vida `CURRENT_LIFE_FRACTION` 1/2 con redondeo `UP`.
   `lifeCostAmount` lo calcula contra la vida justo antes de pagar: con 11 paga 6 y queda en 5.
   Sigue respetando la regla de conservar al menos 1 vida, y el pago dinamico dispara las mismas
@@ -692,7 +704,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   vidas.`, despues `Volar. Vigilancia.` en una sola linea y al final aclara que tiene Robo de vida
   durante tu turno. La regla conserva el tamano normal del texto de Vampiros; para ganar espacio
   solamente se reduce el lore. El titulo de la Condesa usa un tamano intermedio mayor que el
-  preset normal de nombres largos.
+  preset normal de nombres largos. Sus voces se resuelven mediante las reglas reutilizables de
+  `cardVoiceInteractions.ts`: `enter` siempre al entrar; `humans` cuando otra criatura con subtipo
+  `Human` entra mientras ella ya esta en campo; `third_attack` siempre en su tercer ataque
+  confirmado, con maximo una reproduccion por combate aunque varias Condesas lleguen juntas a ese
+  conteo; y al bloquear tiene 50% de silencio, mientras el 50% hablado se reparte por igual entre
+  `pour` y `weak`. Estas frases usan 49% del volumen base; la risa corta de Pacto de Sangre
+  conserva su volumen normal. Cada permanente conserva `attacksMade`, que solo avanza cuando el
+  combate del player se confirma. Centinela de Sangre tiene los subtipos `Human`, `Vampire` y
+  `Knight`, de modo que la interaccion no depende de su nombre y se extiende automaticamente a
+  futuros Humanos.
 - Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
   aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
   bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
@@ -916,6 +937,10 @@ Si es target:
 Si es combate:
 - revisar `CombatResolver.ts`
 - revisar animadores y `buildHordeAttackEvents` en `useGameStore.ts`
+
+Si es VFX o Three.js:
+- revisar `docs/vfx_and_threejs.md`
+- conservar los beats y el orden de resolucion de `docs/animation_contracts.md`
 
 ## Filosofia del proyecto
 
