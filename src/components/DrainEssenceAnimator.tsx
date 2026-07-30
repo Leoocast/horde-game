@@ -314,7 +314,7 @@ export function DrainEssenceAnimator() {
         index,
         0.03 + (index % 23) * 0.015 + Math.floor(index / 23) * 0.025,
         0.54 + seededNoise(index, 1.7) * 0.14,
-        94 + seededNoise(index, 3.3) * 72,
+        101 + seededNoise(index, 3.3) * 78,
         0.28 + seededNoise(index, 6.2) * 0.18,
       );
     }
@@ -324,7 +324,7 @@ export function DrainEssenceAnimator() {
         index,
         0.5 + (index % 11) * 0.012 + Math.floor(index / 11) * 0.025,
         0.4 + seededNoise(index, 4.4) * 0.1,
-        72 + seededNoise(index, 3.9) * 54,
+        78 + seededNoise(index, 3.9) * 58,
         0.26 + seededNoise(index, 7.3) * 0.17,
       );
     }
@@ -334,7 +334,7 @@ export function DrainEssenceAnimator() {
         index,
         0.86 + index * 0.006,
         0.34 + seededNoise(index, 8.6) * 0.07,
-        44 + seededNoise(index, 2.8) * 36,
+        48 + seededNoise(index, 2.8) * 39,
         0.34 + seededNoise(index, 6.8) * 0.17,
       );
     }
@@ -397,7 +397,7 @@ export function DrainEssenceAnimator() {
         puff.mesh.rotation.z = -Math.atan2(tangent.y, tangent.x);
         puff.mesh.scale.set(
           puff.size * 1.45 * taper,
-          puff.size * 0.72 * taper * flutter,
+          puff.size * 0.8 * taper * flutter,
           1,
         );
         puff.material.uniforms.uTime.value = elapsed;
