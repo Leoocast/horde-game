@@ -66,6 +66,12 @@ import {
   uiCardName,
   uiText,
 } from "./presentationEffects";
+import {
+  resolveCardVoiceCue,
+  resolveCardVoiceCueBatch,
+  type CardVoiceCue,
+  type CardVoiceEvent,
+} from "./cardVoiceInteractions";
 
 export type GameStore = {
   game: GameState;
@@ -76,6 +82,7 @@ export type GameStore = {
   burnImpactCardIds: string[];
   burnImpactEventId?: number;
   lifeDamageAnimationId?: number;
+  lifePaymentAnimation?: LifePaymentAnimationState;
   bloodPactAnimation?: BloodPactAnimationState;
   deathRevealCard?: CardInstance;
   hordeSpellCard?: CardInstance;
@@ -168,6 +175,7 @@ export type GameStore = {
   castCard: (id: string, options?: CastOptions) => void;
   setBloodPactAnimationPhase: (id: string, phase: BloodPactAnimationState["phase"]) => void;
   completeBloodPactAnimation: (id: string) => void;
+  completeLifePaymentAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -219,12 +227,15 @@ const PLAYER_ATTACK_MILL_GAP_MS = 35;
 const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
+const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
 let landPlaySummoningSafetyTimer: number | undefined;
 let bloodPactAnimationSafetyTimer: number | undefined;
 let bloodPactAfterCommit: (() => void) | undefined;
+let lifePaymentAnimationSafetyTimer: number | undefined;
+let lifePaymentAfterCommit: (() => void) | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -281,6 +292,11 @@ export type BloodPactAnimationState = {
   lifeAfter: number;
   amount: number;
   phase: "casting" | "impact" | "settling" | "consumed";
+};
+
+export type LifePaymentAnimationState = {
+  id: string;
+  amount: number;
 };
 
 export type BurnAnimationState = {
@@ -370,6 +386,7 @@ function createCleanUiState(): Partial<GameStore> {
     burnImpactCardIds: [],
     burnImpactEventId: undefined,
     lifeDamageAnimationId: undefined,
+    lifePaymentAnimation: undefined,
     bloodPactAnimation: undefined,
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
@@ -420,6 +437,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   burnImpactCardIds: [],
   burnImpactEventId: undefined,
   lifeDamageAnimationId: undefined,
+  lifePaymentAnimation: undefined,
   bloodPactAnimation: undefined,
   deathRevealCard: undefined,
   hordeSpellCard: undefined,
@@ -464,6 +482,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
     clearBloodPactPresentation();
+    clearLifePaymentPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -482,6 +501,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   loadScenario: (game, deckIds) => {
     clearBloodPactPresentation();
+    clearLifePaymentPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -722,7 +742,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -737,7 +757,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -830,6 +850,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   castCard: (id, options) => {
     let afterCommit: (() => void) | undefined;
     let startedBloodPactAnimationId: string | undefined;
+    let startedLifePaymentAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -847,6 +868,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (bloodPactAnimation) {
         bloodPactAfterCommit = result.afterCommit;
         startedBloodPactAnimationId = bloodPactAnimation.id;
+      } else if (result.patch.lifePaymentAnimation) {
+        lifePaymentAfterCommit = result.afterCommit;
+        startedLifePaymentAnimationId = result.patch.lifePaymentAnimation.id;
       } else {
         afterCommit = result.afterCommit;
       }
@@ -854,6 +878,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     afterCommit?.();
     if (startedBloodPactAnimationId) scheduleBloodPactAnimationSafetyClear(startedBloodPactAnimationId);
+    if (startedLifePaymentAnimationId) scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
   },
   setBloodPactAnimationPhase: (id, phase) => {
     let revealDraw = false;
@@ -884,24 +909,56 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (revealDraw) useAudioStore.getState().playSfx("drawOne");
     afterCommit?.();
   },
+  completeLifePaymentAnimation: (id) => {
+    let afterCommit: (() => void) | undefined;
+    set((state) => {
+      if (state.lifePaymentAnimation?.id !== id) return {};
+      if (lifePaymentAnimationSafetyTimer) {
+        window.clearTimeout(lifePaymentAnimationSafetyTimer);
+        lifePaymentAnimationSafetyTimer = undefined;
+      }
+      afterCommit = lifePaymentAfterCommit;
+      lifePaymentAfterCommit = undefined;
+      return { lifePaymentAnimation: undefined };
+    });
+    afterCommit?.();
+  },
   activateAbility: (id, abilityId, options) => {
     let shouldSchedulePlayerTriggers = false;
+    let startedLifePaymentAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       const next = activateEngineAbility(state.game, id, abilityId, {
         ...options,
         deferReactiveTriggers: true,
       });
+      const paidLife = next.lastActionResult?.ok === true
+        ? Math.max(0, next.player.lifePaidThisTurn - state.game.player.lifePaidThisTurn)
+        : 0;
       if (next.lastActionResult?.ok === false) showActionToast(next.lastActionResult.reason);
       shouldSchedulePlayerTriggers =
         next.lastActionResult?.ok === true && hasQueuedPlayerTriggers(next);
+      if (paidLife > 0) {
+        const animationId = `life-payment-${Date.now()}`;
+        startedLifePaymentAnimationId = animationId;
+        lifePaymentAfterCommit = shouldSchedulePlayerTriggers
+          ? () => scheduleQueuedPlayerTriggers()
+          : undefined;
+      }
       return {
         game: next,
         activeEffectCardId: undefined,
+        lifePaymentAnimation: paidLife > 0
+          ? { id: startedLifePaymentAnimationId!, amount: paidLife }
+          : undefined,
         playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
       };
     });
-    if (shouldSchedulePlayerTriggers) scheduleQueuedPlayerTriggers();
+    if (startedLifePaymentAnimationId) {
+      scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
+    } else if (shouldSchedulePlayerTriggers) {
+      scheduleQueuedPlayerTriggers();
+    }
   },
   toggleAttacker: (id) =>
     set(({ game }) => {
@@ -965,12 +1022,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    const attackVoiceCues = new Map(
+      resolveCardVoiceCueBatch(
+        attackers.flatMap((attackerId) => {
+          const card = game.player.battlefield.find((candidate) => candidate.instanceId === attackerId);
+          return card
+            ? [{
+                type: "ATTACKS" as const,
+                card,
+                attackNumber: (card.attacksMade ?? 0) + 1,
+              }]
+            : [];
+        }),
+      ).map(({ cardId, cue }) => [cardId, cue]),
+    );
     let elapsed = 0;
     attackers.forEach((attackerId, index) => {
       const attackerMillCards = previewMillCards.filter((item) => item.attackerIndex === index);
       const startAt = elapsed;
       window.setTimeout(() => {
         useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+        const voiceCue = attackVoiceCues.get(attackerId);
+        if (voiceCue) playCardVoiceCue(voiceCue);
         set({ playerAttackAnimation: { attackerId, eventId: index } });
       }, startAt);
       window.setTimeout(() => {
@@ -1210,6 +1283,10 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number):
     return;
   }
   useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+  const blocker = event.blockerId
+    ? currentGame.player.battlefield.find((card) => card.instanceId === event.blockerId)
+    : undefined;
+  if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
   if (event.blockerDies) useAudioStore.getState().playSfx("defend", { volume: 0.68 });
   useGameStore.setState({
     hordeCombatVisualDamage: nextVisualDamage(event),
@@ -1374,6 +1451,14 @@ function clearBloodPactPresentation(): void {
   bloodPactAfterCommit = undefined;
 }
 
+function clearLifePaymentPresentation(): void {
+  if (lifePaymentAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(lifePaymentAnimationSafetyTimer);
+  }
+  lifePaymentAnimationSafetyTimer = undefined;
+  lifePaymentAfterCommit = undefined;
+}
+
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
   if (bloodPactAnimationSafetyTimer) window.clearTimeout(bloodPactAnimationSafetyTimer);
   bloodPactAnimationSafetyTimer = window.setTimeout(() => {
@@ -1381,11 +1466,20 @@ function scheduleBloodPactAnimationSafetyClear(id: string): void {
   }, BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleLifePaymentAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (lifePaymentAnimationSafetyTimer) window.clearTimeout(lifePaymentAnimationSafetyTimer);
+  lifePaymentAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completeLifePaymentAnimation(id);
+  }, LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
       state.hordeAttackAnimation ||
       state.burnAnimation ||
+      state.lifePaymentAnimation ||
       state.bloodPactAnimation ||
       state.resolvingHordeCombat ||
       state.playerAutoTriggerCount > 0 ||
@@ -1590,10 +1684,14 @@ function buildCastCardPatch(
   const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
   const lostLife = castSucceeded && next.player.life < game.player.life;
   const lifeLost = Math.max(0, game.player.life - next.player.life);
+  const paidLife = castSucceeded
+    ? Math.max(0, next.player.lifePaidThisTurn - game.player.lifePaidThisTurn)
+    : 0;
   const triggeredBuffCardIds = findTemporaryBuffedCardIds(game, next);
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
-  if (lostLife && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+  if (castSucceeded && card) playBattlefieldEntryVoiceInteraction(game, next, card.instanceId);
+  if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
   if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
   const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
@@ -1626,6 +1724,9 @@ function buildCastCardPatch(
         phase: "casting" as const,
       }
     : undefined;
+  const lifePaymentAnimation = paidLife > 0 && !bloodPactAnimation
+    ? { id: `life-payment-${card?.instanceId ?? "cast"}-${Date.now()}`, amount: paidLife }
+    : undefined;
   return {
     patch: {
       game: next,
@@ -1634,7 +1735,8 @@ function buildCastCardPatch(
       focusedCardId: undefined,
       activeEffectCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
-      lifeDamageAnimationId: lostLife && !bloodPactAnimation ? Date.now() : state.lifeDamageAnimationId,
+      lifeDamageAnimationId: lostLife && paidLife === 0 && !bloodPactAnimation ? Date.now() : state.lifeDamageAnimationId,
+      lifePaymentAnimation,
       bloodPactAnimation,
       autoPaidLandAnimation,
       ...(buffBeat ?? {}),
@@ -1671,10 +1773,14 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     });
     const castSucceeded = next.lastActionResult?.ok === true;
     const lostLife = castSucceeded && next.player.life < latest.player.life;
+    const paidLife = castSucceeded
+      ? Math.max(0, next.player.lifePaidThisTurn - latest.player.lifePaidThisTurn)
+      : 0;
     const gainedLife = castSucceeded && next.player.life > latest.player.life;
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
-    if (lostLife) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+    if (castSucceeded) playBattlefieldEntryVoiceInteraction(latest, next, card.instanceId);
+    if (lostLife && paidLife === 0) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
     if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
     if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
@@ -1687,16 +1793,27 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const continueAfterPlayerTriggers = () => {
       if (reactionSources.length > 0) scheduleCardCastReaction(reactionSources, undefined);
     };
-    if (isDestroySpell && castSucceeded) {
-      // Destruction can queue opposing death reactions before a LIFE_LOST reaction. Let the
-      // shared runner preserve that queue order, then continue with reactions to the cast itself.
-      window.setTimeout(() => scheduleQueuedHordeTriggers(continueAfterPlayerTriggers), 0);
-    } else if (playerTriggersQueued) {
-      // `resolveSpell` runs inside a Zustand state update. Start the player beat on the next task
-      // so it reads the just-committed LIFE_LOST event instead of the previous store snapshot.
-      window.setTimeout(() => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers), 0);
-    } else if (castSucceeded) {
-      continueAfterPlayerTriggers();
+    const continueAfterPayment = () => {
+      if (isDestroySpell && castSucceeded) {
+        // Destruction can queue opposing death reactions before a LIFE_LOST reaction. Let the
+        // shared runner preserve that queue order, then continue with reactions to the cast itself.
+        window.setTimeout(() => scheduleQueuedHordeTriggers(continueAfterPlayerTriggers), 0);
+      } else if (playerTriggersQueued) {
+        // `resolveSpell` runs inside a Zustand state update. Start the player beat on the next task
+        // so it reads the just-committed LIFE_LOST event instead of the previous store snapshot.
+        window.setTimeout(() => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers), 0);
+      } else if (castSucceeded) {
+        continueAfterPlayerTriggers();
+      }
+    };
+    const lifePaymentAnimation = paidLife > 0
+      ? { id: `life-payment-${card.instanceId}-${Date.now()}`, amount: paidLife }
+      : undefined;
+    if (lifePaymentAnimation) {
+      lifePaymentAfterCommit = continueAfterPayment;
+      scheduleLifePaymentAnimationSafetyClear(lifePaymentAnimation.id);
+    } else {
+      continueAfterPayment();
     }
     return {
       game: next,
@@ -1704,7 +1821,8 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       hoveredCardId: undefined,
       focusedCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
-      lifeDamageAnimationId: lostLife ? Date.now() : useGameStore.getState().lifeDamageAnimationId,
+      lifeDamageAnimationId: lostLife && paidLife === 0 ? Date.now() : useGameStore.getState().lifeDamageAnimationId,
+      lifePaymentAnimation,
       playerAutoTriggerCount: playerTriggersQueued ? 1 : useGameStore.getState().playerAutoTriggerCount,
       autoPaidLandAnimation,
       ...(buffBeat ?? {}),
@@ -1799,6 +1917,30 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     focusedCardId: undefined,
     spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
   };
+}
+
+function playBattlefieldEntryVoiceInteraction(
+  previousGame: GameState,
+  nextGame: GameState,
+  cardId: string,
+): void {
+  if (previousGame.player.battlefield.some((card) => card.instanceId === cardId)) return;
+  const enteredCard = nextGame.player.battlefield.find((card) => card.instanceId === cardId);
+  if (!enteredCard) return;
+  playCardVoiceInteraction({
+    type: "ENTERS_BATTLEFIELD",
+    card: enteredCard,
+    previousGame,
+  });
+}
+
+function playCardVoiceInteraction(event: CardVoiceEvent): void {
+  const cue = resolveCardVoiceCue(event);
+  if (cue) playCardVoiceCue(cue);
+}
+
+function playCardVoiceCue(cue: CardVoiceCue): void {
+  useAudioStore.getState().playSfx(cue.sfx, { volume: cue.volume });
 }
 
 function nextVisualDamage(event: HordeAttackEvent): Record<string, number> {

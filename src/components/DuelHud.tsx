@@ -300,6 +300,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const lifeDamageAnimationId = useGameStore((state) => state.lifeDamageAnimationId);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
+  const lifePaymentAnimation = useGameStore((state) => state.lifePaymentAnimation);
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
@@ -415,13 +416,18 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
-              bloodPactAnimation?.phase === "impact" ? "blood-pact-life-corrupted" : "",
+              bloodPactAnimation?.phase === "impact" || lifePaymentAnimation ? "blood-pact-life-corrupted" : "",
+              lifePaymentAnimation ? "life-payment-life-corrupted" : "",
             ].join(" ")}
           >
-            {bloodPactAnimation && <span className="blood-pact-life-wave" aria-hidden="true" />}
-            {bloodPactAnimation?.phase === "impact" && (
-              <strong key={bloodPactAnimation.id} className="blood-pact-life-damage-number" aria-hidden="true">
-                -{bloodPactAnimation.amount}
+            {(bloodPactAnimation || lifePaymentAnimation) && <span className="blood-pact-life-wave" aria-hidden="true" />}
+            {(bloodPactAnimation?.phase === "impact" || lifePaymentAnimation) && (
+              <strong
+                key={bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.id : lifePaymentAnimation?.id}
+                className="blood-pact-life-damage-number"
+                aria-hidden="true"
+              >
+                -{bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.amount : lifePaymentAnimation?.amount}
               </strong>
             )}
             {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}

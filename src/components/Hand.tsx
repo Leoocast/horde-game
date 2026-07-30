@@ -59,6 +59,7 @@ export function Hand({ game }: { game: GameState }) {
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
+  const lifePaymentAnimating = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const bloodPactAnimating = Boolean(bloodPactAnimation);
   const energyRecycleAnimation = useGameStore((state) => state.energyRecycleAnimation);
@@ -265,6 +266,7 @@ export function Hand({ game }: { game: GameState }) {
       playerDiscardAnimating ||
       hordeAttackAnimating ||
       playerAttackAnimating ||
+      lifePaymentAnimating ||
       bloodPactAnimating ||
       energyRecycleAnimation ||
       unresolvedTriggerCount > 0 ||

@@ -24,6 +24,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const burnAnimating = useGameStore((state) => Boolean(state.burnAnimation));
+  const lifePaymentAnimating = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimating = useGameStore((state) => Boolean(state.bloodPactAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
@@ -32,7 +33,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || bloodPactAnimating || resolvingHordeCombat;
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || resolvingHordeCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(
     summoningAnimationCount,

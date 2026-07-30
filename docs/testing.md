@@ -50,6 +50,7 @@ archivo no corre nunca.
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad de un deck JSON que el engine no entiende rompe la suite en vez de quedar muda |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso por los generadores de decks y resolución de sus assets locales: keywords, stats, contadores, creación de fichas, párrafos y rutas del arte de Vampires |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
+| `tests/cardVoiceInteractions.test.js` | Reglas de voz entre cartas, filtros por subtipo, probabilidades y conteo de ataques confirmados |
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Import/export y parseo defensivo de escenarios y flujos |

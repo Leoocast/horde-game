@@ -224,6 +224,7 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     assert.equal(result.game.player.life, 5);
     assert.equal(result.game.player.lifePaidThisTurn, 5);
     assert.equal(result.lifeDamageAnimationId, undefined);
+    assert.equal(result.lifePaymentAnimation, undefined);
     assert.equal(result.game.player.hand.length, 2);
     assert.equal(
       result.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
@@ -322,6 +323,8 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
         x: 0,
         y: 0,
       },
+      lifeDamageAnimationId: undefined,
+      lifePaymentAnimation: undefined,
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
     });
@@ -331,6 +334,8 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     const afterCast = useGameStore.getState();
     assert.equal(afterCast.game.player.life, 8);
     assert.equal(afterCast.game.player.lifePaidThisTurn, 2);
+    assert.equal(afterCast.lifeDamageAnimationId, undefined);
+    assert.equal(afterCast.lifePaymentAnimation?.amount, 2);
     assert.equal(
       afterCast.game.player.battlefield.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
       2,
@@ -339,6 +344,8 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
       afterCast.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       0,
     );
+    useGameStore.getState().completeLifePaymentAnimation(afterCast.lifePaymentAnimation.id);
+    assert.equal(useGameStore.getState().lifePaymentAnimation, undefined);
 
     timers.releaseExpiredAt(0);
     assert.equal(useGameStore.getState().activatingEffectCardId, page.instanceId);
@@ -353,6 +360,38 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
+});
+
+test("activated life costs use the reusable life-payment presentation", async () => {
+  const [
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const game = createTestGame("activated-life-payment-presentation");
+  game.player.life = 10;
+  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+  useGameStore.setState({
+    game,
+    lifeDamageAnimationId: undefined,
+    lifePaymentAnimation: undefined,
+    pendingTriggeredEffectCount: 0,
+    playerAutoTriggerCount: 0,
+  });
+
+  useGameStore.getState().activateAbility(acolyte.instanceId, "tithe_acolyte_generate");
+
+  const afterActivation = useGameStore.getState();
+  assert.equal(afterActivation.game.player.life, 5);
+  assert.equal(afterActivation.game.player.lifePaidThisTurn, 5);
+  assert.equal(afterActivation.lifeDamageAnimationId, undefined);
+  assert.equal(afterActivation.lifePaymentAnimation?.amount, 5);
+
+  useGameStore.getState().completeLifePaymentAnimation(afterActivation.lifePaymentAnimation.id);
+  assert.equal(useGameStore.getState().lifePaymentAnimation, undefined);
 });
 
 test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {

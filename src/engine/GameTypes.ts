@@ -182,6 +182,8 @@ export type CardInstance = {
   /** Controller turn in which this permanent most recently entered the battlefield.
    *  Used by pure battlefield layout to keep later Horde copies in a new visual stack. */
   battlefieldEntryTurn?: number;
+  /** Number of player combats this permanent has actually attacked in. */
+  attacksMade?: number;
   activatedThisTurn: boolean;
   damageMarked: number;
   deathtouchDamage: boolean;

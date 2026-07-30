@@ -305,7 +305,7 @@
       "colors": [],
       "colorIdentity": [],
       "cardTypes": ["Creature"],
-      "subtypes": ["Vampire", "Knight"],
+      "subtypes": ["Human", "Vampire", "Knight"],
       "power": 3,
       "toughness": 4,
       "keywords": ["VIGILANCE"],
