@@ -9,16 +9,6 @@ import { Card } from "./Card";
 
 type ScreenPoint = { x: number; y: number };
 type SmokeRoute = "extraction" | "orbit" | "recovery";
-type SmokeTendrilProfile = {
-  className: string;
-  start: number;
-  end: number;
-  amplitude: number;
-  frequency: number;
-  phase: number;
-  drift: number;
-  warped?: boolean;
-};
 type ShaderSmokePuff = {
   mesh: THREE.Mesh;
   material: THREE.ShaderMaterial;
@@ -30,14 +20,6 @@ type ShaderSmokePuff = {
   lateralBias: number;
   opacity: number;
 };
-
-const SMOKE_TENDRILS: SmokeTendrilProfile[] = [
-  { className: "drain-essence-smoke-wisp", start: 0, end: 0.9, amplitude: 42, frequency: 2.7, phase: 1.2, drift: 16, warped: true },
-  { className: "drain-essence-smoke-wisp", start: 0.12, end: 1, amplitude: 34, frequency: 2.2, phase: 3.8, drift: -21, warped: true },
-  { className: "drain-essence-smoke-wisp is-faint", start: 0.3, end: 0.96, amplitude: 49, frequency: 3.4, phase: 0.5, drift: 11, warped: true },
-  { className: "drain-essence-smoke-vein", start: 0, end: 1, amplitude: 13, frequency: 2.1, phase: 1.8, drift: 2 },
-  { className: "drain-essence-smoke-vein is-faint", start: 0.16, end: 0.95, amplitude: 22, frequency: 2.8, phase: 4.1, drift: -7 },
-];
 
 const SMOKE_VERTEX_SHADER = `
   varying vec2 vUv;
@@ -151,32 +133,6 @@ function quadraticScreenTangent(
   return { x: x / length, y: y / length };
 }
 
-function buildSmokeTendrilPath(
-  start: ScreenPoint,
-  control: ScreenPoint,
-  end: ScreenPoint,
-  profile: SmokeTendrilProfile,
-): string {
-  const points: string[] = [];
-  for (let index = 0; index <= 64; index += 1) {
-    const localProgress = index / 64;
-    const progress = profile.start + (profile.end - profile.start) * localProgress;
-    const point = quadraticScreenPoint(start, control, end, progress);
-    const tangent = quadraticScreenTangent(start, control, end, progress);
-    const envelope = Math.sin(Math.PI * localProgress);
-    const offset =
-      (
-        Math.sin(progress * Math.PI * profile.frequency + profile.phase) * profile.amplitude +
-        Math.sin(progress * Math.PI * profile.frequency * 2.37 + profile.phase * 0.7) * profile.amplitude * 0.26
-      ) * envelope +
-      profile.drift * envelope;
-    const x = point.x - tangent.y * offset;
-    const y = point.y + tangent.x * offset;
-    points.push(`${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
-  }
-  return points.join(" ");
-}
-
 function seededNoise(index: number, salt: number): number {
   const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
   return value - Math.floor(value);
@@ -209,9 +165,6 @@ export function DrainEssenceAnimator() {
   const vignetteRef = useRef<HTMLDivElement>(null);
   const targetAuraRef = useRef<HTMLDivElement>(null);
   const threeCanvasRef = useRef<HTMLCanvasElement>(null);
-  const extractionTendrilRefs = useRef<Array<SVGPathElement | null>>([]);
-  const recoveryPathRef = useRef<SVGPathElement>(null);
-  const recoveryOrbRef = useRef<SVGGElement>(null);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -219,18 +172,11 @@ export function DrainEssenceAnimator() {
     const vignetteElement = vignetteRef.current;
     const targetAuraElement = targetAuraRef.current;
     const threeCanvas = threeCanvasRef.current;
-    const recoveryPathElement = recoveryPathRef.current;
-    const recoveryOrbElement = recoveryOrbRef.current;
-    const extractionPathElements = extractionTendrilRefs.current
-      .filter((element): element is SVGPathElement => Boolean(element));
     if (
       !cardElement ||
       !vignetteElement ||
       !targetAuraElement ||
-      !threeCanvas ||
-      !recoveryPathElement ||
-      !recoveryOrbElement ||
-      extractionPathElements.length === 0
+      !threeCanvas
     ) return;
 
     const targetElement = document.querySelector<HTMLElement>(`[data-card-slot-id="${active.targetId}"]`);
@@ -290,17 +236,6 @@ export function DrainEssenceAnimator() {
     targetAuraElement.style.width = `${targetRect.width + 10}px`;
     targetAuraElement.style.height = `${targetRect.height + 10}px`;
 
-    for (let index = 0; index < SMOKE_TENDRILS.length; index += 1) {
-      extractionTendrilRefs.current[index]?.setAttribute(
-        "d",
-        buildSmokeTendrilPath(extractionStart, extractionControl, extractionEnd, SMOKE_TENDRILS[index]),
-      );
-    }
-    recoveryPathElement.setAttribute(
-      "d",
-      `M ${spellX} ${spellY} Q ${recoveryControl.x} ${recoveryControl.y} ${lifeX} ${lifeY}`,
-    );
-
     gsap.set(cardElement, {
       left: targetLeft,
       top: targetTop,
@@ -312,23 +247,6 @@ export function DrainEssenceAnimator() {
     });
     gsap.set(vignetteElement, { opacity: 0 });
     gsap.set(targetAuraElement, { opacity: 0, scale: 0.96 });
-    for (const path of extractionPathElements) {
-      const length = path.getTotalLength();
-      gsap.set(path, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 });
-    }
-    const recoveryLength = recoveryPathElement.getTotalLength();
-    gsap.set(recoveryPathElement, {
-      strokeDasharray: recoveryLength,
-      strokeDashoffset: recoveryLength,
-      opacity: 0,
-    });
-    gsap.set(recoveryOrbElement, {
-      x: spellX,
-      y: spellY,
-      scale: 0.65,
-      opacity: 0,
-      transformOrigin: "50% 50%",
-    });
     targetElement.classList.add("drain-essence-target-draining");
 
     const scene = new THREE.Scene();
@@ -382,7 +300,9 @@ export function DrainEssenceAnimator() {
         delay,
         duration,
         size,
-        phase: seededNoise(index, 5.8) * Math.PI * 2,
+        phase: route === "orbit"
+          ? ((index % 11) / 11) * Math.PI * 2 + Math.floor(index / 11) * 0.28
+          : seededNoise(index, 5.8) * Math.PI * 2,
         lateralBias: (seededNoise(index, 9.2) - 0.5) * (route === "extraction" ? 46 : route === "orbit" ? 12 : 14),
         opacity,
       });
@@ -402,20 +322,20 @@ export function DrainEssenceAnimator() {
       addPuff(
         "orbit",
         index,
-        0.54 + (index % 11) * 0.02 + Math.floor(index / 11) * 0.035,
-        0.42 + seededNoise(index, 4.4) * 0.13,
+        0.5 + (index % 11) * 0.012 + Math.floor(index / 11) * 0.025,
+        0.4 + seededNoise(index, 4.4) * 0.1,
         72 + seededNoise(index, 3.9) * 54,
         0.26 + seededNoise(index, 7.3) * 0.17,
       );
     }
-    for (let index = 0; index < 18; index += 1) {
+    for (let index = 0; index < 26; index += 1) {
       addPuff(
         "recovery",
         index,
-        0.92 + index * 0.008,
-        0.34 + seededNoise(index, 8.6) * 0.08,
-        38 + seededNoise(index, 2.8) * 30,
-        0.3 + seededNoise(index, 6.8) * 0.17,
+        0.86 + index * 0.006,
+        0.34 + seededNoise(index, 8.6) * 0.07,
+        44 + seededNoise(index, 2.8) * 36,
+        0.34 + seededNoise(index, 6.8) * 0.17,
       );
     }
 
@@ -442,16 +362,17 @@ export function DrainEssenceAnimator() {
         let tangent: ScreenPoint;
         let taper: number;
         if (orbiting) {
-          const angle = puff.phase + progress * Math.PI * 2 * 1.18;
-          const radiusX = targetWidth * 0.46 + puff.lateralBias;
-          const radiusY = targetHeight * 0.43 + puff.lateralBias * 0.45;
+          const angle = puff.phase + progress * Math.PI * 2 * 1.42;
+          const spiral = 1 - progress * 0.86;
+          const radiusX = (targetWidth * 0.48 + puff.lateralBias) * spiral + 8;
+          const radiusY = (targetHeight * 0.43 + puff.lateralBias * 0.45) * spiral + 10;
           screenX = spellX + Math.cos(angle) * radiusX;
           screenY = spellY + Math.sin(angle) * radiusY;
           const tangentX = -Math.sin(angle) * radiusX;
           const tangentY = Math.cos(angle) * radiusY;
           const tangentLength = Math.hypot(tangentX, tangentY) || 1;
           tangent = { x: tangentX / tangentLength, y: tangentY / tangentLength };
-          taper = 0.72 + Math.sin(Math.PI * progress) * 0.18;
+          taper = 0.8 - progress * 0.34 + Math.sin(Math.PI * progress) * 0.12;
         } else {
           const start = recovery ? recoveryStart : extractionStart;
           const control = recovery ? recoveryControl : extractionControl;
@@ -488,7 +409,6 @@ export function DrainEssenceAnimator() {
     };
     animationFrame = window.requestAnimationFrame(tick);
 
-    const recoveryMotion = { progress: 0 };
     const timeline = gsap.timeline({
       onComplete: () => complete(active.id),
     });
@@ -501,54 +421,12 @@ export function DrainEssenceAnimator() {
         ease: "power2.out",
       }, 0.02)
       .call(() => playSfx("activateEffect", { volume: 0.55 }), [], 0.04)
-      .to(extractionPathElements, {
-        strokeDashoffset: 0,
-        opacity: 0.58,
-        duration: 0.6,
-        ease: "power2.inOut",
-      }, 0.04)
       .to(cardElement, {
         filter: "brightness(1.08) saturate(0.86) drop-shadow(0 0 18px rgba(91, 34, 47, 0.5))",
         duration: 0.18,
         ease: "power2.out",
-      }, 0.58)
-      .to(extractionPathElements, {
-        opacity: 0,
-        duration: 0.2,
-        ease: "power1.out",
-      }, 0.72)
-      .to(recoveryPathElement, {
-        strokeDashoffset: 0,
-        opacity: 0.7,
-        duration: 0.4,
-        ease: "power2.inOut",
-      }, 0.92)
-      .to(recoveryOrbElement, {
-        opacity: 0.8,
-        scale: 1,
-        duration: 0.09,
-        ease: "back.out(2)",
-      }, 0.92)
-      .to(recoveryMotion, {
-        progress: 1,
-        duration: 0.4,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          const point = quadraticScreenPoint(
-            recoveryStart,
-            recoveryControl,
-            recoveryEnd,
-            recoveryMotion.progress,
-          );
-          gsap.set(recoveryOrbElement, { x: point.x, y: point.y });
-        },
-      }, 0.92)
-      .call(() => resolve(active.id), [], 1.32)
-      .to([recoveryPathElement, recoveryOrbElement], {
-        opacity: 0,
-        duration: 0.14,
-        ease: "power1.out",
-      }, 1.34)
+      }, 0.54)
+      .call(() => resolve(active.id), [], 1.26)
       .to(cardElement, {
         scale: 0.2,
         opacity: 0,
@@ -556,14 +434,14 @@ export function DrainEssenceAnimator() {
         filter: "brightness(1.45) saturate(0.18) blur(13px)",
         duration: 0.24,
         ease: "back.in(1.25)",
-      }, 1.34)
+      }, 1.28)
       .to(targetAuraElement, {
         opacity: 0,
         scale: 1.04,
         duration: 0.18,
         ease: "power1.out",
-      }, 1.35)
-      .to(vignetteElement, { opacity: 0, duration: 0.28, ease: "power1.out" }, 1.42);
+      }, 1.29)
+      .to(vignetteElement, { opacity: 0, duration: 0.26, ease: "power1.out" }, 1.35);
 
     return () => {
       timeline.kill();
@@ -585,35 +463,6 @@ export function DrainEssenceAnimator() {
     <>
       <div ref={vignetteRef} className="drain-essence-vignette" aria-hidden="true" />
       <div key={active.id} className="drain-essence-animation-layer" aria-hidden="true">
-        <svg className="drain-essence-ribbon-svg" viewBox={`0 0 ${window.innerWidth} ${window.innerHeight}`}>
-          <defs>
-            <filter id="drain-essence-smoke-warp" x="-40%" y="-60%" width="180%" height="220%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.009 0.025" numOctaves="2" seed="17" result="smokeNoise" />
-              <feDisplacementMap in="SourceGraphic" in2="smokeNoise" scale="14" xChannelSelector="R" yChannelSelector="B" result="displacedSmoke" />
-              <feGaussianBlur in="displacedSmoke" stdDeviation="1.1" result="softSmoke" />
-              <feMerge>
-                <feMergeNode in="softSmoke" />
-                <feMergeNode in="displacedSmoke" />
-              </feMerge>
-            </filter>
-          </defs>
-          {SMOKE_TENDRILS.map((profile, index) => (
-            <path
-              key={`smoke-tendril-${index}`}
-              ref={(element) => {
-                extractionTendrilRefs.current[index] = element;
-              }}
-              className={profile.className}
-              filter={profile.warped ? "url(#drain-essence-smoke-warp)" : undefined}
-            />
-          ))}
-          <path ref={recoveryPathRef} className="drain-essence-recovery-path" />
-          <g ref={recoveryOrbRef} className="drain-essence-recovery-orb">
-            <circle r="18" className="drain-essence-recovery-orb-haze" />
-            <circle r="8" className="drain-essence-recovery-orb-shell" />
-            <circle r="2.8" className="drain-essence-recovery-orb-core" />
-          </g>
-        </svg>
         <canvas ref={threeCanvasRef} className="drain-essence-three-canvas" />
         <div ref={targetAuraRef} className="drain-essence-target-aura" />
         <div ref={cardRef} className="drain-essence-card-host">
