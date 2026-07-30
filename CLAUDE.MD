@@ -938,6 +938,10 @@ Si es combate:
 - revisar `CombatResolver.ts`
 - revisar animadores y `buildHordeAttackEvents` en `useGameStore.ts`
 
+Si es VFX o Three.js:
+- revisar `docs/vfx_and_threejs.md`
+- conservar los beats y el orden de resolucion de `docs/animation_contracts.md`
+
 ## Filosofia del proyecto
 
 Este no es Magic completo. Es una version PvE clara, animada y jugable. Precision total de reglas no es prioridad si hace peor el flujo. Lo importante es:
