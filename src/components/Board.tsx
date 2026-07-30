@@ -34,6 +34,7 @@ import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
 import { BloodPactAnimator } from "./BloodSiphonAnimator";
 import { LifePaymentAnimator } from "./LifePaymentAnimator";
+import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
 
 type Props = {
   playerName: string;
@@ -52,6 +53,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
   const lifePaymentAnimationActive = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimationActive = useGameStore((state) => Boolean(state.bloodPactAnimation));
+  const drainEssenceAnimationActive = useGameStore((state) => Boolean(state.drainEssenceAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
@@ -110,7 +112,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <BurnAnimator />
       <BloodPactAnimator />
       <LifePaymentAnimator />
-      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      <DrainEssenceAnimator />
+      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

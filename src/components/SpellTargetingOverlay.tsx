@@ -224,7 +224,11 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
         data-source-overlap={sourceRevealsTargets ? "true" : undefined}
         className="counter-target-source-panel"
       >
-        <div ref={sourceRef} className="counter-target-source-card">
+        <div
+          ref={sourceRef}
+          data-spell-source-card-id={spell.instanceId}
+          className="counter-target-source-card"
+        >
           <Card
             game={game}
             card={spell}

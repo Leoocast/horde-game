@@ -16504,6 +16504,163 @@ body.playground-active .phase-banner-shell {
   opacity: 1;
 }
 
+/* Drain Essence keeps its darkness local: the target, spell and HUD remain readable. */
+.drain-essence-vignette {
+  --drain-source-x: 50%;
+  --drain-source-y: 42%;
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background:
+    radial-gradient(
+      circle 320px at var(--drain-source-x) var(--drain-source-y),
+      transparent 0%,
+      rgb(32 37 39 / 0.06) 40%,
+      rgb(3 5 6 / 0.28) 100%
+    );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.drain-essence-animation-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.drain-essence-three-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+}
+
+.drain-essence-ribbon-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.drain-essence-smoke-wisp,
+.drain-essence-smoke-vein,
+.drain-essence-recovery-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.drain-essence-smoke-wisp {
+  stroke: rgb(151 162 165 / 0.38);
+  stroke-width: 6px;
+}
+
+.drain-essence-smoke-wisp.is-faint {
+  stroke: rgb(184 192 193 / 0.22);
+  stroke-width: 3px;
+}
+
+.drain-essence-smoke-vein {
+  stroke: rgb(105 25 39 / 0.66);
+  stroke-width: 2.2px;
+  filter: drop-shadow(0 0 2px rgb(82 13 28 / 0.62));
+}
+
+.drain-essence-smoke-vein.is-faint {
+  stroke: rgb(92 26 37 / 0.38);
+  stroke-width: 1.25px;
+}
+
+.drain-essence-recovery-path {
+  stroke: rgb(89 166 112 / 0.66);
+  stroke-width: 9px;
+  filter:
+    blur(1.8px)
+    drop-shadow(0 0 8px rgb(31 105 59 / 0.78));
+}
+
+.drain-essence-recovery-orb {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.drain-essence-recovery-orb-haze {
+  fill: rgb(87 181 116 / 0.26);
+  filter: blur(8px);
+}
+
+.drain-essence-recovery-orb-shell {
+  fill: rgb(17 48 29 / 0.92);
+  stroke: rgb(111 205 139 / 0.62);
+  stroke-width: 1.4px;
+  filter: drop-shadow(0 0 9px rgb(60 165 91 / 0.54));
+}
+
+.drain-essence-recovery-orb-core {
+  fill: #83d99d;
+  filter: drop-shadow(0 0 5px rgb(67 187 103 / 0.78));
+}
+
+.drain-essence-target-aura {
+  position: fixed;
+  z-index: 1;
+  border-radius: 6px;
+  background: radial-gradient(circle at 50% 48%, transparent 28%, rgb(21 27 29 / 0.3) 72%, rgb(3 6 7 / 0.74) 100%);
+  box-shadow:
+    inset 0 0 30px rgb(4 7 8 / 0.82),
+    0 0 27px rgb(118 131 134 / 0.24);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.drain-essence-card-host {
+  position: fixed;
+  z-index: 4;
+  border-radius: 4.918% / 3.529%;
+  transform-style: preserve-3d;
+  will-change: left, top, transform, opacity, filter;
+}
+
+.drain-essence-card-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  box-shadow:
+    0 18px 42px rgb(0 0 0 / 0.72),
+    0 0 24px rgb(58 65 67 / 0.38);
+}
+
+.drain-essence-card-shell > .card-visual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.drain-essence-card-void {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 18%, rgb(20 25 26 / 0.12) 54%, rgb(0 0 0 / 0.42) 100%),
+    linear-gradient(118deg, transparent 24%, rgb(140 150 152 / 0.08) 47%, transparent 68%);
+  mix-blend-mode: multiply;
+  opacity: 0.76;
+}
+
+.drain-essence-target-draining {
+  filter: grayscale(0.48) brightness(0.66) saturate(0.52) contrast(1.1);
+  transition: filter 180ms ease;
+}
+
 .blood-pact-vampire-bite {
   position: fixed;
   z-index: 5;

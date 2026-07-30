@@ -155,7 +155,7 @@ export function LifePaymentAnimator() {
       .call(() => {
         biteElement.classList.add("is-biting");
         triggerSplash();
-        playSfx("bloodSplash", { volume: 0.42 * 0.7 });
+        playSfx("bloodSplash", { volume: 0.42 * 0.49 });
       }, [], 0.05)
       .call(() => biteElement.classList.remove("is-biting", "is-active"), [], 0.32)
       .call(() => complete(active.id), [], 0.68);

@@ -693,7 +693,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   hasta que Pacto termina de consumirse y entonces entran juntas con `draw_one.wav`.
 - Todo pago de vida que no usa la presentacion completa de Pacto dispara el beat reutilizable
   `lifePaymentAnimation`: colmillos y splash de gotas sobre el emblema, ola roja en el HUD,
-  `blood_splash.mp3` a volumen 0.294 y el numero `-N` con contorno oscuro; este beat no reproduce
+  `blood_splash.mp3` a volumen 0.2058 y el numero `-N` con contorno oscuro; este beat no reproduce
   `punch.mp3`. Se detecta por el incremento real de `lifePaidThisTurn`, asi que dano de combate,
   Burn y efectos `LOSE_LIFE` conservan su presentacion normal.
 - Condesa del Banquete Eterno usa un coste de vida `CURRENT_LIFE_FRACTION` 1/2 con redondeo `UP`.

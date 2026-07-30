@@ -624,6 +624,8 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
         y: 0,
       },
       lifeBuffAnimationId: undefined,
+      drainEssenceAnimation: undefined,
+      pendingSpellHandId: undefined,
       specialDeadCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
@@ -633,6 +635,20 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
 
     useGameStore.getState().confirmSpellTargeting();
 
+    const beforeExtraction = useGameStore.getState();
+    assert.equal(beforeExtraction.game.player.life, 10);
+    assert.equal(
+      beforeExtraction.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.damageMarked,
+      0,
+    );
+    assert.equal(beforeExtraction.game.player.hand.some((card) => card.instanceId === drain.instanceId), true);
+    assert.equal(beforeExtraction.pendingSpellHandId, drain.instanceId);
+    assert.equal(beforeExtraction.drainEssenceAnimation?.phase, "extracting");
+
+    const animationId = beforeExtraction.drainEssenceAnimation?.id;
+    assert.equal(typeof animationId, "string");
+    useGameStore.getState().resolveDrainEssenceAnimation(animationId);
+
     const afterImpact = useGameStore.getState();
     assert.equal(afterImpact.game.player.life, 12);
     assert.equal(typeof afterImpact.lifeBuffAnimationId, "number");
@@ -641,15 +657,17 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
       3,
     );
     assert.deepEqual(afterImpact.specialDeadCardIds, [page.instanceId]);
-    assert.equal(playedSfx.includes("attack"), true);
     assert.equal(playedSfx.includes("buff"), true);
+    assert.equal(afterImpact.drainEssenceAnimation?.phase, "resolved");
 
-    timers.releaseExpiredAt(260);
+    useGameStore.getState().completeDrainEssenceAnimation(animationId);
 
     const afterDeath = useGameStore.getState();
     assert.equal(afterDeath.game.player.battlefield.some((card) => card.instanceId === page.instanceId), false);
     assert.equal(afterDeath.game.player.graveyard.some((card) => card.instanceId === page.instanceId), true);
     assert.deepEqual(afterDeath.specialDeadCardIds, []);
+    assert.equal(afterDeath.drainEssenceAnimation, undefined);
+    assert.equal(afterDeath.pendingSpellHandId, undefined);
   } finally {
     resetPlayerTriggerSequence();
     resetHordeSequence();
@@ -709,6 +727,8 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
       },
       activatingEffectCardId: undefined,
       lifeBuffAnimationId: undefined,
+      drainEssenceAnimation: undefined,
+      pendingSpellHandId: undefined,
       specialDeadCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
@@ -718,6 +738,13 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
 
     useGameStore.getState().confirmSpellTargeting();
 
+    const duringExtraction = useGameStore.getState();
+    assert.equal(duringExtraction.game.player.life, 10);
+    assert.equal(duringExtraction.playerAutoTriggerCount, 0);
+    const animationId = duringExtraction.drainEssenceAnimation?.id;
+    assert.equal(typeof animationId, "string");
+
+    useGameStore.getState().resolveDrainEssenceAnimation(animationId);
     const afterDrain = useGameStore.getState();
     assert.equal(afterDrain.game.player.life, 12);
     assert.equal(
@@ -725,7 +752,9 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
       3,
     );
     assert.equal(afterDrain.playerAutoTriggerCount, 1);
+    assert.equal(afterDrain.activatingEffectCardId, undefined);
 
+    useGameStore.getState().completeDrainEssenceAnimation(animationId);
     timers.releaseExpiredAt(0);
     assert.equal(useGameStore.getState().activatingEffectCardId, guardian.instanceId);
 

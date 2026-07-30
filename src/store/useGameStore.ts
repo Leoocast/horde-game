@@ -84,6 +84,7 @@ export type GameStore = {
   lifeDamageAnimationId?: number;
   lifePaymentAnimation?: LifePaymentAnimationState;
   bloodPactAnimation?: BloodPactAnimationState;
+  drainEssenceAnimation?: DrainEssenceAnimationState;
   deathRevealCard?: CardInstance;
   hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
@@ -176,6 +177,8 @@ export type GameStore = {
   setBloodPactAnimationPhase: (id: string, phase: BloodPactAnimationState["phase"]) => void;
   completeBloodPactAnimation: (id: string) => void;
   completeLifePaymentAnimation: (id: string) => void;
+  resolveDrainEssenceAnimation: (id: string) => void;
+  completeDrainEssenceAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -228,6 +231,7 @@ const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
+const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
@@ -236,6 +240,9 @@ let bloodPactAnimationSafetyTimer: number | undefined;
 let bloodPactAfterCommit: (() => void) | undefined;
 let lifePaymentAnimationSafetyTimer: number | undefined;
 let lifePaymentAfterCommit: (() => void) | undefined;
+let drainEssenceAnimationSafetyTimer: number | undefined;
+let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
+let drainEssenceAfterCommit: (() => void) | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -297,6 +304,14 @@ export type BloodPactAnimationState = {
 export type LifePaymentAnimationState = {
   id: string;
   amount: number;
+};
+
+export type DrainEssenceAnimationState = {
+  id: string;
+  card: CardInstance;
+  targetId: string;
+  origin?: { left: number; top: number; width: number; height: number };
+  phase: "extracting" | "resolved";
 };
 
 export type BurnAnimationState = {
@@ -388,6 +403,7 @@ function createCleanUiState(): Partial<GameStore> {
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
     bloodPactAnimation: undefined,
+    drainEssenceAnimation: undefined,
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
     pendingStaticAuras: [],
@@ -439,6 +455,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lifeDamageAnimationId: undefined,
   lifePaymentAnimation: undefined,
   bloodPactAnimation: undefined,
+  drainEssenceAnimation: undefined,
   deathRevealCard: undefined,
   hordeSpellCard: undefined,
   pendingStaticAuras: [],
@@ -483,6 +500,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
+    clearDrainEssencePresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -502,6 +520,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   loadScenario: (game, deckIds) => {
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
+    clearDrainEssencePresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -742,7 +761,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -757,7 +776,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: () =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -922,6 +941,56 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { lifePaymentAnimation: undefined };
     });
     afterCommit?.();
+  },
+  resolveDrainEssenceAnimation: (id) => {
+    const active = get().drainEssenceAnimation;
+    if (active?.id !== id || active.phase === "resolved") return;
+    const commit = drainEssenceCommit;
+    drainEssenceCommit = undefined;
+    if (!commit) {
+      set({ drainEssenceAnimation: undefined, pendingSpellHandId: undefined });
+      return;
+    }
+    const patch = commit();
+    const committedGame = patch.game ?? get().game;
+    set({
+      ...patch,
+      drainEssenceAnimation: { ...active, phase: "resolved" },
+      pendingSpellHandId: active.card.instanceId,
+      specialDeadCardIds: findMarkedCreatureIds(committedGame),
+    });
+  },
+  completeDrainEssenceAnimation: (id) => {
+    if (get().drainEssenceAnimation?.id !== id) return;
+    if (get().drainEssenceAnimation?.phase !== "resolved") {
+      get().resolveDrainEssenceAnimation(id);
+    }
+    const state = get();
+    if (state.drainEssenceAnimation?.id !== id) return;
+    if (drainEssenceAnimationSafetyTimer) {
+      window.clearTimeout(drainEssenceAnimationSafetyTimer);
+      drainEssenceAnimationSafetyTimer = undefined;
+    }
+    const deadCardIds = state.specialDeadCardIds;
+    let nextGame = state.game;
+    if (deadCardIds.length > 0) {
+      nextGame = structuredClone(state.game) as GameState;
+      destroyMarkedCreatures(nextGame);
+    }
+    const afterCommit = drainEssenceAfterCommit;
+    drainEssenceAfterCommit = undefined;
+    drainEssenceCommit = undefined;
+    set({
+      game: nextGame,
+      drainEssenceAnimation: undefined,
+      pendingSpellHandId: undefined,
+      specialDeadCardIds: [],
+    });
+    if (deadCardIds.length > 0) {
+      scheduleQueuedCombatReactions(afterCommit ?? (() => undefined));
+    } else {
+      afterCommit?.();
+    }
   },
   activateAbility: (id, abilityId, options) => {
     let shouldSchedulePlayerTriggers = false;
@@ -1459,6 +1528,15 @@ function clearLifePaymentPresentation(): void {
   lifePaymentAfterCommit = undefined;
 }
 
+function clearDrainEssencePresentation(): void {
+  if (drainEssenceAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(drainEssenceAnimationSafetyTimer);
+  }
+  drainEssenceAnimationSafetyTimer = undefined;
+  drainEssenceCommit = undefined;
+  drainEssenceAfterCommit = undefined;
+}
+
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
   if (bloodPactAnimationSafetyTimer) window.clearTimeout(bloodPactAnimationSafetyTimer);
   bloodPactAnimationSafetyTimer = window.setTimeout(() => {
@@ -1474,6 +1552,17 @@ function scheduleLifePaymentAnimationSafetyClear(id: string): void {
   }, LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (drainEssenceAnimationSafetyTimer) window.clearTimeout(drainEssenceAnimationSafetyTimer);
+  drainEssenceAnimationSafetyTimer = window.setTimeout(() => {
+    const store = useGameStore.getState();
+    if (store.drainEssenceAnimation?.id !== id) return;
+    store.resolveDrainEssenceAnimation(id);
+    useGameStore.getState().completeDrainEssenceAnimation(id);
+  }, DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
@@ -1481,6 +1570,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.burnAnimation ||
       state.lifePaymentAnimation ||
       state.bloodPactAnimation ||
+      state.drainEssenceAnimation ||
       state.resolvingHordeCombat ||
       state.playerAutoTriggerCount > 0 ||
       state.energyRecycleAnimation ||
@@ -1762,8 +1852,12 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isSourceDamageSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "sourceDamage"));
   const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
+  const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
-  const resolveSpell = (latest: GameState) => {
+  const resolveSpell = (
+    latest: GameState,
+    presentation: { deferContinuation?: boolean } = {},
+  ) => {
     const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
@@ -1812,6 +1906,8 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     if (lifePaymentAnimation) {
       lifePaymentAfterCommit = continueAfterPayment;
       scheduleLifePaymentAnimationSafetyClear(lifePaymentAnimation.id);
+    } else if (presentation.deferContinuation) {
+      drainEssenceAfterCommit = continueAfterPayment;
     } else {
       continueAfterPayment();
     }
@@ -1829,6 +1925,38 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       ...(lifeBuffBeat ?? {}),
     };
   };
+  if (usesDrainEssenceAnimation) {
+    const targetId = String(targets.targetCreature ?? targets.damageTarget ?? "");
+    if (!targetId) return {};
+    const sourceRect = typeof document === "undefined"
+      ? undefined
+      : (
+          document.querySelector<HTMLElement>(`[data-spell-source-card-id="${handId}"]`) ??
+          document.querySelector<HTMLElement>(`[data-hand-card-id="${handId}"]`)
+        )?.getBoundingClientRect();
+    const animationId = `drain-essence-${card.instanceId}-${Date.now()}`;
+    drainEssenceCommit = () =>
+      resolveSpell(useGameStore.getState().game, { deferContinuation: true });
+    drainEssenceAfterCommit = undefined;
+    scheduleDrainEssenceAnimationSafetyClear(animationId);
+    return {
+      drainEssenceAnimation: {
+        id: animationId,
+        card,
+        targetId,
+        origin: sourceRect
+          ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
+          : undefined,
+        phase: "extracting",
+      },
+      spellTargeting: undefined,
+      spellFightAnimation: undefined,
+      pendingSpellHandId: handId,
+      selectedHandId: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
+    };
+  }
   if (!isFightSpell) {
     if (isDestroySpell && destroyTargetIds.length > 0) {
       useAudioStore.getState().playSfx("attack", { volume: 0.72 });
