@@ -4,7 +4,7 @@
     const KEYWORD_PATTERN =
         /\b(?:Daña primero|Daño primero|Doble golpe|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar|Vuelo|Alcance|Arrollar|Prisa|Antimaleficio|Indestructible|Tóxico(?:\s+\d+)?|Guardia aérea|Alerta|Imponente|Letal|Reflejos|Furtivo|Drenar|Veneno(?:\s+\d+)?|Desborde|Ímpetu)\b/giu;
     const TOKEN_CREATION_PATTERN =
-        /\bcrea(?:r)?\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
+        /\b(?:crea|crear|invoca|invocar)\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
     const COUNTER_PATTERN =
         /\b(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)?contador(?:es)?(?:\s+(?:de\s+[\p{L}\p{M}-]+|[+-]\d+\/[+-]\d+))?/giu;
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
@@ -16,7 +16,7 @@
     const INLINE_KEYWORD_SEPARATOR_PATTERN =
         /(\b(?:Volar|Robo de vida|Vigilancia|Drenar|Alerta)\.)\s+(?=(?:Volar|Robo de vida|Vigilancia|Drenar|Alerta)\.)/giu;
     const SEQUENTIAL_EFFECT_BREAK_PATTERN =
-        /\s+y\s+luego\s+(?=(?:crea|lucha)\b)/giu;
+        /\s+y\s+luego\s+(?=(?:crea|invoca|lucha)\b)/giu;
     const SENTENCE_BREAK_PATTERN = /([.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ])/gu;
 
     function escapeHtml(value) {

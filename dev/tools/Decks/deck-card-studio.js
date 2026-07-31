@@ -19,6 +19,8 @@
         echo: "◉",
         enchantment: "✦",
         encantamiento: "✦",
+        support: "✦",
+        apoyo: "✦",
         instant: "✧",
         instantáneo: "✧",
         hechizo: "✧",
@@ -112,7 +114,12 @@
             }
         }
 
-        if (normalized.includes("encantamiento") || normalized.includes("enchantment")) {
+        if (
+            normalized.includes("encantamiento")
+            || normalized.includes("enchantment")
+            || normalized.includes("apoyo")
+            || normalized.includes("support")
+        ) {
             return '<span class="tcg-enchantment-icon">✦</span>';
         }
 
@@ -274,7 +281,7 @@
                         ${hasEffect && hasLore ? '<div class="tcg-divider"></div>' : ""}
                         ${hasLore ? `<p class="tcg-flavor">${escapeHtml(lore)}</p>` : ""}
                         ${!hasEffect && !hasLore ? '<div class="tcg-empty-mark" aria-hidden="true"></div>' : ""}
-                        <div class="tcg-footer-info">${setCode} #${number} · Hostfall TCG</div>
+                        <div class="tcg-footer-info">${setCode} #${number} · © HOSTFALL 2026</div>
                     </div>
                 </div>
 

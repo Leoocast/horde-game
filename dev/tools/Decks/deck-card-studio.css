@@ -1723,6 +1723,12 @@ body[data-theme="zombies"] .tcg-type-icon .fa-inline-icon {
     color: #86efac;
 }
 
+body[data-theme="zombies"] .tcg-type-icon .tcg-echo-icon {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+}
+
 body[data-theme="zombies"] .tcg-body {
     z-index: auto;
     justify-content: center;

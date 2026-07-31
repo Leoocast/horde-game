@@ -29,6 +29,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const noosegraf = formatEffectText(
     "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2.",
   );
+  const invokedToken = formatEffectText("Invoca un Eco Ficha Zombi 2/2.");
   const raidBombardment = formatEffectText(
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
   );
@@ -69,6 +70,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
   assert.match(noosegraf, /y <strong class="effect-token">crea un Zombie 2\/2<\/strong>/);
   assert.equal((noosegraf.match(/class="effect-paragraph"/g) ?? []).length, 1);
+  assert.match(
+    invokedToken,
+    /class="effect-token">Invoca un Eco Ficha Zombi 2\/2<\/strong>/,
+  );
 
   assert.match(raidBombardment, /class="effect-danger">fuerza 2 o menos<\/strong>/);
   assert.match(raidBombardment, /class="effect-danger">1 de daño<\/strong>/);
@@ -125,7 +130,7 @@ test("local Vampire studio art paths resolve to real files", () => {
   }
 });
 
-test("player deck studios use the same minimal header presentation", () => {
+test("migrated deck studios use the same minimal header presentation", () => {
   const monoGreenIndex = fs.readFileSync(
     new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
     "utf8",
@@ -134,11 +139,16 @@ test("player deck studios use the same minimal header presentation", () => {
     new URL("../dev/tools/Decks/vampires/index.html", import.meta.url),
     "utf8",
   );
+  const zombieIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/zombies/index.html", import.meta.url),
+    "utf8",
+  );
   const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360)/iu;
 
   for (const [label, indexHtml] of [
     ["Mono Green", monoGreenIndex],
     ["Vampires", vampireIndex],
+    ["Zombies", zombieIndex],
   ]) {
     assert.match(indexHtml, /<header class="studio-header">/u, `${label} is missing the shared header`);
     assert.match(indexHtml, /class="studio-title"/u, `${label} is missing its title`);
@@ -151,6 +161,25 @@ test("player deck studios use the same minimal header presentation", () => {
     /<main class="cards-grid scale-35" id="cards-container"><\/main>/u,
     "Vampires must open at 35%",
   );
+});
+
+test("card generators print the Hostfall copyright footer", () => {
+  const sharedStudio = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
+    "utf8",
+  );
+  const monoGreenIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+    "utf8",
+  );
+
+  for (const [label, source] of [
+    ["shared studio", sharedStudio],
+    ["Mono Green studio", monoGreenIndex],
+  ]) {
+    assert.match(source, /© HOSTFALL 2026/u, `${label} is missing the copyright footer`);
+    assert.doesNotMatch(source, /Hostfall TCG/iu, `${label} still prints the retired footer`);
+  }
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {
@@ -342,6 +371,117 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
   }
 });
 
+test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => {
+  const indexUrl = new URL("../dev/tools/Decks/zombies/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(
+    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(embeddedJson, "Zombie index must contain its embedded deck JSON");
+
+  const studioCards = JSON.parse(embeddedJson);
+  const runtimeDeck = JSON.parse(
+    fs.readFileSync(
+      new URL("../src/data/decks/horde/zombies/horde-zombies.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Encantamientos?|Horda|Amenaza|cementerio|jugador|entra|obtiene|Zombies?)\b|Toque mortal|Escurridizo|se lance|\bcrea(?:r)?\b)/iu;
+  const keywordLabels = {
+    DEATHTOUCH: "Letal",
+    FLYING: "Volar",
+    MENACE: "Imponente",
+    SKULK: "Furtivo",
+  };
+
+  assert.equal(studioCards.length, 17, "Zombie studio must keep its 17 card definitions");
+  assert.equal(
+    studioCards.length,
+    runtimeDeck.cards.length,
+    "Zombie studio and runtime deck have different card counts",
+  );
+  const studioCss = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    studioCss,
+    /body\[data-theme="zombies"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
+    "Zombie Echo glyph must use the same doubled size as the migrated player decks",
+  );
+
+  for (const runtimeCard of runtimeDeck.cards) {
+    const rulesText = /^Sin efecto (?:activo )?adicional\.$/u.test(runtimeCard.gameText?.es ?? "")
+      ? []
+      : [runtimeCard.gameText?.es];
+    const keywordText = (runtimeCard.keywords ?? [])
+      .map((keyword) => keywordLabels[keyword] ?? keyword);
+    const expectedRules = [...keywordText, ...rulesText].filter(Boolean).join("\n");
+    const studioCard = studioCards.find((card) => card.id === runtimeCard.id);
+
+    assert.ok(studioCard, `Zombie studio is missing ${runtimeCard.id}`);
+    assert.doesNotMatch(
+      `${studioCard.tipo}\n${studioCard.desc}`,
+      retiredStudioVocabulary,
+      `Zombie studio exposes retired vocabulary for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.cantidad,
+      runtimeCard.quantity,
+      `Zombie studio has a stale quantity for ${runtimeCard.id}`,
+    );
+    if (!runtimeCard.isToken) {
+      assert.equal(
+        studioCard.costo,
+        runtimeCard.manaValue,
+        `Zombie studio has a stale cost for ${runtimeCard.id}`,
+      );
+    }
+    assert.equal(
+      studioCard.atk ?? null,
+      runtimeCard.power ?? null,
+      `Zombie studio has stale power for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.def ?? null,
+      runtimeCard.toughness ?? null,
+      `Zombie studio has stale toughness for ${runtimeCard.id}`,
+    );
+
+    if (runtimeCard.isToken) {
+      assert.match(
+        studioCard.tipo,
+        /^Eco · Ficha\b/u,
+        `Zombie studio has a stale token type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Creature")) {
+      assert.match(
+        studioCard.tipo,
+        /^Eco\b/u,
+        `Zombie studio has a stale type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+      assert.equal(
+        studioCard.tipo,
+        "Hechizo",
+        `Zombie studio has a stale type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Enchantment")) {
+      assert.equal(
+        studioCard.tipo,
+        "Apoyo",
+        `Zombie studio has a stale type for ${runtimeCard.id}`,
+      );
+    }
+
+    assert.equal(
+      normalizeZombieEffect(studioCard.desc),
+      normalizeZombieEffect(expectedRules),
+      `Zombie studio has stale rules for ${runtimeCard.id}`,
+    );
+  }
+});
+
 test("Vampire gameplay cards use their full-image faction presentation", () => {
   for (const definitionId of [
     "crimson_energy",
@@ -368,6 +508,15 @@ function normalizeMonoGreenEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
     .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}
+
+function normalizeZombieEffect(text) {
+  const normalized = String(text ?? "").trim();
+  if (/^Sin efecto (?:activo )?adicional\.$/iu.test(normalized)) return "";
+  return normalized
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");

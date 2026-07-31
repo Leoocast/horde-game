@@ -189,6 +189,9 @@ Modificadores de tipo:
 | +1/+1 counter | Contador +1/+1 | +1/+1 counter | Da +1 Fuerza y +1 Aguante de forma persistente. |
 | Poison | Veneno | poison counters | Presión acumulada sobre la Hueste; al alcanzar su umbral, la Hueste pierde cartas de su Archivo. |
 
+Una `Fuente` es la carta permanente del Campo; `Energía` es el recurso que produce. Si un efecto
+elimina una de esas cartas, escribe `Sacrifica una Fuente`, no `Sacrifica una Energía`.
+
 Las cartas impresas pueden usar el formato compacto `+N/+N`; el primer valor siempre es Fuerza y
 el segundo Aguante. Los tooltips y explicaciones extensas nombran ambas estadísticas cuando haga
 falta evitar ambigüedad. La Energía generada se imprime con un símbolo por unidad: `Gana {E}` para

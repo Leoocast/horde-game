@@ -11,23 +11,8 @@
     data-set-code="HFZ"
 >
     <header class="studio-header">
-        <p class="studio-kicker">Archivo del Cementerio</p>
         <h1 class="studio-title">Deck Zombies</h1>
-        <p class="studio-subtitle">
-            Piedra húmeda, hueso envejecido y costuras de mausoleo. Las cartas conservan
-            el formato de exportación HD del player: 976×1360.
-        </p>
-
-        <div class="studio-toolbar">
-            <button class="zoom-button" type="button" data-scale="35">35%</button>
-            <button class="zoom-button is-active" type="button" data-scale="45">45%</button>
-            <button class="zoom-button" type="button" data-scale="60">60%</button>
-            <button class="zoom-button" type="button" data-scale="100">100%</button>
-        </div>
-
-        <p class="studio-status" id="studio-status">
-            Generando deck completo…
-        </p>
+        <p class="studio-subtitle">Piedra húmeda, hueso envejecido y memorias que se niegan a descansar.</p>
     </header>
 
     <main class="cards-grid scale-45" id="cards-container"></main>
@@ -38,7 +23,7 @@
             "id": "zombie_token",
             "art_crop": "https://cards.scryfall.io/art_crop/front/f/2/f29c0f8b-0888-4d9f-a554-c4a79d079f54.jpg?1783927201",
             "nombre": "Ficha de Zombie",
-            "tipo": "Criatura ficha — Zombie",
+            "tipo": "Eco · Ficha — Zombi",
             "costo": 0,
             "atk": 2,
             "def": 2,
@@ -51,7 +36,7 @@
             "id": "zombie_giant_token",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Zombie%20Giant",
             "nombre": "Ficha de Zombie Gigante",
-            "tipo": "Criatura ficha — Zombie Giga",
+            "tipo": "Eco · Ficha — Zombi Gigante",
             "costo": 0,
             "atk": 5,
             "def": 5,
@@ -64,11 +49,11 @@
             "id": "graf_harvest",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Graf%20Harvest",
             "nombre": "Cosecha del cementerio",
-            "tipo": "Encantamiento",
+            "tipo": "Apoyo",
             "costo": 1,
             "atk": null,
             "def": null,
-            "desc": "Los Zombies de la Horda tienen Amenaza.",
+            "desc": "Los Zombis de la Hueste ganan Imponente.",
             "lore": "",
             "cantidad": 2
           },
@@ -76,11 +61,11 @@
             "id": "noosegraf_mob",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Noosegraf%20Mob",
             "nombre": "Turba de Noosegraf",
-            "tipo": "Criatura — Zombie",
+            "tipo": "Eco — Zombi",
             "costo": 6,
             "atk": 0,
             "def": 0,
-            "desc": "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2.",
+            "desc": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2.",
             "lore": "",
             "cantidad": 1
           },
@@ -88,11 +73,11 @@
             "id": "rottenheart_ghoul",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Rottenheart%20Ghoul",
             "nombre": "Ghoul de corazón podrido",
-            "tipo": "Criatura — Zombie",
+            "tipo": "Eco — Zombi",
             "costo": 4,
             "atk": 2,
             "def": 4,
-            "desc": "Cuando esta criatura muere, el jugador descarta una carta.",
+            "desc": "Cuando este Eco muere, el Cronista descarta una carta.",
             "lore": "",
             "cantidad": 2
           },
@@ -100,11 +85,11 @@
             "id": "miasmic_mummy",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Miasmic%20Mummy",
             "nombre": "Momia miasmática",
-            "tipo": "Criatura — Zombie Chacal",
+            "tipo": "Eco — Zombi Chacal",
             "costo": 2,
             "atk": 2,
             "def": 2,
-            "desc": "Cuando esta criatura entra, el jugador descarta una carta.",
+            "desc": "Cuando este Eco es invocado, el Cronista descarta una carta.",
             "lore": "",
             "cantidad": 2
           },
@@ -112,11 +97,11 @@
             "id": "smallpox",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Smallpox",
             "nombre": "Viruela pequeña",
-            "tipo": "Conjuro",
+            "tipo": "Hechizo",
             "costo": 2,
             "atk": null,
             "def": null,
-            "desc": "El jugador pierde 1 vida, descarta una carta, sacrifica una criatura y sacrifica una tierra.",
+            "desc": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente.",
             "lore": "",
             "cantidad": 2
           },
@@ -124,11 +109,11 @@
             "id": "blighted_bat",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Blighted%20Bat",
             "nombre": "Murciélago infectado",
-            "tipo": "Criatura — Zombie Murciélago",
+            "tipo": "Eco — Zombi Murciélago",
             "costo": 3,
             "atk": 2,
             "def": 1,
-            "desc": "Volar.",
+            "desc": "Volar",
             "lore": "",
             "cantidad": 2
           },
@@ -136,11 +121,11 @@
             "id": "stitchwing_skaab",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Stitchwing%20Skaab",
             "nombre": "Skaab ala cosida",
-            "tipo": "Criatura — Zombie Horror",
+            "tipo": "Eco — Zombi Horror",
             "costo": 4,
             "atk": 3,
             "def": 1,
-            "desc": "Volar.",
+            "desc": "Volar",
             "lore": "",
             "cantidad": 1
           },
@@ -148,11 +133,11 @@
             "id": "advanced_stitchwing",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Advanced%20Stitchwing",
             "nombre": "Ala cosida avanzada",
-            "tipo": "Criatura — Zombie Horror",
+            "tipo": "Eco — Zombi Horror",
             "costo": 5,
             "atk": 3,
             "def": 4,
-            "desc": "Volar.",
+            "desc": "Volar",
             "lore": "",
             "cantidad": 1
           },
@@ -160,11 +145,11 @@
             "id": "crow_of_dark_tidings",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Crow%20of%20Dark%20Tidings",
             "nombre": "Cuervo de malos augurios",
-            "tipo": "Criatura — Zombie Ave",
+            "tipo": "Eco — Zombi Ave",
             "costo": 3,
             "atk": 2,
             "def": 1,
-            "desc": "Volar. Cuando esta criatura entra o muere, pon 2 cartas del mazo de la Horda en su cementerio.",
+            "desc": "Volar\nCuando este Eco es invocado o muere, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.",
             "lore": "",
             "cantidad": 2
           },
@@ -172,11 +157,11 @@
             "id": "cursed_minotaur",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Cursed%20Minotaur",
             "nombre": "Minotauro maldito",
-            "tipo": "Criatura — Zombie Minotauro",
+            "tipo": "Eco — Zombi Minotauro",
             "costo": 3,
             "atk": 3,
             "def": 2,
-            "desc": "Amenaza.",
+            "desc": "Imponente",
             "lore": "",
             "cantidad": 1
           },
@@ -184,11 +169,11 @@
             "id": "thraben_foulbloods",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Thraben%20Foulbloods",
             "nombre": "Sangremalas de Thraben",
-            "tipo": "Criatura — Zombie Perro",
+            "tipo": "Eco — Zombi Perro",
             "costo": 3,
             "atk": 3,
             "def": 2,
-            "desc": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura obtiene +1/+1 y tiene Amenaza.",
+            "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente.",
             "lore": "",
             "cantidad": 1
           },
@@ -196,11 +181,11 @@
             "id": "hound_of_the_farbogs",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Hound%20of%20the%20Farbogs",
             "nombre": "Sabueso de Farbog",
-            "tipo": "Criatura — Zombie Perro",
+            "tipo": "Eco — Zombi Perro",
             "costo": 5,
             "atk": 5,
             "def": 3,
-            "desc": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura tiene Amenaza.",
+            "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente.",
             "lore": "",
             "cantidad": 2
           },
@@ -208,11 +193,11 @@
             "id": "rancid_rats",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Rancid%20Rats",
             "nombre": "Ratas rancias",
-            "tipo": "Criatura — Zombie Rata",
+            "tipo": "Eco — Zombi Rata",
             "costo": 2,
             "atk": 1,
             "def": 1,
-            "desc": "Toque mortal.\nEscurridizo.",
+            "desc": "Letal\nFurtivo",
             "lore": "",
             "cantidad": 2
           },
@@ -220,11 +205,11 @@
             "id": "gavony_unhallowed",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Gavony%20Unhallowed",
             "nombre": "Profano de Gavony",
-            "tipo": "Criatura — Zombie",
+            "tipo": "Eco — Zombi",
             "costo": 4,
             "atk": 2,
             "def": 4,
-            "desc": "Siempre que otra criatura de la Horda muera, pon un contador +1/+1 sobre esta criatura.",
+            "desc": "Cada vez que otro Eco de la Hueste muere, pon un contador +1/+1 sobre este Eco.",
             "lore": "",
             "cantidad": 2
           },
@@ -232,11 +217,11 @@
             "id": "diregraf_captain",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Diregraf%20Captain",
             "nombre": "Capitán de Diregraf",
-            "tipo": "Criatura — Zombie Soldado",
+            "tipo": "Eco — Zombi Soldado",
             "costo": 3,
             "atk": 2,
             "def": 2,
-            "desc": "Toque mortal. Los demás Zombies de la Horda obtienen +1/+1. Siempre que otro Zombie de la Horda muera, el jugador pierde 1 vida.",
+            "desc": "Letal\nLos demás Zombis de la Hueste ganan +1/+1.\nCada vez que otro Zombi de la Hueste muere, el Cronista pierde 1 de Vida.",
             "lore": "",
             "cantidad": 2
           }

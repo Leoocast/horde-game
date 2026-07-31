@@ -84,8 +84,8 @@
       "name": "Graf Harvest",
       "displayNameEs": "Cosecha del cementerio",
       "gameText": {
-        "en": "Horde Zombies have Menace. Its upkeep and token abilities are currently inactive.",
-        "es": "Los Zombies de la Horda tienen Amenaza. Sus habilidades de mantenimiento y creación de fichas están inactivas por ahora."
+        "en": "Host Zombies gain Daunting.",
+        "es": "Los Zombis de la Hueste ganan Imponente."
       },
       "quantity": 2,
       "isToken": false,
@@ -197,8 +197,8 @@
       "name": "Noosegraf Mob",
       "displayNameEs": "Turba de Noosegraf",
       "gameText": {
-        "en": "Whenever a non-token card is cast, remove a +1/+1 counter from this creature and create a 2/2 Zombie.",
-        "es": "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2."
+        "en": "Whenever a non-token card is played, remove a +1/+1 counter from this Echo and Invoke a 2/2 Zombie Echo Token.",
+        "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
       },
       "quantity": 1,
       "isToken": false,
@@ -261,8 +261,8 @@
       "name": "Rottenheart Ghoul",
       "displayNameEs": "Ghoul de corazón podrido",
       "gameText": {
-        "en": "When this creature dies, the player discards a card.",
-        "es": "Cuando esta criatura muere, el jugador descarta una carta."
+        "en": "When this Echo dies, the Chronicler discards a card.",
+        "es": "Cuando este Eco muere, el Cronista descarta una carta."
       },
       "quantity": 2,
       "isToken": false,
@@ -307,8 +307,8 @@
       "name": "Miasmic Mummy",
       "displayNameEs": "Momia miasmática",
       "gameText": {
-        "en": "When this creature enters, the player discards a card.",
-        "es": "Cuando esta criatura entra, el jugador descarta una carta."
+        "en": "When this Echo is Invoked, the Chronicler discards a card.",
+        "es": "Cuando este Eco es invocado, el Cronista descarta una carta."
       },
       "quantity": 2,
       "isToken": false,
@@ -355,8 +355,8 @@
       "name": "Smallpox",
       "displayNameEs": "Viruela pequeña",
       "gameText": {
-        "en": "The player loses 1 life, discards a card, sacrifices a creature, and sacrifices a land.",
-        "es": "El jugador pierde 1 vida, descarta una carta, sacrifica una criatura y sacrifica una tierra."
+        "en": "The Chronicler loses 1 Life, discards a card, sacrifices an Echo, and sacrifices a Source.",
+        "es": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente."
       },
       "quantity": 2,
       "isToken": false,
@@ -411,8 +411,8 @@
       "name": "Blighted Bat",
       "displayNameEs": "Murciélago infectado",
       "gameText": {
-        "en": "No additional active effect.",
-        "es": "Sin efecto activo adicional."
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
       },
       "quantity": 2,
       "isToken": false,
@@ -456,8 +456,8 @@
       "name": "Stitchwing Skaab",
       "displayNameEs": "Skaab ala cosida",
       "gameText": {
-        "en": "Its graveyard return ability is currently inactive.",
-        "es": "Su habilidad para regresar del cementerio está inactiva por ahora."
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
       },
       "quantity": 1,
       "isToken": false,
@@ -504,8 +504,8 @@
       "name": "Advanced Stitchwing",
       "displayNameEs": "Ala cosida avanzada",
       "gameText": {
-        "en": "Its graveyard return ability is currently inactive.",
-        "es": "Su habilidad para regresar del cementerio está inactiva por ahora."
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
       },
       "quantity": 1,
       "isToken": false,
@@ -552,8 +552,8 @@
       "name": "Crow of Dark Tidings",
       "displayNameEs": "Cuervo de malos augurios",
       "gameText": {
-        "en": "When this creature enters or dies, mill 2 cards from the Horde deck.",
-        "es": "Cuando esta criatura entra o muere, pon 2 cartas del mazo de la Horda en su cementerio."
+        "en": "When this Echo is Invoked or dies, discard the top 2 cards of the Host Archive to its Memory.",
+        "es": "Cuando este Eco es invocado o muere, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
       },
       "quantity": 2,
       "isToken": false,
@@ -574,7 +574,7 @@
       "keywords": [
         "FLYING"
       ],
-      "triggerMessage": "Crow of Dark Tidings triggers. Horde mills 2 cards.",
+      "triggerMessage": "Crow of Dark Tidings triggers. Host discards 2 cards from its Archive to its Memory.",
       "abilities": [
         {
           "id": "crow_of_dark_tidings_etb",
@@ -645,8 +645,8 @@
       "name": "Thraben Foulbloods",
       "displayNameEs": "Sangremalas de Thraben",
       "gameText": {
-        "en": "While the Horde has 7 or more cards in its graveyard, this creature gets +1/+1 and has Menace.",
-        "es": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura obtiene +1/+1 y tiene Amenaza."
+        "en": "While the Host has 7 or more cards in its Memory, this Echo gains +1/+1 and Daunting.",
+        "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
       },
       "quantity": 1,
       "isToken": false,
@@ -714,8 +714,8 @@
       "name": "Hound of the Farbogs",
       "displayNameEs": "Sabueso de Farbog",
       "gameText": {
-        "en": "While the Horde has 7 or more cards in its graveyard, this creature has Menace.",
-        "es": "Mientras la Horda tenga 7 o más cartas en su cementerio, esta criatura tiene Amenaza."
+        "en": "While the Host has 7 or more cards in its Memory, this Echo gains Daunting.",
+        "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente."
       },
       "quantity": 2,
       "isToken": false,
@@ -795,8 +795,8 @@
       "name": "Gavony Unhallowed",
       "displayNameEs": "Profano de Gavony",
       "gameText": {
-        "en": "Whenever another Horde creature dies, put a +1/+1 counter on this creature.",
-        "es": "Siempre que otra criatura de la Horda muera, pon un contador +1/+1 sobre esta criatura."
+        "en": "Whenever another Host Echo dies, put a +1/+1 counter on this Echo.",
+        "es": "Cada vez que otro Eco de la Hueste muere, pon un contador +1/+1 sobre este Eco."
       },
       "quantity": 2,
       "isToken": false,
@@ -844,8 +844,8 @@
       "name": "Diregraf Captain",
       "displayNameEs": "Capitán de Diregraf",
       "gameText": {
-        "en": "Other Horde Zombies get +1/+1. Whenever another Horde Zombie dies, the player loses 1 life.",
-        "es": "Los demás Zombies de la Horda obtienen +1/+1. Siempre que otro Zombie de la Horda muera, el jugador pierde 1 vida."
+        "en": "Other Host Zombies gain +1/+1. Whenever another Host Zombie dies, the Chronicler loses 1 Life.",
+        "es": "Los demás Zombis de la Hueste ganan +1/+1. Cada vez que otro Zombi de la Hueste muere, el Cronista pierde 1 de Vida."
       },
       "quantity": 2,
       "isToken": false,

@@ -839,7 +839,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   que el primer Execute no vuelva a animar permanentes viejos.
 - Los cuatro generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
-  de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
+  de stats, frases de contadores y `crea/crear/invoca/invocar ... N/N` se imprimen siempre en negrita con el color
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
   frase explicita `Paga N de Vida.` tambien se imprime en rojo y negrita. En Vampiros, los Hechizos con
   pago adicional mantienen `Coste adicional: Paga N de Vida.` en una sola linea y separan el efecto; Acólito usa
@@ -849,8 +849,22 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
-  usa `quita ... y crea ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
+  usa `quita ... e Invoca ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
   `tests/deckCardText.test.js`.
+- El estudio de Zombies y `horde-zombies.json` comparten vocabulario visible Hostfall para sus 17
+  definiciones: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo`, `Hueste`, `Archivo`, `Memoria`,
+  `Cronista`, `Imponente`, `Letal` y `Furtivo`. Crear fichas se redacta con `Invoca`; enviar cartas
+  del Archivo a la Memoria se escribe completo y no recibe keyword. `Apoyo` conserva el glifo del
+  tipo Support. Habilidades todavia inactivas, como regresar los Stitchwing desde la Memoria, y las
+  activaciones pendientes de Graf Harvest permanecen en los datos internos pero no se imprimen.
+  Este pase no cambia nombres, arte, cantidades, balance, ids, tipos o keywords del motor ni
+  regenera PNGs. La regresion compara cantidad, coste, stats, tipos y texto del estudio contra el
+  deck runtime, y rechaza vocabulario visible retirado.
+  Smallpox imprime `sacrifica una Fuente`: la Fuente es la carta permanente elegida, mientras que
+  Energía es el recurso que genera. Su prompt runtime también pide `Elige una Fuente para
+  Sacrificar`. El índice usa el mismo header mínimo de los decks migrados y su glifo de Eco mide
+  56px, el doble del icono legacy. Todos los generadores activos imprimen `© HOSTFALL 2026` en el
+  footer en lugar de `Hostfall TCG`.
 - El generador de Vampires toma sus WebP de arte recortado desde
   `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
   `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
@@ -904,8 +918,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Sus productores de Energía usan un rayo dorado dentro del mismo orbe material de Agotar y
   `Veneno N` presenta N en un badge holgado. El texto usa `gana` para modificadores temporales y `pon un contador ... sobre` para
   contadores permanentes; `obtiene` queda fuera del vocabulario de reglas nuevo.
-  Los índices de Mono Green y Vampires usan un header mínimo común con título y línea temática,
-  sin controles, estado ni mensajes de exportación; Vampires abre sus cartas al 35%.
+  Los índices de Mono Green, Vampires y Zombies usan un header mínimo común con título y línea
+  temática, sin controles, estado ni mensajes de exportación; Vampires abre sus cartas al 35%.
 
   El rombo de disponible pertenece a
   `.hand-card`, pero su render
