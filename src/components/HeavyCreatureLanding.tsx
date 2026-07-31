@@ -143,9 +143,10 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
     const centerX = cardRect
       ? cardRect.left + cardRect.width * 0.5 - canvasRect.left
       : width * 0.5;
-    const centerY = cardRect
+    const cardCenterY = cardRect
       ? cardRect.top + cardRect.height * 0.5 - canvasRect.top
       : height * 0.47;
+    const centerY = cardCenterY - cardHeight * 0.56;
     const groundY = centerY + cardHeight * 0.47;
     const cardFootprintDiameter = Math.hypot(cardWidth, cardHeight) * 1.04;
 

@@ -77,7 +77,7 @@ import {
   buffAnimationVariantForCard,
   type BuffAnimationVariant,
 } from "./buffAnimation";
-import { playerBuffSfxForDeck } from "./playerAudioPolicy";
+import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 
 export type GameStore = {
   game: GameState;
@@ -740,7 +740,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
           },
         });
       }
-      useAudioStore.getState().playSfx(playerBuffSfxForDeck(get().playerDeckId), { volume: 0.82 });
+      const buffVariant = buffAnimationVariantForCard(source.definitionId);
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(buffVariant), { volume: 0.82 });
       const lifeBeat = startLifeBuffBeat();
       return {
         game: next,
@@ -749,7 +750,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingTriggeredEffectSourceId: undefined,
         ...startBuffBeat(
           [target.instanceId],
-          buffAnimationVariantForCard(source.definitionId),
+          buffVariant,
         ),
         lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
@@ -1378,7 +1379,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolvePlayerCombat: () => set((state) => {
     const next = resolvePlayerCombat(state.game);
     const gainedLife = next.player.life > state.game.player.life;
-    if (gainedLife) useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+    if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     return {
       game: next,
       hordeMillAnimationQueue: appendHordeMillAnimations(state, state.game, next),
@@ -1440,7 +1441,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
               amount: lifeGain,
             };
             scheduleLifestealAttackAnimationSafetyClear(lifestealAnimation.id);
-            useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+            useAudioStore.getState().playSfx("buff", { volume: 0.72 });
           }
           if (poisonGain > 0) {
             poisonAttackAnimationEventId += 1;
@@ -1730,7 +1731,7 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number):
       const previous = state.game;
       const next = applyHordeAttackEvent(previous, event);
       const gainedLife = next.player.life > previous.player.life;
-      if (gainedLife) useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+      if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
       notifyDiscardEffects(previous, next);
       return {
         game: next,
@@ -2239,7 +2240,7 @@ function buildCastCardPatch(
   if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
   if (triggeredBuffCardIds.length > 0) {
-    useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+    useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant), { volume: 0.72 });
   }
   const buffBeat = triggeredBuffCardIds.length > 0
     ? startBuffBeat(triggeredBuffCardIds, triggeredBuffVariant)
@@ -2343,15 +2344,16 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
       useAudioStore.getState().playSfx("defend", { volume: 0.62 });
     }
-    if (gainedLife) useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+    if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
+    const triggeredBuffVariant = buffAnimationVariantForCard(card.definitionId);
     if (triggeredBuffCardIds.length > 0) {
-      useAudioStore.getState().playSfx(playerBuffSfxForDeck(state.playerDeckId), { volume: 0.72 });
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant), { volume: 0.72 });
     }
     const buffBeat = triggeredBuffCardIds.length > 0
       ? startBuffBeat(
           triggeredBuffCardIds,
-          buffAnimationVariantForCard(card.definitionId),
+          triggeredBuffVariant,
         )
       : undefined;
     const autoPaidLandIds = castSucceeded

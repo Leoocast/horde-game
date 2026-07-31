@@ -1,0 +1,228 @@
+{
+  "schemaVersion": "preview-0.1",
+  "status": "concept",
+  "id": "player_monster_hunters",
+  "name": "Monster Hunters",
+  "displayNameEs": "Cazadores de Monstruos",
+  "deckSize": 40,
+  "identity": {
+    "manaColor": "R",
+    "visualTheme": "Rojo cobrizo, cuero oscuro, hierro, sangre y hueso",
+    "gameplay": [
+      "Marcar monstruos",
+      "Aturdir amenazas",
+      "Atar monstruos a Cazadores",
+      "Hacer que los monstruos peleen contra su propia Horda",
+      "Cobrar recompensas mediante Trofeo de la Cacería"
+    ]
+  },
+  "setup": {
+    "startingBattlefield": [
+      {
+        "definitionId": "trofeo_de_la_caceria",
+        "quantity": 1,
+        "note": "Esta copia se extrae del deck antes de barajar."
+      }
+    ],
+    "startingHand": [],
+    "library": {
+      "note": "Se barajan las otras 39 cartas. La segunda copia de Trofeo de la Cacería permanece en la biblioteca y debe ser robada normalmente."
+    }
+  },
+  "mechanics": {
+    "MARCAR": {
+      "text": "Coloca una Marca sobre un monstruo. La Marca permanece mientras siga en el campo y un monstruo no puede tener más de una."
+    },
+    "ATURDIR": {
+      "text": "El monstruo no puede atacar durante el próximo turno de la Horda. Después pierde Aturdido."
+    },
+    "ATAR": {
+      "text": "Gira un Cazador y toma control del monstruo indicado. Endereza al monstruo y colócalo inmediatamente a la derecha del Cazador, unido visualmente por una correa.",
+      "rules": [
+        "El Cazador permanece girado y no se endereza normalmente mientras mantenga una presa atada.",
+        "El monstruo atado puede atacar y defender por el jugador.",
+        "El monstruo conserva sus estadísticas y habilidades de combate.",
+        "Cada Cazador puede mantener atado un solo monstruo.",
+        "Si el Cazador se endereza, muere o deja el campo, el monstruo regresa a la Horda girado y pierde su Marca.",
+        "El jugador puede liberar voluntariamente al monstruo al comienzo de su turno.",
+        "Si el monstruo atado muere, va al cementerio de la Horda. El Cazador no se endereza inmediatamente, pero podrá enderezarse normalmente en el próximo turno."
+      ]
+    }
+  },
+  "cards": [
+    {
+      "id": "territorio_de_caza",
+      "name": "Hunting Territory",
+      "displayNameEs": "Territorio de Caza",
+      "quantity": 12,
+      "manaCost": "",
+      "cardTypes": [
+        "Land"
+      ],
+      "rulesTextEs": "Gira: agrega {R}."
+    },
+    {
+      "id": "trampa_de_mandibulas",
+      "name": "Jaw Trap",
+      "displayNameEs": "Trampa de Mandíbulas",
+      "quantity": 4,
+      "manaCost": "{R}",
+      "cardTypes": [
+        "Trap"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "DEFENDER"
+      ],
+      "rulesTextEs": "Cuando Trampa de Mandíbulas bloquee a un monstruo, márcalo y atúrdelo. Al final del combate, sacrifica esta Trampa."
+    },
+    {
+      "id": "rastreadora_de_huellas",
+      "name": "Trail Tracker",
+      "displayNameEs": "Rastreadora de Huellas",
+      "quantity": 3,
+      "manaCost": "{R}",
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Hunter"
+      ],
+      "power": 1,
+      "toughness": 2,
+      "rulesTextEs": "Cuando entre al campo, marca un monstruo."
+    },
+    {
+      "id": "trampero_de_acero",
+      "name": "Steel Trapper",
+      "displayNameEs": "Trampero de Acero",
+      "quantity": 3,
+      "manaCost": "{1}{R}",
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Hunter"
+      ],
+      "power": 1,
+      "toughness": 2,
+      "rulesTextEs": "Cuando entre al campo, crea una Trampa improvisada 1/1 con Defensor y «Cuando esta Trampa bloquee a un monstruo, atúrdelo. Al final del combate, sacrifica esta Trampa»."
+    },
+    {
+      "id": "domador_de_la_frontera",
+      "name": "Frontier Tamer",
+      "displayNameEs": "Domador de la Frontera",
+      "quantity": 3,
+      "manaCost": "{2}{R}",
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Hunter",
+        "Tamer"
+      ],
+      "power": 2,
+      "toughness": 3,
+      "rulesTextEs": "Gira esta carta: ata a ella un monstruo marcado y aturdido con poder 3 o menos."
+    },
+    {
+      "id": "lyra_ojo_de_la_caceria",
+      "name": "Lyra, Eye of the Hunt",
+      "displayNameEs": "Lyra, Ojo de la Cacería",
+      "quantity": 2,
+      "manaCost": "{3}{R}",
+      "cardTypes": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Hunter"
+      ],
+      "power": 3,
+      "toughness": 4,
+      "rulesTextEs": "Cuando entre al campo, marca un monstruo. La primera vez cada turno que un monstruo marcado muera o haga daño a la Horda mientras está atado, roba una carta. Al comienzo de tu combate, si Lyra está enderezada, puedes atar a ella un monstruo marcado y aturdido con poder 4 o menos."
+    },
+    {
+      "id": "flecha_sedante",
+      "name": "Sedative Arrow",
+      "displayNameEs": "Flecha Sedante",
+      "quantity": 3,
+      "manaCost": "{R}",
+      "cardTypes": [
+        "Instant"
+      ],
+      "rulesTextEs": "Elige un monstruo. Si no está marcado, márcalo. Si ya está marcado, atúrdelo."
+    },
+    {
+      "id": "lazo_de_captura",
+      "name": "Capture Lasso",
+      "displayNameEs": "Lazo de Captura",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "cardTypes": [
+        "Sorcery"
+      ],
+      "rulesTextEs": "Elige un Cazador enderezado y un monstruo marcado y aturdido con poder 2 o menos. Gira al Cazador y ata ese monstruo a él."
+    },
+    {
+      "id": "contra_tu_manada",
+      "name": "Against Your Pack!",
+      "displayNameEs": "¡Contra tu manada!",
+      "quantity": 3,
+      "manaCost": "{1}{R}",
+      "cardTypes": [
+        "Instant"
+      ],
+      "rulesTextEs": "Un monstruo atado pelea contra otro monstruo de la Horda. Si destruye al otro monstruo, obtiene +1/+0 hasta el final del turno."
+    },
+    {
+      "id": "rodear_a_la_presa",
+      "name": "Surround the Prey",
+      "displayNameEs": "Rodear a la Presa",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "cardTypes": [
+        "Sorcery"
+      ],
+      "rulesTextEs": "Elige hasta dos Cazadores que controles. En el orden que decidas, cada uno pelea contra un monstruo marcado. Si la presa sobrevive, atúrdela."
+    },
+    {
+      "id": "trofeo_de_la_caceria",
+      "name": "Trophy of the Hunt",
+      "displayNameEs": "Trofeo de la Cacería",
+      "quantity": 2,
+      "manaCost": "{2}{R}",
+      "cardTypes": [
+        "Enchantment"
+      ],
+      "rulesTextEs": "Siempre que muera un monstruo marcado, coloca un contador de Trofeo sobre este permanente. Cuando tenga tres contadores, retira tres y elige uno: ganas 3 vidas; o robas una carta.",
+      "deckRules": [
+        "Una copia comienza la partida en el campo.",
+        "La segunda copia permanece en la biblioteca y debe ser robada normalmente.",
+        "Si ambos Trofeos están en campo, cada uno obtiene su propio contador cuando muere un monstruo marcado."
+      ]
+    },
+    {
+      "id": "la_gran_batida",
+      "name": "The Great Drive",
+      "displayNameEs": "La Gran Batida",
+      "quantity": 1,
+      "manaCost": "{4}{R}",
+      "cardTypes": [
+        "Sorcery"
+      ],
+      "rulesTextEs": "Marca y aturde a todos los monstruos de la Horda. Después, puedes elegir un Cazador enderezado y atar a él uno de esos monstruos sin restricción de poder."
+    }
+  ],
+  "counts": {
+    "lands": 12,
+    "huntersAndTraps": 15,
+    "tacticsAndPermanents": 13,
+    "total": 40
+  },
+  "notes": [
+    "Este archivo es un preview de diseño y no está registrado como deck jugable.",
+    "Los nombres, costes, cantidades y textos pueden cambiar durante la iteración.",
+    "Marcar, Aturdir, Atar, las Trampas bloqueadoras y el setup del Trofeo requieren soporte nuevo en el motor."
+  ]
+}

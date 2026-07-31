@@ -1,9 +1,8 @@
 import type { SfxId } from "../audio/soundManifest";
+import type { BuffAnimationVariant } from "./buffAnimation";
 
-const MONO_GREEN_DECK_ID = "mono_green_ramp";
-
-/** Player-facing buff audio follows the selected player deck. Horde buffs deliberately bypass
- *  this policy so their existing cue never changes with the opposing deck. */
-export function playerBuffSfxForDeck(playerDeckId: string): SfxId {
-  return playerDeckId === MONO_GREEN_DECK_ID ? "monoGreenBuff" : "buff";
+/** The organic cue belongs to the root/branch presentation itself, not to every action made by a
+ *  Mono Green deck. Default buffs—including every Vampire buff—retain the original `buff.wav`. */
+export function playerBuffSfxForAnimation(variant: BuffAnimationVariant): SfxId {
+  return variant === "default" ? "buff" : "monoGreenBuff";
 }

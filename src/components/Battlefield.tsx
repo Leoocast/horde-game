@@ -15,6 +15,7 @@ import { useToastStore } from "../store/useToastStore";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
+import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
 import { Card } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
@@ -1023,13 +1024,28 @@ export function Battlefield({ game, side, cards }: Props) {
       )}
       {buffAnimationActive && (
         buffAnimationVariant === "default"
-          ? <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />
-          : (
-              <GrowthBuffAnimator
-                key={`growth-${buffAnimationEventId}`}
+          ? (
+              <BuffSurgeAnimator
+                key={`buff-surge-${buffAnimationEventId}`}
                 eventId={buffAnimationEventId!}
-                variant={buffAnimationVariant}
+                palette="holy"
+                seedKey={card.instanceId}
               />
+            )
+          : (
+              <>
+                <BuffSurgeAnimator
+                  key={`growth-surge-${buffAnimationEventId}`}
+                  eventId={buffAnimationEventId!}
+                  palette="nature"
+                  seedKey={card.instanceId}
+                />
+                <GrowthBuffAnimator
+                  key={`growth-${buffAnimationEventId}`}
+                  eventId={buffAnimationEventId!}
+                  variant={buffAnimationVariant}
+                />
+              </>
             )
       )}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}

@@ -12,6 +12,7 @@ import type { BuffAnimationVariant } from "./buffAnimation";
 
 export const BUFF_ANIMATION_MS = 1120;
 const AUTO_PAID_LAND_FLASH_MS = 900;
+const HEAVY_SUMMON_DEFINITION_IDS = new Set(["magnigoth_sentry"]);
 
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
@@ -35,7 +36,13 @@ export function showActionToast(message?: string): void {
 }
 
 export function monsterSfx(card: CardInstance) {
-  if (card.basePower > 4 || card.baseToughness > 4) return "playMonsterHeavy" as const;
+  if (
+    HEAVY_SUMMON_DEFINITION_IDS.has(card.definitionId) ||
+    card.basePower > 4 ||
+    card.baseToughness > 4
+  ) {
+    return "playMonsterHeavy" as const;
+  }
   if (card.effects.length > 0 || card.activatedAbilities.length > 0 || card.requiresTargets.length > 0) return "playMonsterEffect" as const;
   return "playMonster" as const;
 }

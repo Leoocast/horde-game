@@ -411,7 +411,14 @@ los lados y brotar hojas ancladas. Una segunda capa de hojas sueltas asciende ca
 leve pero sin remolino, antes de que todo se desvanezca. No cierra el contorno: debe leerse como crecimiento, no
 proteccion. El efecto vive en un canvas Three.js local que sigue a la criatura sin tomar su
 `transform`. La version que envuelve el borde se conserva sin uso en `NatureShieldAnimator.tsx`
-para un futuro efecto defensivo. Los buffs de otros decks conservan las lineas azules.
+para un futuro efecto defensivo. `BuffSurgeAnimator` adapta `might-surge` / "Oleada de fuerza" del
+VFX Lab dejando sus columnas ascendentes y un pulso compacto: no usa chevrons, motas ni luz de
+base. El canvas excede ampliamente la carta y el pulso termina cerca de su ancho, para que nunca
+revele un borde rectangular. Conserva del original 9 columnas con posicion, delay, velocidad,
+largo y grosor variables, mas 24 motas ascendentes alrededor del marco. La semilla combina evento
+e `instanceId`: varias criaturas buffeadas a la vez nunca repiten la misma composicion. Los buffs
+de otros decks usan la paleta dorada; Mono Green superpone la variante verde detras de las raices
+y hojas.
 
 ### Cosmic Hunger
 
@@ -437,9 +444,13 @@ No requieren reglas extra. Al terminar su entrada al campo comparten un impacto 
 pesada inspirado por `smoke-blast` + `blunt-impact` del VFX Lab: un anillo toroidal de humo terroso
 rodea la carta, una onda circular centrada en su cara cubre toda su huella junto con lineas radiales y escombros con
 gravedad. La carta no tiembla ni se comprime. La cortina central del laboratorio se mantiene tenue
-para no tapar la criatura recien jugada. El canvas Three.js tiene margen suficiente para que el humo
+para no tapar la criatura recien jugada. Los tres usan `play_monster_heavy` al entrar; Magnigoth es
+una excepcion explicita a la regla automatica de estadisticas porque su cuerpo 4/4 no supera el
+umbral general. El canvas Three.js tiene margen suficiente para que el humo
 no corte contra sus bordes y empieza 225 ms antes de que termine la caida, incluyendo cualquier
-delay de reacomodo, para que el frente ya este naciendo al aterrizar.
+delay de reacomodo, para que el frente ya este naciendo al aterrizar. El conjunto visual se ancla
+56% de la altura de la carta por encima de su centro geometrico; el canvas extiende su margen
+superior para conservar completo el humo con ese desplazamiento.
 El VFX comienza en el `onfinish` real de la invocacion para mantenerse sincronizado incluso cuando
 la fila de criaturas debe reacomodarse antes de recibir la carta.
 
@@ -547,8 +558,8 @@ SFX usados:
 Reglas interesantes:
 - click valido en casi todo debe sonar
 - seleccionar target de Sunshower usa sonido land, no play_monster
-- los buffs del player usan `monogreen_buff.mp3` solamente con `mono_green_ramp`; Vampiros,
-  otros decks y todos los buffs de la Horda conservan `buff.wav`
+- las variantes organicas de raices/ramas usan `monogreen_buff.mp3`; los buffs visuales default,
+  las ganancias de vida, Vampiros, otros decks y todos los buffs de la Horda conservan `buff.wav`
 - horda entrando al campo usa draw/draw one segun contexto
 
 ## Musica dinamica

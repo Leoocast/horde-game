@@ -22,7 +22,7 @@ import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src
 import { sortKeywordsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
-import { playerBuffSfxForDeck } from "../src/store/playerAudioPolicy";
+import { playerBuffSfxForAnimation } from "../src/store/playerAudioPolicy";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("same seed produces the same player and Horde deck order", () => {
@@ -1586,10 +1586,10 @@ test("mono-green growth cards select the intended presentation intensity", () =>
   assert.equal(buffAnimationVariantForCard("predatory_thirst"), "default");
 });
 
-test("player buff audio changes only for the mono-green deck", () => {
-  assert.equal(playerBuffSfxForDeck("mono_green_ramp"), "monoGreenBuff");
-  assert.equal(playerBuffSfxForDeck("vampire_chronicle_preview"), "buff");
-  assert.equal(playerBuffSfxForDeck("future_player_deck"), "buff");
+test("only organic branch buffs replace the player's default buff audio", () => {
+  assert.equal(playerBuffSfxForAnimation("growth-strong"), "monoGreenBuff");
+  assert.equal(playerBuffSfxForAnimation("growth-soft"), "monoGreenBuff");
+  assert.equal(playerBuffSfxForAnimation("default"), "buff");
 });
 
 test("animated Toxic lands at its attack impact and is not applied twice at combat cleanup", () => {
