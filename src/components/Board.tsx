@@ -95,7 +95,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
-    playSfx("skipNextBattle", { volume: 0.72 });
+    playSfx("skipNextBattle");
   }, [encounterEntering, game.openingHandAccepted, playSfx]);
 
   return (

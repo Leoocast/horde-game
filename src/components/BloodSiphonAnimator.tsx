@@ -454,14 +454,14 @@ export function BloodPactAnimator() {
       .call(() => {
         biteElement.classList.add("is-biting");
         setPhase(active.id, "impact");
-        playSfx("bloodSplash2", { volume: 0.72 * 0.7 });
-        playSfx("punch", { volume: 0.65 * 0.7 });
+        playSfx("bloodSplash2");
+        playSfx("punch");
         triggerBiteBurst();
       }, [], 0.05)
       .call(() => {
         biteElement.classList.remove("is-biting", "is-active");
       }, [], 0.32)
-      .call(() => playSfx("countessLaugh", { volume: 0.68 }), [], 0.2)
+      .call(() => playSfx("countessLaugh"), [], 0.2)
       .call(triggerStream, [], 0.22)
       .to(cardElement, {
         scale: 1.22,

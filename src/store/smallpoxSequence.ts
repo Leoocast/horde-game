@@ -20,7 +20,7 @@ export function runSmallpoxSequence(card: CardInstance): void {
     next.horde.pendingCard = undefined;
     return { game: next, smallpoxCard: card, hordeAutoTriggerCount: state.hordeAutoTriggerCount + 1 };
   });
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
   useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.afflictsHorde", { card: uiCardName(card) }), tone: "horde" });
   window.setTimeout(() => {
@@ -44,7 +44,7 @@ export function runSmallpoxSequence(card: CardInstance): void {
         return;
       }
       useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
-      useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+      useAudioStore.getState().playSfx("attack");
       window.setTimeout(() => {
         if (resetEpoch !== hordeSequenceEpoch()) return;
         useGameStore.setState((state) => {
@@ -64,7 +64,7 @@ export function runSmallpoxSequence(card: CardInstance): void {
 function beginSmallpoxPlayerRound(resetEpoch: number): void {
   if (resetEpoch !== hordeSequenceEpoch()) return;
   const card = useGameStore.getState().smallpoxCard;
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useAudioStore.getState().playSfx("activateEffect");
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
   useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "horde" });
   window.setTimeout(() => {

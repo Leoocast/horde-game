@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
@@ -32,6 +32,8 @@ type Props = {
   onRestartFirstTime?: () => void;
   /** Only provided in development builds; the menu entry does not exist without it. */
   onOpenPlayground?: () => void;
+  /** Only provided in development builds; edits the checked-in per-file audio mix. */
+  onOpenAudioLab?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -44,7 +46,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -133,7 +135,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     completeOnboarding(nextName);
     setNameRequired(false);
     onNameSaved?.(nextName);
-    playSfx("playLand", { volume: 0.62 });
+    playSfx("playLand");
     setNameEditorClosing(true);
     window.setTimeout(() => {
       setShowNameEditor(false);
@@ -188,7 +190,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   function changeDifficulty(nextMode: DifficultyMode) {
     if (nextMode === mode) return;
     const rate = nextMode === "easy" ? 1.08 : nextMode === "hard" ? 0.9 : 1;
-    playSfx("playLand", { volume: 0.76, rate });
+    playSfx("playLand", { rate });
     setMode(nextMode);
   }
 
@@ -232,11 +234,21 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
             <h1 className="main-menu-title">Hostfall</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
-            {onOpenPlayground && (
-              <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
-                <Construction size={15} aria-hidden="true" />
-                <span>Playground</span>
-              </button>
+            {(onOpenPlayground || onOpenAudioLab) && (
+              <div className="main-menu-developer-tools">
+                {onOpenPlayground && (
+                  <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
+                    <Construction size={15} aria-hidden="true" />
+                    <span>Playground</span>
+                  </button>
+                )}
+                {onOpenAudioLab && (
+                  <button className="main-menu-playground" type="button" onClick={onOpenAudioLab} title="Audio mix authoring tool">
+                    <AudioLines size={15} aria-hidden="true" />
+                    <span>Audio Lab</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
 

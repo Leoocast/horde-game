@@ -717,7 +717,7 @@ export function FinalBanquetAnimator() {
     const timeline = gsap.timeline();
     timeline
       .to(vignetteElement, { opacity: 1, duration: 0.22, ease: "power2.out" }, 0)
-      .call(() => playSfx("bloodSplash2", { volume: 0.34 }), [], 0.025)
+      .call(() => playSfx("bloodSplash2"), [], 0.025)
       .to(cardElement, {
         scale: 1.035,
         filter: "brightness(1.16) saturate(1.08) drop-shadow(0 0 18px rgba(164, 17, 50, 0.72))",
@@ -725,7 +725,7 @@ export function FinalBanquetAnimator() {
         ease: "power2.out",
       }, 0.1)
       .call(() => beginStrike(active.id), [], PROJECTILE_LAUNCH_SECONDS - 0.02)
-      .call(() => playSfx("activateEffect", { volume: 0.62 }), [], PROJECTILE_LAUNCH_SECONDS)
+      .call(() => playSfx("activateEffect"), [], PROJECTILE_LAUNCH_SECONDS)
       .to(cardElement, {
         scale: 1.075,
         filter: "brightness(1.38) saturate(0.82) drop-shadow(0 0 30px rgba(137, 15, 43, 0.88))",
@@ -735,7 +735,7 @@ export function FinalBanquetAnimator() {
       .to(cardElement, { x: -5, duration: 0.032, yoyo: true, repeat: 5, ease: "none" }, PROJECTILE_LAUNCH_SECONDS + 0.1)
       .call(() => {
         beginImpact(active.id);
-        playSfx("attack", { volume: 0.72 });
+        playSfx("attack");
       }, [], PROJECTILE_IMPACT_SECONDS)
       .to(cardElement, {
         x: 0,

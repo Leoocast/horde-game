@@ -165,7 +165,7 @@ export function notifyDiscardEffects(previous: GameState, next: GameState, optio
     ],
   }));
   for (const card of discardedCards) {
-    useAudioStore.getState().playSfx("drawOne", { volume: 0.82 });
+    useAudioStore.getState().playSfx("drawOne");
     useToastStore.getState().pushToast({
       title: options?.title ?? uiText("toast.hordeEffect"),
       message: uiText("toast.chroniclerDiscardsCard", { card: uiCardName(card) }),

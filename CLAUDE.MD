@@ -539,7 +539,23 @@ Objetivos:
 - musica de fondo
 - volumen de SFX y musica separados
 - no reiniciar cancion al mutear/desmutear
-- musica empieza al 10% por defecto
+- musica empieza al 60% del slider por defecto
+
+Mezcla por archivo:
+- `src/audio/audioMix.json` es la unica configuracion de volumen individual que lee el juego
+- guarda trims en dB: `0` conserva el archivo y hasta `-30` atenúa los archivos demasiado fuertes
+- el volumen final es master del jugador x trim del JSON; no hay multiplicadores de volumen en
+  stores, componentes, voces ni animadores
+- el jugador no ve sliders por archivo; conserva solo los controles master de SFX y musica
+- `playSfx` solo acepta `rate`; si una presentacion debe ser muda usa un booleano explicito, y si
+  el mismo archivo necesita dos niveles autorales se registran dos cues/ids en el manifest y el JSON
+- `Audio Lab` aparece debajo de `Playground` en el menu principal de desarrollo
+- el laboratorio permite escuchar cada SFX, reproducir grupos de variantes, comparar canciones,
+  importar una mezcla y exportar `audioMix.json`; para conservarla se reemplaza el JSON del repo y
+  se recarga el juego
+- agregar un SFX o una coleccion musical exige agregar su entrada al JSON; `tests/audioMix.test.js`
+  detecta huecos, claves obsoletas, valores fuera del rango permitido y modificadores de volumen
+  escondidos en llamadas `playSfx`
 
 SFX usados:
 - click valido

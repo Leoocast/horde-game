@@ -82,7 +82,7 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
     return;
   }
 
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(claimedSource.instanceId);
   useToastStore.getState().pushToast({
     title: uiText("toast.chroniclerEffect"),
@@ -145,10 +145,7 @@ function resolvePlayerTriggerBeat(eventId: string, sourceId: string): {
       next.player.battlefield.find((card) => card.instanceId === sourceId);
     const buffVariant = buffAnimationVariantForCard(source?.definitionId);
     if (presentationLanded) {
-      useAudioStore.getState().playSfx(
-        playerBuffSfxForAnimation(buffVariant),
-        { volume: 0.72 },
-      );
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(buffVariant));
     }
     const buffBeat = buffLanded
       ? startBuffBeat(

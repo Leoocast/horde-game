@@ -1198,11 +1198,11 @@ export function Battlefield({ game, side, cards }: Props) {
             event.stopPropagation();
             selectActiveEffectCard(undefined);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+              useAudioStore.getState().playSfx("activateEffect");
               triggerEffectActivationPulse(card.instanceId);
             }, 180);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+              useAudioStore.getState().playSfx("playLand");
               activateAbility(card.instanceId, primaryAbility.id);
             }, 620);
           }}

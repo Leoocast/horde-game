@@ -122,7 +122,7 @@ export function scheduleHordeEnterTriggers(
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       if (!activationAlreadyShown) {
-        useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+        useAudioStore.getState().playSfx("activateEffect");
         useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
       }
       useToastStore.getState().pushToast({
@@ -466,11 +466,11 @@ const burnBeatHandler: HordeBeatHandler = {
     // lunges — `.burn-source-casting` moves it without the gold.
     // The whoosh fires as the fireball ignites; a fresh voice each time so back-to-back burns
     // never loop the same clip.
-    useAudioStore.getState().playSfx(pickRandom(fireballCastSfx), { volume: 0.7 });
+    useAudioStore.getState().playSfx(pickRandom(fireballCastSfx));
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.78 });
+      useAudioStore.getState().playSfx(fireballHitSfx);
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
       const lethalTargetIds = burnLethalTargetIds(useGameStore.getState().game, [targetId], Number(event.payload?.amount ?? 0));
@@ -546,12 +546,12 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
       const projectileDelay = projectileIndex * BURN_PROJECTILE_GAP_MS;
       window.setTimeout(() => {
         if (sequenceId !== hordeAutoTriggerSequenceId) return;
-        useAudioStore.getState().playSfx(pickRandom(fireballCastSfx), { volume: 0.7 });
+        useAudioStore.getState().playSfx(pickRandom(fireballCastSfx));
       }, BURN_PROJECTILE_LAUNCH_MS + projectileDelay);
 
       window.setTimeout(() => {
         if (sequenceId !== hordeAutoTriggerSequenceId) return;
-        useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.78 });
+        useAudioStore.getState().playSfx(fireballHitSfx);
         if (projectileIndex !== targets.length - 1) return;
 
         const impactEventId = Date.now();
@@ -615,7 +615,7 @@ const staticAuraBeatHandler: HordeBeatHandler = {
     useGameStore.setState({ hordeAutoTriggerCount: 1 });
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.78 });
+      useAudioStore.getState().playSfx("activateEffect");
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
       useToastStore.getState().pushToast({
         title: uiText("toast.hordeEffect"),
@@ -626,7 +626,7 @@ const staticAuraBeatHandler: HordeBeatHandler = {
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("buff", { volume: 0.7 });
+      useAudioStore.getState().playSfx("buff");
       // Same frame: the withheld stats land exactly as the buff lines rise.
       releaseStaticAura(auraKey);
       useGameStore.setState(startBuffBeat(affectedIds));
@@ -666,7 +666,7 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
       window.setTimeout(() => {
         if (sequenceId !== hordeAutoTriggerSequenceId) return;
         resolve();
-        useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+        useAudioStore.getState().playSfx("buff");
         useGameStore.setState(startBuffBeat(affectedIds));
       }, 80);
       window.setTimeout(() => {
@@ -678,11 +678,11 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
 
     // Instants have no battlefield slot to activate from, so they use the dedicated reveal card.
     useGameStore.setState({ hordeSpellCard: source, hordeAutoTriggerCount: 1 });
-    useAudioStore.getState().playSfx("drawOne", { volume: 0.78 });
+    useAudioStore.getState().playSfx("drawOne");
 
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+      useAudioStore.getState().playSfx("activateEffect");
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
       useToastStore.getState().pushToast({
         title: uiText("toast.hordeEffect"),
@@ -694,7 +694,7 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       resolve();
-      useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+      useAudioStore.getState().playSfx("buff");
       useGameStore.setState(startBuffBeat(affectedIds));
     }, SPELL_REVEAL_BUFF_MS);
 
@@ -723,7 +723,7 @@ const deathRevealBeatHandler: HordeBeatHandler = {
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       useGameStore.setState({ deathRevealCard: source });
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+      useAudioStore.getState().playSfx("activateEffect");
       useToastStore.getState().pushToast({
         title: uiText("toast.hordeEffect"),
         message: queuedHordeTriggerMessage(source),
@@ -758,7 +758,7 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
   run: ({ event, sources, sequenceId, resolve, done }) => {
     const activationAlreadyShown = event.payload?.causeSourceId === sources[0].instanceId;
     if (!activationAlreadyShown) {
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+      useAudioStore.getState().playSfx("activateEffect");
       useGameStore.getState().triggerEffectActivationPulse(sources[0].instanceId);
     }
     useToastStore.getState().pushToast({

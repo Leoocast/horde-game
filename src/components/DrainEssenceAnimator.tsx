@@ -420,7 +420,7 @@ export function DrainEssenceAnimator() {
         duration: 0.16,
         ease: "power2.out",
       }, 0.02)
-      .call(() => playSfx("activateEffect", { volume: 0.55 }), [], 0.04)
+      .call(() => playSfx("activateEffect"), [], 0.04)
       .to(cardElement, {
         filter: "brightness(1.08) saturate(0.86) drop-shadow(0 0 18px rgba(91, 34, 47, 0.5))",
         duration: 0.18,

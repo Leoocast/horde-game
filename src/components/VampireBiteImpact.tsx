@@ -19,10 +19,8 @@ type Props = {
   fallbackSelector?: string;
   fallbackAnchor: "player" | "horde";
   onComplete: (id: string) => void;
-  soundVolume?: number;
+  playSound?: boolean;
 };
-
-const GENERIC_BITE_SPLASH_VOLUME = 0.42 * 0.49;
 
 export function VampireBiteImpact({
   animationId,
@@ -30,7 +28,7 @@ export function VampireBiteImpact({
   fallbackSelector,
   fallbackAnchor,
   onComplete,
-  soundVolume = GENERIC_BITE_SPLASH_VOLUME,
+  playSound = true,
 }: Props) {
   const playSfx = useAudioStore((state) => state.playSfx);
   const biteRef = useRef<HTMLDivElement>(null);
@@ -171,7 +169,7 @@ export function VampireBiteImpact({
       .call(() => {
         biteElement.classList.add("is-biting");
         triggerSplash();
-        if (soundVolume > 0) playSfx("bloodSplash", { volume: soundVolume });
+        if (playSound) playSfx("bloodSplash");
       }, [], 0.05)
       .call(() => biteElement.classList.remove("is-biting", "is-active"), [], 0.32)
       .call(() => onComplete(animationId), [], 0.68);
@@ -182,7 +180,7 @@ export function VampireBiteImpact({
       context?.clearRect(0, 0, window.innerWidth, window.innerHeight);
       biteElement.classList.remove("is-biting", "is-active");
     };
-  }, [animationId, fallbackAnchor, fallbackSelector, onComplete, playSfx, primarySelector, soundVolume]);
+  }, [animationId, fallbackAnchor, fallbackSelector, onComplete, playSfx, playSound, primarySelector]);
 
   if (typeof document === "undefined") return null;
 

@@ -17,6 +17,7 @@ import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
 // Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
 // statically eliminated, so the chunk is still emitted — production simply never requests it.
 const PlaygroundScreen = lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })));
+const AudioLabScreen = lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })));
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -25,7 +26,7 @@ export default function App() {
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
-  const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground">("start");
+  const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground" | "audioLab">("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
   const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
@@ -159,6 +160,20 @@ export default function App() {
     );
   }
 
+  if (screen === "audioLab" && IS_DEV) {
+    return (
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioLabScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (screen === "deckInspector") {
     return (
       <>
@@ -213,6 +228,10 @@ export default function App() {
             stopMusic();
             setScreen("playground");
           } : undefined}
+          onOpenAudioLab={IS_DEV ? () => {
+            stopMusic();
+            setScreen("audioLab");
+          } : undefined}
           onRestartFirstTime={() => {
             setScreen("start");
             setMenuReturnScreen("home");
@@ -225,8 +244,8 @@ export default function App() {
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
             stopMusic();
-            playSfx("draw", { volume: 0.82 });
-            playSfx("playMonsterHeavy", { volume: 0.78, rate: 0.92 });
+            playSfx("draw");
+            playSfx("playMonsterHeavy", { rate: 0.92 });
             const isTutorial = options.seed.trim().toLowerCase() === "tutorial";
             reset(
               options.seed,

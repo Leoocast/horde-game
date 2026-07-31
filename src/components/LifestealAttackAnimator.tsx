@@ -15,7 +15,7 @@ export function LifestealAttackAnimator() {
           fallbackSelector='[data-horde-life-panel="true"]'
           fallbackAnchor="horde"
           onComplete={complete}
-          soundVolume={0}
+          playSound={false}
         />
       ))}
     </>

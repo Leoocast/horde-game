@@ -196,7 +196,7 @@ function DeckCardTile({
   const localArt = usesGeneratedCardFrame(deck, card);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
-  const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
+  const playHoverSound = () => playSfx("drawOne");
 
   return (
     <button
@@ -359,7 +359,7 @@ function DeckInspectorDetailsModal({
     timers.current.push(window.setTimeout(() => {
       if (direction === "next") onNext();
       else onPrevious();
-      playSfx("drawOne", { volume: 0.52 });
+      playSfx("drawOne");
       setTransition(`enter-${direction}`);
       timers.current.push(window.setTimeout(() => {
         setTransition("idle");

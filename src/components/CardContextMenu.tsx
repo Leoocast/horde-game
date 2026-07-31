@@ -99,11 +99,11 @@ export function CardContextMenu() {
     const abilityId = firstAbility.id;
     closeMenu();
     window.setTimeout(() => {
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+      useAudioStore.getState().playSfx("activateEffect");
       triggerEffectActivationPulse(cardId);
     }, 180);
     window.setTimeout(() => {
-      useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+      useAudioStore.getState().playSfx("playLand");
       activateAbility(cardId, abilityId);
     }, 620);
   }

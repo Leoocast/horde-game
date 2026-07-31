@@ -19,7 +19,7 @@ export function AudioClickListener() {
       }
       const audio = useAudioStore.getState();
       audio.resumeMusic();
-      audio.playSfx("click", { volume: 0.65 });
+      audio.playSfx("click");
     }
 
     document.addEventListener("pointerdown", unlockMusic, { capture: true, once: true });

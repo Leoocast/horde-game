@@ -14,7 +14,6 @@ test("Countess entry interactions use card types instead of card names", () => {
     previousGame: beforeCountess,
   });
   assert.equal(enterCue?.sfx, "countessEnter");
-  assert.equal(enterCue?.volume, 0.78 * 0.49);
 
   const countessInPlay = createTestGame("countess-voice-human");
   addCard(countessInPlay, cardFromDeck("eternal_feast_countess", "player"));
@@ -45,7 +44,6 @@ test("Countess speaks exactly on her third confirmed attack", () => {
   assert.equal(resolveCardVoiceCue({ type: "ATTACKS", card: countess, attackNumber: 2 }), undefined);
   const thirdAttackCue = resolveCardVoiceCue({ type: "ATTACKS", card: countess, attackNumber: 3 });
   assert.equal(thirdAttackCue?.sfx, "countessThirdAttack");
-  assert.equal(thirdAttackCue?.volume, 0.8 * 0.49);
   assert.equal(resolveCardVoiceCue({ type: "ATTACKS", card: countess, attackNumber: 4 }), undefined);
 });
 
@@ -73,7 +71,6 @@ test("Countess defense has half silence and evenly split spoken variants", () =>
     randomSequence(0.25, 0.1),
   );
   assert.equal(pourCue?.sfx, "countessPour");
-  assert.equal(pourCue?.volume, 0.78 * 0.49);
   assert.equal(
     resolveCardVoiceCue({ type: "BLOCKS", card: countess }, randomSequence(0.25, 0.9))?.sfx,
     "countessWeak",

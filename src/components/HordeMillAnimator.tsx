@@ -18,7 +18,7 @@ export function HordeMillAnimator() {
 
   useEffect(() => {
     if (!active) return;
-    playSfx("drawOne", { volume: 0.62 });
+    playSfx("drawOne");
   }, [active?.id, playSfx]);
 
   if (!active) return null;

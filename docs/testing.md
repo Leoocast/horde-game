@@ -54,6 +54,7 @@ archivo no corre nunca.
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Import/export y parseo defensivo de escenarios y flujos |
+| `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).
