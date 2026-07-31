@@ -840,9 +840,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
   de stats, frases de contadores y `crea/crear ... N/N` se imprimen siempre en negrita con el color
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
-  frase explicita `Paga N vidas.` tambien se imprime en rojo y negrita. En Vampiros, los spells con
-  pago adicional mantienen `Coste adicional: Paga N vidas.` en una sola linea y separan el efecto; Acólito usa
-  `{{T}}: Paga 5 vidas. Agrega {G}.` para mostrar primero el icono de agotar y luego el mismo
+  frase explicita `Paga N de Vida.` tambien se imprime en rojo y negrita. En Vampiros, los Hechizos con
+  pago adicional mantienen `Coste adicional: Paga N de Vida.` en una sola linea y separan el efecto; Acólito usa
+  `{{T}} y paga 5 de Vida: Gana 1 {E}.` para mostrar primero el icono de agotar y luego el mismo
   orbe azul de Energia que usan los Druidas del deck verde.
   Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
@@ -853,6 +853,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
   `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
   PNG de la raiz, no a los WebP de `art/`. La Corte Carmesi ya es un deck jugable de 40 cartas;
+  su estudio imprime el vocabulario Hostfall (`Eco`, `Fuente`, `Hechizo`, `Hechizo · Rápido` y
+  Rasgos canónicos). `Eco` usa un glifo propio de resonancia, al doble del tamaño del icono legacy,
+  en vez de la huella; la Condesa se presenta como `Eco de Crónica`. Los símbolos inline de Agotar
+  y Energía viven dentro de sellos circulares planos: fondo borgoña texturizado, borde dorado fino
+  y sin degradado ni sombra exterior. Energía usa un fondo dorado oscuro y un rayo dorado para
+  distinguirse sin parecer un botón 3D. La gota del sello del header está centrada ópticamente
+  dentro de su círculo.
   conserva el id interno `vampire_chronicle_preview` para no romper escenarios guardados, pero su
   metadata visible ya no dice Preview/Early Access. El manifest activa `showFullCardImage` para que
   mano, targeting y previews usen la carta completa. `cardThemeForDefinition` deriva el tema
@@ -879,10 +886,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Las cartas mono-green usan sus PNG completos de 976x1360 desde
   `/cards/mono_green_ramp/*.png` en todas las superficies del juego: mano, mulligan, battlefield,
   targeting, previews, cementerio, animadores, inspector y selectores de deck. El manifiesto
-  `mono_green_ramp_images.json` es la fuente unica de esas rutas. `MonoGreenHandCardFace` se
-  conserva solo como referencia/diagnostico y no debe volver a conectarse a una superficie del
-  juego: el texto HTML vivo bajo transforms FLIP/fan de Framer puede quedar rasterizado a una
-  escala intermedia al reordenar. El rombo de disponible pertenece a `.hand-card`, pero su render
+  `mono_green_ramp_images.json` es la fuente unica de esas rutas. Los renderers runtime de caras
+  HTML (`MonoGreenHandCardFace`, `HostfallCardFace`, `DeckCardVisual` y el prototipo Sunshower)
+  fueron eliminados: las cartas vigentes se producen con los generadores bajo `dev/tools/Decks/`
+  y el juego consume exclusivamente sus imagenes completas. El rombo de disponible pertenece a
+  `.hand-card`, pero su render
   esta detras de `showPlayerHandActionableGems`, actualmente inactivo. Los PNG de mano deben usar
   `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al
   reducirlos y rotarlos en el abanico. El exportador apaga la sombra exterior de `.tcg-card` al

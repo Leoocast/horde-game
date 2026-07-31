@@ -7,11 +7,11 @@
   "deckSize": 40,
   "gameplayLandCount": 12,
   "archetype": "life-payment-lifesteal",
-  "gamePlan": "Paga vida para acelerar tu desarrollo y convertirla en poder. Ataca directamente al Host para recuperar vida, pero conserva bloqueadores cuando la Horda amenace con devolverte el golpe.",
+  "gamePlan": "Paga Vida para acelerar tu desarrollo y convertirla en Fuerza. Ataca directamente a la Hueste para recuperar Vida, pero conserva Ecos para defender cuando la Hueste amenace con devolverte el golpe.",
   "mechanics": {
-    "lifePayment": "Pagar vida es un coste, no daño, y nunca puede reducir tu vida por debajo de 1.",
-    "lifesteal": "Cuando una criatura con Robo de vida hace daño de combate, recuperas esa misma cantidad de vida.",
-    "hostfallCombat": "Las criaturas del jugador atacan al Host, no a las criaturas de la Horda. Se enfrentan a ellas al bloquear o mediante hechizos."
+    "lifePayment": "Pagar Vida es un coste, no daño, y nunca puede reducir tu Vida por debajo de 1.",
+    "lifesteal": "Cuando un Eco con Drenar hace daño de Batalla, recuperas esa misma cantidad de Vida.",
+    "hostfallCombat": "Los Ecos del Cronista atacan a la Hueste, no a sus Ecos. Se enfrentan a ellos al defender o mediante Hechizos."
   },
   "tokens": [],
   "cards": [
@@ -20,8 +20,8 @@
       "name": "Crimson Energy",
       "displayNameEs": "Energía Carmesí",
       "gameText": {
-        "en": "Exhaust: Generate 1 Energy.",
-        "es": "Agota: genera 1 de Energía."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
         "en": "Every vow leaves something behind.",
@@ -61,8 +61,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you lose life each turn, this creature gets +2/+0 until end of turn.",
-        "es": "La primera vez que pierdas vida en cada turno, esta criatura obtiene +2/+0 hasta el final del turno."
+        "en": "The first time you lose Life each turn, this Echo gains +2/+0 until the end of the turn.",
+        "es": "La primera vez que pierdas Vida en cada turno, este Eco gana +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "The youngest learn to serve before they learn to feed.",
@@ -136,8 +136,8 @@
       "name": "Tithe Acolyte",
       "displayNameEs": "Acólito del Diezmo",
       "gameText": {
-        "en": "Exhaust: Pay 5 life. Add {G}.",
-        "es": "Agota: Paga 5 vidas. Agrega {G}."
+        "en": "Exhaust and pay 5 Life: Gain 1 Energy.",
+        "es": "Agota y paga 5 de Vida: Gana 1 Energía."
       },
       "flavorText": {
         "en": "The court accepts every currency, especially the one that hurts.",
@@ -181,8 +181,8 @@
       "name": "Court Duelist",
       "displayNameEs": "Duelista de la Corte",
       "gameText": {
-        "en": "Once during your turn, you may pay 3 life. If you do, this creature gets +3/+1 until your next turn.",
-        "es": "Una vez durante tu turno, puedes pagar 3 vidas. Si lo haces, esta criatura obtiene +3/+1 hasta tu próximo turno."
+        "en": "Once during your turn, you may pay 3 Life. If you do, this Echo gains +3/+1 until your next turn.",
+        "es": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno."
       },
       "flavorText": {
         "en": "Courtesy ends at the first drawn blade.",
@@ -225,8 +225,8 @@
       "name": "Crypt Guardian",
       "displayNameEs": "Guardián de la Cripta",
       "gameText": {
-        "en": "Whenever this creature is dealt damage and survives, recover 2 life.",
-        "es": "Siempre que esta criatura reciba daño y sobreviva, recuperas 2 vidas."
+        "en": "When this Echo is dealt damage and survives, gain 2 Life.",
+        "es": "Cuando este Eco recibe daño y sobrevive, ganas 2 de Vida."
       },
       "flavorText": {
         "en": "Nothing leaves the crypt without his permission.",
@@ -316,8 +316,8 @@
       "name": "Countess of the Eternal Feast",
       "displayNameEs": "Condesa del Banquete Eterno",
       "gameText": {
-        "en": "Additional cost: Pay half your life.\nDuring your turn, this creature has Lifesteal.",
-        "es": "Coste adicional: Paga la mitad de tus vidas.\nDurante tu turno, esta criatura tiene Robo de vida."
+        "en": "Additional cost: Pay half your Life.\nDuring your turn, this Echo has Drain.",
+        "es": "Coste adicional: Paga la mitad de tu Vida.\nDurante tu turno, este Eco tiene Drenar."
       },
       "flavorText": {
         "en": "Her court has waited centuries for the final guest.",
@@ -372,8 +372,8 @@
       "name": "Blood Pact",
       "displayNameEs": "Pacto de Sangre",
       "gameText": {
-        "en": "Additional cost: Pay 5 life.\nDraw 2 cards.",
-        "es": "Coste adicional: Paga 5 vidas.\nRoba 2 cartas."
+        "en": "Additional cost: Pay 5 Life.\nDraw 2 cards.",
+        "es": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas."
       },
       "flavorText": {
         "en": "Knowledge never asks whether the price was fair.",
@@ -413,8 +413,8 @@
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
-        "en": "Additional cost: Pay 2 life.\nAn allied creature gets +2/+2 and Flying until end of turn.",
-        "es": "Coste adicional: Paga 2 vidas.\nUna criatura aliada obtiene +2/+2 y Volar hasta el final del turno."
+        "en": "Additional cost: Pay 2 Life.\nAn allied Echo gains +2/+2 and Flying until the end of the turn.",
+        "es": "Coste adicional: Paga 2 de Vida.\nUn Eco aliado gana +2/+2 y Volar hasta el final del turno."
       },
       "flavorText": {
         "en": "Pain is merely strength waiting for direction.",
@@ -472,8 +472,8 @@
       "name": "Drain Essence",
       "displayNameEs": "Drenar la Esencia",
       "gameText": {
-        "en": "Deal 3 damage to a creature. Recover 2 life.",
-        "es": "Haz 3 de daño a una criatura. Recupera 2 vidas."
+        "en": "Deal 3 damage to an Echo. Gain 2 Life.",
+        "es": "Haz 3 de daño a un Eco. Gana 2 de Vida."
       },
       "flavorText": {
         "en": "Even the dead have something left to surrender.",
@@ -528,8 +528,8 @@
       "name": "Predatory Thirst",
       "displayNameEs": "Sed Depredadora",
       "gameText": {
-        "en": "All allied creatures gain Lifesteal until end of turn.",
-        "es": "Las criaturas aliadas obtienen Robo de vida hasta el final del turno."
+        "en": "All allied Echoes gain Drain until the End.",
+        "es": "Todos los Ecos aliados ganan Drenar hasta el Final."
       },
       "flavorText": {
         "en": "Hunger sharpens every step toward the Host.",
@@ -571,8 +571,8 @@
       "name": "Final Banquet",
       "displayNameEs": "Banquete Final",
       "gameText": {
-        "en": "Destroy a Horde creature. Lose life equal to its power.",
-        "es": "Destruye una criatura de la Horda. Pierde vidas igual a su fuerza."
+        "en": "Destroy a Host Echo. Lose Life equal to its Power.",
+        "es": "Destruye un Eco de la Hueste. Pierdes Vida igual a su Fuerza."
       },
       "flavorText": {
         "en": "The last guest always pays for the feast.",

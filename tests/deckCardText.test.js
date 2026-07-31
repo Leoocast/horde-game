@@ -33,16 +33,16 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
   );
   const lifeCost = formatEffectText(
-    "Coste adicional: Paga 5 vidas.\nRoba 2 cartas.",
+    "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas.",
   );
   const fractionalLifeCost = formatEffectText(
-    "Coste adicional: Paga la mitad de tus vidas.",
+    "Coste adicional: Paga la mitad de tu Vida.",
   );
   const inlineKeywords = formatEffectText(
-    "Volar. Robo de vida. Vigilancia.\nCoste adicional: Paga la mitad de tus vidas.",
+    "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
   const acolyteCost = formatEffectText(
-    "{{T}}: Paga 5 vidas. Agrega {G}.",
+    "{{T}} y paga 5 de Vida: Gana 1 {E}.",
     {
       tapIconHtml: '<span class="tap-icon"></span>',
       energyIconHtml: '<span class="energy-icon"></span>',
@@ -65,21 +65,21 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
   assert.match(raidBombardment, /class="effect-danger">fuerza 2 o menos<\/strong>/);
   assert.match(raidBombardment, /class="effect-danger">1 de daño<\/strong>/);
-  assert.match(lifeCost, /class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
-  assert.match(lifeCost, /Coste adicional: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
+  assert.match(lifeCost, /class="effect-life-cost">Paga 5 de Vida\.<\/strong>/);
+  assert.match(lifeCost, /Coste adicional: <strong class="effect-life-cost">Paga 5 de Vida\.<\/strong>/);
   assert.equal((lifeCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(
     fractionalLifeCost,
-    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tus vidas\.<\/strong>/,
+    /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tu Vida\.<\/strong>/,
   );
   assert.match(
     inlineKeywords,
-    /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Robo de vida<\/strong>\. <strong class="effect-keyword">Vigilancia<\/strong>\./,
+    /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Drenar<\/strong>\. <strong class="effect-keyword">Alerta<\/strong>\./,
   );
   assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
-  assert.match(acolyteCost, /<span class="tap-icon"><\/span>: <strong class="effect-life-cost">Paga 5 vidas\.<\/strong>/);
-  assert.match(acolyteCost, /Agrega <span class="energy-icon"><\/span>\./);
-  assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
+  assert.match(acolyteCost, /Gana 1 <span class="energy-icon"><\/span>\./);
+  assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
@@ -137,12 +137,13 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
       ),
     },
   ];
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal)/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Toque mortal",
+    DEATHTOUCH: "Letal",
     FLYING: "Volar",
-    LIFESTEAL: "Robo de vida",
-    REACH: "Alcance",
-    VIGILANCE: "Vigilancia",
+    LIFESTEAL: "Drenar",
+    REACH: "Guardia aérea",
+    VIGILANCE: "Alerta",
   };
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -161,6 +162,11 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
     for (const source of studioSources) {
       const studioCard = source.cards.find((card) => card.id === runtimeCard.id);
       assert.ok(studioCard, `${source.label} is missing ${runtimeCard.id}`);
+      assert.doesNotMatch(
+        `${studioCard.tipo}\n${studioCard.desc}`,
+        retiredStudioVocabulary,
+        `${source.label} exposes retired vocabulary for ${runtimeCard.id}`,
+      );
       assert.equal(studioCard.costo, runtimeCard.manaValue, `${source.label} has a stale cost for ${runtimeCard.id}`);
       assert.equal(studioCard.atk, runtimeCard.power, `${source.label} has stale power for ${runtimeCard.id}`);
       assert.equal(studioCard.def, runtimeCard.toughness, `${source.label} has stale toughness for ${runtimeCard.id}`);
@@ -168,10 +174,13 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
         assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
       }
       if (runtimeCard.id === "blood_pact") {
-        assert.equal(studioCard.tipo, "Conjuro", `${source.label} has a stale type for ${runtimeCard.id}`);
+        assert.equal(studioCard.tipo, "Hechizo", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
       if (runtimeCard.id === "final_banquet") {
-        assert.equal(studioCard.tipo, "Instantáneo", `${source.label} has a stale type for ${runtimeCard.id}`);
+        assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
+      if (runtimeCard.id === "eternal_feast_countess") {
+        assert.equal(studioCard.tipo, "Eco de Crónica — Vampiro Noble", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
       assert.equal(
         normalizeVampireEffect(studioCard.desc),
@@ -198,6 +207,7 @@ test("Vampire gameplay cards use their full-image faction presentation", () => {
 function normalizeVampireEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
+    .replaceAll("{E}", "Energía")
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");

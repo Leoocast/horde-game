@@ -303,7 +303,7 @@ test("legacy card types and authored rules render through the Hostfall vocabular
   assert.equal(localizedTypeLine({ cardTypes: ["Instant"], subtypes: [] }, "es"), "Hechizo · Rápido");
   assert.equal(
     canonicalizeRulesText("When this creature enters, Horde creatures gain Menace until end of turn.", "en"),
-    "When this Echo is Invoked, Host Echoes gain Daunting until the End.",
+    "When this Echo is Invoked, Host Echoes gain Daunting until the end of the turn.",
   );
 });
 

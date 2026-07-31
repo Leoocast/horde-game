@@ -15,14 +15,20 @@
 
     const typeSymbols = {
         criatura: "♞",
+        eco: "◉",
+        echo: "◉",
         enchantment: "✦",
         encantamiento: "✦",
         instant: "✧",
         instantáneo: "✧",
+        hechizo: "✧",
+        spell: "✧",
         sorcery: "☄",
         conjuro: "☄",
         energía: "◆",
         energy: "◆",
+        fuente: "◆",
+        source: "◆",
         tierra: "▲",
         land: "▲"
     };
@@ -54,6 +60,14 @@
             || theme === "vampires"
             || theme === "hunters"
         ) {
+            if (normalized.includes("eco") || normalized.includes("echo")) {
+                return `
+                    <svg class="fa-inline-icon tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                        <path fill="currentColor" d="M32 20 39 32 32 44 25 32 32 20Z"></path>
+                        <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
+                    </svg>
+                `;
+            }
             if (theme === "hunters" && normalized.includes("trampa")) {
                 return `
                     <svg class="fa-inline-icon tcg-trap-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
@@ -74,6 +88,8 @@
                 || normalized.includes("instant")
                 || normalized.includes("conjuro")
                 || normalized.includes("sorcery")
+                || normalized.includes("hechizo")
+                || normalized.includes("spell")
             ) {
                 return `
                     <svg class="fa-inline-icon tcg-spell-icon" aria-hidden="true" focusable="false" viewBox="0 0 576 512">
@@ -126,14 +142,16 @@
         const isHordeToken =
             (theme === "zombies" || theme === "goblins")
             && Boolean(card.isToken);
-        const isVanillaHordeCreature =
+        const isVanillaHordeEcho =
             (theme === "zombies" || theme === "goblins")
-            && type.includes("criatura")
+            && (type.includes("criatura") || type.includes("eco") || type.includes("echo"))
             && description === "sin efecto adicional.";
         return type.includes("tierra")
             || type.includes("energía")
+            || type.includes("fuente")
+            || type.includes("source")
             || isHordeToken
-            || isVanillaHordeCreature;
+            || isVanillaHordeEcho;
     }
 
     function placeholderDataUrl(cardName) {

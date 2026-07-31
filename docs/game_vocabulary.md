@@ -189,8 +189,9 @@ Modificadores de tipo:
 | +1/+1 counter | Contador +1/+1 | +1/+1 counter | Da +1 Fuerza y +1 Aguante de forma persistente. |
 | Poison | Veneno | poison counters | Presión acumulada sobre la Hueste; al alcanzar su umbral, la Hueste pierde cartas de su Archivo. |
 
-Los modificadores temporales se escriben con los nombres de estadística, por ejemplo `gana +2
-Fuerza y +3 Aguante hasta el Final`.
+Las cartas impresas pueden usar el formato compacto `+N/+N`; el primer valor siempre es Fuerza y
+el segundo Aguante. Los tooltips y explicaciones extensas nombran ambas estadísticas cuando haga
+falta evitar ambigüedad.
 
 ## Fases y ventanas
 
@@ -237,7 +238,7 @@ Plantillas preferidas:
 - `Invoca dos Fichas de Goblin.`
 - `Agota: Gana 1 Energía.`
 - `Destruye un Apoyo enemigo.`
-- `Un Eco aliado gana +2 Fuerza y +3 Aguante hasta el Final.`
+- `Un Eco aliado gana +2/+3 hasta el final del turno.`
 - `Descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.`
 - `Destierra una carta de la Memoria al Olvido.`
 
@@ -315,8 +316,8 @@ Reglas de estilo:
 2. Presente e imperativo; sin frases de Oracle ni reminder text copiado.
 3. `Este Eco` para autorreferencia salvo que el nombre sea necesario.
 4. `Cuando este Eco es invocado`, no `cuando entra al campo de batalla`.
-5. `Hasta el Final` y `hasta tu próxima fase de Preparar` son duraciones normativas.
-6. Fuerza y Aguante se nombran; `+N/+N` queda reservado al badge compacto.
+5. `Hasta el final del turno` y `hasta tu próximo turno` son duraciones normativas.
+6. Los modificadores pueden usar `+N/+N` en el texto impreso; su orden siempre es Fuerza/Aguante.
 7. Vida es un recurso singular: `Paga 3 de Vida`, `pierde 3 de Vida` y `gana 3 de Vida`; nunca
    `paga 3 vidas`. En inglés: `Pay 3 Life`, sin `of`.
 8. Los costes van antes de dos puntos: `Agota y paga 2 de Vida: ...`.

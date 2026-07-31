@@ -2,17 +2,18 @@
     "use strict";
 
     const KEYWORD_PATTERN =
-        /\b(?:Daña primero|Daño primero|Doble golpe|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar|Vuelo|Alcance|Arrollar|Prisa|Antimaleficio|Indestructible|Tóxico(?:\s+\d+)?)\b/giu;
+        /\b(?:Daña primero|Daño primero|Doble golpe|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar|Vuelo|Alcance|Arrollar|Prisa|Antimaleficio|Indestructible|Tóxico(?:\s+\d+)?|Guardia aérea|Alerta|Imponente|Letal|Reflejos|Furtivo|Drenar|Veneno(?:\s+\d+)?|Desborde|Ímpetu)\b/giu;
     const TOKEN_CREATION_PATTERN =
         /\bcrea(?:r)?\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
     const COUNTER_PATTERN =
         /\b(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)?contador(?:es)?(?:\s+(?:de\s+[\p{L}\p{M}-]+|[+-]\d+\/[+-]\d+))?/giu;
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
+    const NAMED_STAT_PATTERN = /[+-]\d+\s+de\s+(?:Fuerza|Aguante)/giu;
     const DANGER_PATTERN = /\b(?:fuerza \d+ o menos|\d+ de daño)\b/giu;
     const LIFE_PAYMENT_PATTERN =
-        /\bPaga\s+(?:\d+\s+vidas|la mitad de tus vidas)\./giu;
+        /\bPaga\s+(?:\d+\s+(?:vidas|de\s+Vida)|la mitad de (?:tus vidas|tu Vida))\.?/giu;
     const INLINE_KEYWORD_SEPARATOR_PATTERN =
-        /(\b(?:Volar|Robo de vida|Vigilancia)\.)\s+(?=(?:Volar|Robo de vida|Vigilancia)\.)/giu;
+        /(\b(?:Volar|Robo de vida|Vigilancia|Drenar|Alerta)\.)\s+(?=(?:Volar|Robo de vida|Vigilancia|Drenar|Alerta)\.)/giu;
     const SEQUENTIAL_EFFECT_BREAK_PATTERN =
         /\s+y\s+luego\s+(?=(?:crea|lucha)\b)/giu;
     const SENTENCE_BREAK_PATTERN = /([.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ])/gu;
@@ -55,6 +56,7 @@
         protect(KEYWORD_PATTERN, (match) => strong("effect-keyword", match));
         protect(LIFE_PAYMENT_PATTERN, (match) => strong("effect-life-cost", match));
         protect(DANGER_PATTERN, (match) => strong("effect-danger", match));
+        protect(NAMED_STAT_PATTERN, (match) => strong("effect-stat", match));
         protect(STAT_PATTERN, (match) => strong("effect-stat", match));
 
         return html.replace(
