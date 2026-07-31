@@ -19,6 +19,7 @@ try {
   await server.ssrLoadModule("/tests/playgroundActions.test.js");
   await server.ssrLoadModule("/tests/playgroundStorage.test.js");
   await server.ssrLoadModule("/tests/audioMix.test.js");
+  await server.ssrLoadModule("/tests/vocabulary.test.js");
 } finally {
   await server.close();
 }

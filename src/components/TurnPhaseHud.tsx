@@ -8,7 +8,7 @@ export function TurnPhaseHud({ game }: { game: GameState }) {
   const hordeReady = game.activeSide === "horde" && game.phase === "horde" && game.combat.hordeAttackers.length === 0;
   const owner = game.activeSide === "horde" && game.phase !== "end" && !hordeReady ? t("turn.horde") : t("turn.chronicler");
   const setupActive = game.activeSide === "player" && game.setupTurnsRemaining > 0;
-  const phaseKey = setupActive ? "phase.setup" : hordeReady ? "phase.end" : game.phase === "horde" ? "phase.main" : (`phase.${game.phase}` as const);
+  const phaseKey = setupActive ? "phase.setup" : hordeReady ? "phase.end" : game.phase === "horde" ? "phase.hordePhase" : (`phase.${game.phase}` as const);
   const phase = t(phaseKey);
   const hordeTurn = game.activeSide === "horde" && !hordeReady;
   const turnsUntilSurge = Math.max(0, hordeSurgeTurn(game) - game.hordeTurnNumber);

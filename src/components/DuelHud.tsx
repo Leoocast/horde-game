@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { getPowerToughness } from "../engine/StaticEffects";
-import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -51,8 +50,6 @@ export function DuelHud({ game }: { game: GameState }) {
   }, 0);
   const pendingMill = Math.floor(pendingDamage / 3);
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
   useEffect(() => {
@@ -73,7 +70,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hordeSpellCard ? "z-[117]" : tutorialOverlayActive ? "z-[91]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hordeSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -354,8 +351,6 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const finalBanquetAnimation = useGameStore((state) => state.finalBanquetAnimation);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [chroniclerName, setChroniclerName] = useState(playerName);
   const [visualLife, setVisualLife] = useState(game.player.life);
@@ -440,9 +435,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
             ? "pointer-events-none z-[205]"
             : bloodPactAnimation
               ? "pointer-events-none z-[195]"
-              : tutorialOverlayActive
-                ? "z-[91]"
-                : "z-[75]",
+              : "z-[75]",
         ].join(" ")}
       >
         <div className="player-life-cluster">

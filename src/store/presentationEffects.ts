@@ -1,4 +1,6 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
+import { localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { canonicalizeLogText } from "../i18n/rulesText";
 import { translate, type TranslationKey } from "../i18n/translations";
 import { useAudioStore } from "./useAudioStore";
 import { useLanguageStore } from "./useLanguageStore";
@@ -26,11 +28,17 @@ export function uiCardName(card: CardInstance): string {
   return useLanguageStore.getState().language === "es" ? card.displayNameEs || card.displayName : card.displayName;
 }
 
+export function uiTraitLabel(keyword: string): string {
+  const language = useLanguageStore.getState().language;
+  return naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language));
+}
+
 export function showActionToast(message?: string): void {
   if (!message) return;
+  const language = useLanguageStore.getState().language;
   useToastStore.getState().pushToast({
     title: uiText("toast.actionUnavailable"),
-    message,
+    message: canonicalizeLogText(message, language),
     tone: "warning",
   });
 }

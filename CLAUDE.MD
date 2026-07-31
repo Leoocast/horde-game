@@ -133,10 +133,16 @@ Detalle de testing en `docs/testing.md`. Para agregar o implementar una carta, s
 La fuente canonica para retirar de la superficie del producto el vocabulario y contenido heredados
 de Magic vive en `docs/game_vocabulary.md`. Tambien define la ontologia narrativa de las cartas:
 fragmentos de memoria que reconstruyen un Capitulo. Leerla antes de agregar o cambiar nombres,
-tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas, tooltips o copy de tutorial.
+tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas o tooltips.
 La Parte 1 de ese vocabulario esta cerrada como diseno en v1.0; `Echo / Eco` es el tipo de carta
 que reemplaza a `Unit / Unidad`, y `Chronicle Echo / Eco de Cronica` distingue figuras centrales
 del relato sin agregar una regla de unicidad.
+
+La Parte 2 centralizó la presentación en `src/i18n/gameVocabulary.ts` y
+`src/i18n/rulesText.ts`. Los ids legacy siguen permitidos dentro del engine, pero toda salida
+visible debe pasar por esos bordes. `tests/vocabulary.test.js` protege traducciones, tipos, texto
+de cartas y la ausencia del tutorial. El botón `How to Play` permanece visible y deshabilitado en
+el menú; no existe implementación, estado ni ruta de tutorial.
 
 Durante la migracion pueden sobrevivir ids legacy dentro del engine, pero no deben filtrarse a UI,
 cartas impresas, logs, ARIA ni assets de produccion. No agregar nuevas dependencias de Scryfall,
@@ -696,7 +702,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`).
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
 - Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
-- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`) mas los del tutorial/developer seed.
+- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
@@ -974,7 +980,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   suprime ese chrome y dibuja una corona cian propia con mascara, intensa arriba y con fade vertical
   a alfa cero antes del borde inferior. Las tierras jugables o reciclables tambien muestran esa
   corona. El orbe de coste no recibe una segunda corona de disponibilidad: la indicacion visual
-  permanece solamente en el borde de la carta. Los estados de descarte, tutorial y targeting
+  permanece solamente en el borde de la carta. Los estados de descarte y targeting
   conservan sus estilos separados; el rombo sigue detras del feature flag.
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
@@ -987,7 +993,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   completa con `hand-available-border-pulse` de 2.1s. Ademas llevan una capa de glow independiente,
   equivalente al pulse extra que `Card.actionable` aporta en la mano: anima sombras de `7/16px` a
   `11/25px` cada 1.5s, teñidas segun ataque, defensa o activacion.
-- El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Tap: Add G` con los
+- El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Agotar: generar
+  Energía` con los
   mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
   azul para energia. No debe volver a los chips genericos de `renderCardText`.
 - Una criatura ya asignada como blocker muestra su orden real en el mismo badge azul con escudo,

@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import { getHordeDeck, getPlayerDeck, hordeDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
-import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
+import { localizedKeywordLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
+import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
@@ -150,15 +151,12 @@ test("mulligans redraw one fewer card deterministically down to one", () => {
   assert.equal(atMinimum.mulligansTaken, 6);
 });
 
-test("accepting an opening hand closes mulligan while tutorial skips it", () => {
+test("accepting an opening hand closes mulligan", () => {
   const game = createInitialGame(playerDeck, hordeDeck, "keep-opening", 3);
   const accepted = acceptOpeningHand(game);
   const blockedMulligan = mulliganOpeningHand(accepted);
-  const tutorial = createInitialGame(playerDeck, hordeDeck, "tutorial", 3);
-
   assert.equal(accepted.openingHandAccepted, true);
   assert.deepEqual(blockedMulligan.player.hand.map((card) => card.instanceId), accepted.player.hand.map((card) => card.instanceId));
-  assert.equal(tutorial.openingHandAccepted, true);
 });
 
 test("Chaos removes other permanents but keeps creatures, energy, instants, and sorceries", () => {
@@ -293,9 +291,20 @@ test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first s
   assert.equal(versusFourFour.result.player.battlefield.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
 });
 
-test("multi-word keywords render as words instead of engine identifiers", () => {
-  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "en"), "FIRST STRIKE");
-  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "es"), "DAÑAR PRIMERO");
+test("legacy traits render with Hostfall names instead of engine identifiers", () => {
+  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "en"), "REFLEX");
+  assert.equal(localizedKeywordLabel("FIRST_STRIKE", "es"), "REFLEJOS");
+  assert.equal(localizedKeywordLabel("REACH", "en"), "SKYGUARD");
+  assert.equal(localizedKeywordLabel("TOXIC_1", "es"), "VENENO 1");
+});
+
+test("legacy card types and authored rules render through the Hostfall vocabulary", () => {
+  assert.equal(localizedTypeLine({ cardTypes: ["Legendary", "Creature"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo — Vampire Noble");
+  assert.equal(localizedTypeLine({ cardTypes: ["Instant"], subtypes: [] }, "es"), "Hechizo · Rápido");
+  assert.equal(
+    canonicalizeRulesText("When this creature enters, Horde creatures gain Menace until end of turn.", "en"),
+    "When this Echo is Invoked, Host Echoes gain Daunting until the End.",
+  );
 });
 
 test("keyword display order keeps Menace first and remains stable", () => {

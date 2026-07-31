@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.2.0",
   "id": "horde_zombies",
-  "name": "Zombie Horde",
+  "name": "Zombie Host",
   "source": "Horde Magic - Limited Edition 2.1",
   "side": "horde",
   "deckSize": 50,

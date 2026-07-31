@@ -9,11 +9,11 @@ import { targetCandidatesWithSelectedTargets } from "./Targeting";
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Lands can only be played during your main phase.");
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Sources can only be played during your Main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
-  if (!card || !card.cardTypes.includes("Land")) return fail(next, "Choose a land to play.");
-  if (!canPlayerPutAnotherLand(next)) return fail(next, `Player cannot control more than ${MAX_PLAYER_LANDS} lands.`);
-  if (next.player.energyActionUsedThisTurn) return fail(next, "Player already used their Energy action this turn.");
+  if (!card || !card.cardTypes.includes("Land")) return fail(next, "Choose a Source to play.");
+  if (!canPlayerPutAnotherLand(next)) return fail(next, `The Chronicler cannot control more than ${MAX_PLAYER_LANDS} Sources.`);
+  if (next.player.energyActionUsedThisTurn) return fail(next, "The Chronicler already used their Energy Action this turn.");
   moveHandToBattlefield(next, card);
   next.player.energyActionUsedThisTurn = true;
   return succeed(log(next, `Player plays ${card.name}.`));
@@ -22,9 +22,9 @@ export function playLand(game: GameState, handId: string): GameState {
 export function recycleEnergy(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
   const card = next.player.hand.find((item) => item.instanceId === handId);
-  if (!card || !card.cardTypes.includes("Land")) return fail(next, "Choose an Energy to recycle.");
-  if (next.setupTurnsRemaining > 0) return fail(next, "Energy cannot be recycled during setup.");
-  if (!canPlayerRecycleEnergy(next)) return fail(next, "Energy can only be recycled once during your main phase.");
+  if (!card || !card.cardTypes.includes("Land")) return fail(next, "Choose a Source to recycle.");
+  if (next.setupTurnsRemaining > 0) return fail(next, "A Source cannot be recycled during setup.");
+  if (!canPlayerRecycleEnergy(next)) return fail(next, "A Source can only be recycled once during your Main phase.");
 
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   card.zone = "library";
@@ -38,14 +38,14 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   const next = structuredClone(game) as GameState;
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card) return fail(next, "That card is no longer in hand.", { silent: true });
-  if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be cast right now.`);
+  if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be played right now.`);
   if (card.cardTypes.includes("Land")) return playLand(next, handId);
   const targetFailure = castTargetFailureReason(next, card, options.targets);
   if (targetFailure) return fail(next, targetFailure);
   const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
   if (lifeFailure) return fail(next, lifeFailure);
   const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
-  if (!payManaAutomatically(next, cost)) return fail(next, `Not enough available mana to cast ${card.name}.`);
+  if (!payManaAutomatically(next, cost)) return fail(next, `Not enough available Energy to play ${card.name}.`);
   payLifeCost(next, card.additionalCost, card.instanceId, card.name);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
@@ -112,7 +112,7 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   const next = structuredClone(game) as GameState;
   const card = next.player.battlefield.find((item) => item.instanceId === permanentId);
   const ability = card?.activatedAbilities.find((item) => item.id === abilityId);
-  if (!card || !ability) return fail(next, "That ability is not available.", { silent: true });
+  if (!card || !ability) return fail(next, "That Action is not available.", { silent: true });
   const failure = activatedAbilityFailureReason(next, card, ability);
   if (failure) return fail(next, failure);
   const cost = activatedAbilityManaCost(ability.cost);
@@ -127,21 +127,21 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
 }
 
 export function activatedAbilityFailureReason(game: GameState, card: CardInstance, ability: ActivatedAbility): string | undefined {
-  if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Abilities can only be activated during your main phase.";
-  if (card.controller !== "player" || card.zone !== "battlefield") return "That ability is not available.";
-  if (card.activatedThisTurn) return `${card.name} has already activated an ability this turn.`;
+  if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Actions can only be used during your Main phase.";
+  if (card.controller !== "player" || card.zone !== "battlefield") return "That Action is not available.";
+  if (card.activatedThisTurn) return `${card.name} has already used an Action this turn.`;
   if (ability.requiresNoSummoningSickness && card.cardTypes.includes("Creature") && card.summoningSickness) {
-    return `${card.name} cannot activate this ability while it has summoning sickness.`;
+    return `${card.name} cannot use this Action while Stabilizing.`;
   }
   if (card.cardTypes.includes("Creature") && ability.effect.type === "ADD_MANA" && storedManaSpace(game) === 0) {
-    return "Stored mana is already full.";
+    return "Stored Energy is already full.";
   }
   if (ability.cost?.tap) {
-    if (card.tapped) return `${card.name} is already tapped.`;
-    if (card.summoningSickness && card.cardTypes.includes("Creature")) return `${card.name} has summoning sickness.`;
+    if (card.tapped) return `${card.name} is already Exhausted.`;
+    if (card.summoningSickness && card.cardTypes.includes("Creature")) return `${card.name} is Stabilizing.`;
   }
   const cost = activatedAbilityManaCost(ability.cost);
-  if (!canPay(game.player.manaPool, cost)) return `Not enough mana to activate ${card.name}.`;
+  if (!canPay(game.player.manaPool, cost)) return `Not enough Energy to use ${card.name}.`;
   return lifeCostFailureReason(game, ability.cost, card.name);
 }
 

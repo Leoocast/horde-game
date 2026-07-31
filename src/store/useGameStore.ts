@@ -31,7 +31,6 @@ import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discard
 import { type StaticAura } from "../engine/StaticAuras";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, targetRequirementIsBuff } from "../engine/Targeting";
-import type { TutorialStepId } from "../engine/Tutorial";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
@@ -145,7 +144,6 @@ export type GameStore = {
   activatingEffectCardId?: string;
   hoveredCardId?: string;
   focusedCardId?: string;
-  tutorialAcknowledgedStepId?: TutorialStepId;
   seed: string;
   playerDeckId: string;
   hordeDeckId: string;
@@ -155,7 +153,6 @@ export type GameStore = {
   setSeed: (seed: string) => void;
   acceptOpeningHand: () => void;
   mulliganOpeningHand: () => void;
-  acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
   selectPlayerCreature: (id?: string) => void;
   selectHordeCreature: (id?: string) => void;
@@ -469,7 +466,6 @@ export type BrokenWingsAnimationState = {
  *  clear it here — otherwise callbacks and beats from the previous match land on the new board. */
 function createCleanUiState(): Partial<GameStore> {
   return {
-    tutorialAcknowledgedStepId: undefined,
     selectedHandId: undefined,
     selectedPlayerCreatureId: undefined,
     selectedHordeCreatureId: undefined,
@@ -590,7 +586,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   buffAnimationEventId: undefined,
   buffAnimationVariant: "default",
   lifeBuffAnimationId: undefined,
-  tutorialAcknowledgedStepId: undefined,
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
@@ -650,7 +645,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });
   },
-  acknowledgeTutorialStep: (stepId) => set({ tutorialAcknowledgedStepId: stepId }),
   selectHand: (id) => set({ selectedHandId: id }),
   selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
   selectHordeCreature: (id) => set({ selectedHordeCreatureId: id }),

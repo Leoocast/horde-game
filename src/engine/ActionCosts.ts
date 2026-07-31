@@ -29,5 +29,5 @@ export function canPayLifeCost(game: GameState, cost?: ActionCost): boolean {
 export function lifeCostFailureReason(game: GameState, cost: ActionCost | undefined, sourceName: string): string | undefined {
   const amount = lifeCostAmount(cost, game.player.life);
   if (amount === 0 || canPayLifeCost(game, cost)) return undefined;
-  return `You must keep at least 1 life after paying ${amount} life for ${sourceName}.`;
+  return `You must keep at least 1 Life after paying ${amount} Life for ${sourceName}.`;
 }

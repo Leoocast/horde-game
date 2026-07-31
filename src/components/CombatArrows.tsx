@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
-import { isTutorialOverlayActive } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
@@ -31,8 +30,6 @@ export function CombatArrows({ game }: { game: GameState }) {
   const [hiddenPlayerAttackArrowIds, setHiddenPlayerAttackArrowIds] = useState<Set<string>>(() => new Set());
   const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
   const blockDrag = useGameStore((state) => state.blockDrag);
   const playerAttackDrag = useGameStore((state) => state.playerAttackDrag);
   const renderedArrows = useMemo(() => {
@@ -186,7 +183,7 @@ export function CombatArrows({ game }: { game: GameState }) {
   }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
   return (
-    <svg className={["pointer-events-none fixed inset-0 h-screen w-screen overflow-visible", tutorialOverlayActive ? "z-[99]" : "z-[65]"].join(" ")}>
+    <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">
       <defs>
         <filter id="combat-arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />

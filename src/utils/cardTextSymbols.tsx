@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useLanguageStore } from "../store/useLanguageStore";
 
 export function renderCardText(text: string): ReactNode[] {
   const parts = text.split(/(\{\{?[A-Z0-9/]+\}?\})/g);
@@ -36,6 +37,8 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
   const baseKeywords = new Set([
     "FLYING", "REACH", "VIGILANCE", "MENACE", "DEATHTOUCH", "TRAMPLE", "HASTE", "HEXPROOF", "SKULK", "LIFESTEAL",
     "VOLAR", "ALCANCE", "VIGILANCIA", "AMENAZA", "TOQUE MORTAL", "ARROLLAR", "PRISA", "ANTIMALEFICIO", "ESCURRIDIZO", "ROBO DE VIDA",
+    "SKYGUARD", "ALERT", "DAUNTING", "LETHAL", "REFLEX", "FURTIVE", "DRAIN", "OVERFLOW", "IMPETUS", "POISON 1",
+    "GUARDIA AÉREA", "ALERTA", "IMPONENTE", "LETAL", "REFLEJOS", "FURTIVO", "DRENAR", "DESBORDE", "ÍMPETU", "VENENO 1",
     "TOXICO 1", "TÓXICO 1",
   ]);
   const blocks = text
@@ -79,10 +82,11 @@ function normalizeKeywordLine(text: string): string {
 }
 
 function SymbolLabel({ symbol }: { symbol: string }) {
+  const language = useLanguageStore((state) => state.language);
   if (symbol === "T") {
     return (
       <span className="mx-0.5 inline-flex items-center rounded-sm border border-stone-300 bg-stone-100 px-1 py-0.5 text-[10px] font-bold uppercase text-stone-600 align-middle">
-        Tap
+        {language === "es" ? "Agotar" : "Exhaust"}
       </span>
     );
   }

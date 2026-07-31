@@ -18,18 +18,15 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
   const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
-  const playCollection = useAudioStore((state) => state.playCollection);
   const resetSfx = useAudioStore((state) => state.resetSfx);
   const [seedInput, setSeedInput] = useState(game.seed);
-  const isTutorial = game.seed.trim().toLowerCase() === "tutorial";
 
   function restart() {
     const nextSeed = seedInput.trim() || game.seed;
     resetSfx();
     setSeed(nextSeed);
     reset(nextSeed, setupTurns);
-    if (nextSeed.trim().toLowerCase() === "tutorial") playCollection("zombiesBattle1");
-    else startBattleMusic(true);
+    startBattleMusic(true);
   }
 
   async function copySeed() {
@@ -61,8 +58,7 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
           {t("result.hordeDefeated")}
         </p>
 
-        {!isTutorial && (
-          <>
+        <>
             <label className="game-result-seed-label mt-6 block text-left" htmlFor="victory-seed">
               {t("result.chronicleSeed")}
             </label>
@@ -80,23 +76,22 @@ export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
                 <RefreshCw size={17} />
               </button>
             </div>
-          </>
-        )}
+        </>
 
-        <div className={["game-result-actions grid grid-cols-2 gap-3", isTutorial ? "mt-6" : "mt-5"].join(" ")}>
+        <div className="game-result-actions mt-5 grid grid-cols-2 gap-3">
           <button
             className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
             onClick={onReturnToMenu}
           >
             <Home size={18} />
-            {isTutorial ? t("common.home") : t("common.menu")}
+            {t("common.menu")}
           </button>
           <button
             className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
             onClick={restart}
           >
             <RefreshCcw size={18} />
-            {isTutorial ? t("result.restartTutorial") : t("common.restart")}
+            {t("common.restart")}
           </button>
         </div>
       </section>

@@ -1,5 +1,8 @@
 import { Leaf, Shield, Swords } from "lucide-react";
 import type { NewDeckCard } from "../data/deckCatalog";
+import { localizedTypeLine } from "../i18n/cardLocalization";
+import { canonicalizeRulesText } from "../i18n/rulesText";
+import { useLanguageStore } from "../store/useLanguageStore";
 
 type Props = {
   card: NewDeckCard;
@@ -11,14 +14,14 @@ export function isCardPrototype(card: NewDeckCard | undefined): boolean {
 }
 
 export function CardPrototypeCard({ card, className = "" }: Props) {
+  const language = useLanguageStore((state) => state.language);
   const cost = typeof card.manaValue === "number" ? card.manaValue : 1;
-  const rulesText = typeof card.prototypeRules === "string" ? card.prototypeRules : "";
+  const rulesText = canonicalizeRulesText(typeof card.prototypeRules === "string" ? card.prototypeRules : "", language);
   const flavorText = typeof card.prototypeFlavor === "string" ? card.prototypeFlavor : "";
   const art = typeof card.prototypeArt === "string" ? card.prototypeArt : "";
   const style = typeof card.prototypeStyle === "string" ? card.prototypeStyle : "verdant";
   const study = typeof card.prototypeStudy === "string" ? card.prototypeStudy : "I";
-  const typeLine = (card.cardTypes ?? []).join(" ") || "Creature";
-  const subtypes = card.subtypes?.join(" ") || "Toucan Druid";
+  const typeLine = localizedTypeLine(card, language);
   const power = typeof card.power === "number" ? card.power : 0;
   const toughness = typeof card.toughness === "number" ? card.toughness : 2;
 
@@ -26,13 +29,13 @@ export function CardPrototypeCard({ card, className = "" }: Props) {
     <article
       className={`sunshower-card sunshower-card--${style} ${className}`}
       role="img"
-      aria-label={`${card.name}, ${typeLine} — ${subtypes}, ${power}/${toughness}`}
+      aria-label={`${card.name}, ${typeLine}, ${language === "es" ? `${power} de Fuerza, ${toughness} de Aguante` : `${power} Power, ${toughness} Endurance`}`}
     >
       <div className="sunshower-card__texture" aria-hidden="true" />
       <div className="sunshower-card__frame" aria-hidden="true" />
 
       <header className="sunshower-card__header">
-        <div className="sunshower-card__cost" aria-label={`Mana value ${cost}`}>
+        <div className="sunshower-card__cost" aria-label={language === "es" ? `Coste de Energía ${cost}` : `Energy cost ${cost}`}>
           <span>{cost}</span>
         </div>
         <h3>{card.name}</h3>
@@ -41,8 +44,6 @@ export function CardPrototypeCard({ card, className = "" }: Props) {
         </div>
         <div className="sunshower-card__type">
           <span>{typeLine}</span>
-          <i aria-hidden="true">—</i>
-          <span>{subtypes}</span>
         </div>
       </header>
 
@@ -63,7 +64,7 @@ export function CardPrototypeCard({ card, className = "" }: Props) {
       </section>
 
       <footer className="sunshower-card__footer">
-        <div className="sunshower-card__stat sunshower-card__stat--power" aria-label={`Power ${power}`}>
+        <div className="sunshower-card__stat sunshower-card__stat--power" aria-label={language === "es" ? `Fuerza ${power}` : `Power ${power}`}>
           <Swords aria-hidden="true" />
           <strong>{power}</strong>
         </div>
@@ -72,7 +73,7 @@ export function CardPrototypeCard({ card, className = "" }: Props) {
           <span>0{study}/250</span><i aria-hidden="true" />
           <span>ILLUS. D. SPENCER</span>
         </div>
-        <div className="sunshower-card__stat sunshower-card__stat--toughness" aria-label={`Toughness ${toughness}`}>
+        <div className="sunshower-card__stat sunshower-card__stat--toughness" aria-label={language === "es" ? `Aguante ${toughness}` : `Endurance ${toughness}`}>
           <strong>{toughness}</strong>
           <Shield aria-hidden="true" />
         </div>

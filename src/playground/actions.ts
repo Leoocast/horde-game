@@ -27,7 +27,7 @@ function succeed(game: GameState, message: string): PlaygroundActionResult {
 
 export function drawPlayerCard(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  if (next.player.library.length === 0) return fail(game, "The player library is empty.");
+  if (next.player.library.length === 0) return fail(game, "The Chronicler Archive is empty.");
   drawCards(next, "player", 1);
   return succeed(next, "Playground draws a card.");
 }
@@ -102,14 +102,14 @@ export function grantManaForCard(game: GameState, handId: string): PlaygroundAct
   // payment routine spends colored mana on generic when nothing else is left.
   const totalColored = cost.green + cost.red + cost.blue + cost.white + cost.black;
   if (cost.colorless > 0) next.player.manaPool = addMana(next.player.manaPool, "G", cost.colorless);
-  return succeed(next, `Playground grants ${totalColored + cost.colorless} mana for ${card.name}.`);
+  return succeed(next, `Playground grants ${totalColored + cost.colorless} Energy for ${card.name}.`);
 }
 
 /** Real destruction: death triggers included. */
 export function destroyCard(game: GameState, cardId: string): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   const card = findBattlefieldCard(next, cardId);
-  if (!card) return fail(game, "Select a permanent on the battlefield first.");
+  if (!card) return fail(game, "Select a card on the Field first.");
   destroyPermanent(next, card);
   drainEventQueue(next);
   return succeed(next, `Playground destroys ${card.name}.`);
@@ -121,11 +121,11 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
   const located = locateCard(next, cardId);
   if (!located) return fail(game, "That card is not in play.");
   const { card, side, zone } = located;
-  if (zone === "graveyard") return fail(game, `${card.name} is already in the graveyard.`);
+  if (zone === "graveyard") return fail(game, `${card.name} is already in Memory.`);
   removeFromZone(next, side, zone, cardId);
   card.zone = "graveyard";
   next[side].graveyard.push(card);
-  return succeed(next, `Playground moves ${card.name} to the graveyard.`);
+  return succeed(next, `Playground moves ${card.name} to Memory.`);
 }
 
 /**
@@ -136,7 +136,7 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
 export function clearBattlefield(game: GameState, side: Side): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   const removed = next[side].battlefield;
-  if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Horde" : "player"} board is already empty.`);
+  if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Host" : "Chronicler"} Field is already empty.`);
   for (const card of removed) card.zone = "graveyard";
   next[side].graveyard.push(...removed);
   next[side].battlefield = [];

@@ -267,6 +267,24 @@
     box-shadow: 0 0 12px rgb(185 164 106 / 0.55);
   }
 
+  .main-menu-entry.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+
+  .main-menu-entry.is-disabled:hover,
+  .main-menu-entry.is-disabled:focus-visible {
+    padding-left: 0;
+    background: none;
+    color: #8f9998;
+  }
+
+  .main-menu-entry.is-disabled:hover::after,
+  .main-menu-entry.is-disabled:focus-visible::after {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
   .main-menu-shell.expedition-active {
     background-image:
       linear-gradient(90deg, rgb(3 9 8 / 0.93), rgb(6 15 13 / 0.8) 48%, rgb(3 8 7 / 0.92)),
@@ -2554,7 +2572,7 @@
     }
   }
 
-  .tutorial-construction-backdrop {
+  .notice-modal-backdrop {
     position: fixed;
     inset: 0;
     z-index: 400;
@@ -2567,15 +2585,15 @@
     padding: 24px;
     -webkit-backdrop-filter: blur(8px) saturate(1.06);
     backdrop-filter: blur(8px) saturate(1.06);
-    animation: tutorial-construction-backdrop-open 160ms ease-out both;
+    animation: notice-modal-backdrop-open 160ms ease-out both;
   }
 
-  .tutorial-construction-backdrop.is-closing {
+  .notice-modal-backdrop.is-closing {
     pointer-events: none;
-    animation: tutorial-construction-backdrop-close 160ms ease-out both;
+    animation: notice-modal-backdrop-close 160ms ease-out both;
   }
 
-  .tutorial-construction-modal {
+  .notice-modal {
     position: relative;
     width: min(640px, calc(100vw - 48px));
     overflow: hidden;
@@ -2591,14 +2609,14 @@
     box-shadow:
       inset 0 1px 0 rgb(235 225 183 / 0.11),
       0 28px 70px rgb(0 0 0 / 0.68);
-    animation: tutorial-construction-modal-open 160ms ease-out both;
+    animation: notice-modal-open 160ms ease-out both;
   }
 
-  .tutorial-construction-backdrop.is-closing .tutorial-construction-modal {
-    animation: tutorial-construction-modal-close 160ms ease-out both;
+  .notice-modal-backdrop.is-closing .notice-modal {
+    animation: notice-modal-close 160ms ease-out both;
   }
 
-  .tutorial-construction-modal::before {
+  .notice-modal::before {
     position: absolute;
     top: 0;
     right: 1px;
@@ -2608,7 +2626,7 @@
     content: "";
   }
 
-  .tutorial-construction-close {
+  .notice-modal-close {
     position: absolute;
     top: 16px;
     right: 16px;
@@ -2622,15 +2640,15 @@
     transition: border-color 130ms ease, background-color 130ms ease, color 130ms ease;
   }
 
-  .tutorial-construction-close:hover,
-  .tutorial-construction-close:focus-visible {
+  .notice-modal-close:hover,
+  .notice-modal-close:focus-visible {
     border-color: #96895e;
     background: #283236;
     color: #efe3c1;
     outline: none;
   }
 
-  .tutorial-construction-icon {
+  .notice-modal-icon {
     display: grid;
     width: 64px;
     height: 64px;
@@ -2643,11 +2661,11 @@
     transform: rotate(45deg);
   }
 
-  .tutorial-construction-icon > svg {
+  .notice-modal-icon > svg {
     transform: rotate(-45deg);
   }
 
-  .tutorial-construction-kicker {
+  .notice-modal-kicker {
     margin: 0 0 11px;
     color: #7f8c90;
     font-size: 10px;
@@ -2656,7 +2674,7 @@
     text-transform: uppercase;
   }
 
-  .tutorial-construction-modal h2 {
+  .notice-modal h2 {
     margin: 0;
     color: #e2d7b8;
     font-family: Georgia, "Times New Roman", serif;
@@ -2667,14 +2685,14 @@
     white-space: nowrap;
   }
 
-  .tutorial-construction-rule {
+  .notice-modal-rule {
     width: 76px;
     height: 1px;
     margin: 21px auto 18px;
     background: linear-gradient(90deg, transparent, #96885c, transparent);
   }
 
-  .tutorial-construction-copy {
+  .notice-modal-copy {
     max-width: 470px;
     margin: 0 auto;
     color: #aeb6b7;
@@ -2683,7 +2701,7 @@
     line-height: 1.58;
   }
 
-  .tutorial-construction-action {
+  .notice-modal-action {
     width: 100%;
     min-height: 46px;
     margin-top: 30px;
@@ -2697,8 +2715,8 @@
     transition: border-color 130ms ease, color 130ms ease, filter 130ms ease;
   }
 
-  .tutorial-construction-action:hover,
-  .tutorial-construction-action:focus-visible {
+  .notice-modal-action:hover,
+  .notice-modal-action:focus-visible {
     border-color: #ad9d69;
     color: #fff0ca;
     filter: brightness(1.08);
@@ -2716,22 +2734,22 @@
     margin-top: 30px;
   }
 
-  .developer-warning-actions .tutorial-construction-action {
+  .developer-warning-actions .notice-modal-action {
     margin-top: 0;
   }
 
-  .tutorial-construction-action.is-secondary {
+  .notice-modal-action.is-secondary {
     border-color: rgb(129 141 145 / 0.32);
     background: rgb(9 15 18 / 0.62);
     color: #8d999d;
   }
 
   @media (max-width: 520px) {
-    .tutorial-construction-modal {
+    .notice-modal {
       padding: 38px 26px 30px;
     }
 
-    .tutorial-construction-modal h2 {
+    .notice-modal h2 {
       font-size: clamp(28px, 9vw, 36px);
       white-space: normal;
     }
@@ -2741,22 +2759,22 @@
     }
   }
 
-  @keyframes tutorial-construction-backdrop-open {
+  @keyframes notice-modal-backdrop-open {
     from { opacity: 0; }
     to { opacity: 1; }
   }
 
-  @keyframes tutorial-construction-backdrop-close {
+  @keyframes notice-modal-backdrop-close {
     from { opacity: 1; }
     to { opacity: 0; }
   }
 
-  @keyframes tutorial-construction-modal-open {
+  @keyframes notice-modal-open {
     from { opacity: 0; transform: translateY(12px) scale(0.975); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  @keyframes tutorial-construction-modal-close {
+  @keyframes notice-modal-close {
     from { opacity: 1; transform: translateY(0) scale(1); }
     to { opacity: 0; transform: translateY(8px) scale(0.982); }
   }

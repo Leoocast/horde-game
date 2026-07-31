@@ -5,7 +5,6 @@ import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
-import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
@@ -252,11 +251,6 @@ export function Hand({ game }: { game: GameState }) {
     }
   }
 
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
-  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
-  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
-  const tutorialHandTargetId = tutorialZones.find((zone) => zone.zone === "hand")?.definitionId ?? null;
-  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const smallpoxDiscardMode = smallpoxSelectionKind === "discard";
   const handInteractionBlocked = Boolean(
     counterTargetingActive ||
@@ -272,10 +266,9 @@ export function Hand({ game }: { game: GameState }) {
       energyRecycleAnimation ||
       manaFlowAnimating ||
       unresolvedTriggerCount > 0 ||
-      (smallpoxSelectionActive && !smallpoxDiscardMode) ||
-      tutorialAwaitingContinue,
+      (smallpoxSelectionActive && !smallpoxDiscardMode),
   );
-  const hoverSuppressed = Boolean(tutorialStepId);
+  const hoverSuppressed = false;
 
   function handleHandPointerMove(event: React.MouseEvent<HTMLDivElement>) {
     if (handInteractionBlocked || hoverSuppressed || draggingCardId) return;
@@ -309,7 +302,7 @@ export function Hand({ game }: { game: GameState }) {
       </div>
       <section className={[
         "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
-        draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive || tutorialHandTargetId ? "z-[110]" : "z-[70]",
+        draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
       ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
@@ -332,16 +325,12 @@ export function Hand({ game }: { game: GameState }) {
             const discardTargetLocked = smallpoxSelectionKind === "discard" && smallpoxSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
-            const tutorialTarget = tutorialHandTargetId !== null && card.definitionId === tutorialHandTargetId;
-            const tutorialDimmed = tutorialHandTargetId !== null && !tutorialTarget;
             const cardAvailable =
-              !tutorialAwaitingContinue &&
               !handLimitDiscardActive &&
               !smallpoxSelectionActive &&
-              tutorialHandTargetId === null &&
               (playable || energyRecyclable);
-            const cardActionable = !tutorialAwaitingContinue && (handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : tutorialHandTargetId !== null ? tutorialTarget : cardAvailable);
-            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable) || (tutorialHandTargetId !== null && tutorialTarget));
+            const cardActionable = handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : cardAvailable;
+            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -373,7 +362,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !tutorialDimmed && !hordeAttackAnimating && !playerAttackAnimating}
+                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hordeAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -413,8 +402,6 @@ export function Hand({ game }: { game: GameState }) {
                     discardTargetLocked ? "counter-target-locked-card" : "",
                     handLimitTargetable ? "counter-targetable-card hand-limit-targetable" : "",
                     handLimitTargetLocked ? "counter-target-locked-card hand-limit-target-locked" : "",
-                    tutorialTarget ? "counter-targetable-card" : "",
-                    tutorialDimmed ? "pointer-events-none opacity-30 saturate-50" : "",
                   ].join(" ")}
                   data-hand-card-id={card.instanceId}
                   style={{ "--hand-z": index + 1 } as React.CSSProperties}

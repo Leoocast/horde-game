@@ -6,7 +6,6 @@ import { EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
-import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -23,7 +22,6 @@ export default function App() {
   const reset = useGameStore((state) => state.reset);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
-  const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
   const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground" | "audioLab">("start");
@@ -44,7 +42,6 @@ export default function App() {
     hordeName: string;
     encounterTone: EncounterTone;
     gameMode: GameMode;
-    tutorial: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -115,11 +112,7 @@ export default function App() {
     if (!launchTransition) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealTimeout = window.setTimeout(() => {
-      if (launchTransition.tutorial) {
-        playCollection("zombiesBattle1");
-      } else {
-        startBattleMusic(true);
-      }
+      startBattleMusic(true);
       setScreen("game");
     }, reducedMotion ? 80 : 1050);
     const finishTimeout = window.setTimeout(() => {
@@ -129,7 +122,7 @@ export default function App() {
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
-  }, [launchTransition, playCollection, startBattleMusic]);
+  }, [launchTransition, startBattleMusic]);
 
   if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
 
@@ -246,23 +239,20 @@ export default function App() {
             stopMusic();
             playSfx("draw");
             playSfx("playMonsterHeavy", { rate: 0.92 });
-            const isTutorial = options.seed.trim().toLowerCase() === "tutorial";
             reset(
               options.seed,
               options.setupTurns,
-              isTutorial ? DEFAULT_PLAYER_DECK_ID : selectedDeckId,
-              isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId,
+              selectedDeckId,
+              selectedHordeDeckId,
               options.mode,
               options.gameMode,
             );
-            const transitionHordeDeckId = isTutorial ? DEFAULT_HORDE_DECK_ID : selectedHordeDeckId;
-            const transitionHordeDeck = hordeInspectableDecks.find((deck) => deck.id === transitionHordeDeckId);
+            const transitionHordeDeck = hordeInspectableDecks.find((deck) => deck.id === selectedHordeDeckId);
             setLaunchTransition({
               playerName: options.playerName,
-              hordeName: transitionHordeDeck?.deck.name ?? "The Horde",
+              hordeName: transitionHordeDeck?.deck.name ?? "The Host",
               encounterTone: transitionHordeDeck?.presentation.encounterTone ?? "undead",
               gameMode: options.gameMode,
-              tutorial: isTutorial,
             });
           }}
         />

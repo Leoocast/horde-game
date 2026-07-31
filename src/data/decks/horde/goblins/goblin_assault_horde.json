@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.2.0",
   "id": "goblin_assault_horde",
-  "name": "Goblin Assault Horde",
+  "name": "Goblin Assault Host",
   "format": "horde",
   "side": "HORDE",
   "standardCheckedAt": null,

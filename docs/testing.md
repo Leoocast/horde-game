@@ -96,3 +96,5 @@ frecuencia y fueron una fuente de documentacion atrasada.
   cada habilidad marcada `engineSupport: "pending"`.
 - Un WIP declarado no falla la suite; una habilidad que promete estar soportada y no coincide con
   el vocabulario del engine si la rompe.
+- `tests/vocabulary.test.js` impide que regresen términos públicos retirados, valida la
+  presentación localizada de todas las cartas y confirma que no quede una ruta de tutorial dormida.

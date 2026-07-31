@@ -76,14 +76,14 @@ const ZONE_SIDES = SCENARIO_ZONE_SIDES;
 
 export const SCENARIO_ZONES: Array<{ id: ScenarioZoneKey; label: string; side: Side }> = [
   { id: "playerHand", label: "Player hand", side: "player" },
-  { id: "playerBattlefield", label: "Player battlefield", side: "player" },
-  { id: "playerGraveyard", label: "Player graveyard", side: "player" },
-  { id: "playerExile", label: "Player exile", side: "player" },
-  { id: "playerLibraryTop", label: "Player library (top)", side: "player" },
-  { id: "hordeBattlefield", label: "Horde battlefield", side: "horde" },
-  { id: "hordeGraveyard", label: "Horde graveyard", side: "horde" },
-  { id: "hordeExile", label: "Horde exile", side: "horde" },
-  { id: "hordeLibraryTop", label: "Horde library (top)", side: "horde" },
+  { id: "playerBattlefield", label: "Chronicler Field", side: "player" },
+  { id: "playerGraveyard", label: "Chronicler Memory", side: "player" },
+  { id: "playerExile", label: "Chronicler Oblivion", side: "player" },
+  { id: "playerLibraryTop", label: "Chronicler Archive (top)", side: "player" },
+  { id: "hordeBattlefield", label: "Host Field", side: "horde" },
+  { id: "hordeGraveyard", label: "Host Memory", side: "horde" },
+  { id: "hordeExile", label: "Host Oblivion", side: "horde" },
+  { id: "hordeLibraryTop", label: "Host Archive (top)", side: "horde" },
 ];
 
 export const BLANK_SCENARIO: ScenarioDefinition = {
@@ -425,7 +425,7 @@ export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameS
   }
   next.horde.library.unshift(...staged);
   next.lastActionResult = { ok: true };
-  next.log.unshift(`Playground stages ${staged.length} Horde card(s).`);
+  next.log.unshift(`Playground stages ${staged.length} Host card(s).`);
   return next;
 }
 

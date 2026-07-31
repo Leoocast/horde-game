@@ -1,7 +1,8 @@
 # Hostfall: vocabulario canonico y auditoria de independencia
 
 Estado: vocabulario v1.0. La Parte 1 (identidad, zonas, tipos, recursos, fases, acciones, Rasgos y
-estados) está cerrada como diseño y pendiente de migrarse a UI, cartas y engine.
+estados) está cerrada como diseño. La Parte 2 ya implementó el registro canónico y la capa de
+presentación para UI, cartas generadas, logs, errores, ARIA y herramientas de desarrollo.
 
 Este documento define el idioma propio de Hostfall y el criterio de aceptacion para retirar de la
 superficie del producto todo lo que haga que se lea como una implementacion de Magic. No es una
@@ -26,8 +27,9 @@ Bloqueos encontrados en el repositorio:
 - La superficie reproduce en conjunto las categorias de Magic: mana, land, creature, instant,
   sorcery, enchantment, library, battlefield, graveyard, exile, untap/main/combat/end, cast,
   tap, mill, +1/+1 counters y gran parte de sus keywords perennes.
-- El tutorial nombra Forest, Llanowar Elves y Beast-Kin Ranger. El log muestra texto ingles
-  construido por el engine y hasta clasifica algunos eventos bajo la etiqueta `Magic`.
+- El tutorial heredado ya fue retirado por completo; el menú conserva solamente el botón
+  deshabilitado `How to Play`. El log ya normaliza el texto del engine y no usa la categoría
+  `Magic`.
 - No existe un registro de procedencia/licencia para arte, musica, SFX, fuentes y otros recursos.
 
 Referencias externas para el criterio:
@@ -144,8 +146,8 @@ contiene cartas separadas de ella; `Forgotten / Olvidada` describe su estado nar
 zona ni un Rasgo.
 
 `Memoria` requiere una presentación explícita para jugadores nuevos: icono estable, contador
-visible y tooltip `Cartas usadas y destruidas`. El tutorial debe mostrar la primera carta que pasa
-a esta zona. La UI no debe depender de que el jugador ya conozca el equivalente `graveyard`.
+visible y tooltip `Cartas usadas y destruidas`. Un onboarding futuro deberá mostrar la primera
+carta que pasa a esta zona. La UI no debe depender de que el jugador ya conozca el alias interno.
 
 ## Tipos de carta
 
@@ -256,8 +258,8 @@ en la UI. Pueden sobrevivir temporalmente como nombres internos durante la migra
 
 ## Rasgos
 
-Los ids del engine pueden conservarse como aliases durante la primera fase, pero la carta, badge,
-tooltip, tutorial, log y texto accesible deben usar solamente el Rasgo Hostfall. Esta tabla incluye
+Los ids del engine pueden conservarse como aliases, pero la carta, badge, tooltip, log y texto
+accesible deben usar solamente el Rasgo Hostfall. Esta tabla incluye
 solo nombres ya aceptados y mecánicas visibles hoy.
 
 | Id Hostfall | English | Espanol | Alias actual | Definicion canonica |
@@ -302,8 +304,8 @@ Los Estados usan badges de presentacion; los Rasgos usan badges con tooltip de r
 compartir nombre, color semantico ni orden de apilado por accidente.
 
 `Summoning sickness` se reemplaza en la UI por el Estado `Stabilizing / Estabilizándose`. Puede
-sobrevivir temporalmente como alias interno durante la migración, pero no debe aparecer en cartas,
-tooltips, tutorial, logs, errores ni texto accesible. Ímpetu evita este Estado.
+sobrevivir como alias interno del engine, pero no debe aparecer en cartas, tooltips, logs, errores
+ni texto accesible. Ímpetu evita este Estado.
 
 ## Texto de cartas
 
@@ -378,7 +380,8 @@ La migracion debe separar tres capas:
 2. **Concepto canónico**: `FLYING`, `ARCHIVE`, `FIELD`.
 3. **Presentación localizada**: `Volar/Flying`, `Archivo/Archive`, `Campo/Field`.
 
-Crear un registro tipado unico del que deriven:
+El registro tipado vive en `src/i18n/gameVocabulary.ts`; la normalización de texto heredado en
+`src/i18n/rulesText.ts`. De ellos derivan:
 
 - labels de UI;
 - tooltips y glosario;
@@ -393,7 +396,9 @@ componentes, generadores y JSON.
 
 ## Guardas automatizadas de publicacion
 
-Agregar pruebas/lint que fallen cuando:
+La suite ya falla si el tutorial reaparece, si el copy localizado contiene vocabulario retirado o
+si el texto/tipo visible de una carta no se puede presentar con el vocabulario Hostfall. Todavía
+faltan guardas de assets y procedencia que fallen cuando:
 
 - un campo visible contiene `Magic`, `mana`, `Scryfall`, `Oracle`, un card type/zone legacy o un
   nombre de la lista anterior;
@@ -417,17 +422,18 @@ El registro de recursos debe incluir, como minimo:
 
 ## Orden de migracion
 
-1. Congelar este vocabulario o corregirlo antes de crear más cartas.
-2. Implementar el registro canonico y migrar toda la UI visible, incluido tutorial, log, ARIA,
-   tooltips, modales y cartas impresas.
-3. Convertir La Corte Carmesi, que ya tiene nombres propios, al nuevo vocabulario y verificar la
+1. **Completado:** congelar el vocabulario v1.0.
+2. **Completado:** implementar el registro canónico, retirar el tutorial heredado y migrar el copy
+   controlado por la app: UI, log, ARIA, tooltips, modales y caras de carta generadas por código.
+3. Convertir La Corte Carmesí, que ya tiene nombres propios, al nuevo vocabulario y verificar la
    procedencia de todo su arte.
 4. Crear al menos una Hueste completamente original para que exista un loop publicable.
 5. Reemplazar o retirar Mono Green, Zombies y Goblins; borrar sus recursos de `public`, no solo
    ocultarlos del selector.
 6. Eliminar Scryfall/Oracle y metadata Magic del camino de produccion y de los generadores que
    exportan cartas finales.
-7. Reescribir tutorial, logs, documentacion de jugador y capturas de tienda.
+7. Diseñar un onboarding original cuando haga falta y reescribir documentación de jugador y
+   capturas de tienda.
 8. Ejecutar lint de vocabulario, auditoria de recursos, tipos, tests, build y un escaneo final de
    `dist`.
 

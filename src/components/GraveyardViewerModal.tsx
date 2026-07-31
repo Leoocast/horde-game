@@ -246,7 +246,7 @@ export function GraveyardDetailsModal({
             <header className="deck-collection-modal-header">
               <p>{contextLabel ?? t("graveyard.card")} <span>{position} / {total}</span></p>
               <div><h2>{displayName}</h2></div>
-              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(displayCard, language)}</small>
+              <small>{localizedTypeLine(displayCard, language)}</small>
             </header>
 
             {(keywords || stats) && (

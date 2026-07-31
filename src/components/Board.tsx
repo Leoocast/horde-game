@@ -27,7 +27,6 @@ import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
-import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
@@ -137,7 +136,6 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <CardPreview />
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack variant={game.winner ? "menu" : "game"} />
-      <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
       {surgeTransitionActive && <SurgeTransition onComplete={completeSurgeTransition} />}
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">

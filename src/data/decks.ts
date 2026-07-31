@@ -37,13 +37,13 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("Zombie Horde 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
+  register("Zombie Host 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
     keyCardId: "zombie_token",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("Goblin Horde 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest, {
+  register("Goblin Host 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest, {
     keyCardId: "goblin_token_1_1_red",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",

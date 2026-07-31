@@ -27,7 +27,7 @@ function ZoneSide({ game, side }: { game: GameState; side: Side }) {
   const state = game[side];
   return (
     <div className="game-zone-side">
-      <h3>{side === "player" ? "Chronicler" : t("zones.horde")}</h3>
+      <h3>{side === "player" ? t("setup.playerSide") : t("zones.horde")}</h3>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <ZoneMetric label={t("zones.deck")} count={state.library.length} />
         {side === "player" && <ZoneMetric label={t("zones.hand")} count={game.player.hand.length} />}

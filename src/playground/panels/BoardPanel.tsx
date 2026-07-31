@@ -150,7 +150,7 @@ export function BoardPanel({
             disabled={game.player.battlefield.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "player" })}
           >
-            <Eraser size={14} /> Your board ({game.player.battlefield.length})
+            <Eraser size={14} /> Chronicler Field ({game.player.battlefield.length})
           </button>
           <button
             className="playground-button"
@@ -158,7 +158,7 @@ export function BoardPanel({
             disabled={game.horde.battlefield.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "horde" })}
           >
-            <Eraser size={14} /> Horde board ({game.horde.battlefield.length})
+            <Eraser size={14} /> Host Field ({game.horde.battlefield.length})
           </button>
         </div>
       </section>

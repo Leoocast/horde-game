@@ -55,7 +55,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [setupClosing, setSetupClosing] = useState(false);
-  const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
   const [nameEditorClosing, setNameEditorClosing] = useState(false);
@@ -103,7 +102,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         if (!nameRequired) closeNameEditor();
         return;
       }
-      if (showTutorialConfirm || showDeveloperWarning) return;
+      if (showDeveloperWarning) return;
       if (menuScreen === "home") return;
       event.preventDefault();
       if (menuScreen === "setup" || menuScreen === "chaos") setSetupClosing(true);
@@ -111,7 +110,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor]);
 
   function openNameEditor() {
     setNameDraft(playerName);
@@ -265,7 +264,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
             </button>
-            <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
+            <button className="main-menu-entry is-disabled group" type="button" disabled title={t("menu.howToPlayUnavailable")}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.howToPlay")}</span>
             </button>
@@ -388,10 +387,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           launching={launching}
           closing={setupClosing}
         />
-      )}
-
-      {showTutorialConfirm && (
-        <TutorialUnderConstructionModal onClose={() => setShowTutorialConfirm(false)} />
       )}
 
       {showDeveloperWarning && (
@@ -719,52 +714,6 @@ function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
   return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
 }
 
-function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {
-  const t = useTranslation();
-  const [closing, setClosing] = useState(false);
-
-  useEffect(() => {
-    if (!closing) return;
-    const timeout = window.setTimeout(onClose, 160);
-    return () => window.clearTimeout(timeout);
-  }, [closing, onClose]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setClosing(true);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  return (
-    <div
-      className={`tutorial-construction-backdrop ${closing ? "is-closing" : ""}`}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) setClosing(true);
-      }}
-    >
-      <section className="tutorial-construction-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-construction-title">
-        <button className="tutorial-construction-close" type="button" onClick={() => setClosing(true)} title={t("common.close")}>
-          <X size={18} />
-        </button>
-        <div className="tutorial-construction-icon" aria-hidden="true">
-          <Construction size={30} />
-        </div>
-        <p className="tutorial-construction-kicker">{t("tutorial.lockedKicker")}</p>
-        <h2 id="tutorial-construction-title">{t("tutorial.underConstruction")}</h2>
-        <div className="tutorial-construction-rule" />
-        <p className="tutorial-construction-copy">
-          {t("tutorial.copy")}
-        </p>
-        <button className="tutorial-construction-action" type="button" onClick={() => setClosing(true)}>
-          {t("tutorial.return")}
-        </button>
-      </section>
-    </div>
-  );
-}
-
 function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {
   const t = useTranslation();
   const [closingAction, setClosingAction] = useState<"cancel" | "enable" | null>(null);
@@ -791,27 +740,27 @@ function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onE
   return (
     <div
       data-preserve-settings-menu="true"
-      className={`tutorial-construction-backdrop ${isClosing ? "is-closing" : ""}`}
+      className={`notice-modal-backdrop ${isClosing ? "is-closing" : ""}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setClosingAction("cancel");
       }}
     >
-      <section className="tutorial-construction-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
-        <button className="tutorial-construction-close" type="button" onClick={() => setClosingAction("cancel")} title={t("common.close")}>
+      <section className="notice-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
+        <button className="notice-modal-close" type="button" onClick={() => setClosingAction("cancel")} title={t("common.close")}>
           <X size={18} />
         </button>
-        <div className="tutorial-construction-icon developer-warning-icon" aria-hidden="true">
+        <div className="notice-modal-icon developer-warning-icon" aria-hidden="true">
           <AlertTriangle size={30} />
         </div>
-        <p className="tutorial-construction-kicker">{t("developer.kicker")}</p>
+        <p className="notice-modal-kicker">{t("developer.kicker")}</p>
         <h2 id="developer-warning-title">{t("developer.title")}</h2>
-        <div className="tutorial-construction-rule" />
-        <p className="tutorial-construction-copy">
+        <div className="notice-modal-rule" />
+        <p className="notice-modal-copy">
           {t("developer.copy")}
         </p>
         <div className="developer-warning-actions">
-          <button className="tutorial-construction-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>{t("common.cancel")}</button>
-          <button className="tutorial-construction-action" type="button" onClick={() => setClosingAction("enable")}>{t("developer.enable")}</button>
+          <button className="notice-modal-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>{t("common.cancel")}</button>
+          <button className="notice-modal-action" type="button" onClick={() => setClosingAction("enable")}>{t("developer.enable")}</button>
         </div>
       </section>
     </div>

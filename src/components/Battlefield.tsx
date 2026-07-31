@@ -5,9 +5,9 @@ import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "..
 import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { STORED_MANA_CAP } from "../engine/ManaSystem";
-import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useTranslation } from "../i18n/useTranslation";
 import { translate } from "../i18n/translations";
+import { canonicalizeRulesText } from "../i18n/rulesText";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -93,10 +93,11 @@ function BattlefieldRowSurface({
   otherPermanents,
   otherPermanentsTargetingActive = false,
 }: BattlefieldRowSurfaceProps) {
+  const t = useTranslation();
   return (
     <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
       {cardsEmpty ? (
-        <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
+        <div aria-label={`${t("zones.field")}: 0`} className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
       ) : (
         <div
           ref={creatureRowRef}
@@ -208,7 +209,6 @@ export function Battlefield({ game, side, cards }: Props) {
   const updatePlayerAttackDrag = useGameStore((state) => state.updatePlayerAttackDrag);
   const cancelPlayerAttackDrag = useGameStore((state) => state.cancelPlayerAttackDrag);
   const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
 
   // Combat casualties leave game state the instant their impact lands, so their triggers can
   // resolve in sequence. Removing them from the row right then would re-center every survivor
@@ -242,9 +242,6 @@ export function Battlefield({ game, side, cards }: Props) {
     game.combat.hordeAttackers.length === 0 &&
     !resolvingHordeCombat &&
     !game.winner;
-  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
-  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
-  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
 
   useLayoutEffect(() => {
@@ -587,7 +584,7 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
+      <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hordeSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           <BattlefieldRowSurface
             cardsEmpty={creatures.length === 0}
@@ -840,7 +837,6 @@ export function Battlefield({ game, side, cards }: Props) {
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
     const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
     const selectionDisabled =
-      tutorialAwaitingContinue ||
       casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
@@ -876,18 +872,13 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
     const counterBuffPreview = counterTargetLocked ? counterBuffedStats(game, card) : undefined;
-    const tutorialTargetable = tutorialZones.some(
-      (zone) =>
-        (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
-        (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk" && legalBlocker) || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
-    );
     // A ghost is a card already gone from game state whose slot is held until combat ends. It
     // must keep reading as dead even after hordeCombatDeadCardIds is cleared for the next impact.
     const isCombatGhost = casualtyIds.has(card.instanceId);
     const visuallyDead = isCombatGhost || hordeCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
-    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
-    const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
+    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable;
+    const cardActionable = actionable || cardTargetable;
     const isDraggedDefender = blockDragBlockerId === card.instanceId;
     const draggedDefender = blockDragActive ? game.player.battlefield.find((item) => item.instanceId === blockDragBlockerId) : undefined;
     const dragDefenseTargetable = Boolean(
@@ -933,8 +924,7 @@ export function Battlefield({ game, side, cards }: Props) {
         smallpoxTargetable ||
         smallpoxTargetLocked ||
         spellTargetable ||
-        spellTargetLocked ||
-        tutorialTargetable,
+        spellTargetLocked,
     );
     const isFlying = card.cardTypes.includes("Creature") && hasKeyword(game, card, "FLYING");
     const combatAnimationActive =
@@ -1008,7 +998,6 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
-          tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
       {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
@@ -1079,10 +1068,9 @@ export function Battlefield({ game, side, cards }: Props) {
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
         visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
-          if (tutorialAwaitingContinue) return;
           if (legalAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
             return;
@@ -1100,7 +1088,6 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
-          if (tutorialAwaitingContinue) return;
           if (smallpoxSelectionActive) {
             if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
             return;
@@ -1209,12 +1196,12 @@ export function Battlefield({ game, side, cards }: Props) {
         >
           {primaryAbility.effect.type === "ADD_MANA" || primaryAbility.effect.type === "ADD_MANA_DYNAMIC" ? (
             <span className="effect-action-mana-copy">
-              <span className="effect-action-symbol effect-action-symbol-tap" title="Agotar / Activar">
+              <span className="effect-action-symbol effect-action-symbol-tap" title={t("card.exhaustAction")}>
                 <Hourglass aria-hidden="true" />
               </span>
               <span className="effect-action-mana-colon" aria-hidden="true">:</span>
-              <span className="effect-action-mana-label">Add</span>
-              <span className="effect-action-symbol effect-action-symbol-energy" title="Energía">
+              <span className="effect-action-mana-label">{t("card.generateEnergy")}</span>
+              <span className="effect-action-symbol effect-action-symbol-energy" title={t("card.energy")}>
                 <Zap aria-hidden="true" />
               </span>
             </span>
@@ -1385,9 +1372,10 @@ type BuffStatPreviewValue = {
 
 function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatPreviewValue }) {
   const theme = cardThemeForDefinition(card.definitionId);
+  const language = useLanguageStore((state) => state.language);
   return (
     <span
-      aria-label={`${stats.power} attack, ${stats.toughness} life after buff`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.toughness} de Aguante después de potenciar` : `${stats.power} Power, ${stats.toughness} Endurance after empowering`}
       className={[
         "counter-target-stat-preview",
         theme ? `card-theme-${theme}` : "",
@@ -1434,25 +1422,26 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
+  const language = useLanguageStore.getState().language;
   if (ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC") {
     const mana = ability.effect.mana as Record<string, number> | undefined;
     const entry = mana ? Object.entries(mana)[0] : undefined;
-    const color = entry?.[0] === "chosenColor" ? "chosen" : entry?.[0] ?? String(ability.effect.manaColor ?? "G");
     const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
-    return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
+    return language === "es"
+      ? `Agota: genera ${amount} de Energía.`
+      : `Exhaust: Generate ${amount} Energy.`;
   }
   if (
     (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" ||
       ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN") &&
     ability.effect.target === "SELF"
   ) {
-    const language = useLanguageStore.getState().language;
     const life = Number(ability.cost?.life ?? 0);
     const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
     const untilNextTurn = ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN";
-    return language === "es"
+    return canonicalizeRulesText(language === "es"
       ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} ${untilNextTurn ? "hasta tu próximo turno" : "este turno"}.`
-      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`;
+      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`, language);
   }
   return String(ability.effect.type).replaceAll("_", " ");
 }
@@ -1477,10 +1466,12 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
 
 function showBlockToast(message: string): void {
   const language = useLanguageStore.getState().language;
-  const localizedMessage = message === "That creature cannot block."
+  const localizedMessage = message === "That Echo cannot defend." || message === "That creature cannot block."
     ? translate(language, "error.creatureCannotBlock")
-    : message === "Flying attackers need flying or reach to block."
+    : message === "Echoes with Flying require Flying or Skyguard to defend against them." || message === "Flying attackers need flying or reach to block."
       ? translate(language, "error.flyingBlock")
+      : message === "Furtive cannot be defended by Echoes with greater Power." || message === "Skulk cannot be blocked by creatures with greater power."
+        ? translate(language, "error.furtiveBlock")
       : message;
   useToastStore.getState().pushToast({
     title: translate(language, "error.cannotBlock"),

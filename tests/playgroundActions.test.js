@@ -29,7 +29,7 @@ test("drawing reports a reason instead of failing silently on an empty library",
 
   const result = drawPlayerCard(game);
   assert.equal(result.ok, false);
-  assert.match(result.reason, /library is empty/i);
+  assert.match(result.reason, /Archive is empty/i);
   assert.equal(result.game.lastActionResult.ok, false);
 });
 
@@ -94,7 +94,7 @@ test("play free grants exactly the printed cost and the card then casts through 
 
   const blocked = castCard(start, handId);
   assert.equal(blocked.lastActionResult.ok, false);
-  assert.match(blocked.lastActionResult.reason, /not enough available mana/i);
+  assert.match(blocked.lastActionResult.reason, /not enough available Energy/i);
 
   const granted = grantManaForCard(start, handId);
   assert.equal(granted.ok, true);

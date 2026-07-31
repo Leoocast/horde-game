@@ -1,6 +1,7 @@
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
 import { cardThemeForDefinition, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
@@ -116,6 +117,11 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       data-audio-click={selectionDisabled ? undefined : "valid"}
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
+      aria-label={[
+        localizedName,
+        card.tapped && !usesHordeTappedStyle ? t("card.tapped") : "",
+        summoningSick ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
+      ].filter(Boolean).join(", ")}
       aria-disabled={selectionDisabled ? "true" : undefined}
       onMouseEnter={() => {
         if (!suppressHoverOverlay) setHoveredCardId(card.instanceId);
@@ -278,11 +284,12 @@ export function CardStatsBadge({
   stats: CardStatDisplay;
   preferSingleSword?: boolean;
 }) {
+  const language = useLanguageStore((state) => state.language);
   if (!stats.text) return null;
 
   return (
     <div
-      aria-label={`${stats.power} attack, ${stats.toughness} life`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.toughness} de Aguante` : `${stats.power} Power, ${stats.toughness} Endurance`}
       className={[
         "card-stat-badge",
         stats.damaged ? "is-damaged" : "",
@@ -301,11 +308,11 @@ export function CardStatsBadge({
 }
 
 function renderBattlefieldKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^(TOXIC|TÓXICO)\s+\{(\d+)\}$/i);
-  if (!toxic) return keyword;
+  const poison = keyword.match(/^(POISON|VENENO)\s+\{?(\d+)\}?$/i);
+  if (!poison) return keyword;
   return (
     <>
-      {toxic[1]} <span className="card-toxic-counter">{toxic[2]}</span>
+      {poison[1]} <span className="card-toxic-counter">{poison[2]}</span>
     </>
   );
 }

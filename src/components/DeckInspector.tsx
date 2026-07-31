@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "luci
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { canonicalizeRulesText } from "../i18n/rulesText";
 import { useTranslation } from "../i18n/useTranslation";
 import type { AppLanguage } from "../i18n/translations";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
@@ -266,7 +267,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         <div>
           <span className="deck-detail-info-kicker">{t("deck.selectedCard")}</span>
           <h2>{displayName}</h2>
-          <p>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(card, language)}</p>
+          <p>{localizedTypeLine(card, language)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {pinned && (
@@ -428,7 +429,7 @@ function DeckInspectorDetailsModal({
               <div>
                 <h2>{displayName}</h2>
               </div>
-              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(card, language)}</small>
+              <small>{localizedTypeLine(card, language)}</small>
             </header>
 
             {(keywords || cardStats) && (
@@ -525,7 +526,7 @@ function deckCardDescription(card: NewDeckCard, language: AppLanguage, oracleTex
   void oracleText;
   void flavorText;
   const authored = card.gameText?.[language] ?? card.gameText?.en;
-  if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), authored);
+  if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), canonicalizeRulesText(authored, language));
   const generated = describeCardFromJson(card);
   if (generated) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), generated);
   return language === "es" ? "Sin efecto adicional." : "No additional effect.";

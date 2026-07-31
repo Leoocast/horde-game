@@ -1,7 +1,6 @@
 import { Check, FastForward, Shield, Swords, X } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasKeyword } from "../engine/Keywords";
-import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
@@ -34,7 +33,6 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || manaFlowAnimating || resolvingHordeCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(
@@ -44,8 +42,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
     playerAutoTriggerCount,
     t,
   );
-  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
-  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason) || tutorialAwaitingContinue;
+  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "horde" && game.combat.hordeAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
@@ -77,10 +74,6 @@ export function PhaseOrb({ game }: { game: GameState }) {
     finishHordeTurn,
   }, t);
   const orbTooltip = targetingActive ? undefined : actionBlockedReason;
-  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
-  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
-  const tutorialOrbTarget = tutorialZones.some((zone) => zone.zone === "phase-orb");
-
   function runOrbAction() {
     playSfx("skipNextBattle");
     state.action();
@@ -88,7 +81,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
 
   return (
     <>
-      <div className={["game-phase-orb fixed right-4 top-[46%] -translate-y-1/2", game.gameMode === "chaos" ? "is-chaos" : "", tutorialOrbTarget ? "z-[97]" : "z-[80]"].join(" ")}>
+      <div className={["game-phase-orb fixed right-4 top-[46%] z-[80] -translate-y-1/2", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")}>
         <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)}>
           <button
             data-audio-click="off"
@@ -108,18 +101,18 @@ export function PhaseOrb({ game }: { game: GameState }) {
           <div className="game-phase-secondary">
             {showAttackAll && (
               <GameTooltip content={t("orb.allTooltip")} className="game-phase-secondary-tooltip">
-                <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-all">
+                <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-all">
                   <Swords size={17} /> <span>{t("orb.all")}</span>
                 </button>
               </GameTooltip>
             )}
             {showCancelDefense && (
-              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title={t("orb.cancelBlocks")}>
+              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelBlocks")}>
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}
             {showCancelAttack && (
-              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating || tutorialAwaitingContinue} className="game-phase-secondary-button is-cancel" title={t("orb.cancelAttackers")}>
+              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelAttackers")}>
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}

@@ -18,18 +18,18 @@ function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; labe
   );
   if (card.side === "horde") {
     return [
-      ...(isPermanent ? ([{ zone: "hordeBattlefield", label: "Horde battlefield" }] as const) : []),
-      { zone: "hordeLibraryTop", label: "Top of Horde library" },
-      { zone: "hordeGraveyard", label: "Horde graveyard" },
-      { zone: "hordeExile", label: "Horde exile" },
+      ...(isPermanent ? ([{ zone: "hordeBattlefield", label: "Host Field" }] as const) : []),
+      { zone: "hordeLibraryTop", label: "Top of Host Archive" },
+      { zone: "hordeGraveyard", label: "Host Memory" },
+      { zone: "hordeExile", label: "Host Oblivion" },
     ];
   }
   return [
     { zone: "playerHand", label: "Your hand" },
-    ...(isPermanent ? ([{ zone: "playerBattlefield", label: "Your battlefield" }] as const) : []),
-    { zone: "playerLibraryTop", label: "Top of your library" },
-    { zone: "playerGraveyard", label: "Your graveyard" },
-    { zone: "playerExile", label: "Your exile" },
+    ...(isPermanent ? ([{ zone: "playerBattlefield", label: "Your Field" }] as const) : []),
+    { zone: "playerLibraryTop", label: "Top of your Archive" },
+    { zone: "playerGraveyard", label: "Your Memory" },
+    { zone: "playerExile", label: "Your Oblivion" },
   ];
 }
 
@@ -141,7 +141,7 @@ export function CardsPanel({ onDispatch }: Props) {
               {isPermanent && (
                 <label className="playground-checkbox">
                   <input type="checkbox" checked={tapped} onChange={(event) => setTapped(event.target.checked)} />
-                  <span>Tapped</span>
+                  <span>Exhausted</span>
                 </label>
               )}
               <button

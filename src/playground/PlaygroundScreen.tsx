@@ -46,7 +46,7 @@ import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } f
 type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
 
 const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon: LucideIcon }> = [
-  { id: "scenario", label: "Setup", description: "Seed, decks and Horde queue", icon: SlidersHorizontal },
+  { id: "scenario", label: "Setup", description: "Seed, decks and Host queue", icon: SlidersHorizontal },
   { id: "cards", label: "Cards", description: "Find, play or place cards", icon: Search },
   { id: "board", label: "Board", description: "Selection and saved states", icon: Layers3 },
   { id: "actions", label: "Actions", description: "Turn flow and energy", icon: Gamepad2 },

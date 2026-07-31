@@ -52,8 +52,8 @@ export function describeStep(step: TimelineStep): string {
   switch (step.kind) {
     case "advancePhase": return "Advance phase";
     case "endTurn": return "Advance turn";
-    case "hordeTurn": return "Run Horde turn";
-    case "hordeTurnExact": return `Run Horde turn with exactly ${queuedCardCount(step)} queued card(s)`;
+    case "hordeTurn": return "Run Host turn";
+    case "hordeTurnExact": return `Run Host turn with exactly ${queuedCardCount(step)} queued card(s)`;
     case "resolveNextEvent": return "Resolve next event";
     case "resolveAllEvents": return "Resolve all events";
     case "draw": return "Draw card";
@@ -65,7 +65,7 @@ export function describeStep(step: TimelineStep): string {
     case "playCard": return `Play ${step.cardName}`;
     case "play": return `${step.free ? "Play free" : "Play"} ${step.cardName}`;
     case "destroy": return `Destroy ${step.cardName}`;
-    case "toGraveyard": return `To graveyard: ${step.cardName}`;
+    case "toGraveyard": return `To Memory: ${step.cardName}`;
     case "clearBattlefield": return `Clear ${step.side} board`;
     // A flow saved before a step kind was renamed still lists it; say so instead of rendering blank.
     default: return `Unknown step "${(step as { kind: string }).kind}"`;
@@ -84,7 +84,7 @@ export function executeStep(step: TimelineStep): StepOutcome {
       return readEngineOutcome("Turn advanced.");
     case "hordeTurn":
       store.runHordeMain();
-      return readEngineOutcome("Horde turn running.");
+      return readEngineOutcome("Host turn running.");
     case "hordeTurnExact": {
       const originalRules = structuredClone(store.game.hordeRules);
       const withQueue = step.entries ? stageHordeQueue(store.game, step.entries) : store.game;
@@ -96,7 +96,7 @@ export function executeStep(step: TimelineStep): StepOutcome {
       useGameStore.setState({ game: staged });
       store.runHordeMain();
       useGameStore.setState(({ game }) => ({ game: { ...game, hordeRules: originalRules } }));
-      return readEngineOutcome("Queued Horde turn running.");
+      return readEngineOutcome("Queued Host turn running.");
     }
     case "resolveNextEvent":
       return applyToGame(resolveNextEvent);
@@ -153,7 +153,7 @@ function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): Ste
     }
     useGameStore.setState({ game: staged });
     store.resolveHordeCardFromTop();
-    return readEngineOutcome(`${step.cardName} enters for the Horde.`);
+    return readEngineOutcome(`${step.cardName} is Invoked for the Host.`);
   }
 
   const withCard = addScenarioCard(store.game, "playerHand", { definitionId: step.definitionId });

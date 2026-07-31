@@ -86,7 +86,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
             onChange={(playerDeckId) => onChange({ ...draft, playerDeckId })}
           />
           <SelectField
-            label="Horde deck"
+            label="Host deck"
             value={draft.hordeDeckId}
             options={hordeInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
             onChange={(hordeDeckId) => onChange({ ...draft, hordeDeckId })}
@@ -96,14 +96,14 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
 
       <section className="playground-group playground-horde-turn">
         <header className="playground-group-head">
-          <span className="playground-group-title">Horde turn</span>
+          <span className="playground-group-title">Host turn</span>
           <span className="playground-group-badge">{queue.length} queued</span>
         </header>
 
         <div className="playground-horde-toolbar">
           <div className="playground-horde-search">
             <SearchInput
-              placeholder="Search Horde cards"
+              placeholder="Search Host cards"
               value={query}
               onChange={setQuery}
             />

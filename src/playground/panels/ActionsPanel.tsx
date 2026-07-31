@@ -32,7 +32,7 @@ export function ActionsPanel({ onDispatch }: Props) {
         </div>
         <div className="playground-button-row">
           <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hordeTurn" })}>
-            <Skull size={14} /> Horde turn
+            <Skull size={14} /> Host turn
           </button>
           <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "draw" })}>
             <Hand size={14} /> Draw card
@@ -61,7 +61,7 @@ export function ActionsPanel({ onDispatch }: Props) {
             className="playground-button is-primary"
             type="button"
             disabled={sources >= MAX_PLAYER_LANDS}
-            title="Puts one more untapped land on the battlefield"
+            title="Invokes one more Ready Source onto the Field"
             onClick={() => onDispatch({ kind: "addEnergySource" })}
           >
             <Plus size={14} /> Add source
@@ -69,7 +69,7 @@ export function ActionsPanel({ onDispatch }: Props) {
           <button
             className="playground-button"
             type="button"
-            title="Untaps every land and gives the Energy action back"
+            title="Readies every Source and restores the Energy Action"
             onClick={() => onDispatch({ kind: "refillEnergy" })}
           >
             <BatteryCharging size={14} /> Refill
@@ -84,7 +84,7 @@ export function ActionsPanel({ onDispatch }: Props) {
           >
             <Zap size={14} /> +1 stored
           </button>
-          <button className="playground-button" type="button" title="Taps every land and empties the pool" onClick={() => onDispatch({ kind: "drainEnergy" })}>
+          <button className="playground-button" type="button" title="Exhausts every Source and empties stored Energy" onClick={() => onDispatch({ kind: "drainEnergy" })}>
             <ZapOff size={14} /> Drain all
           </button>
         </div>

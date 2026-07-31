@@ -1,5 +1,6 @@
 import { DECK_REGISTRY } from "../data/decks";
 import type { CardDefinition, Side } from "../engine/GameTypes";
+import { canonicalCardTypeLine } from "../i18n/gameVocabulary";
 
 export type CatalogCard = {
   /** Unique across the whole catalog; safe as a React list key. */
@@ -53,11 +54,9 @@ export function searchCatalog(query: string, deckId?: string): CatalogCard[] {
   });
 }
 
-/** One-line type summary, e.g. "Creature — Zombie 2/2". */
+/** One-line type summary rendered through the public Hostfall vocabulary. */
 export function describeCardTypes(definition: CardDefinition): string {
-  const types = (definition.cardTypes ?? []).join(" ");
-  const subtypes = (definition.subtypes ?? []).join(" ");
-  const line = subtypes ? `${types} — ${subtypes}` : types;
+  const line = canonicalCardTypeLine(definition.cardTypes ?? [], definition.subtypes ?? [], "en", definition.isToken);
   const power = definition.power ?? null;
   const toughness = definition.toughness ?? null;
   return power === null && toughness === null ? line : `${line} ${power ?? 0}/${toughness ?? 0}`;

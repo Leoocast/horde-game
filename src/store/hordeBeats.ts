@@ -24,6 +24,7 @@ import {
   notifyDiscardEffects,
   startBuffBeat,
   uiCardName,
+  uiTraitLabel,
   uiText,
 } from "./presentationEffects";
 
@@ -824,7 +825,7 @@ function staticAuraBeatMessage(source: CardInstance, event: EventItem): string {
   const cardName = uiCardName(source);
   const count = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.length : 0;
   const keyword = typeof event.payload?.keyword === "string" ? event.payload.keyword : undefined;
-  if (keyword) return uiText("toast.staticAuraKeyword", { card: cardName, keyword: keywordLabel(keyword), count });
+  if (keyword) return uiText("toast.staticAuraKeyword", { card: cardName, keyword: uiTraitLabel(keyword), count });
   const power = Number(event.payload?.power ?? 0);
   const toughness = Number(event.payload?.toughness ?? 0);
   return uiText("toast.staticAuraBuff", {
@@ -834,10 +835,6 @@ function staticAuraBeatMessage(source: CardInstance, event: EventItem): string {
   });
 }
 
-function keywordLabel(keyword: string): string {
-  return keyword.replace(/_/g, " ").toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());
-}
-
 function queuedHordeTriggerMessage(source?: CardInstance): string {
-  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : "Horde" });
+  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : uiText("setup.hordeSide") });
 }

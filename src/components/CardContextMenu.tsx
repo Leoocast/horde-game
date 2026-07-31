@@ -72,7 +72,6 @@ export function CardContextMenu() {
         card={detailsCard}
         imageUrl={details.imageUrl}
         displayName={details.displayName}
-        typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
         keywords={keywords}
         stats={stats}
         text={detailsText}
@@ -134,7 +133,6 @@ export function CardContextMenu() {
           card={detailsCard}
           imageUrl={details.imageUrl}
           displayName={details.displayName}
-          typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
           keywords={keywords}
           stats={stats}
           text={detailsText}
