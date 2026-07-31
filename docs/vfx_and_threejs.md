@@ -26,6 +26,9 @@ Implementaciones utiles como referencia:
 - `NatureShieldAnimator.tsx`: conserva la variante de raices que envuelve y cierra el contorno de
   la carta. No esta conectada a ninguna carta: queda lista para un futuro efecto de resistencia,
   proteccion, hexproof o indestructible.
+- `ManaFlowAnimator.tsx`: usa SVG y Framer Motion para alinear un ribbon vegetal entre una
+  criatura de ramp y el socket de mana almacenado. El store difiere la ganancia hasta que la
+  semilla llega al HUD; no requiere Three.js porque ambos extremos son elementos de interfaz.
 - `BurnAnimator.tsx`: ejemplo de que un efecto complejo no siempre necesita Three.js; CSS y DOM
   funcionan mejor cuando el efecto debe alinearse estrechamente con la interfaz.
 

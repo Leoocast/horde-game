@@ -342,6 +342,9 @@ Efecto generico de tap:
   2. boton de efecto aparece
   3. al confirmar hace pulse dorado + `activate_effect.wav`
   4. luego se tapa con animacion + sonido land
+  5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
+     hasta el siguiente socket amarillo vacio; el mana almacenado se compromete al impacto. El
+     ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
 
 Reglas:
 - solo en turno del player

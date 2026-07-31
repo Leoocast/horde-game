@@ -55,6 +55,7 @@ export function Hand({ game }: { game: GameState }) {
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
+  const manaFlowAnimating = useGameStore((state) => Boolean(state.manaFlowAnimation));
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
@@ -269,6 +270,7 @@ export function Hand({ game }: { game: GameState }) {
       lifePaymentAnimating ||
       bloodPactAnimating ||
       energyRecycleAnimation ||
+      manaFlowAnimating ||
       unresolvedTriggerCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode) ||
       tutorialAwaitingContinue,

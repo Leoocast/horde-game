@@ -95,6 +95,7 @@ export type GameStore = {
   bloodPactAnimation?: BloodPactAnimationState;
   drainEssenceAnimation?: DrainEssenceAnimationState;
   finalBanquetAnimation?: FinalBanquetAnimationState;
+  manaFlowAnimation?: ManaFlowAnimationState;
   deathRevealCard?: CardInstance;
   hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
@@ -197,6 +198,8 @@ export type GameStore = {
   beginFinalBanquetStrike: (id: string) => void;
   beginFinalBanquetImpact: (id: string) => void;
   completeFinalBanquetAnimation: (id: string) => void;
+  resolveManaFlowAnimation: (id: string) => void;
+  completeManaFlowAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -253,6 +256,7 @@ const POISON_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 900;
 const POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS = 1200;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
+const MANA_FLOW_ANIMATION_SAFETY_CLEAR_MS = 1500;
 const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
 const SPELL_FIGHT_IMPACT_MS = 520;
 const SPELL_FIGHT_DEATH_FADE_MS = 260;
@@ -277,6 +281,9 @@ let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
 let drainEssenceAfterCommit: (() => void) | undefined;
 let finalBanquetAnimationSafetyTimer: number | undefined;
 let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
+let manaFlowAnimationSafetyTimer: number | undefined;
+let manaFlowCommit: (() => Partial<GameStore>) | undefined;
+let manaFlowAfterCommit: (() => void) | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -374,6 +381,13 @@ export type FinalBanquetAnimationState = {
   amount: number;
   origin?: { left: number; top: number; width: number; height: number };
   phase: "siphon" | "strike" | "impact";
+};
+
+export type ManaFlowAnimationState = {
+  id: string;
+  sourceId: string;
+  amount: number;
+  phase: "travel" | "impact";
 };
 
 export type BurnAnimationState = {
@@ -475,6 +489,7 @@ function createCleanUiState(): Partial<GameStore> {
     bloodPactAnimation: undefined,
     drainEssenceAnimation: undefined,
     finalBanquetAnimation: undefined,
+    manaFlowAnimation: undefined,
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
     pendingStaticAuras: [],
@@ -533,6 +548,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   bloodPactAnimation: undefined,
   drainEssenceAnimation: undefined,
   finalBanquetAnimation: undefined,
+  manaFlowAnimation: undefined,
   deathRevealCard: undefined,
   hordeSpellCard: undefined,
   pendingStaticAuras: [],
@@ -584,6 +600,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearPoisonConsumePresentation();
     clearDrainEssencePresentation();
     clearFinalBanquetPresentation();
+    clearManaFlowPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -608,6 +625,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearPoisonConsumePresentation();
     clearDrainEssencePresentation();
     clearFinalBanquetPresentation();
+    clearManaFlowPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -866,7 +884,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.manaFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -881,7 +899,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   endPlayerTurn: (options) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.manaFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -1209,11 +1227,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
       specialDeadCardIds: [],
     });
   },
+  resolveManaFlowAnimation: (id) => {
+    const active = get().manaFlowAnimation;
+    if (active?.id !== id || active.phase === "impact") return;
+    const commit = manaFlowCommit;
+    const afterCommit = manaFlowAfterCommit;
+    manaFlowCommit = undefined;
+    manaFlowAfterCommit = undefined;
+    set({
+      ...(commit?.() ?? {}),
+      manaFlowAnimation: {
+        ...active,
+        phase: "impact",
+      },
+    });
+    afterCommit?.();
+  },
+  completeManaFlowAnimation: (id) => {
+    const active = get().manaFlowAnimation;
+    if (active?.id !== id) return;
+    if (active.phase === "travel") get().resolveManaFlowAnimation(id);
+    if (manaFlowAnimationSafetyTimer && typeof window !== "undefined") {
+      window.clearTimeout(manaFlowAnimationSafetyTimer);
+      manaFlowAnimationSafetyTimer = undefined;
+    }
+    set({ manaFlowAnimation: undefined });
+  },
   activateAbility: (id, abilityId, options) => {
     let shouldSchedulePlayerTriggers = false;
     let startedLifePaymentAnimationId: string | undefined;
+    let startedManaFlowAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
+      const source = state.game.player.battlefield.find((card) => card.instanceId === id);
       const next = activateEngineAbility(state.game, id, abilityId, {
         ...options,
         deferReactiveTriggers: true,
@@ -1231,6 +1277,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
           ? () => scheduleQueuedPlayerTriggers()
           : undefined;
       }
+      const storedManaGained = next.lastActionResult?.ok === true
+        ? Math.max(0, next.player.manaPool.colorless - state.game.player.manaPool.colorless)
+        : 0;
+      const usesManaFlowAnimation = Boolean(
+        storedManaGained > 0 &&
+        source &&
+        (source.definitionId === "llanowar_elves" || source.definitionId === "druid_of_the_cowl"),
+      );
+      if (usesManaFlowAnimation) {
+        const animationId = `mana-flow-${source!.instanceId}-${Date.now()}`;
+        const staged = structuredClone(next) as GameState;
+        staged.player.manaPool = { ...state.game.player.manaPool };
+        startedManaFlowAnimationId = animationId;
+        manaFlowCommit = () => ({
+          game: next,
+          playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
+        });
+        manaFlowAfterCommit = shouldSchedulePlayerTriggers
+          ? () => scheduleQueuedPlayerTriggers()
+          : undefined;
+        return {
+          game: staged,
+          activeEffectCardId: undefined,
+          manaFlowAnimation: {
+            id: animationId,
+            sourceId: source!.instanceId,
+            amount: storedManaGained,
+            phase: "travel",
+          },
+          playerAutoTriggerCount: 0,
+        };
+      }
       return {
         game: next,
         activeEffectCardId: undefined,
@@ -1240,7 +1318,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
       };
     });
-    if (startedLifePaymentAnimationId) {
+    if (startedManaFlowAnimationId) {
+      scheduleManaFlowAnimationSafetyClear(startedManaFlowAnimationId);
+    } else if (startedLifePaymentAnimationId) {
       scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
     } else if (shouldSchedulePlayerTriggers) {
       scheduleQueuedPlayerTriggers();
@@ -1829,6 +1909,15 @@ function clearFinalBanquetPresentation(): void {
   finalBanquetCommit = undefined;
 }
 
+function clearManaFlowPresentation(): void {
+  if (manaFlowAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(manaFlowAnimationSafetyTimer);
+  }
+  manaFlowAnimationSafetyTimer = undefined;
+  manaFlowCommit = undefined;
+  manaFlowAfterCommit = undefined;
+}
+
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
   if (bloodPactAnimationSafetyTimer) window.clearTimeout(bloodPactAnimationSafetyTimer);
   bloodPactAnimationSafetyTimer = window.setTimeout(() => {
@@ -1895,6 +1984,16 @@ function scheduleFinalBanquetAnimationSafetyClear(id: string): void {
   }, FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleManaFlowAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (manaFlowAnimationSafetyTimer) window.clearTimeout(manaFlowAnimationSafetyTimer);
+  manaFlowAnimationSafetyTimer = window.setTimeout(() => {
+    const store = useGameStore.getState();
+    if (store.manaFlowAnimation?.id !== id) return;
+    store.completeManaFlowAnimation(id);
+  }, MANA_FLOW_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
@@ -1906,6 +2005,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.bloodPactAnimation ||
       state.drainEssenceAnimation ||
       state.finalBanquetAnimation ||
+      state.manaFlowAnimation ||
       state.pendingSpellHandId ||
       state.spellFightAnimation ||
       state.resolvingHordeCombat ||

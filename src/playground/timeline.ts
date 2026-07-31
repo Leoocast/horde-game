@@ -231,6 +231,7 @@ export function isPlaygroundBusy(): boolean {
     Boolean(state.playerAttackAnimation) ||
     Boolean(state.spellFightAnimation) ||
     Boolean(state.brokenWingsAnimation) ||
+    Boolean(state.manaFlowAnimation) ||
     Boolean(state.burnAnimation) ||
     Boolean(state.energyRecycleAnimation)
   );

@@ -922,6 +922,77 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
   }
 });
 
+test("mana creatures tap first and fill stored mana when their flow reaches the HUD", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("mana-flow-presentation");
+    const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player"));
+    const forest = addCard(game, cardFromDeck("forest", "player"));
+    useGameStore.setState({
+      game,
+      playerDeckId: "mono_green_ramp",
+      manaFlowAnimation: undefined,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().activateAbility(llanowar.instanceId, "llanowar_elves_add_green");
+
+    const duringTravel = useGameStore.getState();
+    assert.equal(duringTravel.manaFlowAnimation?.sourceId, llanowar.instanceId);
+    assert.equal(duringTravel.manaFlowAnimation?.phase, "travel");
+    assert.equal(duringTravel.game.player.manaPool.colorless, 0);
+    assert.equal(
+      duringTravel.game.player.battlefield.find((card) => card.instanceId === llanowar.instanceId)?.tapped,
+      true,
+    );
+
+    const animationId = duringTravel.manaFlowAnimation?.id;
+    assert.equal(typeof animationId, "string");
+    duringTravel.resolveManaFlowAnimation(animationId);
+
+    const atHud = useGameStore.getState();
+    assert.equal(atHud.game.player.manaPool.colorless, 1);
+    assert.equal(atHud.manaFlowAnimation?.phase, "impact");
+
+    atHud.completeManaFlowAnimation(animationId);
+    assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
+    assert.equal(useGameStore.getState().game.player.manaPool.colorless, 1);
+
+    useGameStore.getState().activateAbility(forest.instanceId, "forest_add_green");
+    assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
+    assert.equal(useGameStore.getState().game.player.manaPool.green, 1);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
