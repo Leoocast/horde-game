@@ -767,7 +767,8 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
   ]);
 
   const originalPlaySfx = useAudioStore.getState().playSfx;
-  useAudioStore.setState({ playSfx: () => undefined });
+  const playedSfx = [];
+  useAudioStore.setState({ playSfx: (id) => playedSfx.push(id) });
 
   try {
     const game = createTestGame("ruthless-growth-before-fight");
@@ -783,6 +784,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
+      playerDeckId: "mono_green_ramp",
       spellTargeting: undefined,
       spellFightAnimation: undefined,
       pendingSpellHandId: undefined,
@@ -794,8 +796,10 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     useGameStore.getState().startSpellTargeting(spell.instanceId, 0, 0);
     useGameStore.getState().lockSpellTarget(friendly.instanceId);
     assert.deepEqual(useGameStore.getState().buffAnimationCardIds, []);
+    assert.deepEqual(playedSfx, ["playLand"]);
     useGameStore.getState().lockSpellTarget(enemy.instanceId);
     assert.deepEqual(useGameStore.getState().buffAnimationCardIds, []);
+    assert.deepEqual(playedSfx, ["playLand", "playLand"]);
 
     useGameStore.getState().confirmSpellTargeting();
     const afterConfirm = useGameStore.getState();
@@ -806,6 +810,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     assert.equal(afterConfirm.buffAnimationVariant, "growth-strong");
     assert.equal(afterConfirm.spellFightAnimation, undefined);
     assert.equal(afterConfirm.pendingSpellHandId, spell.instanceId);
+    assert.equal(playedSfx.filter((id) => id === "monoGreenBuff").length, 1);
 
     timers.releaseExpiredAt(1039);
     assert.equal(useGameStore.getState().spellFightAnimation, undefined);

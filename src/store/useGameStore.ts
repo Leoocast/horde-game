@@ -803,7 +803,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       spellTargeting: spellTargeting ? { ...spellTargeting, x, y } : undefined,
     })),
   lockSpellTarget: (targetId) =>
-    set(({ game, playerDeckId, spellTargeting }) => {
+    set(({ game, spellTargeting }) => {
       if (!spellTargeting) return {};
       const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
       const req = card?.requiresTargets[spellTargeting.stepIndex];
@@ -812,10 +812,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!valid) return {};
       const targets = { ...spellTargeting.targets, [req.id]: targetId };
       const nextStep = spellTargeting.stepIndex + 1;
-      useAudioStore.getState().playSfx(
-        nextStep >= card.requiresTargets.length ? "playLand" : playerBuffSfxForDeck(playerDeckId),
-        { volume: 0.68 },
-      );
+      useAudioStore.getState().playSfx("playLand", { volume: 0.68 });
       const targetIsBuff = targetRequirementIsBuff(card, req);
       const previewVariant = buffAnimationVariantForCard(card.definitionId, true);
       const buffBeat = targetIsBuff && previewVariant !== "growth-preview"

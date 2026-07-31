@@ -57,6 +57,21 @@ type LeafParticle = {
   phase: number;
 };
 
+type RisingLeafParticle = {
+  group: THREE.Group;
+  blade: THREE.Mesh<THREE.ShapeGeometry, THREE.MeshBasicMaterial>;
+  vein: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  delay: number;
+  life: number;
+  startX: number;
+  startY: number;
+  rise: number;
+  drift: number;
+  rotation: number;
+  turn: number;
+  size: number;
+};
+
 const GROWTH_CONFIGS: Record<GrowthBuffVariant, GrowthConfig> = {
   "growth-preview": {
     duration: 0.72,
@@ -505,6 +520,7 @@ export function NatureRootAnimator({
     const leafGeometry = createLeafGeometry();
     const veinGeometry = createVeinGeometry();
     const leaves: LeafParticle[] = [];
+    const risingLeaves: RisingLeafParticle[] = [];
     const leafCount = reducedMotion ? Math.min(5, config.leafCount) : config.leafCount;
 
     for (let index = 0; index < leafCount; index += 1) {
@@ -561,6 +577,53 @@ export function NatureRootAnimator({
           side * (0.62 + seededNoise(index, salt + 10.8) * 0.46),
         size: (8.5 + seededNoise(index, salt + 12.4) * 8.5) * config.leafScale,
         phase: seededNoise(index, salt + 13.7) * Math.PI * 2,
+      });
+    }
+
+    const risingLeafCount =
+      pattern === "growth"
+        ? reducedMotion
+          ? Math.min(3, Math.ceil(config.leafCount * 0.42))
+          : Math.ceil(config.leafCount * 0.42)
+        : 0;
+    for (let index = 0; index < risingLeafCount; index += 1) {
+      const tone = config.colors.leaves[(index + 1) % config.colors.leaves.length];
+      const bladeMaterial = new THREE.MeshBasicMaterial({
+        color: tone,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const veinMaterial = new THREE.LineBasicMaterial({
+        color: index % 4 === 3 ? 0xe5db8a : 0xd2ef9a,
+        transparent: true,
+        opacity: 0,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const blade = new THREE.Mesh(leafGeometry, bladeMaterial);
+      const vein = new THREE.Line(veinGeometry, veinMaterial);
+      const group = new THREE.Group();
+      group.visible = false;
+      group.add(blade, vein);
+      group.position.z = 4 + seededNoise(index, salt + 20.3);
+      scene.add(group);
+
+      risingLeaves.push({
+        group,
+        blade,
+        vein,
+        delay: 0.1 + seededNoise(index, salt + 21.4) * 0.2,
+        life: config.duration * (0.58 + seededNoise(index, salt + 22.7) * 0.16),
+        startX: width * (0.2 + seededNoise(index, salt + 23.9) * 0.6),
+        startY: height * (0.14 + seededNoise(index, salt + 24.6) * 0.12),
+        rise: height * (0.48 + seededNoise(index, salt + 25.8) * 0.24),
+        drift: width * (seededNoise(index, salt + 26.5) - 0.5) * 0.075,
+        rotation: (seededNoise(index, salt + 27.7) - 0.5) * 0.9,
+        turn: (seededNoise(index, salt + 28.4) - 0.5) * 0.52,
+        size: (7.5 + seededNoise(index, salt + 29.6) * 7.5) * config.leafScale,
       });
     }
 
@@ -659,6 +722,40 @@ export function NatureRootAnimator({
         leaf.vein.material.opacity = alpha * 0.72;
       }
 
+      for (const leaf of risingLeaves) {
+        const localLife = reducedMotion ? Math.min(0.17, leaf.life) : leaf.life;
+        const progress = clamp01((elapsed - leaf.delay) / localLife);
+        const visible = elapsed >= leaf.delay && progress < 1;
+        leaf.group.visible = visible;
+        if (!visible) {
+          leaf.blade.material.opacity = 0;
+          leaf.vein.material.opacity = 0;
+          continue;
+        }
+
+        const travel = easeOutCubic(progress);
+        const fadeIn = clamp01(progress / 0.14);
+        const fadeAway = clamp01((1 - progress) / 0.3);
+        const alpha = Math.min(fadeIn, fadeAway) * config.opacity;
+        const unfold = easeOutCubic(clamp01(progress / 0.2));
+        const shrink = progress > 0.76 ? 1 - (progress - 0.76) * 0.72 : 1;
+
+        leaf.group.position.set(
+          leaf.startX + leaf.drift * travel,
+          leaf.startY + leaf.rise * travel,
+          leaf.group.position.z,
+        );
+        leaf.group.rotation.z = leaf.rotation + leaf.turn * progress;
+        leaf.blade.rotation.y = Math.sin(progress * Math.PI) * 0.22;
+        leaf.group.scale.set(
+          leaf.size * 0.64 * unfold * shrink,
+          leaf.size * unfold * shrink,
+          1,
+        );
+        leaf.blade.material.opacity = alpha * 0.92;
+        leaf.vein.material.opacity = alpha * 0.68;
+      }
+
       renderer.render(scene, camera);
       if (elapsed <= duration + 0.08) {
         animationFrame = window.requestAnimationFrame(tick);
@@ -677,6 +774,11 @@ export function NatureRootAnimator({
         root.glowMaterial.dispose();
       }
       for (const leaf of leaves) {
+        scene.remove(leaf.group);
+        leaf.blade.material.dispose();
+        leaf.vein.material.dispose();
+      }
+      for (const leaf of risingLeaves) {
         scene.remove(leaf.group);
         leaf.blade.material.dispose();
         leaf.vein.material.dispose();

@@ -401,7 +401,8 @@ Los buffs organicos comparten un beat de presentacion sin meter nombres de carta
 `buffAnimationVariantForCard` envia Sunshower Druid, Beast-Kin Ranger, Giant Growth y Ruthless
 Predation a la misma animacion fuerte de Giant Growth. `GrowthBuffAnimator` extiende primero una
 base de raices por todo el ancho inferior, las hace atravesar la carta hacia arriba, abrirse hacia
-los lados y brotar hojas ancladas antes de que todo se desvanezca. No cierra el contorno: debe leerse como crecimiento, no
+los lados y brotar hojas ancladas. Una segunda capa de hojas sueltas asciende casi recta, con deriva
+leve pero sin remolino, antes de que todo se desvanezca. No cierra el contorno: debe leerse como crecimiento, no
 proteccion. El efecto vive en un canvas Three.js local que sigue a la criatura sin tomar su
 `transform`. La version que envuelve el borde se conserva sin uso en `NatureShieldAnimator.tsx`
 para un futuro efecto defensivo. Los buffs de otros decks conservan las lineas azules.
