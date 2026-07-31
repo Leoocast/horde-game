@@ -840,6 +840,88 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
   }
 });
 
+test("Broken Wings cuts the target before its normal destruction fade", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const playedSfx = [];
+  useAudioStore.setState({ playSfx: (id) => playedSfx.push(id) });
+
+  try {
+    const game = createTestGame("broken-wings-presentation");
+    addForests(game, 3);
+    const target = addCard(game, cardFromDeck("graf_harvest", "horde"));
+    const spell = addCard(game, cardFromDeck("broken_wings", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      playerDeckId: "mono_green_ramp",
+      spellTargeting: {
+        handId: spell.instanceId,
+        stepIndex: 0,
+        targets: { targetPermanent: target.instanceId },
+        x: 0,
+        y: 0,
+      },
+      brokenWingsAnimation: undefined,
+      pendingSpellHandId: undefined,
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+
+    const duringCut = useGameStore.getState();
+    assert.equal(duringCut.brokenWingsAnimation?.targetId, target.instanceId);
+    assert.equal(duringCut.pendingSpellHandId, spell.instanceId);
+    assert.deepEqual(duringCut.specialDeadCardIds, []);
+    assert.equal(duringCut.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(duringCut.game.player.hand.some((card) => card.instanceId === spell.instanceId), true);
+    assert.deepEqual(playedSfx, []);
+
+    timers.releaseExpiredAt(419);
+    assert.deepEqual(useGameStore.getState().specialDeadCardIds, []);
+
+    timers.releaseExpiredAt(420);
+    const atImpact = useGameStore.getState();
+    assert.deepEqual(atImpact.specialDeadCardIds, [target.instanceId]);
+    assert.equal(atImpact.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), true);
+    assert.deepEqual(playedSfx, ["attack"]);
+
+    timers.releaseExpiredAt(680);
+    const afterFade = useGameStore.getState();
+    assert.equal(afterFade.brokenWingsAnimation, undefined);
+    assert.equal(afterFade.pendingSpellHandId, undefined);
+    assert.deepEqual(afterFade.specialDeadCardIds, []);
+    assert.equal(afterFade.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), false);
+    assert.equal(afterFade.game.horde.graveyard.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(afterFade.game.player.graveyard.some((card) => card.instanceId === spell.instanceId), true);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

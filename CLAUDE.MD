@@ -422,6 +422,8 @@ Instant:
 - debe poder targetear `Graf Harvest`
 - target valido en Other permanents debe quedar sobre fade negro
 - CardPreview no debe bloquear la vista mientras eliges target
+- al confirmar, dos cortes verdes atraviesan el target sin moverlo; hojas, plumas oscuras y
+  astillas caen desde el corte antes del fade normal de destruccion
 
 ### Magnigoth Sentry / Colossadactyl / Timberland Ancient
 

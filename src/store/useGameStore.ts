@@ -130,6 +130,7 @@ export type GameStore = {
   smallpoxSelection?: SmallpoxSelectionState;
   spellTargeting?: SpellTargetingState;
   spellFightAnimation?: SpellFightAnimationState;
+  brokenWingsAnimation?: BrokenWingsAnimationState;
   pendingSpellHandId?: string;
   buffAnimationCardIds: string[];
   buffAnimationEventId?: number;
@@ -255,6 +256,8 @@ const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
 const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
 const SPELL_FIGHT_IMPACT_MS = 520;
 const SPELL_FIGHT_DEATH_FADE_MS = 260;
+const BROKEN_WINGS_IMPACT_MS = 420;
+const BROKEN_WINGS_DEATH_FADE_MS = 260;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
@@ -440,6 +443,11 @@ export type SpellFightAnimationState = {
   eventId: number;
 };
 
+export type BrokenWingsAnimationState = {
+  id: string;
+  targetId: string;
+};
+
 /** Every piece of presentation state that must NOT survive into a new game. It lives outside
  *  `GameState` (animation queues, targeting, selections), so anything that swaps the game in has to
  *  clear it here — otherwise callbacks and beats from the previous match land on the new board. */
@@ -500,6 +508,7 @@ function createCleanUiState(): Partial<GameStore> {
     smallpoxSelection: undefined,
     spellTargeting: undefined,
     spellFightAnimation: undefined,
+    brokenWingsAnimation: undefined,
     pendingSpellHandId: undefined,
     buffAnimationCardIds: [],
     buffAnimationEventId: undefined,
@@ -557,6 +566,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   smallpoxSelection: undefined,
   spellTargeting: undefined,
   spellFightAnimation: undefined,
+  brokenWingsAnimation: undefined,
   pendingSpellHandId: undefined,
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
@@ -2191,6 +2201,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
   const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
+  const usesBrokenWingsAnimation = card.definitionId === "broken_wings";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (
     latest: GameState,
@@ -2346,6 +2357,46 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   }
   if (!isFightSpell) {
     if (isDestroySpell && destroyTargetIds.length > 0) {
+      if (usesBrokenWingsAnimation) {
+        const animationId = `broken-wings-${card.instanceId}-${Date.now()}`;
+        const gameSessionId = state.gameSessionId;
+        window.setTimeout(() => {
+          const current = useGameStore.getState();
+          if (
+            current.gameSessionId !== gameSessionId ||
+            current.pendingSpellHandId !== handId ||
+            current.brokenWingsAnimation?.id !== animationId
+          ) return;
+          useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+          useGameStore.setState({ specialDeadCardIds: destroyTargetIds });
+
+          window.setTimeout(() => {
+            const latest = useGameStore.getState();
+            if (
+              latest.gameSessionId !== gameSessionId ||
+              latest.pendingSpellHandId !== handId ||
+              latest.brokenWingsAnimation?.id !== animationId
+            ) return;
+            useGameStore.setState({
+              ...resolveSpell(latest.game),
+              brokenWingsAnimation: undefined,
+              specialDeadCardIds: [],
+              pendingSpellHandId: undefined,
+            });
+          }, BROKEN_WINGS_DEATH_FADE_MS);
+        }, BROKEN_WINGS_IMPACT_MS);
+        return {
+          spellTargeting: undefined,
+          selectedHandId: undefined,
+          focusedCardId: undefined,
+          pendingSpellHandId: handId,
+          brokenWingsAnimation: {
+            id: animationId,
+            targetId: destroyTargetIds[0],
+          },
+          specialDeadCardIds: [],
+        };
+      }
       useAudioStore.getState().playSfx("attack", { volume: 0.72 });
       window.setTimeout(() => {
         useGameStore.setState((state) => ({

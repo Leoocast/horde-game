@@ -5515,6 +5515,145 @@
     animation: special-card-death-fade 260ms ease-out both;
   }
 
+  .broken-wings-vfx {
+    position: absolute;
+    inset: -8% -10% -18%;
+    z-index: 64;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .broken-wings-impact-haze {
+    position: absolute;
+    inset: 13% 3% 17%;
+    border-radius: 42%;
+    opacity: 0;
+    background:
+      radial-gradient(ellipse at 52% 53%, rgb(213 255 150 / 0.32), rgb(88 195 57 / 0.12) 42%, transparent 72%);
+    filter: blur(5px);
+    animation: broken-wings-haze 680ms ease-out both;
+  }
+
+  .broken-wings-slashes {
+    position: absolute;
+    inset: 2% 0 9%;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .broken-wings-slash {
+    fill: none;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .broken-wings-slash-back {
+    stroke-width: 5.2;
+    animation: broken-wings-cut 250ms 70ms cubic-bezier(0.16, 0.84, 0.36, 1) both;
+  }
+
+  .broken-wings-slash-front {
+    stroke-width: 3.6;
+    animation: broken-wings-cut 230ms 118ms cubic-bezier(0.16, 0.84, 0.36, 1) both;
+  }
+
+  .broken-wings-fragments {
+    position: absolute;
+    inset: 0;
+  }
+
+  .broken-wings-fragment {
+    position: absolute;
+    left: var(--fragment-x);
+    top: var(--fragment-y);
+    display: block;
+    width: 8px;
+    height: 15px;
+    opacity: 0;
+    transform-origin: 50% 16%;
+    filter: drop-shadow(0 0 4px rgb(94 220 66 / 0.64));
+    animation: broken-wings-fragment-fall 470ms var(--fragment-delay) cubic-bezier(0.18, 0.62, 0.42, 1) both;
+  }
+
+  .broken-wings-fragment-leaf {
+    border-radius: 90% 12% 90% 12%;
+    background: linear-gradient(140deg, #c8f37d 0 10%, #5ebe38 48%, #224f20 100%);
+  }
+
+  .broken-wings-fragment-feather {
+    width: 7px;
+    height: 19px;
+    border-radius: 95% 15% 72% 16%;
+    background:
+      linear-gradient(90deg, transparent 47%, rgb(204 255 143 / 0.72) 48% 54%, transparent 55%),
+      linear-gradient(145deg, #6f9c60 0%, #2d4b35 48%, #14271e 100%);
+    clip-path: polygon(50% 0, 92% 18%, 73% 31%, 95% 43%, 69% 54%, 88% 67%, 59% 76%, 53% 100%, 42% 76%, 12% 66%, 34% 53%, 8% 42%, 31% 30%, 10% 17%);
+  }
+
+  .broken-wings-fragment-splinter {
+    width: 3px;
+    height: 15px;
+    border-radius: 60% 40%;
+    background: linear-gradient(180deg, #d0f28b, #438f34 56%, #183c20);
+  }
+
+  @keyframes broken-wings-haze {
+    0%,
+    10% {
+      opacity: 0;
+      transform: scale(0.72);
+    }
+    43% {
+      opacity: 0.9;
+      transform: scale(1.04);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.16);
+    }
+  }
+
+  @keyframes broken-wings-cut {
+    0% {
+      opacity: 0;
+      stroke-dashoffset: 1;
+    }
+    24% {
+      opacity: 1;
+    }
+    68% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      opacity: 0;
+      stroke-dashoffset: -0.18;
+    }
+  }
+
+  @keyframes broken-wings-fragment-fall {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, -3px, 0) rotate(0deg) scale(0.72);
+    }
+    16% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 0.82;
+    }
+    100% {
+      opacity: 0;
+      transform:
+        translate3d(var(--fragment-dx), var(--fragment-dy), 0)
+        rotate(var(--fragment-rotation))
+        scale(0.9);
+    }
+  }
+
   @keyframes special-card-death-fade {
     0% {
       opacity: 1;
