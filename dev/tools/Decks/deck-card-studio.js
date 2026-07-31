@@ -48,7 +48,20 @@
     function typeSymbol(type) {
         const normalized = String(type || "").toLocaleLowerCase("es");
 
-        if (theme === "zombies" || theme === "goblins" || theme === "vampires") {
+        if (
+            theme === "zombies"
+            || theme === "goblins"
+            || theme === "vampires"
+            || theme === "hunters"
+        ) {
+            if (theme === "hunters" && normalized.includes("trampa")) {
+                return `
+                    <svg class="fa-inline-icon tcg-trap-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                        <path fill="currentColor" d="M7 18h10l7 11 8-14 8 14 7-11h10L45 40H19L7 18Zm12 27h26v6H19v-6Z"></path>
+                        <path fill="currentColor" d="M12 10h8l4 8-6 4-6-12Zm32 0h8l-6 12-6-4 4-8Z"></path>
+                    </svg>
+                `;
+            }
             if (normalized.includes("criatura")) {
                 return `
                     <svg class="fa-inline-icon" aria-hidden="true" focusable="false" viewBox="0 0 512 512">
@@ -91,6 +104,15 @@
             return `
                 <svg class="tcg-faction-icon tcg-faction-icon--blood" aria-hidden="true" focusable="false" viewBox="0 0 384 512">
                     <path fill="currentColor" d="M192 0C79.9 95.2 0 213.9 0 320c0 106 86 192 192 192s192-86 192-192C384 213.9 304.1 95.2 192 0Z"></path>
+                </svg>
+            `;
+        }
+
+        if (theme === "hunters") {
+            return `
+                <svg class="tcg-faction-icon tcg-faction-icon--hunters" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" fill-rule="evenodd" d="M32 4 43 20l17 4-11 13 2 19-19-8-19 8 2-19L4 24l17-4L32 4Zm0 11-6 10-11 3 7 7-1 11 11-5 11 5-1-11 7-7-11-3-6-10Z" clip-rule="evenodd"></path>
+                    <path fill="currentColor" d="m11 8 6 2 6 12-7 3L11 8Zm42 0-5 17-7-3 6-12 6-2Z"></path>
                 </svg>
             `;
         }
