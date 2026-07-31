@@ -577,7 +577,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
   }
 });
 
-test("activated life costs use the reusable life-payment presentation", async () => {
+test("Tithe Acolyte presents its life payment while carrying stored Energy to the HUD", async () => {
   const [
     { useGameStore },
     { addCard, cardFromDeck, createTestGame },
@@ -593,6 +593,7 @@ test("activated life costs use the reusable life-payment presentation", async ()
     game,
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
+    manaFlowAnimation: undefined,
     pendingTriggeredEffectCount: 0,
     playerAutoTriggerCount: 0,
   });
@@ -604,9 +605,30 @@ test("activated life costs use the reusable life-payment presentation", async ()
   assert.equal(afterActivation.game.player.lifePaidThisTurn, 5);
   assert.equal(afterActivation.lifeDamageAnimationId, undefined);
   assert.equal(afterActivation.lifePaymentAnimation?.amount, 5);
+  assert.equal(afterActivation.manaFlowAnimation?.sourceId, acolyte.instanceId);
+  assert.equal(afterActivation.manaFlowAnimation?.phase, "travel");
+  assert.equal(afterActivation.game.player.manaPool.colorless, 0);
+  assert.equal(
+    afterActivation.game.player.battlefield.find((card) => card.instanceId === acolyte.instanceId)?.tapped,
+    true,
+  );
 
-  useGameStore.getState().completeLifePaymentAnimation(afterActivation.lifePaymentAnimation.id);
+  const lifePaymentId = afterActivation.lifePaymentAnimation?.id;
+  const manaFlowId = afterActivation.manaFlowAnimation?.id;
+  assert.equal(typeof lifePaymentId, "string");
+  assert.equal(typeof manaFlowId, "string");
+
+  afterActivation.resolveManaFlowAnimation(manaFlowId);
+  const atHud = useGameStore.getState();
+  assert.equal(atHud.game.player.manaPool.colorless, 1);
+  assert.equal(atHud.manaFlowAnimation?.phase, "impact");
+  assert.equal(atHud.lifePaymentAnimation?.id, lifePaymentId);
+
+  atHud.completeManaFlowAnimation(manaFlowId);
+  useGameStore.getState().completeLifePaymentAnimation(lifePaymentId);
+  assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
   assert.equal(useGameStore.getState().lifePaymentAnimation, undefined);
+  assert.equal(useGameStore.getState().game.player.manaPool.colorless, 1);
 });
 
 test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {

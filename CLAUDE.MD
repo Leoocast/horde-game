@@ -332,7 +332,7 @@ Sin marcador = la habilidad debe validar completa contra el vocabulario del engi
 
 ## Cartas / efectos ya tratados
 
-### Llanowar Elves / Druid of the Cowl
+### Llanowar Elves / Druid of the Cowl / Tithe Acolyte
 
 Efecto generico de tap:
 - `{{T}}: Add {G}.`
@@ -345,6 +345,9 @@ Efecto generico de tap:
   5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
      hasta el siguiente socket amarillo vacio; el mana almacenado se compromete al impacto. El
      ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
+  6. Tithe Acolyte reutiliza ese flujo dorado sin reemplazar su pago de vida: la mordida y el viaje
+     corren en la misma activacion, pero la Energia almacenada tampoco se acredita hasta que la
+     semilla alcanza el socket
 
 Reglas:
 - solo en turno del player
@@ -430,7 +433,15 @@ Instant:
 
 ### Magnigoth Sentry / Colossadactyl / Timberland Ancient
 
-No requieren programacion extra ahora.
+No requieren reglas extra. Al terminar su entrada al campo comparten un impacto visual de criatura
+pesada inspirado por `smoke-blast` + `blunt-impact` del VFX Lab: un anillo toroidal de humo terroso
+rodea la carta, una onda circular centrada en su cara cubre toda su huella junto con lineas radiales y escombros con
+gravedad. La carta no tiembla ni se comprime. La cortina central del laboratorio se mantiene tenue
+para no tapar la criatura recien jugada. El canvas Three.js tiene margen suficiente para que el humo
+no corte contra sus bordes y empieza 225 ms antes de que termine la caida, incluyendo cualquier
+delay de reacomodo, para que el frente ya este naciendo al aterrizar.
+El VFX comienza en el `onfinish` real de la invocacion para mantenerse sincronizado incluso cuando
+la fila de criaturas debe reacomodarse antes de recibir la carta.
 
 No implementar Forestcycling; no aporta en este modo.
 

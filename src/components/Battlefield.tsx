@@ -17,6 +17,7 @@ import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
+import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
 import {
@@ -44,6 +45,11 @@ const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
+const HEAVY_MONO_GREEN_CREATURE_IDS = new Set([
+  "magnigoth_sentry",
+  "colossadactyl",
+  "timberland_ancient",
+]);
 
 type EnergyChangeSource = "card" | "land" | "turn";
 
@@ -143,6 +149,8 @@ export function Battlefield({ game, side, cards }: Props) {
   const currentSwarmEntryWaveId = useRef<number | undefined>(undefined);
   const currentSwarmEntryWaveTurn = useRef<number | undefined>(undefined);
   const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
+  const [heavyLandingEvents, setHeavyLandingEvents] = useState<Record<string, number>>({});
+  const nextHeavyLandingEventId = useRef(0);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
@@ -479,6 +487,21 @@ export function Battlefield({ game, side, cards }: Props) {
           fill: "both",
         },
       );
+      if (
+        side === "player" &&
+        id &&
+        summonedCard &&
+        HEAVY_MONO_GREEN_CREATURE_IDS.has(summonedCard.definitionId)
+      ) {
+        const leadInMs =
+          (Number(visual.dataset.entryDelay ?? 0) + entranceExtraDelay) * 1000 + 135;
+        window.setTimeout(() => {
+          if (!visual.isConnected || !entranceAnimatingIds.current.has(id)) return;
+          nextHeavyLandingEventId.current += 1;
+          const eventId = nextHeavyLandingEventId.current;
+          setHeavyLandingEvents((current) => ({ ...current, [id]: eventId }));
+        }, leadInMs);
+      }
       animation.onfinish = () => {
         // Do not leave the final fill frame attached to this stable DOM node: a retained
         // WAAPI transform/filter outranks the CSS activation and targeting animations that
@@ -924,6 +947,7 @@ export function Battlefield({ game, side, cards }: Props) {
         !visuallyDead &&
         !speciallyDead,
     );
+    const heavyLandingEventId = heavyLandingEvents[card.instanceId];
 
     return (
       <motion.div
@@ -982,6 +1006,21 @@ export function Battlefield({ game, side, cards }: Props) {
       {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
+      {heavyLandingEventId && (
+        <HeavyCreatureLanding
+          key={`heavy-landing-${heavyLandingEventId}`}
+          cardId={card.instanceId}
+          eventId={heavyLandingEventId}
+          onComplete={(cardId, eventId) => {
+            setHeavyLandingEvents((current) => {
+              if (current[cardId] !== eventId) return current;
+              const next = { ...current };
+              delete next[cardId];
+              return next;
+            });
+          }}
+        />
+      )}
       {buffAnimationActive && (
         buffAnimationVariant === "default"
           ? <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />

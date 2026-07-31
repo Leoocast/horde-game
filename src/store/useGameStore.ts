@@ -1283,23 +1283,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const usesManaFlowAnimation = Boolean(
         storedManaGained > 0 &&
         source &&
-        (source.definitionId === "llanowar_elves" || source.definitionId === "druid_of_the_cowl"),
+        (
+          source.definitionId === "llanowar_elves" ||
+          source.definitionId === "druid_of_the_cowl" ||
+          source.definitionId === "tithe_acolyte"
+        ),
       );
       if (usesManaFlowAnimation) {
         const animationId = `mana-flow-${source!.instanceId}-${Date.now()}`;
         const staged = structuredClone(next) as GameState;
         staged.player.manaPool = { ...state.game.player.manaPool };
         startedManaFlowAnimationId = animationId;
-        manaFlowCommit = () => ({
-          game: next,
-          playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
-        });
-        manaFlowAfterCommit = shouldSchedulePlayerTriggers
+        manaFlowCommit = () => {
+          const committed = structuredClone(useGameStore.getState().game) as GameState;
+          committed.player.manaPool.colorless += storedManaGained;
+          return {
+            game: committed,
+            playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
+          };
+        };
+        manaFlowAfterCommit = shouldSchedulePlayerTriggers && paidLife === 0
           ? () => scheduleQueuedPlayerTriggers()
           : undefined;
         return {
           game: staged,
           activeEffectCardId: undefined,
+          lifePaymentAnimation: paidLife > 0
+            ? { id: startedLifePaymentAnimationId!, amount: paidLife }
+            : undefined,
           manaFlowAnimation: {
             id: animationId,
             sourceId: source!.instanceId,
@@ -1320,9 +1331,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     if (startedManaFlowAnimationId) {
       scheduleManaFlowAnimationSafetyClear(startedManaFlowAnimationId);
-    } else if (startedLifePaymentAnimationId) {
+    }
+    if (startedLifePaymentAnimationId) {
       scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
-    } else if (shouldSchedulePlayerTriggers) {
+    } else if (!startedManaFlowAnimationId && shouldSchedulePlayerTriggers) {
       scheduleQueuedPlayerTriggers();
     }
   },
