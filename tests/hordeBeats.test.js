@@ -243,6 +243,152 @@ test("a Lifesteal attacker bites the Horde life panel at its combat impact", asy
   }
 });
 
+test("a Toxic attacker poisons the Horde HUD at its combat impact without doubling the counter", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("toxic-attack-presentation");
+    game.activeSide = "player";
+    game.phase = "combat";
+    game.setupTurnsRemaining = 0;
+    const basilisk = addCard(game, cardFromDeck("ichorspit_basilisk", "player"));
+    game.combat.playerAttackers = [basilisk.instanceId];
+
+    useGameStore.setState({
+      game,
+      playerAttackAnimation: undefined,
+      poisonAttackAnimation: undefined,
+    });
+
+    useGameStore.getState().finishPlayerCombat();
+    timers.releaseExpiredAt(0);
+    assert.equal(useGameStore.getState().playerAttackAnimation?.attackerId, basilisk.instanceId);
+
+    timers.releaseExpiredAt(89);
+    assert.equal(useGameStore.getState().game.horde.poisonCounters, 0);
+    assert.equal(useGameStore.getState().poisonAttackAnimation, undefined);
+
+    timers.releaseExpiredAt(90);
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.horde.poisonCounters, 1);
+    assert.equal(atImpact.poisonAttackAnimation?.attackerId, basilisk.instanceId);
+    assert.equal(atImpact.poisonAttackAnimation?.amount, 1);
+
+    atImpact.completePoisonAttackAnimation(atImpact.poisonAttackAnimation.id);
+    assert.equal(useGameStore.getState().poisonAttackAnimation, undefined);
+
+    timers.releaseExpiredAt(1_000);
+    const afterCombat = useGameStore.getState();
+    assert.equal(afterCombat.game.horde.poisonCounters, 1);
+    assert.equal(afterCombat.playerAttackAnimation, undefined);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("three poison counters animate their consumption before the Horde card is milled", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("poison-consume-presentation");
+    game.activeSide = "player";
+    game.phase = "end";
+    game.setupTurnsRemaining = 0;
+    game.horde.poisonCounters = 3;
+    const milledCard = addCard(
+      game,
+      cardFromDeck("zombie_token", "horde", "library"),
+      "horde",
+      "library",
+    );
+    addCard(
+      game,
+      cardFromDeck("zombie_token", "horde", "library"),
+      "horde",
+      "library",
+    );
+
+    useGameStore.setState({
+      game,
+      poisonConsumeAnimation: undefined,
+      hordeMillAnimationQueue: [],
+    });
+
+    useGameStore.getState().endPlayerTurn();
+    const beforeConsume = useGameStore.getState();
+    assert.equal(beforeConsume.game.activeSide, "player");
+    assert.equal(beforeConsume.game.horde.poisonCounters, 3);
+    assert.equal(beforeConsume.game.horde.library.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(beforeConsume.game.horde.graveyard.length, 0);
+    assert.equal(beforeConsume.hordeMillAnimationQueue.length, 0);
+    assert.equal(beforeConsume.poisonConsumeAnimation?.amount, 3);
+    assert.equal(beforeConsume.poisonConsumeAnimation?.millCount, 1);
+
+    beforeConsume.completePoisonConsumeAnimation(beforeConsume.poisonConsumeAnimation.id);
+    const afterConsume = useGameStore.getState();
+    assert.equal(afterConsume.poisonConsumeAnimation, undefined);
+    assert.equal(afterConsume.game.activeSide, "horde");
+    assert.equal(afterConsume.game.horde.poisonCounters, 0);
+    assert.equal(afterConsume.game.horde.graveyard.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(afterConsume.hordeMillAnimationQueue.length, 1);
+    assert.equal(afterConsume.hordeMillAnimationQueue[0].card.instanceId, milledCard.instanceId);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Blood Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

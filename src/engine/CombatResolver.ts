@@ -63,7 +63,7 @@ function failAction(game: GameState, reason: string): GameState {
 
 export function resolvePlayerCombat(
   game: GameState,
-  options: { skipLifesteal?: boolean } = {},
+  options: { skipLifesteal?: boolean; skipPoison?: boolean } = {},
 ): GameState {
   const next = structuredClone(game) as GameState;
   let hordeDamage = 0;
@@ -75,7 +75,7 @@ export function resolvePlayerCombat(
     const power = getPowerToughness(next, attacker).power;
     hordeDamage += power;
     if (!options.skipLifesteal) applyCombatLifesteal(next, attacker, power);
-    if (power > 0) poisonCounters += getToxicAmount(next, attacker);
+    if (!options.skipPoison && power > 0) poisonCounters += getToxicAmount(next, attacker);
   }
   const cardsToMill = Math.floor(hordeDamage / next.hordeRules.damagePerMill);
   if (hordeDamage > 0) log(next, `Player deals ${hordeDamage} damage to Horde.`);
@@ -362,6 +362,20 @@ export function resolvePlayerAttackerLifesteal(game: GameState, attackerId: stri
   const attacker = next.player.battlefield.find((card) => card.instanceId === attackerId);
   if (!attacker) return next;
   applyCombatLifesteal(next, attacker, getPowerToughness(next, attacker).power);
+  return next;
+}
+
+/** Commits one animated player's poison counters at that attacker's impact frame.
+ *  The batch resolver can skip poison afterwards so the same counters are not applied twice. */
+export function resolvePlayerAttackerPoison(game: GameState, attackerId: string): GameState {
+  const next = structuredClone(game) as GameState;
+  if (!next.combat.playerAttackers.includes(attackerId)) return next;
+  const attacker = next.player.battlefield.find((card) => card.instanceId === attackerId);
+  if (!attacker || getPowerToughness(next, attacker).power <= 0) return next;
+  const amount = getToxicAmount(next, attacker);
+  if (amount <= 0) return next;
+  next.horde.poisonCounters += amount;
+  log(next, `Horde gets ${amount} poison counter(s).`);
   return next;
 }
 

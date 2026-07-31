@@ -7,7 +7,7 @@ import { localizedKeywordLabel } from "../src/i18n/cardLocalization";
 import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerLifesteal, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerLifesteal, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
@@ -1541,6 +1541,20 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.horde.poisonCounters, 0);
   assert.equal(turnResult.horde.graveyard.length, 1);
   assert.equal(turnResult.horde.library.length, 2);
+});
+
+test("animated Toxic lands at its attack impact and is not applied twice at combat cleanup", () => {
+  const game = createTestGame("toxic-player-impact");
+  const basilisk = addCard(game, cardFromDeck("ichorspit_basilisk", "player"));
+  game.combat.playerAttackers = [basilisk.instanceId];
+
+  const animatedImpact = resolvePlayerAttackerPoison(game, basilisk.instanceId);
+  const animatedResult = resolvePlayerCombat(animatedImpact, { skipPoison: true });
+
+  assert.equal(game.horde.poisonCounters, 0);
+  assert.equal(animatedImpact.horde.poisonCounters, 1);
+  assert.equal(animatedResult.horde.poisonCounters, 1);
+  assert.equal(animatedResult.combat.playerAttackers.length, 0);
 });
 
 test("Lifesteal restores the combat damage a player attacker deals to the Horde", () => {

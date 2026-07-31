@@ -31,6 +31,10 @@ export function DuelHud({ game }: { game: GameState }) {
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const lifestealAttackAnimations = useGameStore((state) => state.lifestealAttackAnimations);
+  const poisonAttackAnimation = useGameStore((state) => state.poisonAttackAnimation);
+  const completePoisonAttackAnimation = useGameStore((state) => state.completePoisonAttackAnimation);
+  const poisonConsumeAnimation = useGameStore((state) => state.poisonConsumeAnimation);
+  const completePoisonConsumeAnimation = useGameStore((state) => state.completePoisonConsumeAnimation);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
@@ -232,6 +236,37 @@ export function DuelHud({ game }: { game: GameState }) {
             {latestLifestealAttack && (
               <span key={latestLifestealAttack.id} className="horde-lifesteal-blood-wave" aria-hidden="true" />
             )}
+            {poisonAttackAnimation && (
+              <span
+                key={poisonAttackAnimation.id}
+                className="horde-poison-impact"
+                aria-hidden="true"
+                onAnimationEnd={(event) => {
+                  if (event.animationName === "horde-poison-impact-lifetime") {
+                    completePoisonAttackAnimation(poisonAttackAnimation.id);
+                  }
+                }}
+              >
+                {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+              </span>
+            )}
+            {poisonConsumeAnimation && (
+              <span
+                key={poisonConsumeAnimation.id}
+                className="horde-poison-consume"
+                aria-hidden="true"
+                onAnimationEnd={(event) => {
+                  if (event.animationName === "horde-poison-consume-lifetime") {
+                    completePoisonConsumeAnimation(poisonConsumeAnimation.id);
+                  }
+                }}
+              >
+                {Array.from(
+                  { length: Math.min(9, poisonConsumeAnimation.amount) },
+                  (_, index) => <i key={index} />,
+                )}
+              </span>
+            )}
             <div data-horde-mill-origin="true" data-horde-life-emblem="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
@@ -257,7 +292,15 @@ export function DuelHud({ game }: { game: GameState }) {
             </div>
             {game.horde.poisonCounters > 0 && (
               <GameTooltip content={t("game.poisonCounters", { count: game.horde.poisonCounters })} side="bottom" className="horde-poison-tooltip">
-                <div className="horde-poison-status" aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters })}>
+                <div
+                  key={poisonAttackAnimation?.id ?? poisonConsumeAnimation?.id ?? `poison-${game.horde.poisonCounters}`}
+                  className={[
+                    "horde-poison-status",
+                    poisonAttackAnimation ? "is-poison-gaining" : "",
+                    poisonConsumeAnimation ? "is-poison-consuming" : "",
+                  ].join(" ")}
+                  aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters })}
+                >
                   <Droplet size={15} fill="currentColor" strokeWidth={2.2} />
                   <span>{game.horde.poisonCounters}</span>
                 </div>

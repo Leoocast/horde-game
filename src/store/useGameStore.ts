@@ -18,6 +18,7 @@ import {
   refreshHordeAttackEvent,
   resolvePendingHordeCombatDamageVolleys,
   resolvePlayerAttackerLifesteal,
+  resolvePlayerAttackerPoison,
   resolvePlayerCombat,
   sortPlayerAttackersLeftToRight,
   togglePlayerAttacker,
@@ -84,6 +85,8 @@ export type GameStore = {
   lifeDamageAnimationId?: number;
   lifePaymentAnimation?: LifePaymentAnimationState;
   lifestealAttackAnimations: LifestealAttackAnimationState[];
+  poisonAttackAnimation?: PoisonAttackAnimationState;
+  poisonConsumeAnimation?: PoisonConsumeAnimationState;
   bloodPactAnimation?: BloodPactAnimationState;
   drainEssenceAnimation?: DrainEssenceAnimationState;
   finalBanquetAnimation?: FinalBanquetAnimationState;
@@ -170,7 +173,7 @@ export type GameStore = {
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
-  endPlayerTurn: () => void;
+  endPlayerTurn: (options?: { runHordeAfter?: boolean }) => void;
   playLand: (id: string) => void;
   startEnergyRecycle: (id: string, origin: { x: number; y: number }) => void;
   setEnergyRecycleDragActive: (active: boolean) => void;
@@ -180,6 +183,8 @@ export type GameStore = {
   completeBloodPactAnimation: (id: string) => void;
   completeLifePaymentAnimation: (id: string) => void;
   completeLifestealAttackAnimation: (id: string) => void;
+  completePoisonAttackAnimation: (id: string) => void;
+  completePoisonConsumeAnimation: (id: string) => void;
   resolveDrainEssenceAnimation: (id: string) => void;
   completeDrainEssenceAnimation: (id: string) => void;
   beginFinalBanquetStrike: (id: string) => void;
@@ -237,6 +242,8 @@ const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
 const LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 1100;
+const POISON_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 900;
+const POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS = 1200;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
 let activeEffectCloseTimer: number | undefined;
@@ -249,6 +256,10 @@ let lifePaymentAnimationSafetyTimer: number | undefined;
 let lifePaymentAfterCommit: (() => void) | undefined;
 const lifestealAttackAnimationSafetyTimers = new Map<string, number>();
 let lifestealAttackAnimationEventId = 0;
+let poisonAttackAnimationSafetyTimer: number | undefined;
+let poisonAttackAnimationEventId = 0;
+let poisonConsumeAnimationSafetyTimer: number | undefined;
+let poisonConsumeRunHordeAfterMill = false;
 let drainEssenceAnimationSafetyTimer: number | undefined;
 let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
 let drainEssenceAfterCommit: (() => void) | undefined;
@@ -275,6 +286,19 @@ export type LifestealAttackAnimationState = {
   id: string;
   attackerId: string;
   amount: number;
+};
+
+export type PoisonAttackAnimationState = {
+  id: string;
+  attackerId: string;
+  amount: number;
+};
+
+export type PoisonConsumeAnimationState = {
+  id: string;
+  amount: number;
+  millCount: number;
+  runHordeAfter: boolean;
 };
 
 type AutoPaidLandAnimation = {
@@ -429,6 +453,8 @@ function createCleanUiState(): Partial<GameStore> {
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
     lifestealAttackAnimations: [],
+    poisonAttackAnimation: undefined,
+    poisonConsumeAnimation: undefined,
     bloodPactAnimation: undefined,
     drainEssenceAnimation: undefined,
     finalBanquetAnimation: undefined,
@@ -483,6 +509,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lifeDamageAnimationId: undefined,
   lifePaymentAnimation: undefined,
   lifestealAttackAnimations: [],
+  poisonAttackAnimation: undefined,
+  poisonConsumeAnimation: undefined,
   bloodPactAnimation: undefined,
   drainEssenceAnimation: undefined,
   finalBanquetAnimation: undefined,
@@ -531,6 +559,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
     clearLifestealAttackPresentation();
+    clearPoisonAttackPresentation();
+    clearPoisonConsumePresentation();
     clearDrainEssencePresentation();
     clearFinalBanquetPresentation();
     set((state) => {
@@ -553,6 +583,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
     clearLifestealAttackPresentation();
+    clearPoisonAttackPresentation();
+    clearPoisonConsumePresentation();
     clearDrainEssencePresentation();
     clearFinalBanquetPresentation();
     set((state) => {
@@ -808,13 +840,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitSelectionId: undefined,
       };
     }),
-  endPlayerTurn: () =>
+  endPlayerTurn: (options) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
         return { handLimitDiscardActive: true, handLimitSelectionId: undefined };
+      }
+      const poisonPerMill = game.hordeRules.poisonPerMill;
+      const poisonMills = Math.floor(game.horde.poisonCounters / poisonPerMill);
+      if (poisonMills > 0) {
+        const animation: PoisonConsumeAnimationState = {
+          id: `poison-consume-${Date.now()}`,
+          amount: poisonMills * poisonPerMill,
+          millCount: poisonMills,
+          runHordeAfter: options?.runHordeAfter === true,
+        };
+        schedulePoisonConsumeAnimationSafetyClear(animation.id);
+        useAudioStore.getState().playSfx("activateEffect", { volume: 0.48 });
+        return {
+          poisonConsumeAnimation: animation,
+          handLimitDiscardActive: false,
+          handLimitSelectionId: undefined,
+        };
       }
       const next = endPlayerTurn(game);
       playDrawOneIfPlayerDrew(game, next);
@@ -986,6 +1035,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lifestealAttackAnimations: state.lifestealAttackAnimations.filter((animation) => animation.id !== id),
       };
     });
+  },
+  completePoisonAttackAnimation: (id) => {
+    set((state) => {
+      if (state.poisonAttackAnimation?.id !== id) return {};
+      if (poisonAttackAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+        window.clearTimeout(poisonAttackAnimationSafetyTimer);
+      }
+      poisonAttackAnimationSafetyTimer = undefined;
+      return { poisonAttackAnimation: undefined };
+    });
+  },
+  completePoisonConsumeAnimation: (id) => {
+    const active = get().poisonConsumeAnimation;
+    if (active?.id !== id) return;
+    if (poisonConsumeAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+      window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+    }
+    poisonConsumeAnimationSafetyTimer = undefined;
+    const previous = get().game;
+    const next = endPlayerTurn(previous);
+    playDrawOneIfPlayerDrew(previous, next);
+    let millAnimationQueued = false;
+    set((state) => {
+      const hordeMillAnimationQueue = appendHordeMillAnimations(state, previous, next);
+      millAnimationQueued = hordeMillAnimationQueue.length > 0;
+      return {
+        game: next,
+        poisonConsumeAnimation: undefined,
+        handLimitDiscardActive: false,
+        handLimitSelectionId: undefined,
+        hordeMillAnimationQueue,
+      };
+    });
+    if (active.runHordeAfter && millAnimationQueued) {
+      poisonConsumeRunHordeAfterMill = true;
+    } else if (active.runHordeAfter && typeof window !== "undefined") {
+      window.setTimeout(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide === "horde" && latest.game.phase === "horde") {
+          latest.runHordeMain();
+        }
+      }, 0);
+    }
   },
   resolveDrainEssenceAnimation: (id) => {
     const active = get().drainEssenceAnimation;
@@ -1203,21 +1295,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt);
       window.setTimeout(() => {
         useGameStore.setState((state) => {
-          const next = resolvePlayerAttackerLifesteal(state.game, attackerId);
-          const amount = next.player.life - state.game.player.life;
-          if (amount <= 0) return {};
-          lifestealAttackAnimationEventId += 1;
-          const animation: LifestealAttackAnimationState = {
-            id: `lifesteal-attack-${lifestealAttackAnimationEventId}`,
-            attackerId,
-            amount,
-          };
-          scheduleLifestealAttackAnimationSafetyClear(animation.id);
-          useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+          const afterLifesteal = resolvePlayerAttackerLifesteal(state.game, attackerId);
+          const lifeGain = afterLifesteal.player.life - state.game.player.life;
+          const next = resolvePlayerAttackerPoison(afterLifesteal, attackerId);
+          const poisonGain = next.horde.poisonCounters - state.game.horde.poisonCounters;
+          let lifestealAnimation: LifestealAttackAnimationState | undefined;
+          let poisonAnimation: PoisonAttackAnimationState | undefined;
+          if (lifeGain > 0) {
+            lifestealAttackAnimationEventId += 1;
+            lifestealAnimation = {
+              id: `lifesteal-attack-${lifestealAttackAnimationEventId}`,
+              attackerId,
+              amount: lifeGain,
+            };
+            scheduleLifestealAttackAnimationSafetyClear(lifestealAnimation.id);
+            useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+          }
+          if (poisonGain > 0) {
+            poisonAttackAnimationEventId += 1;
+            poisonAnimation = {
+              id: `poison-attack-${poisonAttackAnimationEventId}`,
+              attackerId,
+              amount: poisonGain,
+            };
+            schedulePoisonAttackAnimationSafetyClear(poisonAnimation.id);
+          }
+          if (!lifestealAnimation && !poisonAnimation) return {};
           return {
             game: next,
-            ...startLifeBuffBeat(),
-            lifestealAttackAnimations: [...state.lifestealAttackAnimations, animation],
+            ...(lifeGain > 0 ? startLifeBuffBeat() : {}),
+            lifestealAttackAnimations: lifestealAnimation
+              ? [...state.lifestealAttackAnimations, lifestealAnimation]
+              : state.lifestealAttackAnimations,
+            poisonAttackAnimation: poisonAnimation ?? state.poisonAttackAnimation,
           };
         });
       }, startAt + PLAYER_ATTACK_MILL_START_MS);
@@ -1234,7 +1344,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      const resolved = resolvePlayerCombat(latest, { skipLifesteal: true });
+      const resolved = resolvePlayerCombat(latest, { skipLifesteal: true, skipPoison: true });
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
@@ -1399,10 +1509,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
       summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
-  completeHordeMillAnimation: (id) =>
-    set((state) => ({
-      hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
-    })),
+  completeHordeMillAnimation: (id) => {
+    let shouldRunHorde = false;
+    set((state) => {
+      const hordeMillAnimationQueue = state.hordeMillAnimationQueue.filter((item) => item.id !== id);
+      if (hordeMillAnimationQueue.length === 0 && poisonConsumeRunHordeAfterMill) {
+        poisonConsumeRunHordeAfterMill = false;
+        shouldRunHorde = true;
+      }
+      return { hordeMillAnimationQueue };
+    });
+    if (shouldRunHorde && typeof window !== "undefined") {
+      window.setTimeout(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide === "horde" && latest.game.phase === "horde") {
+          latest.runHordeMain();
+        }
+      }, 0);
+    }
+  },
   resolveHordeCombat: () => {
     const state = get();
     if (discardPauseInProgress(state)) return;
@@ -1633,6 +1758,21 @@ function clearLifestealAttackPresentation(): void {
   lifestealAttackAnimationSafetyTimers.clear();
 }
 
+function clearPoisonAttackPresentation(): void {
+  if (poisonAttackAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(poisonAttackAnimationSafetyTimer);
+  }
+  poisonAttackAnimationSafetyTimer = undefined;
+}
+
+function clearPoisonConsumePresentation(): void {
+  if (poisonConsumeAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+  }
+  poisonConsumeAnimationSafetyTimer = undefined;
+  poisonConsumeRunHordeAfterMill = false;
+}
+
 function clearDrainEssencePresentation(): void {
   if (drainEssenceAnimationSafetyTimer && typeof window !== "undefined") {
     window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1675,6 +1815,26 @@ function scheduleLifestealAttackAnimationSafetyClear(id: string): void {
   lifestealAttackAnimationSafetyTimers.set(id, timer);
 }
 
+function schedulePoisonAttackAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (poisonAttackAnimationSafetyTimer !== undefined) {
+    window.clearTimeout(poisonAttackAnimationSafetyTimer);
+  }
+  poisonAttackAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completePoisonAttackAnimation(id);
+  }, POISON_ATTACK_ANIMATION_SAFETY_CLEAR_MS);
+}
+
+function schedulePoisonConsumeAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (poisonConsumeAnimationSafetyTimer !== undefined) {
+    window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+  }
+  poisonConsumeAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completePoisonConsumeAnimation(id);
+  }, POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
   if (typeof window === "undefined") return;
   if (drainEssenceAnimationSafetyTimer) window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1703,6 +1863,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.burnAnimation ||
       state.lifePaymentAnimation ||
       state.lifestealAttackAnimations.length > 0 ||
+      state.poisonConsumeAnimation ||
       state.bloodPactAnimation ||
       state.drainEssenceAnimation ||
       state.finalBanquetAnimation ||

@@ -28,7 +28,7 @@ export function PhaseControls() {
           <span>{t(labelKey)}</span>
         </button>
       ))}
-      <button className="control-button" onClick={endPlayerTurn} disabled={hordeActive} title={t("orb.endTurn")}>
+      <button className="control-button" onClick={() => endPlayerTurn()} disabled={hordeActive} title={t("orb.endTurn")}>
         <FastForward size={16} />
         <span>{t("orb.endTurn")}</span>
       </button>

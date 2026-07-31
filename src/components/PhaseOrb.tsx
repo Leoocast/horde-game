@@ -50,15 +50,18 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
   const finishPlayerTurnAndRunHorde = () => {
-    endPlayerTurn();
+    endPlayerTurn({ runHordeAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "horde" && latest.phase === "horde") {
       useGameStore.getState().runHordeMain();
     }
   };
   const finishSetupAndRunHorde = () => {
-    endPlayerTurn();
-    useGameStore.getState().runHordeMain();
+    endPlayerTurn({ runHordeAfter: true });
+    const latest = useGameStore.getState().game;
+    if (latest.activeSide === "horde" && latest.phase === "horde") {
+      useGameStore.getState().runHordeMain();
+    }
   };
 
   const state = getOrbState(game, {
@@ -131,7 +134,7 @@ function getOrbState(
   actions: {
     startPlayerCombat: () => void;
     goToEndStep: () => void;
-    endPlayerTurn: () => void;
+    endPlayerTurn: (options?: { runHordeAfter?: boolean }) => void;
     finishPlayerTurnAndRunHorde: () => void;
     finishSetupAndRunHorde: () => void;
     runHordeMain: () => void;
