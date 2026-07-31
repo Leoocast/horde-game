@@ -1,5 +1,5 @@
 import { AlertTriangle, Home } from "lucide-react";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -71,6 +71,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
+  const stopGamePresentation = useGameStore((state) => state.stopGamePresentation);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
@@ -87,6 +88,10 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
     if (game.winner === "player") playCollection("winTheme");
     else if (game.winner === "horde") playCollection("lossTheme");
   }, [game.winner, playCollection]);
+
+  useLayoutEffect(() => {
+    if (game.winner === "horde") stopGamePresentation();
+  }, [game.winner, stopGamePresentation]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
@@ -125,7 +130,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <FinalBanquetAnimator />
       <BrokenWingsAnimator />
       <ManaFlowAnimator />
-      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || brokenWingsAnimationActive || manaFlowAnimationActive || poisonConsumeAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {!game.winner && (hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || brokenWingsAnimationActive || manaFlowAnimationActive || poisonConsumeAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

@@ -11847,16 +11847,28 @@
     0 3px 7px rgb(0 0 0 / 0.52);
 }
 
+.card-defense-badge-anchor {
+  position: absolute;
+  inset: 0;
+  z-index: 32;
+  pointer-events: none;
+}
+
 .card-defense-badge-horde {
-  top: 3px;
-  left: 3px;
-  border-radius: 0 7px 8px;
+  top: -22px;
+  left: 7px;
+  border-radius: 7px 7px 7px 0;
 }
 
 .card-defense-badge-player {
-  top: 3px;
-  left: 3px;
-  border-radius: 0 7px 8px;
+  top: -22px;
+  left: 0;
+  border-radius: 7px 7px 7px 0;
+}
+
+.battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .card-defense-badge-anchor {
+  transform: rotate(4deg);
+  transform-origin: center;
 }
 
 .card-defense-badge > svg {
@@ -11870,10 +11882,6 @@
 
 .card-defense-badge > strong {
   font: inherit;
-}
-
-.card-visual:has(> .card-defense-badge-horde) > .card-cropped-title {
-  padding-left: 49px;
 }
 
 /* Shared stats palette: matches the printed mono-green card generator. */

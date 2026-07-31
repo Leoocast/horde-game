@@ -1,6 +1,82 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+test("a lethal Horde impact stops the remaining attack sequence immediately", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHordeSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hordeBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHordeSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("lethal-horde-impact-stops-sequence");
+    game.player.life = 2;
+    game.activeSide = "horde";
+    game.phase = "combat";
+    const lethalAttacker = addCard(game, customCard("lethal_attacker", "horde", { power: 3 }));
+    const queuedAttacker = addCard(game, customCard("queued_attacker", "horde", { power: 4 }));
+    game.combat.hordeAttackers = [lethalAttacker.instanceId, queuedAttacker.instanceId];
+
+    useGameStore.setState({
+      game,
+      hordeAttackAnimation: undefined,
+      resolvingHordeCombat: false,
+      hordeAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().resolveHordeCombat();
+    assert.equal(useGameStore.getState().hordeAttackAnimation?.attackerId, lethalAttacker.instanceId);
+    assert.equal(useGameStore.getState().resolvingHordeCombat, true);
+
+    timers.releaseExpiredAt(465);
+    const atDefeat = useGameStore.getState();
+    assert.equal(atDefeat.game.winner, "horde");
+    assert.equal(atDefeat.game.player.life, -1);
+    assert.equal(atDefeat.hordeAttackAnimation, undefined);
+    assert.equal(atDefeat.resolvingHordeCombat, false);
+    assert.equal(atDefeat.hordeAutoTriggerCount, 0);
+    assert.equal(atDefeat.playerAutoTriggerCount, 0);
+
+    timers.releaseExpiredAt(10_000);
+    assert.equal(useGameStore.getState().game.player.life, -1);
+    assert.equal(useGameStore.getState().hordeAttackAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHordeSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("a throttled Chainwhirler volley consumes its event before the beat finishes", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

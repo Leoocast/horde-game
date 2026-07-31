@@ -232,6 +232,7 @@ export type GameStore = {
   finishHordeTurn: () => void;
   completeHordeMillAnimation: (id: string) => void;
   triggerEndGame: (winner: "player" | "horde") => void;
+  stopGamePresentation: () => void;
 };
 
 const SEED_STORAGE_KEY = "horde-game-seed";
@@ -284,6 +285,7 @@ let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
 let manaFlowAnimationSafetyTimer: number | undefined;
 let manaFlowCommit: (() => Partial<GameStore>) | undefined;
 let manaFlowAfterCommit: (() => void) | undefined;
+let hordeCombatSequenceId = 0;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -593,17 +595,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
   hordeDeckId: DEFAULT_HORDE_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
-    clearBloodPactPresentation();
-    clearLifePaymentPresentation();
-    clearLifestealAttackPresentation();
-    clearPoisonAttackPresentation();
-    clearPoisonConsumePresentation();
-    clearDrainEssencePresentation();
-    clearFinalBanquetPresentation();
-    clearManaFlowPresentation();
+    cancelScheduledPresentation();
     set((state) => {
-      resetHordeSequence();
-      resetPlayerTriggerSequence();
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
       const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty, gameMode);
@@ -618,17 +611,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
   loadScenario: (game, deckIds) => {
-    clearBloodPactPresentation();
-    clearLifePaymentPresentation();
-    clearLifestealAttackPresentation();
-    clearPoisonAttackPresentation();
-    clearPoisonConsumePresentation();
-    clearDrainEssencePresentation();
-    clearFinalBanquetPresentation();
-    clearManaFlowPresentation();
+    cancelScheduledPresentation();
     set((state) => {
-      resetHordeSequence();
-      resetPlayerTriggerSequence();
       useAudioStore.getState().setMusicVariant("battle");
       return {
         ...createCleanUiState(),
@@ -1667,12 +1651,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (hordeAttackAnimation || playerAttackAnimation || burnAnimation) return;
 
     const attackEvents = buildHordeAttackEvents(game);
+    const sequenceId = ++hordeCombatSequenceId;
     if (attackEvents.length === 0) {
-      runPendingHordeCombatVolleyOrFinish();
+      runPendingHordeCombatVolleyOrFinish(sequenceId);
       return;
     }
     set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
-    runHordeCombatEventSequence(attackEvents, 0);
+    runHordeCombatEventSequence(attackEvents, 0, sequenceId);
   },
   finishHordeTurn: () =>
     set((state) => {
@@ -1682,28 +1667,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, hordeAutoTriggerCount: 0 };
     }),
-  triggerEndGame: (winner) =>
+  triggerEndGame: (winner) => {
     set((state) => {
       const next = structuredClone(state.game) as GameState;
       next.winner = winner;
-      return { game: next };
-    }),
+      return { ...createCleanUiState(), game: next };
+    });
+    get().stopGamePresentation();
+  },
+  stopGamePresentation: () => {
+    cancelScheduledPresentation();
+    useAudioStore.getState().stopAllSfx();
+    set(createCleanUiState());
+  },
 }));
 
-function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number): void {
+function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number, sequenceId: number): void {
+  if (sequenceId !== hordeCombatSequenceId || useGameStore.getState().game.winner) return;
   const plannedEvent = events[index];
   if (!plannedEvent) {
-    runPendingHordeCombatVolleyOrFinish();
+    runPendingHordeCombatVolleyOrFinish(sequenceId);
     return;
   }
   const currentGame = useGameStore.getState().game;
   if (!isHordeAttackEventCurrent(currentGame, plannedEvent)) {
-    runHordeCombatEventSequence(events, index + 1);
+    runHordeCombatEventSequence(events, index + 1, sequenceId);
     return;
   }
   const event = refreshHordeAttackEvent(currentGame, plannedEvent);
   if (!event) {
-    runHordeCombatEventSequence(events, index + 1);
+    runHordeCombatEventSequence(events, index + 1, sequenceId);
     return;
   }
   useAudioStore.getState().playSfx("attack", { volume: 0.75 });
@@ -1727,25 +1720,35 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number):
   });
 
   window.setTimeout(() => {
+    if (sequenceId !== hordeCombatSequenceId) return;
+    let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = applyHordeAttackEvent(previous, event);
+      // Combat is presented one impact at a time. Declare a lethal impact immediately instead of
+      // waiting for finishHordeCombat after every remaining attacker has played its animation.
+      checkWinLoss(next);
+      gameEnded = Boolean(next.winner);
       const gainedLife = next.player.life > previous.player.life;
       if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
       notifyDiscardEffects(previous, next);
+      if (gameEnded) return { ...createCleanUiState(), game: next };
       return {
         game: next,
         hordeCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
+    if (gameEnded) useGameStore.getState().stopGamePresentation();
   }, HORDE_ATTACK_ANIMATION_MS - 35);
 
   window.setTimeout(() => {
+    if (sequenceId !== hordeCombatSequenceId || useGameStore.getState().game.winner) return;
     useGameStore.setState({ hordeAttackAnimation: undefined });
     scheduleQueuedCombatReactions(() => {
+      if (sequenceId !== hordeCombatSequenceId || useGameStore.getState().game.winner) return;
       useGameStore.setState({ hordeCombatDeadCardIds: [] });
-      runHordeCombatEventSequence(events, index + 1);
+      runHordeCombatEventSequence(events, index + 1, sequenceId);
     });
   }, HORDE_ATTACK_ANIMATION_MS);
 }
@@ -1764,7 +1767,8 @@ function scheduleQueuedCombatReactions(onComplete: () => void): void {
   });
 }
 
-function runPendingHordeCombatVolleyOrFinish(): void {
+function runPendingHordeCombatVolleyOrFinish(combatSequenceId: number): void {
+  if (combatSequenceId !== hordeCombatSequenceId || useGameStore.getState().game.winner) return;
   const state = useGameStore.getState();
   const volley = pendingHordeCombatDamageVolley(state.game);
   if (!volley || volley.damage <= 0) {
@@ -1791,7 +1795,7 @@ function runPendingHordeCombatVolleyOrFinish(): void {
   }
 
   window.setTimeout(() => {
-    if (sequenceId !== hordeSequenceEpoch()) return;
+    if (sequenceId !== hordeSequenceEpoch() || combatSequenceId !== hordeCombatSequenceId) return;
     useGameStore.setState({
       burnAnimation: {
         id: `combat-volley-${Date.now()}`,
@@ -1804,23 +1808,28 @@ function runPendingHordeCombatVolleyOrFinish(): void {
     for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {
       const projectileDelay = projectileIndex * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
       window.setTimeout(() => {
-        if (sequenceId !== hordeSequenceEpoch()) return;
+        if (sequenceId !== hordeSequenceEpoch() || combatSequenceId !== hordeCombatSequenceId) return;
         useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx), { volume: 0.64 });
       }, COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS + projectileDelay);
 
       window.setTimeout(() => {
-        if (sequenceId !== hordeSequenceEpoch()) return;
+        if (sequenceId !== hordeSequenceEpoch() || combatSequenceId !== hordeCombatSequenceId) return;
         useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.72 });
         if (projectileIndex !== projectileCount - 1) return;
-        useGameStore.setState((current) => ({
-          game: resolvePendingHordeCombatDamageVolleys(current.game),
-          lifeDamageAnimationId: Date.now(),
-        }));
+        let gameEnded = false;
+        useGameStore.setState((current) => {
+          const next = resolvePendingHordeCombatDamageVolleys(current.game);
+          gameEnded = Boolean(next.winner);
+          return gameEnded
+            ? { ...createCleanUiState(), game: next }
+            : { game: next, lifeDamageAnimationId: Date.now() };
+        });
+        if (gameEnded) useGameStore.getState().stopGamePresentation();
       }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
     }
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeSequenceEpoch()) return;
+      if (sequenceId !== hordeSequenceEpoch() || combatSequenceId !== hordeCombatSequenceId) return;
       useGameStore.setState({ burnAnimation: undefined });
       finishAnimatedHordeCombat();
     }, COMBAT_VOLLEY_ANIMATION_MS + volleyDelay);
@@ -1929,6 +1938,32 @@ function clearManaFlowPresentation(): void {
   manaFlowAnimationSafetyTimer = undefined;
   manaFlowCommit = undefined;
   manaFlowAfterCommit = undefined;
+}
+
+function cancelScheduledPresentation(): void {
+  hordeCombatSequenceId += 1;
+  resetHordeSequence();
+  resetPlayerTriggerSequence();
+
+  if (typeof window !== "undefined") {
+    if (activeEffectCloseTimer !== undefined) window.clearTimeout(activeEffectCloseTimer);
+    if (effectActivationPulseTimer !== undefined) window.clearTimeout(effectActivationPulseTimer);
+    if (summoningAnimationSafetyTimer !== undefined) window.clearTimeout(summoningAnimationSafetyTimer);
+    if (landPlaySummoningSafetyTimer !== undefined) window.clearTimeout(landPlaySummoningSafetyTimer);
+  }
+  activeEffectCloseTimer = undefined;
+  effectActivationPulseTimer = undefined;
+  summoningAnimationSafetyTimer = undefined;
+  landPlaySummoningSafetyTimer = undefined;
+
+  clearBloodPactPresentation();
+  clearLifePaymentPresentation();
+  clearLifestealAttackPresentation();
+  clearPoisonAttackPresentation();
+  clearPoisonConsumePresentation();
+  clearDrainEssencePresentation();
+  clearFinalBanquetPresentation();
+  clearManaFlowPresentation();
 }
 
 function scheduleBloodPactAnimationSafetyClear(id: string): void {

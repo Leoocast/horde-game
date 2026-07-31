@@ -16,7 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
-import { Card } from "./Card";
+import { Card, CardDefenseBadge } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
@@ -907,6 +907,7 @@ export function Battlefield({ game, side, cards }: Props) {
             : undefined;
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem =
+      !counterTargetingActive &&
       !smallpoxSelectionActive &&
       !spellTargetingActive &&
       !combatAvailabilityTone &&
@@ -949,6 +950,12 @@ export function Battlefield({ game, side, cards }: Props) {
         !speciallyDead,
     );
     const heavyLandingEventId = heavyLandingEvents[card.instanceId];
+    const defenseBadgeCount =
+      side === "player" && blockerOrderLabel
+        ? blockerOrderLabel
+        : side === "horde" && blockersAssigned > 0
+          ? `${blockersAssigned}`
+          : undefined;
 
     return (
       <motion.div
@@ -1068,7 +1075,7 @@ export function Battlefield({ game, side, cards }: Props) {
         actionable={cardActionable && !combatAvailabilityTone}
         effectAvailable={showActivatedAbilityChrome && !showEffectAvailabilityBorder}
         accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
-        linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
+        linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
@@ -1133,6 +1140,12 @@ export function Battlefield({ game, side, cards }: Props) {
           }
         }}
       />
+      {defenseBadgeCount && (
+        <CardDefenseBadge
+          count={defenseBadgeCount}
+          variant={side === "horde" ? "horde" : "player"}
+        />
+      )}
       {combatAvailabilityTone && (
         <>
           <span

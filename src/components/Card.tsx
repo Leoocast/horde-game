@@ -208,18 +208,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ) : null}
         </div>
       </div>
-      {card.controller === "horde" && !blocking && linkLabel && (
-        <span className="card-defense-badge card-defense-badge-horde" aria-label={t("card.blockersAssigned", { count: linkLabel })}>
-          <Shield aria-hidden="true" />
-          <strong>{linkLabel}</strong>
-        </span>
-      )}
-      {blocking && linkLabel && (
-        <span className="card-defense-badge card-defense-badge-player" aria-label={t("card.blockingOrder", { count: linkLabel })}>
-          <Shield aria-hidden="true" />
-          <strong>{linkLabel}</strong>
-        </span>
-      )}
       {visibleKeywords.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleKeywords.map((keyword) => (
@@ -236,6 +224,28 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         />
       )}
     </article>
+  );
+}
+
+export function CardDefenseBadge({
+  count,
+  variant,
+}: {
+  count: string;
+  variant: "horde" | "player";
+}) {
+  const t = useTranslation();
+  const label = variant === "horde"
+    ? t("card.blockersAssigned", { count })
+    : t("card.blockingOrder", { count });
+
+  return (
+    <span className="card-defense-badge-anchor">
+      <span className={`card-defense-badge card-defense-badge-${variant}`} aria-label={label}>
+        <Shield aria-hidden="true" />
+        <strong>{count}</strong>
+      </span>
+    </span>
   );
 }
 
