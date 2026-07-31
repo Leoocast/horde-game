@@ -43,9 +43,11 @@
     }
 
     function formatEffectText(value) {
+        const tapIconHtml = theme === "vampires"
+            ? '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>'
+            : '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>';
         return cardText.formatEffectText(value, {
-            tapIconHtml:
-                '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>',
+            tapIconHtml,
             energyIconHtml:
                 '<span class="symbol-badge symbol-energy" title="Energía"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>',
         });
@@ -67,6 +69,17 @@
                         <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
                     </svg>
                 `;
+            }
+            if (
+                theme === "vampires"
+                && (
+                    normalized.includes("fuente")
+                    || normalized.includes("source")
+                    || normalized.includes("energía")
+                    || normalized.includes("energy")
+                )
+            ) {
+                return '<i class="fa-solid fa-gem tcg-source-icon" aria-hidden="true"></i>';
             }
             if (theme === "hunters" && normalized.includes("trampa")) {
                 return `
@@ -188,7 +201,7 @@
             empty.className = "empty-state";
             empty.textContent = "El JSON no contiene cartas.";
             container.appendChild(empty);
-            status.innerHTML = "<strong>0 cartas</strong>";
+            if (status) status.innerHTML = "<strong>0 cartas</strong>";
             return;
         }
 
@@ -291,7 +304,7 @@
             container.appendChild(cardElement);
         });
 
-        status.innerHTML = `<strong>${cards.length} cartas</strong> · deck completo`;
+        if (status) status.innerHTML = `<strong>${cards.length} cartas</strong> · deck completo`;
     }
 
     function readEmbeddedCards() {
@@ -300,7 +313,7 @@
             return normalizeCards(JSON.parse(embeddedData.textContent));
         } catch (error) {
             console.error(error);
-            status.textContent = `No se pudo leer el ejemplo incluido: ${error.message}`;
+            if (status) status.textContent = `No se pudo leer el ejemplo incluido: ${error.message}`;
             return [];
         }
     }

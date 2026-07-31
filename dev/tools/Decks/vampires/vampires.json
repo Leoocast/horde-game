@@ -7,7 +7,7 @@
     "costo": 0,
     "atk": null,
     "def": null,
-    "desc": "{{T}}: Gana 1 {E}.",
+    "desc": "Agota: Gana {E}.",
     "lore": "Todo juramento deja algo atrás."
   },
   {
@@ -40,7 +40,7 @@
     "costo": 1,
     "atk": 1,
     "def": 2,
-    "desc": "{{T}} y paga 5 de Vida: Gana 1 {E}.",
+    "desc": "Agota y paga 5 de Vida: Gana {E}.",
     "lore": "La corte acepta toda moneda, especialmente la que duele."
   },
   {

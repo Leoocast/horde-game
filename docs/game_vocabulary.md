@@ -191,7 +191,8 @@ Modificadores de tipo:
 
 Las cartas impresas pueden usar el formato compacto `+N/+N`; el primer valor siempre es Fuerza y
 el segundo Aguante. Los tooltips y explicaciones extensas nombran ambas estadísticas cuando haga
-falta evitar ambigüedad.
+falta evitar ambigüedad. La Energía generada se imprime con un símbolo por unidad: `Gana {E}` para
+una y `Gana {E}{E}` para dos. No se escribe un número junto a esos símbolos.
 
 ## Fases y ventanas
 
@@ -236,7 +237,7 @@ Plantillas preferidas:
 
 - `Cuando este Eco es invocado, ...`
 - `Invoca dos Fichas de Goblin.`
-- `Agota: Gana 1 Energía.`
+- `Agota: Gana {E}.`
 - `Destruye un Apoyo enemigo.`
 - `Un Eco aliado gana +2/+3 hasta el final del turno.`
 - `Descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.`
@@ -318,12 +319,16 @@ Reglas de estilo:
 4. `Cuando este Eco es invocado`, no `cuando entra al campo de batalla`.
 5. `Hasta el final del turno` y `hasta tu próximo turno` son duraciones normativas.
 6. Los modificadores pueden usar `+N/+N` en el texto impreso; su orden siempre es Fuerza/Aguante.
-7. Vida es un recurso singular: `Paga 3 de Vida`, `pierde 3 de Vida` y `gana 3 de Vida`; nunca
+7. `Gana` se reserva para modificadores temporales y Rasgos: `gana +2/+2`, `gana Volar`. Los
+   contadores permanentes se colocan: `pon un contador +1/+1 sobre este Eco`. No usar `obtiene`
+   para ninguno de los dos casos.
+8. Vida es un recurso singular: `Paga 3 de Vida`, `pierde 3 de Vida` y `gana 3 de Vida`; nunca
    `paga 3 vidas`. En inglés: `Pay 3 Life`, sin `of`.
-8. Los costes van antes de dos puntos: `Agota y paga 2 de Vida: ...`.
-9. Un Rasgo se imprime como nombre; el tooltip contiene su definicion. No repetir ambos.
-10. Espanol e ingles deben describir la misma regla, no ser traducciones libres con diferencias.
-11. El texto de ambientacion nunca completa una regla.
+9. Los costes van antes de dos puntos: `Agota y paga 2 de Vida: ...`.
+   En la carta impresa, `Agota` va en negrita y usa el color de acento de su facción.
+10. Un Rasgo se imprime como nombre; el tooltip contiene su definicion. No repetir ambos.
+11. Espanol e ingles deben describir la misma regla, no ser traducciones libres con diferencias.
+12. El texto de ambientacion nunca completa una regla.
 
 ## Inventario Magic que debe salir de produccion
 

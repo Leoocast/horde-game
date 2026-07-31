@@ -10,7 +10,7 @@
     "G"
   ],
   "archetype": "ramp",
-  "gamePlan": "Acelerar maná con criaturas, desarrollar amenazas verdes con alcance y usar trucos de combate o remoción basada en criaturas para controlar la mesa.",
+  "gamePlan": "Acelera tu Energía con Ecos, desarrolla amenazas con Guardia aérea y usa Hechizos de Batalla o destrucción basada en Ecos para controlar el Campo.",
   "tokens": [],
   "cards": [
     {
@@ -18,8 +18,8 @@
       "name": "Llanowar Elves",
       "displayNameEs": "Elfos de Llanowar",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
       "setCode": "FDN",
@@ -76,8 +76,8 @@
       "name": "Sunshower Druid",
       "displayNameEs": "Druida de la lluvia solar",
       "gameText": {
-        "en": "When this creature enters, put a +1/+1 counter on an allied creature and gain 1 life.",
-        "es": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida."
+        "en": "When this Echo is Invoked, put a +1/+1 counter on an allied Echo and gain 1 Life.",
+        "es": "Cuando este Eco es invocado, pon un contador +1/+1 sobre un Eco aliado y gana 1 de Vida."
       },
       "quantity": 3,
       "setCode": "BLB",
@@ -148,8 +148,8 @@
       "name": "Druid of the Cowl",
       "displayNameEs": "Druid of the Cowl",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
       "setCode": "M19",
@@ -206,8 +206,8 @@
       "name": "Ichorspit Basilisk",
       "displayNameEs": "Basilisco escupeicor",
       "gameText": {
-        "en": "When this creature deals combat damage to the Horde, give the Horde 1 poison counter.",
-        "es": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno."
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
       },
       "quantity": 2,
       "setCode": "ONE",
@@ -241,7 +241,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "toxic_1",
-          "implementationNote": "Cuando esta criatura hace daño de combate a un jugador, ese jugador obtiene un contador de veneno. Toxic 1 no depende de la cantidad de daño."
+          "implementationNote": "Cuando este Eco hace daño de Batalla a la Hueste, agrega 1 de Veneno. Veneno 1 no depende de la cantidad de daño."
         }
       ],
       "scryfall": {
@@ -256,8 +256,8 @@
       "name": "Beast-Kin Ranger",
       "displayNameEs": "Guardabosque bestial",
       "gameText": {
-        "en": "Whenever another allied creature enters, this creature gets +1/+0 until end of turn.",
-        "es": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno."
+        "en": "Whenever another allied Echo is Invoked, this Echo gains +1/+0 until the end of the turn.",
+        "es": "Cada vez que otro Eco aliado es invocado, este Eco gana +1/+0 hasta el final del turno."
       },
       "quantity": 3,
       "setCode": "FDN",
@@ -443,8 +443,8 @@
       "name": "Cosmic Hunger",
       "displayNameEs": "Hambre cósmica",
       "gameText": {
-        "en": "Choose an allied creature and another creature. The allied creature deals damage equal to its power to the other creature.",
-        "es": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura."
+        "en": "Choose an allied Echo and another Echo. The allied Echo deals damage equal to its Power to the other Echo.",
+        "es": "Elige un Eco aliado y otro Eco. El Eco aliado hace daño igual a su Fuerza al otro Eco."
       },
       "quantity": 2,
       "setCode": "MOM",
@@ -540,8 +540,8 @@
       "name": "Ruthless Predation",
       "displayNameEs": "Depredación despiadada",
       "gameText": {
-        "en": "An allied creature gets +1/+2 until end of turn, then fights an enemy creature.",
-        "es": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga."
+        "en": "An allied Echo gains +1/+2 until the end of the turn. Then it fights an enemy Echo.",
+        "es": "Un Eco aliado gana +1/+2 hasta el final del turno. Luego lucha contra un Eco enemigo."
       },
       "quantity": 1,
       "setCode": "ONE",
@@ -646,8 +646,8 @@
       "name": "Broken Wings",
       "displayNameEs": "Alas rotas",
       "gameText": {
-        "en": "Destroy an artifact, an enchantment, or a creature with Flying.",
-        "es": "Destruye un artefacto, un encantamiento o una criatura con Vuelo."
+        "en": "Destroy a Support or an Echo with Flying.",
+        "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "quantity": 2,
       "setCode": "FDN",
@@ -726,8 +726,8 @@
       "name": "Giant Growth",
       "displayNameEs": "Crecimiento gigante",
       "gameText": {
-        "en": "Target creature gets +3/+3 until end of turn.",
-        "es": "La criatura objetivo obtiene +3/+3 hasta el final del turno."
+        "en": "The target Echo gains +3/+3 until the end of the turn.",
+        "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "quantity": 2,
       "setCode": "FDN",
@@ -792,8 +792,8 @@
       "name": "Forest",
       "displayNameEs": "Bosque",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 15,
       "setCode": "FDN",

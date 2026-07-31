@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hostfall — Taller de cartas Vampiros</title>
+    <title>Hostfall — Deck Vampiros</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../deck-card-studio.css">
 </head>
@@ -12,26 +12,11 @@
     data-set-code="HFV"
 >
     <header class="studio-header">
-        <p class="studio-kicker">Archivo de la Corte</p>
         <h1 class="studio-title">Deck Vampiros</h1>
-        <p class="studio-subtitle">
-            Obsidiana, lacre carmesí y oro de una corte hambrienta. Las cartas conservan
-            el formato de exportación HD del player: 976×1360.
-        </p>
-
-        <div class="studio-toolbar">
-            <button class="zoom-button" type="button" data-scale="35">35%</button>
-            <button class="zoom-button is-active" type="button" data-scale="45">45%</button>
-            <button class="zoom-button" type="button" data-scale="60">60%</button>
-            <button class="zoom-button" type="button" data-scale="100">100%</button>
-        </div>
-
-        <p class="studio-status" id="studio-status">
-            Generando deck completo…
-        </p>
+        <p class="studio-subtitle">Obsidiana, lacre carmesí y oro de una corte hambrienta.</p>
     </header>
 
-    <main class="cards-grid scale-45" id="cards-container"></main>
+    <main class="cards-grid scale-35" id="cards-container"></main>
 
     <script id="deck-data" type="application/json">
         [
@@ -43,7 +28,7 @@
             "costo": 0,
             "atk": null,
             "def": null,
-            "desc": "{{T}}: Gana 1 {E}.",
+            "desc": "Agota: Gana {E}.",
             "lore": "Todo juramento deja algo atrás.",
             "cantidad": 12
           },
@@ -79,7 +64,7 @@
             "costo": 1,
             "atk": 1,
             "def": 2,
-            "desc": "{{T}} y paga 5 de Vida: Gana 1 {E}.",
+            "desc": "Agota y paga 5 de Vida: Gana {E}.",
             "lore": "La corte acepta toda moneda, especialmente la que duele.",
             "cantidad": 2
           },

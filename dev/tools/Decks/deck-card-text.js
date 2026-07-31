@@ -10,6 +10,7 @@
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
     const NAMED_STAT_PATTERN = /[+-]\d+\s+de\s+(?:Fuerza|Aguante)/giu;
     const DANGER_PATTERN = /\b(?:fuerza \d+ o menos|\d+ de daño)\b/giu;
+    const ACTION_PATTERN = /\bAgota\b/giu;
     const LIFE_PAYMENT_PATTERN =
         /\bPaga\s+(?:\d+\s+(?:vidas|de\s+Vida)|la mitad de (?:tus vidas|tu Vida))\.?/giu;
     const INLINE_KEYWORD_SEPARATOR_PATTERN =
@@ -29,6 +30,14 @@
 
     function strong(className, value) {
         return `<strong class="${className}">${value}</strong>`;
+    }
+
+    function keywordStrong(value) {
+        const withValueBadge = value.replace(
+            /^((?:Tóxico|Veneno)\s+)(\d+)$/iu,
+            '$1<span class="effect-keyword-value">$2</span>',
+        );
+        return strong("effect-keyword", withValueBadge);
     }
 
     function formatInlineText(value, options) {
@@ -53,7 +62,8 @@
 
         protect(TOKEN_CREATION_PATTERN, (match) => strong("effect-token", match));
         protect(COUNTER_PATTERN, (match) => strong("effect-counter", match));
-        protect(KEYWORD_PATTERN, (match) => strong("effect-keyword", match));
+        protect(KEYWORD_PATTERN, keywordStrong);
+        protect(ACTION_PATTERN, (match) => strong("effect-action", match));
         protect(LIFE_PAYMENT_PATTERN, (match) => strong("effect-life-cost", match));
         protect(DANGER_PATTERN, (match) => strong("effect-danger", match));
         protect(NAMED_STAT_PATTERN, (match) => strong("effect-stat", match));

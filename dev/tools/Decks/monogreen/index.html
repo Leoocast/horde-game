@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hostfall Deck — Mono Green (976x1360 HD)</title>
+    <title>Hostfall — Deck Mono Green</title>
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.min.js"></script>
@@ -50,95 +50,59 @@
             min-height: 100vh;
         }
 
-        .header-title {
+        .studio-header {
+            position: relative;
+            width: min(1120px, calc(100vw - 40px));
             text-align: center;
-            margin-bottom: 60px;
+            margin: 0 auto 42px;
+            padding: 30px 34px 28px;
+            overflow: hidden;
+            border: 1px solid rgba(184, 162, 107, 0.33);
+            border-radius: 18px;
+            background:
+                linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.025), transparent),
+                linear-gradient(180deg, rgba(18, 39, 21, 0.97), rgba(8, 16, 10, 0.97));
+            box-shadow:
+                0 22px 60px rgba(0, 0, 0, 0.48),
+                inset 0 1px rgba(255, 255, 255, 0.045);
         }
 
-        .header-title h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 42px;
+        .studio-header::before,
+        .studio-header::after {
+            content: "";
+            position: absolute;
+            top: 18px;
+            bottom: 18px;
+            width: 4px;
+            background: linear-gradient(transparent, #4ade80, transparent);
+            opacity: 0.72;
+        }
+
+        .studio-header::before {
+            left: 15px;
+        }
+
+        .studio-header::after {
+            right: 15px;
+        }
+
+        .studio-title {
+            font-family: 'Cinzel Decorative', 'Cinzel', serif;
+            font-size: clamp(30px, 4vw, 47px);
             color: var(--gold-light);
-            margin: 0 0 12px 0;
-            letter-spacing: 4px;
+            margin: 0;
+            letter-spacing: 0.045em;
             text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
         }
 
-        .header-title p {
+        .studio-subtitle {
             font-family: 'Outfit', sans-serif;
-            font-size: 20px;
-            color: #94a3b8;
-            margin: 0 0 20px 0;
-        }
-
-        /* ENLACE AL EXPORTADOR DE CAPTURA NATIVA */
-        .export-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #ffffff;
-            background: linear-gradient(180deg, #15803d 0%, #166534 100%);
-            border: 2px solid #86efac;
-            padding: 14px 32px;
-            border-radius: 35px;
-            cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
-            box-shadow: 0 12px 30px rgba(34, 197, 94, 0.6);
-        }
-
-        /* ==================== CONTROLES DE ZOOM / COLUMNAS ==================== */
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: 1px solid rgba(184, 162, 107, 0.3);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-        }
-
-        .zoom-controls span {
-            font-family: 'Cinzel', serif;
-            font-size: 14px;
-            color: var(--gold-light);
-            letter-spacing: 1px;
-            margin-right: 8px;
-        }
-
-        .zoom-btn {
-            font-family: 'Outfit', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: #cbd5e1;
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            padding: 6px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .zoom-btn:hover,
-        .zoom-btn.active {
-            color: #ffffff;
-            background: #15803d;
-            border-color: #86efac;
-            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #aaa59d;
+            margin: 11px auto 0;
+            letter-spacing: 0.02em;
         }
 
         /* ==================== REJILLA DE CARTAS MULTI-COLUMNA ==================== */
@@ -483,6 +447,15 @@
             transform: translateY(3px);
         }
 
+        .tcg-type-text .tcg-echo-icon {
+            display: block;
+            width: 56px;
+            height: 56px;
+            flex: 0 0 56px;
+            overflow: visible;
+            color: #86efac;
+        }
+
         .tcg-body {
             position: relative;
             flex: 1;
@@ -547,11 +520,35 @@
         }
 
         .effect-keyword,
+        .effect-action,
         .effect-counter,
         .effect-token,
         .effect-stat {
             color: #14532d;
             font-weight: 700;
+        }
+
+        .effect-action {
+            font-weight: 800;
+        }
+
+        .effect-keyword-value {
+            display: inline-grid;
+            width: 1.55em;
+            height: 1.55em;
+            margin-left: 0.14em;
+            place-items: center;
+            border: 2px solid rgba(184, 162, 107, 0.78);
+            border-radius: 50%;
+            color: #f3eedc;
+            background-color: #174e2b;
+            background-image: var(--noise-tex);
+            background-blend-mode: soft-light;
+            box-shadow: inset 0 0 0 1px rgba(222, 238, 196, 0.18);
+            font-family: "Outfit", sans-serif;
+            font-size: 0.64em;
+            line-height: 1;
+            vertical-align: 0.08em;
         }
 
         .tcg-effect strong.effect-danger {
@@ -591,16 +588,23 @@
 
         .symbol-energy {
             background:
-                radial-gradient(circle at 36% 27%, rgba(213, 239, 242, 0.18), transparent 32%),
-                linear-gradient(145deg, #47788a 0%, #285166 48%, #142c3c 100%);
-            border: 3px solid rgba(137, 198, 213, 0.66);
-            color: #dceff0;
+                radial-gradient(circle at 36% 27%, rgba(242, 229, 191, 0.18), transparent 32%),
+                linear-gradient(145deg, #665b43 0%, #403a2d 48%, #211f1a 100%);
+            border: 3px solid rgba(184, 162, 107, 0.66);
+            color: #f6d76f;
             font-size: 29px;
-            text-shadow: 0 1px 2px rgba(3, 16, 27, 0.95);
+            text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
             box-shadow:
-                inset 0 1px 2px rgba(222, 245, 247, 0.24),
-                inset 0 -3px 5px rgba(3, 17, 28, 0.48),
+                inset 0 1px 2px rgba(255, 242, 204, 0.24),
+                inset 0 -3px 5px rgba(16, 12, 7, 0.48),
                 0 3px 7px rgba(0, 0, 0, 0.42);
+        }
+
+        .symbol-badge > svg {
+            display: block;
+            width: 40px;
+            height: 40px;
+            fill: currentColor;
         }
 
         .tcg-divider {
@@ -830,15 +834,10 @@
 
 <body>
 
-    <div class="header-title">
-        <h1>Hostfall — Deck Mono Green (Cartas HD 976×1360)</h1>
-        <p>Colección completa de 13 cartas en alta resolución • Formato Completo Estándar</p>
-
-        <a class="export-btn" href="./export_cards.cmd" download>
-            <i class="fa-solid fa-camera"></i>
-            <span>Exportar PNGs (captura nativa)</span>
-        </a>
-    </div>
+    <header class="studio-header">
+        <h1 class="studio-title">Deck Mono Green</h1>
+        <p class="studio-subtitle">Raíces antiguas, crecimiento paciente y Energía viva.</p>
+    </header>
 
     <!-- CONTENEDOR DE TODAS LAS CARTAS EN MULTI-COLUMNA -->
     <div class="cards-grid scale-45" id="cards-container">
@@ -853,162 +852,165 @@
                 "id": "llanowar_elves",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd.jpg?1783909057",
                 "nombre": "Elfos de Llanowar",
-                "tipo": "Criatura — Elfo Druida",
+                "tipo": "Eco — Elfo Druida",
                 "costo": 1,
                 "atk": 1,
                 "def": 1,
-                "desc": "{{T}}: Agrega {G}.",
+                "desc": "Agota: Gana {E}.",
                 "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
             },
             {
                 "id": "sunshower_druid",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/7/7/7740abc5-54e1-478d-966e-0fa64e727995.jpg?1783910802",
                 "nombre": "Druida de la lluvia solar",
-                "tipo": "Criatura — Rana Druida",
+                "tipo": "Eco — Rana Druida",
                 "costo": 1,
                 "atk": 0,
                 "def": 2,
-                "desc": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida.",
+                "desc": "Cuando este Eco es invocado, pon un contador +1/+1 sobre un Eco aliado y gana 1 de Vida.",
                 "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
             },
             {
                 "id": "druid_of_the_cowl",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/76ceff1d-9e83-41cc-b54b-8bf90d985da9.jpg?1783934537",
                 "nombre": "Druida de la capucha",
-                "tipo": "Criatura — Elfo Druida",
+                "tipo": "Eco — Elfo Druida",
                 "costo": 2,
                 "atk": 1,
                 "def": 3,
-                "desc": "{{T}}: Agrega {G}.",
+                "desc": "Agota: Gana {E}.",
                 "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
             },
             {
                 "id": "ichorspit_basilisk",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/0955b64f-6721-4fa6-b161-cae404cb5b9f.jpg?1783918014",
                 "nombre": "Basilisco escupeicor",
-                "tipo": "Criatura — Pirexiano Basilisco",
+                "tipo": "Eco — Pirexiano Basilisco",
                 "costo": 3,
                 "atk": 1,
                 "def": 3,
-                "desc": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno.",
+                "desc": "Letal\nVeneno 1",
                 "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
             },
             {
                 "id": "beast_kin_ranger",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/0102e0be-5783-4825-9489-713b1b1df0b2.jpg?1783909098",
                 "nombre": "Guardabosque bestial",
-                "tipo": "Criatura — Elfo Explorador",
+                "tipo": "Eco — Elfo Explorador",
                 "costo": 3,
                 "atk": 3,
                 "def": 3,
-                "desc": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno.",
+                "desc": "Cada vez que otro Eco aliado es invocado, este Eco gana +1/+0 hasta el final del turno.",
                 "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
             },
             {
                 "id": "magnigoth_sentry",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/5624e610-c4c0-4103-a32b-0f1264030a7a.jpg?1783908947",
                 "nombre": "Centinela mágnigoth",
-                "tipo": "Criatura — Pueblo-arbóreo",
+                "tipo": "Eco — Pueblo-arbóreo",
                 "costo": 4,
                 "atk": 4,
                 "def": 4,
-                "desc": "Alcance.",
+                "desc": "Guardia aérea",
                 "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
             },
             {
                 "id": "colossadactyl",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/8/7/8702e776-be2c-48a9-9bc5-bb8ea514333b.jpg?1783913750",
                 "nombre": "Colosadáctilo",
-                "tipo": "Criatura — Dinosaurio",
+                "tipo": "Eco — Dinosaurio",
                 "costo": 4,
                 "atk": 4,
                 "def": 5,
-                "desc": "Alcance.",
+                "desc": "Guardia aérea",
                 "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
             },
             {
                 "id": "timberland_ancient",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/5/f/5f73cd60-cd89-4c7a-85a6-e0ae34ca101b.jpg?1783916960",
                 "nombre": "Anciano forestal",
-                "tipo": "Criatura — Pueblo-arbóreo",
+                "tipo": "Eco — Pueblo-arbóreo",
                 "costo": 6,
                 "atk": 6,
                 "def": 5,
-                "desc": "Alcance.",
+                "desc": "Guardia aérea",
                 "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
             },
             {
                 "id": "cosmic_hunger",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b8eef541-6851-4312-ad2b-74f45c7ede6c.jpg?1783916972",
                 "nombre": "Hambre cósmica",
-                "tipo": "Instantáneo",
+                "tipo": "Hechizo · Rápido",
                 "costo": 2,
                 "atk": null,
                 "def": null,
-                "desc": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura.",
+                "desc": "Elige un Eco aliado y otro Eco. El Eco aliado hace daño igual a su Fuerza al otro Eco.",
                 "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
             },
             {
                 "id": "ruthless_predation",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/1/2/123f0c76-1fde-439e-a76d-eccf96f8d941.jpg?1783918010",
                 "nombre": "Depredación despiadada",
-                "tipo": "Conjuro",
+                "tipo": "Hechizo",
                 "costo": 2,
                 "atk": null,
                 "def": null,
-                "desc": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
+                "desc": "Un Eco aliado gana +1/+2 hasta el final del turno.\nLuego lucha contra un Eco enemigo.",
                 "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
             },
             {
                 "id": "broken_wings",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61f9cbeb-cc9c-4562-be65-8a77053faefe.jpg?1783909061",
                 "nombre": "Alas rotas",
-                "tipo": "Instantáneo",
+                "tipo": "Hechizo · Rápido",
                 "costo": 3,
                 "atk": null,
                 "def": null,
-                "desc": "Destruye un artefacto, un encantamiento o una criatura con Vuelo.",
+                "desc": "Destruye un Apoyo o un Eco con Volar.",
                 "lore": "Todo lo que domina el cielo termina por conocer la tierra."
             },
             {
                 "id": "giant_growth",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd0bf74e-14c1-4428-88d8-2181a080b5d0.jpg?1783909057",
                 "nombre": "Crecimiento gigante",
-                "tipo": "Instantáneo",
+                "tipo": "Hechizo · Rápido",
                 "costo": 1,
                 "atk": null,
                 "def": null,
-                "desc": "La criatura objetivo obtiene +3/+3 hasta el final del turno.",
+                "desc": "El Eco objetivo gana +3/+3 hasta el final del turno.",
                 "lore": "La naturaleza no pide permiso para superar sus límites."
             },
             {
                 "id": "forest",
                 "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d232fcc2-12f6-401a-b1aa-ddff11cb9378.jpg?1783909039",
                 "nombre": "Bosque",
-                "tipo": "Tierra básica — Bosque",
+                "tipo": "Fuente — Bosque",
                 "costo": 0,
                 "atk": null,
                 "def": null,
-                "desc": "{{T}}: Agrega {E}.",
+                "desc": "Agota: Gana {E}.",
                 "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
             }
         ];
 
-        // Función para formatear el texto de descripción y reemplazar los símbolos {{T}}, {G}, {E} por íconos
+        // Función para formatear el texto de descripción y reemplazar {E} por el ícono de Energía
         function formatEffectText(text) {
-            const tapIcon = `<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half"></i></span>`;
-            const energyIcon = `<span class="symbol-badge symbol-energy" title="Energía"><i class="fa-solid fa-bolt-lightning"></i></span>`;
+            const energyIcon = `<span class="symbol-badge symbol-energy" title="Energía"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"></path></svg></span>`;
             return window.HostfallCardText.formatEffectText(text, {
-                tapIconHtml: tapIcon,
                 energyIconHtml: energyIcon,
             });
         }
 
         // Determinar ícono de tipo
         function getTypeIcon(tipo) {
-            if (tipo.includes("Criatura")) return '<i class="fa-solid fa-paw" style="font-size: 28px; color: #86efac;"></i>';
-            if (tipo.includes("Instantáneo") || tipo.includes("Conjuro")) return '<i class="fa-solid fa-scroll" style="font-size: 28px; color: #86efac;"></i>';
-            if (tipo.includes("Tierra")) return '<i class="fa-solid fa-mountain-sun" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Eco")) return `
+                <svg class="tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" d="M32 20 39 32 32 44 25 32 32 20Z"></path>
+                    <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
+                </svg>
+            `;
+            if (tipo.includes("Hechizo")) return '<i class="fa-solid fa-scroll" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Fuente")) return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';
             return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';
         }
 
@@ -1021,10 +1023,10 @@
 
             const hasEffect = card.desc && card.desc.trim() !== "" && card.desc.trim().toLowerCase() !== "sin efecto adicional.";
             const hasLore = card.lore && card.lore.trim() !== "";
-            const isLand = card.tipo && card.tipo.toLowerCase().includes("tierra");
+            const isSource = card.tipo && card.tipo.toLowerCase().includes("fuente");
 
             const cardEl = document.createElement('div');
-            cardEl.className = `tcg-card${isLand ? ' tcg-card--full-art-land' : ''}`;
+            cardEl.className = `tcg-card${isSource ? ' tcg-card--full-art-land' : ''}`;
             cardEl.id = `card-${card.id}`;
 
             cardEl.innerHTML = `
@@ -1032,7 +1034,7 @@
                 <div class="tcg-inner">
                     <!-- Cabecera -->
                     <div class="tcg-head">
-                        ${!isLand ? `<div class="tcg-mana-gem"><span data-cost="${card.costo}">${card.costo}</span></div>` : ''}
+                        ${!isSource ? `<div class="tcg-mana-gem"><span data-cost="${card.costo}">${card.costo}</span></div>` : ''}
                         <div class="tcg-title-wrap">
                             <div class="tcg-title">${card.nombre}</div>
                             <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
@@ -1054,9 +1056,9 @@
 
                     <!-- Cuerpo de Descripción -->
                     <div class="tcg-body">
-                        ${(!isLand && hasEffect) ? `<p class="tcg-effect">${formatEffectText(card.desc)}</p>` : ''}
-                        ${(!isLand && hasEffect && hasLore) ? `<div class="tcg-divider"></div>` : ''}
-                        ${(isLand || !hasEffect) && hasLore ? `<p class="tcg-flavor tcg-flavor-solo">${card.lore}</p>` : (!isLand && hasLore ? `<p class="tcg-flavor ${hasEffect ? '' : 'tcg-flavor-solo'}">${card.lore}</p>` : '')}
+                        ${(!isSource && hasEffect) ? `<p class="tcg-effect">${formatEffectText(card.desc)}</p>` : ''}
+                        ${(!isSource && hasEffect && hasLore) ? `<div class="tcg-divider"></div>` : ''}
+                        ${(isSource || !hasEffect) && hasLore ? `<p class="tcg-flavor tcg-flavor-solo">${card.lore}</p>` : (!isSource && hasLore ? `<p class="tcg-flavor ${hasEffect ? '' : 'tcg-flavor-solo'}">${card.lore}</p>` : '')}
                         <div class="tcg-footer-info">HFA1 #${cardNumberStr} • Hostfall TCG</div>
                     </div>
                 </div>

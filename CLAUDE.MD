@@ -356,7 +356,8 @@ Sin marcador = la habilidad debe validar completa contra el vocabulario del engi
 ### Llanowar Elves / Druid of the Cowl / Tithe Acolyte
 
 Efecto generico de tap:
-- `{{T}}: Add {G}.`
+- texto interno legacy: `{{T}}: Add {G}.`
+- texto impreso Hostfall: `Agota: Gana {E}.`
 - se activa con UI de efecto
 - animacion:
   1. carta se agranda/levanta
@@ -842,8 +843,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
   frase explicita `Paga N de Vida.` tambien se imprime en rojo y negrita. En Vampiros, los Hechizos con
   pago adicional mantienen `Coste adicional: Paga N de Vida.` en una sola linea y separan el efecto; Acólito usa
-  `{{T}} y paga 5 de Vida: Gana 1 {E}.` para mostrar primero el icono de agotar y luego el mismo
-  orbe azul de Energia que usan los Druidas del deck verde.
+  `Agota y paga 5 de Vida: Gana {E}.`. Las cartas imprimen `Agota` como texto en negrita y con el
+  acento de su faccion, no el reloj de arena. Cada `{E}` representa una unidad; las cartas repiten
+  el icono en lugar de anteponerle un número.
   Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
@@ -855,10 +857,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   PNG de la raiz, no a los WebP de `art/`. La Corte Carmesi ya es un deck jugable de 40 cartas;
   su estudio imprime el vocabulario Hostfall (`Eco`, `Fuente`, `Hechizo`, `Hechizo · Rápido` y
   Rasgos canónicos). `Eco` usa un glifo propio de resonancia, al doble del tamaño del icono legacy,
-  en vez de la huella; la Condesa se presenta como `Eco de Crónica`. Los símbolos inline de Agotar
-  y Energía viven dentro de sellos circulares planos: fondo borgoña texturizado, borde dorado fino
-  y sin degradado ni sombra exterior. Energía usa un fondo dorado oscuro y un rayo dorado para
-  distinguirse sin parecer un botón 3D. La gota del sello del header está centrada ópticamente
+  en vez de la huella; Fuente usa el mismo diamante que Mono Green y la Condesa se presenta como
+  `Eco de Crónica`. Las cartas imprimen `Agota` como verbo; Energía conserva el rayo dorado dentro
+  del orbe de 64px de Mono Green, con el mismo material oscuro, reflejo superior, borde de latón y
+  sombra. La gota del sello del header está centrada ópticamente
   dentro de su círculo.
   conserva el id interno `vampire_chronicle_preview` para no romper escenarios guardados, pero su
   metadata visible ya no dice Preview/Early Access. El manifest activa `showFullCardImage` para que
@@ -889,7 +891,23 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `mono_green_ramp_images.json` es la fuente unica de esas rutas. Los renderers runtime de caras
   HTML (`MonoGreenHandCardFace`, `HostfallCardFace`, `DeckCardVisual` y el prototipo Sunshower)
   fueron eliminados: las cartas vigentes se producen con los generadores bajo `dev/tools/Decks/`
-  y el juego consume exclusivamente sus imagenes completas. El rombo de disponible pertenece a
+  y el juego consume exclusivamente sus imagenes completas.
+
+  El estudio Mono Green y sus dos espejos JSON imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
+  `Hechizo`, `Hechizo · Rápido`, `Guardia aérea`, `Letal` y `Veneno 1`) sin cambiar los ids,
+  tipos o keywords internos del motor. `Eco` usa el mismo glifo grande de resonancia de Vampires;
+  la detección de carta full-art del estudio reconoce `Fuente` en lugar de `Tierra`. `TRAMPLE`
+  sigue funcionando internamente y permanece oculto en la presentación vigente; no se imprime
+  `Desborde` hasta que esa keyword se exponga deliberadamente. Esta fase tampoco cambia nombres,
+  arte, metadata de Scryfall ni regenera los PNG de `public/cards/mono_green_ramp/`. La regresión
+  compara las 13 cartas del HTML, ambos JSON del generador y el texto visible del deck runtime.
+  Sus productores de Energía usan un rayo dorado dentro del mismo orbe material de Agotar y
+  `Veneno N` presenta N en un badge holgado. El texto usa `gana` para modificadores temporales y `pon un contador ... sobre` para
+  contadores permanentes; `obtiene` queda fuera del vocabulario de reglas nuevo.
+  Los índices de Mono Green y Vampires usan un header mínimo común con título y línea temática,
+  sin controles, estado ni mensajes de exportación; Vampires abre sus cartas al 35%.
+
+  El rombo de disponible pertenece a
   `.hand-card`, pero su render
   esta detras de `showPlayerHandActionableGems`, actualmente inactivo. Los PNG de mano deben usar
   `image-rendering: auto`: `-webkit-optimize-contrast` vuelve punteados los bordes dorados finos al

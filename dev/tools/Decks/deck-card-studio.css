@@ -591,11 +591,33 @@ input {
 }
 
 .effect-keyword,
+.effect-action,
 .effect-counter,
 .effect-token,
 .effect-stat {
     color: var(--accent-deep);
     font-weight: 700;
+}
+
+.effect-action {
+    font-weight: 800;
+}
+
+.effect-keyword-value {
+    display: inline-grid;
+    width: 1.55em;
+    height: 1.55em;
+    margin-left: 0.14em;
+    place-items: center;
+    border: 2px solid rgba(184, 162, 107, 0.72);
+    border-radius: 50%;
+    color: #f5ead1;
+    background: var(--accent-deep);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    font-family: "Outfit", sans-serif;
+    font-size: 0.64em;
+    line-height: 1;
+    vertical-align: 0.08em;
 }
 
 .tcg-effect strong.effect-danger {
@@ -2441,41 +2463,50 @@ body[data-theme="vampires"] .tcg-effect strong {
 
 body[data-theme="vampires"] .symbol-badge {
     display: inline-flex;
-    width: 54px;
-    height: 54px;
+    width: 64px;
+    height: 64px;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    margin: 0 7px;
+    margin: 0 8px;
     vertical-align: middle;
-    border: 2px solid rgba(184, 162, 107, 0.78);
     border-radius: 50%;
-    color: #f0d8c8;
-    background-color: #3b0d1d;
-    background-image: var(--noise);
-    background-blend-mode: soft-light;
-    box-shadow: inset 0 0 0 1px rgba(228, 147, 158, 0.2);
-    text-shadow: none;
-    transform: translateY(-4px);
+    transform: translateY(-5px);
 }
 
 body[data-theme="vampires"] .symbol-badge > svg {
-    width: 34px;
-    height: 34px;
+    display: block;
+    width: 40px;
+    height: 40px;
+    fill: currentColor;
 }
 
 body[data-theme="vampires"] .symbol-tap {
-    color: #f0d8c8;
+    border: 3px solid rgba(184, 162, 107, 0.66);
+    color: #eadcae;
+    background:
+        radial-gradient(circle at 36% 27%, rgba(242, 229, 191, 0.18), transparent 32%),
+        linear-gradient(145deg, #665b43 0%, #403a2d 48%, #211f1a 100%);
+    box-shadow:
+        inset 0 1px 2px rgba(255, 242, 204, 0.24),
+        inset 0 -3px 5px rgba(16, 12, 7, 0.48),
+        0 3px 7px rgba(0, 0, 0, 0.42);
+    font-size: 27px;
+    text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
 }
 
 body[data-theme="vampires"] .symbol-energy {
-    border-color: rgba(212, 175, 55, 0.88);
+    border: 3px solid rgba(184, 162, 107, 0.66);
     color: #f6d76f;
-    background-color: #493515;
-    background-image: var(--noise);
-    background-blend-mode: soft-light;
-    box-shadow: inset 0 0 0 1px rgba(255, 233, 130, 0.2);
-    text-shadow: none;
+    background:
+        radial-gradient(circle at 36% 27%, rgba(242, 229, 191, 0.18), transparent 32%),
+        linear-gradient(145deg, #665b43 0%, #403a2d 48%, #211f1a 100%);
+    box-shadow:
+        inset 0 1px 2px rgba(255, 242, 204, 0.24),
+        inset 0 -3px 5px rgba(16, 12, 7, 0.48),
+        0 3px 7px rgba(0, 0, 0, 0.42);
+    font-size: 29px;
+    text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
 }
 
 body[data-theme="vampires"] .tcg-divider {

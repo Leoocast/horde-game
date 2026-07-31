@@ -41,8 +41,15 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const inlineKeywords = formatEffectText(
     "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
+  const numberedKeyword = formatEffectText("Letal\nVeneno 1");
+  const repeatedEnergy = formatEffectText("Gana {E}{E}.", {
+    energyIconHtml: '<span class="energy-icon"></span>',
+  });
+  const exhaustAction = formatEffectText("Agota: Gana {E}.", {
+    energyIconHtml: '<span class="energy-icon"></span>',
+  });
   const acolyteCost = formatEffectText(
-    "{{T}} y paga 5 de Vida: Gana 1 {E}.",
+    "{{T}} y paga 5 de Vida: Gana {E}.",
     {
       tapIconHtml: '<span class="tap-icon"></span>',
       energyIconHtml: '<span class="energy-icon"></span>',
@@ -76,9 +83,16 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     inlineKeywords,
     /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Drenar<\/strong>\. <strong class="effect-keyword">Alerta<\/strong>\./,
   );
+  assert.match(
+    numberedKeyword,
+    /class="effect-keyword">Veneno <span class="effect-keyword-value">1<\/span><\/strong>/,
+  );
+  assert.equal((repeatedEnergy.match(/class="energy-icon"/g) ?? []).length, 2);
+  assert.doesNotMatch(repeatedEnergy, /Gana\s+\d/u);
+  assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong>:/u);
   assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
-  assert.match(acolyteCost, /Gana 1 <span class="energy-icon"><\/span>\./);
+  assert.match(acolyteCost, /Gana <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
 });
 
@@ -111,6 +125,34 @@ test("local Vampire studio art paths resolve to real files", () => {
   }
 });
 
+test("player deck studios use the same minimal header presentation", () => {
+  const monoGreenIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+    "utf8",
+  );
+  const vampireIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/vampires/index.html", import.meta.url),
+    "utf8",
+  );
+  const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360)/iu;
+
+  for (const [label, indexHtml] of [
+    ["Mono Green", monoGreenIndex],
+    ["Vampires", vampireIndex],
+  ]) {
+    assert.match(indexHtml, /<header class="studio-header">/u, `${label} is missing the shared header`);
+    assert.match(indexHtml, /class="studio-title"/u, `${label} is missing its title`);
+    assert.match(indexHtml, /class="studio-subtitle"/u, `${label} is missing its thematic subtitle`);
+    assert.doesNotMatch(indexHtml, retiredHeaderUi, `${label} exposes retired studio controls or export copy`);
+  }
+
+  assert.match(
+    vampireIndex,
+    /<main class="cards-grid scale-35" id="cards-container"><\/main>/u,
+    "Vampires must open at 35%",
+  );
+});
+
 test("Vampire studio cards stay aligned with the runtime deck", () => {
   const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
   const indexHtml = fs.readFileSync(indexUrl, "utf8");
@@ -137,7 +179,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
       ),
     },
   ];
-  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal)/iu;
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
     DEATHTOUCH: "Letal",
     FLYING: "Volar",
@@ -191,6 +233,115 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
   }
 });
 
+test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
+  const indexUrl = new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(/const deckData = (\[[\s\S]*?\]);/)?.[1];
+  assert.ok(embeddedJson, "Mono Green index must contain its embedded deck JSON");
+
+  const runtimeDeck = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const studioSources = [
+    { label: "embedded index", cards: JSON.parse(embeddedJson) },
+    {
+      label: "mono-green.json",
+      cards: JSON.parse(
+        fs.readFileSync(
+          new URL("../dev/tools/Decks/monogreen/mono-green.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    },
+    {
+      label: "card generator mirror",
+      cards: JSON.parse(
+        fs.readFileSync(
+          new URL(
+            "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      ),
+    },
+  ];
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
+  const keywordLabels = {
+    DEATHTOUCH: "Letal",
+    REACH: "Guardia aérea",
+  };
+
+  for (const source of studioSources) {
+    assert.equal(
+      source.cards.length,
+      runtimeDeck.cards.length,
+      `${source.label} has a stale Mono Green card count`,
+    );
+  }
+
+  for (const runtimeCard of runtimeDeck.cards) {
+    const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
+      ? []
+      : [runtimeCard.gameText?.es];
+    const keywordText = (runtimeCard.keywords ?? [])
+      .filter((keyword) => keyword !== "TRAMPLE")
+      .map((keyword) => keywordLabels[keyword] ?? keyword);
+    const poisonText = (runtimeCard.abilities ?? [])
+      .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/i)?.[1])
+      .filter(Boolean)
+      .map((amount) => `Veneno ${amount}`);
+    const expectedRules = [...keywordText, ...poisonText, ...rulesText].filter(Boolean).join("\n");
+
+    for (const source of studioSources) {
+      const studioCard = source.cards.find((card) => card.id === runtimeCard.id);
+      assert.ok(studioCard, `${source.label} is missing ${runtimeCard.id}`);
+      assert.doesNotMatch(
+        `${studioCard.tipo}\n${studioCard.desc}`,
+        retiredStudioVocabulary,
+        `${source.label} exposes retired vocabulary for ${runtimeCard.id}`,
+      );
+      assert.equal(
+        studioCard.costo,
+        runtimeCard.manaValue,
+        `${source.label} has a stale cost for ${runtimeCard.id}`,
+      );
+      assert.equal(
+        studioCard.atk,
+        runtimeCard.power,
+        `${source.label} has stale power for ${runtimeCard.id}`,
+      );
+      assert.equal(
+        studioCard.def,
+        runtimeCard.toughness,
+        `${source.label} has stale toughness for ${runtimeCard.id}`,
+      );
+
+      if (runtimeCard.cardTypes.includes("Creature")) {
+        assert.match(studioCard.tipo, /^Eco\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
+      } else if (runtimeCard.cardTypes.includes("Instant")) {
+        assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
+      } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+        assert.equal(studioCard.tipo, "Hechizo", `${source.label} has a stale type for ${runtimeCard.id}`);
+      } else if (runtimeCard.cardTypes.includes("Land")) {
+        assert.match(studioCard.tipo, /^Fuente\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
+      }
+
+      assert.equal(
+        normalizeMonoGreenEffect(studioCard.desc),
+        normalizeMonoGreenEffect(expectedRules),
+        `${source.label} has stale rules for ${runtimeCard.id}`,
+      );
+    }
+  }
+});
+
 test("Vampire gameplay cards use their full-image faction presentation", () => {
   for (const definitionId of [
     "crimson_energy",
@@ -207,7 +358,16 @@ test("Vampire gameplay cards use their full-image faction presentation", () => {
 function normalizeVampireEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
-    .replaceAll("{E}", "Energía")
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}
+
+function normalizeMonoGreenEffect(text) {
+  return String(text ?? "")
+    .replaceAll("{{T}}", "Agota")
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");
