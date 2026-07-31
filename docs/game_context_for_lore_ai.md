@@ -6,6 +6,23 @@ Este es un documento narrativo, no una fuente de implementación. Para implement
 `docs/adding_cards.md`; ante cualquier diferencia mandan los JSON registrados, el engine y los
 tests.
 
+> **Actualización canónica de identidad:** el vocabulario y la ontología narrativa vigentes viven
+> en `docs/game_vocabulary.md`. Las secciones mecánicas inferiores todavía documentan el prototipo
+> legacy y por eso conservan términos de Magic que deben migrarse.
+
+## Crónicas, fragmentos y protagonistas
+
+Cada mazo del jugador es una **Crónica** y debe contar una historia, no limitarse a reunir cartas de
+un mismo arquetipo. Sus cartas representan fragmentos de memoria con los que el Cronista
+reconstruye un Capítulo; los Ecos Invocados son reconstrucciones de las figuras recordadas, no las
+personas históricas originales.
+
+Cuando la protagonista o el protagonista aparece como carta, se distingue como `Chronicle Echo /
+Eco de Crónica`. Esta designación expresa importancia narrativa y visual, pero no concede reglas
+ni unicidad. Una Crónica puede contener otros Ecos de Crónica si son figuras centrales de su
+relato. El `keyCardId` técnico existente solo selecciona la carta de portada del mazo y no sustituye
+la declaración narrativa de protagonista.
+
 ## Concepto central
 
 Un jugador humano (el "Player") se enfrenta en solitario a una horda de criaturas controlada por el sistema (la "Horde"). No es un duelo simétrico de Magic: la Horda no tiene mano, no tiene vida, no paga maná de forma normal y no toma decisiones estratégicas — revela cartas de su propio mazo de forma automática y ataca con todo lo que puede. El Player sí juega con las reglas clásicas de Magic (tierras, maná, criaturas, instants, sorceries, combate con bloqueos).

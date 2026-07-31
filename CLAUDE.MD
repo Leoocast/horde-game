@@ -128,6 +128,21 @@ tests/
 Detalle de testing en `docs/testing.md`. Para agregar o implementar una carta, seguir
 `docs/adding_cards.md`.
 
+## Vocabulario e independencia de producto
+
+La fuente canonica para retirar de la superficie del producto el vocabulario y contenido heredados
+de Magic vive en `docs/game_vocabulary.md`. Tambien define la ontologia narrativa de las cartas:
+fragmentos de memoria que reconstruyen un Capitulo. Leerla antes de agregar o cambiar nombres,
+tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas, tooltips o copy de tutorial.
+La Parte 1 de ese vocabulario esta cerrada como diseno en v1.0; `Echo / Eco` es el tipo de carta
+que reemplaza a `Unit / Unidad`, y `Chronicle Echo / Eco de Cronica` distingue figuras centrales
+del relato sin agregar una regla de unicidad.
+
+Durante la migracion pueden sobrevivir ids legacy dentro del engine, pero no deben filtrarse a UI,
+cartas impresas, logs, ARIA ni assets de produccion. No agregar nuevas dependencias de Scryfall,
+arte, nombres, metadata ni texto de cartas de Magic. Todo recurso final necesita procedencia y
+derechos de uso comercial documentados.
+
 ## Estado actual del juego
 
 ### Modos legacy
