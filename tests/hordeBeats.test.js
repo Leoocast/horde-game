@@ -532,7 +532,7 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
   }
 });
 
-test("Final Banquet fades the target, presents its death reaction, then triggers Blood Page from life loss", async () => {
+test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -598,10 +598,26 @@ test("Final Banquet fades the target, presents its death reaction, then triggers
     const beforeDeath = useGameStore.getState();
     assert.equal(beforeDeath.game.player.life, 10);
     assert.equal(beforeDeath.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
-    assert.deepEqual(beforeDeath.specialDeadCardIds, [rundvelt.instanceId]);
+    assert.deepEqual(beforeDeath.specialDeadCardIds, []);
     assert.equal(beforeDeath.pendingSpellHandId, banquet.instanceId);
+    assert.equal(beforeDeath.finalBanquetAnimation?.phase, "siphon");
+    assert.equal(beforeDeath.finalBanquetAnimation?.targetId, rundvelt.instanceId);
+    assert.equal(beforeDeath.finalBanquetAnimation?.amount, 1);
 
-    timers.releaseExpiredAt(260);
+    beforeDeath.beginFinalBanquetStrike(beforeDeath.finalBanquetAnimation.id);
+    const beforeRayImpact = useGameStore.getState();
+    assert.equal(beforeRayImpact.finalBanquetAnimation?.phase, "strike");
+    assert.equal(beforeRayImpact.game.player.life, 10);
+    assert.equal(beforeRayImpact.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+
+    beforeRayImpact.beginFinalBanquetImpact(beforeRayImpact.finalBanquetAnimation.id);
+    const atSmokeImpact = useGameStore.getState();
+    assert.equal(atSmokeImpact.finalBanquetAnimation?.phase, "impact");
+    assert.deepEqual(atSmokeImpact.specialDeadCardIds, [rundvelt.instanceId]);
+    assert.equal(atSmokeImpact.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+
+    atSmokeImpact.completeFinalBanquetAnimation(atSmokeImpact.finalBanquetAnimation.id);
+    timers.releaseExpiredAt(0);
 
     const afterBanquet = useGameStore.getState();
     assert.equal(afterBanquet.game.player.life, 9);
@@ -609,13 +625,15 @@ test("Final Banquet fades the target, presents its death reaction, then triggers
     assert.equal(afterBanquet.game.player.lifeLostThisTurn, 1);
     assert.equal(afterBanquet.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
     assert.equal(afterBanquet.game.horde.graveyard.some((card) => card.instanceId === rundvelt.instanceId), true);
-    assert.equal(typeof afterBanquet.lifeDamageAnimationId, "number");
+    assert.equal(afterBanquet.lifeDamageAnimationId, undefined);
+    assert.equal(afterBanquet.finalBanquetAnimation, undefined);
+    assert.equal(afterBanquet.pendingSpellHandId, undefined);
     assert.equal(afterBanquet.hordeAutoTriggerCount, 1);
 
-    timers.releaseExpiredAt(380);
+    timers.releaseExpiredAt(120);
     assert.equal(useGameStore.getState().deathRevealCard?.instanceId, rundvelt.instanceId);
 
-    timers.releaseExpiredAt(1_340);
+    timers.releaseExpiredAt(1_080);
     const afterDeathTrigger = useGameStore.getState();
     assert.equal(afterDeathTrigger.game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
     assert.equal(afterDeathTrigger.game.horde.library.length, 0);
@@ -624,14 +642,14 @@ test("Final Banquet fades the target, presents its death reaction, then triggers
     // exactly where the real card animation would decrement it.
     useGameStore.setState({ summoningAnimationCount: 0 });
 
-    timers.releaseExpiredAt(1_900);
+    timers.releaseExpiredAt(1_640);
     assert.equal(useGameStore.getState().activatingEffectCardId, page.instanceId);
     assert.equal(useGameStore.getState().playerAutoTriggerCount, 1);
 
-    timers.releaseExpiredAt(2_360);
+    timers.releaseExpiredAt(2_100);
     assert.equal(useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
 
-    timers.releaseExpiredAt(3_500);
+    timers.releaseExpiredAt(3_240);
     assert.equal(useGameStore.getState().playerAutoTriggerCount, 0);
     assert.deepEqual(useGameStore.getState().game.eventQueue, []);
   } finally {

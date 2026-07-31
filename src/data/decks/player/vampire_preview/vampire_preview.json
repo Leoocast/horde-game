@@ -608,7 +608,8 @@
           "effects": [
             {
               "type": "DESTROY_TARGET",
-              "target": "targetCreature"
+              "target": "targetCreature",
+              "animation": "FINAL_BANQUET"
             },
             {
               "type": "LOSE_LIFE",

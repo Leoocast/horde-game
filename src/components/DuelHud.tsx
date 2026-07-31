@@ -309,6 +309,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
   const lifePaymentAnimation = useGameStore((state) => state.lifePaymentAnimation);
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
+  const finalBanquetAnimation = useGameStore((state) => state.finalBanquetAnimation);
   const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
@@ -319,6 +320,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const lastEventId = useRef<number | undefined>(undefined);
   const lastLifeDamageAnimationId = useRef<number | undefined>(undefined);
   const bloodPactLifeFrame = useRef<number | undefined>(undefined);
+  const finalBanquetLifeId = useRef<string | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
 
@@ -326,6 +328,18 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
     setVisualLife(bloodPactAnimation?.lifeBefore ?? game.player.life);
     lastEventId.current = undefined;
   }, [bloodPactAnimation?.id, bloodPactAnimation?.lifeBefore, game.player.life]);
+
+  useEffect(() => {
+    if (finalBanquetAnimation && finalBanquetLifeId.current !== finalBanquetAnimation.id) {
+      finalBanquetLifeId.current = finalBanquetAnimation.id;
+      setVisualLife(Math.max(0, game.player.life - finalBanquetAnimation.amount));
+      return;
+    }
+    if (!finalBanquetAnimation && finalBanquetLifeId.current) {
+      finalBanquetLifeId.current = undefined;
+      setVisualLife(game.player.life);
+    }
+  }, [finalBanquetAnimation, game.player.life]);
 
   useEffect(() => {
     if (bloodPactLifeFrame.current) {
@@ -379,11 +393,13 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
       <div
         className={[
           "player-life-dock fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
-          bloodPactAnimation
-            ? "pointer-events-none z-[195]"
-            : tutorialOverlayActive
-              ? "z-[91]"
-              : "z-[75]",
+          finalBanquetAnimation
+            ? "pointer-events-none z-[205]"
+            : bloodPactAnimation
+              ? "pointer-events-none z-[195]"
+              : tutorialOverlayActive
+                ? "z-[91]"
+                : "z-[75]",
         ].join(" ")}
       >
         <div className="player-life-cluster">
@@ -423,18 +439,18 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
-              bloodPactAnimation?.phase === "impact" || lifePaymentAnimation ? "blood-pact-life-corrupted" : "",
-              lifePaymentAnimation ? "life-payment-life-corrupted" : "",
+              bloodPactAnimation?.phase === "impact" || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon" ? "blood-pact-life-corrupted" : "",
+              lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon" ? "life-payment-life-corrupted" : "",
             ].join(" ")}
           >
-            {(bloodPactAnimation || lifePaymentAnimation) && <span className="blood-pact-life-wave" aria-hidden="true" />}
-            {(bloodPactAnimation?.phase === "impact" || lifePaymentAnimation) && (
+            {(bloodPactAnimation || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon") && <span className="blood-pact-life-wave" aria-hidden="true" />}
+            {(bloodPactAnimation?.phase === "impact" || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon") && (
               <strong
-                key={bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.id : lifePaymentAnimation?.id}
+                key={bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.id : lifePaymentAnimation?.id ?? finalBanquetAnimation?.id}
                 className="blood-pact-life-damage-number"
                 aria-hidden="true"
               >
-                -{bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.amount : lifePaymentAnimation?.amount}
+                -{bloodPactAnimation?.phase === "impact" ? bloodPactAnimation.amount : lifePaymentAnimation?.amount ?? finalBanquetAnimation?.amount}
               </strong>
             )}
             {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}

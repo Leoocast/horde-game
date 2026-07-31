@@ -86,6 +86,7 @@ export type GameStore = {
   lifestealAttackAnimations: LifestealAttackAnimationState[];
   bloodPactAnimation?: BloodPactAnimationState;
   drainEssenceAnimation?: DrainEssenceAnimationState;
+  finalBanquetAnimation?: FinalBanquetAnimationState;
   deathRevealCard?: CardInstance;
   hordeSpellCard?: CardInstance;
   /** Horde static auras whose announcement beat has not played yet. */
@@ -181,6 +182,9 @@ export type GameStore = {
   completeLifestealAttackAnimation: (id: string) => void;
   resolveDrainEssenceAnimation: (id: string) => void;
   completeDrainEssenceAnimation: (id: string) => void;
+  beginFinalBanquetStrike: (id: string) => void;
+  beginFinalBanquetImpact: (id: string) => void;
+  completeFinalBanquetAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -234,6 +238,7 @@ const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
 const LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 1100;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
+const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
@@ -247,6 +252,8 @@ let lifestealAttackAnimationEventId = 0;
 let drainEssenceAnimationSafetyTimer: number | undefined;
 let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
 let drainEssenceAfterCommit: (() => void) | undefined;
+let finalBanquetAnimationSafetyTimer: number | undefined;
+let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
 
 type HordeAttackAnimation = {
   attackerId: string;
@@ -322,6 +329,15 @@ export type DrainEssenceAnimationState = {
   targetId: string;
   origin?: { left: number; top: number; width: number; height: number };
   phase: "extracting" | "resolved";
+};
+
+export type FinalBanquetAnimationState = {
+  id: string;
+  card: CardInstance;
+  targetId: string;
+  amount: number;
+  origin?: { left: number; top: number; width: number; height: number };
+  phase: "siphon" | "strike" | "impact";
 };
 
 export type BurnAnimationState = {
@@ -415,6 +431,7 @@ function createCleanUiState(): Partial<GameStore> {
     lifestealAttackAnimations: [],
     bloodPactAnimation: undefined,
     drainEssenceAnimation: undefined,
+    finalBanquetAnimation: undefined,
     deathRevealCard: undefined,
     hordeSpellCard: undefined,
     pendingStaticAuras: [],
@@ -468,6 +485,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lifestealAttackAnimations: [],
   bloodPactAnimation: undefined,
   drainEssenceAnimation: undefined,
+  finalBanquetAnimation: undefined,
   deathRevealCard: undefined,
   hordeSpellCard: undefined,
   pendingStaticAuras: [],
@@ -514,6 +532,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearLifePaymentPresentation();
     clearLifestealAttackPresentation();
     clearDrainEssencePresentation();
+    clearFinalBanquetPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -535,6 +554,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     clearLifePaymentPresentation();
     clearLifestealAttackPresentation();
     clearDrainEssencePresentation();
+    clearFinalBanquetPresentation();
     set((state) => {
       resetHordeSequence();
       resetPlayerTriggerSequence();
@@ -1016,6 +1036,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else {
       afterCommit?.();
     }
+  },
+  beginFinalBanquetStrike: (id) =>
+    set((state) => {
+      if (state.finalBanquetAnimation?.id !== id || state.finalBanquetAnimation.phase === "strike") return {};
+      return {
+        finalBanquetAnimation: {
+          ...state.finalBanquetAnimation,
+          phase: "strike",
+        },
+      };
+    }),
+  beginFinalBanquetImpact: (id) =>
+    set((state) => {
+      const active = state.finalBanquetAnimation;
+      if (active?.id !== id || active.phase === "impact") return {};
+      return {
+        finalBanquetAnimation: {
+          ...active,
+          phase: "impact",
+        },
+        specialDeadCardIds: state.specialDeadCardIds.includes(active.targetId)
+          ? state.specialDeadCardIds
+          : [...state.specialDeadCardIds, active.targetId],
+      };
+    }),
+  completeFinalBanquetAnimation: (id) => {
+    const active = get().finalBanquetAnimation;
+    if (active?.id !== id) return;
+    if (finalBanquetAnimationSafetyTimer && typeof window !== "undefined") {
+      window.clearTimeout(finalBanquetAnimationSafetyTimer);
+      finalBanquetAnimationSafetyTimer = undefined;
+    }
+    const commit = finalBanquetCommit;
+    finalBanquetCommit = undefined;
+    const patch = commit?.() ?? {};
+    set({
+      ...patch,
+      finalBanquetAnimation: undefined,
+      pendingSpellHandId: undefined,
+      specialDeadCardIds: [],
+    });
   },
   activateAbility: (id, abilityId, options) => {
     let shouldSchedulePlayerTriggers = false;
@@ -1581,6 +1642,14 @@ function clearDrainEssencePresentation(): void {
   drainEssenceAfterCommit = undefined;
 }
 
+function clearFinalBanquetPresentation(): void {
+  if (finalBanquetAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(finalBanquetAnimationSafetyTimer);
+  }
+  finalBanquetAnimationSafetyTimer = undefined;
+  finalBanquetCommit = undefined;
+}
+
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
   if (bloodPactAnimationSafetyTimer) window.clearTimeout(bloodPactAnimationSafetyTimer);
   bloodPactAnimationSafetyTimer = window.setTimeout(() => {
@@ -1617,6 +1686,16 @@ function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
   }, DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleFinalBanquetAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (finalBanquetAnimationSafetyTimer) window.clearTimeout(finalBanquetAnimationSafetyTimer);
+  finalBanquetAnimationSafetyTimer = window.setTimeout(() => {
+    const store = useGameStore.getState();
+    if (store.finalBanquetAnimation?.id !== id) return;
+    store.completeFinalBanquetAnimation(id);
+  }, FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
@@ -1626,6 +1705,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.lifestealAttackAnimations.length > 0 ||
       state.bloodPactAnimation ||
       state.drainEssenceAnimation ||
+      state.finalBanquetAnimation ||
       state.resolvingHordeCombat ||
       state.playerAutoTriggerCount > 0 ||
       state.energyRecycleAnimation ||
@@ -1908,10 +1988,11 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
+  const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (
     latest: GameState,
-    presentation: { deferContinuation?: boolean } = {},
+    presentation: { deferContinuation?: boolean; suppressLifeLossPresentation?: boolean } = {},
   ) => {
     const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
     const reactionSources = findCardCastReactionSources(latest, card);
@@ -1929,7 +2010,9 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     if (castSucceeded) playBattlefieldEntryVoiceInteraction(latest, next, card.instanceId);
-    if (lostLife && paidLife === 0) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+    if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
+      useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+    }
     if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
     if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
@@ -1972,7 +2055,9 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       hoveredCardId: undefined,
       focusedCardId: undefined,
       hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
-      lifeDamageAnimationId: lostLife && paidLife === 0 ? Date.now() : useGameStore.getState().lifeDamageAnimationId,
+      lifeDamageAnimationId: lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation
+        ? Date.now()
+        : useGameStore.getState().lifeDamageAnimationId,
       lifePaymentAnimation,
       playerAutoTriggerCount: playerTriggersQueued ? 1 : useGameStore.getState().playerAutoTriggerCount,
       autoPaidLandAnimation,
@@ -2003,6 +2088,39 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
           ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
           : undefined,
         phase: "extracting",
+      },
+      spellTargeting: undefined,
+      spellFightAnimation: undefined,
+      pendingSpellHandId: handId,
+      selectedHandId: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
+    };
+  }
+  if (usesFinalBanquetAnimation) {
+    const targetId = String(targets.targetCreature ?? "");
+    const target = game.horde.battlefield.find((candidate) => candidate.instanceId === targetId);
+    if (!target) return {};
+    const sourceRect = typeof document === "undefined"
+      ? undefined
+      : (
+          document.querySelector<HTMLElement>(`[data-spell-source-card-id="${handId}"]`) ??
+          document.querySelector<HTMLElement>(`[data-hand-card-id="${handId}"]`)
+        )?.getBoundingClientRect();
+    const animationId = `final-banquet-${card.instanceId}-${Date.now()}`;
+    finalBanquetCommit = () =>
+      resolveSpell(useGameStore.getState().game, { suppressLifeLossPresentation: true });
+    scheduleFinalBanquetAnimationSafetyClear(animationId);
+    return {
+      finalBanquetAnimation: {
+        id: animationId,
+        card,
+        targetId,
+        amount: Math.max(0, getPowerToughness(game, target).power),
+        origin: sourceRect
+          ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
+          : undefined,
+        phase: "siphon",
       },
       spellTargeting: undefined,
       spellFightAnimation: undefined,

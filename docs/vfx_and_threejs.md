@@ -15,6 +15,10 @@ Implementaciones utiles como referencia:
 - `BloodPactAnimator.tsx`: sprites y materiales Three.js para manchar y consumir una carta.
 - `DrainEssenceAnimator.tsx`: humo procedural con `ShaderMaterial`, billboards y una ruta animada
   entre carta objetivo, carta lanzada y vida.
+- `FinalBanquetAnimator.tsx`: combina gotas Three.js para la sangre con ese lenguaje procedural en
+  una secuencia contundente: varias corrientes de sangre hacia la carta, proyectil compacto con
+  cabeza/trail/chispas y explosion local sobre el objetivo. La carta lanzada permanece visible y
+  la criatura conserva el fade de muerte normal del campo.
 - `BurnAnimator.tsx`: ejemplo de que un efecto complejo no siempre necesita Three.js; CSS y DOM
   funcionan mejor cuando el efecto debe alinearse estrechamente con la interfaz.
 

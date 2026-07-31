@@ -743,8 +743,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   de vida al player. `ResolveContext.lastKnownStats` conserva esa informacion entre los efectos
   `DESTROY_TARGET` y `LOSE_LIFE`. Es perdida, no pago: puede llevar al player a cero y no incrementa
   `lifePaidThisTurn`, pero si activa al Paje cuando es la primera perdida del turno. El store difiere
-  tanto esa reaccion como los triggers de muerte hasta despues del fade y respeta el orden de la
-  cola antes de presentar cada beat.
+  la resolucion bajo `FINAL_BANQUET`: la carta queda visible y fija en la posicion del targeting,
+  absorbe hacia si una corriente de gotas de sangre desde la vida del player y dispara desde su
+  centro un proyectil compacto y veloz de humo procedural: una cabeza densa, trail corto y chispas
+  viajan juntos, en vez de llenar toda la ruta como un rayo. Al alcanzar al objetivo estalla en una
+  nube de humo sin overlays rectangulares; la criatura usa el fade de muerte normal del campo y
+  solo al terminar se comprometen la destruccion y la perdida de vida. Los triggers de muerte y la
+  reaccion del Paje conservan el orden real de la cola antes de presentar cada beat.
 - Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
