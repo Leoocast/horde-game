@@ -663,6 +663,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Carmesi usa esta regla generica en ataque y defensa. Condesa del Banquete Eterno la recibe
   mediante una condicion estatica solo durante el turno del player, de modo que recupera vida al
   atacar pero nunca al bloquear; Centinela de Sangre conserva solo `VIGILANCE`.
+  Cada impacto de ataque con Robo de vida reutiliza los mismos colmillos y splash visual, anclados
+  al emblema de vida/deck de la Horda y sincronizados con el inicio visual del descarte. Por ahora
+  esa mordida no reproduce sonido para no confundirse con el pago de vida; no se dispara al
+  defender. Las mordidas activas se conservan como lista para que atacantes consecutivos no corten
+  la cola de gotas de la anterior.
 - Guardian de la Cripta tiene `REACH` y usa el evento generico `SURVIVED_DAMAGE`: cada instancia positiva de dano,
   de combate o no, lo encola solamente si sigue en campo despues del impacto. No tiene limite por
   turno, por decision del usuario; varios impactos que sobreviva crean varios triggers. El evento

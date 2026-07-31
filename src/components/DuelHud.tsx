@@ -30,6 +30,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const confirmSmallpoxSelection = useGameStore((state) => state.confirmSmallpoxSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
+  const lifestealAttackAnimations = useGameStore((state) => state.lifestealAttackAnimations);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
@@ -48,6 +49,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
   const tutorialOverlayActive = isTutorialOverlayActive(game, tutorialAcknowledgedStepId);
+  const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
   useEffect(() => {
     if (!playerAttackAnimation) {
@@ -219,13 +221,18 @@ export function DuelHud({ game }: { game: GameState }) {
         <div className="horde-deck-counter-cluster">
           <div
             data-player-attack-target="horde-deck"
+            data-horde-life-panel="true"
             className={[
               "old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
               attackCountVisible ? "is-attack-locked" : "",
               hordeTakingDamage ? "horde-counter-hit" : "",
+              latestLifestealAttack ? "is-lifesteal-bitten" : "",
             ].join(" ")}
           >
-            <div data-horde-mill-origin="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+            {latestLifestealAttack && (
+              <span key={latestLifestealAttack.id} className="horde-lifesteal-blood-wave" aria-hidden="true" />
+            )}
+            <div data-horde-mill-origin="true" data-horde-life-emblem="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
             <div className="horde-deck-counter-copy">

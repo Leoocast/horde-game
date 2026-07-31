@@ -34,6 +34,7 @@ import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
 import { BloodPactAnimator } from "./BloodSiphonAnimator";
 import { LifePaymentAnimator } from "./LifePaymentAnimator";
+import { LifestealAttackAnimator } from "./LifestealAttackAnimator";
 import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
 
 type Props = {
@@ -112,6 +113,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <BurnAnimator />
       <BloodPactAnimator />
       <LifePaymentAnimator />
+      <LifestealAttackAnimator />
       <DrainEssenceAnimator />
       {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (

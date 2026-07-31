@@ -83,6 +83,7 @@ export type GameStore = {
   burnImpactEventId?: number;
   lifeDamageAnimationId?: number;
   lifePaymentAnimation?: LifePaymentAnimationState;
+  lifestealAttackAnimations: LifestealAttackAnimationState[];
   bloodPactAnimation?: BloodPactAnimationState;
   drainEssenceAnimation?: DrainEssenceAnimationState;
   deathRevealCard?: CardInstance;
@@ -177,6 +178,7 @@ export type GameStore = {
   setBloodPactAnimationPhase: (id: string, phase: BloodPactAnimationState["phase"]) => void;
   completeBloodPactAnimation: (id: string) => void;
   completeLifePaymentAnimation: (id: string) => void;
+  completeLifestealAttackAnimation: (id: string) => void;
   resolveDrainEssenceAnimation: (id: string) => void;
   completeDrainEssenceAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
@@ -223,7 +225,6 @@ const COMBAT_VOLLEY_ANIMATION_MS = 1220;
 const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
 const COMBAT_VOLLEY_MAX_PROJECTILES = 6;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
-const PLAYER_ATTACK_LIFESTEAL_IMPACT_MS = 275;
 const HORDE_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
@@ -231,6 +232,7 @@ const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
+const LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 1100;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
@@ -240,6 +242,8 @@ let bloodPactAnimationSafetyTimer: number | undefined;
 let bloodPactAfterCommit: (() => void) | undefined;
 let lifePaymentAnimationSafetyTimer: number | undefined;
 let lifePaymentAfterCommit: (() => void) | undefined;
+const lifestealAttackAnimationSafetyTimers = new Map<string, number>();
+let lifestealAttackAnimationEventId = 0;
 let drainEssenceAnimationSafetyTimer: number | undefined;
 let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
 let drainEssenceAfterCommit: (() => void) | undefined;
@@ -258,6 +262,12 @@ type HordeAttackAnimation = {
 type PlayerAttackAnimation = {
   attackerId: string;
   eventId: number;
+};
+
+export type LifestealAttackAnimationState = {
+  id: string;
+  attackerId: string;
+  amount: number;
 };
 
 type AutoPaidLandAnimation = {
@@ -402,6 +412,7 @@ function createCleanUiState(): Partial<GameStore> {
     burnImpactEventId: undefined,
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
+    lifestealAttackAnimations: [],
     bloodPactAnimation: undefined,
     drainEssenceAnimation: undefined,
     deathRevealCard: undefined,
@@ -454,6 +465,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   burnImpactEventId: undefined,
   lifeDamageAnimationId: undefined,
   lifePaymentAnimation: undefined,
+  lifestealAttackAnimations: [],
   bloodPactAnimation: undefined,
   drainEssenceAnimation: undefined,
   deathRevealCard: undefined,
@@ -500,6 +512,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
+    clearLifestealAttackPresentation();
     clearDrainEssencePresentation();
     set((state) => {
       resetHordeSequence();
@@ -520,6 +533,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   loadScenario: (game, deckIds) => {
     clearBloodPactPresentation();
     clearLifePaymentPresentation();
+    clearLifestealAttackPresentation();
     clearDrainEssencePresentation();
     set((state) => {
       resetHordeSequence();
@@ -942,6 +956,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     afterCommit?.();
   },
+  completeLifestealAttackAnimation: (id) => {
+    set((state) => {
+      const timer = lifestealAttackAnimationSafetyTimers.get(id);
+      if (timer !== undefined && typeof window !== "undefined") window.clearTimeout(timer);
+      lifestealAttackAnimationSafetyTimers.delete(id);
+      if (!state.lifestealAttackAnimations.some((animation) => animation.id === id)) return {};
+      return {
+        lifestealAttackAnimations: state.lifestealAttackAnimations.filter((animation) => animation.id !== id),
+      };
+    });
+  },
   resolveDrainEssenceAnimation: (id) => {
     const active = get().drainEssenceAnimation;
     if (active?.id !== id || active.phase === "resolved") return;
@@ -1118,11 +1143,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       window.setTimeout(() => {
         useGameStore.setState((state) => {
           const next = resolvePlayerAttackerLifesteal(state.game, attackerId);
-          if (next.player.life <= state.game.player.life) return {};
+          const amount = next.player.life - state.game.player.life;
+          if (amount <= 0) return {};
+          lifestealAttackAnimationEventId += 1;
+          const animation: LifestealAttackAnimationState = {
+            id: `lifesteal-attack-${lifestealAttackAnimationEventId}`,
+            attackerId,
+            amount,
+          };
+          scheduleLifestealAttackAnimationSafetyClear(animation.id);
           useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-          return { game: next, ...startLifeBuffBeat() };
+          return {
+            game: next,
+            ...startLifeBuffBeat(),
+            lifestealAttackAnimations: [...state.lifestealAttackAnimations, animation],
+          };
         });
-      }, startAt + PLAYER_ATTACK_LIFESTEAL_IMPACT_MS);
+      }, startAt + PLAYER_ATTACK_MILL_START_MS);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
           useGameStore.getState().queueHordeMillPreview(preview.card);
@@ -1528,6 +1565,13 @@ function clearLifePaymentPresentation(): void {
   lifePaymentAfterCommit = undefined;
 }
 
+function clearLifestealAttackPresentation(): void {
+  if (typeof window !== "undefined") {
+    for (const timer of lifestealAttackAnimationSafetyTimers.values()) window.clearTimeout(timer);
+  }
+  lifestealAttackAnimationSafetyTimers.clear();
+}
+
 function clearDrainEssencePresentation(): void {
   if (drainEssenceAnimationSafetyTimer && typeof window !== "undefined") {
     window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1552,6 +1596,16 @@ function scheduleLifePaymentAnimationSafetyClear(id: string): void {
   }, LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleLifestealAttackAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  const previousTimer = lifestealAttackAnimationSafetyTimers.get(id);
+  if (previousTimer !== undefined) window.clearTimeout(previousTimer);
+  const timer = window.setTimeout(() => {
+    useGameStore.getState().completeLifestealAttackAnimation(id);
+  }, LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS);
+  lifestealAttackAnimationSafetyTimers.set(id, timer);
+}
+
 function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
   if (typeof window === "undefined") return;
   if (drainEssenceAnimationSafetyTimer) window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1569,6 +1623,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.hordeAttackAnimation ||
       state.burnAnimation ||
       state.lifePaymentAnimation ||
+      state.lifestealAttackAnimations.length > 0 ||
       state.bloodPactAnimation ||
       state.drainEssenceAnimation ||
       state.resolvingHordeCombat ||

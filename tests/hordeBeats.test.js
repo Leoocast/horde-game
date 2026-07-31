@@ -174,6 +174,75 @@ test("the shared reaction runner hands surviving damage to the player and animat
   }
 });
 
+test("a Lifesteal attacker bites the Horde life panel at its combat impact", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("lifesteal-attack-bite-presentation");
+    game.player.life = 10;
+    game.activeSide = "player";
+    game.phase = "combat";
+    game.setupTurnsRemaining = 0;
+    const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+    game.combat.playerAttackers = [bat.instanceId];
+
+    useGameStore.setState({
+      game,
+      playerAttackAnimation: undefined,
+      lifestealAttackAnimations: [],
+      lifeBuffAnimationId: undefined,
+    });
+
+    useGameStore.getState().finishPlayerCombat();
+    timers.releaseExpiredAt(0);
+    assert.equal(useGameStore.getState().playerAttackAnimation?.attackerId, bat.instanceId);
+
+    timers.releaseExpiredAt(89);
+    assert.equal(useGameStore.getState().game.player.life, 10);
+    assert.deepEqual(useGameStore.getState().lifestealAttackAnimations, []);
+
+    timers.releaseExpiredAt(90);
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.player.life, 12);
+    assert.equal(atImpact.lifestealAttackAnimations.length, 1);
+    assert.equal(atImpact.lifestealAttackAnimations[0].attackerId, bat.instanceId);
+    assert.equal(atImpact.lifestealAttackAnimations[0].amount, 2);
+
+    atImpact.completeLifestealAttackAnimation(atImpact.lifestealAttackAnimations[0].id);
+    assert.deepEqual(useGameStore.getState().lifestealAttackAnimations, []);
+    timers.releaseExpiredAt(1_000);
+    assert.equal(useGameStore.getState().playerAttackAnimation, undefined);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Blood Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

@@ -9100,6 +9100,41 @@
   animation: horde-counter-hit 430ms ease-out both;
 }
 
+.horde-deck-counter.is-lifesteal-bitten {
+  border-color: #c8001a !important;
+  box-shadow:
+    inset 0 0 25px rgb(90 0 10 / 0.76),
+    0 0 34px rgb(158 0 21 / 0.62) !important;
+  animation: horde-lifesteal-bite-impact 440ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.horde-deck-counter.is-lifesteal-bitten > .horde-deck-emblem,
+.horde-deck-counter.is-lifesteal-bitten > .horde-deck-counter-copy,
+.horde-deck-counter.is-lifesteal-bitten > .horde-poison-status {
+  position: relative;
+  z-index: 1;
+}
+
+.horde-deck-counter.is-lifesteal-bitten > .horde-deck-emblem {
+  border-color: #d81630 !important;
+  background: linear-gradient(145deg, #5c0a18, #27040b) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 0 0 3px rgb(7 12 14 / 0.26),
+    0 0 28px #9e0015;
+}
+
+.horde-lifesteal-blood-wave {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 50%, #d50020 0%, #7a0010 46%, #300007 82%, transparent 100%);
+  clip-path: circle(0% at 16% 50%);
+  pointer-events: none;
+  animation: horde-lifesteal-blood-wave 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .horde-deck-counter-copy {
   min-width: 105px;
   flex: 1 1 auto;
@@ -9402,6 +9437,43 @@
   100% {
     filter: brightness(1) drop-shadow(0 0 0 rgb(210 44 31 / 0));
     transform: translateX(0);
+  }
+}
+
+@keyframes horde-lifesteal-bite-impact {
+  0%, 100% {
+    filter: brightness(1);
+    transform: translateX(0);
+  }
+  18% {
+    filter: brightness(1.5) saturate(1.35) drop-shadow(0 0 18px rgb(212 0 38 / 0.72));
+    transform: translateX(-3px);
+  }
+  36% {
+    transform: translateX(5px);
+  }
+  54% {
+    transform: translateX(-5px);
+  }
+  72% {
+    filter: brightness(1.18) saturate(1.16) drop-shadow(0 0 10px rgb(174 0 27 / 0.42));
+    transform: translateX(2px);
+  }
+}
+
+@keyframes horde-lifesteal-blood-wave {
+  0% {
+    clip-path: circle(0% at 16% 50%);
+    opacity: 0;
+  }
+  28%,
+  72% {
+    clip-path: circle(180% at 16% 50%);
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(180% at 16% 50%);
+    opacity: 0;
   }
 }
 
