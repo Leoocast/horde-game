@@ -2,7 +2,7 @@ import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOp
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordBattlefieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
-import { destroyPermanent, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
 import { canPay, parseManaCost, payMana, payManaAutomatically, storedManaSpace } from "./ManaSystem";
 import { targetCandidatesWithSelectedTargets } from "./Targeting";
@@ -50,7 +50,10 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {
-    resolveEffects(next, card.effects, { source: card, side: "player", targets: options.targets, distribution: options.distribution });
+    const immediateEffects = options.deferFightResolution
+      ? card.effects.filter((effect) => !hasEffectPresentation([effect], "fight"))
+      : card.effects;
+    resolveEffects(next, immediateEffects, { source: card, side: "player", targets: options.targets, distribution: options.distribution });
     card.zone = "graveyard";
     next.player.graveyard.push(card);
   } else {

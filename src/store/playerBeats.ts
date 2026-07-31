@@ -4,6 +4,7 @@ import { pendingTriggerSources, resolveTriggeredEvent } from "../engine/EffectRe
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore } from "./useGameStore";
+import { playerBuffSfxForDeck } from "./playerAudioPolicy";
 import {
   BUFF_ANIMATION_MS,
   appendHordeMillAnimations,
@@ -14,6 +15,7 @@ import {
   uiCardName,
   uiText,
 } from "./presentationEffects";
+import { buffAnimationVariantForCard } from "./buffAnimation";
 
 // Automatic player reactions use the same contract as Horde beats: one source announces itself,
 // then the engine commits that source's effect exactly when the presentation lands. The sequence
@@ -138,8 +140,21 @@ function resolvePlayerTriggerBeat(eventId: string, sourceId: string): {
     const lifeGainLanded = next.player.life > previous.player.life;
     presentationLanded = buffLanded || lifeGainLanded;
     hasMore = hasQueuedPlayerTriggers(next);
-    if (presentationLanded) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-    const buffBeat = buffLanded ? startBuffBeat(buffedCardIds) : undefined;
+    if (presentationLanded) {
+      useAudioStore.getState().playSfx(
+        playerBuffSfxForDeck(useGameStore.getState().playerDeckId),
+        { volume: 0.72 },
+      );
+    }
+    const source =
+      previous.player.battlefield.find((card) => card.instanceId === sourceId) ??
+      next.player.battlefield.find((card) => card.instanceId === sourceId);
+    const buffBeat = buffLanded
+      ? startBuffBeat(
+          buffedCardIds,
+          buffAnimationVariantForCard(source?.definitionId),
+        )
+      : undefined;
     const lifeBuffBeat = lifeGainLanded ? startLifeBuffBeat() : undefined;
     notifyDiscardEffects(previous, next);
     return {

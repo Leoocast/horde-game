@@ -8,7 +8,7 @@ import { buildHordeRules } from "../src/engine/HordeRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerLifesteal, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
-import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
@@ -21,6 +21,8 @@ import { queueUnusedNormalMana, releasePendingStoredMana } from "../src/engine/M
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { sortKeywordsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
+import { playerBuffSfxForDeck } from "../src/store/playerAudioPolicy";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("same seed produces the same player and Horde deck order", () => {
@@ -1491,6 +1493,38 @@ test("Ruthless Predation buffs first, then both creatures deal simultaneous dama
   assert.equal(restoredFriendly.damageMarked, 0);
 });
 
+test("Ruthless Predation can stage its buff before the deferred fight impact", () => {
+  const game = createTestGame();
+  addForests(game, 2);
+  const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, toughness: 2 }));
+  const enemy = addCard(game, customCard("staged_enemy_fighter", "horde", { power: 1, toughness: 5 }));
+  const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
+  const targets = {
+    yourCreature: friendly.instanceId,
+    opponentCreature: enemy.instanceId,
+  };
+
+  const staged = castCard(game, spell.instanceId, {
+    targets,
+    deferFightResolution: true,
+  });
+  const buffedFriendly = staged.player.battlefield.find((card) => card.instanceId === friendly.instanceId);
+  const untouchedEnemy = staged.horde.battlefield.find((card) => card.instanceId === enemy.instanceId);
+
+  assert.deepEqual(getPowerToughness(staged, buffedFriendly), { power: 3, toughness: 4 });
+  assert.equal(buffedFriendly.damageMarked, 0);
+  assert.equal(untouchedEnemy.damageMarked, 0);
+  assert.equal(staged.player.graveyard.some((card) => card.instanceId === spell.instanceId), true);
+
+  resolveEffects(
+    staged,
+    spell.effects.filter((effect) => effect.type === "FIGHT_SIMULTANEOUS"),
+    { source: spell, side: "player", targets },
+  );
+  assert.equal(buffedFriendly.damageMarked, 1);
+  assert.equal(untouchedEnemy.damageMarked, 3);
+});
+
 test("Sunshower Druid can target itself, adds one counter, and gains one life", () => {
   const game = createTestGame();
   addForests(game, 1);
@@ -1541,6 +1575,21 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.horde.poisonCounters, 0);
   assert.equal(turnResult.horde.graveyard.length, 1);
   assert.equal(turnResult.horde.library.length, 2);
+});
+
+test("mono-green growth cards select the intended presentation intensity", () => {
+  assert.equal(buffAnimationVariantForCard("sunshower_druid"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("beast_kin_ranger"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("giant_growth"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("ruthless_predation"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("ruthless_predation", true), "growth-preview");
+  assert.equal(buffAnimationVariantForCard("predatory_thirst"), "default");
+});
+
+test("player buff audio changes only for the mono-green deck", () => {
+  assert.equal(playerBuffSfxForDeck("mono_green_ramp"), "monoGreenBuff");
+  assert.equal(playerBuffSfxForDeck("vampire_chronicle_preview"), "buff");
+  assert.equal(playerBuffSfxForDeck("future_player_deck"), "buff");
 });
 
 test("animated Toxic lands at its attack impact and is not applied twice at combat cleanup", () => {

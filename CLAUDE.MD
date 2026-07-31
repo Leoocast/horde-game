@@ -356,7 +356,7 @@ Trigger manual al entrar:
 - pone counter/buff y gana vida segun JSON
 - usa `CounterTargetingOverlay`
 - debe bloquear invocaciones mientras el trigger no se resuelva
-- sonido `buff.wav` al aplicar buff
+- sonido `monogreen_buff.mp3` al aplicar buff porque Sunshower pertenece a Mono Green
 
 ### Beast-Kin Ranger
 
@@ -381,7 +381,10 @@ Sorcery, main phase:
 - target 2: criatura enemiga
 - requiere ambos targets disponibles
 - usa el mismo sistema de target que spells
-- pelea/secuencia debe usar animacion de batalla ya existente, no otra rara
+- seleccionar objetivos no reproduce hojas ni ningun preview de crecimiento
+- al confirmar, primero compromete el +1/+2 y reproduce completa la animacion compartida de
+  Giant Growth; despues inicia la animacion de batalla existente y el dano se compromete en su
+  impacto
 - debe aplicar deathtouch si corresponde
 
 ### Giant Growth
@@ -389,7 +392,19 @@ Sorcery, main phase:
 Instant:
 - puede jugarse en main, battle y defend phase
 - target aliado
-- al confirmar debe aplicar inmediatamente, quitar la carta de mano y resolver en ese mismo momento
+- seleccionar target no reproduce la animacion; al confirmar debe aplicar inmediatamente, quitar
+  la carta de mano y reproducir el crecimiento compartido en ese mismo momento
+
+### Crecimiento mono-green
+
+Los buffs organicos comparten un beat de presentacion sin meter nombres de carta en el engine.
+`buffAnimationVariantForCard` envia Sunshower Druid, Beast-Kin Ranger, Giant Growth y Ruthless
+Predation a la misma animacion fuerte de Giant Growth. `GrowthBuffAnimator` extiende primero una
+base de raices por todo el ancho inferior, las hace atravesar la carta hacia arriba, abrirse hacia
+los lados y brotar hojas ancladas antes de que todo se desvanezca. No cierra el contorno: debe leerse como crecimiento, no
+proteccion. El efecto vive en un canvas Three.js local que sigue a la criatura sin tomar su
+`transform`. La version que envuelve el borde se conserva sin uso en `NatureShieldAnimator.tsx`
+para un futuro efecto defensivo. Los buffs de otros decks conservan las lineas azules.
 
 ### Cosmic Hunger
 
@@ -515,7 +530,8 @@ SFX usados:
 Reglas interesantes:
 - click valido en casi todo debe sonar
 - seleccionar target de Sunshower usa sonido land, no play_monster
-- buff de Sunshower usa `buff.wav`
+- los buffs del player usan `monogreen_buff.mp3` solamente con `mono_green_ramp`; Vampiros,
+  otros decks y todos los buffs de la Horda conservan `buff.wav`
 - horda entrando al campo usa draw/draw one segun contexto
 
 ## Musica dinamica

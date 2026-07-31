@@ -299,6 +299,9 @@ export type CastOptions = {
    *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
   deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
+  /** Commits the cast and every non-fight effect, leaving the fight effect for a later
+   *  presentation impact. The store must resolve the deferred effect before unlocking play. */
+  deferFightResolution?: boolean;
 };
 
 export type AbilityOptions = {

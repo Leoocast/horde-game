@@ -4,6 +4,7 @@ import { useAudioStore } from "./useAudioStore";
 import { useLanguageStore } from "./useLanguageStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type GameStore, type HordeMillAnimationItem } from "./useGameStore";
+import type { BuffAnimationVariant } from "./buffAnimation";
 
 // Shared presentation plumbing for the store and its sequence modules: localized text, SFX
 // policy, toast policy, and the small timed visual beats (buff pulse, auto-paid land flash)
@@ -93,13 +94,24 @@ export function resumeAfterDiscardPause(onReady: () => void): void {
 
 /** Starts (or restarts) the buff pulse on `cardIds` and schedules its clear. Spread the
  *  returned patch into the state update that should carry the pulse. */
-export function startBuffBeat(cardIds: string[]): { buffAnimationCardIds: string[]; buffAnimationEventId: number } {
+export function startBuffBeat(
+  cardIds: string[],
+  variant: BuffAnimationVariant = "default",
+): {
+  buffAnimationCardIds: string[];
+  buffAnimationEventId: number;
+  buffAnimationVariant: BuffAnimationVariant;
+} {
   if (buffAnimationTimer) window.clearTimeout(buffAnimationTimer);
   buffAnimationTimer = window.setTimeout(() => {
-    useGameStore.setState({ buffAnimationCardIds: [] });
+    useGameStore.setState({ buffAnimationCardIds: [], buffAnimationVariant: "default" });
     buffAnimationTimer = undefined;
   }, BUFF_ANIMATION_MS);
-  return { buffAnimationCardIds: cardIds, buffAnimationEventId: Date.now() };
+  return {
+    buffAnimationCardIds: cardIds,
+    buffAnimationEventId: Date.now(),
+    buffAnimationVariant: variant,
+  };
 }
 
 export function startLifeBuffBeat(): { lifeBuffAnimationId: number } {

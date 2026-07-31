@@ -678,6 +678,163 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
   }
 });
 
+test("Beast-Kin Ranger uses the shared growth animation when another creature enters", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("beast-kin-growth-presentation");
+    const ranger = addCard(game, cardFromDeck("beast_kin_ranger", "player"));
+    const entrant = addCard(
+      game,
+      customCard("free_growth_entrant", "player", { zone: "hand" }),
+      "player",
+      "hand",
+    );
+    useGameStore.setState({
+      game,
+      buffAnimationCardIds: [],
+      buffAnimationVariant: "default",
+      pendingTriggeredEffectCount: 0,
+      playerAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+    });
+
+    useGameStore.getState().castCard(entrant.instanceId);
+
+    const result = useGameStore.getState();
+    assert.equal(
+      result.game.player.battlefield.find((card) => card.instanceId === ranger.instanceId)?.temporaryPower,
+      1,
+    );
+    assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
+    assert.equal(result.buffAnimationVariant, "growth-strong");
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("growth spells animate only after confirm, and Ruthless fights after the buff beat", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { getPowerToughness },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addForests, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/engine/StaticEffects"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("ruthless-growth-before-fight");
+    addForests(game, 2);
+    const friendly = addCard(game, customCard("ruthless_store_friendly", "player", {
+      power: 2,
+      toughness: 2,
+    }));
+    const enemy = addCard(game, customCard("ruthless_store_enemy", "horde", {
+      power: 1,
+      toughness: 5,
+    }));
+    const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      spellTargeting: undefined,
+      spellFightAnimation: undefined,
+      pendingSpellHandId: undefined,
+      buffAnimationCardIds: [],
+      buffAnimationVariant: "default",
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().startSpellTargeting(spell.instanceId, 0, 0);
+    useGameStore.getState().lockSpellTarget(friendly.instanceId);
+    assert.deepEqual(useGameStore.getState().buffAnimationCardIds, []);
+    useGameStore.getState().lockSpellTarget(enemy.instanceId);
+    assert.deepEqual(useGameStore.getState().buffAnimationCardIds, []);
+
+    useGameStore.getState().confirmSpellTargeting();
+    const afterConfirm = useGameStore.getState();
+    const buffedFriendly = afterConfirm.game.player.battlefield.find((card) => card.instanceId === friendly.instanceId);
+    assert.deepEqual(getPowerToughness(afterConfirm.game, buffedFriendly), { power: 3, toughness: 4 });
+    assert.equal(buffedFriendly.damageMarked, 0);
+    assert.deepEqual(afterConfirm.buffAnimationCardIds, [friendly.instanceId]);
+    assert.equal(afterConfirm.buffAnimationVariant, "growth-strong");
+    assert.equal(afterConfirm.spellFightAnimation, undefined);
+    assert.equal(afterConfirm.pendingSpellHandId, spell.instanceId);
+
+    timers.releaseExpiredAt(1039);
+    assert.equal(useGameStore.getState().spellFightAnimation, undefined);
+
+    timers.releaseExpiredAt(1040);
+    assert.equal(useGameStore.getState().spellFightAnimation?.friendlyId, friendly.instanceId);
+    assert.equal(
+      useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
+      0,
+    );
+
+    timers.releaseExpiredAt(1560);
+    const afterImpact = useGameStore.getState();
+    assert.equal(afterImpact.spellFightAnimation, undefined);
+    assert.equal(afterImpact.pendingSpellHandId, undefined);
+    assert.equal(
+      afterImpact.game.player.battlefield.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
+      1,
+    );
+    assert.equal(
+      afterImpact.game.horde.battlefield.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
+      3,
+    );
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
@@ -849,6 +1006,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
+      playerDeckId: "vampire_chronicle_preview",
       spellTargeting: {
         handId: drain.instanceId,
         stepIndex: 0,

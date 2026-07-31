@@ -16,6 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { Card } from "./Card";
+import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
 import {
@@ -167,6 +168,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const buffAnimationVariant = useGameStore((state) => state.buffAnimationVariant);
   const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
   const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
@@ -980,7 +982,17 @@ export function Battlefield({ game, side, cards }: Props) {
       {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
-      {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
+      {buffAnimationActive && (
+        buffAnimationVariant === "default"
+          ? <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />
+          : (
+              <GrowthBuffAnimator
+                key={`growth-${buffAnimationEventId}`}
+                eventId={buffAnimationEventId!}
+                variant={buffAnimationVariant}
+              />
+            )
+      )}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
       {(burnImpactCardId === card.instanceId || burnImpactCardIds.includes(card.instanceId)) && (
