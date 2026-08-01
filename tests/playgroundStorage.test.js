@@ -9,7 +9,7 @@ function storedEntry(overrides = {}) {
     id: "scenario-1",
     name: "Zombie test",
     savedAt: "2026-07-24T10:00:00.000Z",
-    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hordeBattlefield: [{ definitionId: "zombie_token", amount: 2 }] } },
+    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hostField: [{ definitionId: "zombie_token", amount: 2 }] } },
     steps: [{ kind: "draw" }, { kind: "addEnergySource" }],
     ...overrides,
   };
@@ -25,12 +25,12 @@ test("an exported scenario round-trips with its recorded flow", () => {
   assert.deepEqual(parsed.entry.steps, entry.steps);
 });
 
-test("scenario v2 replay steps keep their legacy Host boundary discriminants", () => {
+test("scenario v3 replay steps use Hostfall-native discriminants", () => {
   const entry = storedEntry({
     steps: [
-      { kind: "hordeTurn" },
-      { kind: "hordeTurnExact", count: 2 },
-      { kind: "clearBattlefield", side: "horde" },
+      { kind: "hostTurn" },
+      { kind: "hostTurnExact", count: 2 },
+      { kind: "clearBattlefield", side: "host" },
     ],
   });
 
@@ -39,15 +39,15 @@ test("scenario v2 replay steps keep their legacy Host boundary discriminants", (
   assert.deepEqual(parsed.entry.steps, entry.steps);
 });
 
-test("an exported board JSON round-trips as hand and battlefield only", () => {
+test("an exported board JSON round-trips as Hand and Fields only", () => {
   const definition = {
     ...BLANK_SCENARIO,
     name: "Board JSON",
     zones: {
       playerHand: [{ definitionId: "giant_growth" }],
-      playerBattlefield: [{ definitionId: "llanowar_elves" }],
-      hordeBattlefield: [{ definitionId: "zombie_token" }],
-      playerGraveyard: [{ definitionId: "broken_wings" }],
+      playerField: [{ definitionId: "llanowar_elves" }],
+      hostField: [{ definitionId: "zombie_token" }],
+      playerMemory: [{ definitionId: "broken_wings" }],
     },
   };
   const board = { id: "board-1", name: definition.name, savedAt: "2026-07-24T10:00:00.000Z", definition };
@@ -57,9 +57,24 @@ test("an exported board JSON round-trips as hand and battlefield only", () => {
   assert.deepEqual(parsed.problems, []);
   assert.equal(parsed.board.name, "Board JSON");
   assert.deepEqual(parsed.board.definition.zones.playerHand, definition.zones.playerHand);
-  assert.deepEqual(parsed.board.definition.zones.playerBattlefield, definition.zones.playerBattlefield);
-  assert.deepEqual(parsed.board.definition.zones.hordeBattlefield, definition.zones.hordeBattlefield);
-  assert.equal(parsed.board.definition.zones.playerGraveyard, undefined);
+  assert.deepEqual(parsed.board.definition.zones.playerField, definition.zones.playerField);
+  assert.deepEqual(parsed.board.definition.zones.hostField, definition.zones.hostField);
+  assert.equal(parsed.board.definition.zones.playerMemory, undefined);
+});
+
+test("a retired board wrapper is rejected without migration", () => {
+  const definition = { ...BLANK_SCENARIO, name: "Retired board" };
+  const retiredFile = JSON.stringify({
+    id: "old-board",
+    name: definition.name,
+    savedAt: "2026-07-24T10:00:00.000Z",
+    definition,
+    version: 1,
+  });
+
+  const parsed = parseBoardFile(retiredFile);
+  assert.equal(parsed.board, undefined);
+  assert.match(parsed.problems[0], /retired.*requires 2/i);
 });
 
 test("a bare scenario definition is accepted as a file too", () => {
@@ -86,6 +101,14 @@ test("a file naming an unknown card is rejected with that card's name", () => {
   const parsed = parseScenarioFile(toScenarioFile(entry));
   assert.equal(parsed.entry, undefined);
   assert.match(parsed.problems[0], /totally_made_up/);
+});
+
+test("a file from a retired scenario version is rejected without migration", () => {
+  const entry = storedEntry({ definition: { ...BLANK_SCENARIO, version: 2 } });
+
+  const parsed = parseScenarioFile(JSON.stringify(entry));
+  assert.equal(parsed.entry, undefined);
+  assert.match(parsed.problems[0], /retired.*requires 3/i);
 });
 
 test("a file from a newer scenario version is rejected", () => {

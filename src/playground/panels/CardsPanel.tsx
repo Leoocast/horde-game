@@ -18,18 +18,18 @@ function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; labe
   );
   if (card.side === "host") {
     return [
-      ...(isPermanent ? ([{ zone: "hordeBattlefield", label: "Host Field" }] as const) : []),
-      { zone: "hordeLibraryTop", label: "Top of Host Archive" },
-      { zone: "hordeGraveyard", label: "Host Memory" },
-      { zone: "hordeExile", label: "Host Oblivion" },
+      ...(isPermanent ? ([{ zone: "hostField", label: "Host Field" }] as const) : []),
+      { zone: "hostArchiveTop", label: "Top of Host Archive" },
+      { zone: "hostMemory", label: "Host Memory" },
+      { zone: "hostOblivion", label: "Host Oblivion" },
     ];
   }
   return [
     { zone: "playerHand", label: "Your hand" },
-    ...(isPermanent ? ([{ zone: "playerBattlefield", label: "Your Field" }] as const) : []),
-    { zone: "playerLibraryTop", label: "Top of your Archive" },
-    { zone: "playerGraveyard", label: "Your Memory" },
-    { zone: "playerExile", label: "Your Oblivion" },
+    ...(isPermanent ? ([{ zone: "playerField", label: "Your Field" }] as const) : []),
+    { zone: "playerArchiveTop", label: "Top of your Archive" },
+    { zone: "playerMemory", label: "Your Memory" },
+    { zone: "playerOblivion", label: "Your Oblivion" },
   ];
 }
 
@@ -76,7 +76,7 @@ export function CardsPanel({ onDispatch }: Props) {
   const visible = results.slice(0, RESULT_LIMIT);
   const destinations = selected ? destinationsFor(selected) : [];
   const activeZone = destinations.some((option) => option.zone === zone) ? zone : destinations[0]?.zone;
-  const isPermanent = activeZone === "playerBattlefield" || activeZone === "hordeBattlefield";
+  const isPermanent = activeZone === "playerField" || activeZone === "hostField";
 
   function select(card: CatalogCard) {
     setSelected(card);
@@ -107,7 +107,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   kind: "playCard",
                   definitionId: selected.definition.id,
                   cardName: selected.definition.name,
-                  side: selected.side === "host" ? "horde" : "player",
+                  side: selected.side,
                 })
               }
             >
@@ -153,7 +153,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   onDispatch({
                     kind: "place",
                     zone: activeZone,
-                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && exhausted ? { tapped: true } : {}) },
+                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && exhausted ? { exhausted: true } : {}) },
                   })
                 }
               >

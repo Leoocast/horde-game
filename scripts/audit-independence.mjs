@@ -286,27 +286,19 @@ const l46HostIdentityExcluded = new Set([
   "src/components/DeckInspector.tsx",
   "src/data/deckLint.ts",
   "src/data/decks.ts",
-  "src/playground/PlaygroundScreen.tsx",
-  "src/playground/panels/ActionsPanel.tsx",
-  "src/playground/panels/BoardPanel.tsx",
-  "src/playground/panels/CardsPanel.tsx",
-  "src/playground/panels/ScenarioPanel.tsx",
-  "src/playground/scenario.ts",
-  "src/playground/scenarioStorage.ts",
-  "src/playground/timeline.ts",
   "src/store/useAudioStore.ts",
   "src/store/useLanguageStore.ts",
   "src/utils/appPersistence.ts",
   "tests/deckCardText.test.js",
   "tests/deckLint.test.js",
-  "tests/playgroundActions.test.js",
-  "tests/playgroundScenario.test.js",
-  "tests/playgroundStorage.test.js",
   "tests/vocabulary.test.js",
 ]);
 const l46HostIdentityText = textFiles(["src", "tests"])
   .filter((file) => [".css", ".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => !l46HostIdentityExcluded.has(relative(file)));
+const l46PlaygroundContractText = textFiles(["src/playground", "tests"])
+  .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => relative(file).startsWith("src/playground/") || /^tests\/playground[^/]*\.test\.js$/u.test(relative(file)));
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -429,6 +421,28 @@ const l46HostIdentityLegacyPatterns = [
     pattern: /\b(?:horde[A-Z][A-Za-z0-9_]*|[A-Za-z0-9_]+Horde(?!master)[A-Za-z0-9_]*|[A-Z0-9_]*HORDE[A-Z0-9_]*)\b/u,
   },
 ];
+const l46PlaygroundContractLegacyPatterns = [
+  {
+    label: "legacy Playground Host identity",
+    pattern: /["']horde["']|\b(?:hordeDeckId|hordeTurnNumber|hordeBattlefield|hordeGraveyard|hordeExile|hordeLibraryTop)\b/u,
+  },
+  {
+    label: "legacy Playground zone name",
+    pattern: /\b(?:playerBattlefield|playerGraveyard|playerExile|playerLibraryTop)\b/u,
+  },
+  {
+    label: "legacy Playground card state",
+    pattern: /\b(?:tapped|summoningSickness)\b/u,
+  },
+  {
+    label: "legacy Playground timeline step",
+    pattern: /["']hordeTurn(?:Exact)?["']/u,
+  },
+  {
+    label: "retired Playground storage namespace",
+    pattern: /hostfall-playground-(?:(?:boards|replays):v1|scenarios:v1)/u,
+  },
+];
 
 const derivedAssetRoots = [
   "public/cards/mono_green_ramp",
@@ -543,7 +557,7 @@ const checks = [
     "blocker",
     "L4.4",
     "Legacy card-state model in active runtime consumers",
-    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; scenario-v2 compatibility remains isolated at its boundary.",
+    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v3 boundary uses the same states.",
     scanTextPatterns(l44Text, l44LegacyPatterns),
   ),
   finding(
@@ -572,12 +586,25 @@ const checks = [
     "blocker",
     "L4.6b",
     "Legacy Horde identity in runtime consumers",
-    "Runtime state, engine, store, UI and migrated tests must use Host identity; scenario-v2, storage and authored-path compatibility remain isolated at their boundaries.",
+    "Runtime state, engine, store, UI, Playground and migrated tests must use Host identity; authored deck ids and unrelated preference keys remain explicit boundaries.",
     scanTextPatternsIgnoringTaggedLines(
       l46HostIdentityText,
       l46HostIdentityLegacyPatterns,
       "audit-allow legacy-l46b-compatibility",
       ["src/store/useGameStore.ts"],
+    ),
+  ),
+  finding(
+    "legacy-l46-playground-contract",
+    "blocker",
+    "L4.6c",
+    "Legacy Playground external contract",
+    "Scenario v3, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
+    scanTextPatternsIgnoringTaggedLines(
+      l46PlaygroundContractText,
+      l46PlaygroundContractLegacyPatterns,
+      "audit-allow legacy-l46c-retired-storage",
+      ["src/playground/scenarioStorage.ts"],
     ),
   ),
   finding(

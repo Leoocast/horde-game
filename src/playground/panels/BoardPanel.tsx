@@ -83,8 +83,8 @@ export function BoardPanel({
                 <div className="playground-library-info">
                   <strong>{board.name}</strong>
                   <span>{board.definition.zones.playerHand?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0} hand · {
-                    (board.definition.zones.playerBattlefield?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0) +
-                    (board.definition.zones.hordeBattlefield?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0)
+                    (board.definition.zones.playerField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0) +
+                    (board.definition.zones.hostField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0)
                   } field</span>
                 </div>
                 <div className="playground-library-actions">
@@ -156,7 +156,7 @@ export function BoardPanel({
             className="playground-button"
             type="button"
             disabled={game.host.field.length === 0}
-            onClick={() => onDispatch({ kind: "clearBattlefield", side: "horde" })}
+            onClick={() => onDispatch({ kind: "clearBattlefield", side: "host" })}
           >
             <Eraser size={14} /> Host Field ({game.host.field.length})
           </button>

@@ -311,17 +311,18 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 
 ### Punto de entrada para el siguiente chat
 
-- L0-L3 y L4.1-L4.6a están cerradas y validadas.
-- L4.6b está implementada: estado, engine, store, UI y pruebas usan identidad runtime `host`.
-  Falta solamente la validación visual dirigida antes de cerrarla.
+- L0-L3 y L4.1-L4.6b están cerradas y validadas.
+- L4.6c está implementada y pendiente únicamente del smoke test manual del Playground.
 - Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
   `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
   `legacy-l44-card-states`, `legacy-l45-actions-events-host-rules` y
-  `legacy-l46-card-structure` y `legacy-l46-host-identity` están en cero.
+  `legacy-l46-card-structure`, `legacy-l46-host-identity` y
+  `legacy-l46-playground-contract` están en cero.
 - `hostfallDeckAdapter.ts` ya deja pasar sin traducción identidad, estructura de carta, eventos,
   Acciones y `rulesProfile`. Conserva únicamente la conversión de casing de zonas authored/runtime.
-- Escenarios y replays v2 conservan sus claves externas `horde*`, y los storage keys históricos no
-  cambian. Esas compatibilidades están aisladas y quedan para L4.6c.
+- Escenarios y replays usan el contrato v3 Hostfall. Los boards/replays antiguos se descartaron por
+  decisión explícita: no hay migrador, las versiones retiradas se rechazan y localStorage usa un
+  namespace nuevo que elimina las entradas v1 al acceder al Playground.
 - Preservar comportamiento, ids y reglas. Verificar cada subfase con TypeScript, deck lint, suite,
   build, auditoría y una partida dirigida del usuario antes de avanzar.
 
@@ -508,14 +509,30 @@ adaptador con una fase de eliminación conocida.
   tonos y clases de presentación. Los nombres propios como Rundvelt Hordemaster no se alteran.
 - El adaptador deja pasar `side: HOST` y controladores `HOST` sin downgrade. `normalizeDeck` produce
   la identidad runtime `host`, y el deck lint protege el contrato authored canónico.
-- El schema de escenarios/replays permanece en v2: `hordeDeckId`, `hordeTurnNumber`, `horde`,
-  zonas `horde*`, fases/bandos `horde` y discriminantes de timeline se traducen sólo en el borde.
-  Dos regresiones nuevas prueban el round-trip, sin invalidar boards guardados.
-- La auditoría incorpora `legacy-l46-host-identity`, actualmente en cero. Las rutas/ids históricos
-  de decks y las claves persistidas se conservan como compatibilidad explícita para L4.6c.
+- El schema v2 de escenarios/replays todavía conservaba temporalmente `horde*` en este punto; ese
+  borde fue retirado inmediatamente después en L4.6c.
+- La auditoría incorpora `legacy-l46-host-identity`, actualmente en cero. Rutas e ids authored de
+  decks permanecen fuera de este bloque porque identifican contenido y no el modelo runtime.
 - Verificación automática: TypeScript, deck lint, Card Studio, 218/218 tests, blockers L4.5,
-  L4.6a y L4.6b en cero, y build en verde. Falta una prueba visual corta del usuario antes de
-  marcar L4.6b cerrada.
+  L4.6a y L4.6b en cero, y build en verde. El usuario confirmó la validación visual el 2026-08-01;
+  L4.6b queda cerrada.
+
+### Avance L4.6c — Contrato externo del Playground
+
+- `SCENARIO_VERSION` sube a 3. `ScenarioDefinition`, snapshots y archivos usan directamente
+  `hostDeckId`, `hostTurnNumber`, `host`, lados/fase `host`, zonas `Field`/`Memory`/`Oblivion`/
+  `ArchiveTop`, y estados `exhausted`/`stabilizing`.
+- El timeline usa `hostTurn`/`hostTurnExact` y lados `player | host`; se eliminaron los conversores
+  de identidad que existían sólo para el borde v2.
+- Se conservan guardar, cargar, importar y exportar. Boards y replays usan namespaces v2 de
+  localStorage; al acceder, las tres claves v1 se eliminan. Los JSON anteriores se rechazan con un
+  error de versión. No existe migrador ni prueba de migración.
+- Se eliminó `dev/snapshots/player-base.json`, el único board externo antiguo encontrado en el repo.
+  No había replays externos guardados. Los ids físicos de decks y las preferencias generales de la
+  aplicación no se modificaron porque no son datos generados por el Playground.
+- La suite prueba round-trip del contrato v3 y rechazo de versiones retiradas. TypeScript, deck
+  lint, Card Studio, 220/220 tests, build, `git diff --check` y los blockers L4.6a-c pasan; falta el
+  smoke test manual del Playground antes de cerrar L4.6c.
 
 ## Fase L5 — Independencia de los mazos
 

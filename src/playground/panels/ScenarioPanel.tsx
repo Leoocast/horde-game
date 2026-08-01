@@ -31,8 +31,8 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
   const [draggedIndex, setDraggedIndex] = useState<number>();
   const [dropIndex, setDropIndex] = useState<number>();
   const results = useMemo(
-    () => searchCatalog(query, draft.hordeDeckId).filter((card) => card.side === "host").slice(0, RESULT_LIMIT),
-    [draft.hordeDeckId, query],
+    () => searchCatalog(query, draft.hostDeckId).filter((card) => card.side === "host").slice(0, RESULT_LIMIT),
+    [draft.hostDeckId, query],
   );
 
   function addToQueue(definitionId: string) {
@@ -87,9 +87,9 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
           />
           <SelectField
             label="Host deck"
-            value={draft.hordeDeckId}
+            value={draft.hostDeckId}
             options={hostInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
-            onChange={(hordeDeckId) => onChange({ ...draft, hordeDeckId })}
+            onChange={(hostDeckId) => onChange({ ...draft, hostDeckId })}
           />
         </div>
       </section>

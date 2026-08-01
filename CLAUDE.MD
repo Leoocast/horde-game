@@ -710,12 +710,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.6b está implementada y pendiente de una validación visual corta. `Side`, `Phase`,
+- L4.6c está implementada y pendiente de una validación manual corta del Playground. Escenarios y
+  replays usan schema v3 Hostfall (`host`, zonas canónicas, `exhausted`/`stabilizing` y timeline
+  `hostTurn`); las funciones de guardar/cargar/importar/exportar se conservan. No hay migración:
+  JSON v1/v2 se rechazan, localStorage usa namespaces nuevos y elimina sus entradas antiguas, y se
+  borró el único board externo versionado (`dev/snapshots/player-base.json`). TypeScript, deck lint,
+  Card Studio, 220/220 tests, auditoría, build y `git diff --check` pasan;
+  `legacy-l46-playground-contract` está en cero.
+- L4.6b está cerrada y validada por el usuario. `Side`, `Phase`,
   `GameState.host`, turnos, combate, engine, store y UI usan identidad `host`; los módulos centrales
   se llaman `HostController.ts` y `hostBeats.ts`. El adaptador deja pasar `HOST` sin downgrade.
-  Escenarios/replays siguen en v2 y traducen sus aliases `horde*` sólo en el borde; storage keys,
-  rutas e ids históricos no se invalidan. TypeScript, deck lint, Card Studio, 218/218 tests,
-  auditoría y build pasan; `legacy-l46-host-identity` está en cero.
+  TypeScript, deck lint, Card Studio, 218/218 tests, auditoría y build pasan;
+  `legacy-l46-host-identity` está en cero. El borde externo se retiró después en L4.6c.
 - L4.6a está cerrada y validada por el usuario. Definiciones, instancias,
   filtros, historial y consumidores usan exclusivamente `kinds`, `traits` y `endurance`, incluidas
   sus variantes temporales y derivadas. `Traits.ts` reemplaza `Keywords.ts`; el adaptador ya no
@@ -731,24 +737,26 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - L4.4 está cerrada y validada por el usuario. `CardInstance` usa `exhausted`,
   `entersExhausted` y `stabilizing`; los costes usan `exhaust`, las restricciones
   `requiresStabilized` y la condición canónica es `SOURCE_IS_READY`. El adaptador dejó de traducir
-  esos estados. Los escenarios v2 mantienen `tapped`/`summoningSickness` sólo en su borde externo
-  hasta la limpieza conjunta de L4.6. TypeScript, deck lint, Card Studio, 202/202 tests, auditoría
-  y build pasan; `legacy-l44-card-states` debe permanecer en cero. L4.5 fue implementada después.
+  esos estados. En aquel bloque, los escenarios v2 todavía mantenían `tapped`/
+  `summoningSickness` sólo en el borde; L4.6c los retiró y subió el contrato a v3. TypeScript, deck
+  lint, Card Studio, 202/202 tests, auditoría y build pasaban; `legacy-l44-card-states` debe
+  permanecer en cero. L4.5 fue implementada después.
 - L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplaza el modelo de
   seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
   cantidades numéricas. El autopago agota Sources antes de gastar Stored Energy, los Ecos de
   generación siguen requiriendo activación explícita y el límite de reserva continúa en 3. Store,
-  HUD, animación de flujo, Playground y escenarios ya consumen este modelo; `SCENARIO_VERSION`
-  permanece en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
+  HUD, animación de flujo, Playground y escenarios ya consumen este modelo; en L4.3
+  `SCENARIO_VERSION` permaneció en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
+  L4.6c lo subió posteriormente a 3 por el cambio integral del contrato del Playground.
   `legacy-l43-energy-model` debe permanecer en cero; la matriz automática pasa 202/202 tests. Antes
   de cerrar L4 hay que revisar la decisión diferida del usuario: gastar Stored Energy antes que
   Sources, para que la Energía normal sobrante sea la que pueda convertirse en reserva.
 - L4.2 está cerrada y validada por el usuario. `GameState`, `CardInstance` y sus
   consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
   igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas
-  desconocidas y `legacy-l42-zones` debe permanecer en cero. Las claves externas del Playground
-  (`playerBattlefield`, `hordeLibraryTop`, etc.) se conservan como contrato de compatibilidad hasta
-  L4.6, por lo que no se subió `SCENARIO_VERSION` ni se invalidaron boards guardados.
+  desconocidas y `legacy-l42-zones` debe permanecer en cero. Las claves externas anteriores del
+  Playground se conservaron temporalmente hasta L4.6c; ese bloque las retiró, subió el schema a v3
+  y descartó deliberadamente los boards/replays viejos sin migrarlos.
 - L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
   tienen vocabulario cerrado, y `modifiers` conserva QUICK/CHRONICLE. L4.6a retiró posteriormente
   los nombres de contenedor temporales de aquella migración. Filtros, targeting, historial, combate,

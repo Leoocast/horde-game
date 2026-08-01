@@ -37,12 +37,12 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   assert.ok(game.player.field.every((card) => card.kinds.includes("SOURCE") && !card.exhausted));
 });
 
-test("scenario v2 Host aliases map to runtime identity and back without a version bump", () => {
+test("scenario v3 preserves Host identity directly across runtime and snapshots", () => {
   const definition = scenario({
-    activeSide: "horde",
-    phase: "horde",
-    hordeTurnNumber: 4,
-    horde: { poisonCounters: 2 },
+    activeSide: "host",
+    phase: "host",
+    hostTurnNumber: 4,
+    host: { poisonCounters: 2 },
   });
   const game = buildScenarioGame(definition);
 
@@ -52,10 +52,10 @@ test("scenario v2 Host aliases map to runtime identity and back without a versio
   assert.equal(game.host.poisonCounters, 2);
 
   const saved = snapshotScenario(game, definition);
-  assert.equal(saved.activeSide, "horde");
-  assert.equal(saved.phase, "horde");
-  assert.equal(saved.hordeTurnNumber, 4);
-  assert.equal(saved.horde.poisonCounters, 2);
+  assert.equal(saved.activeSide, "host");
+  assert.equal(saved.phase, "host");
+  assert.equal(saved.hostTurnNumber, 4);
+  assert.equal(saved.host.poisonCounters, 2);
 });
 
 test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
@@ -70,7 +70,7 @@ test("lands listed in a zone count against the energy field instead of stacking 
   const game = buildScenarioGame(
     scenario({
       player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
-      zones: { playerBattlefield: [{ definitionId: "forest", amount: 2, tapped: true }] },
+      zones: { playerField: [{ definitionId: "forest", amount: 2, exhausted: true }] },
     }),
   );
 
@@ -84,13 +84,13 @@ test("zone entries become real card instances in the right zone", () => {
   const game = buildScenarioGame(
     scenario({
       player: { life: 12, energy: 0, storedEnergy: 3 },
-      horde: { poisonCounters: 2 },
+      host: { poisonCounters: 2 },
       zones: {
         playerHand: [{ definitionId: "giant_growth" }],
-        playerBattlefield: [{ definitionId: "forest", amount: 3, tapped: true }],
-        playerGraveyard: [{ definitionId: "llanowar_elves" }],
-        hordeBattlefield: [{ definitionId: "zombie_token", amount: 2 }],
-        hordeLibraryTop: [{ definitionId: "graf_harvest" }],
+        playerField: [{ definitionId: "forest", amount: 3, exhausted: true }],
+        playerMemory: [{ definitionId: "llanowar_elves" }],
+        hostField: [{ definitionId: "zombie_token", amount: 2 }],
+        hostArchiveTop: [{ definitionId: "graf_harvest" }],
       },
     }),
   );
@@ -122,8 +122,8 @@ test("instance ids are unique across every zone", () => {
     scenario({
       zones: {
         playerHand: [{ definitionId: "forest", amount: 2 }],
-        playerBattlefield: [{ definitionId: "forest", amount: 4 }],
-        playerGraveyard: [{ definitionId: "forest", amount: 2 }],
+        playerField: [{ definitionId: "forest", amount: 4 }],
+        playerMemory: [{ definitionId: "forest", amount: 2 }],
       },
     }),
   );
@@ -142,7 +142,7 @@ test("instance ids are unique across every zone", () => {
 
 test("copies beyond the deck's count are minted instead of silently dropped", () => {
   // The Zombie deck holds a single Graf Harvest; a scenario may still want three on the board.
-  const game = buildScenarioGame(scenario({ zones: { hordeBattlefield: [{ definitionId: "graf_harvest", amount: 3 }] } }));
+  const game = buildScenarioGame(scenario({ zones: { hostField: [{ definitionId: "graf_harvest", amount: 3 }] } }));
 
   assert.equal(game.host.field.length, 3);
   assert.equal(new Set(game.host.field.map((card) => card.instanceId)).size, 3);
@@ -152,8 +152,8 @@ test("rebuilding a scenario reproduces the exact same state, RNG included", () =
   const definition = scenario({
     seed: "repeatable",
     zones: {
-      playerBattlefield: [{ definitionId: "forest", amount: 4 }],
-      hordeBattlefield: [{ definitionId: "zombie_token" }],
+      playerField: [{ definitionId: "forest", amount: 4 }],
+      hostField: [{ definitionId: "zombie_token" }],
     },
   });
 
@@ -183,8 +183,8 @@ test("placing cards into a live game keeps instance ids unique across repeated a
   // Forest is in the deck, so the first copies come out of the library; Graf Harvest belongs to the
   // Host deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {
-    game = addScenarioCard(game, "playerBattlefield", { definitionId: "forest", amount: 2 });
-    game = addScenarioCard(game, "hordeBattlefield", { definitionId: "graf_harvest" });
+    game = addScenarioCard(game, "playerField", { definitionId: "forest", amount: 2 });
+    game = addScenarioCard(game, "hostField", { definitionId: "graf_harvest" });
   }
 
   assert.equal(game.player.field.length, 6);
@@ -207,8 +207,8 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   // card and saving can never disagree the way a separate draft did.
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
   game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth", amount: 2 });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token", amount: 3 });
-  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game = addScenarioCard(game, "hostField", { definitionId: "zombie_token", amount: 3 });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "llanowar_elves" });
   game.player.life = 31;
   game.host.poisonCounters = 4;
 
@@ -229,12 +229,12 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
 
 test("saved boards preserve separate token waves around another summon", () => {
   let game = buildScenarioGame(scenario());
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 4 });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "hobgoblin_bandit_lord" });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 2 });
+  game = addScenarioCard(game, "hostField", { definitionId: "goblin_token_1_1_red", amount: 4 });
+  game = addScenarioCard(game, "hostField", { definitionId: "hobgoblin_bandit_lord" });
+  game = addScenarioCard(game, "hostField", { definitionId: "goblin_token_1_1_red", amount: 2 });
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
-  assert.deepEqual(saved.zones.hordeBattlefield, [
+  assert.deepEqual(saved.zones.hostField, [
     { definitionId: "goblin_token_1_1_red", amount: 4 },
     { definitionId: "hobgoblin_bandit_lord", amount: 1 },
     { definitionId: "goblin_token_1_1_red", amount: 2 },
@@ -250,8 +250,8 @@ test("saved boards preserve separate token waves around another summon", () => {
 test("saved boards keep only the hand and battlefields", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
   game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth" });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token" });
-  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game = addScenarioCard(game, "hostField", { definitionId: "zombie_token" });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "llanowar_elves" });
   game.player.life = 12;
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
@@ -267,7 +267,7 @@ test("saved boards keep only the hand and battlefields", () => {
 test("Host library queues preserve their authored top-to-bottom order", () => {
   const game = buildScenarioGame(scenario({
     zones: {
-      hordeLibraryTop: [
+      hostArchiveTop: [
         { definitionId: "graf_harvest" },
         { definitionId: "zombie_token" },
       ],
@@ -280,7 +280,7 @@ test("Host library queues preserve their authored top-to-bottom order", () => {
 test("an exact queued Host turn reveals duplicates and no extra deck card", () => {
   const queued = buildScenarioGame(scenario({
     zones: {
-      hordeLibraryTop: [
+      hostArchiveTop: [
         { definitionId: "graf_harvest" },
         { definitionId: "graf_harvest" },
       ],

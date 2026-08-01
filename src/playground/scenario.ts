@@ -5,33 +5,27 @@ import type { CardInstance, DifficultyMode, GameMode, GameState, Phase, Side } f
 import { STORED_ENERGY_CAP, emptyEnergyPool } from "../engine/EnergySystem";
 
 /** Bump when the shape changes in a way older exported JSON can't satisfy.
- *  v2 exposes the two Energy resources used by scenarios: Sources on the Field and Stored Energy. */
-export const SCENARIO_VERSION = 2;
-
-/** Scenario v2 keeps these legacy values at the import/export boundary until L4.6c. */
-export type ScenarioSide = "player" | "horde";
-export type ScenarioPhase = Exclude<Phase, "host"> | "horde";
+ *  v3 is the first Hostfall-native Playground contract; v1/v2 are intentionally unsupported. */
+export const SCENARIO_VERSION = 3;
 
 export type ScenarioZoneKey =
   | "playerHand"
-  | "playerBattlefield"
-  | "playerGraveyard"
-  | "playerExile"
-  | "playerLibraryTop"
-  | "hordeBattlefield"
-  | "hordeGraveyard"
-  | "hordeExile"
-  | "hordeLibraryTop";
+  | "playerField"
+  | "playerMemory"
+  | "playerOblivion"
+  | "playerArchiveTop"
+  | "hostField"
+  | "hostMemory"
+  | "hostOblivion"
+  | "hostArchiveTop";
 
 export type ScenarioCard = {
   definitionId: string;
   /** Copies to place. Defaults to 1. */
   amount?: number;
-  /** External scenario-v2 compatibility; translated to CardInstance.exhausted at the boundary. */
-  tapped?: boolean;
+  exhausted?: boolean;
   /** Scenario cards are assumed to have been in play already; defaults to false. */
-  /** External scenario-v2 compatibility; translated to CardInstance.stabilizing at the boundary. */
-  summoningSickness?: boolean;
+  stabilizing?: boolean;
   damageMarked?: number;
   counters?: Record<string, number>;
 };
@@ -44,14 +38,14 @@ export type ScenarioDefinition = {
   version: number;
   name: string;
   playerDeckId: string;
-  hordeDeckId: string;
+  hostDeckId: string;
   seed: string;
   difficulty: DifficultyMode;
   gameMode: GameMode;
   turnNumber: number;
-  hordeTurnNumber: number;
-  phase: ScenarioPhase;
-  activeSide: ScenarioSide;
+  hostTurnNumber: number;
+  phase: Phase;
+  activeSide: Side;
   player: {
     life: number;
     /** Ready Energy Sources on the Field, capped at `MAX_PLAYER_LANDS`. */
@@ -59,52 +53,52 @@ export type ScenarioDefinition = {
     /** Stored energy in the pool, capped at `STORED_ENERGY_CAP`. */
     storedEnergy: number;
   };
-  horde: { poisonCounters: number };
+  host: { poisonCounters: number };
   zones: Partial<Record<ScenarioZoneKey, ScenarioCard[]>>;
 };
 
 export const SCENARIO_ZONE_SIDES: Record<ScenarioZoneKey, Side> = {
   playerHand: "player",
-  playerBattlefield: "player",
-  playerGraveyard: "player",
-  playerExile: "player",
-  playerLibraryTop: "player",
-  hordeBattlefield: "host",
-  hordeGraveyard: "host",
-  hordeExile: "host",
-  hordeLibraryTop: "host",
+  playerField: "player",
+  playerMemory: "player",
+  playerOblivion: "player",
+  playerArchiveTop: "player",
+  hostField: "host",
+  hostMemory: "host",
+  hostOblivion: "host",
+  hostArchiveTop: "host",
 };
 
 const ZONE_SIDES = SCENARIO_ZONE_SIDES;
 
 export const SCENARIO_ZONES: Array<{ id: ScenarioZoneKey; label: string; side: Side }> = [
   { id: "playerHand", label: "Player hand", side: "player" },
-  { id: "playerBattlefield", label: "Chronicler Field", side: "player" },
-  { id: "playerGraveyard", label: "Chronicler Memory", side: "player" },
-  { id: "playerExile", label: "Chronicler Oblivion", side: "player" },
-  { id: "playerLibraryTop", label: "Chronicler Archive (top)", side: "player" },
-  { id: "hordeBattlefield", label: "Host Field", side: "host" },
-  { id: "hordeGraveyard", label: "Host Memory", side: "host" },
-  { id: "hordeExile", label: "Host Oblivion", side: "host" },
-  { id: "hordeLibraryTop", label: "Host Archive (top)", side: "host" },
+  { id: "playerField", label: "Chronicler Field", side: "player" },
+  { id: "playerMemory", label: "Chronicler Memory", side: "player" },
+  { id: "playerOblivion", label: "Chronicler Oblivion", side: "player" },
+  { id: "playerArchiveTop", label: "Chronicler Archive (top)", side: "player" },
+  { id: "hostField", label: "Host Field", side: "host" },
+  { id: "hostMemory", label: "Host Memory", side: "host" },
+  { id: "hostOblivion", label: "Host Oblivion", side: "host" },
+  { id: "hostArchiveTop", label: "Host Archive (top)", side: "host" },
 ];
 
 export const BLANK_SCENARIO: ScenarioDefinition = {
   version: SCENARIO_VERSION,
   name: "Blank scenario",
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
-  hordeDeckId: DEFAULT_HOST_DECK_ID,
+  hostDeckId: DEFAULT_HOST_DECK_ID,
   seed: "playground01",
   difficulty: "normal",
   gameMode: "standard",
   turnNumber: 1,
-  hordeTurnNumber: 0,
+  hostTurnNumber: 0,
   phase: "main",
   activeSide: "player",
   // Full energy by default, sources and reserve both: a blank board you cannot cast anything from
   // is not a useful starting point for testing a card.
   player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: STORED_ENERGY_CAP },
-  horde: { poisonCounters: 0 },
+  host: { poisonCounters: 0 },
   zones: {},
 };
 
@@ -124,9 +118,9 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
   return {
     ...cloneScenario(base),
     turnNumber: game.turnNumber,
-    hordeTurnNumber: game.hostTurnNumber,
-    phase: toScenarioPhase(game.phase),
-    activeSide: runtimeSideToScenario(game.activeSide),
+    hostTurnNumber: game.hostTurnNumber,
+    phase: game.phase,
+    activeSide: game.activeSide,
     player: {
       life: game.player.life,
       // Sources are captured as ordinary Field entries below (exhausted state included), so the
@@ -134,15 +128,15 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
       energy: 0,
       storedEnergy: Math.min(game.player.energyPool.stored, STORED_ENERGY_CAP),
     },
-    horde: { poisonCounters: game.host.poisonCounters },
+    host: { poisonCounters: game.host.poisonCounters },
     zones: {
       playerHand: groupCards(game.player.hand),
-      playerBattlefield: groupCards(game.player.field),
-      playerGraveyard: groupCards(game.player.memory),
-      playerExile: groupCards(game.player.oblivion),
-      hordeBattlefield: groupCards(game.host.field),
-      hordeGraveyard: groupCards(game.host.memory),
-      hordeExile: groupCards(game.host.oblivion),
+      playerField: groupCards(game.player.field),
+      playerMemory: groupCards(game.player.memory),
+      playerOblivion: groupCards(game.player.oblivion),
+      hostField: groupCards(game.host.field),
+      hostMemory: groupCards(game.host.memory),
+      hostOblivion: groupCards(game.host.oblivion),
     },
   };
 }
@@ -153,15 +147,15 @@ export function snapshotBoard(game: GameState, base: ScenarioDefinition): Scenar
   return {
     ...snapshot,
     turnNumber: 1,
-    hordeTurnNumber: 0,
+    hostTurnNumber: 0,
     phase: "main",
     activeSide: "player",
     player: { life: BLANK_SCENARIO.player.life, energy: 0, storedEnergy: 0 },
-    horde: { poisonCounters: 0 },
+    host: { poisonCounters: 0 },
     zones: {
       playerHand: snapshot.zones.playerHand,
-      playerBattlefield: snapshot.zones.playerBattlefield,
-      hordeBattlefield: snapshot.zones.hordeBattlefield,
+      playerField: snapshot.zones.playerField,
+      hostField: snapshot.zones.hostField,
     },
   };
 }
@@ -183,7 +177,7 @@ function groupCards(cards: CardInstance[]): ScenarioCard[] {
       entry: {
         definitionId: card.definitionId,
         amount: 1,
-        ...(card.exhausted ? { tapped: true } : {}),
+        ...(card.exhausted ? { exhausted: true } : {}),
         ...(card.damageMarked ? { damageMarked: card.damageMarked } : {}),
       },
     });
@@ -195,8 +189,35 @@ function groupCards(cards: CardInstance[]): ScenarioCard[] {
  *  this reports, so a scenario never half-loads with an unexplained missing card. */
 export function validateScenario(definition: ScenarioDefinition): string[] {
   const problems: string[] = [];
-  if (definition.version > SCENARIO_VERSION) {
-    problems.push(`Scenario version ${definition.version} is newer than this build (${SCENARIO_VERSION}).`);
+  const source = definition as unknown as Record<string, unknown>;
+  if (definition.version !== SCENARIO_VERSION) {
+    problems.push(
+      definition.version < SCENARIO_VERSION
+        ? `Scenario version ${definition.version} is retired; this build requires ${SCENARIO_VERSION}.`
+        : `Scenario version ${definition.version} is newer than this build (${SCENARIO_VERSION}).`,
+    );
+  }
+  for (const key of ["name", "playerDeckId", "hostDeckId", "seed"] as const) {
+    if (typeof source[key] !== "string") problems.push(`Scenario is missing Hostfall v3 field "${key}".`);
+  }
+  if (source.activeSide !== "player" && source.activeSide !== "host") {
+    problems.push('Scenario activeSide must be "player" or "host".');
+  }
+  if (!new Set<Phase>(["untap", "draw", "main", "combat", "end", "host"]).has(source.phase as Phase)) {
+    problems.push(`Unknown scenario phase "${String(source.phase)}".`);
+  }
+  if (typeof source.player !== "object" || source.player === null || typeof source.host !== "object" || source.host === null) {
+    problems.push('Scenario v3 requires both "player" and "host" state.');
+  }
+  if (typeof source.turnNumber !== "number" || typeof source.hostTurnNumber !== "number") {
+    problems.push('Scenario v3 requires numeric "turnNumber" and "hostTurnNumber".');
+  }
+  if (typeof source.zones !== "object" || source.zones === null || Array.isArray(source.zones)) {
+    problems.push('Scenario v3 requires a "zones" object.');
+    return problems;
+  }
+  for (const zone of Object.keys(source.zones)) {
+    if (!(zone in ZONE_SIDES)) problems.push(`Unknown scenario zone "${zone}".`);
   }
   for (const [zone, entries] of zoneEntries(definition)) {
     for (const entry of entries) {
@@ -218,7 +239,7 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   const scenario = withScenarioDefaults(definition);
   const game = createInitialGame(
     getPlayerDeck(scenario.playerDeckId),
-    getHostDeck(scenario.hordeDeckId),
+    getHostDeck(scenario.hostDeckId),
     scenario.seed,
     0,
     scenario.difficulty,
@@ -231,14 +252,14 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   game.openingHandAccepted = true;
   game.mulligansTaken = 0;
   game.turnNumber = scenario.turnNumber;
-  game.hostTurnNumber = scenario.hordeTurnNumber;
-  game.phase = toRuntimePhase(scenario.phase);
-  game.activeSide = scenarioSideToRuntime(scenario.activeSide);
+  game.hostTurnNumber = scenario.hostTurnNumber;
+  game.phase = scenario.phase;
+  game.activeSide = scenario.activeSide;
   game.player.life = scenario.player.life;
   game.player.energyPool = { ...emptyEnergyPool(), stored: clamp(scenario.player.storedEnergy, 0, STORED_ENERGY_CAP) };
   game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;
-  game.host.poisonCounters = scenario.horde.poisonCounters;
+  game.host.poisonCounters = scenario.host.poisonCounters;
   delete game.host.pendingCard;
   game.combat = { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] };
   game.eventQueue = [];
@@ -281,7 +302,7 @@ export function placeEnergySources(game: GameState, requested: number): number {
   for (let copy = 0; copy < room; copy += 1) {
     const card = takeCard(game, "player", definitionId, counter);
     if (!card) break;
-    placeCard(game, "playerBattlefield", card, { definitionId });
+    placeCard(game, "playerField", card, { definitionId });
     placed += 1;
   }
   return placed;
@@ -292,7 +313,7 @@ function withScenarioDefaults(definition: ScenarioDefinition): ScenarioDefinitio
     ...BLANK_SCENARIO,
     ...definition,
     player: { ...BLANK_SCENARIO.player, ...definition.player },
-    horde: { ...BLANK_SCENARIO.horde, ...definition.horde },
+    host: { ...BLANK_SCENARIO.host, ...definition.host },
     zones: { ...definition.zones },
   };
 }
@@ -324,9 +345,9 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
   const counter = { next: 0 };
   // Archive tops are applied last so the cards placed elsewhere are already out of the Archive and
   // can't be pulled twice; within a zone, the listed order is the resulting order.
-  const zones = zoneEntries(scenario).sort(([a], [b]) => Number(a.endsWith("LibraryTop")) - Number(b.endsWith("LibraryTop")));
+  const zones = zoneEntries(scenario).sort(([a], [b]) => Number(a.endsWith("ArchiveTop")) - Number(b.endsWith("ArchiveTop")));
   for (const [zone, entries] of zones) {
-    if (zone.endsWith("LibraryTop")) {
+    if (zone.endsWith("ArchiveTop")) {
       const side = ZONE_SIDES[zone];
       const staged: CardInstance[] = [];
       for (const entry of entries) {
@@ -392,7 +413,7 @@ export function addScenarioCard(game: GameState, zone: ScenarioZoneKey, entry: S
   for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
     const card = takeCard(next, side, entry.definitionId, counter);
     if (!card) break;
-    if (zone.endsWith("LibraryTop")) {
+    if (zone.endsWith("ArchiveTop")) {
       card.zone = "archive";
       staged.push(card);
     } else {
@@ -448,22 +469,6 @@ export function configureExactHostTurn(game: GameState, count: number): GameStat
   return next;
 }
 
-export function runtimeSideToScenario(side: Side): ScenarioSide {
-  return side === "host" ? "horde" : "player";
-}
-
-export function scenarioSideToRuntime(side: ScenarioSide): Side {
-  return side === "horde" ? "host" : "player";
-}
-
-function toScenarioPhase(phase: Phase): ScenarioPhase {
-  return phase === "host" ? "horde" : phase;
-}
-
-function toRuntimePhase(phase: ScenarioPhase): Phase {
-  return phase === "horde" ? "host" : phase;
-}
-
 function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, entry: ScenarioCard): void {
   const side = ZONE_SIDES[zone];
   card.exhausted = false;
@@ -471,7 +476,7 @@ function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, e
   card.damageMarked = 0;
   card.activatedThisTurn = false;
 
-  if (zone === "playerLibraryTop" || zone === "hordeLibraryTop") {
+  if (zone === "playerArchiveTop" || zone === "hostArchiveTop") {
     card.zone = "archive";
     game[side].archive.unshift(card);
     return;
@@ -481,20 +486,20 @@ function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, e
     game.player.hand.push(card);
     return;
   }
-  if (zone === "playerGraveyard" || zone === "hordeGraveyard") {
+  if (zone === "playerMemory" || zone === "hostMemory") {
     card.zone = "memory";
     game[side].memory.push(card);
     return;
   }
-  if (zone === "playerExile" || zone === "hordeExile") {
+  if (zone === "playerOblivion" || zone === "hostOblivion") {
     card.zone = "oblivion";
     game[side].oblivion.push(card);
     return;
   }
 
   card.zone = "field";
-  card.exhausted = entry.tapped ?? false;
-  card.stabilizing = entry.summoningSickness ?? false;
+  card.exhausted = entry.exhausted ?? false;
+  card.stabilizing = entry.stabilizing ?? false;
   card.damageMarked = entry.damageMarked ?? 0;
   if (entry.counters) card.counters = { ...card.counters, ...entry.counters };
   game[side].field.push(card);

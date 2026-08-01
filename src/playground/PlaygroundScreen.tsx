@@ -93,7 +93,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
       const snapshot = cloneScenario(definition);
       loadScenario(buildScenarioGame(snapshot), {
         playerDeckId: snapshot.playerDeckId,
-        hostDeckId: snapshot.hordeDeckId,
+        hostDeckId: snapshot.hostDeckId,
       });
       setLaunch(snapshot);
       setReplayCursor(undefined);
@@ -136,11 +136,11 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
   }
 
   function executeHostTurn() {
-    if (useGameStore.getState().hostDeckId !== draft.hordeDeckId && !buildBoard(draft)) return;
+    if (useGameStore.getState().hostDeckId !== draft.hostDeckId && !buildBoard(draft)) return;
     dispatch(
       hostQueue.length > 0
-        ? { kind: "hordeTurnExact", entries: structuredClone(hostQueue) }
-        : { kind: "hordeTurn" },
+        ? { kind: "hostTurnExact", entries: structuredClone(hostQueue) }
+        : { kind: "hostTurn" },
     );
   }
 
@@ -327,7 +327,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
                 queue={hostQueue}
                 onChangeQueue={setHostQueue}
                 onChange={(definition) => {
-                  if (definition.hordeDeckId !== draft.hordeDeckId) setHostQueue([]);
+                  if (definition.hostDeckId !== draft.hostDeckId) setHostQueue([]);
                   setDraft(definition);
                 }}
                 onUpdate={() => buildBoard(draft)}

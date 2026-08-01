@@ -107,12 +107,12 @@ test("play free grants exactly the printed cost and the card then casts through 
 
 test("destroy runs death triggers and to-graveyard does not", () => {
   const definition = scenario({
-    hordeDeckId: "goblin_assault_horde",
+    hostDeckId: "goblin_assault_horde",
     // No energy sources: the only player permanent is the creature this test is watching die.
     player: { life: 50, energy: 0, storedEnergy: 0 },
     zones: {
-      hordeBattlefield: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
-      playerBattlefield: [{ definitionId: "llanowar_elves" }],
+      hostField: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
+      playerField: [{ definitionId: "llanowar_elves" }],
     },
   });
 
@@ -136,11 +136,11 @@ test("wiping a board is silent: nothing dies, so nothing triggers", () => {
   // table has to leave that creature alone, or tidying up between tests would change the test.
   const game = buildScenarioGame(
     scenario({
-      hordeDeckId: "goblin_assault_horde",
+      hostDeckId: "goblin_assault_horde",
       player: { life: 50, energy: 0, storedEnergy: 0 },
       zones: {
-        hordeBattlefield: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
-        playerBattlefield: [{ definitionId: "llanowar_elves" }],
+        hostField: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
+        playerField: [{ definitionId: "llanowar_elves" }],
       },
     }),
   );
@@ -183,7 +183,7 @@ test("the same action sequence over two rebuilds lands on identical states", () 
   const definition = scenario({
     seed: "replayable",
     player: { life: 50, energy: 0, storedEnergy: 0 },
-    zones: { playerBattlefield: [{ definitionId: "forest", amount: 3 }], hordeBattlefield: [{ definitionId: "zombie_token" }] },
+    zones: { playerField: [{ definitionId: "forest", amount: 3 }], hostField: [{ definitionId: "zombie_token" }] },
   });
 
   const run = () => {

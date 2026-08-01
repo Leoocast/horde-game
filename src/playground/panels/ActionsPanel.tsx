@@ -31,7 +31,7 @@ export function ActionsPanel({ onDispatch }: Props) {
           </button>
         </div>
         <div className="playground-button-row">
-          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hordeTurn" })}>
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hostTurn" })}>
             <Skull size={14} /> Host turn
           </button>
           <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "draw" })}>
