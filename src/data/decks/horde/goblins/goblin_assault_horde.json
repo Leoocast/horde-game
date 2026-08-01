@@ -107,8 +107,8 @@
       "name": "Hobgoblin Bandit Lord",
       "displayNameEs": "Señor de los bandidos hobgoblin",
       "gameText": {
-        "en": "Other Host Goblins gain +1/+1. When this Echo is Invoked, it deals damage to the best enemy Echo equal to the number of Goblins Invoked this turn.",
-        "es": "Los demás Trasgos de la Hueste ganan +1/+1. Cuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos invocados este turno."
+        "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
       },
       "quantity": 2,
       "manaCost": "{1}{R}{R}",
@@ -296,8 +296,8 @@
       "name": "Battle Cry Goblin",
       "displayNameEs": "Goblin del grito de guerra",
       "gameText": {
-        "en": "When this Echo is Invoked, Host Goblins gain +1/+0 until the end of the turn.",
-        "es": "Cuando este Eco es invocado, los Trasgos de la Hueste ganan +1/+0 hasta el final del turno."
+        "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
+        "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
       },
       "quantity": 2,
       "manaCost": "{1}{R}",
@@ -364,8 +364,8 @@
       "name": "Goblin War Drums",
       "displayNameEs": null,
       "gameText": {
-        "en": "Host Echoes gain Daunting.",
-        "es": "Los Ecos de la Hueste ganan Imponente."
+        "en": "Allied Goblins gain Daunting.",
+        "es": "Los Trasgos aliados ganan Imponente."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -467,8 +467,8 @@
       "name": "Beetleback Chief",
       "displayNameEs": "Jefe lomo de escarabajo",
       "gameText": {
-        "en": "When this Echo is Invoked, Invoke two 1/1 Goblin Echo Tokens.",
-        "es": "Cuando este Eco es invocado, Invoca dos Ecos Ficha Trasgo 1/1."
+        "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
@@ -523,8 +523,8 @@
       "name": "Siege-Gang Commander",
       "displayNameEs": "Comandante de sitiadores",
       "gameText": {
-        "en": "When this Echo is Invoked, Invoke three 1/1 Goblin Echo Tokens.",
-        "es": "Cuando este Eco es invocado, Invoca tres Ecos Ficha Trasgo 1/1."
+        "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
       "manaCost": "{3}{R}{R}",
@@ -578,8 +578,8 @@
       "name": "Goblin Rabblemaster",
       "displayNameEs": "Agitador trasgo",
       "gameText": {
-        "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this Echo attacks, it gains +1/+0 for each other attacking Goblin.",
-        "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando este Eco ataca, gana +1/+0 por cada otro Trasgo atacante."
+        "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
+        "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -658,8 +658,8 @@
       "name": "Goblin Surprise",
       "displayNameEs": "Sorpresa trasga",
       "gameText": {
-        "en": "The Host chooses one: its Echoes gain +2/+0 until the end of the turn; or it starts another Reveal round.",
-        "es": "La Hueste elige uno: sus Ecos ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
+        "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
+        "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
       },
       "quantity": 3,
       "manaCost": "{2}{R}",
@@ -774,8 +774,8 @@
       "name": "Volley Veteran",
       "displayNameEs": "Veterano de salvas",
       "gameText": {
-        "en": "When this Echo is Invoked, it deals damage to the best enemy Echo equal to the number of Host Goblins.",
-        "es": "Cuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos de la Hueste."
+        "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
+        "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
       },
       "quantity": 1,
       "manaCost": "{3}{R}",
@@ -843,8 +843,8 @@
       "name": "Goblin Chainwhirler",
       "displayNameEs": null,
       "gameText": {
-        "en": "When this Echo is Invoked, it deals 1 damage to the Chronicler and each Echo they control.",
-        "es": "Cuando este Eco es invocado, inflige 1 de daño al Cronista y a cada Eco que controla."
+        "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
+        "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
       },
       "quantity": 2,
       "manaCost": "{R}{R}{R}",
@@ -896,8 +896,8 @@
       "name": "Goblin Trashmaster",
       "displayNameEs": "Maestro chatarrero trasgo",
       "gameText": {
-        "en": "Other Host Goblins gain +1/+1.",
-        "es": "Los demás Trasgos de la Hueste ganan +1/+1."
+        "en": "Other allied Goblins gain +1/+1.",
+        "es": "Los demás Trasgos aliados ganan +1/+1."
       },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
@@ -998,8 +998,8 @@
       "name": "General Kreat, the Boltbringer",
       "displayNameEs": "General Kreat, la Crearrayos",
       "gameText": {
-        "en": "When Host Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another Host Echo is Invoked, the Chronicler loses 1 Life.",
-        "es": "Cuando los Trasgos de la Hueste atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro Eco de la Hueste es invocado, el Cronista pierde 1 de Vida."
+        "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
+        "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -1076,8 +1076,8 @@
       "name": "Krenko, Tin Street Kingpin",
       "displayNameEs": "Krenko, líder de la Calle Hojalata",
       "gameText": {
-        "en": "When this Echo attacks, put a +1/+1 counter on it. Then Invoke that many 1/1 Goblin Echo Tokens attacking, equal to its Power.",
-        "es": "Cuando este Eco ataca, pon un contador +1/+1 sobre él. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
+        "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
+        "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -1151,8 +1151,8 @@
       "name": "Pashalik Mons",
       "displayNameEs": "Pashalik Mons",
       "gameText": {
-        "en": "Whenever a Host Goblin dies, deal 1 damage to a random Echo controlled by the Chronicler.",
-        "es": "Cada vez que un Trasgo de la Hueste muere, inflige 1 de daño a un Eco aleatorio del Cronista."
+        "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
+        "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
       },
       "quantity": 2,
       "manaCost": "{2}{R}",

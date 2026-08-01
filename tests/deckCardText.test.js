@@ -675,6 +675,50 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   );
 });
 
+test("authored rules use ally and enemy as compact Echo nouns", () => {
+  const loadEmbeddedDeck = (relativePath, pattern) => {
+    const html = fs.readFileSync(new URL(relativePath, import.meta.url), "utf8");
+    const json = html.match(pattern)?.[1];
+    assert.ok(json, `${relativePath} must contain embedded deck data`);
+    return JSON.parse(json);
+  };
+  const scriptDeckPattern = /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/;
+  const studioDecks = [
+    [
+      "Mono Green",
+      loadEmbeddedDeck(
+        "../dev/tools/Decks/monogreen/index.html",
+        /const deckData = (\[[\s\S]*?\]);/,
+      ),
+    ],
+    ["Vampires", loadEmbeddedDeck("../dev/tools/Decks/vampires/index.html", scriptDeckPattern)],
+    ["Zombies", loadEmbeddedDeck("../dev/tools/Decks/zombies/index.html", scriptDeckPattern)],
+    ["Goblins", loadEmbeddedDeck("../dev/tools/Decks/goblins/index.html", scriptDeckPattern)],
+    ["Hunters", loadEmbeddedDeck("../dev/tools/Decks/hunters/index.html", scriptDeckPattern)],
+  ];
+  const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
+
+  for (const [deckName, cards] of studioDecks) {
+    for (const card of cards) {
+      assert.doesNotMatch(
+        card.desc ?? "",
+        verboseEchoProse,
+        `${deckName}/${card.id} uses a verbose Echo relation or Invoke trigger`,
+      );
+    }
+  }
+
+  const hunterCards = studioDecks.find(([deckName]) => deckName === "Hunters")[1];
+  assert.equal(
+    hunterCards.find((card) => card.id === "rastreadora_de_huellas").desc,
+    "Al ser invocada, marca un enemigo.",
+  );
+  assert.match(
+    hunterCards.find((card) => card.id === "lyra_ojo_de_la_caceria").desc,
+    /^Al ser invocada, marca un enemigo\./u,
+  );
+});
+
 test("Vampire gameplay cards use their full-image faction presentation", () => {
   for (const definitionId of [
     "crimson_energy",

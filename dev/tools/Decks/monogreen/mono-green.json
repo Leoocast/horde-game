@@ -18,7 +18,7 @@
         "costo": 1,
         "atk": 0,
         "def": 2,
-        "desc": "Cuando este Eco es invocado, pon un contador +1/+1 sobre un Eco aliado y gana 1 de Vida.",
+        "desc": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida.",
         "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
     },
     {
@@ -51,7 +51,7 @@
         "costo": 3,
         "atk": 3,
         "def": 3,
-        "desc": "Cada vez que otro Eco aliado es invocado, este Eco gana +1/+0 hasta el final del turno.",
+        "desc": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno.",
         "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
     },
     {
@@ -95,7 +95,7 @@
         "costo": 2,
         "atk": null,
         "def": null,
-        "desc": "Elige un Eco aliado y otro Eco. El Eco aliado hace daño igual a su Fuerza al otro Eco.",
+        "desc": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza.",
         "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
     },
     {
@@ -106,7 +106,7 @@
         "costo": 2,
         "atk": null,
         "def": null,
-        "desc": "Un Eco aliado gana +1/+2 hasta el final del turno.\nLuego lucha contra un Eco enemigo.",
+        "desc": "Un aliado gana +1/+2 hasta el final del turno.\nLuego lucha contra un enemigo.",
         "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
     },
     {

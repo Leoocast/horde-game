@@ -61,8 +61,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you lose Life each turn, this Echo gains +2/+0 until the end of the turn.",
-        "es": "La primera vez que pierdas Vida en cada turno, este Eco gana +2/+0 hasta el final del turno."
+        "en": "The first time you lose Life each turn, this card gains +2/+0 until the end of the turn.",
+        "es": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "The youngest learn to serve before they learn to feed.",
@@ -225,8 +225,8 @@
       "name": "Crypt Guardian",
       "displayNameEs": "Guardián de la Cripta",
       "gameText": {
-        "en": "When this Echo is dealt damage and survives, gain 2 Life.",
-        "es": "Cuando este Eco recibe daño y sobrevive, ganas 2 de Vida."
+        "en": "When this card is dealt damage and survives, gain 2 Life.",
+        "es": "Cuando reciba daño y sobreviva, ganas 2 de Vida."
       },
       "flavorText": {
         "en": "Nothing leaves the crypt without his permission.",
@@ -413,8 +413,8 @@
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
-        "en": "Additional cost: Pay 2 Life.\nAn allied Echo gains +2/+2 and Flying until the end of the turn.",
-        "es": "Coste adicional: Paga 2 de Vida.\nUn Eco aliado gana +2/+2 y Volar hasta el final del turno."
+        "en": "Additional cost: Pay 2 Life.\nAn ally gains +2/+2 and Flying until the end of the turn.",
+        "es": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno."
       },
       "flavorText": {
         "en": "Pain is merely strength waiting for direction.",
@@ -528,8 +528,8 @@
       "name": "Predatory Thirst",
       "displayNameEs": "Sed Depredadora",
       "gameText": {
-        "en": "All allied Echoes gain Drain until the End.",
-        "es": "Todos los Ecos aliados ganan Drenar hasta el Final."
+        "en": "All your allies gain Drain until the End.",
+        "es": "Todos tus aliados ganan Drenar hasta el Final."
       },
       "flavorText": {
         "en": "Hunger sharpens every step toward the Host.",
@@ -571,8 +571,8 @@
       "name": "Final Banquet",
       "displayNameEs": "Banquete Final",
       "gameText": {
-        "en": "Destroy a Host Echo. Lose Life equal to its Power.",
-        "es": "Destruye un Eco de la Hueste. Pierdes Vida igual a su Fuerza."
+        "en": "Destroy an enemy. Lose Life equal to its Power.",
+        "es": "Destruye un enemigo. Pierdes Vida igual a su Fuerza."
       },
       "flavorText": {
         "en": "The last guest always pays for the feast.",

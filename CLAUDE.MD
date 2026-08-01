@@ -137,6 +137,9 @@ tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas o tooltips.
 La Parte 1 de ese vocabulario esta cerrada como diseno en v1.0; `Echo / Eco` es el tipo de carta
 que reemplaza a `Unit / Unidad`, y `Chronicle Echo / Eco de Cronica` distingue figuras centrales
 del relato sin agregar una regla de unicidad.
+En reglas impresas, `aliado` y `enemigo` funcionan como sustantivos de Eco; no repetir `Eco` salvo
+que identifique el tipo de carta, una Ficha o una distincion necesaria. Los disparos de entrada se
+redactan `Al ser invocado/a` con concordancia respecto al sujeto visible.
 
 La Parte 2 centralizó la presentación en `src/i18n/gameVocabulary.ts` y
 `src/i18n/rulesText.ts`. Los ids legacy siguen permitidos dentro del engine, pero toda salida

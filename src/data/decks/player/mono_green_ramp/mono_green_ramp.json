@@ -76,8 +76,8 @@
       "name": "Sunshower Druid",
       "displayNameEs": "Druida de la lluvia solar",
       "gameText": {
-        "en": "When this Echo is Invoked, put a +1/+1 counter on an allied Echo and gain 1 Life.",
-        "es": "Cuando este Eco es invocado, pon un contador +1/+1 sobre un Eco aliado y gana 1 de Vida."
+        "en": "When Invoked, put a +1/+1 counter on an ally and gain 1 Life.",
+        "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
       },
       "quantity": 3,
       "setCode": "BLB",
@@ -241,7 +241,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "toxic_1",
-          "implementationNote": "Cuando este Eco hace daño de Batalla a la Hueste, agrega 1 de Veneno. Veneno 1 no depende de la cantidad de daño."
+          "implementationNote": "Cuando esta carta hace daño de Batalla a la Hueste, agrega 1 de Veneno. Veneno 1 no depende de la cantidad de daño."
         }
       ],
       "scryfall": {
@@ -256,8 +256,8 @@
       "name": "Beast-Kin Ranger",
       "displayNameEs": "Guardabosque bestial",
       "gameText": {
-        "en": "Whenever another allied Echo is Invoked, this Echo gains +1/+0 until the end of the turn.",
-        "es": "Cada vez que otro Eco aliado es invocado, este Eco gana +1/+0 hasta el final del turno."
+        "en": "Whenever another ally is Invoked, this card gains +1/+0 until the end of the turn.",
+        "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
       },
       "quantity": 3,
       "setCode": "FDN",
@@ -443,8 +443,8 @@
       "name": "Cosmic Hunger",
       "displayNameEs": "Hambre cósmica",
       "gameText": {
-        "en": "Choose an allied Echo and another Echo. The allied Echo deals damage equal to its Power to the other Echo.",
-        "es": "Elige un Eco aliado y otro Eco. El Eco aliado hace daño igual a su Fuerza al otro Eco."
+        "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
+        "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "quantity": 2,
       "setCode": "MOM",
@@ -540,8 +540,8 @@
       "name": "Ruthless Predation",
       "displayNameEs": "Depredación despiadada",
       "gameText": {
-        "en": "An allied Echo gains +1/+2 until the end of the turn. Then it fights an enemy Echo.",
-        "es": "Un Eco aliado gana +1/+2 hasta el final del turno. Luego lucha contra un Eco enemigo."
+        "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
+        "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "quantity": 1,
       "setCode": "ONE",

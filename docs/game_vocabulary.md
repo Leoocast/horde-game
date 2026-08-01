@@ -238,16 +238,21 @@ completa: `Descarta las N primeras cartas del Archivo de la Hueste a su Memoria`
 
 Plantillas preferidas:
 
-- `Cuando este Eco es invocado, ...`
-- `Invoca dos Fichas de Goblin.`
+- `Al ser invocado, ...` o `Al ser invocada, ...`, segun el sujeto visible.
+- `Invoca dos Ecos Ficha Trasgo 1/1.`
 - `Agota: Gana {E}.`
 - `Destruye un Apoyo enemigo.`
-- `Un Eco aliado gana +2/+3 hasta el final del turno.`
+- `Un aliado gana +2/+3 hasta el final del turno.`
 - `Descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.`
 - `Destierra una carta de la Memoria al Olvido.`
 
-La UI usa `aliada`, `enemiga`, `esta carta` y `la Hueste` en vez de copiar el lenguaje de
-controlador/oponente de un juego PvP cuando esa precision no existe en Hostfall.
+En el texto de una carta, `aliado` y `enemigo` usados como sustantivos siempre significan un Eco
+respecto al controlador de esa carta. Los subtipos siguen la misma regla: `Trasgo aliado`,
+`Cazador aliado`. Se escribe el tipo completo cuando aporta informacion real o evita ambiguedad:
+`Eco Ficha`, `Eco con Volar`, `sacrifica un Eco` o `destruye un Apoyo enemigo`.
+
+La UI usa `aliado`, `enemigo`, `este Eco`, `esta carta` y `la Hueste` en vez de copiar el lenguaje
+de controlador/oponente de un juego PvP cuando esa precision no existe en Hostfall.
 
 ## Clases de habilidad
 
@@ -333,12 +338,15 @@ Reglas de estilo:
 
 1. Una instruccion por oracion y orden real de ejecucion.
 2. Presente e imperativo; sin frases de Oracle ni reminder text copiado.
-3. `Este Eco` para autorreferencia salvo que el nombre sea necesario.
-4. `Cuando este Eco es invocado`, no `cuando entra al campo de batalla`.
+3. La autorreferencia se omite cuando el sujeto es inequivoco. Si hace falta, un Eco usa `este Eco`
+   y los demas tipos pueden usar `esta carta`. El nombre se reserva para efectos que deban
+   identificarla frente a otra copia o carta.
+4. Los disparos de entrada usan `Al ser invocado, ...` o `Al ser invocada, ...`, con concordancia
+   respecto al sujeto visible; nunca `cuando este Eco entra al campo de batalla`.
 5. `Hasta el final del turno` y `hasta tu próximo turno` son duraciones normativas.
 6. Los modificadores pueden usar `+N/+N` en el texto impreso; su orden siempre es Fuerza/Aguante.
 7. `Gana` se reserva para modificadores temporales y Rasgos: `gana +2/+2`, `gana Volar`. Los
-   contadores permanentes se colocan: `pon un contador +1/+1 sobre este Eco`. No usar `obtiene`
+   contadores permanentes se colocan: `pon un contador +1/+1 sobre esta carta`. No usar `obtiene`
    para ninguno de los dos casos.
 8. Vida es un recurso singular: `Paga 3 de Vida`, `pierde 3 de Vida` y `gana 3 de Vida`; nunca
    `paga 3 vidas`. En inglés: `Pay 3 Life`, sin `of`.
@@ -347,6 +355,8 @@ Reglas de estilo:
 10. Un Rasgo se imprime como nombre; el tooltip contiene su definicion. No repetir ambos.
 11. Espanol e ingles deben describir la misma regla, no ser traducciones libres con diferencias.
 12. El texto de ambientacion nunca completa una regla.
+13. `Aliado` y `enemigo` pueden funcionar como sustantivos de Eco. No anteponer `Eco` por rutina;
+    conservarlo solo cuando declare el tipo, describa una Ficha o distinga entre clases de carta.
 
 ## Inventario Magic que debe salir de produccion
 
