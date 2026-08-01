@@ -4,7 +4,6 @@
   "name": "Mono-Green Ramp 39",
   "format": "casual",
   "side": "PLAYER",
-  "standardCheckedAt": null,
   "deckSize": 39,
   "colors": [
     "G"
@@ -22,8 +21,6 @@
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "227",
       "manaCost": "{G}",
       "manaValue": 1,
       "colors": [
@@ -63,13 +60,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Llanowar Elves",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "sunshower_druid",
@@ -80,8 +71,6 @@
         "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
       },
       "quantity": 3,
-      "setCode": "BLB",
-      "collectorNumber": "195",
       "manaCost": "{G}",
       "manaValue": 1,
       "colors": [
@@ -135,13 +124,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Sunshower Druid",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "druid_of_the_cowl",
@@ -152,8 +135,6 @@
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "setCode": "M19",
-      "collectorNumber": "177",
       "manaCost": "{1}{G}",
       "manaValue": 2,
       "colors": [
@@ -193,13 +174,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Druid of the Cowl",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "ichorspit_basilisk",
@@ -210,8 +185,6 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "ONE",
-      "collectorNumber": "170",
       "manaCost": "{2}{G}",
       "manaValue": 3,
       "colors": [
@@ -243,13 +216,7 @@
           "customHandler": "toxic_1",
           "implementationNote": "Cuando esta carta hace daño de Batalla a la Hueste, agrega 1 de Veneno. Veneno 1 no depende de la cantidad de daño."
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Ichorspit Basilisk",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "beast_kin_ranger",
@@ -260,8 +227,6 @@
         "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
       },
       "quantity": 3,
-      "setCode": "FDN",
-      "collectorNumber": "100",
       "manaCost": "{2}{G}",
       "manaValue": 3,
       "colors": [
@@ -314,13 +279,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Beast-Kin Ranger",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "magnigoth_sentry",
@@ -331,8 +290,6 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "556",
       "manaCost": "{3}{G}",
       "manaValue": 4,
       "colors": [
@@ -352,13 +309,7 @@
       "keywords": [
         "REACH"
       ],
-      "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Magnigoth Sentry",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "abilities": []
     },
     {
       "id": "colossadactyl",
@@ -369,8 +320,6 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "LCI",
-      "collectorNumber": "180",
       "manaCost": "{2}{G}{G}",
       "manaValue": 4,
       "colors": [
@@ -391,13 +340,7 @@
         "REACH",
         "TRAMPLE"
       ],
-      "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Colossadactyl",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "abilities": []
     },
     {
       "id": "timberland_ancient",
@@ -408,8 +351,6 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "setCode": "MOM",
-      "collectorNumber": "210",
       "manaCost": "{4}{G}{G}",
       "manaValue": 6,
       "colors": [
@@ -430,13 +371,7 @@
         "REACH",
         "TRAMPLE"
       ],
-      "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Timberland Ancient",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "abilities": []
     },
     {
       "id": "cosmic_hunger",
@@ -447,8 +382,6 @@
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "quantity": 2,
-      "setCode": "MOM",
-      "collectorNumber": "182",
       "manaCost": "{1}{G}",
       "manaValue": 2,
       "colors": [
@@ -527,13 +460,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Cosmic Hunger",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "ruthless_predation",
@@ -544,8 +471,6 @@
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "quantity": 1,
-      "setCode": "ONE",
-      "collectorNumber": "182",
       "manaCost": "{1}{G}",
       "manaValue": 2,
       "colors": [
@@ -633,13 +558,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Ruthless Predation",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "broken_wings",
@@ -650,8 +569,6 @@
         "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "214",
       "manaCost": "{2}{G}",
       "manaValue": 3,
       "colors": [
@@ -713,13 +630,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Broken Wings",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "giant_growth",
@@ -730,8 +641,6 @@
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "223",
       "manaCost": "{G}",
       "manaValue": 1,
       "colors": [
@@ -779,13 +688,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Giant Growth",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "forest",
@@ -796,10 +699,6 @@
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 15,
-      "setCode": "FDN",
-      "collectorNumber": null,
-      "needsVerification": true,
-      "verificationNote": "La lista no especifica el número de coleccionista o arte exacto entre las múltiples versiones de Forest en Foundations.",
       "manaCost": null,
       "manaValue": 0,
       "colors": [],
@@ -836,13 +735,7 @@
             }
           ]
         }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Forest",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     }
   ],
   "engineSupportNeeded": []

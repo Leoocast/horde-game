@@ -42,8 +42,8 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = findKeyCard(deck);
-  const details = useDeckCardDetails(deck.id, keyCard, deck.images);
-  const cardName = language === "es" ? keyCard?.displayNameEs || details.displayName || localizedCardName(keyCard, language) : localizedCardName(keyCard, language);
+  const details = useDeckCardDetails(keyCard, deck.images);
+  const cardName = localizedCardName(keyCard, language);
   const playSfx = useAudioStore((state) => state.playSfx);
 
   const playHoverSound = () => playSfx("drawOne");

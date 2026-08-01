@@ -3,7 +3,7 @@ import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
 import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
-import { cardThemeForDefinition, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -76,9 +76,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : card.controller === "horde"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
-  const { imageUrl, displayName } = useCardDetails(card.definitionId);
-  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const highResImageUrl = toHighResImageUrl(imageUrl) ?? imageUrl;
+  const { imageUrl } = useCardDetails(card.definitionId);
+  const localizedName = localizedCardName(card, language);
+  const highResImageUrl = imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
   const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);

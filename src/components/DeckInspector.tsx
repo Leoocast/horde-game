@@ -191,8 +191,8 @@ function DeckCardTile({
   onClick: () => void;
 }) {
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
+  const details = useDeckCardDetails(card, deck.images);
+  const displayName = localizedCardName(card, language);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const playHoverSound = () => playSfx("drawOne");
@@ -234,7 +234,7 @@ function DeckCardTile({
 function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: InspectableDeck; card?: NewDeckCard; pinned: boolean; onClearPin: () => void; onDetails: () => void }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
+  const details = useDeckCardDetails(card, deck.images);
   if (!card) {
     return (
       <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
@@ -243,8 +243,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     );
   }
 
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
+  const displayName = localizedCardName(card, language);
+  const text = deckCardDescription(card, language);
   const hasText = text.length > 0;
   const showFullCardImage = usesFullCardImage(deck, card);
 
@@ -315,9 +315,9 @@ function DeckInspectorDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
+  const details = useDeckCardDetails(card, deck.images);
+  const displayName = localizedCardName(card, language);
+  const text = deckCardDescription(card, language);
   const keywords = deckKeywords(card);
   const cardStats = stats(card);
   const showFullCardImage = usesFullCardImage(deck, card);
@@ -479,9 +479,7 @@ function describeCardFromJson(card: NewDeckCard): string {
   return abilities.map(describeAbility).filter(Boolean).join("\n\n");
 }
 
-function deckCardDescription(card: NewDeckCard, language: AppLanguage, oracleText?: string, flavorText?: string): string {
-  void oracleText;
-  void flavorText;
+function deckCardDescription(card: NewDeckCard, language: AppLanguage): string {
   const authored = card.gameText?.[language] ?? card.gameText?.en;
   if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), canonicalizeRulesText(authored, language));
   const generated = describeCardFromJson(card);

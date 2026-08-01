@@ -57,3 +57,65 @@ test("the retired tutorial cannot be reintroduced through a dormant source path"
 
   assert.deepEqual(occurrences, []);
 });
+
+test("card images stay local and remote card-provider metadata cannot return", () => {
+  const retiredProviderName = ["scry", "fall"].join("");
+  const retiredMetadataKeys = new Set([
+    retiredProviderName,
+    "setCode",
+    "collectorNumber",
+    "lookupUrl",
+    "lookupMode",
+    "lookupQuery",
+    "imagePath",
+    "fallbackImagePath",
+    "needsVerification",
+    "verificationNote",
+  ]);
+
+  function assertNoRetiredMetadata(value, context) {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => assertNoRetiredMetadata(item, `${context}[${index}]`));
+      return;
+    }
+    for (const [key, nestedValue] of Object.entries(value)) {
+      assert.ok(!retiredMetadataKeys.has(key), `${context} still contains ${key}`);
+      assertNoRetiredMetadata(nestedValue, `${context}.${key}`);
+    }
+  }
+
+  for (const entry of DECK_REGISTRY) {
+    assert.equal(entry.images.provider, "local", `${entry.deck.id} must use the local image provider`);
+    assertNoRetiredMetadata(entry.raw, entry.deck.id);
+
+    const definitions = [...(entry.raw.cards ?? []), ...(entry.raw.tokens ?? [])];
+    for (const card of definitions) {
+      assert.ok(entry.images.cards[card.id], `${entry.deck.id}/${card.id} has no local image entry`);
+    }
+
+    for (const [cardId, image] of Object.entries(entry.images.cards)) {
+      assert.equal(image.source, "local", `${entry.deck.id}/${cardId} must use a local image`);
+      assert.match(image.imageUrl, /^\/cards\//, `${entry.deck.id}/${cardId} must point inside public/cards`);
+      assert.ok(
+        fs.existsSync(path.resolve("public", image.imageUrl.slice(1))),
+        `${entry.deck.id}/${cardId} points to missing image ${image.imageUrl}`,
+      );
+    }
+  }
+
+  const scanRoots = [path.resolve("src"), path.resolve("dev", "tools")];
+  const retiredProviderPattern = new RegExp(retiredProviderName, "i");
+  const providerReferences = scanRoots.flatMap((root) =>
+    fs.readdirSync(root, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile() && /\.(?:ts|tsx|js|json|html)$/.test(entry.name))
+      .filter((entry) => retiredProviderPattern.test(fs.readFileSync(path.join(entry.parentPath, entry.name), "utf8")))
+      .map((entry) => path.relative(process.cwd(), path.join(entry.parentPath, entry.name))),
+  );
+  assert.deepEqual(providerReferences, []);
+
+  for (const file of [path.resolve("src", "utils", "cardImages.ts"), path.resolve("src", "utils", "deckCardImages.ts")]) {
+    const source = fs.readFileSync(file, "utf8");
+    assert.doesNotMatch(source, /\bfetch\s*\(|https?:\/\//i, `${path.basename(file)} must remain local-only`);
+  }
+});

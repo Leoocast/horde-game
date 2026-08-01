@@ -94,9 +94,8 @@ Reglas:
 - Los tokens reutilizables deben estar en `tokens`; `tokens` no se expande dentro de la library.
   Algunos decks también pueden llevar esa misma ficha como carta real de `cards`.
 - `cardTypes`, `subtypes`, `keywords`, `power` y `toughness` son datos estructurados. No se deriva
-  gameplay del texto de Scryfall.
-- `displayNameEs` es el nombre local del juego; imagen, oracle text y flavor text se consultan
-  mediante el manifest.
+  gameplay de texto o metadata externos.
+- `displayNameEs` es el nombre local del juego; la imagen se resuelve mediante el manifest local.
 - `gameText` describe lo que la carta hace realmente en Hostfall, en inglés y español. Los
   detalles de carta no usan oracle text de Magic para explicar reglas, porque varias cartas
   tienen adaptaciones PvE o habilidades deliberadamente inactivas.
@@ -389,16 +388,15 @@ Entrada típica:
 ```json
 {
   "example_guardian": {
-    "source": "scryfallNamed",
-    "exact": "Example Guardian",
-    "set": "abc"
+    "source": "local",
+    "imageKind": "card",
+    "imageUrl": "/cards/example_deck/example_guardian.png"
   }
 }
 ```
 
-El gameplay nunca depende de la respuesta de Scryfall. El manifest aporta imagen, nombre impreso
-y type line. El texto de reglas mostrado en detalles viene de `gameText`; no debe copiar oracle
-text cuando el comportamiento de Hostfall sea distinto.
+El manifest solo acepta assets locales. El nombre, tipo y texto mostrado vienen del JSON del deck;
+`gameText` debe describir exactamente el comportamiento de Hostfall.
 
 Al añadir una carta a un deck existente, añadir también su entrada al manifest. Al crear un deck
 nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí derivan engine, inspector,

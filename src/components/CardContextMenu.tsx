@@ -71,7 +71,6 @@ export function CardContextMenu() {
       <CardDetailsModal
         card={detailsCard}
         imageUrl={details.imageUrl}
-        displayName={details.displayName}
         keywords={keywords}
         stats={stats}
         text={detailsText}
@@ -132,7 +131,6 @@ export function CardContextMenu() {
         <CardDetailsModal
           card={detailsCard}
           imageUrl={details.imageUrl}
-          displayName={details.displayName}
           keywords={keywords}
           stats={stats}
           text={detailsText}

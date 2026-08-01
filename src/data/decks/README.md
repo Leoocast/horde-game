@@ -96,7 +96,7 @@ Example:
 
 ## Image Manifest
 
-The image file keeps remote lookup data separate from gameplay data.
+The image file maps every card id to a checked-in local asset.
 
 Required top-level fields:
 
@@ -110,14 +110,15 @@ Each card entry should be keyed by card id:
 ```json
 {
   "llanowar_elves": {
-    "source": "scryfallNamed",
-    "exact": "Llanowar Elves",
-    "set": "fdn"
+    "source": "local",
+    "imageKind": "card",
+    "imageUrl": "/cards/mono_green_ramp/llanowar_elves.png"
   }
 }
 ```
 
-The deck inspector uses this manifest to verify card art. Prefer this file over legacy root-level image lookup files.
+The game and deck inspector use this manifest directly. Remote lookups and fallbacks are not
+supported; the referenced file must exist under `public/cards`.
 
 ## Runtime actual
 

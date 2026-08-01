@@ -6,7 +6,7 @@ import { canonicalizeLogText } from "../i18n/rulesText";
 import type { TranslationKey } from "../i18n/translations";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { useCardDetails } from "../utils/cardImages";
 import { GraveyardDetailsModal } from "./GraveyardViewerModal";
 
 type LogKind = "combat" | "spell" | "death" | "life" | "draw" | "turn" | "system";
@@ -216,7 +216,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
     <>
       {previewCard && previewPosition && previewDetails.imageUrl && !detailsCard && (
         <div className="game-log-card-preview" style={previewPosition} aria-hidden="true">
-          <img src={toHighResImageUrl(previewDetails.imageUrl) ?? previewDetails.imageUrl} alt="" />
+          <img src={previewDetails.imageUrl} alt="" />
           <span>{previewCard.displayName}</span>
         </div>
       )}

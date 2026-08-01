@@ -5,7 +5,7 @@ import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, loca
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { cardThemeForDefinition, shouldShowFullCardImage, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, shouldShowFullCardImage, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardKeywords, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
@@ -165,8 +165,8 @@ export function CardPreview() {
   const deckTheme = cardThemeForDefinition(card.definitionId);
   const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
   const usesFullArtLayout = usesFullArtCardImage(card.definitionId);
-  const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
+  const imageUrl = details.imageUrl;
+  const displayName = localizedCardName(card, language);
 
   if (focusedCardId) {
     return (

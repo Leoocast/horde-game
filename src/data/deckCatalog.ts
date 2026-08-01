@@ -29,12 +29,6 @@ export type NewDeckCard = {
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
   requiresDistribution?: { counterType: string; totalAmount: number; eachTargetMinimum?: number };
   abilities?: NewDeckAbility[];
-  scryfall?: {
-    lookupMode?: string;
-    lookupQuery?: string;
-    imagePath?: string;
-    fallbackImagePath?: string;
-  };
   [key: string]: unknown;
 };
 
@@ -73,29 +67,18 @@ export type NewDeckList = {
 
 export type DeckImageManifest = {
   schemaVersion?: string;
-  provider?: string;
+  provider?: "local";
   defaults?: {
-    imageSize?: string;
-    face?: string;
-    cacheKey?: string;
     showFullCardImage?: boolean;
   };
   cards: Record<
     string,
     {
-      source: string;
-      exact?: string;
-      query?: string;
-      pick?: number;
-      set?: string;
-      collectorNumber?: string;
-      imageUrl?: string;
+      source: "local";
+      imageUrl: string;
       imageKind?: "art" | "card";
       showFullCardImage?: boolean;
       fullArt?: boolean;
-      lookupUrl?: string;
-      imagePath?: string;
-      fallbackImagePath?: string;
     }
   >;
 };

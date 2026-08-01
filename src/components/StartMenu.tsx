@@ -687,8 +687,8 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = deck ? findSetupKeyCard(deck) : undefined;
-  const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
-  const keyCardName = language === "es" ? keyCard?.displayNameEs || details.displayName || localizedCardName(keyCard, language) : localizedCardName(keyCard, language);
+  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
+  const keyCardName = localizedCardName(keyCard, language);
   return (
     <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
       <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button></div>

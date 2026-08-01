@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
+import { useCardImage } from "../../utils/cardImages";
 import { CATALOG_DECKS, describeCardTypes, searchCatalog, type CatalogCard } from "../cardCatalog";
 import type { ScenarioZoneKey } from "../scenario";
 import type { TimelineStep } from "../timeline";
@@ -34,7 +34,7 @@ function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; labe
 }
 
 function CardThumb({ definitionId, name, large = false }: { definitionId: string; name: string; large?: boolean }) {
-  const imageUrl = toArtCropImageUrl(useCardImage(definitionId));
+  const imageUrl = useCardImage(definitionId);
   return (
     <span className={`playground-thumb ${large ? "is-large" : ""}`} aria-hidden="true">
       {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="playground-thumb-fallback">{name.slice(0, 1)}</span>}

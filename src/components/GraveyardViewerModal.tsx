@@ -150,7 +150,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
 function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index: number; onClick: () => void }) {
   const language = useLanguageStore((state) => state.language);
   const details = useCardDetails(card.definitionId);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
+  const displayName = localizedCardName(card, language);
 
   return (
     <button
@@ -206,7 +206,7 @@ export function GraveyardDetailsModal({
   const language = useLanguageStore((state) => state.language);
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
-  const displayName = language === "es" ? displayCard.displayNameEs || details.displayName || localizedCardName(displayCard, language) : localizedCardName(displayCard, language);
+  const displayName = localizedCardName(displayCard, language);
   const keywords = cardKeywords(game, displayCard);
   const stats = cardStats(game, displayCard);
   const text = cleanCardDescriptionText(undefined, undefined, keywords, gameEffectDescription(displayCard, language));

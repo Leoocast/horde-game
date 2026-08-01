@@ -148,8 +148,8 @@ de cartas y la ausencia del tutorial. El botón `How to Play` permanece visible 
 el menú; no existe implementación, estado ni ruta de tutorial.
 
 Durante la migracion pueden sobrevivir ids legacy dentro del engine, pero no deben filtrarse a UI,
-cartas impresas, logs, ARIA ni assets de produccion. No agregar nuevas dependencias de Scryfall,
-arte, nombres, metadata ni texto de cartas de Magic. Todo recurso final necesita procedencia y
+cartas impresas, logs, ARIA ni assets de produccion. No agregar proveedores remotos de cartas ni
+arte, nombres, metadata o texto heredado de Magic. Todo recurso final necesita procedencia y
 derechos de uso comercial documentados.
 
 ## Estado actual del juego
@@ -935,7 +935,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   la detección de carta full-art del estudio reconoce `Fuente` en lugar de `Tierra`. `TRAMPLE`
   sigue funcionando internamente y permanece oculto en la presentación vigente; no se imprime
   `Desborde` hasta que esa keyword se exponga deliberadamente. Esta fase tampoco cambia nombres,
-  arte, metadata de Scryfall ni regenera los PNG de `public/cards/mono_green_ramp/`. La regresión
+  arte ni regenera los PNG de `public/cards/mono_green_ramp/`. La regresión
   compara las 13 cartas del HTML, ambos JSON del generador y el texto visible del deck runtime.
   Sus productores de Energía usan un rayo dorado dentro del mismo orbe material de Agotar y
   `Veneno N` presenta N en un badge holgado. El texto usa `gana` para modificadores temporales y `pon un contador ... sobre` para
@@ -943,6 +943,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Los índices de Mono Green, Vampires, Zombies, Goblins y Hunters usan un header mínimo común con
   título y línea temática, sin controles, estado ni mensajes de exportación; Vampires abre sus
   cartas al 35%.
+
+  Todas las imágenes runtime se resuelven exclusivamente desde los manifests locales hacia
+  `public/cards`. No existe fallback remoto, consulta de metadata ni caché de respuestas de un
+  proveedor de cartas. Los JSON runtime tampoco conservan set codes, números de coleccionista o
+  bloques de lookup heredados.
 
   El rombo de disponible pertenece a
   `.hand-card`, pero su render

@@ -4,7 +4,6 @@
   "name": "Goblin Assault Host",
   "format": "horde",
   "side": "HORDE",
-  "standardCheckedAt": null,
   "deckSize": 50,
   "colors": [
     "R"
@@ -53,15 +52,7 @@
       "toughness": 1,
       "keywords": [],
       "abilities": [],
-      "isToken": true,
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "search",
-        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
-        "imagePath": "data[0].image_uris.normal",
-        "fallbackImagePath": "data[0].image_uris.large",
-        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
-      }
+      "isToken": true
     }
   ],
   "cards": [
@@ -92,14 +83,6 @@
       "keywords": [],
       "abilities": [],
       "isToken": true,
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "search",
-        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
-        "imagePath": "data[0].image_uris.normal",
-        "fallbackImagePath": "data[0].image_uris.large",
-        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
-      },
       "quantity": 24
     },
     {
@@ -189,14 +172,7 @@
           ],
           "implementationNote": "PvE adaptation: on entry, Burn the best opposing creature for the number of Goblins that entered under Horde control this turn."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Hobgoblin Bandit Lord",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "rundvelt_hordemaster",
@@ -282,14 +258,7 @@
           "customHandler": "rundvelt_hordemaster_inspect_top_if_goblin",
           "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is a Goblin Echo; otherwise put it on the bottom of the Archive."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Rundvelt Hordemaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "battle_cry_goblin",
@@ -350,14 +319,7 @@
           ],
           "implementationNote": "PvE adaptation: on entry, Horde Goblins get +1/+0 until end of turn. Haste and Pack tactics are omitted."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Battle Cry Goblin",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "goblin_war_drums",
@@ -406,14 +368,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin War Drums",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "raid_bombardment",
@@ -453,14 +408,7 @@
           "customHandler": "raid_bombardment_small_attacker_damage",
           "implementationNote": "PvE adaptation: capture each attacking Goblin with power 2 or less once, then deal the combined damage to the player as a Burn volley after the Horde attack sequence."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Raid Bombardment",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "beetleback_chief",
@@ -509,14 +457,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Beetleback Chief",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "siege_gang_commander",
@@ -564,14 +505,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Siege-Gang Commander",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "goblin_rabblemaster",
@@ -644,14 +578,7 @@
           "customHandler": "goblin_rabblemaster_attack_buff",
           "implementationNote": "This source gets +1/+0 until end of turn for each other attacking Goblin."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Rabblemaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "goblin_surprise",
@@ -725,14 +652,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Surprise",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "mogg_mob",
@@ -760,14 +680,7 @@
       "power": 3,
       "toughness": 3,
       "keywords": [],
-      "abilities": [],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Mogg Mob",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "abilities": []
     },
     {
       "id": "volley_veteran",
@@ -829,14 +742,7 @@
           ],
           "implementationNote": "Horde targeting policy chooses a lethal opposing creature when possible, then the highest-value creature."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Volley Veteran",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "goblin_chainwhirler",
@@ -882,14 +788,7 @@
           "customHandler": "goblin_chainwhirler_enter_damage_all",
           "implementationNote": "Deal 1 damage to each opponent and each creature and planeswalker those opponents control."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Chainwhirler",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "goblin_trashmaster",
@@ -984,14 +883,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Trashmaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "general_kreat_the_boltbringer",
@@ -1062,14 +954,7 @@
           "customHandler": "general_kreat_damage_each_opponent",
           "implementationNote": "Deal 1 damage to each opponent."
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "General Kreat, the Boltbringer",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "krenko_tin_street_kingpin",
@@ -1137,14 +1022,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Krenko, Tin Street Kingpin",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     },
     {
       "id": "pashalik_mons",
@@ -1220,14 +1098,7 @@
             }
           ]
         }
-      ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Pashalik Mons",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      ]
     }
   ],
   "engineSupportNeeded": []

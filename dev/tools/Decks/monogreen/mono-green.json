@@ -1,7 +1,7 @@
 [
     {
         "id": "llanowar_elves",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd.jpg?1783909057",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/llanowar_elves.jpg",
         "nombre": "Elfos de Llanowar",
         "tipo": "Eco — Elfo Druida",
         "costo": 1,
@@ -12,7 +12,7 @@
     },
     {
         "id": "sunshower_druid",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/7/7/7740abc5-54e1-478d-966e-0fa64e727995.jpg?1783910802",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/sunshower_druid.jpg",
         "nombre": "Druida de la lluvia solar",
         "tipo": "Eco — Rana Druida",
         "costo": 1,
@@ -23,7 +23,7 @@
     },
     {
         "id": "druid_of_the_cowl",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/76ceff1d-9e83-41cc-b54b-8bf90d985da9.jpg?1783934537",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/druid_of_the_cowl.jpg",
         "nombre": "Druida de la capucha",
         "tipo": "Eco — Elfo Druida",
         "costo": 2,
@@ -34,7 +34,7 @@
     },
     {
         "id": "ichorspit_basilisk",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/0955b64f-6721-4fa6-b161-cae404cb5b9f.jpg?1783918014",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/ichorspit_basilisk.jpg",
         "nombre": "Basilisco escupeicor",
         "tipo": "Eco — Pirexiano Basilisco",
         "costo": 3,
@@ -45,7 +45,7 @@
     },
     {
         "id": "beast_kin_ranger",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/0102e0be-5783-4825-9489-713b1b1df0b2.jpg?1783909098",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
         "nombre": "Guardabosque bestial",
         "tipo": "Eco — Elfo Explorador",
         "costo": 3,
@@ -56,7 +56,7 @@
     },
     {
         "id": "magnigoth_sentry",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/5624e610-c4c0-4103-a32b-0f1264030a7a.jpg?1783908947",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/magnigoth_sentry.jpg",
         "nombre": "Centinela mágnigoth",
         "tipo": "Eco — Pueblo-arbóreo",
         "costo": 4,
@@ -67,7 +67,7 @@
     },
     {
         "id": "colossadactyl",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/8/7/8702e776-be2c-48a9-9bc5-bb8ea514333b.jpg?1783913750",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/colossadactyl.jpg",
         "nombre": "Colosadáctilo",
         "tipo": "Eco — Dinosaurio",
         "costo": 4,
@@ -78,7 +78,7 @@
     },
     {
         "id": "timberland_ancient",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/5/f/5f73cd60-cd89-4c7a-85a6-e0ae34ca101b.jpg?1783916960",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/timberland_ancient.jpg",
         "nombre": "Anciano forestal",
         "tipo": "Eco — Pueblo-arbóreo",
         "costo": 6,
@@ -89,7 +89,7 @@
     },
     {
         "id": "cosmic_hunger",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b8eef541-6851-4312-ad2b-74f45c7ede6c.jpg?1783916972",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/cosmic_hunger.jpg",
         "nombre": "Hambre cósmica",
         "tipo": "Hechizo · Rápido",
         "costo": 2,
@@ -100,7 +100,7 @@
     },
     {
         "id": "ruthless_predation",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/1/2/123f0c76-1fde-439e-a76d-eccf96f8d941.jpg?1783918010",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/ruthless_predation.jpg",
         "nombre": "Depredación despiadada",
         "tipo": "Hechizo",
         "costo": 2,
@@ -111,7 +111,7 @@
     },
     {
         "id": "broken_wings",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61f9cbeb-cc9c-4562-be65-8a77053faefe.jpg?1783909061",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/broken_wings.jpg",
         "nombre": "Alas rotas",
         "tipo": "Hechizo · Rápido",
         "costo": 3,
@@ -122,7 +122,7 @@
     },
     {
         "id": "giant_growth",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd0bf74e-14c1-4428-88d8-2181a080b5d0.jpg?1783909057",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/giant_growth.jpg",
         "nombre": "Crecimiento gigante",
         "tipo": "Hechizo · Rápido",
         "costo": 1,
@@ -133,7 +133,7 @@
     },
     {
         "id": "forest",
-        "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d232fcc2-12f6-401a-b1aa-ddff11cb9378.jpg?1783909039",
+        "art_crop": "../../../../public/cards/mono_green_ramp/art/forest.jpg",
         "nombre": "Bosque",
         "tipo": "Fuente — Bosque",
         "costo": 0,

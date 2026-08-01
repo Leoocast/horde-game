@@ -22,8 +22,8 @@ Bloqueos encontrados en el repositorio:
   archivos de carta/arte derivados. Vite copia `public` completo al build, incluso si un recurso
   no se abre desde la UI.
 - El deck de Zombies declara `"source": "Horde Magic - Limited Edition 2.1"`.
-- Los JSON y generadores conservan nombres, set codes, collector numbers, consultas y URLs de
-  Scryfall.
+- Los nombres y varios assets de Mono Green, Zombies y Goblins todavía proceden de cartas Magic,
+  aunque las consultas, URLs y metadata del proveedor remoto ya fueron retiradas.
 - La superficie reproduce en conjunto las categorias de Magic: mana, land, creature, instant,
   sorcery, enchantment, library, battlefield, graveyard, exile, untap/main/combat/end, cast,
   tap, mill, +1/+1 counters y gran parte de sus keywords perennes.
@@ -434,9 +434,9 @@ La suite ya falla si el tutorial reaparece, si el copy localizado contiene vocab
 si el texto/tipo visible de una carta no se puede presentar con el vocabulario Hostfall. Todavía
 faltan guardas de assets y procedencia que fallen cuando:
 
-- un campo visible contiene `Magic`, `mana`, `Scryfall`, `Oracle`, un card type/zone legacy o un
+- un campo visible contiene `Magic`, `mana`, metadata de proveedor, un card type/zone legacy o un
   nombre de la lista anterior;
-- un deck de produccion declara `scryfall`, set code, collector number o una URL de cartas Magic;
+- un deck de produccion declara un lookup remoto, set code, collector number o una URL de cartas;
 - un manifest de produccion no tiene procedencia de arte;
 - un Rasgo carece de nombre, tooltip o definicion en ingles o espanol;
 - una fase, zona, tipo, Accion o Estado visible no sale del registro canonico;
@@ -464,8 +464,8 @@ El registro de recursos debe incluir, como minimo:
 4. Crear al menos una Hueste completamente original para que exista un loop publicable.
 5. Reemplazar o retirar Mono Green, Zombies y Goblins; borrar sus recursos de `public`, no solo
    ocultarlos del selector.
-6. Eliminar Scryfall/Oracle y metadata Magic del camino de produccion y de los generadores que
-   exportan cartas finales.
+6. **Completado:** eliminar proveedores remotos de cartas y metadata Magic del camino de
+   produccion y de los generadores que exportan cartas finales.
 7. Diseñar un onboarding original cuando haga falta y reescribir documentación de jugador y
    capturas de tienda.
 8. Ejecutar lint de vocabulario, auditoria de recursos, tipos, tests, build y un escaneo final de

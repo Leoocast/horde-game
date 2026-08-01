@@ -1,7 +1,7 @@
 import { ArrowDownToLine, GripVertical, Play, Plus, RefreshCw, X } from "lucide-react";
 import { useMemo, useState, type DragEvent } from "react";
 import { hordeInspectableDecks, playerInspectableDecks } from "../../data/deckCatalog";
-import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
+import { useCardImage } from "../../utils/cardImages";
 import { searchCatalog } from "../cardCatalog";
 import type { ScenarioCard, ScenarioDefinition } from "../scenario";
 import { SearchInput, SelectField, TextField } from "./fields";
@@ -9,7 +9,7 @@ import { SearchInput, SelectField, TextField } from "./fields";
 const RESULT_LIMIT = 20;
 
 function CardThumb({ definitionId, name }: { definitionId: string; name: string }) {
-  const imageUrl = toArtCropImageUrl(useCardImage(definitionId));
+  const imageUrl = useCardImage(definitionId);
   return (
     <span className="playground-thumb" aria-hidden="true">
       {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="playground-thumb-fallback">{name.slice(0, 1)}</span>}
