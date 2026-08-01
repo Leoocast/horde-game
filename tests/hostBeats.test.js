@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-test("a lethal Horde impact stops the remaining attack sequence immediately", async () => {
+test("a lethal Host impact stops the remaining attack sequence immediately", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -17,13 +17,13 @@ test("a lethal Horde impact stops the remaining attack sequence immediately", as
   };
 
   const [
-    { resetHordeSequence },
+    { resetHostSequence },
     { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, createTestGame, customCard },
   ] = await Promise.all([
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/playerBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
@@ -35,43 +35,43 @@ test("a lethal Horde impact stops the remaining attack sequence immediately", as
   useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     resetPlayerTriggerSequence();
-    const game = createTestGame("lethal-horde-impact-stops-sequence");
+    const game = createTestGame("lethal-host-impact-stops-sequence");
     game.player.life = 2;
-    game.activeSide = "horde";
+    game.activeSide = "host";
     game.phase = "combat";
-    const lethalAttacker = addCard(game, customCard("lethal_attacker", "horde", { power: 3 }));
-    const queuedAttacker = addCard(game, customCard("queued_attacker", "horde", { power: 4 }));
-    game.combat.hordeAttackers = [lethalAttacker.instanceId, queuedAttacker.instanceId];
+    const lethalAttacker = addCard(game, customCard("lethal_attacker", "host", { power: 3 }));
+    const queuedAttacker = addCard(game, customCard("queued_attacker", "host", { power: 4 }));
+    game.combat.hostAttackers = [lethalAttacker.instanceId, queuedAttacker.instanceId];
 
     useGameStore.setState({
       game,
-      hordeAttackAnimation: undefined,
-      resolvingHordeCombat: false,
-      hordeAutoTriggerCount: 0,
+      hostAttackAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
       playerAutoTriggerCount: 0,
     });
 
-    useGameStore.getState().resolveHordeCombat();
-    assert.equal(useGameStore.getState().hordeAttackAnimation?.attackerId, lethalAttacker.instanceId);
-    assert.equal(useGameStore.getState().resolvingHordeCombat, true);
+    useGameStore.getState().resolveHostCombat();
+    assert.equal(useGameStore.getState().hostAttackAnimation?.attackerId, lethalAttacker.instanceId);
+    assert.equal(useGameStore.getState().resolvingHostCombat, true);
 
     timers.releaseExpiredAt(465);
     const atDefeat = useGameStore.getState();
-    assert.equal(atDefeat.game.winner, "horde");
+    assert.equal(atDefeat.game.winner, "host");
     assert.equal(atDefeat.game.player.life, -1);
-    assert.equal(atDefeat.hordeAttackAnimation, undefined);
-    assert.equal(atDefeat.resolvingHordeCombat, false);
-    assert.equal(atDefeat.hordeAutoTriggerCount, 0);
+    assert.equal(atDefeat.hostAttackAnimation, undefined);
+    assert.equal(atDefeat.resolvingHostCombat, false);
+    assert.equal(atDefeat.hostAutoTriggerCount, 0);
     assert.equal(atDefeat.playerAutoTriggerCount, 0);
 
     timers.releaseExpiredAt(10_000);
     assert.equal(useGameStore.getState().game.player.life, -1);
-    assert.equal(useGameStore.getState().hordeAttackAnimation, undefined);
+    assert.equal(useGameStore.getState().hostAttackAnimation, undefined);
   } finally {
     resetPlayerTriggerSequence();
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
     globalThis.window = originalWindow;
   }
@@ -94,13 +94,13 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
 
   const [
     { enqueue },
-    { resetHordeSequence, scheduleQueuedHordeTriggers },
+    { resetHostSequence, scheduleQueuedHostTriggers },
     { useAudioStore },
     { useGameStore },
     { addCard, cardFromDeck, createTestGame, customCard },
   ] = await Promise.all([
     import("../src/engine/EventQueue"),
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
     import("./engineTestUtils"),
@@ -110,16 +110,16 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     const game = createTestGame("chainwhirler-throttled-beat");
     const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
     const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
-    const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
+    const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "host"));
     enqueue(game, {
       type: "BURN_VOLLEY_DAMAGE",
       sourceId: chainwhirler.instanceId,
       payload: {
-        sourceSide: "horde",
+        sourceSide: "host",
         targetPlayer: true,
         targetIds: [fragile.instanceId, sturdy.instanceId],
         amount: 1,
@@ -132,11 +132,11 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
       burnAnimation: undefined,
       burnImpactCardId: undefined,
       burnImpactCardIds: [],
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       specialDeadCardIds: [],
       summoningAnimationCount: 0,
     });
-    scheduleQueuedHordeTriggers(() => {
+    scheduleQueuedHostTriggers(() => {
       completed = true;
     });
 
@@ -151,10 +151,10 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
 
     // The board-settle handoff is scheduled relative to the resumed clock.
     timers.releaseExpiredAt(11_000);
-    assert.equal(useGameStore.getState().hordeAutoTriggerCount, 0);
+    assert.equal(useGameStore.getState().hostAutoTriggerCount, 0);
     assert.equal(completed, true);
   } finally {
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
@@ -176,15 +176,15 @@ test("the shared reaction runner hands surviving damage to the player and animat
   };
 
   const [
-    { applyHordeAttackEvent, buildHordeAttackEvents },
-    { resetHordeSequence, scheduleQueuedHordeTriggers },
+    { applyHostAttackEvent, buildHostAttackEvents },
+    { resetHostSequence, scheduleQueuedHostTriggers },
     { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, cardFromDeck, createTestGame, customCard },
   ] = await Promise.all([
     import("../src/engine/CombatResolver"),
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/playerBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
@@ -195,32 +195,32 @@ test("the shared reaction runner hands surviving damage to the player and animat
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     resetPlayerTriggerSequence();
     const game = createTestGame("crypt-guardian-reaction-order");
     game.player.life = 10;
-    const attacker = addCard(game, customCard("crypt_reaction_attacker", "horde", {
+    const attacker = addCard(game, customCard("crypt_reaction_attacker", "host", {
       power: 1,
       endurance: 2,
     }));
     const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-    game.activeSide = "horde";
+    game.activeSide = "host";
     game.phase = "combat";
-    game.combat.hordeAttackers = [attacker.instanceId];
+    game.combat.hostAttackers = [attacker.instanceId];
     game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
-    const [impact] = buildHordeAttackEvents(game);
-    const afterImpact = applyHordeAttackEvent(game, impact);
+    const [impact] = buildHostAttackEvents(game);
+    const afterImpact = applyHostAttackEvent(game, impact);
 
     useGameStore.setState({
       game: afterImpact,
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       playerAutoTriggerCount: 0,
       lifeBuffAnimationId: undefined,
       summoningAnimationCount: 0,
     });
 
     let sharedRunnerCompleted = false;
-    scheduleQueuedHordeTriggers(() => {
+    scheduleQueuedHostTriggers(() => {
       sharedRunnerCompleted = true;
     });
     assert.equal(sharedRunnerCompleted, false);
@@ -244,13 +244,13 @@ test("the shared reaction runner hands surviving damage to the player and animat
     assert.equal(sharedRunnerCompleted, true);
   } finally {
     resetPlayerTriggerSequence();
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
 });
 
-test("a Lifesteal attacker bites the Horde life panel at its combat impact", async () => {
+test("a Lifesteal attacker bites the Host life panel at its combat impact", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -319,7 +319,7 @@ test("a Lifesteal attacker bites the Horde life panel at its combat impact", asy
   }
 });
 
-test("a Toxic attacker poisons the Horde HUD at its combat impact without doubling the counter", async () => {
+test("a Toxic attacker poisons the Host HUD at its combat impact without doubling the counter", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -366,12 +366,12 @@ test("a Toxic attacker poisons the Horde HUD at its combat impact without doubli
     assert.equal(useGameStore.getState().playerAttackAnimation?.attackerId, basilisk.instanceId);
 
     timers.releaseExpiredAt(89);
-    assert.equal(useGameStore.getState().game.horde.poisonCounters, 0);
+    assert.equal(useGameStore.getState().game.host.poisonCounters, 0);
     assert.equal(useGameStore.getState().poisonAttackAnimation, undefined);
 
     timers.releaseExpiredAt(90);
     const atImpact = useGameStore.getState();
-    assert.equal(atImpact.game.horde.poisonCounters, 1);
+    assert.equal(atImpact.game.host.poisonCounters, 1);
     assert.equal(atImpact.poisonAttackAnimation?.attackerId, basilisk.instanceId);
     assert.equal(atImpact.poisonAttackAnimation?.amount, 1);
 
@@ -380,7 +380,7 @@ test("a Toxic attacker poisons the Horde HUD at its combat impact without doubli
 
     timers.releaseExpiredAt(1_000);
     const afterCombat = useGameStore.getState();
-    assert.equal(afterCombat.game.horde.poisonCounters, 1);
+    assert.equal(afterCombat.game.host.poisonCounters, 1);
     assert.equal(afterCombat.playerAttackAnimation, undefined);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
@@ -388,7 +388,7 @@ test("a Toxic attacker poisons the Horde HUD at its combat impact without doubli
   }
 });
 
-test("three poison counters animate their consumption before the Horde card is milled", async () => {
+test("three poison counters animate their consumption before the Host card is milled", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -421,44 +421,44 @@ test("three poison counters animate their consumption before the Horde card is m
     game.activeSide = "player";
     game.phase = "end";
     game.setupTurnsRemaining = 0;
-    game.horde.poisonCounters = 3;
+    game.host.poisonCounters = 3;
     const milledCard = addCard(
       game,
-      cardFromDeck("zombie_token", "horde", "archive"),
-      "horde",
+      cardFromDeck("zombie_token", "host", "archive"),
+      "host",
       "archive",
     );
     addCard(
       game,
-      cardFromDeck("zombie_token", "horde", "archive"),
-      "horde",
+      cardFromDeck("zombie_token", "host", "archive"),
+      "host",
       "archive",
     );
 
     useGameStore.setState({
       game,
       poisonConsumeAnimation: undefined,
-      hordeMillAnimationQueue: [],
+      hostMillAnimationQueue: [],
     });
 
     useGameStore.getState().endPlayerTurn();
     const beforeConsume = useGameStore.getState();
     assert.equal(beforeConsume.game.activeSide, "player");
-    assert.equal(beforeConsume.game.horde.poisonCounters, 3);
-    assert.equal(beforeConsume.game.horde.archive.some((card) => card.instanceId === milledCard.instanceId), true);
-    assert.equal(beforeConsume.game.horde.memory.length, 0);
-    assert.equal(beforeConsume.hordeMillAnimationQueue.length, 0);
+    assert.equal(beforeConsume.game.host.poisonCounters, 3);
+    assert.equal(beforeConsume.game.host.archive.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(beforeConsume.game.host.memory.length, 0);
+    assert.equal(beforeConsume.hostMillAnimationQueue.length, 0);
     assert.equal(beforeConsume.poisonConsumeAnimation?.amount, 3);
     assert.equal(beforeConsume.poisonConsumeAnimation?.millCount, 1);
 
     beforeConsume.completePoisonConsumeAnimation(beforeConsume.poisonConsumeAnimation.id);
     const afterConsume = useGameStore.getState();
     assert.equal(afterConsume.poisonConsumeAnimation, undefined);
-    assert.equal(afterConsume.game.activeSide, "horde");
-    assert.equal(afterConsume.game.horde.poisonCounters, 0);
-    assert.equal(afterConsume.game.horde.memory.some((card) => card.instanceId === milledCard.instanceId), true);
-    assert.equal(afterConsume.hordeMillAnimationQueue.length, 1);
-    assert.equal(afterConsume.hordeMillAnimationQueue[0].card.instanceId, milledCard.instanceId);
+    assert.equal(afterConsume.game.activeSide, "host");
+    assert.equal(afterConsume.game.host.poisonCounters, 0);
+    assert.equal(afterConsume.game.host.memory.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(afterConsume.hostMillAnimationQueue.length, 1);
+    assert.equal(afterConsume.hostMillAnimationQueue[0].card.instanceId, milledCard.instanceId);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
@@ -560,7 +560,7 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
   }
 });
 
-test("targeted life-cost spells queue Blood Page after their target buff during the Horde turn", async () => {
+test("targeted life-cost spells queue Blood Page after their target buff during the Host turn", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -599,12 +599,12 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
       power: 2,
       endurance: 2,
     }));
-    const attacker = addCard(game, customCard("crimson_impulse_store_attacker", "horde"), "horde");
+    const attacker = addCard(game, customCard("crimson_impulse_store_attacker", "host"), "host");
     const page = addCard(game, cardFromDeck("blood_page", "player"));
     const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
-    game.activeSide = "horde";
+    game.activeSide = "host";
     game.phase = "combat";
-    game.combat.hordeAttackers = [attacker.instanceId];
+    game.combat.hostAttackers = [attacker.instanceId];
     useGameStore.setState({
       game,
       spellTargeting: {
@@ -748,7 +748,7 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
       power: 1,
       endurance: 2,
     }));
-    const enemy = addCard(game, customCard("predatory_thirst_store_enemy", "horde"));
+    const enemy = addCard(game, customCard("predatory_thirst_store_enemy", "host"));
     const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
@@ -766,7 +766,7 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
     assert.equal(hasTrait(result.game, firstBuffed, "DRAIN"), true);
     assert.equal(hasTrait(result.game, secondBuffed, "DRAIN"), true);
     assert.equal(
-      hasTrait(result.game, result.game.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"),
+      hasTrait(result.game, result.game.host.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"),
       false,
     );
     assert.deepEqual(result.buffAnimationCardIds, [firstAlly.instanceId, secondAlly.instanceId]);
@@ -875,7 +875,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
       power: 2,
       endurance: 2,
     }));
-    const enemy = addCard(game, customCard("ruthless_store_enemy", "horde", {
+    const enemy = addCard(game, customCard("ruthless_store_enemy", "host", {
       power: 1,
       endurance: 5,
     }));
@@ -929,7 +929,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
       1,
     );
     assert.equal(
-      afterImpact.game.horde.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
+      afterImpact.game.host.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
       3,
     );
   } finally {
@@ -970,7 +970,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
   try {
     const game = createTestGame("broken-wings-presentation");
     addForests(game, 3);
-    const target = addCard(game, cardFromDeck("graf_harvest", "horde"));
+    const target = addCard(game, cardFromDeck("graf_harvest", "host"));
     const spell = addCard(game, cardFromDeck("broken_wings", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
@@ -993,7 +993,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     assert.equal(duringCut.brokenWingsAnimation?.targetId, target.instanceId);
     assert.equal(duringCut.pendingSpellHandId, spell.instanceId);
     assert.deepEqual(duringCut.specialDeadCardIds, []);
-    assert.equal(duringCut.game.horde.field.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(duringCut.game.host.field.some((card) => card.instanceId === target.instanceId), true);
     assert.equal(duringCut.game.player.hand.some((card) => card.instanceId === spell.instanceId), true);
     assert.deepEqual(playedSfx, []);
 
@@ -1003,7 +1003,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     timers.releaseExpiredAt(420);
     const atImpact = useGameStore.getState();
     assert.deepEqual(atImpact.specialDeadCardIds, [target.instanceId]);
-    assert.equal(atImpact.game.horde.field.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(atImpact.game.host.field.some((card) => card.instanceId === target.instanceId), true);
     assert.deepEqual(playedSfx, ["attack"]);
 
     timers.releaseExpiredAt(680);
@@ -1011,8 +1011,8 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     assert.equal(afterFade.brokenWingsAnimation, undefined);
     assert.equal(afterFade.pendingSpellHandId, undefined);
     assert.deepEqual(afterFade.specialDeadCardIds, []);
-    assert.equal(afterFade.game.horde.field.some((card) => card.instanceId === target.instanceId), false);
-    assert.equal(afterFade.game.horde.memory.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(afterFade.game.host.field.some((card) => card.instanceId === target.instanceId), false);
+    assert.equal(afterFade.game.host.memory.some((card) => card.instanceId === target.instanceId), true);
     assert.equal(afterFade.game.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
@@ -1107,13 +1107,13 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
   };
 
   const [
-    { resetHordeSequence },
+    { resetHostSequence },
     { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, addForests, cardFromDeck, createTestGame },
   ] = await Promise.all([
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/playerBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
@@ -1124,14 +1124,14 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     resetPlayerTriggerSequence();
     const game = createTestGame("final-banquet-store");
     game.player.life = 10;
     addForests(game, 3);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
-    const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-    addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
+    const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+    addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
     const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
@@ -1148,7 +1148,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
       specialDeadCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       summoningAnimationCount: 0,
     });
 
@@ -1156,7 +1156,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
 
     const beforeDeath = useGameStore.getState();
     assert.equal(beforeDeath.game.player.life, 10);
-    assert.equal(beforeDeath.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(beforeDeath.game.host.field.some((card) => card.instanceId === rundvelt.instanceId), true);
     assert.deepEqual(beforeDeath.specialDeadCardIds, []);
     assert.equal(beforeDeath.pendingSpellHandId, banquet.instanceId);
     assert.equal(beforeDeath.finalBanquetAnimation?.phase, "siphon");
@@ -1167,13 +1167,13 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     const beforeRayImpact = useGameStore.getState();
     assert.equal(beforeRayImpact.finalBanquetAnimation?.phase, "strike");
     assert.equal(beforeRayImpact.game.player.life, 10);
-    assert.equal(beforeRayImpact.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(beforeRayImpact.game.host.field.some((card) => card.instanceId === rundvelt.instanceId), true);
 
     beforeRayImpact.beginFinalBanquetImpact(beforeRayImpact.finalBanquetAnimation.id);
     const atSmokeImpact = useGameStore.getState();
     assert.equal(atSmokeImpact.finalBanquetAnimation?.phase, "impact");
     assert.deepEqual(atSmokeImpact.specialDeadCardIds, [rundvelt.instanceId]);
-    assert.equal(atSmokeImpact.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(atSmokeImpact.game.host.field.some((card) => card.instanceId === rundvelt.instanceId), true);
 
     atSmokeImpact.completeFinalBanquetAnimation(atSmokeImpact.finalBanquetAnimation.id);
     timers.releaseExpiredAt(0);
@@ -1183,19 +1183,19 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     assert.equal(afterBanquet.game.player.lifePaidThisTurn, 0);
     assert.equal(afterBanquet.game.player.lifeLostThisTurn, 1);
     assert.equal(afterBanquet.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
-    assert.equal(afterBanquet.game.horde.memory.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(afterBanquet.game.host.memory.some((card) => card.instanceId === rundvelt.instanceId), true);
     assert.equal(afterBanquet.lifeDamageAnimationId, undefined);
     assert.equal(afterBanquet.finalBanquetAnimation, undefined);
     assert.equal(afterBanquet.pendingSpellHandId, undefined);
-    assert.equal(afterBanquet.hordeAutoTriggerCount, 1);
+    assert.equal(afterBanquet.hostAutoTriggerCount, 1);
 
     timers.releaseExpiredAt(120);
     assert.equal(useGameStore.getState().deathRevealCard?.instanceId, rundvelt.instanceId);
 
     timers.releaseExpiredAt(1_080);
     const afterDeathTrigger = useGameStore.getState();
-    assert.equal(afterDeathTrigger.game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
-    assert.equal(afterDeathTrigger.game.horde.archive.length, 0);
+    assert.equal(afterDeathTrigger.game.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+    assert.equal(afterDeathTrigger.game.host.archive.length, 0);
     assert.equal(afterDeathTrigger.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
     // Battlefield is not mounted in this store test, so release the summoned token's entry hold
     // exactly where the real card animation would decrement it.
@@ -1213,7 +1213,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     assert.deepEqual(useGameStore.getState().game.eventQueue, []);
   } finally {
     resetPlayerTriggerSequence();
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
@@ -1235,13 +1235,13 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
   };
 
   const [
-    { resetHordeSequence },
+    { resetHostSequence },
     { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, addForests, cardFromDeck, createTestGame },
   ] = await Promise.all([
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/playerBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
@@ -1253,7 +1253,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
   useAudioStore.setState({ playSfx: (id) => playedSfx.push(id) });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     resetPlayerTriggerSequence();
     const game = createTestGame("drain-essence-store");
     game.player.life = 10;
@@ -1276,7 +1276,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
       specialDeadCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       summoningAnimationCount: 0,
     });
 
@@ -1317,7 +1317,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     assert.equal(afterDeath.pendingSpellHandId, undefined);
   } finally {
     resetPlayerTriggerSequence();
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
@@ -1339,13 +1339,13 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
   };
 
   const [
-    { resetHordeSequence },
+    { resetHostSequence },
     { resetPlayerTriggerSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, addForests, cardFromDeck, createTestGame },
   ] = await Promise.all([
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/playerBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
@@ -1356,7 +1356,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     resetPlayerTriggerSequence();
     const game = createTestGame("drain-essence-guardian-trigger");
     game.player.life = 10;
@@ -1379,7 +1379,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
       specialDeadCardIds: [],
       pendingTriggeredEffectCount: 0,
       playerAutoTriggerCount: 0,
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       summoningAnimationCount: 0,
     });
 
@@ -1412,7 +1412,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
     assert.equal(afterGuardian.game.player.field.some((card) => card.instanceId === guardian.instanceId), true);
   } finally {
     resetPlayerTriggerSequence();
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }
@@ -1434,12 +1434,12 @@ test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", as
   };
 
   const [
-    { resetHordeSequence },
+    { resetHostSequence },
     { useAudioStore },
     { useGameStore },
     { addCard, cardFromDeck, createTestGame, customCard },
   ] = await Promise.all([
-    import("../src/store/hordeBeats"),
+    import("../src/store/hostBeats"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
     import("./engineTestUtils"),
@@ -1449,31 +1449,31 @@ test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", as
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    resetHordeSequence();
+    resetHostSequence();
     const game = createTestGame("deferred-vanilla-echo-invoked");
-    addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
-    addCard(game, customCard("deferred_vanilla_echo", "horde", {
+    addCard(game, cardFromDeck("general_kreat_the_boltbringer", "host"));
+    addCard(game, customCard("deferred_vanilla_echo", "host", {
       zone: "archive",
       power: 0,
-    }), "horde", "archive");
+    }), "host", "archive");
     useGameStore.setState({
       game,
-      hordeAutoTriggerCount: 0,
+      hostAutoTriggerCount: 0,
       summoningAnimationCount: 0,
       pendingStaticAuras: [],
       heldStaticAuraBonuses: {},
     });
 
-    useGameStore.getState().resolveHordeCardFromTop();
+    useGameStore.getState().resolveHostCardFromTop();
     assert.equal(useGameStore.getState().summoningAnimationCount, 1);
     useGameStore.setState({ summoningAnimationCount: 0 });
     timers.releaseExpiredAt(60);
 
     const awaitingGeneral = useGameStore.getState();
-    assert.equal(awaitingGeneral.hordeAutoTriggerCount, 1);
+    assert.equal(awaitingGeneral.hostAutoTriggerCount, 1);
     assert.equal(awaitingGeneral.game.eventQueue[0]?.type, "ECHO_INVOKED");
   } finally {
-    resetHordeSequence();
+    resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
   }

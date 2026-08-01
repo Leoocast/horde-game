@@ -9,7 +9,7 @@ import {
 } from "../src/components/battlefieldLayout";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
-// The battlefield holds a dead card's slot open ("a ghost") for the whole Horde sequence so the
+// The battlefield holds a dead card's slot open ("a ghost") for the whole Host sequence so the
 // row never re-centers between attackers. These tests drive that logic the way a render pass
 // does — one call per render, refs carried across calls.
 
@@ -42,15 +42,15 @@ function renderFrame(board, cards, holdCasualties) {
   return renderCreatureRow(board, displayed);
 }
 
-test("a loaded Horde board registers existing cards and only animates later arrivals", () => {
+test("a loaded Host board registers existing cards and only animates later arrivals", () => {
   const game = createTestGame();
-  const existingA = addCard(game, customCard("existing_a", "horde"));
-  const existingB = addCard(game, customCard("existing_b", "horde"));
+  const existingA = addCard(game, customCard("existing_a", "host"));
+  const existingB = addCard(game, customCard("existing_b", "host"));
   const registry = createBattlefieldArrivalRegistry([existingA, existingB]);
 
   assert.deepEqual(unregisteredBattlefieldArrivals([existingA, existingB], registry), []);
 
-  const arriving = addCard(game, customCard("arriving", "horde"));
+  const arriving = addCard(game, customCard("arriving", "host"));
   assert.deepEqual(
     unregisteredBattlefieldArrivals([existingA, existingB, arriving], registry).map((card) => card.instanceId),
     [arriving.instanceId],
@@ -60,13 +60,13 @@ test("a loaded Horde board registers existing cards and only animates later arri
   assert.deepEqual(unregisteredBattlefieldArrivals([existingA, existingB, arriving], registry), []);
 });
 
-test("a horde death mid-sequence keeps its slot even with an other permanent on the board", () => {
+test("a host death mid-sequence keeps its slot even with an other permanent on the board", () => {
   const game = createTestGame();
   const board = makeBoard();
-  const zombieA = addCard(game, customCard("zombie_a", "horde", { subtypes: ["Zombie"], isToken: true }));
-  const zombieB = addCard(game, customCard("zombie_b", "horde", { subtypes: ["Zombie"], isToken: true }));
+  const zombieA = addCard(game, customCard("zombie_a", "host", { subtypes: ["Zombie"], isToken: true }));
+  const zombieB = addCard(game, customCard("zombie_b", "host", { subtypes: ["Zombie"], isToken: true }));
   // Graf Harvest lives in the "other permanents" dock, so it never registers a creature-row order.
-  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "horde"));
+  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "host"));
 
   renderFrame(board, [zombieA, zombieB, grafHarvest], true);
   const afterDeath = renderFrame(board, [zombieB, grafHarvest], true);
@@ -113,9 +113,9 @@ test("held slots are released once the sequence ends", () => {
 test("a creature arriving from a death trigger stays after the held casualty slot", () => {
   const game = createTestGame();
   const board = makeBoard();
-  const first = addCard(game, customCard("first", "horde"));
-  const second = addCard(game, customCard("second", "horde"));
-  const summoned = addCard(game, customCard("summoned", "horde"));
+  const first = addCard(game, customCard("first", "host"));
+  const second = addCard(game, customCard("second", "host"));
+  const summoned = addCard(game, customCard("summoned", "host"));
 
   renderFrame(board, [first, second], true);
   const afterDeath = renderFrame(board, [first], true);
@@ -135,8 +135,8 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
   const familyOrder = new Map();
   const groupKeys = new Map();
   const groupMeta = new Map();
-  const left = addCard(game, customCard("ghoul", "horde", { power: 2, endurance: 2 }));
-  const right = addCard(game, customCard("ghoul", "horde", { power: 2, endurance: 2 }));
+  const left = addCard(game, customCard("ghoul", "host", { power: 2, endurance: 2 }));
+  const right = addCard(game, customCard("ghoul", "host", { power: 2, endurance: 2 }));
   left.fieldEntryTurn = 1;
   right.fieldEntryTurn = 1;
   cardOrder.set(left.instanceId, 0);
@@ -155,13 +155,13 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
   assert.equal(after.length, 2, "once the sequence is over the differing stats split the stack");
 });
 
-test("non-token Horde copies stack only when they entered during the same Horde turn", () => {
+test("non-token Host copies stack only when they entered during the same Host turn", () => {
   const game = createTestGame();
   const cardOrder = new Map();
   const familyOrder = new Map();
-  const firstBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
-  const interveningZombie = addCard(game, customCard("intervening_zombie", "horde", { subtypes: ["Zombie"] }));
-  const laterBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
+  const firstBat = addCard(game, cardFromDeck("blighted_bat", "host"));
+  const interveningZombie = addCard(game, customCard("intervening_zombie", "host", { subtypes: ["Zombie"] }));
+  const laterBat = addCard(game, cardFromDeck("blighted_bat", "host"));
   firstBat.fieldEntryTurn = 1;
   interveningZombie.fieldEntryTurn = 1;
   laterBat.fieldEntryTurn = 2;
@@ -196,6 +196,6 @@ test("non-token Horde copies stack only when they entered during the same Horde 
   assert.deepEqual(
     sameTurn.map((group) => group.cards.map((card) => card.instanceId)),
     [[firstBat.instanceId, laterBat.instanceId], [interveningZombie.instanceId]],
-    "matching copies from the same Horde turn may share one stack",
+    "matching copies from the same Host turn may share one stack",
   );
 });

@@ -17,7 +17,7 @@ type Props = {
   animationId: string;
   primarySelector: string;
   fallbackSelector?: string;
-  fallbackAnchor: "player" | "horde";
+  fallbackAnchor: "player" | "host";
   onComplete: (id: string) => void;
   playSound?: boolean;
 };

@@ -4,12 +4,12 @@ import type { ZoneName } from "./hostfallZones";
 export type { Trait } from "./hostfallVocabulary";
 export type { ZoneName } from "./hostfallZones";
 
-export type Side = "player" | "horde";
+export type Side = "player" | "host";
 export type DifficultyMode = "easy" | "normal" | "hard";
 // `chaos` is retained only for legacy saves/tests. The experiment is deprecated and no longer
 // exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
-export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
+export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "host";
 export type EnergyPool = {
   /** Energy already produced this turn but not yet spent. */
   available: number;
@@ -78,8 +78,8 @@ export type CardDefinition = {
   power?: number | null;
   endurance?: number | null;
   traits?: Trait[];
-  /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
-   * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
+  /** Player-facing text shown when a Host trigger of this card resolves. Kept as card data so
+   * new Host cards don't need a branch in useGameStore's trigger-message switch. */
   triggerMessage?: string;
   entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
@@ -117,7 +117,7 @@ export type HostRulesProfile = {
   revealCount: number;
   /** Stop the normal reveal early when a non-token card is revealed. */
   stopOnNonToken: boolean;
-  /** One-time extra reveals on this Horde turn (0 disables). */
+  /** One-time extra reveals on this Host turn (0 disables). */
   miniSurgeTurn: number;
   miniSurgeExtraReveals: number;
   /** Permanent surge from this Host turn on. */
@@ -203,7 +203,7 @@ export type PlayerState = {
   lifeLostThisTurn: number;
 };
 
-export type HordeState = {
+export type HostState = {
   archive: CardInstance[];
   field: CardInstance[];
   memory: CardInstance[];
@@ -212,16 +212,16 @@ export type HordeState = {
   /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
   pendingCard?: CardInstance;
-  /** Extra normal reveal rounds requested by a Horde spell. HordeController consumes these
-   * inside the current turn; they never advance the Horde turn counter or add Surge reveals. */
+  /** Extra normal reveal rounds requested by a Host spell. HostController consumes these
+   * inside the current turn; they never advance the Host turn counter or add Surge reveals. */
   pendingRevealRounds?: number;
 };
 
 export type CombatState = {
   playerAttackers: string[];
-  hordeAttackers: string[];
+  hostAttackers: string[];
   blockers: Record<string, string[]>;
-  /** Damage captured when attackers are declared but deliberately held until the animated Horde
+  /** Damage captured when attackers are declared but deliberately held until the animated Host
    * attack sequence ends. Attacker ids make each attacker count once even with multiple blockers. */
   pendingDamageVolleys: Array<{
     sourceId?: string;
@@ -253,17 +253,17 @@ export type GameState = {
   hostRules: HostRulesProfile;
   chaosMutations: Record<Side, Record<string, Trait[]>>;
   currentRandomState: number;
-  hordeDeckOrderHash?: string;
+  hostDeckOrderHash?: string;
   activeSide: Side;
   phase: Phase;
   turnNumber: number;
-  hordeTurnNumber: number;
+  hostTurnNumber: number;
   setupTurnsRemaining: number;
-  setupCompletePendingHorde: boolean;
+  setupCompletePendingHost: boolean;
   openingHandAccepted: boolean;
   mulligansTaken: number;
   player: PlayerState;
-  horde: HordeState;
+  host: HostState;
   combat: CombatState;
   /** Permanents that entered since the current turn began. Rules may count entries even if the
    * permanent later changes zones; presentation and logs must not be used as rules history. */

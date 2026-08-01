@@ -5,10 +5,10 @@ import { cardStatState } from "../utils/selectors";
  * Pure layout rules for the battlefield rows.
  *
  * These live outside `Battlefield.tsx` because they are the part of the board that has to stay
- * still while the Horde's attack sequence plays: they decide which cards share a stack, in which
+ * still while the Host's attack sequence plays: they decide which cards share a stack, in which
  * order the stacks sit in the row, and which slots are held open for cards that already died.
  * Keeping them here means a regression can be reproduced in `tests/battlefieldLayout.test.js`
- * instead of only by playing a full Horde turn.
+ * instead of only by playing a full Host turn.
  */
 
 export type GroupMeta = { order: number; suborder: number; anchorId: string };
@@ -36,7 +36,7 @@ export function isZombieToken(card: CardInstance): boolean {
 }
 
 export function isGoblinToken(card: CardInstance): boolean {
-  return card.controller === "horde"
+  return card.controller === "host"
     && card.isToken
     && card.subtypes.some((subtype) => subtype.toLowerCase() === "goblin");
 }
@@ -57,7 +57,7 @@ export function groupBattlefieldCopies(
   groupMeta?: Map<string, GroupMeta>,
   // Stats move constantly while combat resolves: a dying lord drops its static buff off every
   // creature it covered. Grouping by stats then would re-key and remount whole stacks mid-
-  // sequence, which reads as the board reorganising itself. While the Horde sequence runs,
+  // sequence, which reads as the board reorganising itself. While the Host sequence runs,
   // each card keeps the grouping key it already had (frozen in `lastGroupKeys`): stacks
   // neither merge nor split mid-sequence — cards with different stats must never collapse
   // into one stack — and the grouping settles once, at the end.
@@ -83,8 +83,8 @@ export function groupBattlefieldCopies(
         ? `instance-${card.instanceId}`
         : swarmToken
           ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
-          : card.controller === "horde"
-            ? `horde-turn-${card.fieldEntryTurn ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
+          : card.controller === "host"
+            ? `host-turn-${card.fieldEntryTurn ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
             : `copy-${card.definitionId}-${visualStatsKey}`);
     lastGroupKeys?.set(card.instanceId, groupingKey);
     groupOfCard.set(card.instanceId, groupingKey);
@@ -93,7 +93,7 @@ export function groupBattlefieldCopies(
       ? swarmWaveId === undefined
         ? instanceOrder
         : (swarmWaveOrder.get(swarmWaveId) ?? instanceOrder)
-      : card.controller === "horde"
+      : card.controller === "host"
         ? instanceOrder
         : (familyOrder.get(card.definitionId) ?? instanceOrder);
     const group = groups.get(groupingKey);
@@ -139,7 +139,7 @@ export function groupBattlefieldCopies(
 }
 
 /**
- * Returns the row's cards with combat casualties still in it while the Horde combat sequence runs.
+ * Returns the row's cards with combat casualties still in it while the Host combat sequence runs.
  * Refs are read and written during render on purpose: the ghost has to exist in the very first
  * render after the card left game state, otherwise the row re-centers for one frame.
  */
@@ -159,7 +159,7 @@ export function holdCombatCasualties(
     }
     // New creatures keep their actual arrival order. In particular, a Goblin summoned by
     // Rundvelt after another Goblin dies must not inherit the casualty's middle slot: combat
-    // still resolves it last because the engine appended it to `horde.field`. Keeping the
+    // still resolves it last because the engine appended it to `host.field`. Keeping the
     // ghost until the sequence ends makes the visual row agree with that rules order.
   } else if (casualties.current.size > 0) {
     casualties.current.clear();

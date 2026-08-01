@@ -58,12 +58,12 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
         message: `Deck presentation references unknown key card "${entry.presentation.keyCardId}".`,
       });
     }
-    if (entry.deck.side === "horde" && !entry.presentation.encounterTone) {
+    if (entry.deck.side === "host" && !entry.presentation.encounterTone) {
       errors.push({
         deckId,
         cardId: entry.presentation.keyCardId,
         abilityId: "presentation.encounterTone",
-        message: "Horde deck presentation must declare an encounter tone.",
+        message: "Host deck presentation must declare an encounter tone.",
       });
     }
     for (const card of authoredCards) {
@@ -624,7 +624,7 @@ function normalizeIsolated(card: NewDeckCard, ability: NewDeckAbility): Normaliz
   const syntheticDeck: NewDeckList = {
     id: "lint",
     name: "lint",
-    side: "horde",
+    side: "host",
     cards: [{ ...card, abilities: [ability] }],
   };
   const definition = normalizeDeck(syntheticDeck).cards[0];

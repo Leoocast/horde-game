@@ -37,7 +37,7 @@ export const PHASE_VOCABULARY = {
   main: { en: "Main", es: "Principal" },
   combat: { en: "Battle", es: "Batalla" },
   end: { en: "End", es: "Final" },
-  horde: { en: "Host Turn", es: "Turno de la Hueste" },
+  host: { en: "Host Turn", es: "Turno de la Hueste" },
 } as const satisfies Record<Phase, LocalizedTerm>;
 
 export const CARD_TYPE_VOCABULARY = {

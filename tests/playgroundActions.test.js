@@ -116,7 +116,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
     },
   });
 
-  const token = (game) => game.horde.field.find((card) => card.definitionId === "goblin_token_1_1_red").instanceId;
+  const token = (game) => game.host.field.find((card) => card.definitionId === "goblin_token_1_1_red").instanceId;
 
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
@@ -126,7 +126,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
   assert.equal(destroyed.game.player.memory.length, 1);
 
   // The raw move puts the same token in the graveyard without any death ever happening.
-  assert.equal(moved.game.horde.memory.at(-1).definitionId, "goblin_token_1_1_red");
+  assert.equal(moved.game.host.memory.at(-1).definitionId, "goblin_token_1_1_red");
   assert.equal(moved.game.player.field.length, 1);
   assert.equal(moved.game.eventQueue.length, 0);
 });
@@ -145,15 +145,15 @@ test("wiping a board is silent: nothing dies, so nothing triggers", () => {
     }),
   );
 
-  const wiped = clearBattlefield(game, "horde");
+  const wiped = clearBattlefield(game, "host");
   assert.equal(wiped.ok, true);
-  assert.equal(wiped.game.horde.field.length, 0);
-  assert.equal(wiped.game.horde.memory.length, 2);
-  assert.ok(wiped.game.horde.memory.every((card) => card.zone === "memory"));
+  assert.equal(wiped.game.host.field.length, 0);
+  assert.equal(wiped.game.host.memory.length, 2);
+  assert.ok(wiped.game.host.memory.every((card) => card.zone === "memory"));
   assert.equal(wiped.game.player.field.length, 1, "no death trigger ever fired");
   assert.equal(wiped.game.eventQueue.length, 0);
 
-  const again = clearBattlefield(wiped.game, "horde");
+  const again = clearBattlefield(wiped.game, "host");
   assert.equal(again.ok, false);
   assert.match(again.reason, /already empty/i);
 });
@@ -192,7 +192,7 @@ test("the same action sequence over two rebuilds lands on identical states", () 
     game = addEnergySource(game).game;
     game = addStoredEnergy(game).game;
     game = drawPlayerCard(game).game;
-    const token = game.horde.field[0].instanceId;
+    const token = game.host.field[0].instanceId;
     game = destroyCard(game, token).game;
     return drainEnergy(game).game;
   };

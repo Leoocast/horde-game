@@ -70,10 +70,10 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   enqueue(next, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   // Always resolve the player's own reactive triggers now (so e.g. Beast-Kin's self-buff lands
   // in the same frame the new creature enters, never flickering through a same-stats stack).
-  // When a Horde reaction is pending, defer only the Horde's triggers to glow after the cast.
+  // When a Host reaction is pending, defer only the Host's triggers to glow after the cast.
   const deferredControllers: Side[] = [];
   if (options.deferPlayerTriggers) deferredControllers.push("player");
-  if (options.deferReactiveTriggers) deferredControllers.push("horde");
+  if (options.deferReactiveTriggers) deferredControllers.push("host");
   drainEventQueue(next, deferredControllers.length > 0 ? { deferControllers: deferredControllers } : undefined);
   return succeed(log(next, `Player casts ${card.name}.`));
 }
@@ -104,7 +104,7 @@ function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").Car
   if (game.winner) return false;
   if (isQuickSpell(card)) {
     if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
-    return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+    return game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
   }
   return game.activeSide === "player" && game.phase === "main";
 }

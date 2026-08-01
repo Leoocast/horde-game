@@ -282,6 +282,31 @@ const l45Text = textFiles(["src", "tests"])
 const l46CardStructureText = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => !["src/data/deckLint.ts", "tests/deckLint.test.js"].includes(relative(file)));
+const l46HostIdentityExcluded = new Set([
+  "src/components/DeckInspector.tsx",
+  "src/data/deckLint.ts",
+  "src/data/decks.ts",
+  "src/playground/PlaygroundScreen.tsx",
+  "src/playground/panels/ActionsPanel.tsx",
+  "src/playground/panels/BoardPanel.tsx",
+  "src/playground/panels/CardsPanel.tsx",
+  "src/playground/panels/ScenarioPanel.tsx",
+  "src/playground/scenario.ts",
+  "src/playground/scenarioStorage.ts",
+  "src/playground/timeline.ts",
+  "src/store/useAudioStore.ts",
+  "src/store/useLanguageStore.ts",
+  "src/utils/appPersistence.ts",
+  "tests/deckCardText.test.js",
+  "tests/deckLint.test.js",
+  "tests/playgroundActions.test.js",
+  "tests/playgroundScenario.test.js",
+  "tests/playgroundStorage.test.js",
+  "tests/vocabulary.test.js",
+]);
+const l46HostIdentityText = textFiles(["src", "tests"])
+  .filter((file) => [".css", ".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => !l46HostIdentityExcluded.has(relative(file)));
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -392,6 +417,16 @@ const l46CardStructureLegacyPatterns = [
   {
     label: "legacy card structure helper or type",
     pattern: /\b(?:CardType|CardTypes|getPowerToughness|Keyword|Keywords)\b/u,
+  },
+];
+const l46HostIdentityLegacyPatterns = [
+  {
+    label: "legacy Host identity word",
+    pattern: /\bhorde\b/iu,
+  },
+  {
+    label: "legacy Host technical identifier",
+    pattern: /\b(?:horde[A-Z][A-Za-z0-9_]*|[A-Za-z0-9_]+Horde(?!master)[A-Za-z0-9_]*|[A-Z0-9_]*HORDE[A-Z0-9_]*)\b/u,
   },
 ];
 
@@ -531,6 +566,19 @@ const checks = [
     "Legacy card structure in runtime consumers",
     "Runtime, UI and migrated tests must use kinds, traits and endurance without structural aliases.",
     scanTextPatterns(l46CardStructureText, l46CardStructureLegacyPatterns),
+  ),
+  finding(
+    "legacy-l46-host-identity",
+    "blocker",
+    "L4.6b",
+    "Legacy Horde identity in runtime consumers",
+    "Runtime state, engine, store, UI and migrated tests must use Host identity; scenario-v2, storage and authored-path compatibility remain isolated at their boundaries.",
+    scanTextPatternsIgnoringTaggedLines(
+      l46HostIdentityText,
+      l46HostIdentityLegacyPatterns,
+      "audit-allow legacy-l46b-compatibility",
+      ["src/store/useGameStore.ts"],
+    ),
   ),
   finding(
     "legacy-internal-vocabulary",

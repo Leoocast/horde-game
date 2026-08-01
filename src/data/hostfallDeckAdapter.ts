@@ -9,15 +9,13 @@ export function isHostfallDeck(rawDeck: NewDeckList): boolean {
 }
 
 /**
- * Temporary L4 bridge. Card kinds, modifiers, Traits and the core Energy cost/pool contract already
- * stay in Hostfall vocabulary. Events, Actions and Host rules now do too; this adapter only keeps
- * the structural/side aliases scheduled for L4.6. Authored zone casing stays canonical.
+ * Temporary L4 bridge. Runtime identity and card structure now stay in Hostfall vocabulary; this
+ * adapter only converts authored zone casing to the lowercase runtime representation.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
   if (!isHostfallDeck(rawDeck)) return rawDeck;
   return {
     ...rawDeck,
-    side: rawDeck.side === "HOST" ? "HORDE" : "PLAYER",
     rulesProfile: rawDeck.rulesProfile,
     cards: rawDeck.cards.map(adaptHostfallCard),
     tokens: rawDeck.tokens?.map(adaptHostfallCard),
@@ -48,14 +46,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
   const source = value as Record<string, unknown>;
   const adapted: Record<string, unknown> = {};
   for (const [key, nestedValue] of Object.entries(source)) {
-    if (key === "keyword" && typeof nestedValue === "string") {
-      adapted.keyword = nestedValue;
-      continue;
-    }
-    if (key === "controller" && nestedValue === "HOST") {
-      adapted.controller = "HORDE";
-      continue;
-    }
     if (key === "zone" && typeof nestedValue === "string") {
       adapted.zone = isHostfallAuthoredZone(nestedValue) ? toRuntimeZone(nestedValue) : nestedValue;
       continue;

@@ -25,7 +25,7 @@ export function endPlayerTurn(game: GameState): GameState {
   const queuedEnergy = queueUnusedNormalEnergy(next);
   if (queuedEnergy > 0) next.log.unshift(`Player reserves ${queuedEnergy} unused Energy.`);
   cleanupEndStep(next);
-  resolveHordePoison(next);
+  resolveHostPoison(next);
   if (next.winner) return next;
   completePlayerStabilization(next);
   next.player.lifePaidThisTurn = 0;
@@ -38,24 +38,24 @@ export function endPlayerTurn(game: GameState): GameState {
   }
   if (next.setupTurnsRemaining === 1) {
     next.setupTurnsRemaining = 0;
-    next.setupCompletePendingHorde = false;
-    next.activeSide = "horde";
-    next.phase = "horde";
-    next.log.unshift("Setup complete. Horde turn is ready.");
+    next.setupCompletePendingHost = false;
+    next.activeSide = "host";
+    next.phase = "host";
+    next.log.unshift("Setup complete. Host turn is ready.");
     return next;
   }
-  next.setupCompletePendingHorde = false;
-  next.phase = "horde";
-  next.activeSide = "horde";
-  next.log.unshift("Player ends turn. Horde turn is ready.");
+  next.setupCompletePendingHost = false;
+  next.phase = "host";
+  next.activeSide = "host";
+  next.log.unshift("Player ends turn. Host turn is ready.");
   return next;
 }
 
-function resolveHordePoison(game: GameState): void {
+function resolveHostPoison(game: GameState): void {
   const poisonPerArchiveDiscard = game.hostRules.poisonPerArchiveDiscard;
-  const archiveDiscards = Math.floor(game.horde.poisonCounters / poisonPerArchiveDiscard);
+  const archiveDiscards = Math.floor(game.host.poisonCounters / poisonPerArchiveDiscard);
   if (archiveDiscards <= 0) return;
-  game.horde.poisonCounters -= archiveDiscards * poisonPerArchiveDiscard;
+  game.host.poisonCounters -= archiveDiscards * poisonPerArchiveDiscard;
   game.log.unshift(`Host Poison consumes ${archiveDiscards * poisonPerArchiveDiscard} counter(s).`);
   discardHostArchiveToMemory(game, archiveDiscards);
   checkWinLoss(game);

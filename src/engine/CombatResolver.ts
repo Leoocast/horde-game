@@ -6,7 +6,7 @@ import { getPowerEndurance } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
 
-export type HordeAttackEvent = {
+export type HostAttackEvent = {
   attackerId: string;
   attackerDies: boolean;
   blockerId?: string;
@@ -30,13 +30,13 @@ export function togglePlayerAttacker(game: GameState, id: string): GameState {
   if (!canAttack(next, card)) return log(next, "That creature cannot attack.");
   next.combat.playerAttackers = [...next.combat.playerAttackers, id];
   if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
-  return log(next, `${card.name} ${selected ? "stops attacking" : "attacks the Horde"}.`);
+  return log(next, `${card.name} ${selected ? "stops attacking" : "attacks the Host"}.`);
 }
 
 export function declareBlocker(game: GameState, blockerId: string, attackerId: string): GameState {
   const next = structuredClone(game) as GameState;
   const blocker = next.player.field.find((card) => card.instanceId === blockerId);
-  const attacker = next.horde.field.find((card) => card.instanceId === attackerId);
+  const attacker = next.host.field.find((card) => card.instanceId === attackerId);
   if (!blocker || !attacker) return failAction(next, "Illegal block.");
   const restriction = blockRestrictionReason(next, blocker, attacker);
   if (restriction) return failAction(next, restriction);
@@ -48,7 +48,7 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
   }
   const alreadyBlocking = Object.entries(next.combat.blockers).find(([otherAttackerId, blockerIds]) => otherAttackerId !== attackerId && blockerIds.includes(blockerId));
   if (alreadyBlocking) {
-    const blockedAttacker = next.horde.field.find((card) => card.instanceId === alreadyBlocking[0]);
+    const blockedAttacker = next.host.field.find((card) => card.instanceId === alreadyBlocking[0]);
     return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
   }
   next.combat.blockers[attackerId] = [...current, blockerId];
@@ -66,22 +66,22 @@ export function resolvePlayerCombat(
   options: { skipDrain?: boolean; skipPoison?: boolean } = {},
 ): GameState {
   const next = structuredClone(game) as GameState;
-  let hordeDamage = 0;
+  let hostDamage = 0;
   let poisonCounters = 0;
   for (const id of next.combat.playerAttackers) {
     const attacker = next.player.field.find((card) => card.instanceId === id);
     if (!attacker) continue;
     attacker.attacksMade = (attacker.attacksMade ?? 0) + 1;
     const power = getPowerEndurance(next, attacker).power;
-    hordeDamage += power;
+    hostDamage += power;
     if (!options.skipDrain) applyCombatDrain(next, attacker, power);
     if (!options.skipPoison && power > 0) poisonCounters += getPoisonAmount(next, attacker);
   }
-  const archiveDiscards = Math.floor(hordeDamage / next.hostRules.damagePerArchiveDiscard);
-  if (hordeDamage > 0) log(next, `Player deals ${hordeDamage} damage to Horde.`);
+  const archiveDiscards = Math.floor(hostDamage / next.hostRules.damagePerArchiveDiscard);
+  if (hostDamage > 0) log(next, `Player deals ${hostDamage} damage to Host.`);
   if (poisonCounters > 0) {
-    next.horde.poisonCounters += poisonCounters;
-    log(next, `Horde gets ${poisonCounters} poison counter(s).`);
+    next.host.poisonCounters += poisonCounters;
+    log(next, `Host gets ${poisonCounters} poison counter(s).`);
   }
   if (archiveDiscards > 0) discardHostArchiveToMemory(next, archiveDiscards);
   next.combat.playerAttackers = [];
@@ -90,67 +90,67 @@ export function resolvePlayerCombat(
   return next;
 }
 
-export function beginHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
+export function beginHostCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
-  next.activeSide = "horde";
+  next.activeSide = "host";
   next.phase = "combat";
-  enqueue(next, { type: "BEGIN_BATTLE", payload: { controller: "horde" } });
+  enqueue(next, { type: "BEGIN_BATTLE", payload: { controller: "host" } });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
   return next;
 }
 
-export function declareHordeAttackers(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
+export function declareHostAttackers(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
   const attackers = sortCardsByFieldOrder(
-    next.horde.field,
-    next.horde.field.filter((card) => canAttack(next, card)),
+    next.host.field,
+    next.host.field.filter((card) => canAttack(next, card)),
   );
-  next.combat.hordeAttackers = attackers.map((card) => card.instanceId);
+  next.combat.hostAttackers = attackers.map((card) => card.instanceId);
   for (const attacker of attackers) attacker.exhausted = true;
   const attackerPowers = Object.fromEntries(attackers.map((card) => [card.instanceId, getPowerEndurance(next, card).power]));
   enqueue(next, {
     type: "ATTACK_DECLARED",
     payload: {
-      controller: "horde",
-      attackerIds: [...next.combat.hordeAttackers],
+      controller: "host",
+      attackerIds: [...next.combat.hostAttackers],
       attackerPowers,
       totalPower: Object.values(attackerPowers).reduce((total, power) => total + power, 0),
     },
   });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
-  next.combat.hordeAttackers = sortCardsByFieldOrder(
-    next.horde.field,
-    next.combat.hordeAttackers
-      .map((id) => next.horde.field.find((card) => card.instanceId === id))
+  next.combat.hostAttackers = sortCardsByFieldOrder(
+    next.host.field,
+    next.combat.hostAttackers
+      .map((id) => next.host.field.find((card) => card.instanceId === id))
       .filter((card): card is CardInstance => Boolean(card)),
   ).map((card) => card.instanceId);
   checkWinLoss(next);
-  log(next, `Horde attacks with ${next.combat.hordeAttackers.length} creature(s).`);
+  log(next, `Host attacks with ${next.combat.hostAttackers.length} creature(s).`);
   return next;
 }
 
-export function prepareHordeAttackers(game: GameState): GameState {
-  return declareHordeAttackers(beginHordeCombat(game));
+export function prepareHostAttackers(game: GameState): GameState {
+  return declareHostAttackers(beginHostCombat(game));
 }
 
-export function resolveHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
-  if (game.combat.hordeAttackers.length === 0) {
-    return log(structuredClone(game) as GameState, "No Horde attackers to resolve. Press Attack after Horde Turn first.");
+export function resolveHostCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
+  if (game.combat.hostAttackers.length === 0) {
+    return log(structuredClone(game) as GameState, "No Host attackers to resolve. Press Attack after Host Turn first.");
   }
   let next = structuredClone(game) as GameState;
-  for (const event of buildHordeAttackEvents(next)) next = applyHordeAttackEvent(next, event);
-  return finishHordeCombat(next, options);
+  for (const event of buildHostAttackEvents(next)) next = applyHostAttackEvent(next, event);
+  return finishHostCombat(next, options);
 }
 
-export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
-  const events: HordeAttackEvent[] = [];
+export function buildHostAttackEvents(game: GameState): HostAttackEvent[] {
+  const events: HostAttackEvent[] = [];
   const damageById = new Map<string, number>();
   const lethalDamageById = new Set<string>();
   const deadBuffSourceIds = new Set<string>();
 
-  for (const attackerId of game.combat.hordeAttackers) {
+  for (const attackerId of game.combat.hostAttackers) {
     const blockerIds = game.combat.blockers[attackerId] ?? [];
-    const attacker = game.horde.field.find((card) => card.instanceId === attackerId);
+    const attacker = game.host.field.find((card) => card.instanceId === attackerId);
     if (!attacker) continue;
     const attackerStats = getPowerEndurance(game, attacker, deadBuffSourceIds);
     if (isEventCardDead(attacker, attackerStats.endurance, damageById, lethalDamageById)) continue;
@@ -231,10 +231,10 @@ export function buildHordeAttackEvents(game: GameState): HordeAttackEvent[] {
 }
 
 /** Re-evaluates one planned animated impact against the current board. Player reactions resolve
- * between Horde attackers, so a later blocker may have different power or traits than it had
+ * between Host attackers, so a later blocker may have different power or traits than it had
  * when the combat sequence was first planned (Blood Page is the common case). */
-export function refreshHordeAttackEvent(game: GameState, planned: HordeAttackEvent): HordeAttackEvent | undefined {
-  const attacker = game.horde.field.find((card) => card.instanceId === planned.attackerId);
+export function refreshHostAttackEvent(game: GameState, planned: HostAttackEvent): HostAttackEvent | undefined {
+  const attacker = game.host.field.find((card) => card.instanceId === planned.attackerId);
   if (!attacker) return undefined;
   const attackerStats = getPowerEndurance(game, attacker);
 
@@ -296,9 +296,9 @@ export function refreshHordeAttackEvent(game: GameState, planned: HordeAttackEve
   };
 }
 
-export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent): GameState {
+export function applyHostAttackEvent(game: GameState, event: HostAttackEvent): GameState {
   const next = structuredClone(game) as GameState;
-  const attacker = next.horde.field.find((card) => card.instanceId === event.attackerId);
+  const attacker = next.host.field.find((card) => card.instanceId === event.attackerId);
   const blocker = event.blockerId
     ? next.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
@@ -311,7 +311,7 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
   if (blocker && event.blockerDamageMarked !== undefined) blocker.damageMarked = event.blockerDamageMarked;
   if (event.playerDamage > 0) {
     losePlayerLife(next, event.playerDamage, attacker.instanceId);
-    log(next, `Horde deals ${event.playerDamage} damage to Player.`);
+    log(next, `Host deals ${event.playerDamage} damage to Player.`);
   }
   if (event.playerLifeGain > 0) {
     next.player.life += event.playerLifeGain;
@@ -338,15 +338,15 @@ export function applyHordeAttackEvent(game: GameState, event: HordeAttackEvent):
   return next;
 }
 
-export function isHordeAttackEventCurrent(game: GameState, event: HordeAttackEvent): boolean {
-  const attackerExists = game.horde.field.some((card) => card.instanceId === event.attackerId);
+export function isHostAttackEventCurrent(game: GameState, event: HostAttackEvent): boolean {
+  const attackerExists = game.host.field.some((card) => card.instanceId === event.attackerId);
   if (!attackerExists) return false;
   return !event.blockerId || game.player.field.some((card) => card.instanceId === event.blockerId);
 }
 
-export function finishHordeCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
-  const next = resolvePendingHordeCombatDamageVolleys(game);
-  next.combat.hordeAttackers = [];
+export function finishHostCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
+  const next = resolvePendingHostCombatDamageVolleys(game);
+  next.combat.hostAttackers = [];
   next.combat.blockers = {};
   if (!options.deferTriggeredEvents) drainEventQueue(next);
   checkWinLoss(next);
@@ -374,12 +374,12 @@ export function resolvePlayerAttackerPoison(game: GameState, attackerId: string)
   if (!attacker || getPowerEndurance(next, attacker).power <= 0) return next;
   const amount = getPoisonAmount(next, attacker);
   if (amount <= 0) return next;
-  next.horde.poisonCounters += amount;
-  log(next, `Horde gets ${amount} poison counter(s).`);
+  next.host.poisonCounters += amount;
+  log(next, `Host gets ${amount} poison counter(s).`);
   return next;
 }
 
-export function pendingHordeCombatDamageVolley(game: GameState): {
+export function pendingHostCombatDamageVolley(game: GameState): {
   sourceId?: string;
   attackerCount: number;
   damage: number;
@@ -396,15 +396,15 @@ export function pendingHordeCombatDamageVolley(game: GameState): {
 }
 
 /** Commits deferred combat damage at the presentation's impact frame. Kept separate from
- * `finishHordeCombat` so the store can animate the volley first; non-animated callers still
- * receive the same rule because `finishHordeCombat` invokes it as a fallback. */
-export function resolvePendingHordeCombatDamageVolleys(game: GameState): GameState {
+ * `finishHostCombat` so the store can animate the volley first; non-animated callers still
+ * receive the same rule because `finishHostCombat` invokes it as a fallback. */
+export function resolvePendingHostCombatDamageVolleys(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
-  const pending = pendingHordeCombatDamageVolley(next);
+  const pending = pendingHostCombatDamageVolley(next);
   next.combat.pendingDamageVolleys = [];
   if (!pending || pending.damage <= 0) return next;
   losePlayerLife(next, pending.damage, pending.sourceId);
-  log(next, `Horde combat volley deals ${pending.damage} damage to Player.`);
+  log(next, `Host combat volley deals ${pending.damage} damage to Player.`);
   checkWinLoss(next);
   return next;
 }
@@ -433,9 +433,9 @@ function isEventCardDead(
 }
 
 export function checkWinLoss(game: GameState): void {
-  if (game.player.life <= 0) game.winner = "horde";
-  const hordeCanDamage = game.horde.field.some((card) => card.kinds.includes("ECHO"));
-  if (game.horde.archive.length === 0 && !hordeCanDamage) game.winner = "player";
+  if (game.player.life <= 0) game.winner = "host";
+  const hostCanDamage = game.host.field.some((card) => card.kinds.includes("ECHO"));
+  if (game.host.archive.length === 0 && !hostCanDamage) game.winner = "player";
 }
 
 function log(game: GameState, message: string): GameState {
@@ -463,7 +463,7 @@ function sortCardsByFieldOrder(field: CardInstance[], cards: CardInstance[]): Ca
 
 function sortFieldCardsByVisualOrder(game: GameState, field: CardInstance[], cards: CardInstance[]): CardInstance[] {
   const entryIndex = new Map(field.map((card, index) => [card.instanceId, index]));
-  // Horde swarm tokens are re-summoned throughout the encounter and reuse the same
+  // Host swarm tokens are re-summoned throughout the encounter and reuse the same
   // definitionIds. The board groups swarm tokens (per-deck subtypes in hostRules) by
   // arrival wave so a later wave stays where it entered instead of jumping back into
   // the first stack. For attack ordering, that visual wave order equals entry order.

@@ -9,10 +9,10 @@ const emptyPlayerDeck = {
   cards: [],
 };
 
-const emptyHordeDeck = {
-  id: "test-horde",
-  name: "Test Horde",
-  side: "horde",
+const emptyHostDeck = {
+  id: "test-host",
+  name: "Test Host",
+  side: "host",
   deckSize: 0,
   cards: [],
 };
@@ -20,7 +20,7 @@ const emptyHordeDeck = {
 let nextInstance = 1;
 
 export function createTestGame(seed = "engine-test") {
-  const game = createInitialGame(emptyPlayerDeck, emptyHordeDeck, seed, 0);
+  const game = createInitialGame(emptyPlayerDeck, emptyHostDeck, seed, 0);
   game.player.life = 30;
   return game;
 }

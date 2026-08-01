@@ -9,10 +9,10 @@ import { useCardDetails } from "../utils/cardImages";
 const CARD_WIDTH = 172;
 const CARD_HEIGHT = 240;
 
-export function HordeMillAnimator() {
+export function HostMillAnimator() {
   const language = useLanguageStore((state) => state.language);
-  const queue = useGameStore((state) => state.hordeMillAnimationQueue);
-  const complete = useGameStore((state) => state.completeHordeMillAnimation);
+  const queue = useGameStore((state) => state.hostMillAnimationQueue);
+  const complete = useGameStore((state) => state.completeHostMillAnimation);
   const playSfx = useAudioStore((state) => state.playSfx);
   const active = queue[0];
 
@@ -26,14 +26,14 @@ export function HordeMillAnimator() {
   return (
     <>
       <div data-audio-click="off" className="fixed inset-0 z-[89]" />
-      <HordeMillCard key={active.id} itemId={active.id} definitionId={active.card.definitionId} name={localizedCardName(active.card, language)} onComplete={() => complete(active.id)} />
+      <HostMillCard key={active.id} itemId={active.id} definitionId={active.card.definitionId} name={localizedCardName(active.card, language)} onComplete={() => complete(active.id)} />
     </>
   );
 }
 
-function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: string; definitionId: string; name: string; onComplete: () => void }) {
+function HostMillCard({ itemId, definitionId, name, onComplete }: { itemId: string; definitionId: string; name: string; onComplete: () => void }) {
   const { imageUrl } = useCardDetails(definitionId);
-  const path = useMemo(readHordeMillPath, [itemId]);
+  const path = useMemo(readHostMillPath, [itemId]);
   const deltaX = path.target.x - path.origin.x;
   const deltaY = path.target.y - path.origin.y;
 
@@ -68,9 +68,9 @@ function HordeMillCard({ itemId, definitionId, name, onComplete }: { itemId: str
   );
 }
 
-function readHordeMillPath(): { origin: { x: number; y: number }; target: { x: number; y: number } } {
-  const originRect = document.querySelector<HTMLElement>("[data-horde-mill-origin='true']")?.getBoundingClientRect();
-  const targetRect = document.querySelector<HTMLElement>("[data-horde-mill-target='true']")?.getBoundingClientRect();
+function readHostMillPath(): { origin: { x: number; y: number }; target: { x: number; y: number } } {
+  const originRect = document.querySelector<HTMLElement>("[data-host-mill-origin='true']")?.getBoundingClientRect();
+  const targetRect = document.querySelector<HTMLElement>("[data-host-mill-target='true']")?.getBoundingClientRect();
   const origin = originRect
     ? { x: originRect.left + originRect.width / 2, y: originRect.top + originRect.height / 2 }
     : { x: window.innerWidth / 2 - 92, y: 42 };

@@ -25,6 +25,20 @@ test("an exported scenario round-trips with its recorded flow", () => {
   assert.deepEqual(parsed.entry.steps, entry.steps);
 });
 
+test("scenario v2 replay steps keep their legacy Host boundary discriminants", () => {
+  const entry = storedEntry({
+    steps: [
+      { kind: "hordeTurn" },
+      { kind: "hordeTurnExact", count: 2 },
+      { kind: "clearBattlefield", side: "horde" },
+    ],
+  });
+
+  const parsed = parseScenarioFile(toScenarioFile(entry));
+  assert.deepEqual(parsed.problems, []);
+  assert.deepEqual(parsed.entry.steps, entry.steps);
+});
+
 test("an exported board JSON round-trips as hand and battlefield only", () => {
   const definition = {
     ...BLANK_SCENARIO,

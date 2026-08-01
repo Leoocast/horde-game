@@ -188,7 +188,7 @@ export function CardPreview() {
             ].join(" ")}
           >
             {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-            {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
+            {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}
           </div>
           {traits && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -217,7 +217,7 @@ export function CardPreview() {
       style={hoverStyle}
     >
       {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-      {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
+      {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}
       {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );
@@ -377,8 +377,8 @@ function findCard(game: ReturnType<typeof useGameStore.getState>["game"], id: st
     ...game.player.field,
     ...game.player.memory,
     ...game.player.oblivion,
-    ...game.horde.field,
-    ...game.horde.memory,
-    ...game.horde.oblivion,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
   ].find((card) => card.instanceId === id);
 }

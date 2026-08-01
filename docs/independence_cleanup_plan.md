@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L4 en curso — L4.1-L4.5 cerradas; L4.6a implementada y pendiente de validación manual**
+Estado: **L4 en curso — L4.1-L4.6a cerradas; L4.6b implementada y pendiente de validación manual**
 Última actualización: 2026-08-01
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -27,7 +27,7 @@ demostrarse.
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | En curso: L4.1-L4.5 cerradas; L4.6a pendiente de validación manual | Autorizada por subfases |
+| L4 — Limpieza interna del engine | En curso: L4.1-L4.6a cerradas; L4.6b pendiente de validación manual | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
@@ -311,16 +311,17 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 
 ### Punto de entrada para el siguiente chat
 
-- L0-L3 y L4.1-L4.5 están cerradas y validadas.
-- L4.6a está implementada: definiciones, instancias, filtros, historial y consumidores usan ya
-  `kinds`, `traits` y `endurance`. Falta solamente la validación visual dirigida antes de cerrarla.
+- L0-L3 y L4.1-L4.6a están cerradas y validadas.
+- L4.6b está implementada: estado, engine, store, UI y pruebas usan identidad runtime `host`.
+  Falta solamente la validación visual dirigida antes de cerrarla.
 - Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
   `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
   `legacy-l44-card-states`, `legacy-l45-actions-events-host-rules` y
-  `legacy-l46-card-structure` están en cero.
-- `hostfallDeckAdapter.ts` ya deja pasar sin traducción la estructura de carta, eventos, Acciones y
-  `rulesProfile`. Conserva únicamente el borde de bando y casing de zonas para los siguientes
-  bloques de L4.6 (`HOST`/`CHRONICLER` y zonas authored/runtime).
+  `legacy-l46-card-structure` y `legacy-l46-host-identity` están en cero.
+- `hostfallDeckAdapter.ts` ya deja pasar sin traducción identidad, estructura de carta, eventos,
+  Acciones y `rulesProfile`. Conserva únicamente la conversión de casing de zonas authored/runtime.
+- Escenarios y replays v2 conservan sus claves externas `horde*`, y los storage keys históricos no
+  cambian. Esas compatibilidades están aisladas y quedan para L4.6c.
 - Preservar comportamiento, ids y reglas. Verificar cada subfase con TypeScript, deck lint, suite,
   build, auditoría y una partida dirigida del usuario antes de avanzar.
 
@@ -495,8 +496,26 @@ adaptador con una fase de eliminación conocida.
   de bando, casing de zonas y escenarios v2 quedan deliberadamente para los siguientes bloques de
   L4.6; tampoco se alteró todavía la prioridad Sources→Stored Energy.
 - Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker L4.5 y
-  blocker L4.6a en cero, y build en verde. Falta una validación visual corta del usuario antes de
-  marcar L4.6a cerrada.
+  blocker L4.6a en cero, y build en verde. El usuario confirmó la validación visual dirigida el
+  2026-08-01; L4.6a queda cerrada.
+
+### Avance L4.6b — Identidad runtime de la Host
+
+- `Side` y la fase automática usan `host`; `GameState.host`, `HostState`, `hostTurnNumber`,
+  `setupCompletePendingHost` y `hostAttackers` reemplazan sus equivalentes legacy.
+- Engine, store y UI usan nombres Host, incluidos `HostController.ts`, `hostBeats.ts`,
+  `HostAttackAnimator.tsx`, `HostMillAnimator.tsx`, funciones, estado de animación, selectores,
+  tonos y clases de presentación. Los nombres propios como Rundvelt Hordemaster no se alteran.
+- El adaptador deja pasar `side: HOST` y controladores `HOST` sin downgrade. `normalizeDeck` produce
+  la identidad runtime `host`, y el deck lint protege el contrato authored canónico.
+- El schema de escenarios/replays permanece en v2: `hordeDeckId`, `hordeTurnNumber`, `horde`,
+  zonas `horde*`, fases/bandos `horde` y discriminantes de timeline se traducen sólo en el borde.
+  Dos regresiones nuevas prueban el round-trip, sin invalidar boards guardados.
+- La auditoría incorpora `legacy-l46-host-identity`, actualmente en cero. Las rutas/ids históricos
+  de decks y las claves persistidas se conservan como compatibilidad explícita para L4.6c.
+- Verificación automática: TypeScript, deck lint, Card Studio, 218/218 tests, blockers L4.5,
+  L4.6a y L4.6b en cero, y build en verde. Falta una prueba visual corta del usuario antes de
+  marcar L4.6b cerrada.
 
 ## Fase L5 — Independencia de los mazos
 
@@ -654,7 +673,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | L4.3 | Migración interna de Energía y costes. | Pool numérico único, costes `energyCost` numéricos y autopago Sources→Stored Energy; `legacy-l43-energy-model` quedó en cero. El cambio a Stored→Sources queda diferido al cierre de L4. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.3; prueba dirigida del usuario OK. |
 | 2026-08-01 | L4.4 | Migración interna de estados de cartas. | Runtime y consumidores usan `exhausted`, `entersExhausted`, `stabilizing`, `exhaust`, `requiresStabilized` y `SOURCE_IS_READY`; `legacy-l44-card-states` quedó en cero. El schema externo de escenarios v2 conserva temporalmente sus aliases. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.4; prueba dirigida del usuario OK. |
 | 2026-08-01 | L4.5 | Migración interna de Acciones, eventos y reglas de la Hueste. | Runtime y datos normalizados usan el vocabulario Hostfall; `game.hostRules` reemplaza el contrato anterior. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blocker L4.5 en cero; validación del usuario OK. |
-| 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida pendiente. |
+| 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
+| 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
 
 ## Plantilla para cerrar una fase
 

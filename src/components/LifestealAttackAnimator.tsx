@@ -11,9 +11,9 @@ export function LifestealAttackAnimator() {
         <VampireBiteImpact
           key={animation.id}
           animationId={animation.id}
-          primarySelector='[data-horde-life-emblem="true"]'
-          fallbackSelector='[data-horde-life-panel="true"]'
-          fallbackAnchor="horde"
+          primarySelector='[data-host-life-emblem="true"]'
+          fallbackSelector='[data-host-life-panel="true"]'
+          fallbackAnchor="host"
           onComplete={complete}
           playSound={false}
         />

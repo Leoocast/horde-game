@@ -32,15 +32,15 @@ export function BoardPanel({
   const game = useGameStore((state) => state.game);
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   const [name, setName] = useState(initialName);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => setName(initialName), [initialName]);
 
   const handCard = game.player.hand.find((card) => card.instanceId === selectedHandId);
-  const permanent = [...game.player.field, ...game.horde.field].find(
-    (card) => card.instanceId === (selectedPlayerCreatureId ?? selectedHordeCreatureId),
+  const permanent = [...game.player.field, ...game.host.field].find(
+    (card) => card.instanceId === (selectedPlayerCreatureId ?? selectedHostCreatureId),
   );
   const target = permanent ?? handCard;
 
@@ -155,10 +155,10 @@ export function BoardPanel({
           <button
             className="playground-button"
             type="button"
-            disabled={game.horde.field.length === 0}
+            disabled={game.host.field.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "horde" })}
           >
-            <Eraser size={14} /> Host Field ({game.horde.field.length})
+            <Eraser size={14} /> Host Field ({game.host.field.length})
           </button>
         </div>
       </section>

@@ -2,7 +2,7 @@ import type { GameState } from "./GameTypes";
 import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
 
-export function readySide(game: GameState, side: "player" | "horde"): void {
+export function readySide(game: GameState, side: "player" | "host"): void {
   for (const card of game[side].field) {
     card.exhausted = false;
     card.activatedThisTurn = false;
@@ -11,7 +11,7 @@ export function readySide(game: GameState, side: "player" | "horde"): void {
 }
 
 export function cleanupEndStep(game: GameState): void {
-  for (const card of [...game.player.field, ...game.horde.field]) {
+  for (const card of [...game.player.field, ...game.host.field]) {
     card.damageMarked = 0;
     card.lethalDamage = false;
     card.temporaryPower = 0;
@@ -20,7 +20,7 @@ export function cleanupEndStep(game: GameState): void {
     delete card.flags.burnSmoke;
   }
   game.player.energyPool = { ...emptyEnergyPool(), stored: game.player.energyPool.stored };
-  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
+  game.combat = { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] };
 }
 
 export function completePlayerStabilization(game: GameState): void {
@@ -30,15 +30,15 @@ export function completePlayerStabilization(game: GameState): void {
 }
 
 export function startPlayerTurn(game: GameState): void {
-  for (const card of [...game.player.field, ...game.horde.field]) {
+  for (const card of [...game.player.field, ...game.host.field]) {
     card.untilNextPlayerTurnPower = 0;
     card.untilNextPlayerTurnEndurance = 0;
   }
   game.activeSide = "player";
   game.phase = "untap";
   game.fieldEntriesThisTurn = [];
-  // Setup can grant consecutive player turns without a Horde turn between them.
-  // A reserve only belongs to the player turn that immediately precedes the Horde,
+  // Setup can grant consecutive player turns without a Host turn between them.
+  // A reserve only belongs to the player turn that immediately precedes the Host,
   // so an older setup turn must never refill Stored Energy later.
   game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;

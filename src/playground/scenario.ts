@@ -1,4 +1,4 @@
-import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, findCardDefinition, getHordeDeck, getPlayerDeck } from "../data/decks";
+import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID, findCardDefinition, getHostDeck, getPlayerDeck } from "../data/decks";
 import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { createCardInstance, createInitialGame } from "../engine/GameState";
 import type { CardInstance, DifficultyMode, GameMode, GameState, Phase, Side } from "../engine/GameTypes";
@@ -7,6 +7,10 @@ import { STORED_ENERGY_CAP, emptyEnergyPool } from "../engine/EnergySystem";
 /** Bump when the shape changes in a way older exported JSON can't satisfy.
  *  v2 exposes the two Energy resources used by scenarios: Sources on the Field and Stored Energy. */
 export const SCENARIO_VERSION = 2;
+
+/** Scenario v2 keeps these legacy values at the import/export boundary until L4.6c. */
+export type ScenarioSide = "player" | "horde";
+export type ScenarioPhase = Exclude<Phase, "host"> | "horde";
 
 export type ScenarioZoneKey =
   | "playerHand"
@@ -46,8 +50,8 @@ export type ScenarioDefinition = {
   gameMode: GameMode;
   turnNumber: number;
   hordeTurnNumber: number;
-  phase: Phase;
-  activeSide: Side;
+  phase: ScenarioPhase;
+  activeSide: ScenarioSide;
   player: {
     life: number;
     /** Ready Energy Sources on the Field, capped at `MAX_PLAYER_LANDS`. */
@@ -65,10 +69,10 @@ export const SCENARIO_ZONE_SIDES: Record<ScenarioZoneKey, Side> = {
   playerGraveyard: "player",
   playerExile: "player",
   playerLibraryTop: "player",
-  hordeBattlefield: "horde",
-  hordeGraveyard: "horde",
-  hordeExile: "horde",
-  hordeLibraryTop: "horde",
+  hordeBattlefield: "host",
+  hordeGraveyard: "host",
+  hordeExile: "host",
+  hordeLibraryTop: "host",
 };
 
 const ZONE_SIDES = SCENARIO_ZONE_SIDES;
@@ -79,17 +83,17 @@ export const SCENARIO_ZONES: Array<{ id: ScenarioZoneKey; label: string; side: S
   { id: "playerGraveyard", label: "Chronicler Memory", side: "player" },
   { id: "playerExile", label: "Chronicler Oblivion", side: "player" },
   { id: "playerLibraryTop", label: "Chronicler Archive (top)", side: "player" },
-  { id: "hordeBattlefield", label: "Host Field", side: "horde" },
-  { id: "hordeGraveyard", label: "Host Memory", side: "horde" },
-  { id: "hordeExile", label: "Host Oblivion", side: "horde" },
-  { id: "hordeLibraryTop", label: "Host Archive (top)", side: "horde" },
+  { id: "hordeBattlefield", label: "Host Field", side: "host" },
+  { id: "hordeGraveyard", label: "Host Memory", side: "host" },
+  { id: "hordeExile", label: "Host Oblivion", side: "host" },
+  { id: "hordeLibraryTop", label: "Host Archive (top)", side: "host" },
 ];
 
 export const BLANK_SCENARIO: ScenarioDefinition = {
   version: SCENARIO_VERSION,
   name: "Blank scenario",
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
-  hordeDeckId: DEFAULT_HORDE_DECK_ID,
+  hordeDeckId: DEFAULT_HOST_DECK_ID,
   seed: "playground01",
   difficulty: "normal",
   gameMode: "standard",
@@ -120,9 +124,9 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
   return {
     ...cloneScenario(base),
     turnNumber: game.turnNumber,
-    hordeTurnNumber: game.hordeTurnNumber,
-    phase: game.phase,
-    activeSide: game.activeSide,
+    hordeTurnNumber: game.hostTurnNumber,
+    phase: toScenarioPhase(game.phase),
+    activeSide: runtimeSideToScenario(game.activeSide),
     player: {
       life: game.player.life,
       // Sources are captured as ordinary Field entries below (exhausted state included), so the
@@ -130,15 +134,15 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
       energy: 0,
       storedEnergy: Math.min(game.player.energyPool.stored, STORED_ENERGY_CAP),
     },
-    horde: { poisonCounters: game.horde.poisonCounters },
+    horde: { poisonCounters: game.host.poisonCounters },
     zones: {
       playerHand: groupCards(game.player.hand),
       playerBattlefield: groupCards(game.player.field),
       playerGraveyard: groupCards(game.player.memory),
       playerExile: groupCards(game.player.oblivion),
-      hordeBattlefield: groupCards(game.horde.field),
-      hordeGraveyard: groupCards(game.horde.memory),
-      hordeExile: groupCards(game.horde.oblivion),
+      hordeBattlefield: groupCards(game.host.field),
+      hordeGraveyard: groupCards(game.host.memory),
+      hordeExile: groupCards(game.host.oblivion),
     },
   };
 }
@@ -214,7 +218,7 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   const scenario = withScenarioDefaults(definition);
   const game = createInitialGame(
     getPlayerDeck(scenario.playerDeckId),
-    getHordeDeck(scenario.hordeDeckId),
+    getHostDeck(scenario.hordeDeckId),
     scenario.seed,
     0,
     scenario.difficulty,
@@ -223,20 +227,20 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
 
   returnPlayerCardsToLibrary(game);
   game.setupTurnsRemaining = 0;
-  game.setupCompletePendingHorde = false;
+  game.setupCompletePendingHost = false;
   game.openingHandAccepted = true;
   game.mulligansTaken = 0;
   game.turnNumber = scenario.turnNumber;
-  game.hordeTurnNumber = scenario.hordeTurnNumber;
-  game.phase = scenario.phase;
-  game.activeSide = scenario.activeSide;
+  game.hostTurnNumber = scenario.hordeTurnNumber;
+  game.phase = toRuntimePhase(scenario.phase);
+  game.activeSide = scenarioSideToRuntime(scenario.activeSide);
   game.player.life = scenario.player.life;
   game.player.energyPool = { ...emptyEnergyPool(), stored: clamp(scenario.player.storedEnergy, 0, STORED_ENERGY_CAP) };
   game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;
-  game.horde.poisonCounters = scenario.horde.poisonCounters;
-  delete game.horde.pendingCard;
-  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
+  game.host.poisonCounters = scenario.horde.poisonCounters;
+  delete game.host.pendingCard;
+  game.combat = { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] };
   game.eventQueue = [];
   delete game.winner;
   delete game.lastActionResult;
@@ -368,7 +372,7 @@ function takeCard(game: GameState, side: Side, definitionId: string, counter: { 
 function instanceIdTaken(game: GameState, instanceId: string): boolean {
   const zones = [
     game.player.archive, game.player.hand, game.player.field, game.player.memory, game.player.oblivion,
-    game.horde.archive, game.horde.field, game.horde.memory, game.horde.oblivion,
+    game.host.archive, game.host.field, game.host.memory, game.host.oblivion,
   ];
   return zones.some((zone) => zone.some((card) => card.instanceId === instanceId));
 }
@@ -406,14 +410,14 @@ export function addScenarioCard(game: GameState, zone: ScenarioZoneKey, entry: S
   return next;
 }
 
-/** Stages an authored Horde queue atomically so duplicate definitions become distinct instances. */
-export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameState {
+/** Stages an authored Host queue atomically so duplicate definitions become distinct instances. */
+export function stageHostQueue(game: GameState, entries: ScenarioCard[]): GameState {
   const next = structuredClone(game) as GameState;
   const counter = { next: 0 };
   const staged: CardInstance[] = [];
   for (const entry of entries) {
     for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
-      const card = takeCard(next, "horde", entry.definitionId, counter);
+      const card = takeCard(next, "host", entry.definitionId, counter);
       if (!card) {
         next.lastActionResult = { ok: false, reason: `Unknown card "${entry.definitionId}".` };
         return next;
@@ -422,14 +426,14 @@ export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameS
       staged.push(card);
     }
   }
-  next.horde.archive.unshift(...staged);
+  next.host.archive.unshift(...staged);
   next.lastActionResult = { ok: true };
   next.log.unshift(`Playground stages ${staged.length} Host card(s).`);
   return next;
 }
 
-/** Temporarily overrides only reveal-shaping rules for a hand-authored Playground Horde turn. */
-export function configureExactHordeTurn(game: GameState, count: number): GameState {
+/** Temporarily overrides only reveal-shaping rules for a hand-authored Playground Host turn. */
+export function configureExactHostTurn(game: GameState, count: number): GameState {
   const next = structuredClone(game) as GameState;
   next.hostRules = {
     ...next.hostRules,
@@ -442,6 +446,22 @@ export function configureExactHordeTurn(game: GameState, count: number): GameSta
     surgeExtraReveals: 0,
   };
   return next;
+}
+
+export function runtimeSideToScenario(side: Side): ScenarioSide {
+  return side === "host" ? "horde" : "player";
+}
+
+export function scenarioSideToRuntime(side: ScenarioSide): Side {
+  return side === "horde" ? "host" : "player";
+}
+
+function toScenarioPhase(phase: Phase): ScenarioPhase {
+  return phase === "host" ? "horde" : phase;
+}
+
+function toRuntimePhase(phase: ScenarioPhase): Phase {
+  return phase === "horde" ? "host" : phase;
 }
 
 function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, entry: ScenarioCard): void {

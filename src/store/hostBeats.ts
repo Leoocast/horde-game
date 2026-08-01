@@ -1,5 +1,5 @@
 import type { CardInstance, EffectDefinition, EventItem, GameState } from "../engine/GameTypes";
-import { beginHordeCombat, checkWinLoss, declareHordeAttackers } from "../engine/CombatResolver";
+import { beginHostCombat, checkWinLoss, declareHostAttackers } from "../engine/CombatResolver";
 import {
   EFFECT_ANNOUNCEMENTS,
   effectNeedsManualTarget,
@@ -17,7 +17,7 @@ import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
 import {
   BUFF_ANIMATION_MS,
-  appendHordeMillAnimations,
+  appendHostMillAnimations,
   discardPauseInProgress,
   findBattlefieldCard,
   monsterSfx,
@@ -28,10 +28,10 @@ import {
   uiText,
 } from "./presentationEffects";
 
-// Arrival orchestration now waits for every Horde entrance animation before presenting effects,
+// Arrival orchestration now waits for every Host entrance animation before presenting effects,
 // so this is only a small readability gap rather than a second summon-length pause.
-const HORDE_ENTER_TRIGGER_START_MS = 80;
-const HORDE_ENTER_TRIGGER_RESOLVE_MS = 430;
+const HOST_ENTER_TRIGGER_START_MS = 80;
+const HOST_ENTER_TRIGGER_RESOLVE_MS = 430;
 // Matches the fireball's CSS master clock (--burn-duration 1100ms, impact at 58%). The window
 // runs a touch past the duration so the rising damage number finishes before the layer clears.
 const BURN_IMPACT_MS = 638;
@@ -50,7 +50,7 @@ const STATIC_AURA_BEAT_MS = STATIC_AURA_PULSE_MS + 360;
 // lead-in lets the board finish moving first. Kept tight — the whole beat has to read as a
 // reaction to the death, not as a pause before one.
 const DEATH_REVEAL_LEAD_IN_MS = 120;
-// Matches the CSS entrance (.horde-death-reveal-enter), so the activation pulse fires the
+// Matches the CSS entrance (.host-death-reveal-enter), so the activation pulse fires the
 // instant the card has settled rather than after a dead beat.
 const DEATH_REVEAL_ENTER_MS = 280;
 const DEATH_REVEAL_HOLD_MS = 300;
@@ -63,22 +63,22 @@ const SPELL_REVEAL_EXIT_MS = 300;
 // that move over 360ms. A beat that changed the board waits it out, so the next attacker never
 // charges across a row that is still sliding into place.
 const BOARD_SETTLE_MS = 560;
-const HORDE_ENTRY_WAIT_POLL_MS = 40;
+const HOST_ENTRY_WAIT_POLL_MS = 40;
 
-let hordeAutoTriggerSequenceId = 0;
-// Coverage of every Horde static ability as of the last announced beat. Diffed, not recomputed
+let hostAutoTriggerSequenceId = 0;
+// Coverage of every Host static ability as of the last announced beat. Diffed, not recomputed
 // from scratch, so a lord only re-announces itself when it starts buffing someone new.
-let hordeStaticAuraSnapshot: StaticAuraSnapshot = {};
+let hostStaticAuraSnapshot: StaticAuraSnapshot = {};
 
 /** The current sequence epoch. Scheduled callbacks capture it and bail when a reset bumped it. */
-export function hordeSequenceEpoch(): number {
-  return hordeAutoTriggerSequenceId;
+export function hostSequenceEpoch(): number {
+  return hostAutoTriggerSequenceId;
 }
 
-/** Invalidates every scheduled Horde-sequence callback (game reset / new game). */
-export function resetHordeSequence(): void {
-  hordeAutoTriggerSequenceId += 1;
-  hordeStaticAuraSnapshot = {};
+/** Invalidates every scheduled Host-sequence callback (game reset / new game). */
+export function resetHostSequence(): void {
+  hostAutoTriggerSequenceId += 1;
+  hostStaticAuraSnapshot = {};
 }
 
 export function hasInvokedTrigger(card: CardInstance): boolean {
@@ -103,12 +103,12 @@ export function scheduleHostInvokedTriggers(
   onComplete?: () => void,
   options: { activationAlreadyShownSourceIds?: string[] } = {},
 ): void {
-  const sequenceId = ++hordeAutoTriggerSequenceId;
+  const sequenceId = ++hostAutoTriggerSequenceId;
   const runNext = (index: number) => {
-    if (sequenceId !== hordeAutoTriggerSequenceId) return;
+    if (sequenceId !== hostAutoTriggerSequenceId) return;
     const card = cards[index];
     if (!card) {
-      useGameStore.setState({ hordeAutoTriggerCount: 0 });
+      useGameStore.setState({ hostAutoTriggerCount: 0 });
       onComplete?.();
       return;
     }
@@ -119,59 +119,59 @@ export function scheduleHostInvokedTriggers(
       useGameStore.setState((state) => {
         const previous = state.game;
         const next = structuredClone(previous) as GameState;
-        const source = next.horde.field.find((item) => item.instanceId === card.instanceId);
+        const source = next.host.field.find((item) => item.instanceId === card.instanceId);
         if (source) runInvokedTriggers(next, source);
         notifyDiscardEffects(previous, next);
         return {
           game: next,
-          hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+          hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
         };
       });
-      scheduleQueuedHordeTriggers(() => runNext(index + 1));
+      scheduleQueuedHostTriggers(() => runNext(index + 1));
       return;
     }
     const activationAlreadyShown = options.activationAlreadyShownSourceIds?.includes(card.instanceId) ?? false;
     // A static aura already announced and illuminated this source. Its second effect still gets
     // a distinct queued beat, but needs only a quick handoff rather than another summon-length
     // anticipation pause.
-    const triggerStartMs = activationAlreadyShown ? 40 : HORDE_ENTER_TRIGGER_START_MS;
-    const triggerResolveMs = activationAlreadyShown ? 80 : HORDE_ENTER_TRIGGER_RESOLVE_MS;
+    const triggerStartMs = activationAlreadyShown ? 40 : HOST_ENTER_TRIGGER_START_MS;
+    const triggerResolveMs = activationAlreadyShown ? 80 : HOST_ENTER_TRIGGER_RESOLVE_MS;
     const triggerHandoffMs = activationAlreadyShown ? 40 : 180;
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
+    useGameStore.setState({ hostAutoTriggerCount: 1 });
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       if (!activationAlreadyShown) {
         useAudioStore.getState().playSfx("activateEffect");
         useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
       }
       useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
+        title: uiText("toast.hostEffect"),
         message: hostInvokedTriggerMessage(card),
-        tone: "horde",
+        tone: "host",
       });
     }, triggerStartMs);
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useGameStore.setState((state) => {
         const previous = state.game;
         const next = structuredClone(previous) as GameState;
-        const source = next.horde.field.find((item) => item.instanceId === card.instanceId);
+        const source = next.host.field.find((item) => item.instanceId === card.instanceId);
         if (source) {
           runInvokedTriggers(next, source);
         }
         notifyDiscardEffects(previous, next);
         return {
           game: next,
-          hordeAutoTriggerCount: 1,
-          hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+          hostAutoTriggerCount: 1,
+          hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
         };
       });
       // Enter triggers can create creatures (Beetleback Chief, Siege-Gang). Hold their aura
       // buffs in the same tick they appear, so they are never drawn already buffed either.
       captureStaticAuraBeats();
       window.setTimeout(() => {
-        if (sequenceId === hordeAutoTriggerSequenceId) {
-          scheduleQueuedHordeTriggers(() => runNext(index + 1));
+        if (sequenceId === hostAutoTriggerSequenceId) {
+          scheduleQueuedHostTriggers(() => runNext(index + 1));
         }
       }, triggerHandoffMs);
     }, triggerStartMs + triggerResolveMs);
@@ -179,15 +179,15 @@ export function scheduleHostInvokedTriggers(
   runNext(0);
 }
 
-/** Resolves the presentation attached to every newly revealed Horde card. Static auras go first;
+/** Resolves the presentation attached to every newly revealed Host card. Static auras go first;
  * arrivals without a self trigger still broadcast ECHO_INVOKED silently, while a card whose aura
  * already supplied the activation pulse keeps its ETB as a separate beat without glowing twice. */
-export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
-  const waitingSequenceId = hordeAutoTriggerSequenceId;
+export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
+  const waitingSequenceId = hostAutoTriggerSequenceId;
   if (useGameStore.getState().summoningAnimationCount > 0) {
     window.setTimeout(() => {
-      if (waitingSequenceId === hordeAutoTriggerSequenceId) scheduleHordeArrivalEffects(cards, onComplete);
-    }, HORDE_ENTRY_WAIT_POLL_MS);
+      if (waitingSequenceId === hostAutoTriggerSequenceId) scheduleHostArrivalEffects(cards, onComplete);
+    }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
   const auraSourceIds = [
@@ -198,48 +198,48 @@ export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: 
   const runEnterTriggers = () =>
     scheduleHostInvokedTriggers(cards, onComplete, { activationAlreadyShownSourceIds: auraSourceIds });
   if (hasAuraBeats) {
-    scheduleQueuedHordeTriggers(runEnterTriggers);
+    scheduleQueuedHostTriggers(runEnterTriggers);
     return;
   }
   runEnterTriggers();
 }
 
-export function startHordeCombatSequence(): void {
+export function startHostCombatSequence(): void {
   if (useGameStore.getState().summoningAnimationCount > 0) {
-    const waitingSequenceId = hordeAutoTriggerSequenceId;
+    const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
-      if (waitingSequenceId === hordeAutoTriggerSequenceId) startHordeCombatSequence();
-    }, HORDE_ENTRY_WAIT_POLL_MS);
+      if (waitingSequenceId === hostAutoTriggerSequenceId) startHostCombatSequence();
+    }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
   captureStaticAuraBeats();
   flushStaticAuraBeats();
-  const begun = beginHordeCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
+  const begun = beginHostCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
   useGameStore.setState({ game: begun });
-  scheduleQueuedHordeTriggers(() => {
-    const declared = declareHordeAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
+  scheduleQueuedHostTriggers(() => {
+    const declared = declareHostAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
     useGameStore.setState({ game: declared });
     // Attack triggers can add creatures (Krenko, General Kreat), so re-check aura coverage
     // once they settled instead of before they existed.
-    scheduleQueuedHordeTriggers(() => {
+    scheduleQueuedHostTriggers(() => {
       captureStaticAuraBeats();
       flushStaticAuraBeats();
-      scheduleQueuedHordeTriggers();
+      scheduleQueuedHostTriggers();
     });
   });
 }
 
 // Static aura announcements are two-phase on purpose.
 //
-// Capture runs the moment the Horde's summons land: it records which auras started covering new
+// Capture runs the moment the Host's summons land: it records which auras started covering new
 // creatures and holds their stat bonus back in `heldStaticAuraBonuses`, so those creatures are
 // drawn UNBUFFED from the very frame they appear. Flush queues the beats afterwards, once the
 // summon sequence is over. Without the split the creatures would render already buffed and the
 // beat meant to explain the buff would have nothing left to show.
 export function captureStaticAuraBeats(): void {
-  const auras = collectStaticAuras(useGameStore.getState().game, "horde");
-  const announced = newlyCoveredAuras(auras, hordeStaticAuraSnapshot);
-  hordeStaticAuraSnapshot = snapshotStaticAuras(auras);
+  const auras = collectStaticAuras(useGameStore.getState().game, "host");
+  const announced = newlyCoveredAuras(auras, hostStaticAuraSnapshot);
+  hostStaticAuraSnapshot = snapshotStaticAuras(auras);
   if (announced.length === 0) return;
   useGameStore.setState((state) => {
     const pending = [...state.pendingStaticAuras];
@@ -292,21 +292,21 @@ function releaseStaticAura(auraKey: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// Horde presentation beats
+// Host presentation beats
 //
-// Every Horde reaction plays as one "beat": exactly one card acting at a time, board locked,
-// engine state committed at the moment the animation says it lands. `scheduleQueuedHordeTriggers`
+// Every Host reaction plays as one "beat": exactly one card acting at a time, board locked,
+// engine state committed at the moment the animation says it lands. `scheduleQueuedHostTriggers`
 // walks `game.eventQueue` and hands the first claimed event to the handler that owns its look;
 // the handler calls `done()` when its animation is over and the queue moves on.
 //
-// Adding a new Horde effect = push a handler here. The runner never learns a card name, and two
+// Adding a new Host effect = push a handler here. The runner never learns a card name, and two
 // effects reacting to the same death (Rundvelt + Pashalik) get one beat EACH instead of firing
 // on top of each other, because a claimed event resolves one source per beat.
 // ---------------------------------------------------------------------------
 
-type HordeBeatContext = {
+type HostBeatContext = {
   event: EventItem;
-  /** Horde-controlled sources of `event` that still owe a reaction; act on the first one. */
+  /** Host-controlled sources of `event` that still owe a reaction; act on the first one. */
   sources: CardInstance[];
   sequenceId: number;
   /** Commits this beat's engine effect. Call once, at the moment the animation lands. Returns
@@ -316,29 +316,29 @@ type HordeBeatContext = {
   done: () => void;
 };
 
-type HordeBeatHandler = {
+type HostBeatHandler = {
   id: string;
   /** Claiming parks the queue on this event so the beat plays before anything else resolves. */
   claims: (event: EventItem, sources: CardInstance[], game: GameState) => boolean;
-  run: (context: HordeBeatContext) => void;
+  run: (context: HostBeatContext) => void;
 };
 
-export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
+export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
   if (useGameStore.getState().summoningAnimationCount > 0) {
-    const waitingSequenceId = hordeAutoTriggerSequenceId;
+    const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
-      if (waitingSequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
-    }, HORDE_ENTRY_WAIT_POLL_MS);
+      if (waitingSequenceId === hostAutoTriggerSequenceId) scheduleQueuedHostTriggers(onComplete);
+    }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
   if (discardPauseInProgress(useGameStore.getState())) {
-    window.setTimeout(() => scheduleQueuedHordeTriggers(onComplete), 120);
+    window.setTimeout(() => scheduleQueuedHostTriggers(onComplete), 120);
     return;
   }
-  const sequenceId = hordeAutoTriggerSequenceId;
+  const sequenceId = hostAutoTriggerSequenceId;
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
-  let handler: HordeBeatHandler | undefined;
+  let handler: HostBeatHandler | undefined;
 
   useGameStore.setState((state) => {
     const previous = state.game;
@@ -346,15 +346,15 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
     while (next.eventQueue.length > 0) {
       const candidate = next.eventQueue[0];
       const pendingSources = pendingTriggerSources(next, candidate);
-      const candidateSources = pendingSources.filter((source) => source.controller === "horde");
-      const claimed = HORDE_BEAT_HANDLERS.find((item) => item.claims(candidate, candidateSources, next));
+      const candidateSources = pendingSources.filter((source) => source.controller === "host");
+      const claimed = HOST_BEAT_HANDLERS.find((item) => item.claims(candidate, candidateSources, next));
       if (claimed) {
         event = candidate;
         sources = candidateSources;
         handler = claimed;
         break;
       }
-      // A shared queue can park a player reaction in front of Horde work during combat. Yield
+      // A shared queue can park a player reaction in front of Host work during combat. Yield
       // without resolving it so the player beat can announce the source and land its animation.
       if (pendingSources.some((source) => source.controller === "player")) break;
       next.eventQueue.shift();
@@ -363,8 +363,8 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
     if (!event) checkWinLoss(next);
     return {
       game: next,
-      hordeAutoTriggerCount: event ? 1 : 0,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      hostAutoTriggerCount: event ? 1 : 0,
+      hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
     };
   });
 
@@ -372,7 +372,7 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
   const claimedHandler = handler;
   if (!claimedEvent || !claimedHandler) {
     if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
-      scheduleQueuedPlayerTriggers(() => scheduleQueuedHordeTriggers(onComplete));
+      scheduleQueuedPlayerTriggers(() => scheduleQueuedHostTriggers(onComplete));
       return;
     }
     onComplete?.();
@@ -393,15 +393,15 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
       return changed;
     },
     done: () => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
       const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
       if (remaining === 0) {
-        scheduleQueuedHordeTriggers(onComplete);
+        scheduleQueuedHostTriggers(onComplete);
         return;
       }
       window.setTimeout(() => {
-        if (sequenceId === hordeAutoTriggerSequenceId) scheduleQueuedHordeTriggers(onComplete);
+        if (sequenceId === hostAutoTriggerSequenceId) scheduleQueuedHostTriggers(onComplete);
       }, remaining);
     },
   });
@@ -437,18 +437,18 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
     if (spawned.length > 0) {
       next.eventQueue = [...spawned, ...next.eventQueue.filter((item) => knownEventIds.has(item.id))];
     }
-    const summoned = next.horde.field.filter(
-      (card) => !previous.horde.field.some((old) => old.instanceId === card.instanceId),
+    const summoned = next.host.field.filter(
+      (card) => !previous.host.field.some((old) => old.instanceId === card.instanceId),
     );
     if (summoned[0]) useAudioStore.getState().playSfx(monsterSfx(summoned[0]));
     fieldChanged =
-      next.horde.field.length !== previous.horde.field.length ||
+      next.host.field.length !== previous.host.field.length ||
       next.player.field.length !== previous.player.field.length;
     notifyDiscardEffects(previous, next);
     return {
       game: next,
       summoningAnimationCount: state.summoningAnimationCount + summoned.length,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
     };
   });
   return fieldChanged;
@@ -458,13 +458,13 @@ function pickRandom(ids: SfxId[]): SfxId {
   return ids[Math.floor(Math.random() * ids.length)];
 }
 
-const burnBeatHandler: HordeBeatHandler = {
+const burnBeatHandler: HostBeatHandler = {
   id: "burn",
   claims: (event) => event.type === "BURN_DAMAGE",
   run: ({ event, sequenceId, resolve, done }) => {
     let committed = false;
     const commit = () => {
-      if (committed || sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (committed || sequenceId !== hostAutoTriggerSequenceId) return;
       committed = true;
       resolve();
       useGameStore.setState({ specialDeadCardIds: [] });
@@ -478,7 +478,7 @@ const burnBeatHandler: HordeBeatHandler = {
     useGameStore.setState({
       burnAnimation: { id: event.id, sourceId: event.sourceId, targetId, amount: Number(event.payload?.amount ?? 0) },
       burnImpactCardIds: [],
-      hordeAutoTriggerCount: 1,
+      hostAutoTriggerCount: 1,
     });
     // No activation pulse here: the source already flashed gold on the beat that queued this
     // burn, and firing it twice for one effect reads as the card triggering again. It still
@@ -488,7 +488,7 @@ const burnBeatHandler: HordeBeatHandler = {
     useAudioStore.getState().playSfx(pickRandom(fireballCastSfx));
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useAudioStore.getState().playSfx(fireballHitSfx);
       // The scorch shader is keyed off the impact, not the projectile, so the card only
       // reddens once the fireball actually reaches it.
@@ -513,9 +513,9 @@ const burnBeatHandler: HordeBeatHandler = {
     window.setTimeout(commit, BURN_IMPACT_MS + SPECIAL_DEATH_ANIMATION_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       commit();
-      // Leave hordeAutoTriggerCount alone: the runner sets it for the next beat, and clearing
+      // Leave hostAutoTriggerCount alone: the runner sets it for the next beat, and clearing
       // it here would unblock the board for one frame between beats.
       useGameStore.setState({ burnAnimation: undefined, burnImpactCardId: undefined, burnImpactCardIds: [] });
       done();
@@ -523,13 +523,13 @@ const burnBeatHandler: HordeBeatHandler = {
   },
 };
 
-const burnVolleyBeatHandler: HordeBeatHandler = {
+const burnVolleyBeatHandler: HostBeatHandler = {
   id: "burn-volley",
   claims: (event) => event.type === "BURN_VOLLEY_DAMAGE" || event.type === "BURN_PLAYER_LIFE_LOSS",
   run: ({ event, sequenceId, resolve, done }) => {
     let committed = false;
     const commit = () => {
-      if (committed || sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (committed || sequenceId !== hostAutoTriggerSequenceId) return;
       committed = true;
       resolve();
       useGameStore.setState({ specialDeadCardIds: [] });
@@ -557,19 +557,19 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
         amount: Number(event.payload?.amount ?? 0),
         variant: event.payload?.variant === "oil" ? "oil" : "fire",
       },
-      hordeAutoTriggerCount: 1,
+      hostAutoTriggerCount: 1,
     });
     // The ETB beat already gave Chainwhirler its single gold activation. This follow-up owns
     // only the projectiles, with an individual cast and impact voice for every target.
     targets.forEach((_, projectileIndex) => {
       const projectileDelay = projectileIndex * BURN_PROJECTILE_GAP_MS;
       window.setTimeout(() => {
-        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
         useAudioStore.getState().playSfx(pickRandom(fireballCastSfx));
       }, BURN_PROJECTILE_LAUNCH_MS + projectileDelay);
 
       window.setTimeout(() => {
-        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
         useAudioStore.getState().playSfx(fireballHitSfx);
         if (projectileIndex !== targets.length - 1) return;
 
@@ -596,7 +596,7 @@ const burnVolleyBeatHandler: HordeBeatHandler = {
     window.setTimeout(commit, BURN_IMPACT_MS + finalProjectileDelay + SPECIAL_DEATH_ANIMATION_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       // Fail-safe invariant: no Burn beat may call done() while its queue event is unconsumed.
       commit();
       useGameStore.setState({
@@ -618,7 +618,7 @@ function burnLethalTargetIds(game: GameState, targetIds: string[], amount: numbe
   });
 }
 
-const staticAuraBeatHandler: HordeBeatHandler = {
+const staticAuraBeatHandler: HostBeatHandler = {
   id: "static-aura",
   claims: (event) => event.type === "STATIC_AURA_ONLINE",
   run: ({ event, sequenceId, resolve, done }) => {
@@ -631,20 +631,20 @@ const staticAuraBeatHandler: HordeBeatHandler = {
       done();
       return;
     }
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
+    useGameStore.setState({ hostAutoTriggerCount: 1 });
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useAudioStore.getState().playSfx("activateEffect");
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
       useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
+        title: uiText("toast.hostEffect"),
         message: staticAuraBeatMessage(source, event),
-        tone: "horde",
+        tone: "host",
       });
     }, STATIC_AURA_LEAD_IN_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useAudioStore.getState().playSfx("buff");
       // Same frame: the withheld stats land exactly as the buff lines rise.
       releaseStaticAura(auraKey);
@@ -653,22 +653,22 @@ const staticAuraBeatHandler: HordeBeatHandler = {
     }, STATIC_AURA_PULSE_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       done();
     }, STATIC_AURA_BEAT_MS);
   },
 };
 
-const hordeGroupBuffBeatHandler: HordeBeatHandler = {
-  id: "horde-group-buff",
+const hostGroupBuffBeatHandler: HostBeatHandler = {
+  id: "host-group-buff",
   claims: (event) => event.type === "HOST_GROUP_BUFF",
   run: ({ event, sequenceId, resolve, done }) => {
     const game = useGameStore.getState().game;
     const fieldSource = event.sourceId
-      ? game.horde.field.find((card) => card.instanceId === event.sourceId)
+      ? game.host.field.find((card) => card.instanceId === event.sourceId)
       : undefined;
     const source = fieldSource ?? (event.sourceId
-      ? game.horde.memory.find((card) => card.instanceId === event.sourceId)
+      ? game.host.memory.find((card) => card.instanceId === event.sourceId)
       : undefined);
     const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
     if (!source || affectedIds.length === 0) {
@@ -681,49 +681,49 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
     // queued this event. Keep the stat change as its own beat, but land only the shared buff lines
     // so one effect never reads as the card activating twice.
     if (fieldSource) {
-      useGameStore.setState({ hordeAutoTriggerCount: 1 });
+      useGameStore.setState({ hostAutoTriggerCount: 1 });
       window.setTimeout(() => {
-        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
         resolve();
         useAudioStore.getState().playSfx("buff");
         useGameStore.setState(startBuffBeat(affectedIds));
       }, 80);
       window.setTimeout(() => {
-        if (sequenceId !== hordeAutoTriggerSequenceId) return;
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
         done();
       }, BUFF_ANIMATION_MS);
       return;
     }
 
     // Spells have no Field slot to activate from, so they use the dedicated reveal card.
-    useGameStore.setState({ hordeSpellCard: source, hordeAutoTriggerCount: 1 });
+    useGameStore.setState({ hostSpellCard: source, hostAutoTriggerCount: 1 });
     useAudioStore.getState().playSfx("drawOne");
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useAudioStore.getState().playSfx("activateEffect");
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
       useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
-        message: queuedHordeTriggerMessage(source),
-        tone: "horde",
+        title: uiText("toast.hostEffect"),
+        message: queuedHostTriggerMessage(source),
+        tone: "host",
       });
     }, SPELL_REVEAL_ENTER_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       resolve();
       useAudioStore.getState().playSfx("buff");
       useGameStore.setState(startBuffBeat(affectedIds));
     }, SPELL_REVEAL_BUFF_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
-      useGameStore.setState({ hordeSpellCard: undefined });
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
+      useGameStore.setState({ hostSpellCard: undefined });
     }, SPELL_REVEAL_HOLD_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       done();
     }, SPELL_REVEAL_HOLD_MS + SPELL_REVEAL_EXIT_MS);
   },
@@ -731,27 +731,27 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
 
 // A card that triggers on its own death has no Field slot left to pulse, so present it
 // beside its Memory first. Generic: any dies-trigger whose source already left play.
-const deathRevealBeatHandler: HordeBeatHandler = {
+const deathRevealBeatHandler: HostBeatHandler = {
   id: "death-reveal",
   claims: (_event, sources, game) =>
-    Boolean(sources[0] && !game.horde.field.some((card) => card.instanceId === sources[0].instanceId)),
+    Boolean(sources[0] && !game.host.field.some((card) => card.instanceId === sources[0].instanceId)),
   run: ({ sources, sequenceId, resolve, done }) => {
     const source = sources[0];
-    useGameStore.setState({ hordeAutoTriggerCount: 1 });
+    useGameStore.setState({ hostAutoTriggerCount: 1 });
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useGameStore.setState({ deathRevealCard: source });
       useAudioStore.getState().playSfx("activateEffect");
       useToastStore.getState().pushToast({
-        title: uiText("toast.hordeEffect"),
-        message: queuedHordeTriggerMessage(source),
-        tone: "horde",
+        title: uiText("toast.hostEffect"),
+        message: queuedHostTriggerMessage(source),
+        tone: "host",
       });
     }, DEATH_REVEAL_LEAD_IN_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
     }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS);
 
@@ -759,19 +759,19 @@ const deathRevealBeatHandler: HordeBeatHandler = {
     // resolves. Resolving while the reveal is still on screen made whatever the effect puts on
     // the Field entry mid-animation and stutter it.
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       useGameStore.setState({ deathRevealCard: undefined });
     }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS);
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       resolve();
       done();
     }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS + DEATH_REVEAL_HOLD_MS + DEATH_REVEAL_EXIT_MS);
   },
 };
 
-const triggerPulseBeatHandler: HordeBeatHandler = {
+const triggerPulseBeatHandler: HostBeatHandler = {
   id: "trigger-pulse",
   claims: (_event, sources) => sources.length > 0,
   run: ({ event, sources, sequenceId, resolve, done }) => {
@@ -781,20 +781,20 @@ const triggerPulseBeatHandler: HordeBeatHandler = {
       useGameStore.getState().triggerEffectActivationPulse(sources[0].instanceId);
     }
     useToastStore.getState().pushToast({
-      title: uiText("toast.hordeEffect"),
-      message: queuedHordeTriggerMessage(sources[0]),
-      tone: "horde",
+      title: uiText("toast.hostEffect"),
+      message: queuedHostTriggerMessage(sources[0]),
+      tone: "host",
     });
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeAutoTriggerSequenceId) return;
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
       resolve();
       window.setTimeout(() => done(), activationAlreadyShown ? 60 : 180);
-    }, activationAlreadyShown ? 120 : HORDE_ENTER_TRIGGER_RESOLVE_MS);
+    }, activationAlreadyShown ? 120 : HOST_ENTER_TRIGGER_RESOLVE_MS);
   },
 };
 
-const deferredCombatVolleyHandler: HordeBeatHandler = {
+const deferredCombatVolleyHandler: HostBeatHandler = {
   id: "deferred-combat-volley",
   claims: (event, sources) =>
     event.type === "ATTACK_DECLARED" &&
@@ -829,11 +829,11 @@ function isDeferredCombatVolleyEffect(effect?: EffectDefinition): boolean {
 }
 
 // Order matters: the first handler that claims an event owns its presentation.
-const HORDE_BEAT_HANDLERS: HordeBeatHandler[] = [
+const HOST_BEAT_HANDLERS: HostBeatHandler[] = [
   burnBeatHandler,
   burnVolleyBeatHandler,
   staticAuraBeatHandler,
-  hordeGroupBuffBeatHandler,
+  hostGroupBuffBeatHandler,
   deathRevealBeatHandler,
   deferredCombatVolleyHandler,
   triggerPulseBeatHandler,
@@ -853,6 +853,6 @@ function staticAuraBeatMessage(source: CardInstance, event: EventItem): string {
   });
 }
 
-function queuedHordeTriggerMessage(source?: CardInstance): string {
-  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : uiText("setup.hordeSide") });
+function queuedHostTriggerMessage(source?: CardInstance): string {
+  return uiText("toast.cardTrigger", { card: source ? uiCardName(source) : uiText("setup.hostSide") });
 }

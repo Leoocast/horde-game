@@ -190,7 +190,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
             {showDivider && (
               <div className="game-log-turn-divider">
                 <span>{t("log.turn", { turn: entry.turn })}</span>
-                <i>{entry.side === "player" ? t("setup.playerSide") : t("setup.hordeSide")}</i>
+                <i>{entry.side === "player" ? t("setup.playerSide") : t("setup.hostSide")}</i>
               </div>
             )}
             <div className="game-log-entry-body">
@@ -260,8 +260,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 function collectCards(game: GameState): CardInstance[] {
   return [
     ...game.player.archive, ...game.player.hand, ...game.player.field, ...game.player.memory, ...game.player.oblivion,
-    ...game.horde.archive, ...game.horde.field, ...game.horde.memory, ...game.horde.oblivion,
-    ...(game.horde.pendingCard ? [game.horde.pendingCard] : []),
+    ...game.host.archive, ...game.host.field, ...game.host.memory, ...game.host.oblivion,
+    ...(game.host.pendingCard ? [game.host.pendingCard] : []),
   ];
 }
 
@@ -270,21 +270,21 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
   let side = game.activeSide;
   return entries.map((text, sourceIndex) => {
     let entrySide = side;
-    if (/^Horde turn ends/i.test(text)) {
-      entrySide = "horde";
-      side = "horde";
+    if (/^Host turn ends/i.test(text)) {
+      entrySide = "host";
+      side = "host";
     } else if (/Player starts the turn/i.test(text)) {
       entrySide = "player";
       const setupTransition = entries[sourceIndex - 1]?.includes("Setup turn complete");
-      side = setupTransition ? "player" : "horde";
+      side = setupTransition ? "player" : "host";
     } else if (/^(Player ends turn|Setup complete)/i.test(text)) {
       entrySide = "player";
       side = "player";
-    } else if (/^Horde readies/i.test(text)) {
-      entrySide = "horde";
-      side = "horde";
+    } else if (/^Host readies/i.test(text)) {
+      entrySide = "host";
+      side = "host";
     }
-    const entryTurn = /^Horde turn ends/i.test(text) ? turn - 1 : turn;
+    const entryTurn = /^Host turn ends/i.test(text) ? turn - 1 : turn;
     const annotated = { text: canonicalizeLogText(text, language), sourceIndex, turn: Math.max(1, entryTurn), side: entrySide };
     if (/Player starts the turn/i.test(text)) turn -= 1;
     return annotated;

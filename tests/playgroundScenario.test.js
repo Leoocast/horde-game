@@ -5,13 +5,13 @@ import {
   BLANK_SCENARIO,
   addScenarioCard,
   buildScenarioGame,
-  configureExactHordeTurn,
+  configureExactHostTurn,
   snapshotBoard,
   snapshotScenario,
   validateScenario,
 } from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
-import { runHordeMain } from "../src/engine/HordeController";
+import { runHostMain } from "../src/engine/HostController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
 import { STORED_ENERGY_CAP } from "../src/engine/EnergySystem";
 
@@ -23,7 +23,7 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   const game = buildScenarioGame(scenario());
 
   assert.equal(game.player.hand.length, 0);
-  assert.equal(game.horde.field.length, 0);
+  assert.equal(game.host.field.length, 0);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.openingHandAccepted, true);
   assert.equal(game.phase, "main");
@@ -35,6 +35,27 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   // not a useful place to start testing a card.
   assert.equal(game.player.field.length, MAX_PLAYER_LANDS);
   assert.ok(game.player.field.every((card) => card.kinds.includes("SOURCE") && !card.exhausted));
+});
+
+test("scenario v2 Host aliases map to runtime identity and back without a version bump", () => {
+  const definition = scenario({
+    activeSide: "horde",
+    phase: "horde",
+    hordeTurnNumber: 4,
+    horde: { poisonCounters: 2 },
+  });
+  const game = buildScenarioGame(definition);
+
+  assert.equal(game.activeSide, "host");
+  assert.equal(game.phase, "host");
+  assert.equal(game.hostTurnNumber, 4);
+  assert.equal(game.host.poisonCounters, 2);
+
+  const saved = snapshotScenario(game, definition);
+  assert.equal(saved.activeSide, "horde");
+  assert.equal(saved.phase, "horde");
+  assert.equal(saved.hordeTurnNumber, 4);
+  assert.equal(saved.horde.poisonCounters, 2);
 });
 
 test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
@@ -76,7 +97,7 @@ test("zone entries become real card instances in the right zone", () => {
 
   assert.equal(game.player.life, 12);
   assert.equal(game.player.energyPool.stored, 3);
-  assert.equal(game.horde.poisonCounters, 2);
+  assert.equal(game.host.poisonCounters, 2);
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["giant_growth"]);
   assert.equal(game.player.hand[0].zone, "hand");
@@ -88,12 +109,12 @@ test("zone entries become real card instances in the right zone", () => {
   assert.deepEqual(game.player.memory.map((card) => card.definitionId), ["llanowar_elves"]);
   assert.equal(game.player.memory[0].zone, "memory");
 
-  assert.equal(game.horde.field.length, 2);
-  assert.ok(game.horde.field.every((card) => card.definitionId === "zombie_token" && card.controller === "horde"));
+  assert.equal(game.host.field.length, 2);
+  assert.ok(game.host.field.every((card) => card.definitionId === "zombie_token" && card.controller === "host"));
   // Scenario cards are assumed to be already in play, so they can act immediately.
-  assert.ok(game.horde.field.every((card) => !card.stabilizing));
+  assert.ok(game.host.field.every((card) => !card.stabilizing));
 
-  assert.equal(game.horde.archive[0].definitionId, "graf_harvest");
+  assert.equal(game.host.archive[0].definitionId, "graf_harvest");
 });
 
 test("instance ids are unique across every zone", () => {
@@ -112,8 +133,8 @@ test("instance ids are unique across every zone", () => {
     ...game.player.hand,
     ...game.player.field,
     ...game.player.memory,
-    ...game.horde.archive,
-    ...game.horde.field,
+    ...game.host.archive,
+    ...game.host.field,
   ].map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
@@ -123,8 +144,8 @@ test("copies beyond the deck's count are minted instead of silently dropped", ()
   // The Zombie deck holds a single Graf Harvest; a scenario may still want three on the board.
   const game = buildScenarioGame(scenario({ zones: { hordeBattlefield: [{ definitionId: "graf_harvest", amount: 3 }] } }));
 
-  assert.equal(game.horde.field.length, 3);
-  assert.equal(new Set(game.horde.field.map((card) => card.instanceId)).size, 3);
+  assert.equal(game.host.field.length, 3);
+  assert.equal(new Set(game.host.field.map((card) => card.instanceId)).size, 3);
 });
 
 test("rebuilding a scenario reproduces the exact same state, RNG included", () => {
@@ -142,8 +163,8 @@ test("rebuilding a scenario reproduces the exact same state, RNG included", () =
 
   // And the same actions on top of a rebuild produce the same result: that is what makes
   // "restart scenario" trustworthy, since nothing is reverted — the state is built again.
-  const playedFirst = runHordeMain(advancePhase(first, "main"));
-  const playedSecond = runHordeMain(advancePhase(second, "main"));
+  const playedFirst = runHostMain(advancePhase(first, "main"));
+  const playedSecond = runHostMain(advancePhase(second, "main"));
   assert.deepEqual(playedSecond, playedFirst);
   assert.equal(playedFirst.currentRandomState, playedSecond.currentRandomState);
 });
@@ -160,15 +181,15 @@ test("unknown cards are reported by validateScenario, not half-loaded", () => {
 test("placing cards into a live game keeps instance ids unique across repeated adds", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
   // Forest is in the deck, so the first copies come out of the library; Graf Harvest belongs to the
-  // Horde deck only once, so the later copies have to be minted — both paths in one run.
+  // Host deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {
     game = addScenarioCard(game, "playerBattlefield", { definitionId: "forest", amount: 2 });
     game = addScenarioCard(game, "hordeBattlefield", { definitionId: "graf_harvest" });
   }
 
   assert.equal(game.player.field.length, 6);
-  assert.equal(game.horde.field.length, 3);
-  const ids = [...game.player.field, ...game.horde.field, ...game.player.archive, ...game.horde.archive].map((card) => card.instanceId);
+  assert.equal(game.host.field.length, 3);
+  const ids = [...game.player.field, ...game.host.field, ...game.player.archive, ...game.host.archive].map((card) => card.instanceId);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(game.lastActionResult.ok, true);
 });
@@ -189,7 +210,7 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token", amount: 3 });
   game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
   game.player.life = 31;
-  game.horde.poisonCounters = 4;
+  game.host.poisonCounters = 4;
 
   const rebuilt = buildScenarioGame(snapshotScenario(game, BLANK_SCENARIO));
 
@@ -197,9 +218,9 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   assert.deepEqual(zoneIds(rebuilt.player.hand), zoneIds(game.player.hand));
   assert.deepEqual(zoneIds(rebuilt.player.field), zoneIds(game.player.field));
   assert.deepEqual(zoneIds(rebuilt.player.memory), zoneIds(game.player.memory));
-  assert.deepEqual(zoneIds(rebuilt.horde.field), zoneIds(game.horde.field));
+  assert.deepEqual(zoneIds(rebuilt.host.field), zoneIds(game.host.field));
   assert.equal(rebuilt.player.life, 31);
-  assert.equal(rebuilt.horde.poisonCounters, 4);
+  assert.equal(rebuilt.host.poisonCounters, 4);
   assert.equal(rebuilt.player.energyPool.stored, 1);
 
   // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
@@ -221,8 +242,8 @@ test("saved boards preserve separate token waves around another summon", () => {
 
   const rebuilt = buildScenarioGame(saved);
   assert.deepEqual(
-    rebuilt.horde.field.map((card) => card.definitionId),
-    game.horde.field.map((card) => card.definitionId),
+    rebuilt.host.field.map((card) => card.definitionId),
+    game.host.field.map((card) => card.definitionId),
   );
 });
 
@@ -237,13 +258,13 @@ test("saved boards keep only the hand and battlefields", () => {
   const rebuilt = buildScenarioGame(saved);
 
   assert.equal(rebuilt.player.hand.some((card) => card.definitionId === "giant_growth"), true);
-  assert.equal(rebuilt.horde.field.some((card) => card.definitionId === "zombie_token"), true);
+  assert.equal(rebuilt.host.field.some((card) => card.definitionId === "zombie_token"), true);
   assert.equal(rebuilt.player.memory.length, 0);
   assert.equal(rebuilt.player.life, BLANK_SCENARIO.player.life);
   assert.equal(rebuilt.player.energyPool.stored, 0);
 });
 
-test("Horde library queues preserve their authored top-to-bottom order", () => {
+test("Host library queues preserve their authored top-to-bottom order", () => {
   const game = buildScenarioGame(scenario({
     zones: {
       hordeLibraryTop: [
@@ -253,10 +274,10 @@ test("Horde library queues preserve their authored top-to-bottom order", () => {
     },
   }));
 
-  assert.deepEqual(game.horde.archive.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
+  assert.deepEqual(game.host.archive.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
 });
 
-test("an exact queued Horde turn reveals duplicates and no extra deck card", () => {
+test("an exact queued Host turn reveals duplicates and no extra deck card", () => {
   const queued = buildScenarioGame(scenario({
     zones: {
       hordeLibraryTop: [
@@ -265,12 +286,12 @@ test("an exact queued Horde turn reveals duplicates and no extra deck card", () 
       ],
     },
   }));
-  const libraryBefore = queued.horde.archive.length;
+  const libraryBefore = queued.host.archive.length;
 
-  const resolved = runHordeMain(configureExactHordeTurn(queued, 2));
+  const resolved = runHostMain(configureExactHostTurn(queued, 2));
 
-  assert.equal(resolved.horde.archive.length, libraryBefore - 2);
-  assert.equal(resolved.horde.field.filter((card) => card.definitionId === "graf_harvest").length, 2);
+  assert.equal(resolved.host.archive.length, libraryBefore - 2);
+  assert.equal(resolved.host.field.filter((card) => card.definitionId === "graf_harvest").length, 2);
 });
 
 test("a valid scenario reports no problems", () => {

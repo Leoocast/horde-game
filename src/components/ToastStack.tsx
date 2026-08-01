@@ -20,9 +20,9 @@ const toneStyles: Record<ToastTone, { icon: typeof Info; className: string }> = 
     icon: XCircle,
     className: "toast-tone-danger",
   },
-  horde: {
+  host: {
     icon: AlertTriangle,
-    className: "toast-tone-horde",
+    className: "toast-tone-host",
   },
 };
 

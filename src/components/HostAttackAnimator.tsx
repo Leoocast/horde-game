@@ -3,24 +3,24 @@ import { useGameStore } from "../store/useGameStore";
 
 const ATTACK_DURATION_MS = 500;
 
-export function HordeAttackAnimator() {
-  const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+export function HostAttackAnimator() {
+  const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
 
   useEffect(() => {
-    if (!hordeAttackAnimation) return;
+    if (!hostAttackAnimation) return;
 
-    const attacker = document.querySelector<HTMLElement>(`[data-card-slot-id="${hordeAttackAnimation.attackerId}"]`);
+    const attacker = document.querySelector<HTMLElement>(`[data-card-slot-id="${hostAttackAnimation.attackerId}"]`);
     if (!attacker) return;
 
-    const attackerCleanup = animateAttacker(attacker, hordeAttackAnimation.attackerDies);
-    const blocker = hordeAttackAnimation.blockerId ? document.querySelector<HTMLElement>(`[data-card-slot-id="${hordeAttackAnimation.blockerId}"]`) : undefined;
-    const blockerCleanup = blocker ? animateBlocker(blocker, hordeAttackAnimation.blockerDies) : undefined;
+    const attackerCleanup = animateAttacker(attacker, hostAttackAnimation.attackerDies);
+    const blocker = hostAttackAnimation.blockerId ? document.querySelector<HTMLElement>(`[data-card-slot-id="${hostAttackAnimation.blockerId}"]`) : undefined;
+    const blockerCleanup = blocker ? animateBlocker(blocker, hostAttackAnimation.blockerDies) : undefined;
 
     return () => {
       attackerCleanup();
       blockerCleanup?.();
     };
-  }, [hordeAttackAnimation]);
+  }, [hostAttackAnimation]);
 
   return null;
 }

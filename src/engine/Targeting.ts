@@ -3,7 +3,7 @@ import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { pickRandom } from "./RNG";
 
 export function allBattlefield(game: GameState): CardInstance[] {
-  return [...game.player.field, ...game.horde.field];
+  return [...game.player.field, ...game.host.field];
 }
 
 export function findPermanent(game: GameState, id: string): CardInstance | undefined {
@@ -68,7 +68,7 @@ function targetExcludedByPreviousSelection(card: CardInstance, excludeTargetIds:
   return false;
 }
 
-export function chooseHordeTarget(game: GameState, kind: "destroy" | "damage", damage = 0): string | undefined {
+export function chooseHostTarget(game: GameState, kind: "destroy" | "damage", damage = 0): string | undefined {
   const creatures = game.player.field.filter((card) => card.kinds.includes("ECHO"));
   if (creatures.length === 0) return undefined;
   if (kind === "damage") {
@@ -98,5 +98,5 @@ export function weakestCreature(game: GameState, side: Side): CardInstance | und
 }
 
 export function opponent(side: Side): Side {
-  return side === "player" ? "horde" : "player";
+  return side === "player" ? "host" : "player";
 }

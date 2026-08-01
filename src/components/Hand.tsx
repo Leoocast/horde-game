@@ -43,7 +43,7 @@ export function Hand({ game }: { game: GameState }) {
   const t = useTranslation();
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   // Primitive/stable selectors: avoids re-rendering the whole hand on every mousemove
   // while a CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay arrow
   // is tracking the pointer (those only mutate x/y on the underlying object).
@@ -56,9 +56,9 @@ export function Hand({ game }: { game: GameState }) {
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
   const energyFlowAnimating = useGameStore((state) => Boolean(state.energyFlowAnimation));
-  const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
+  const hostMillAnimating = useGameStore((state) => state.hostMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
-  const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
+  const hostAttackAnimating = useGameStore((state) => Boolean(state.hostAttackAnimation) || state.resolvingHostCombat);
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const lifePaymentAnimating = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
@@ -216,7 +216,7 @@ export function Hand({ game }: { game: GameState }) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
       return;
     }
-    playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);
+    playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHostCreatureId);
   }
 
   function finishDrag(card: CardInstance, playable: boolean, info: PanInfo) {
@@ -258,9 +258,9 @@ export function Hand({ game }: { game: GameState }) {
       spellTargetingActive ||
       spellFightAnimation ||
       pendingSpellHandId ||
-      hordeMillAnimating ||
+      hostMillAnimating ||
       playerDiscardAnimating ||
-      hordeAttackAnimating ||
+      hostAttackAnimating ||
       playerAttackAnimating ||
       lifePaymentAnimating ||
       bloodPactAnimating ||
@@ -363,7 +363,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hordeAttackAnimating && !playerAttackAnimating}
+                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -547,7 +547,7 @@ function readEnergyRecycleTarget(): { x: number; y: number } {
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {
   if (isQuickSpell(card)) {
     if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
-    return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+    return game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
   }
   return game.activeSide === "player" && game.phase === "main";
 }

@@ -69,8 +69,8 @@ archivo no corre nunca.
 | Archivo | Cubre |
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
-| `tests/hordeBeats.test.js` | Regresiones de presentacion del store: cola visual bajo timers retrasados, orden compartido player/Horda, curaciones y perdida de vida/robo de hechizos. |
-| `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y el borde de bando/zona reservado para los bloques restantes de L4.6 |
+| `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
+| `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y el borde de zona reservado para el bloque restante de L4.6 |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
 | `tests/cardVoiceInteractions.test.js` | Reglas de voz entre cartas, filtros por subtipo, probabilidades y conteo de ataques confirmados |

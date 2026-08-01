@@ -63,7 +63,7 @@ src/
     GameActions.ts        jugar tierra, castear, activar habilidades
     PhaseManager.ts       fases del player, poison tick
     CombatResolver.ts     ataque player, defensa horda, dano, death checks
-    HordeController.ts    revelado/turno de la Horda
+    HostController.ts     revelado/turno de la Host
     EffectResolver.ts     efectos genericos
     Targeting.ts          candidatos de target
     Traits.ts             Rasgos dinamicos/static grants
@@ -72,7 +72,7 @@ src/
 
   store/
     useGameStore.ts       puente UI/engine: acciones, targeting, secuencia de combate del player
-    hordeBeats.ts         sistema de beats de la Horda (handlers, aura estatica, epoch de secuencia)
+    hostBeats.ts          sistema de beats de la Host (handlers, aura estatica, epoch de secuencia)
     smallpoxSequence.ts   secuencia interactiva bespoke de Smallpox
     presentationEffects.ts helpers compartidos: uiText/uiCardName, toasts, SFX policy, buff/flash beats, discard/mill diffs
     useAudioStore.ts      SFX y musica
@@ -89,10 +89,10 @@ src/
     SpellTargetingOverlay.tsx
     CounterTargetingOverlay.tsx
     CombatArrows.tsx
-    HordeAttackAnimator.tsx
+    HostAttackAnimator.tsx
     PlayerAttackAnimator.tsx
     SpellFightAnimator.tsx
-    HordeMillAnimator.tsx
+    HostMillAnimator.tsx
     PlayerDiscardAnimator.tsx
     CardPreview.tsx       side preview + CardDetailsModal compartido
     DeckInspector.tsx
@@ -342,7 +342,7 @@ El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
 - player: `vampire_chronicle_preview`
-- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`)
+- horde: `horde_zombies` (`DEFAULT_HOST_DECK_ID`)
 - horde: `goblin_assault_horde` — seleccionable
 
 Reglas de Hueste por deck: el engine construye `game.hostRules` con `buildHostRules(deck.rulesProfile)` (ver `HostRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, descarta una carta del Archivo por cada 3 de dano o 3 de Veneno, Ímpetu implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una Hueste = editar su `rulesProfile`, no el engine.
@@ -488,7 +488,7 @@ la fila de criaturas debe reacomodarse antes de recibir la carta.
 
 No implementar Forestcycling; no aporta en este modo.
 
-## Horde specifics
+## Host specifics
 
 ### Graf Harvest
 
@@ -512,7 +512,7 @@ No resolver triggers invisiblemente si hay animaciones importantes.
 
 ### Zombie discard/mill
 
-Horde mill animation:
+Host Archive discard animation:
 - cuando se millea carta de Horda, animar carta desde zona de Horde Deck hacia la derecha/descartar
 - debe suceder en tiempo real durante secuencias de ataque, no todo al final
 - si un atacante millea varias cartas, esperar lo justo para que se vean antes del siguiente atacante
@@ -540,7 +540,7 @@ Durante Battle:
 ### Defensa contra Horda
 
 Durante Defend:
-- la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
+- la Horda resuelve atacantes estrictamente en orden de invocacion (`host.field`); el
   agrupado visual por copias/stacks nunca puede reordenar el combate
 - criaturas no-token iguales de la Horda solo comparten stack si entraron durante el mismo turno
   de Horda; una copia posterior conserva su nueva posicion aunque haya una copia antigua en campo
@@ -710,12 +710,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.6a está implementada y pendiente de una validación visual corta. Definiciones, instancias,
+- L4.6b está implementada y pendiente de una validación visual corta. `Side`, `Phase`,
+  `GameState.host`, turnos, combate, engine, store y UI usan identidad `host`; los módulos centrales
+  se llaman `HostController.ts` y `hostBeats.ts`. El adaptador deja pasar `HOST` sin downgrade.
+  Escenarios/replays siguen en v2 y traducen sus aliases `horde*` sólo en el borde; storage keys,
+  rutas e ids históricos no se invalidan. TypeScript, deck lint, Card Studio, 218/218 tests,
+  auditoría y build pasan; `legacy-l46-host-identity` está en cero.
+- L4.6a está cerrada y validada por el usuario. Definiciones, instancias,
   filtros, historial y consumidores usan exclusivamente `kinds`, `traits` y `endurance`, incluidas
   sus variantes temporales y derivadas. `Traits.ts` reemplaza `Keywords.ts`; el adaptador ya no
   degrada la estructura de carta. TypeScript, deck lint, Card Studio, 216/216 tests, auditoría y
-  build pasan; `legacy-l46-card-structure` está en cero. Los bandos, escenarios y la prioridad de
-  Energía siguen fuera de este bloque.
+  build pasan; `legacy-l46-card-structure` está en cero. La identidad Host se migró después en
+  L4.6b; la prioridad de Energía sigue fuera de ambos bloques.
 - L4.5 está cerrada y validada por el usuario. El runtime usa `INVOKED`/
   `ECHO_INVOKED`, `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED`, `BEGIN_BATTLE` y Acciones/condiciones
   Hostfall sin downgrade en el adaptador. `game.hostRules` se construye con `buildHostRules` y usa
@@ -750,9 +756,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. Tras L4.6a, `src/data/hostfallDeckAdapter.ts` conserva únicamente el puente de
-  bandos y casing de zonas previsto para los bloques restantes de L4.6; ya no traduce estructura de
-  carta, costes, estados, eventos, Acciones ni reglas de la Hueste. Mono Green,
+  `GAIN_ENERGY`. Tras L4.6b, `src/data/hostfallDeckAdapter.ts` conserva únicamente la conversión de
+  casing de zonas; ya no traduce bandos, estructura de carta, costes, estados, eventos, Acciones ni
+  reglas de la Hueste. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.
@@ -765,8 +771,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
-- `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`. Mogg Mob se simplifico a criatura vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Horda ya la satisface.
+- `useGameStore.ts` quedo fragmentado: beats de Host en `hostBeats.ts` (con `resetHostSequence`/`hostSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Host seleccionable via `getHostDeck` en `decks.ts`. Mogg Mob se simplifico a Eco vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Host ya la satisface.
 - Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
   el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
@@ -797,7 +803,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - `LIFESTEAL` es una keyword real de combate del player: recupera vida igual al dano de combate
   que la criatura hace al Host o a una criatura mientras bloquea. La recuperacion del ataque se
   aplica por atacante en el punto de impacto de `PlayerAttackAnimator`; la defensa lleva
-  `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
+  `playerLifeGain` en cada `HostAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
   muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
   si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
   Carmesi usa esta regla generica en ataque y defensa. Condesa del Banquete Eterno la recibe
@@ -890,10 +896,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   nube de humo sin overlays rectangulares; la criatura usa el fade de muerte normal del campo y
   solo al terminar se comprometen la destruccion y la perdida de vida. Los triggers de muerte y la
   reaccion del Paje conservan el orden real de la cola antes de presentar cada beat.
-- Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
+- Las entradas de la Horda cuentan como animacion pendiente real: `runHostMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
-  reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
+  reacciones y combate esperan a cero. `animatedHostIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
 - Los cinco generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
@@ -1173,7 +1179,7 @@ Si es target:
 
 Si es combate:
 - revisar `CombatResolver.ts`
-- revisar animadores y `buildHordeAttackEvents` en `useGameStore.ts`
+- revisar animadores y `buildHostAttackEvents` en `useGameStore.ts`
 
 Si es VFX o Three.js:
 - revisar `docs/vfx_and_threejs.md`

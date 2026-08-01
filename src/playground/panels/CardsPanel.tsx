@@ -16,7 +16,7 @@ function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; labe
   const isPermanent = (card.definition.kinds ?? []).some((type) =>
     ["ECHO", "SOURCE", "SUPPORT"].includes(type),
   );
-  if (card.side === "horde") {
+  if (card.side === "host") {
     return [
       ...(isPermanent ? ([{ zone: "hordeBattlefield", label: "Host Field" }] as const) : []),
       { zone: "hordeLibraryTop", label: "Top of Host Archive" },
@@ -107,7 +107,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   kind: "playCard",
                   definitionId: selected.definition.id,
                   cardName: selected.definition.name,
-                  side: selected.side,
+                  side: selected.side === "host" ? "horde" : "player",
                 })
               }
             >

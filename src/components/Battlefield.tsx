@@ -124,9 +124,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const t = useTranslation();
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   // Cards already present when this Battlefield mounts belong to the loaded board, not to the
-  // next arrival wave. Starting empty made the first Horde summon replay every existing card's
+  // next arrival wave. Starting empty made the first Host summon replay every existing card's
   // entrance animation.
-  const animatedHordeIds = useRef<Set<string>>(createBattlefieldArrivalRegistry(cards));
+  const animatedHostIds = useRef<Set<string>>(createBattlefieldArrivalRegistry(cards));
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
   const activeReflowAnimations = useRef<Map<string, Animation>>(new Map());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
@@ -135,7 +135,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, { left: number; top: number }>>(new Map());
   const reflowSampleFrame = useRef<number | undefined>(undefined);
-  const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const previousHostEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
@@ -154,13 +154,13 @@ export function Battlefield({ game, side, cards }: Props) {
   const [heavyLandingEvents, setHeavyLandingEvents] = useState<Record<string, number>>({});
   const nextHeavyLandingEventId = useRef(0);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
-  const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
-  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
+  const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
+  const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
-  const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
-  const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
+  const hostAttackAnimationAttackerId = useGameStore((state) => state.hostAttackAnimation?.attackerId);
+  const hostAttackAnimationBlockerId = useGameStore((state) => state.hostAttackAnimation?.blockerId);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -184,8 +184,8 @@ export function Battlefield({ game, side, cards }: Props) {
   const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
-  const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
-  const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
+  const hostCombatVisualDamage = useGameStore((state) => state.hostCombatVisualDamage);
+  const hostCombatDeadCardIds = useGameStore((state) => state.hostCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
@@ -194,7 +194,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const blockDragActive = useGameStore((state) => Boolean(state.blockDrag));
   const blockDragBlockerId = useGameStore((state) => state.blockDrag?.blockerId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
-  const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
+  const selectHostCreature = useGameStore((state) => state.selectHostCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
@@ -213,9 +213,9 @@ export function Battlefield({ game, side, cards }: Props) {
   // Combat casualties leave game state the instant their impact lands, so their triggers can
   // resolve in sequence. Removing them from the row right then would re-center every survivor
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
-  // let them all leave at once. This covers both animated Horde combat and the Horde's own
+  // let them all leave at once. This covers both animated Host combat and the Host's own
   // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
-  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
+  const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
   const creatures = displayedCards.filter((card) => card.kinds.includes("ECHO"));
@@ -230,17 +230,17 @@ export function Battlefield({ game, side, cards }: Props) {
     normal?: EnergyTrackTransition;
     stored?: EnergyTrackTransition;
   }>({});
-  const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
-  // The Horde attacks with everything able, every turn. Declaring is a rules step that only runs
+  const hostCombat = game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
+  // The Host attacks with everything able, every turn. Declaring is a rules step that only runs
   // after summons and enter triggers, but the board should read as committed from the moment the
   // creatures land: they arrive already leaning with their attack chevron, and the effects then
   // play over a board that has stopped moving. Visual only — nothing here declares an attacker.
-  const hordeAttackPending =
-    side === "horde" &&
-    game.activeSide === "horde" &&
-    (game.phase === "horde" || game.phase === "combat") &&
-    game.combat.hordeAttackers.length === 0 &&
-    !resolvingHordeCombat &&
+  const hostAttackPending =
+    side === "host" &&
+    game.activeSide === "host" &&
+    (game.phase === "host" || game.phase === "combat") &&
+    game.combat.hostAttackers.length === 0 &&
+    !resolvingHostCombat &&
     !game.winner;
   const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
 
@@ -405,12 +405,12 @@ export function Battlefield({ game, side, cards }: Props) {
       previousPlayerAttackers.current = currentAttackers;
     }
 
-    const currentHordeEntrySignature = cards.map((card) => card.instanceId).join("|");
-    if (side === "horde" && currentHordeEntrySignature !== previousHordeEntrySignature.current) {
-      for (const card of unregisteredBattlefieldArrivals(cards, animatedHordeIds.current)) {
+    const currentHostEntrySignature = cards.map((card) => card.instanceId).join("|");
+    if (side === "host" && currentHostEntrySignature !== previousHostEntrySignature.current) {
+      for (const card of unregisteredBattlefieldArrivals(cards, animatedHostIds.current)) {
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
-        animatedHordeIds.current.add(card.instanceId);
+        animatedHostIds.current.add(card.instanceId);
         seenCardIds.current.add(card.instanceId);
         entranceAnimatingIds.current.add(card.instanceId);
         visual.style.opacity = "0";
@@ -431,7 +431,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: (hordeEntryDelay(card) + (card.kinds.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
+            delay: (hostEntryDelay(card) + (card.kinds.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -449,7 +449,7 @@ export function Battlefield({ game, side, cards }: Props) {
         };
       }
     }
-    if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
+    if (side === "host") previousHostEntrySignature.current = currentHostEntrySignature;
 
     const summoningElements = [
       ...Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']")),
@@ -467,7 +467,7 @@ export function Battlefield({ game, side, cards }: Props) {
         [
           {
             opacity: 0,
-            transform: `translateY(${side === "horde" ? "-46px" : "46px"}) scale(1.55) rotate(${side === "horde" ? "-3deg" : "3deg"})`,
+            transform: `translateY(${side === "host" ? "-46px" : "46px"}) scale(1.55) rotate(${side === "host" ? "-3deg" : "3deg"})`,
             filter: "brightness(1.8) saturate(1.25)",
           },
           {
@@ -584,13 +584,13 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hordeSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
+      <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hostSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           <BattlefieldRowSurface
             cardsEmpty={creatures.length === 0}
             cropCreatureCards={cropCreatureCards}
             creatureRowRef={creatureRowRef}
-            dropTarget={side === "horde" ? "player-attack" : undefined}
+            dropTarget={side === "host" ? "player-attack" : undefined}
             otherPermanents={others.length > 0 ? renderOtherPermanentStacks(others) : undefined}
             otherPermanentsTargetingActive={otherPermanentsTargetingActive}
           >
@@ -760,7 +760,7 @@ export function Battlefield({ game, side, cards }: Props) {
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
       battlefieldGroupKeys.current,
       battlefieldGroupMeta.current,
-      // Freeze grouping for the whole Horde sequence — combat impacts AND trigger/aura beats.
+      // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
       // The aura beat window (e.g. Graf Harvest announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
       holdCasualties,
@@ -793,19 +793,19 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
-    const useNewSummoning = side !== "horde";
+    const useNewSummoning = side !== "host";
     const newlyArrived = !seenCardIds.current.has(card.instanceId);
     const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
     const buffAnimationActive = Boolean(buffAnimationEventId && buffAnimationCardIds.includes(card.instanceId));
     const isOtherPermanent = keyPrefix === "other";
-    const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
+    const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHostCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
     const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
     const attacking =
       game.combat.playerAttackers.includes(card.instanceId) ||
-      game.combat.hordeAttackers.includes(card.instanceId) ||
-      (hordeAttackPending && canAttack(game, card));
+      game.combat.hostAttackers.includes(card.instanceId) ||
+      (hostAttackPending && canAttack(game, card));
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
@@ -825,29 +825,29 @@ export function Battlefield({ game, side, cards }: Props) {
     const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
     const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
-      hordeCombat &&
+      hostCombat &&
         side === "player" &&
         card.kinds.includes("ECHO") &&
         !blocking &&
-        game.combat.hordeAttackers.some((attackerId) => {
-          const attacker = game.horde.field.find((item) => item.instanceId === attackerId);
+        game.combat.hostAttackers.some((attackerId) => {
+          const attacker = game.host.field.find((item) => item.instanceId === attackerId);
           return attacker ? canBlockAttacker(game, card, attacker) : false;
         }),
     );
-    const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
-    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
+    const legalBlockTarget = Boolean(hostCombat && side === "host" && selectedBlocker && !selectedBlockerAssigned && game.combat.hostAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
+    const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
-      (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && !selectableBlocker) ||
-      (hordeCombat && side === "horde" && !legalBlockTarget);
+      (playerCombat && side === "host") ||
+      (hostCombat && side === "player" && !selectableBlocker) ||
+      (hostCombat && side === "host" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
-      (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && card.kinds.includes("ECHO") && !selectableBlocker);
-    const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
+      (playerCombat && side === "host") ||
+      (hostCombat && side === "player" && card.kinds.includes("ECHO") && !selectableBlocker);
+    const actionable = !resolvingHostCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const primaryAbility = card.activatedAbilities[0];
     const effectAvailable = canUseActivatedAbility(card, primaryAbility);
     const showActivatedAbilityChrome = effectAvailable && !isLand;
@@ -873,9 +873,9 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
     const counterBuffPreview = counterTargetLocked ? counterBuffedStats(game, card) : undefined;
     // A ghost is a card already gone from game state whose slot is held until combat ends. It
-    // must keep reading as dead even after hordeCombatDeadCardIds is cleared for the next impact.
+    // must keep reading as dead even after hostCombatDeadCardIds is cleared for the next impact.
     const isCombatGhost = casualtyIds.has(card.instanceId);
-    const visuallyDead = isCombatGhost || hordeCombatDeadCardIds.includes(card.instanceId);
+    const visuallyDead = isCombatGhost || hostCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable;
     const cardActionable = actionable || cardTargetable;
@@ -884,8 +884,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const dragDefenseTargetable = Boolean(
       blockDragActive &&
         draggedDefender &&
-        side === "horde" &&
-        game.combat.hordeAttackers.includes(card.instanceId) &&
+        side === "host" &&
+        game.combat.hostAttackers.includes(card.instanceId) &&
         canBlockAttacker(game, draggedDefender, card),
     );
     const combatAvailabilityTone =
@@ -893,7 +893,7 @@ export function Battlefield({ game, side, cards }: Props) {
         ? "defense"
         : playerCombat && availablePlayerAttacker
           ? "attack"
-          : hordeCombat && actionable
+          : hostCombat && actionable
             ? "defense"
             : undefined;
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
@@ -910,7 +910,7 @@ export function Battlefield({ game, side, cards }: Props) {
       ? "card-target-gem"
       : playerCombat && actionable
         ? "card-attack-gem"
-        : hordeCombat && actionable
+        : hostCombat && actionable
           ? "card-defense-gem"
           : showActivatedAbilityChrome && !cardActionable
             ? "card-effect-available-gem"
@@ -929,8 +929,8 @@ export function Battlefield({ game, side, cards }: Props) {
     const isFlying = card.kinds.includes("ECHO") && hasTrait(game, card, "FLYING");
     const combatAnimationActive =
       playerAttackAnimationId === card.instanceId ||
-      hordeAttackAnimationAttackerId === card.instanceId ||
-      hordeAttackAnimationBlockerId === card.instanceId;
+      hostAttackAnimationAttackerId === card.instanceId ||
+      hostAttackAnimationBlockerId === card.instanceId;
     const flyingIdleActive = Boolean(
       isFlying &&
         !newlyArrived &&
@@ -943,7 +943,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const defenseBadgeCount =
       side === "player" && blockerOrderLabel
         ? blockerOrderLabel
-        : side === "horde" && blockersAssigned > 0
+        : side === "host" && blockersAssigned > 0
           ? `${blockersAssigned}`
           : undefined;
 
@@ -953,7 +953,7 @@ export function Battlefield({ game, side, cards }: Props) {
         data-card-layout-id={card.instanceId}
         initial={false}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
+        exit={{ opacity: 0, y: side === "host" ? 28 : -28, scale: 0.78, rotate: side === "host" ? 3 : -3 }}
         transition={{
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
@@ -964,7 +964,7 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
-          card.exhausted || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
+          card.exhausted || (attacking && side === "host") ? "battlefield-layout-slot-tapped" : "",
           card.kinds.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
@@ -985,7 +985,7 @@ export function Battlefield({ game, side, cards }: Props) {
           actionable && !combatAvailabilityTone ? "battlefield-card-actionable" : "",
           showActivatedAbilityChrome && !showEffectAvailabilityBorder && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
-          side === "horde" && attacking ? "horde-attacker-readied" : "",
+          side === "host" && attacking ? "host-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
           speciallyDead ? "special-card-visually-dead" : "",
           effectActive ? "effect-card-lifted" : "",
@@ -1063,13 +1063,13 @@ export function Battlefield({ game, side, cards }: Props) {
         glowBorderWidth={4}
         actionable={cardActionable && !combatAvailabilityTone}
         effectAvailable={showActivatedAbilityChrome && !showEffectAvailabilityBorder}
-        accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
+        accentColor={side === "player" && !hostCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
         suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
+        visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
@@ -1098,12 +1098,12 @@ export function Battlefield({ game, side, cards }: Props) {
           }
           if (side === "player") {
             if (isLand) return;
-            if (!hordeCombat && !playerCombat && effectAvailable) {
+            if (!hostCombat && !playerCombat && effectAvailable) {
               selectActiveEffectCard(effectActive ? undefined : card.instanceId);
               selectPlayerCreature(undefined);
               return;
             }
-            if (hordeCombat) {
+            if (hostCombat) {
               if (assignedAttackerId) {
                 declareBlocker(card.instanceId, assignedAttackerId);
                 selectPlayerCreature(card.instanceId);
@@ -1118,19 +1118,19 @@ export function Battlefield({ game, side, cards }: Props) {
             }
             selectPlayerCreature(card.instanceId);
           } else {
-            if (hordeCombat && selectedPlayerCreatureId && game.combat.hordeAttackers.includes(card.instanceId)) {
+            if (hostCombat && selectedPlayerCreatureId && game.combat.hostAttackers.includes(card.instanceId)) {
               declareBlocker(selectedPlayerCreatureId, card.instanceId);
               selectPlayerCreature(undefined);
               return;
             }
-            selectHordeCreature(card.instanceId);
+            selectHostCreature(card.instanceId);
           }
         }}
       />
       {defenseBadgeCount && (
         <CardDefenseBadge
           count={defenseBadgeCount}
-          variant={side === "horde" ? "horde" : "player"}
+          variant={side === "host" ? "host" : "player"}
         />
       )}
       {combatAvailabilityTone && (
@@ -1172,7 +1172,7 @@ export function Battlefield({ game, side, cards }: Props) {
           className={[
             "card-actionable-gem card-actionable-gem-outside",
             actionGemTone,
-            dragDefenseTargetable ? "card-defense-gem-horde-target" : "",
+            dragDefenseTargetable ? "card-defense-gem-host-target" : "",
           ].join(" ")}
           aria-hidden="true"
         />
@@ -1249,12 +1249,12 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function getAttackerColor(attackerId: string): string | undefined {
-    const index = game.combat.hordeAttackers.indexOf(attackerId);
+    const index = game.combat.hostAttackers.indexOf(attackerId);
     if (index === -1) return undefined;
     return blockColors[index % blockColors.length];
   }
 
-  function hordeEntryDelay(card: CardInstance): number {
+  function hostEntryDelay(card: CardInstance): number {
     const index = cards.findIndex((item) => item.instanceId === card.instanceId);
     return Math.max(index, 0) * 0.04;
   }
@@ -1453,8 +1453,8 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
   for (const element of document.elementsFromPoint(x, y)) {
     const cardElement = element.closest<HTMLElement>("[data-card-id]");
     const candidateId = cardElement?.dataset.cardId;
-    if (!candidateId || !latest.combat.hordeAttackers.includes(candidateId)) continue;
-    const attacker = latest.horde.field.find((card) => card.instanceId === candidateId);
+    if (!candidateId || !latest.combat.hostAttackers.includes(candidateId)) continue;
+    const attacker = latest.host.field.find((card) => card.instanceId === candidateId);
     if (!attacker) continue;
     const reason = blockRestrictionReason(latest, blocker, attacker);
     return reason ? { reason } : { attackerId: candidateId };

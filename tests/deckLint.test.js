@@ -246,7 +246,7 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.equal(adapted.side, "HORDE");
+  assert.equal(adapted.side, "HOST");
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
@@ -255,7 +255,7 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(byId.zombie_token.isToken, true);
   assert.deepEqual(byId.zombie_token.energyCost, { amount: 2 });
   assert.deepEqual(byId.graf_harvest.kinds, ["SUPPORT"]);
-  assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
+  assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HOST");
   assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
@@ -292,7 +292,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.equal(adapted.side, "HORDE");
+  assert.equal(adapted.side, "HOST");
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);

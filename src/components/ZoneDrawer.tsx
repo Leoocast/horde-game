@@ -16,7 +16,7 @@ export function ZoneDrawer({ game }: { game: GameState }) {
       </div>
       <div className="game-zone-content space-y-4 p-3">
         <ZoneSide game={game} side="player" />
-        <ZoneSide game={game} side="horde" />
+        <ZoneSide game={game} side="host" />
       </div>
     </section>
   );
@@ -27,7 +27,7 @@ function ZoneSide({ game, side }: { game: GameState; side: Side }) {
   const state = game[side];
   return (
     <div className="game-zone-side">
-      <h3>{side === "player" ? t("setup.playerSide") : t("zones.horde")}</h3>
+      <h3>{side === "player" ? t("setup.playerSide") : t("zones.host")}</h3>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <ZoneMetric label={t("zones.deck")} count={state.archive.length} />
         {side === "player" && <ZoneMetric label={t("zones.hand")} count={game.player.hand.length} />}

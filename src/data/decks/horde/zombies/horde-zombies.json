@@ -376,7 +376,7 @@
             }
           ],
           "engineSupport": "custom",
-          "implementationNote": "Resolved by the bespoke Host sequence in HordeController/useGameStore (the internal horde.pendingCard bridge), not by the generic resolver."
+          "implementationNote": "Resolved by the bespoke Host sequence in HostController/useGameStore (the internal host.pendingCard bridge), not by the generic resolver."
         }
       ],
       "hostErrata": {

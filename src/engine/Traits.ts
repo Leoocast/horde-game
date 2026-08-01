@@ -17,11 +17,11 @@ export function getPoisonAmount(game: GameState, card: CardInstance): number {
 export function getTraits(game: GameState, card: CardInstance): Trait[] {
   const traits = new Set<Trait>([...card.traits, ...card.temporaryTraits]);
 
-  if (card.controller === "horde" && isCreature(card) && game.hostRules.hostEchosHaveImpetus) {
+  if (card.controller === "host" && isCreature(card) && game.hostRules.hostEchosHaveImpetus) {
     traits.add("IMPETUS");
   }
 
-  for (const source of [...game.player.field, ...game.horde.field]) {
+  for (const source of [...game.player.field, ...game.host.field]) {
     for (const effect of source.effects) {
       if (effect.type === "STATIC_GRANT_KEYWORD") {
         const affectedController = resolveAffectedController(source.controller, effect.controller);
@@ -50,7 +50,7 @@ function parsePoisonTrait(trait: Trait): number {
 
 export function canAttack(game: GameState, card: CardInstance): boolean {
   if (!isCreature(card) || card.exhausted) return false;
-  if (card.controller === "player" && game.horde.archive.length === 0) return false;
+  if (card.controller === "player" && game.host.archive.length === 0) return false;
   return !card.stabilizing || hasTrait(game, card, "IMPETUS");
 }
 

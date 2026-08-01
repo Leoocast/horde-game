@@ -1,22 +1,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { getHordeDeck, getPlayerDeck, hordeDeck, playerDeck } from "../src/data/decks";
+import { getHostDeck, getPlayerDeck, hostDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
 import { localizedTraitLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
-import { finishHordeTurn, revealHordeCardFromTop, runHordeMain } from "../src/engine/HordeController";
+import { finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engine/HostController";
 import { canAttack, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
-import { getPowerEndurance, hordeInSurge } from "../src/engine/StaticEffects";
+import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
@@ -26,24 +26,24 @@ import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
 import { playerBuffSfxForAnimation } from "../src/store/playerAudioPolicy";
 import { addCard, addForests, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
-test("same seed produces the same player and Horde deck order", () => {
-  const first = createInitialGame(playerDeck, hordeDeck, "repeatable-seed", 3);
-  const second = createInitialGame(playerDeck, hordeDeck, "repeatable-seed", 3);
+test("same seed produces the same player and Host deck order", () => {
+  const first = createInitialGame(playerDeck, hostDeck, "repeatable-seed", 3);
+  const second = createInitialGame(playerDeck, hostDeck, "repeatable-seed", 3);
 
   assert.deepEqual(
     first.player.archive.map((card) => card.definitionId),
     second.player.archive.map((card) => card.definitionId),
   );
   assert.deepEqual(
-    first.horde.archive.map((card) => card.definitionId),
-    second.horde.archive.map((card) => card.definitionId),
+    first.host.archive.map((card) => card.definitionId),
+    second.host.archive.map((card) => card.definitionId),
   );
   assert.equal(first.currentRandomState, second.currentRandomState);
 });
 
 test("game state exposes only canonical Hostfall zones", () => {
-  const game = createInitialGame(playerDeck, hordeDeck, "canonical-zones", 3);
-  for (const side of [game.player, game.horde]) {
+  const game = createInitialGame(playerDeck, hostDeck, "canonical-zones", 3);
+  for (const side of [game.player, game.host]) {
     for (const retired of ["library", "battlefield", "graveyard", "exile"]) {
       assert.equal(Object.hasOwn(side, retired), false, `retired zone ${retired} leaked into GameState`);
     }
@@ -53,12 +53,12 @@ test("game state exposes only canonical Hostfall zones", () => {
   }
   assert.ok(game.player.archive.every((card) => card.zone === "archive"));
   assert.ok(game.player.hand.every((card) => card.zone === "hand"));
-  assert.ok(game.horde.archive.every((card) => card.zone === "archive"));
+  assert.ok(game.host.archive.every((card) => card.zone === "archive"));
 });
 
 test("the registered Vampire chronicle starts as its complete playable deck", () => {
   const vampireDeck = getPlayerDeck("vampire_chronicle_preview");
-  const game = createInitialGame(vampireDeck, hordeDeck, "vampire-integration", 3);
+  const game = createInitialGame(vampireDeck, hostDeck, "vampire-integration", 3);
   const card = (definitionId) => {
     const definition = vampireDeck.cards.find((candidate) => candidate.id === definitionId);
     assert.ok(definition, `Missing Vampire card ${definitionId}`);
@@ -119,7 +119,7 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
 
 test("Developer Mode uses the selected player deck's own Energy cards", () => {
   const vampireDeck = getPlayerDeck("vampire_chronicle_preview");
-  const game = createInitialGame(vampireDeck, hordeDeck, "developer", 3);
+  const game = createInitialGame(vampireDeck, hostDeck, "developer", 3);
 
   assert.deepEqual(
     game.player.field.map((card) => card.definitionId),
@@ -134,15 +134,15 @@ test("Developer Mode uses the selected player deck's own Energy cards", () => {
 });
 
 test("every expanded card copy has a unique instance id", () => {
-  const cards = [...expandDeck(playerDeck, "player"), ...expandDeck(hordeDeck, "horde")];
+  const cards = [...expandDeck(playerDeck, "player"), ...expandDeck(hostDeck, "host")];
   const ids = cards.map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
 });
 
 test("mulligans redraw one fewer card deterministically down to one", () => {
-  const first = createInitialGame(playerDeck, hordeDeck, "mulligan-seed", 3);
-  const second = createInitialGame(playerDeck, hordeDeck, "mulligan-seed", 3);
+  const first = createInitialGame(playerDeck, hostDeck, "mulligan-seed", 3);
+  const second = createInitialGame(playerDeck, hostDeck, "mulligan-seed", 3);
   const initialCardTotal = first.player.hand.length + first.player.archive.length + first.player.field.length;
 
   assert.equal(first.openingHandAccepted, false);
@@ -167,7 +167,7 @@ test("mulligans redraw one fewer card deterministically down to one", () => {
 });
 
 test("accepting an opening hand closes mulligan", () => {
-  const game = createInitialGame(playerDeck, hordeDeck, "keep-opening", 3);
+  const game = createInitialGame(playerDeck, hostDeck, "keep-opening", 3);
   const accepted = acceptOpeningHand(game);
   const blockedMulligan = mulliganOpeningHand(accepted);
   assert.equal(accepted.openingHandAccepted, true);
@@ -209,10 +209,10 @@ test("Chaos starts with one Source and no Stored Energy", () => {
       { id: "chaos_touch", name: "Chaos Touch", quantity: 4, kinds: ["ECHO"], traits: ["LETHAL"], power: 1, endurance: 1 },
     ],
   };
-  const chaosHordeDeck = {
-    id: "chaos-horde",
-    name: "Chaos Horde",
-    side: "horde",
+  const chaosHostDeck = {
+    id: "chaos-host",
+    name: "Chaos Host",
+    side: "host",
     deckSize: 3,
     cards: [
       { id: "chaos_zombie", name: "Chaos Zombie", quantity: 2, isToken: true, kinds: ["ECHO"], traits: ["DAUNTING"], power: 2, endurance: 2 },
@@ -220,7 +220,7 @@ test("Chaos starts with one Source and no Stored Energy", () => {
     ],
   };
 
-  const game = createInitialGame(chaosPlayerDeck, chaosHordeDeck, "chaos-opening", 4, "normal", "chaos");
+  const game = createInitialGame(chaosPlayerDeck, chaosHostDeck, "chaos-opening", 4, "normal", "chaos");
 
   assert.equal(game.gameMode, "chaos");
   assert.equal(game.player.life, 35);
@@ -229,7 +229,7 @@ test("Chaos starts with one Source and no Stored Energy", () => {
   assert.equal(game.player.energyPool.stored, 0);
   assert.equal(game.player.hand.length, 7);
   assert.equal(game.player.archive.length, 8);
-  assert.equal(game.horde.archive.some((card) => card.definitionId === "chaos_harvest"), false);
+  assert.equal(game.host.archive.some((card) => card.definitionId === "chaos_harvest"), false);
 
   performPlayerDraw(game);
   assert.equal(game.player.hand.length, 9);
@@ -237,17 +237,17 @@ test("Chaos starts with one Source and no Stored Energy", () => {
 });
 
 test("standard games start the player at 50 life", () => {
-  const game = createInitialGame(playerDeck, hordeDeck, "standard-life", 4, "normal", "standard");
+  const game = createInitialGame(playerDeck, hostDeck, "standard-life", 4, "normal", "standard");
 
   assert.equal(game.player.life, 50);
 });
 
 test("Chaos mutations are deterministic, replace printed traits, and are shared by every copy", () => {
-  const first = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
-  const second = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
+  const first = createInitialGame(playerDeck, hostDeck, "shared-chaos", 0, "normal", "chaos");
+  const second = createInitialGame(playerDeck, hostDeck, "shared-chaos", 0, "normal", "chaos");
 
   assert.deepEqual(first.chaosMutations, second.chaosMutations);
-  for (const side of ["player", "horde"]) {
+  for (const side of ["player", "host"]) {
     const cards = [...first[side].archive, ...(side === "player" ? first.player.hand : []), ...first[side].field];
     for (const card of cards.filter((item) => item.kinds.includes("ECHO"))) {
       assert.deepEqual(card.traits, first.chaosMutations[side][card.definitionId]);
@@ -258,11 +258,11 @@ test("Chaos mutations are deterministic, replace printed traits, and are shared 
   }
 });
 
-test("Chaos never includes the Horde's implicit Haste in its mutation pool", () => {
+test("Chaos never includes the Host's implicit Haste in its mutation pool", () => {
   const deck = {
     id: "haste-pool",
     name: "Haste Pool",
-    side: "horde",
+    side: "host",
     deckSize: 2,
     cards: [
       { id: "hasty", name: "Hasty", kinds: ["ECHO"], traits: ["IMPETUS"] },
@@ -275,34 +275,34 @@ test("Chaos never includes the Horde's implicit Haste in its mutation pool", () 
 
 test("First strike mutations deal combat damage before a normal blocker can answer", () => {
   const game = createTestGame("first-strike-combat");
-  const attacker = addCard(game, customCard("first_striker", "horde", { traits: ["REFLEX"], power: 2, endurance: 2 }));
+  const attacker = addCard(game, customCard("first_striker", "host", { traits: ["REFLEX"], power: 2, endurance: 2 }));
   const blocker = addCard(game, customCard("normal_blocker", "player", { power: 2, endurance: 2 }));
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
 
-  const result = resolveHordeCombat(game);
+  const result = resolveHostCombat(game);
 
   assert.equal(result.player.memory.some((card) => card.instanceId === blocker.instanceId), true);
-  assert.equal(result.horde.field.some((card) => card.instanceId === attacker.instanceId), true);
-  assert.equal(result.horde.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
+  assert.equal(result.host.field.some((card) => card.instanceId === attacker.instanceId), true);
+  assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
 test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first strike", () => {
   const resolveDuel = (endurance) => {
     const game = createTestGame(`chainwhirler-first-strike-${endurance}`);
-    const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
+    const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "host"));
     const blocker = addCard(game, customCard(`blocker_4_${endurance}`, "player", { power: 4, endurance }));
-    game.combat.hordeAttackers = [chainwhirler.instanceId];
+    game.combat.hostAttackers = [chainwhirler.instanceId];
     game.combat.blockers = { [chainwhirler.instanceId]: [blocker.instanceId] };
-    return { result: resolveHordeCombat(game), chainwhirler, blocker };
+    return { result: resolveHostCombat(game), chainwhirler, blocker };
   };
 
   const versusFourThree = resolveDuel(3);
-  assert.equal(versusFourThree.result.horde.field.some((card) => card.instanceId === versusFourThree.chainwhirler.instanceId), true);
+  assert.equal(versusFourThree.result.host.field.some((card) => card.instanceId === versusFourThree.chainwhirler.instanceId), true);
   assert.equal(versusFourThree.result.player.memory.some((card) => card.instanceId === versusFourThree.blocker.instanceId), true);
 
   const versusFourFour = resolveDuel(4);
-  assert.equal(versusFourFour.result.horde.memory.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
+  assert.equal(versusFourFour.result.host.memory.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
   assert.equal(versusFourFour.result.player.field.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
 });
 
@@ -317,7 +317,7 @@ test("Hostfall card kinds, modifiers and authored rules render through the publi
   assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo · Chronicle — Vampire Noble");
   assert.equal(localizedTypeLine({ kinds: ["SPELL"], modifiers: ["QUICK"], subtypes: [] }, "es"), "Hechizo · Rápido");
   assert.equal(
-    canonicalizeRulesText("When this creature enters, Horde creatures gain Menace until end of turn.", "en"),
+    canonicalizeRulesText("When this creature enters, Host creatures gain Menace until end of turn.", "en"),
     "When this Echo is Invoked, Host Echoes gain Daunting until the end of the turn.",
   );
 });
@@ -345,14 +345,14 @@ test("discard selection stays raised while the hovered hand card layers above it
 });
 
 test("standard games keep nine energy cards in the player deck", () => {
-  const game = createInitialGame(playerDeck, hordeDeck, "no-lands", 3);
+  const game = createInitialGame(playerDeck, hostDeck, "no-lands", 3);
   const cards = [...game.player.hand, ...game.player.archive, ...game.player.field];
 
   assert.equal(cards.length, 33);
   assert.equal(cards.filter((card) => card.kinds.includes("SOURCE")).length, 9);
 });
 
-test("unused Source Energy stays pending until the Horde turn ends", () => {
+test("unused Source Energy stays pending until the Host turn ends", () => {
   const game = createTestGame();
   const lands = addForests(game, 5);
   lands[0].exhausted = true;
@@ -374,15 +374,15 @@ test("spent Sources do not become Stored Energy", () => {
     land.activatedThisTurn = true;
   }
 
-  const hordeTurn = endPlayerTurn(game);
-  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+  const hostTurn = endPlayerTurn(game);
+  const nextPlayerTurn = finishHostTurn(hostTurn);
 
-  assert.equal(hordeTurn.player.pendingStoredEnergy, 0);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 0);
   assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
 test("unused Energy from an earlier setup turn does not refill Stored Energy", () => {
-  const game = createInitialGame(playerDeck, hordeDeck, "setup-reserve", 2);
+  const game = createInitialGame(playerDeck, hostDeck, "setup-reserve", 2);
   const lands = addForests(game, 3);
 
   const finalSetupTurn = endPlayerTurn(game);
@@ -394,10 +394,10 @@ test("unused Energy from an earlier setup turn does not refill Stored Energy", (
     currentLand.exhausted = true;
     currentLand.activatedThisTurn = true;
   }
-  const hordeTurn = endPlayerTurn(finalSetupTurn);
-  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+  const hostTurn = endPlayerTurn(finalSetupTurn);
+  const nextPlayerTurn = finishHostTurn(hostTurn);
 
-  assert.equal(hordeTurn.player.pendingStoredEnergy, 0);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 0);
   assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
@@ -409,14 +409,14 @@ test("Llanowar and Druid fill Stored Energy immediately, then pending Source Ene
   const afterLlanowar = activateAbility(game, llanowar.instanceId, "llanowar_elves_add_green");
   const afterAbilities = activateAbility(afterLlanowar, druid.instanceId, "druid_of_the_cowl_add_green");
 
-  const hordeTurn = endPlayerTurn(afterAbilities);
-  const nextPlayerTurn = finishHordeTurn(hordeTurn);
+  const hostTurn = endPlayerTurn(afterAbilities);
+  const nextPlayerTurn = finishHostTurn(hostTurn);
 
   assert.equal(afterAbilities.player.energyPool.stored, 2);
   assert.equal(afterAbilities.player.field.find((card) => card.instanceId === llanowar.instanceId)?.exhausted, true);
   assert.equal(afterAbilities.player.field.find((card) => card.instanceId === druid.instanceId)?.exhausted, true);
-  assert.equal(hordeTurn.player.energyPool.stored, 2);
-  assert.equal(hordeTurn.player.pendingStoredEnergy, 1);
+  assert.equal(hostTurn.player.energyPool.stored, 2);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 1);
   assert.equal(nextPlayerTurn.player.pendingStoredEnergy, 0);
   assert.equal(nextPlayerTurn.player.energyPool.stored, 3);
 });
@@ -689,20 +689,20 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
 
   const defense = createTestGame("countess-turn-lifesteal-defense");
   defense.player.life = 10;
-  defense.activeSide = "horde";
+  defense.activeSide = "host";
   defense.phase = "combat";
-  const attacker = addCard(defense, customCard("countess_horde_attacker", "horde", {
+  const attacker = addCard(defense, customCard("countess_host_attacker", "host", {
     power: 2,
     endurance: 6,
   }));
   const blockingCountess = addCard(defense, cardFromDeck("eternal_feast_countess", "player"));
-  defense.combat.hordeAttackers = [attacker.instanceId];
+  defense.combat.hostAttackers = [attacker.instanceId];
   defense.combat.blockers = { [attacker.instanceId]: [blockingCountess.instanceId] };
 
   assert.equal(hasTrait(defense, blockingCountess, "DRAIN"), false);
-  const [impact] = buildHordeAttackEvents(defense);
+  const [impact] = buildHostAttackEvents(defense);
   assert.equal(impact.playerLifeGain, 0);
-  assert.equal(applyHordeAttackEvent(defense, impact).player.life, 10);
+  assert.equal(applyHostAttackEvent(defense, impact).player.life, 10);
 });
 
 test("Blood Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
@@ -758,7 +758,7 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   addForests(game, 1);
   const ally = addCard(game, customCard("crimson_impulse_ally", "player", { power: 2, endurance: 3 }));
   const page = addCard(game, cardFromDeck("blood_page", "player"));
-  const enemy = addCard(game, customCard("crimson_impulse_enemy", "horde"));
+  const enemy = addCard(game, customCard("crimson_impulse_enemy", "host"));
   const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
   const requirement = impulse.requiresTargets[0];
 
@@ -784,7 +784,7 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
     cast.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
     2,
   );
-  assert.equal(cast.horde.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
+  assert.equal(cast.host.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
 
   const cleaned = advancePhase(cast, "end");
   assert.deepEqual(
@@ -798,7 +798,7 @@ test("Crimson Impulse rejects an enemy target before spending Energy or life", (
   const game = createTestGame("crimson-impulse-illegal-target");
   game.player.life = 10;
   addForests(game, 1);
-  const enemy = addCard(game, customCard("crimson_impulse_illegal_enemy", "horde"));
+  const enemy = addCard(game, customCard("crimson_impulse_illegal_enemy", "host"));
   const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
 
   const result = castCard(game, impulse.instanceId, {
@@ -811,7 +811,7 @@ test("Crimson Impulse rejects an enemy target before spending Energy or life", (
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === impulse.instanceId), true);
   assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
-  assert.equal(result.horde.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
+  assert.equal(result.host.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
 });
 
 test("Drain Essence can damage either side and always recovers two life", () => {
@@ -819,7 +819,7 @@ test("Drain Essence can damage either side and always recovers two life", () => 
   game.player.life = 10;
   addForests(game, 2);
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  const enemy = addCard(game, customCard("drain_essence_enemy", "horde", { endurance: 3 }));
+  const enemy = addCard(game, customCard("drain_essence_enemy", "host", { endurance: 3 }));
   const land = game.player.field.find((card) => card.kinds.includes("SOURCE"));
   const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const requirement = drain.requiresTargets[0];
@@ -844,16 +844,16 @@ test("Drain Essence can damage either side and always recovers two life", () => 
   const enemyGame = createTestGame("drain-essence-enemy-kill");
   enemyGame.player.life = 10;
   addForests(enemyGame, 2);
-  const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "horde", { endurance: 3 }));
+  const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "host", { endurance: 3 }));
   const secondDrain = addCard(enemyGame, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const enemyDrain = castCard(enemyGame, secondDrain.instanceId, {
     targets: { targetCreature: lethalEnemy.instanceId },
   });
 
   assert.equal(enemyDrain.player.life, 12);
-  assert.equal(enemyDrain.horde.field.find((card) => card.instanceId === lethalEnemy.instanceId)?.damageMarked, 3);
+  assert.equal(enemyDrain.host.field.find((card) => card.instanceId === lethalEnemy.instanceId)?.damageMarked, 3);
   destroyMarkedCreatures(enemyDrain);
-  assert.equal(enemyDrain.horde.memory.some((card) => card.instanceId === lethalEnemy.instanceId), true);
+  assert.equal(enemyDrain.host.memory.some((card) => card.instanceId === lethalEnemy.instanceId), true);
 });
 
 test("Drain Essence can kill an allied creature but rejects noncreature targets atomically", () => {
@@ -900,31 +900,31 @@ test("TARGET_ECHO excludes Supports even without authored card-type filters", ()
 
 test("random opponent Echo damage never targets a Support", () => {
   const game = createTestGame("random-echo-damage-contract");
-  const source = addCard(game, customCard("random_echo_damage_source", "horde"));
+  const source = addCard(game, customCard("random_echo_damage_source", "host"));
   addCard(game, customCard("random_echo_damage_support", "player", { kinds: ["SUPPORT"] }));
   const effect = { type: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO", amount: 2 };
 
-  resolveEffect(game, effect, { source, side: "horde" });
+  resolveEffect(game, effect, { source, side: "host" });
   assert.equal(game.eventQueue.some((event) => event.type === "BURN_DAMAGE"), false);
 
   const echo = addCard(game, customCard("random_echo_damage_target", "player"));
-  resolveEffect(game, effect, { source, side: "horde" });
+  resolveEffect(game, effect, { source, side: "host" });
   const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
   assert.equal(burn?.payload?.targetId, echo.instanceId);
 });
 
 test("COUNT_ECHOS ignores Supports even without authored filters", () => {
   const game = createTestGame("count-echos-contract");
-  const source = addCard(game, customCard("count_echos_source", "horde"));
-  addCard(game, customCard("count_echos_ally", "horde"));
-  addCard(game, customCard("count_echos_support", "horde", { kinds: ["SUPPORT"] }));
+  const source = addCard(game, customCard("count_echos_source", "host"));
+  addCard(game, customCard("count_echos_ally", "host"));
+  addCard(game, customCard("count_echos_support", "host", { kinds: ["SUPPORT"] }));
   addCard(game, customCard("count_echos_target", "player"));
 
   resolveEffect(game, {
     type: "DEAL_DAMAGE_TO_OPPONENT_ECHO",
     amount: { type: "COUNT_ECHOS", controller: "SELF" },
     animation: "BURN",
-  }, { source, side: "horde" });
+  }, { source, side: "host" });
 
   const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
   assert.equal(burn?.payload?.amount, 2);
@@ -932,9 +932,9 @@ test("COUNT_ECHOS ignores Supports even without authored filters", () => {
 
 test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
   const game = createTestGame("count-invoked-echos-contract");
-  const source = addCard(game, customCard("count_invoked_source", "horde"));
-  const echo = addCard(game, customCard("count_invoked_echo", "horde"));
-  const support = addCard(game, customCard("count_invoked_support", "horde", { kinds: ["SUPPORT"] }));
+  const source = addCard(game, customCard("count_invoked_source", "host"));
+  const echo = addCard(game, customCard("count_invoked_echo", "host"));
+  const support = addCard(game, customCard("count_invoked_support", "host", { kinds: ["SUPPORT"] }));
   addCard(game, customCard("count_invoked_target", "player"));
   recordFieldEntry(game, echo);
   recordFieldEntry(game, support);
@@ -943,7 +943,7 @@ test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
     type: "DEAL_DAMAGE_TO_OPPONENT_ECHO",
     amount: { type: "COUNT_ECHOS_INVOKED_THIS_TURN", controller: "SELF" },
     animation: "BURN",
-  }, { source, side: "horde" });
+  }, { source, side: "host" });
 
   const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
   assert.equal(burn?.payload?.amount, 1);
@@ -962,7 +962,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
     endurance: 2,
   }));
   const alliedSupport = addCard(game, customCard("predatory_thirst_support", "player", { kinds: ["SUPPORT"] }));
-  const enemy = addCard(game, customCard("predatory_thirst_enemy", "horde"));
+  const enemy = addCard(game, customCard("predatory_thirst_enemy", "host"));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
 
   assert.deepEqual(thirst.requiresTargets, []);
@@ -976,7 +976,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   assert.equal(hasTrait(cast, firstBuffed, "DRAIN"), true);
   assert.equal(hasTrait(cast, secondBuffed, "DRAIN"), true);
   assert.equal(hasTrait(cast, cast.player.field.find((card) => card.instanceId === alliedSupport.instanceId), "DRAIN"), false);
-  assert.equal(hasTrait(cast, cast.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cast, cast.host.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"), false);
 
   cast.phase = "combat";
   cast.combat.playerAttackers = [firstAlly.instanceId, secondAlly.instanceId];
@@ -996,19 +996,19 @@ test("Predatory Thirst grants defensive Lifesteal without requiring a target", (
     power: 2,
     endurance: 4,
   }));
-  const attacker = addCard(game, customCard("predatory_thirst_horde_attacker", "horde", {
+  const attacker = addCard(game, customCard("predatory_thirst_host_attacker", "host", {
     power: 2,
     endurance: 4,
   }));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
 
   const cast = castCard(game, thirst.instanceId);
   cast.combat.blockers = { [attacker.instanceId]: [ally.instanceId] };
-  const [impact] = buildHordeAttackEvents(cast);
-  const afterImpact = applyHordeAttackEvent(cast, impact);
+  const [impact] = buildHostAttackEvents(cast);
+  const afterImpact = applyHostAttackEvent(cast, impact);
 
   assert.equal(cast.lastActionResult?.ok, true);
   assert.equal(impact.playerLifeGain, 2);
@@ -1016,19 +1016,19 @@ test("Predatory Thirst grants defensive Lifesteal without requiring a target", (
   assert.equal(afterImpact.player.field.some((card) => card.instanceId === ally.instanceId), true);
 });
 
-test("Final Banquet destroys only a Horde creature and loses its last known effective power", () => {
+test("Final Banquet destroys only a Host creature and loses its last known effective power", () => {
   const game = createTestGame("final-banquet-effective-power");
   game.player.life = 20;
   addForests(game, 3);
   const page = addCard(game, cardFromDeck("blood_page", "player"));
   const ally = addCard(game, customCard("final_banquet_ally", "player"));
-  const target = addCard(game, customCard("final_banquet_target", "horde", {
+  const target = addCard(game, customCard("final_banquet_target", "host", {
     power: 2,
     endurance: 5,
   }));
   target.counters["+1/+1"] = 1;
   target.temporaryPower = 2;
-  const nonCreature = addCard(game, customCard("final_banquet_enchantment", "horde", {
+  const nonCreature = addCard(game, customCard("final_banquet_enchantment", "host", {
     kinds: ["SUPPORT"],
     power: 0,
     endurance: 0,
@@ -1053,8 +1053,8 @@ test("Final Banquet destroys only a Horde creature and loses its last known effe
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.lifeLostThisTurn, 5);
   assert.equal(result.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
-  assert.equal(result.horde.field.some((card) => card.instanceId === target.instanceId), false);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === target.instanceId), true);
+  assert.equal(result.host.field.some((card) => card.instanceId === target.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
 test("Final Banquet rejects allied targets before paying Energy", () => {
@@ -1074,18 +1074,18 @@ test("Final Banquet rejects allied targets before paying Energy", () => {
   assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
-test("Final Banquet can be cast during Horde combat as an Instant", () => {
+test("Final Banquet can be cast during Host combat as an Instant", () => {
   const game = createTestGame("final-banquet-instant");
   game.player.life = 20;
   addForests(game, 3);
-  const attacker = addCard(game, customCard("final_banquet_attacker", "horde", {
+  const attacker = addCard(game, customCard("final_banquet_attacker", "host", {
     power: 2,
     endurance: 4,
   }));
   const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
 
   const result = castCard(game, banquet.instanceId, {
     targets: { targetCreature: attacker.instanceId },
@@ -1093,15 +1093,15 @@ test("Final Banquet can be cast during Horde combat as an Instant", () => {
 
   assert.equal(result.lastActionResult?.ok, true);
   assert.equal(result.player.life, 18);
-  assert.equal(result.horde.field.some((card) => card.instanceId === attacker.instanceId), false);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === attacker.instanceId), true);
+  assert.equal(result.host.field.some((card) => card.instanceId === attacker.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === attacker.instanceId), true);
 });
 
 test("Final Banquet can cause a lethal life loss after destroying its target", () => {
   const game = createTestGame("final-banquet-lethal-loss");
   game.player.life = 4;
   addForests(game, 3);
-  const target = addCard(game, customCard("final_banquet_lethal_target", "horde", {
+  const target = addCard(game, customCard("final_banquet_lethal_target", "host", {
     power: 4,
     endurance: 4,
   }));
@@ -1112,16 +1112,16 @@ test("Final Banquet can cause a lethal life loss after destroying its target", (
   });
 
   assert.equal(result.player.life, 0);
-  assert.equal(result.winner, "horde");
-  assert.equal(result.horde.memory.some((card) => card.instanceId === target.instanceId), true);
+  assert.equal(result.winner, "host");
+  assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet preserves Horde death triggers after the destruction", () => {
+test("Final Banquet preserves Host death triggers after the destruction", () => {
   const game = createTestGame("final-banquet-death-trigger");
   game.player.life = 20;
   addForests(game, 3);
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
   const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
 
   const result = castCard(game, banquet.instanceId, {
@@ -1129,9 +1129,9 @@ test("Final Banquet preserves Horde death triggers after the destruction", () =>
   });
 
   assert.equal(result.player.life, 19);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === rundvelt.instanceId), true);
-  assert.equal(result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
-  assert.equal(result.horde.archive.length, 0);
+  assert.equal(result.host.memory.some((card) => card.instanceId === rundvelt.instanceId), true);
+  assert.equal(result.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(result.host.archive.length, 0);
 });
 
 test("life payment is atomic with Energy, emits LIFE_PAID, accumulates, and resets next turn", () => {
@@ -1265,7 +1265,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(unchanged?.activatedThisTurn, false);
 });
 
-test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next player turn", () => {
+test("Court Duelist keeps +3/+1 through Host combat and loses it at the next player turn", () => {
   const freshGame = createTestGame();
   freshGame.player.life = 10;
   const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
@@ -1303,23 +1303,23 @@ test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next pl
     { power: 6, endurance: 4 },
   );
 
-  const hordeTurn = endPlayerTurn(repeated);
+  const hostTurn = endPlayerTurn(repeated);
   assert.deepEqual(
-    getPowerEndurance(hordeTurn, hordeTurn.player.field.find((card) => card.instanceId === duelist.instanceId)),
+    getPowerEndurance(hostTurn, hostTurn.player.field.find((card) => card.instanceId === duelist.instanceId)),
     { power: 6, endurance: 4 },
   );
-  const attacker = addCard(hordeTurn, customCard("court_duelist_defended_attacker", "horde", {
+  const attacker = addCard(hostTurn, customCard("court_duelist_defended_attacker", "host", {
     power: 1,
     endurance: 6,
   }));
-  hordeTurn.phase = "combat";
-  hordeTurn.combat.hordeAttackers = [attacker.instanceId];
-  hordeTurn.combat.blockers = { [attacker.instanceId]: [duelist.instanceId] };
-  const [impact] = buildHordeAttackEvents(hordeTurn);
+  hostTurn.phase = "combat";
+  hostTurn.combat.hostAttackers = [attacker.instanceId];
+  hostTurn.combat.blockers = { [attacker.instanceId]: [duelist.instanceId] };
+  const [impact] = buildHostAttackEvents(hostTurn);
   assert.equal(impact.attackerDamageMarked, 6);
   assert.equal(impact.attackerDies, true);
 
-  const nextTurn = structuredClone(hordeTurn);
+  const nextTurn = structuredClone(hostTurn);
   startPlayerTurnReady(nextTurn);
   const readyDuelist = nextTurn.player.field.find((card) => card.instanceId === duelist.instanceId);
   assert.equal(readyDuelist?.activatedThisTurn, false);
@@ -1364,16 +1364,16 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   const defense = createTestGame();
   defense.player.life = 10;
   const defendingPage = addCard(defense, cardFromDeck("blood_page", "player"));
-  const attacker = addCard(defense, customCard("life_payment_attacker", "horde"), "horde");
+  const attacker = addCard(defense, customCard("life_payment_attacker", "host"), "host");
   defense.player.lifePaidThisTurn = 3;
   defense.player.lifeLostThisTurn = 3;
-  const hordeTurn = endPlayerTurn(defense);
-  assert.equal(hordeTurn.player.lifePaidThisTurn, 0);
-  assert.equal(hordeTurn.player.lifeLostThisTurn, 0);
-  hordeTurn.phase = "combat";
-  hordeTurn.combat.hordeAttackers = [attacker.instanceId];
+  const hostTurn = endPlayerTurn(defense);
+  assert.equal(hostTurn.player.lifePaidThisTurn, 0);
+  assert.equal(hostTurn.player.lifeLostThisTurn, 0);
+  hostTurn.phase = "combat";
+  hostTurn.combat.hostAttackers = [attacker.instanceId];
   const instant = addCard(
-    hordeTurn,
+    hostTurn,
     customCard("defensive_life_payment", "player", {
       zone: "hand",
       kinds: ["SPELL"],
@@ -1384,13 +1384,13 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
     "hand",
   );
 
-  const paidDuringHordeTurn = castCard(hordeTurn, instant.instanceId);
+  const paidDuringHostTurn = castCard(hostTurn, instant.instanceId);
 
-  assert.equal(paidDuringHordeTurn.lastActionResult?.ok, true);
-  assert.equal(paidDuringHordeTurn.player.life, 8);
-  assert.equal(paidDuringHordeTurn.player.lifePaidThisTurn, 2);
-  assert.equal(paidDuringHordeTurn.player.lifeLostThisTurn, 2);
-  assert.equal(paidDuringHordeTurn.player.field.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 2);
+  assert.equal(paidDuringHostTurn.lastActionResult?.ok, true);
+  assert.equal(paidDuringHostTurn.player.life, 8);
+  assert.equal(paidDuringHostTurn.player.lifePaidThisTurn, 2);
+  assert.equal(paidDuringHostTurn.player.lifeLostThisTurn, 2);
+  assert.equal(paidDuringHostTurn.player.field.find((card) => card.instanceId === defendingPage.instanceId)?.temporaryPower, 2);
 });
 
 test("Blood Page does not trigger from the first life loss while exhausted", () => {
@@ -1414,28 +1414,28 @@ test("Blood Page does not trigger from the first life loss while exhausted", () 
   );
 });
 
-test("Blood Page can take an early Horde hit and use the buff against a later attacker", () => {
+test("Blood Page can take an early Host hit and use the buff against a later attacker", () => {
   const game = createTestGame("blood-page-mid-combat-buff");
   game.player.life = 10;
   const page = addCard(game, cardFromDeck("blood_page", "player"));
-  const firstAttacker = addCard(game, customCard("blood_page_unblocked_attacker", "horde", {
+  const firstAttacker = addCard(game, customCard("blood_page_unblocked_attacker", "host", {
     power: 1,
     endurance: 4,
   }));
-  const laterAttacker = addCard(game, customCard("blood_page_blocked_attacker", "horde", {
+  const laterAttacker = addCard(game, customCard("blood_page_blocked_attacker", "host", {
     power: 2,
     endurance: 3,
   }));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [firstAttacker.instanceId, laterAttacker.instanceId];
+  game.combat.hostAttackers = [firstAttacker.instanceId, laterAttacker.instanceId];
   game.combat.blockers = { [laterAttacker.instanceId]: [page.instanceId] };
 
-  const planned = buildHordeAttackEvents(game);
+  const planned = buildHostAttackEvents(game);
   assert.equal(planned[0].playerDamage, 1);
   assert.equal(planned[1].attackerDies, false);
 
-  const afterHit = applyHordeAttackEvent(game, planned[0]);
+  const afterHit = applyHostAttackEvent(game, planned[0]);
   drainEventQueue(afterHit);
   const buffedPage = afterHit.player.field.find((card) => card.instanceId === page.instanceId);
   assert.equal(afterHit.player.life, 9);
@@ -1443,13 +1443,13 @@ test("Blood Page can take an early Horde hit and use the buff against a later at
   assert.equal(buffedPage?.temporaryPower, 2);
   assert.deepEqual(getPowerEndurance(afterHit, buffedPage), { power: 3, endurance: 3 });
 
-  const refreshedBlock = refreshHordeAttackEvent(afterHit, planned[1]);
+  const refreshedBlock = refreshHostAttackEvent(afterHit, planned[1]);
   assert.ok(refreshedBlock);
   assert.equal(refreshedBlock.attackerDies, true);
   assert.equal(refreshedBlock.attackerDamageMarked, 3);
 
-  const afterBlock = applyHordeAttackEvent(afterHit, refreshedBlock);
-  assert.equal(afterBlock.horde.memory.some((card) => card.instanceId === laterAttacker.instanceId), true);
+  const afterBlock = applyHostAttackEvent(afterHit, refreshedBlock);
+  assert.equal(afterBlock.host.memory.some((card) => card.instanceId === laterAttacker.instanceId), true);
 });
 
 test("player triggers can stay queued and resolve one source at a time for presentation beats", () => {
@@ -1532,9 +1532,9 @@ test("Giant Growth applies +3/+3 and cleanup removes the temporary buff", () => 
 test("Broken Wings only offers legal permanent types and destroys Graf Harvest", () => {
   const game = createTestGame();
   addForests(game, 3);
-  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "horde"));
-  const flyer = addCard(game, customCard("test_flyer", "horde", { traits: ["FLYING"] }));
-  const groundCreature = addCard(game, customCard("test_ground_creature", "horde"));
+  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "host"));
+  const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
+  const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
   const spell = addCard(game, cardFromDeck("broken_wings", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
@@ -1544,47 +1544,47 @@ test("Broken Wings only offers legal permanent types and destroys Graf Harvest",
   assert.equal(candidateIds.includes(groundCreature.instanceId), false);
 
   const result = castCard(game, spell.instanceId, { targets: { targetPermanent: grafHarvest.instanceId } });
-  assert.equal(result.horde.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
+  assert.equal(result.host.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
 });
 
 test("Cosmic Hunger deals source power and preserves deathtouch for death cleanup", () => {
   const game = createTestGame();
   addForests(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
-  const target = addCard(game, customCard("large_target", "horde", { power: 0, endurance: 8 }));
+  const target = addCard(game, customCard("large_target", "host", { power: 0, endurance: 8 }));
   const spell = addCard(game, cardFromDeck("cosmic_hunger", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
     targets: { sourceCreature: source.instanceId, damageTarget: target.instanceId },
   });
-  const damagedTarget = result.horde.field.find((card) => card.instanceId === target.instanceId);
+  const damagedTarget = result.host.field.find((card) => card.instanceId === target.instanceId);
 
   assert.equal(damagedTarget.damageMarked, 1);
   assert.equal(damagedTarget.lethalDamage, true);
   destroyMarkedCreatures(result);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === target.instanceId), true);
+  assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
 test("Ruthless Predation buffs first, then both creatures deal simultaneous damage", () => {
   const game = createTestGame();
   addForests(game, 2);
   const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
-  const enemy = addCard(game, customCard("enemy_fighter", "horde", { power: 3, endurance: 3 }));
+  const enemy = addCard(game, customCard("enemy_fighter", "host", { power: 3, endurance: 3 }));
   const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
     targets: { yourCreature: friendly.instanceId, opponentCreature: enemy.instanceId },
   });
   const survivingFriendly = result.player.field.find((card) => card.instanceId === friendly.instanceId);
-  const damagedEnemy = result.horde.field.find((card) => card.instanceId === enemy.instanceId);
+  const damagedEnemy = result.host.field.find((card) => card.instanceId === enemy.instanceId);
 
   assert.deepEqual(getPowerEndurance(result, survivingFriendly), { power: 3, endurance: 4 });
   assert.equal(survivingFriendly.damageMarked, 3);
   assert.equal(damagedEnemy.damageMarked, 3);
   destroyMarkedCreatures(result);
   assert.equal(result.player.field.some((card) => card.instanceId === friendly.instanceId), true);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === enemy.instanceId), true);
+  assert.equal(result.host.memory.some((card) => card.instanceId === enemy.instanceId), true);
 
   const cleaned = advancePhase(result, "end");
   const restoredFriendly = cleaned.player.field.find((card) => card.instanceId === friendly.instanceId);
@@ -1596,7 +1596,7 @@ test("Ruthless Predation can stage its buff before the deferred fight impact", (
   const game = createTestGame();
   addForests(game, 2);
   const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
-  const enemy = addCard(game, customCard("staged_enemy_fighter", "horde", { power: 1, endurance: 5 }));
+  const enemy = addCard(game, customCard("staged_enemy_fighter", "host", { power: 1, endurance: 5 }));
   const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
   const targets = {
     yourCreature: friendly.instanceId,
@@ -1608,7 +1608,7 @@ test("Ruthless Predation can stage its buff before the deferred fight impact", (
     deferFightResolution: true,
   });
   const buffedFriendly = staged.player.field.find((card) => card.instanceId === friendly.instanceId);
-  const untouchedEnemy = staged.horde.field.find((card) => card.instanceId === enemy.instanceId);
+  const untouchedEnemy = staged.host.field.find((card) => card.instanceId === enemy.instanceId);
 
   assert.deepEqual(getPowerEndurance(staged, buffedFriendly), { power: 3, endurance: 4 });
   assert.equal(buffedFriendly.damageMarked, 0);
@@ -1646,9 +1646,9 @@ test("Sunshower Druid can target itself, adds one counter, and gains one life", 
 
 test("Graf Harvest grants Menace only while it remains on the battlefield", () => {
   const game = createTestGame();
-  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "horde"));
-  const zombie = addCard(game, cardFromDeck("zombie_token", "horde"));
-  const nonZombie = addCard(game, customCard("horde_non_zombie", "horde"));
+  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "host"));
+  const zombie = addCard(game, cardFromDeck("zombie_token", "host"));
+  const nonZombie = addCard(game, customCard("host_non_zombie", "host"));
 
   assert.equal(hasTrait(game, zombie, "DAUNTING"), true);
   assert.equal(hasTrait(game, nonZombie, "DAUNTING"), false);
@@ -1661,19 +1661,19 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   const game = createTestGame();
   const basilisk = addCard(game, cardFromDeck("ichorspit_basilisk", "player"));
   for (let index = 0; index < 3; index += 1) {
-    addCard(game, customCard(`horde_library_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+    addCard(game, customCard(`host_library_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
   game.combat.playerAttackers = [basilisk.instanceId];
 
   const combatResult = resolvePlayerCombat(game);
-  assert.equal(combatResult.horde.poisonCounters, 1);
-  assert.equal(combatResult.horde.memory.length, 0);
+  assert.equal(combatResult.host.poisonCounters, 1);
+  assert.equal(combatResult.host.memory.length, 0);
 
-  combatResult.horde.poisonCounters = 3;
+  combatResult.host.poisonCounters = 3;
   const turnResult = endPlayerTurn(combatResult);
-  assert.equal(turnResult.horde.poisonCounters, 0);
-  assert.equal(turnResult.horde.memory.length, 1);
-  assert.equal(turnResult.horde.archive.length, 2);
+  assert.equal(turnResult.host.poisonCounters, 0);
+  assert.equal(turnResult.host.memory.length, 1);
+  assert.equal(turnResult.host.archive.length, 2);
 });
 
 test("mono-green growth cards select the intended presentation intensity", () => {
@@ -1699,13 +1699,13 @@ test("animated Toxic lands at its attack impact and is not applied twice at comb
   const animatedImpact = resolvePlayerAttackerPoison(game, basilisk.instanceId);
   const animatedResult = resolvePlayerCombat(animatedImpact, { skipPoison: true });
 
-  assert.equal(game.horde.poisonCounters, 0);
-  assert.equal(animatedImpact.horde.poisonCounters, 1);
-  assert.equal(animatedResult.horde.poisonCounters, 1);
+  assert.equal(game.host.poisonCounters, 0);
+  assert.equal(animatedImpact.host.poisonCounters, 1);
+  assert.equal(animatedResult.host.poisonCounters, 1);
   assert.equal(animatedResult.combat.playerAttackers.length, 0);
 });
 
-test("Lifesteal restores the combat damage a player attacker deals to the Horde", () => {
+test("Lifesteal restores the combat damage a player attacker deals to the Host", () => {
   const game = createTestGame("lifesteal-player-attack");
   game.player.life = 10;
   const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
@@ -1726,65 +1726,65 @@ test("Lifesteal restores the combat damage a player attacker deals to the Horde"
 test("Lifesteal resolves on a blocking impact, including simultaneous lethal combat", () => {
   const game = createTestGame("lifesteal-blocking");
   game.player.life = 10;
-  const attacker = addCard(game, customCard("lifesteal_horde_attacker", "horde", {
+  const attacker = addCard(game, customCard("lifesteal_host_attacker", "host", {
     power: 2,
     endurance: 2,
   }));
   const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [bat.instanceId] };
 
-  const [impact] = buildHordeAttackEvents(game);
-  const result = applyHordeAttackEvent(game, impact);
+  const [impact] = buildHostAttackEvents(game);
+  const result = applyHostAttackEvent(game, impact);
 
   assert.equal(impact.playerLifeGain, 2);
   assert.equal(result.player.life, 12);
   assert.equal(result.player.field.some((card) => card.instanceId === bat.instanceId), false);
-  assert.equal(result.horde.field.some((card) => card.instanceId === attacker.instanceId), false);
-  assert.equal(result.horde.memory.some((card) => card.instanceId === attacker.instanceId), true);
+  assert.equal(result.host.field.some((card) => card.instanceId === attacker.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === attacker.instanceId), true);
 });
 
 test("Lifesteal gains nothing when first strike kills the blocker before it deals damage", () => {
   const game = createTestGame("lifesteal-blocked-by-first-strike");
   game.player.life = 10;
-  const attacker = addCard(game, customCard("first_strike_horde_attacker", "horde", {
+  const attacker = addCard(game, customCard("first_strike_host_attacker", "host", {
     traits: ["REFLEX"],
     power: 2,
     endurance: 2,
   }));
   const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [bat.instanceId] };
 
-  const [impact] = buildHordeAttackEvents(game);
-  const result = applyHordeAttackEvent(game, impact);
+  const [impact] = buildHostAttackEvents(game);
+  const result = applyHostAttackEvent(game, impact);
 
   assert.equal(impact.playerLifeGain, 0);
   assert.equal(result.player.life, 10);
   assert.equal(result.player.field.some((card) => card.instanceId === bat.instanceId), false);
-  assert.equal(result.horde.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
+  assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
 test("Crypt Guardian reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
   const game = createTestGame("crypt-guardian-survives-blocking");
   game.player.life = 10;
-  const attacker = addCard(game, customCard("crypt_attacker", "horde", {
+  const attacker = addCard(game, customCard("crypt_attacker", "host", {
     power: 1,
     endurance: 2,
   }));
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
   const idleGuardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
 
-  const [impact] = buildHordeAttackEvents(game);
-  const afterImpact = applyHordeAttackEvent(game, impact);
+  const [impact] = buildHostAttackEvents(game);
+  const afterImpact = applyHostAttackEvent(game, impact);
 
   assert.deepEqual(
     afterImpact.eventQueue.map((event) => event.type),
@@ -1809,18 +1809,18 @@ test("Crypt Guardian reacts only when that Guardian survives combat damage, befo
 test("Crypt Guardian does not react when the damage event kills it", () => {
   const game = createTestGame("crypt-guardian-dies-blocking");
   game.player.life = 10;
-  const attacker = addCard(game, customCard("crypt_lethal_attacker", "horde", {
+  const attacker = addCard(game, customCard("crypt_lethal_attacker", "host", {
     power: 4,
     endurance: 4,
   }));
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
 
-  const [impact] = buildHordeAttackEvents(game);
-  const afterImpact = applyHordeAttackEvent(game, impact);
+  const [impact] = buildHostAttackEvents(game);
+  const afterImpact = applyHostAttackEvent(game, impact);
 
   assert.equal(
     afterImpact.eventQueue.some(
@@ -1836,7 +1836,7 @@ test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per
   const game = createTestGame("crypt-guardian-unlimited-goblin-damage");
   game.player.life = 10;
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  const goblin = addCard(game, customCard("crypt_guardian_burn_goblin", "horde", {
+  const goblin = addCard(game, customCard("crypt_guardian_burn_goblin", "host", {
     subtypes: ["Goblin"],
   }));
   for (let index = 0; index < 2; index += 1) {
@@ -1844,7 +1844,7 @@ test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per
       type: "BURN_VOLLEY_DAMAGE",
       sourceId: goblin.instanceId,
       payload: {
-        sourceSide: "horde",
+        sourceSide: "host",
         targetPlayer: true,
         targetIds: [guardian.instanceId],
         amount: 1,
@@ -1859,39 +1859,39 @@ test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per
   assert.equal(game.eventQueue.length, 0);
 });
 
-test("Horde reveal stops at a non-token and Surge adds exactly two reveals", () => {
+test("Host reveal stops at a non-token and Surge adds exactly two reveals", () => {
   const normal = createTestGame("normal-reveal");
-  addCard(normal, customCard("normal_token_1", "horde", { zone: "archive", isToken: true }), "horde", "archive");
-  addCard(normal, customCard("normal_token_2", "horde", { zone: "archive", isToken: true }), "horde", "archive");
-  addCard(normal, customCard("normal_non_token", "horde", { zone: "archive" }), "horde", "archive");
-  addCard(normal, customCard("normal_unrevealed", "horde", { zone: "archive", isToken: true }), "horde", "archive");
+  addCard(normal, customCard("normal_token_1", "host", { zone: "archive", isToken: true }), "host", "archive");
+  addCard(normal, customCard("normal_token_2", "host", { zone: "archive", isToken: true }), "host", "archive");
+  addCard(normal, customCard("normal_non_token", "host", { zone: "archive" }), "host", "archive");
+  addCard(normal, customCard("normal_unrevealed", "host", { zone: "archive", isToken: true }), "host", "archive");
 
-  const normalResult = runHordeMain(normal);
-  assert.equal(normalResult.horde.field.length, 3);
-  assert.deepEqual(normalResult.horde.archive.map((card) => card.definitionId), ["normal_unrevealed"]);
+  const normalResult = runHostMain(normal);
+  assert.equal(normalResult.host.field.length, 3);
+  assert.deepEqual(normalResult.host.archive.map((card) => card.definitionId), ["normal_unrevealed"]);
 
   const surge = createTestGame("surge-reveal");
-  surge.hordeTurnNumber = 9;
+  surge.hostTurnNumber = 9;
   for (let index = 0; index < 5; index += 1) {
-    addCard(surge, customCard(`surge_token_${index}`, "horde", { zone: "archive", isToken: true }), "horde", "archive");
+    addCard(surge, customCard(`surge_token_${index}`, "host", { zone: "archive", isToken: true }), "host", "archive");
   }
   for (let index = 0; index < 6; index += 1) {
-    addCard(surge, customCard(`surge_grave_${index}`, "horde", { zone: "memory" }), "horde", "memory");
+    addCard(surge, customCard(`surge_grave_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
 
-  const surgeResult = runHordeMain(surge);
-  assert.equal(surge.hordeTurnNumber, 9);
-  assert.equal(surgeResult.hordeTurnNumber, 10);
-  assert.equal(surgeResult.horde.field.length, 5);
-  assert.equal(surgeResult.horde.archive.length, 0);
+  const surgeResult = runHostMain(surge);
+  assert.equal(surge.hostTurnNumber, 9);
+  assert.equal(surgeResult.hostTurnNumber, 10);
+  assert.equal(surgeResult.host.field.length, 5);
+  assert.equal(surgeResult.host.archive.length, 0);
 });
 
-test("Goblin static lords and War Drums apply only to the intended Horde creatures", () => {
+test("Goblin static lords and War Drums apply only to the intended Host creatures", () => {
   const game = createTestGame("goblin-static-effects");
-  const hobgoblin = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
-  const warDrums = addCard(game, cardFromDeck("goblin_war_drums", "horde"));
-  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const nonGoblin = addCard(game, customCard("not_a_goblin", "horde", { power: 2, endurance: 2 }));
+  const hobgoblin = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "host"));
+  const warDrums = addCard(game, cardFromDeck("goblin_war_drums", "host"));
+  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
+  const nonGoblin = addCard(game, customCard("not_a_goblin", "host", { power: 2, endurance: 2 }));
 
   assert.deepEqual(getPowerEndurance(game, hobgoblin), { power: 2, endurance: 3 });
   assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
@@ -1903,38 +1903,38 @@ test("Goblin static lords and War Drums apply only to the intended Horde creatur
   assert.equal(hasTrait(game, goblin, "DAUNTING"), false);
 });
 
-test("Hobgoblin Bandit Lord burns for Goblins that entered this Horde turn", () => {
+test("Hobgoblin Bandit Lord burns for Goblins that entered this Host turn", () => {
   const game = createTestGame("hobgoblin-entered-goblins");
   const target = addCard(game, customCard("hobgoblin_burn_target", "player", { endurance: 8 }));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde", "archive"), "horde", "archive");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("hobgoblin_bandit_lord", "host", "archive"), "host", "archive");
 
-  const firstTurn = runHordeMain(game);
+  const firstTurn = runHostMain(game);
   assert.equal(firstTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 3);
 
-  addCard(firstTurn, cardFromDeck("hobgoblin_bandit_lord", "horde", "archive"), "horde", "archive");
-  const secondTurn = runHordeMain(firstTurn);
+  addCard(firstTurn, cardFromDeck("hobgoblin_bandit_lord", "host", "archive"), "host", "archive");
+  const secondTurn = runHostMain(firstTurn);
   assert.equal(secondTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 4);
 });
 
 test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on entry", () => {
   const beetlebackGame = createTestGame("beetleback-entry");
-  const beetleback = addCard(beetlebackGame, cardFromDeck("beetleback_chief", "horde"));
+  const beetleback = addCard(beetlebackGame, cardFromDeck("beetleback_chief", "host"));
   runInvokedTriggers(beetlebackGame, beetleback);
   drainEventQueue(beetlebackGame);
-  assert.equal(beetlebackGame.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+  assert.equal(beetlebackGame.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
 
   const siegeGangGame = createTestGame("siege-gang-entry");
-  const siegeGang = addCard(siegeGangGame, cardFromDeck("siege_gang_commander", "horde"));
+  const siegeGang = addCard(siegeGangGame, cardFromDeck("siege_gang_commander", "host"));
   runInvokedTriggers(siegeGangGame, siegeGang);
   drainEventQueue(siegeGangGame);
-  assert.equal(siegeGangGame.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
+  assert.equal(siegeGangGame.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
 });
 
 test("Noosegraf Mob reacts once to each non-token card played and ignores tokens", () => {
   const game = createTestGame("noosegraf-card-played");
-  const mob = addCard(game, cardFromDeck("noosegraf_mob", "horde"));
+  const mob = addCard(game, cardFromDeck("noosegraf_mob", "host"));
 
   for (const sourceId of ["player-non-token", "host-non-token"]) {
     enqueue(game, { type: "CARD_PLAYED", sourceId, payload: { nonToken: true } });
@@ -1944,49 +1944,49 @@ test("Noosegraf Mob reacts once to each non-token card played and ignores tokens
   drainEventQueue(game);
 
   assert.equal(mob.counters["+1/+1"], 3);
-  assert.equal(game.horde.field.filter((card) => card.definitionId === "zombie_token").length, 2);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "zombie_token").length, 2);
 });
 
 test("Noosegraf Mob observes real Chronicler plays and Host reveals exactly once", () => {
   const game = createTestGame("noosegraf-real-play-paths");
-  addCard(game, cardFromDeck("noosegraf_mob", "horde"));
+  addCard(game, cardFromDeck("noosegraf_mob", "host"));
   const spell = addCard(game, customCard("noosegraf_test_spell", "player", {
     zone: "hand",
     kinds: ["SPELL"],
   }), "player", "hand");
 
   const afterSpell = castCard(game, spell.instanceId);
-  assert.equal(afterSpell.horde.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 4);
-  assert.equal(afterSpell.horde.field.filter((card) => card.definitionId === "zombie_token").length, 1);
+  assert.equal(afterSpell.host.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 4);
+  assert.equal(afterSpell.host.field.filter((card) => card.definitionId === "zombie_token").length, 1);
 
-  addCard(afterSpell, customCard("noosegraf_host_reveal", "horde", { zone: "archive" }), "horde", "archive");
-  const afterReveal = revealHordeCardFromTop(afterSpell);
-  assert.equal(afterReveal.horde.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 3);
-  assert.equal(afterReveal.horde.field.filter((card) => card.definitionId === "zombie_token").length, 2);
+  addCard(afterSpell, customCard("noosegraf_host_reveal", "host", { zone: "archive" }), "host", "archive");
+  const afterReveal = revealHostCardFromTop(afterSpell);
+  assert.equal(afterReveal.host.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 3);
+  assert.equal(afterReveal.host.field.filter((card) => card.definitionId === "zombie_token").length, 2);
 });
 
 test("Crow discards two Host Archive cards when Invoked and two more when it dies", () => {
   const game = createTestGame("crow-archive-discard");
-  const crow = addCard(game, cardFromDeck("crow_of_dark_tidings", "horde"));
+  const crow = addCard(game, cardFromDeck("crow_of_dark_tidings", "host"));
   for (let index = 0; index < 4; index += 1) {
-    addCard(game, customCard(`crow_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+    addCard(game, customCard(`crow_archive_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
 
   runInvokedTriggers(game, crow);
-  assert.equal(game.horde.archive.length, 2);
+  assert.equal(game.host.archive.length, 2);
   drainEventQueue(game);
 
   destroyPermanent(game, crow);
   assert.deepEqual(game.eventQueue.map((event) => event.type), ["THIS_DIES", "ECHO_DIED"]);
   drainEventQueue(game);
 
-  assert.equal(game.horde.archive.length, 0);
-  assert.equal(game.horde.memory.filter((card) => card.definitionId.startsWith("crow_archive_")).length, 4);
+  assert.equal(game.host.archive.length, 0);
+  assert.equal(game.host.memory.filter((card) => card.definitionId.startsWith("crow_archive_")).length, 4);
 });
 
 test("destroying a Support does not emit Echo death events", () => {
   const game = createTestGame("support-destroyed-not-died");
-  const support = addCard(game, customCard("destroyed_support", "horde", { kinds: ["SUPPORT"] }));
+  const support = addCard(game, customCard("destroyed_support", "host", { kinds: ["SUPPORT"] }));
 
   destroyPermanent(game, support);
 
@@ -1995,22 +1995,22 @@ test("destroying a Support does not emit Echo death events", () => {
 
 test("Memory threshold effects turn on exactly at seven Host cards", () => {
   const game = createTestGame("memory-threshold");
-  const thraben = addCard(game, cardFromDeck("thraben_foulbloods", "horde"));
+  const thraben = addCard(game, cardFromDeck("thraben_foulbloods", "host"));
   for (let index = 0; index < 6; index += 1) {
-    addCard(game, customCard(`memory_card_${index}`, "horde", { zone: "memory" }), "horde", "memory");
+    addCard(game, customCard(`memory_card_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
 
   assert.deepEqual(getPowerEndurance(game, thraben), { power: 3, endurance: 2 });
   assert.equal(hasTrait(game, thraben, "DAUNTING"), false);
 
-  addCard(game, customCard("memory_card_6", "horde", { zone: "memory" }), "horde", "memory");
+  addCard(game, customCard("memory_card_6", "host", { zone: "memory" }), "host", "memory");
   assert.deepEqual(getPowerEndurance(game, thraben), { power: 4, endurance: 3 });
   assert.equal(hasTrait(game, thraben, "DAUNTING"), true);
 });
 
 test("Siege-Gang Commander and Pashalik Mons omit their sacrifice modes", () => {
-  const siegeGang = cardFromDeck("siege_gang_commander", "horde");
-  const pashalik = cardFromDeck("pashalik_mons", "horde");
+  const siegeGang = cardFromDeck("siege_gang_commander", "host");
+  const pashalik = cardFromDeck("pashalik_mons", "host");
 
   assert.deepEqual(siegeGang.activatedAbilities, []);
   assert.deepEqual(pashalik.activatedAbilities, []);
@@ -2018,45 +2018,45 @@ test("Siege-Gang Commander and Pashalik Mons omit their sacrifice modes", () => 
 
 test("Goblin Surprise pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
-  const firstGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const secondGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
-  addCard(pumpGame, cardFromDeck("goblin_surprise", "horde", "archive"), "horde", "archive");
+  const firstGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "host"));
+  const secondGoblin = addCard(pumpGame, cardFromDeck("goblin_token_1_1_red", "host"));
+  addCard(pumpGame, cardFromDeck("goblin_surprise", "host", "archive"), "host", "archive");
 
-  const pumped = runHordeMain(pumpGame);
-  assert.equal(pumped.horde.field.find((card) => card.instanceId === firstGoblin.instanceId)?.temporaryPower, 2);
-  assert.equal(pumped.horde.field.find((card) => card.instanceId === secondGoblin.instanceId)?.temporaryPower, 2);
+  const pumped = runHostMain(pumpGame);
+  assert.equal(pumped.host.field.find((card) => card.instanceId === firstGoblin.instanceId)?.temporaryPower, 2);
+  assert.equal(pumped.host.field.find((card) => card.instanceId === secondGoblin.instanceId)?.temporaryPower, 2);
 
   const animatedPumpGame = createTestGame("goblin-surprise-animated-pump");
-  const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
-  addCard(animatedPumpGame, cardFromDeck("goblin_surprise", "horde", "archive"), "horde", "archive");
+  const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("goblin_token_1_1_red", "host"));
+  addCard(animatedPumpGame, cardFromDeck("goblin_surprise", "host", "archive"), "host", "archive");
 
-  const pendingPump = runHordeMain(animatedPumpGame, { deferInvokedTriggers: true });
-  assert.equal(pendingPump.horde.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 0);
+  const pendingPump = runHostMain(animatedPumpGame, { deferInvokedTriggers: true });
+  assert.equal(pendingPump.host.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 0);
   assert.deepEqual(
     pendingPump.eventQueue.find((event) => event.type === "HOST_GROUP_BUFF")?.payload?.affectedIds,
     [animatedGoblin.instanceId],
   );
   drainEventQueue(pendingPump);
-  assert.equal(pendingPump.horde.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 2);
+  assert.equal(pendingPump.host.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 2);
 
   const revealGame = createTestGame("goblin-surprise-reveal");
-  addCard(revealGame, cardFromDeck("goblin_surprise", "horde", "archive"), "horde", "archive");
+  addCard(revealGame, cardFromDeck("goblin_surprise", "host", "archive"), "host", "archive");
   for (let index = 0; index < 4; index += 1) {
-    addCard(revealGame, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
+    addCard(revealGame, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
   }
 
-  const revealResult = runHordeMain(revealGame);
-  assert.equal(revealResult.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
-  assert.equal(revealResult.horde.archive.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
-  assert.equal(revealResult.hordeTurnNumber, 1, "the extra reveal is part of the same Horde turn");
+  const revealResult = runHostMain(revealGame);
+  assert.equal(revealResult.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
+  assert.equal(revealResult.host.archive.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(revealResult.hostTurnNumber, 1, "the extra reveal is part of the same Host turn");
 });
 
-test("Volley Veteran damages a chosen opposing creature equal to the Horde's Goblin count", () => {
+test("Volley Veteran damages a chosen opposing creature equal to the Host's Goblin count", () => {
   const game = createTestGame("volley-veteran-entry");
   const fragile = addCard(game, customCard("volley_target", "player", { endurance: 2 }));
   const sturdy = addCard(game, customCard("volley_survivor", "player", { endurance: 4 }));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const veteran = addCard(game, cardFromDeck("volley_veteran", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
+  const veteran = addCard(game, cardFromDeck("volley_veteran", "host"));
 
   runInvokedTriggers(game, veteran);
   drainEventQueue(game);
@@ -2065,15 +2065,15 @@ test("Volley Veteran damages a chosen opposing creature equal to the Horde's Gob
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 0);
 });
 
-test("Goblin Rabblemaster creates its combat token before Horde attackers are declared", () => {
+test("Goblin Rabblemaster creates its combat token before Host attackers are declared", () => {
   const game = createTestGame("rabblemaster-combat-token");
-  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "horde"));
+  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "host"));
 
-  const result = prepareHordeAttackers(game);
-  const tokens = result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
+  const result = prepareHostAttackers(game);
+  const tokens = result.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(tokens.length, 1);
-  assert.deepEqual(new Set(result.combat.hordeAttackers), new Set([rabblemaster.instanceId, tokens[0].instanceId]));
+  assert.deepEqual(new Set(result.combat.hostAttackers), new Set([rabblemaster.instanceId, tokens[0].instanceId]));
   assert.equal(tokens[0].exhausted, true);
 });
 
@@ -2081,32 +2081,32 @@ test("Goblin token waves attack in chronological visual order", () => {
   const game = createTestGame("goblin-wave-attack-order");
   const firstWave = Array.from(
     { length: 4 },
-    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "horde")),
+    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "host")),
   );
-  const creatureBetweenWaves = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
+  const creatureBetweenWaves = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "host"));
   const secondWave = Array.from(
     { length: 2 },
-    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "horde")),
+    () => addCard(game, cardFromDeck("goblin_token_1_1_red", "host")),
   );
 
-  const result = prepareHordeAttackers(game);
+  const result = prepareHostAttackers(game);
 
-  assert.deepEqual(result.combat.hordeAttackers, [
+  assert.deepEqual(result.combat.hostAttackers, [
     ...firstWave.map((card) => card.instanceId),
     creatureBetweenWaves.instanceId,
     ...secondWave.map((card) => card.instanceId),
   ]);
 });
 
-test("Horde attackers follow summon order instead of regrouping identical definitions", () => {
-  const game = createTestGame("horde-summon-order");
-  const firstCopy = addCard(game, customCard("repeated_raider", "horde", { subtypes: ["Goblin"] }));
-  const summonedBetween = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
-  const secondCopy = addCard(game, customCard("repeated_raider", "horde", { subtypes: ["Goblin"] }));
+test("Host attackers follow summon order instead of regrouping identical definitions", () => {
+  const game = createTestGame("host-summon-order");
+  const firstCopy = addCard(game, customCard("repeated_raider", "host", { subtypes: ["Goblin"] }));
+  const summonedBetween = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "host"));
+  const secondCopy = addCard(game, customCard("repeated_raider", "host", { subtypes: ["Goblin"] }));
 
-  const result = prepareHordeAttackers(game);
+  const result = prepareHostAttackers(game);
 
-  assert.deepEqual(result.combat.hordeAttackers, [
+  assert.deepEqual(result.combat.hostAttackers, [
     firstCopy.instanceId,
     summonedBetween.instanceId,
     secondCopy.instanceId,
@@ -2115,53 +2115,53 @@ test("Horde attackers follow summon order instead of regrouping identical defini
 
 test("Goblin Rabblemaster counts every other attacking Goblin after attack tokens enter", () => {
   const game = createTestGame("rabblemaster-attack-buff");
-  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "horde"));
-  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const rabblemaster = addCard(game, cardFromDeck("goblin_rabblemaster", "host"));
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
-  const result = prepareHordeAttackers(game);
-  const currentRabblemaster = result.horde.field.find((card) => card.instanceId === rabblemaster.instanceId);
+  const result = prepareHostAttackers(game);
+  const currentRabblemaster = result.host.field.find((card) => card.instanceId === rabblemaster.instanceId);
 
   assert.ok(currentRabblemaster);
-  assert.equal(result.combat.hordeAttackers.length, 5);
+  assert.equal(result.combat.hostAttackers.length, 5);
   assert.deepEqual(getPowerEndurance(result, currentRabblemaster), { power: 6, endurance: 2 });
 });
 
-test("Battle Cry Goblin gives Horde Goblins +1/+0 until end of turn on entry", () => {
+test("Battle Cry Goblin gives Host Goblins +1/+0 until end of turn on entry", () => {
   const game = createTestGame("battle-cry-entry-pump");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  addCard(game, cardFromDeck("battle_cry_goblin", "horde", "archive"), "horde", "archive");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("battle_cry_goblin", "host", "archive"), "host", "archive");
 
-  const result = runHordeMain(game);
-  const battleCry = result.horde.field.find((card) => card.definitionId === "battle_cry_goblin");
-  const token = result.horde.field.find((card) => card.definitionId === "goblin_token_1_1_red");
+  const result = runHostMain(game);
+  const battleCry = result.host.field.find((card) => card.definitionId === "battle_cry_goblin");
+  const token = result.host.field.find((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(battleCry?.temporaryPower, 1);
   assert.equal(battleCry?.temporaryEndurance, 0);
   assert.equal(token?.temporaryPower, 1);
   assert.equal(token?.temporaryEndurance, 0);
-  assert.equal(result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(result.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
 });
 
 test("General Kreat creates one attacking token and damages the player when it enters", () => {
   const game = createTestGame("general-kreat-attack");
-  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
-  const result = prepareHordeAttackers(game);
-  const goblinTokens = result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
+  const result = prepareHostAttackers(game);
+  const goblinTokens = result.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(goblinTokens.length, 2);
-  assert.equal(result.combat.hordeAttackers.length, 3);
+  assert.equal(result.combat.hostAttackers.length, 3);
   assert.equal(result.player.life, 29);
 });
 
 test("General Kreat queues a separate player Burn for each other creature entering", () => {
   const game = createTestGame("general-kreat-separate-burns");
-  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
+  addCard(game, cardFromDeck("general_kreat_the_boltbringer", "host"));
 
   const resolveCreatureEntry = (definitionId) => {
-    const creature = addCard(game, customCard(definitionId, "horde", { subtypes: ["Goblin"] }));
+    const creature = addCard(game, customCard(definitionId, "host", { subtypes: ["Goblin"] }));
     runInvokedTriggers(game, creature);
     const enterEvent = game.eventQueue.shift();
     assert.equal(enterEvent?.type, "ECHO_INVOKED");
@@ -2187,7 +2187,7 @@ test("General Kreat queues a separate player Burn for each other creature enteri
 
 test("only Echo invocations broadcast ECHO_INVOKED", () => {
   const game = createTestGame("echo-invoked-only");
-  const support = addCard(game, customCard("test_support", "horde", { kinds: ["SUPPORT"] }));
+  const support = addCard(game, customCard("test_support", "host", { kinds: ["SUPPORT"] }));
 
   runInvokedTriggers(game, support);
 
@@ -2196,13 +2196,13 @@ test("only Echo invocations broadcast ECHO_INVOKED", () => {
 
 test("Raid Bombardment defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
-  const raid = addCard(game, cardFromDeck("raid_bombardment", "horde"));
-  const smallGoblin = addCard(game, customCard("small_goblin", "horde", { subtypes: ["Goblin"], power: 1 }));
-  const mediumGoblin = addCard(game, customCard("medium_goblin", "horde", { subtypes: ["Goblin"], power: 2 }));
-  addCard(game, customCard("large_goblin", "horde", { subtypes: ["Goblin"], power: 3 }));
-  addCard(game, customCard("small_non_goblin", "horde", { subtypes: ["Warrior"], power: 1 }));
+  const raid = addCard(game, cardFromDeck("raid_bombardment", "host"));
+  const smallGoblin = addCard(game, customCard("small_goblin", "host", { subtypes: ["Goblin"], power: 1 }));
+  const mediumGoblin = addCard(game, customCard("medium_goblin", "host", { subtypes: ["Goblin"], power: 2 }));
+  addCard(game, customCard("large_goblin", "host", { subtypes: ["Goblin"], power: 3 }));
+  addCard(game, customCard("small_non_goblin", "host", { subtypes: ["Warrior"], power: 1 }));
 
-  const declared = prepareHordeAttackers(game);
+  const declared = prepareHostAttackers(game);
 
   assert.equal(declared.player.life, 30);
   assert.deepEqual(declared.combat.pendingDamageVolleys, [{
@@ -2211,30 +2211,30 @@ test("Raid Bombardment defers one damage per small Goblin attacker until combat 
     amountPerAttacker: 1,
   }]);
 
-  const result = resolveHordeCombat(declared);
+  const result = resolveHostCombat(declared);
   assert.equal(result.player.life, 21);
   assert.deepEqual(result.combat.pendingDamageVolleys, []);
 });
 
 test("Krenko grows before creating tokens equal to its new power", () => {
   const game = createTestGame("krenko-attack");
-  const krenko = addCard(game, cardFromDeck("krenko_tin_street_kingpin", "horde"));
+  const krenko = addCard(game, cardFromDeck("krenko_tin_street_kingpin", "host"));
 
-  const result = prepareHordeAttackers(game);
-  const currentKrenko = result.horde.field.find((card) => card.instanceId === krenko.instanceId);
-  const tokens = result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
+  const result = prepareHostAttackers(game);
+  const currentKrenko = result.host.field.find((card) => card.instanceId === krenko.instanceId);
+  const tokens = result.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(currentKrenko?.counters["+1/+1"], 1);
   assert.deepEqual(getPowerEndurance(result, currentKrenko), { power: 2, endurance: 3 });
   assert.equal(tokens.length, 2);
-  assert.equal(tokens.every((card) => card.exhausted && result.combat.hordeAttackers.includes(card.instanceId)), true);
+  assert.equal(tokens.every((card) => card.exhausted && result.combat.hostAttackers.includes(card.instanceId)), true);
 });
 
 test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and opposing creatures", () => {
   const game = createTestGame("chainwhirler-entry");
   const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
   const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
-  const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
+  const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "host"));
 
   runInvokedTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
   const enterEvent = game.eventQueue.shift();
@@ -2258,8 +2258,8 @@ test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and 
 
 test("Diregraf Captain queues an oil Burn before the player loses life", () => {
   const game = createTestGame("diregraf-captain-oil-burn");
-  const captain = addCard(game, cardFromDeck("diregraf_captain", "horde"));
-  const zombie = addCard(game, cardFromDeck("zombie_token", "horde"));
+  const captain = addCard(game, cardFromDeck("diregraf_captain", "host"));
+  const zombie = addCard(game, cardFromDeck("zombie_token", "host"));
 
   destroyPermanent(game, zombie);
   const deathIndex = game.eventQueue.findIndex((event) => event.type === "ECHO_DIED");
@@ -2282,10 +2282,10 @@ test("Diregraf Captain queues an oil Burn before the player loses life", () => {
 
 test("Pashalik Mons burns a random opposing creature separately for each Goblin death", () => {
   const anotherGoblinDies = createTestGame("pashalik-other-dies");
-  addCard(anotherGoblinDies, cardFromDeck("pashalik_mons", "horde"));
+  addCard(anotherGoblinDies, cardFromDeck("pashalik_mons", "host"));
   const burnTarget = addCard(anotherGoblinDies, customCard("pashalik_burn_target", "player", { endurance: 5 }));
-  const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "host"));
+  const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "host"));
   destroyPermanent(anotherGoblinDies, firstGoblin);
   drainEventQueue(anotherGoblinDies);
   assert.equal(burnTarget.damageMarked, 1);
@@ -2300,84 +2300,84 @@ test("Pashalik Mons burns a random opposing creature separately for each Goblin 
   assert.equal(cleaned.player.field.find((card) => card.instanceId === burnTarget.instanceId)?.flags.burnSmoke, undefined);
 });
 
-test("Pashalik resolves a combat death before the next Horde combat event", () => {
+test("Pashalik resolves a combat death before the next Host combat event", () => {
   const game = createTestGame("pashalik-combat-timing");
-  addCard(game, cardFromDeck("pashalik_mons", "horde"));
-  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("pashalik_mons", "host"));
+  const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
   const blocker = addCard(game, customCard("pashalik_combat_blocker", "player", { power: 3, endurance: 5 }));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [goblin.instanceId];
+  game.combat.hostAttackers = [goblin.instanceId];
   game.combat.blockers = { [goblin.instanceId]: [blocker.instanceId] };
 
-  const [combatEvent] = buildHordeAttackEvents(game);
-  const afterImpact = applyHordeAttackEvent(game, combatEvent);
+  const [combatEvent] = buildHostAttackEvents(game);
+  const afterImpact = applyHostAttackEvent(game, combatEvent);
 
-  assert.equal(afterImpact.horde.field.some((card) => card.instanceId === goblin.instanceId), false);
+  assert.equal(afterImpact.host.field.some((card) => card.instanceId === goblin.instanceId), false);
   assert.equal(afterImpact.eventQueue.some((event) => event.type === "ECHO_DIED"), true);
 
   drainEventQueue(afterImpact);
   assert.equal(afterImpact.player.field.find((card) => card.instanceId === blocker.instanceId)?.damageMarked, 2);
 });
 
-test("a blocker removed between Horde impacts cannot deal ghost combat damage", () => {
+test("a blocker removed between Host impacts cannot deal ghost combat damage", () => {
   const game = createTestGame("goblin-no-ghost-blocker");
-  const attacker = addCard(game, customCard("later_attacker", "horde", { power: 2, endurance: 3 }));
+  const attacker = addCard(game, customCard("later_attacker", "host", { power: 2, endurance: 3 }));
   const blocker = addCard(game, customCard("burned_future_blocker", "player", { power: 5, endurance: 2 }));
-  game.activeSide = "horde";
+  game.activeSide = "host";
   game.phase = "combat";
-  game.combat.hordeAttackers = [attacker.instanceId];
+  game.combat.hostAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
-  const [event] = buildHordeAttackEvents(game);
+  const [event] = buildHostAttackEvents(game);
 
   destroyPermanent(game, blocker);
-  assert.equal(isHordeAttackEventCurrent(game, event), false);
+  assert.equal(isHostAttackEventCurrent(game, event), false);
 
-  const resolved = applyHordeAttackEvent(game, event);
-  assert.equal(resolved.horde.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
+  const resolved = applyHostAttackEvent(game, event);
+  assert.equal(resolved.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
   assert.equal(resolved.player.life, 30);
 });
 
 test("Rundvelt Hordemaster resolves exactly once when it dies", () => {
   const game = createTestGame("rundvelt-self-dies");
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
 
   destroyPermanent(game, rundvelt);
   drainEventQueue(game);
 
-  assert.equal(game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
-  assert.equal(game.horde.archive.length, 1);
-  assert.equal(game.horde.oblivion.length, 0);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+  assert.equal(game.host.archive.length, 1);
+  assert.equal(game.host.oblivion.length, 0);
 });
 
 test("Rundvelt moves a non-Goblin inspection to the bottom of the Archive", () => {
   const game = createTestGame("rundvelt-non-goblin-bottom");
-  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  const support = addCard(game, cardFromDeck("goblin_war_drums", "horde", "archive"), "horde", "archive");
-  const futureGoblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  const support = addCard(game, cardFromDeck("goblin_war_drums", "host", "archive"), "host", "archive");
+  const futureGoblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   drainEventQueue(game);
 
   assert.deepEqual(
-    game.horde.archive.map((card) => card.instanceId),
+    game.host.archive.map((card) => card.instanceId),
     [futureGoblin.instanceId, support.instanceId],
   );
   assert.equal(support.zone, "archive");
-  assert.equal(game.horde.oblivion.length, 0);
-  assert.equal(game.horde.field.some((card) => card.instanceId === support.instanceId), false);
+  assert.equal(game.host.oblivion.length, 0);
+  assert.equal(game.host.field.some((card) => card.instanceId === support.instanceId), false);
 });
 
 test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", () => {
   const game = createTestGame("goblin-death-two-reactors");
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2390,21 +2390,21 @@ test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", 
     pendingTriggerSources(game, death).map((source) => source.instanceId),
     [rundvelt.instanceId],
   );
-  assert.equal(game.horde.archive.length, 1, "Rundvelt must not inspect before its own beat");
+  assert.equal(game.host.archive.length, 1, "Rundvelt must not inspect before its own beat");
 
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
   assert.equal(pendingTriggerSources(game, death).length, 0);
-  assert.equal(game.horde.archive.length, 0);
+  assert.equal(game.host.archive.length, 0);
 });
 
 test("a creature that enters because of a death does not react to that death", () => {
   const game = createTestGame("no-reaction-to-own-summon");
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
   // Rundvelt inspects the top card on a Goblin death; that card is Pashalik, who also reacts to
   // Goblin deaths. Pashalik was not in play when the Goblin died, so it must never react to it.
-  addCard(game, cardFromDeck("pashalik_mons", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("pashalik_mons", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2412,7 +2412,7 @@ test("a creature that enters because of a death does not react to that death", (
   // Mirrors the animated beat loop, which re-derives the reactors after every beat. A plain
   // drain collects its sources up front and would hide this.
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
-  const pashalik = game.horde.field.find((card) => card.definitionId === "pashalik_mons");
+  const pashalik = game.host.field.find((card) => card.definitionId === "pashalik_mons");
   assert.ok(pashalik, "Rundvelt must have Invoked Pashalik onto the battlefield");
   assert.deepEqual(
     pendingTriggerSources(game, death).map((source) => source.definitionId),
@@ -2426,19 +2426,19 @@ test("a creature that enters because of a death does not react to that death", (
 
 test("a creature summoned by an effect still announces its own enter trigger", () => {
   const game = createTestGame("effect-summon-enter-trigger");
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, cardFromDeck("beetleback_chief", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  addCard(game, cardFromDeck("beetleback_chief", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
 
-  const chief = game.horde.field.find((card) => card.definitionId === "beetleback_chief");
+  const chief = game.host.field.find((card) => card.definitionId === "beetleback_chief");
   assert.ok(chief, "Rundvelt must have Invoked Beetleback Chief onto the battlefield");
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
-  // would arriving through the normal Horde reveal.
-  assert.equal(game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
+  // would arriving through the normal Host reveal.
+  assert.equal(game.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
   const entered = game.eventQueue.find((event) => event.type === "INVOKED" && event.sourceId === chief.instanceId);
   assert.ok(entered, "the Chief's enter trigger must be queued for its own beat");
   assert.deepEqual(
@@ -2448,16 +2448,16 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   );
 
   drainEventQueue(game);
-  assert.equal(game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
 });
 
 test("an effect that queues a follow-up keeps it ahead of the other reactors", () => {
   const game = createTestGame("spawned-event-priority");
-  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
-  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const pashalik = addCard(game, cardFromDeck("pashalik_mons", "host"));
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
   addCard(game, customCard("burn_target", "player", { power: 1, endurance: 4 }), "player");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2475,35 +2475,35 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
 
 test("a resolved trigger source is never resolved a second time by a bulk drain", () => {
   const game = createTestGame("trigger-source-resolved-once");
-  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
-  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
   drainEventQueue(game);
 
-  assert.equal(game.horde.archive.length, 1);
+  assert.equal(game.host.archive.length, 1);
 });
 
 test("static auras only announce the creatures that newly fell under them", () => {
   const game = createTestGame("static-aura-coverage");
-  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
 
-  const before = collectStaticAuras(game, "horde");
+  const before = collectStaticAuras(game, "host");
   const buff = before.find((aura) => aura.power === 1 && aura.endurance === 1);
   assert.ok(buff, "Rundvelt's +1/+1 must be visible as a static aura");
   assert.deepEqual(buff.affectedIds, [first.instanceId]);
-  assert.equal(buff.controller, "horde");
+  assert.equal(buff.controller, "host");
 
   const snapshot = snapshotStaticAuras(before);
-  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot).length, 0);
+  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "host"), snapshot).length, 0);
 
-  const second = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const announced = newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot);
+  const second = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
+  const announced = newlyCoveredAuras(collectStaticAuras(game, "host"), snapshot);
   assert.deepEqual(
     announced.map((aura) => aura.affectedIds),
     [[second.instanceId]],
@@ -2513,40 +2513,40 @@ test("static auras only announce the creatures that newly fell under them", () =
 
 test("a static aura losing a creature is not announced again", () => {
   const game = createTestGame("static-aura-shrinks");
-  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const snapshot = snapshotStaticAuras(collectStaticAuras(game, "horde"));
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "host"));
+  const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
+  addCard(game, cardFromDeck("goblin_token_1_1_red", "host"));
+  const snapshot = snapshotStaticAuras(collectStaticAuras(game, "host"));
 
   destroyPermanent(game, first);
 
-  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "horde"), snapshot).length, 0);
+  assert.equal(newlyCoveredAuras(collectStaticAuras(game, "host"), snapshot).length, 0);
 });
 
-test("Horde turn six has a one-card Mini Surge", () => {
+test("Host turn six has a one-card Mini Surge", () => {
   const miniSurge = createTestGame("mini-surge-reveal");
-  miniSurge.hordeTurnNumber = 5;
+  miniSurge.hostTurnNumber = 5;
   for (let index = 0; index < 4; index += 1) {
-    addCard(miniSurge, customCard(`mini_surge_token_${index}`, "horde", { zone: "archive", isToken: true }), "horde", "archive");
+    addCard(miniSurge, customCard(`mini_surge_token_${index}`, "host", { zone: "archive", isToken: true }), "host", "archive");
   }
 
-  const miniSurgeResult = runHordeMain(miniSurge);
+  const miniSurgeResult = runHostMain(miniSurge);
 
-  assert.equal(miniSurgeResult.hordeTurnNumber, 6);
-  assert.equal(miniSurgeResult.horde.field.length, 4);
-  assert.equal(miniSurgeResult.horde.archive.length, 0);
+  assert.equal(miniSurgeResult.hostTurnNumber, 6);
+  assert.equal(miniSurgeResult.host.field.length, 4);
+  assert.equal(miniSurgeResult.host.archive.length, 0);
   assert.equal(miniSurgeResult.log.some((entry) => entry.includes("Mini Surge")), true);
 
   const followingTurn = createTestGame("after-mini-surge-reveal");
-  followingTurn.hordeTurnNumber = 6;
+  followingTurn.hostTurnNumber = 6;
   for (let index = 0; index < 4; index += 1) {
-    addCard(followingTurn, customCard(`after_mini_surge_token_${index}`, "horde", { zone: "archive", isToken: true }), "horde", "archive");
+    addCard(followingTurn, customCard(`after_mini_surge_token_${index}`, "host", { zone: "archive", isToken: true }), "host", "archive");
   }
 
-  const followingResult = runHordeMain(followingTurn);
-  assert.equal(followingResult.hordeTurnNumber, 7);
-  assert.equal(followingResult.horde.field.length, 3);
-  assert.equal(followingResult.horde.archive.length, 1);
+  const followingResult = runHostMain(followingTurn);
+  assert.equal(followingResult.hostTurnNumber, 7);
+  assert.equal(followingResult.host.field.length, 3);
+  assert.equal(followingResult.host.archive.length, 1);
 });
 
 test("Host rule defaults are isolated and reject unsafe runtime overrides", () => {
@@ -2574,126 +2574,126 @@ test("non-default Host rules drive damage, Poison and Impetus behavior", () => {
   combatGame.hostRules = buildHostRules({ damagePerArchiveDiscard: 2 });
   const attacker = addCard(combatGame, customCard("custom_rule_attacker", "player", { power: 3 }));
   for (let index = 0; index < 3; index += 1) {
-    addCard(combatGame, customCard(`custom_damage_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+    addCard(combatGame, customCard(`custom_damage_archive_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
   combatGame.combat.playerAttackers = [attacker.instanceId];
   const afterCombat = resolvePlayerCombat(combatGame);
-  assert.equal(afterCombat.horde.archive.length, 2);
-  assert.equal(afterCombat.horde.memory.length, 1);
+  assert.equal(afterCombat.host.archive.length, 2);
+  assert.equal(afterCombat.host.memory.length, 1);
 
   const poisonGame = createTestGame("custom-host-poison-threshold");
   poisonGame.hostRules = buildHostRules({ poisonPerArchiveDiscard: 4 });
-  poisonGame.horde.poisonCounters = 7;
+  poisonGame.host.poisonCounters = 7;
   for (let index = 0; index < 3; index += 1) {
-    addCard(poisonGame, customCard(`custom_poison_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+    addCard(poisonGame, customCard(`custom_poison_archive_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
   const afterPoison = endPlayerTurn(poisonGame);
-  assert.equal(afterPoison.horde.archive.length, 2);
-  assert.equal(afterPoison.horde.memory.length, 1);
-  assert.equal(afterPoison.horde.poisonCounters, 3);
+  assert.equal(afterPoison.host.archive.length, 2);
+  assert.equal(afterPoison.host.memory.length, 1);
+  assert.equal(afterPoison.host.poisonCounters, 3);
 
   const impetusGame = createTestGame("custom-host-impetus");
   impetusGame.hostRules = buildHostRules({ hostEchosHaveImpetus: false });
-  addCard(impetusGame, customCard("custom_host_echo", "horde", { zone: "archive" }), "horde", "archive");
-  addCard(impetusGame, customCard("custom_host_archive_guard", "horde", { zone: "archive" }), "horde", "archive");
-  const afterReveal = revealHordeCardFromTop(impetusGame);
-  const revealed = afterReveal.horde.field.find((card) => card.definitionId === "custom_host_echo");
+  addCard(impetusGame, customCard("custom_host_echo", "host", { zone: "archive" }), "host", "archive");
+  addCard(impetusGame, customCard("custom_host_archive_guard", "host", { zone: "archive" }), "host", "archive");
+  const afterReveal = revealHostCardFromTop(impetusGame);
+  const revealed = afterReveal.host.field.find((card) => card.definitionId === "custom_host_echo");
   assert.ok(revealed);
   assert.equal(revealed.stabilizing, true);
   assert.equal(hasTrait(afterReveal, revealed, "IMPETUS"), false);
   assert.equal(canAttack(afterReveal, revealed), false);
 
-  const afterReady = finishHordeTurn(afterReveal);
-  const readied = afterReady.horde.field.find((card) => card.instanceId === revealed.instanceId);
+  const afterReady = finishHostTurn(afterReveal);
+  const readied = afterReady.host.field.find((card) => card.instanceId === revealed.instanceId);
   assert.ok(readied);
   assert.equal(readied.stabilizing, false);
   assert.equal(canAttack(afterReady, readied), true);
 });
 
-test("Surge depends only on reaching the tenth Horde turn", () => {
+test("Surge depends only on reaching the tenth Host turn", () => {
   const game = createTestGame("surge-clock");
-  game.hordeTurnNumber = 9;
+  game.hostTurnNumber = 9;
   for (let index = 0; index < 20; index += 1) {
-    addCard(game, customCard(`surge_clock_grave_${index}`, "horde", { zone: "memory" }), "horde", "memory");
+    addCard(game, customCard(`surge_clock_grave_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
 
-  assert.equal(hordeInSurge(game), false);
+  assert.equal(hostInSurge(game), false);
 
-  game.hordeTurnNumber = 10;
-  assert.equal(hordeInSurge(game), true);
+  game.hostTurnNumber = 10;
+  assert.equal(hostInSurge(game), true);
 });
 
-test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
+test("Host Zombies gain +1/+0 continuously from Surge onward", () => {
   const game = createTestGame("surge-zombie-power");
   // The surge bonus is deck data, not an engine rule: it comes from the zombie deck's profile.
-  game.hostRules = buildHostRules(hordeDeck.rulesProfile);
-  const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, endurance: 2 }));
-  const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, endurance: 2 }));
+  game.hostRules = buildHostRules(hostDeck.rulesProfile);
+  const hostZombie = addCard(game, customCard("surge_zombie", "host", { subtypes: ["Zombie"], power: 2, endurance: 2 }));
+  const hostNonZombie = addCard(game, customCard("surge_bat", "host", { subtypes: ["Bat"], power: 2, endurance: 2 }));
   const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, endurance: 2 }));
 
-  game.hordeTurnNumber = 6;
-  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 2, endurance: 2 });
+  game.hostTurnNumber = 6;
+  assert.deepEqual(getPowerEndurance(game, hostZombie), { power: 2, endurance: 2 });
 
-  game.hordeTurnNumber = 10;
-  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 3, endurance: 2 });
-  assert.deepEqual(getPowerEndurance(game, hordeNonZombie), { power: 2, endurance: 2 });
+  game.hostTurnNumber = 10;
+  assert.deepEqual(getPowerEndurance(game, hostZombie), { power: 3, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(game, hostNonZombie), { power: 2, endurance: 2 });
   assert.deepEqual(getPowerEndurance(game, playerZombie), { power: 2, endurance: 2 });
 
-  game.hordeTurnNumber = 12;
-  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 3, endurance: 2 });
+  game.hostTurnNumber = 12;
+  assert.deepEqual(getPowerEndurance(game, hostZombie), { power: 3, endurance: 2 });
 });
 
-test("the surge stat bonus is per-deck: the goblin horde gets none", () => {
+test("the surge stat bonus is per-deck: the goblin host gets none", () => {
   const game = createTestGame("surge-goblin-power");
-  game.hostRules = buildHostRules(getHordeDeck("goblin_assault_horde").rulesProfile);
-  const goblin = addCard(game, customCard("surge_goblin", "horde", { subtypes: ["Goblin"], power: 2, endurance: 2 }));
+  game.hostRules = buildHostRules(getHostDeck("goblin_assault_horde").rulesProfile);
+  const goblin = addCard(game, customCard("surge_goblin", "host", { subtypes: ["Goblin"], power: 2, endurance: 2 }));
 
-  game.hordeTurnNumber = 10;
-  assert.equal(hordeInSurge(game), true);
+  game.hostTurnNumber = 10;
+  assert.equal(hostInSurge(game), true);
   assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
 });
 
-test("revealing one Horde card plays that card and nothing else", () => {
-  // The Playground's "play this card" for the Horde. Running a Horde turn instead would untap,
+test("revealing one Host card plays that card and nothing else", () => {
+  // The Playground's "play this card" for the Host. Running a Host turn instead would untap,
   // reveal up to three of the loaded deck's own cards and advance the clock — so playing a single
   // Goblin token would drag a whole Zombie turn along with it.
-  const game = createTestGame("horde-single-reveal");
+  const game = createTestGame("host-single-reveal");
   // Three in the library: a turn would reveal all three, a single reveal takes exactly one.
   for (let index = 0; index < 3; index += 1) {
-    addCard(game, customCard(`horde_stack_${index}`, "horde", { zone: "archive", isToken: true }), "horde", "archive");
+    addCard(game, customCard(`host_stack_${index}`, "host", { zone: "archive", isToken: true }), "host", "archive");
   }
-  const before = { turn: game.hordeTurnNumber, phase: game.phase, side: game.activeSide };
-  const libraryBefore = game.horde.archive.length;
-  const top = game.horde.archive[0];
+  const before = { turn: game.hostTurnNumber, phase: game.phase, side: game.activeSide };
+  const libraryBefore = game.host.archive.length;
+  const top = game.host.archive[0];
 
-  const next = revealHordeCardFromTop(game);
+  const next = revealHostCardFromTop(game);
 
   assert.equal(next.lastActionResult.ok, true);
-  assert.equal(next.horde.archive.length, libraryBefore - 1, "exactly one card left the library");
-  assert.equal(next.hordeTurnNumber, before.turn, "a single reveal is not a turn");
+  assert.equal(next.host.archive.length, libraryBefore - 1, "exactly one card left the library");
+  assert.equal(next.hostTurnNumber, before.turn, "a single reveal is not a turn");
   assert.equal(next.phase, before.phase);
   assert.equal(next.activeSide, before.side);
-  assert.equal(next.combat.hordeAttackers.length, 0, "nothing is declared as an attacker");
-  // The card itself really entered, through the Horde's own play path.
-  const landed = [...next.horde.field, ...next.horde.memory].some((card) => card.instanceId === top.instanceId);
+  assert.equal(next.combat.hostAttackers.length, 0, "nothing is declared as an attacker");
+  // The card itself really entered, through the Host's own play path.
+  const landed = [...next.host.field, ...next.host.memory].some((card) => card.instanceId === top.instanceId);
   assert.ok(landed, `${top.name} should have entered play or gone to the graveyard`);
 });
 
 test("revealing from an empty Host Archive reports a reason instead of doing nothing", () => {
-  const game = createTestGame("horde-single-reveal-empty");
-  game.horde.archive = [];
+  const game = createTestGame("host-single-reveal-empty");
+  game.host.archive = [];
 
-  const next = revealHordeCardFromTop(game);
+  const next = revealHostCardFromTop(game);
   assert.equal(next.lastActionResult.ok, false);
   assert.match(next.lastActionResult.reason, /Host Archive is empty/i);
 });
 
-test("Chaos Surge begins on the eighth Horde turn", () => {
+test("Chaos Surge begins on the eighth Host turn", () => {
   const game = createTestGame("chaos-surge-clock");
   game.gameMode = "chaos";
-  game.hordeTurnNumber = 7;
-  assert.equal(hordeInSurge(game), false);
+  game.hostTurnNumber = 7;
+  assert.equal(hostInSurge(game), false);
 
-  game.hordeTurnNumber = 8;
-  assert.equal(hordeInSurge(game), true);
+  game.hostTurnNumber = 8;
+  assert.equal(hostInSurge(game), true);
 });

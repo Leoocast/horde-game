@@ -176,7 +176,7 @@ Los eventos y condiciones aceptados cambian con el engine. No mantener una lista
 guía: consultar `AUTHORING_TRIGGER_EVENTS`, `ENGINE_TRIGGER_EVENTS` y
 `TRIGGER_CONDITION_TYPES` en `effectVocabulary.ts`. El deck lint rechaza valores desconocidos.
 
-Los triggers de Horda se resuelven mediante `EventQueue` y `hordeBeats.ts`:
+Los triggers de la Host se resuelven mediante `EventQueue` y `hostBeats.ts`:
 
 - un source por beat;
 - sólo reaccionan permanentes que presenciaron el evento;
@@ -339,14 +339,14 @@ Antes de añadir código de presentación, comprobar:
 - `EFFECT_PRESENTATIONS` en `EffectResolver.ts`: clasifica fight, source damage y destroy para que
   el store elija una animación sin reaprender tipos.
 - `EFFECT_ANNOUNCEMENTS`: permite generar mensajes de tokens, mill, discard o pérdida de vida.
-- `hordeBeats.ts`: handlers genéricos para Burn, auras estáticas, death reveal y pulse normal.
+- `hostBeats.ts`: handlers genéricos para Burn, auras estáticas, death reveal y pulse normal.
 - `presentationEffects.ts`: helpers de buff, vida, descarte, mill y pago automático.
 - `docs/animation_contracts.md`: orden y tiempos que no se deben romper.
 
 Para un look nuevo de la Horda:
 
 1. Definir una señal genérica en los datos o evento.
-2. Añadir un `HordeBeatHandler` que reclame esa señal.
+2. Añadir un `HostBeatHandler` que reclame esa señal.
 3. No comprobar nombres ni `definitionId`.
 4. Resolver el engine exactamente cuando el impacto visual aterriza.
 5. Llamar `done()` sólo cuando el beat y cualquier reflow relevante hayan terminado.

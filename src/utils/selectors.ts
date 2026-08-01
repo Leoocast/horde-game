@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { getTraits } from "../engine/Traits";
-import { getPowerEndurance, hordeInSurge } from "../engine/StaticEffects";
+import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 
 export function cardStats(game: GameState, card: CardInstance): string {
   return cardStatState(game, card).text;
@@ -35,7 +35,7 @@ export function cardStatState(
 
 export function cardTraits(game: GameState, card: CardInstance): string {
   return sortTraitsForDisplay(getTraits(game, card))
-    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "OVERFLOW") && (keyword !== "IMPETUS" || card.controller !== "horde"))
+    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "OVERFLOW") && (keyword !== "IMPETUS" || card.controller !== "host"))
     .map(formatTrait)
     .join(", ");
 }
@@ -85,12 +85,12 @@ function formatTrait(keyword: string): string {
 export function zoneCount(game: GameState, side: Side, zone: "archive" | "hand" | "field" | "memory" | "oblivion"): number {
   if (side === "player") return game.player[zone].length;
   if (zone === "hand") return 0;
-  return game.horde[zone].length;
+  return game.host[zone].length;
 }
 
 export function gameStatus(game: GameState): string {
-  if (game.winner) return `${game.winner === "player" ? "Player" : "Horde"} wins`;
-  if (game.gameMode === "chaos") return hordeInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
+  if (game.winner) return `${game.winner === "player" ? "Player" : "Host"} wins`;
+  if (game.gameMode === "chaos") return hostInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
   if (game.setupTurnsRemaining > 0) return `Setup: ${game.setupTurnsRemaining} player turn(s) remain`;
-  return hordeInSurge(game) ? "Horde Surge active" : "Normal alternation";
+  return hostInSurge(game) ? "Host Surge active" : "Normal alternation";
 }

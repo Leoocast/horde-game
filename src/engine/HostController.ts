@@ -2,36 +2,36 @@ import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runInvokedTriggers } from "./EffectResolver";
 import { recordFieldEntry } from "./GameState";
-import { prepareHordeAttackers } from "./CombatResolver";
-import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
+import { prepareHostAttackers } from "./CombatResolver";
+import { hostInSurge, hostSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, readySide, startPlayerTurnReady } from "./TurnManager";
 import { releasePendingStoredEnergy } from "./EnergySystem";
 
-type HordeMainOptions = {
+type HostMainOptions = {
   deferInvokedTriggers?: boolean;
 };
 
-export function runHordeMain(game: GameState, options: HordeMainOptions = {}): GameState {
+export function runHostMain(game: GameState, options: HostMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
   const rules = next.hostRules;
-  const wasInSurge = hordeInSurge(next);
+  const wasInSurge = hostInSurge(next);
   next.fieldEntriesThisTurn = [];
-  next.hordeTurnNumber += 1;
-  next.activeSide = "horde";
-  next.phase = "horde";
-  next.setupCompletePendingHorde = false;
-  readySide(next, "horde");
-  next.log.unshift("Horde readies its Field.");
+  next.hostTurnNumber += 1;
+  next.activeSide = "host";
+  next.phase = "host";
+  next.setupCompletePendingHost = false;
+  readySide(next, "host");
+  next.log.unshift("Host readies its Field.");
   revealNormal(next, options);
-  if (next.hordeTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
-    next.log.unshift(`Horde Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
+  if (next.hostTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
+    next.log.unshift(`Host Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
     revealAndPlay(next, rules.miniSurgeExtraReveals, options);
   }
-  if (hordeInSurge(next)) {
+  if (hostInSurge(next)) {
     next.log.unshift(
       wasInSurge
-        ? `Horde Surge reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " have ")}`
-        : `Horde enters Surge on turn ${hordeSurgeTurn(next)} and reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " get ")}`,
+        ? `Host Surge reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " have ")}`
+        : `Host enters Surge on turn ${hostSurgeTurn(next)} and reveals ${rules.surgeExtraReveals} extra card(s).${surgeBonusText(next, " get ")}`,
     );
     revealAndPlay(next, rules.surgeExtraReveals, options);
   }
@@ -44,26 +44,26 @@ function surgeBonusText(game: GameState, verb: string): string {
   const bonus = game.hostRules.surgeBonus;
   if (!bonus) return "";
   const sign = (value: number) => `${value >= 0 ? "+" : ""}${value}`;
-  return ` Horde ${bonus.subtypes.join("/")}s${verb}${sign(bonus.power)}/${sign(bonus.endurance)}.`;
+  return ` Host ${bonus.subtypes.join("/")}s${verb}${sign(bonus.power)}/${sign(bonus.endurance)}.`;
 }
 
-export function runFullHordeTurn(game: GameState): GameState {
-  let next = runHordeMain(game);
-  next = prepareHordeAttackers(next);
+export function runFullHostTurn(game: GameState): GameState {
+  let next = runHostMain(game);
+  next = prepareHostAttackers(next);
   return next;
 }
 
 /**
  * Reveals and plays exactly ONE card off the top of the Host Archive, through the same path the
- * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No ready step, reveal count,
+ * Host's turn uses — reveal, ETB, triggers, Smallpox parking and all. No ready step, reveal count,
  * no surge, no combat: this is a single card entering play, not a turn.
  *
- * Only the Playground needs it. A match never plays one Horde card in isolation, but a lab does:
- * putting a card on the board to look at it must not drag a whole Horde turn along with it.
+ * Only the Playground needs it. A match never plays one Host card in isolation, but a lab does:
+ * putting a card on the board to look at it must not drag a whole Host turn along with it.
  */
-export function revealHordeCardFromTop(game: GameState, options: HordeMainOptions = {}): GameState {
+export function revealHostCardFromTop(game: GameState, options: HostMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.horde.archive.length === 0) {
+  if (next.host.archive.length === 0) {
     next.lastActionResult = { ok: false, reason: "The Host Archive is empty." };
     return next;
   }
@@ -74,62 +74,62 @@ export function revealHordeCardFromTop(game: GameState, options: HordeMainOption
   return next;
 }
 
-export function finishHordeTurn(game: GameState): GameState {
+export function finishHostTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
-  readySide(next, "horde");
+  readySide(next, "host");
   const releasedEnergy = releasePendingStoredEnergy(next);
   startPlayerTurnReady(next);
   if (releasedEnergy > 0) next.log.unshift(`Player gains ${releasedEnergy} Stored Energy.`);
-  next.log.unshift("Horde turn ends.");
+  next.log.unshift("Host turn ends.");
   return next;
 }
 
-function revealNormal(game: GameState, options: HordeMainOptions): void {
+function revealNormal(game: GameState, options: HostMainOptions): void {
   let played = 0;
-  while (played < game.hostRules.revealCount && game.horde.archive.length > 0) {
+  while (played < game.hostRules.revealCount && game.host.archive.length > 0) {
     const card = revealAndPlayOne(game, options);
     played += 1;
     if (game.hostRules.stopOnNonToken && card && !card.isToken) {
-      game.log.unshift(`Horde reveals ${card.name} and stops revealing.`);
+      game.log.unshift(`Host reveals ${card.name} and stops revealing.`);
       break;
     }
   }
 }
 
-function revealAndPlay(game: GameState, amount: number, options: HordeMainOptions): void {
+function revealAndPlay(game: GameState, amount: number, options: HostMainOptions): void {
   for (let i = 0; i < amount; i += 1) {
-    if (game.horde.archive.length === 0) break;
+    if (game.host.archive.length === 0) break;
     revealAndPlayOne(game, options);
   }
 }
 
-function resolveRequestedRevealRounds(game: GameState, options: HordeMainOptions): void {
-  while ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.archive.length > 0) {
-    game.horde.pendingRevealRounds = Math.max(0, (game.horde.pendingRevealRounds ?? 0) - 1);
-    game.log.unshift("Horde begins an extra reveal round.");
+function resolveRequestedRevealRounds(game: GameState, options: HostMainOptions): void {
+  while ((game.host.pendingRevealRounds ?? 0) > 0 && game.host.archive.length > 0) {
+    game.host.pendingRevealRounds = Math.max(0, (game.host.pendingRevealRounds ?? 0) - 1);
+    game.log.unshift("Host begins an extra reveal round.");
     revealNormal(game, options);
   }
-  if ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.archive.length === 0) {
-    game.horde.pendingRevealRounds = 0;
+  if ((game.host.pendingRevealRounds ?? 0) > 0 && game.host.archive.length === 0) {
+    game.host.pendingRevealRounds = 0;
   }
 }
 
-function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInstance | undefined {
-  const card = game.horde.archive.shift();
+function revealAndPlayOne(game: GameState, options: HostMainOptions): CardInstance | undefined {
+  const card = game.host.archive.shift();
   if (!card) return undefined;
-  game.log.unshift(`Horde reveals ${card.name}.`);
-  // Bridge: Smallpox needs a bespoke, player-interactive multi-step resolution (Horde sacrifices,
+  game.log.unshift(`Host reveals ${card.name}.`);
+  // Bridge: Smallpox needs a bespoke, player-interactive multi-step resolution (Host sacrifices,
   // then the player chooses life/discard/creature/land) that can't run inside this synchronous
   // reveal. Park it unresolved; the store drives the sequence and moves it to Memory itself.
   if (card.definitionId === "smallpox") {
-    game.horde.pendingCard = card;
+    game.host.pendingCard = card;
     return card;
   }
   if (card.kinds.includes("SPELL")) {
-    resolveEffects(game, card.effects, { source: card, side: "horde" });
+    resolveEffects(game, card.effects, { source: card, side: "host" });
     card.zone = "memory";
-    game.horde.memory.push(card);
+    game.host.memory.push(card);
     enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
     return card;
   }
@@ -139,7 +139,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
   for (const counter of card.effects.filter((effect) => effect.type === "ENTERS_WITH_COUNTERS")) {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
-  game.horde.field.push(card);
+  game.host.field.push(card);
   recordFieldEntry(game, card);
   if (!options.deferInvokedTriggers) runInvokedTriggers(game, card);
   enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });

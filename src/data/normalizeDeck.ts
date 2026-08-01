@@ -316,5 +316,5 @@ function normalizeEffectTarget(target: unknown): Record<string, unknown> {
 }
 
 function normalizeSide(side?: string): Side {
-  return side === "HORDE" || side === "horde" ? "horde" : "player";
+  return side === "HOST" || side === "host" ? "host" : "player";
 }

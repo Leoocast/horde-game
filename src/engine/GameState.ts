@@ -10,54 +10,54 @@ const CHAOS_STARTING_LIFE = 35;
 const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HORDE_OPENING_ARCHIVE = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
-const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
+const DEVELOPER_HOST_OPENING_ARCHIVE = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
+const DEVELOPER_HOST_PROTECTED_OPENING_SIZE = 2;
 const DEVELOPER_STARTING_LAND_COUNT = 4;
 
 export function createInitialGame(
   playerDeck: DeckList,
-  hordeDeck: DeckList,
+  hostDeck: DeckList,
   seed = "hostfall-seed",
   setupTurns = 4,
   difficulty: DifficultyMode = "normal",
   gameMode: GameMode = "standard",
 ): GameState {
   const activePlayerDeck = gameMode === "chaos" ? prepareChaosDeck(playerDeck) : playerDeck;
-  const activeHordeDeck = gameMode === "chaos" ? prepareChaosDeck(hordeDeck) : hordeDeck;
+  const activeHostDeck = gameMode === "chaos" ? prepareChaosDeck(hostDeck) : hostDeck;
   const chaosMutations = gameMode === "chaos"
     ? {
         player: buildChaosMutations(activePlayerDeck, "player", seed),
-        horde: buildChaosMutations(activeHordeDeck, "horde", seed),
+        host: buildChaosMutations(activeHostDeck, "host", seed),
       }
-    : { player: {}, horde: {} };
+    : { player: {}, host: {} };
   const playerCards = limitPlayerDeckLands(
     expandDeck(activePlayerDeck, "player", chaosMutations.player),
     activePlayerDeck.gameplayLandCount ?? DEFAULT_PLAYER_DECK_LAND_COUNT,
   );
-  const hordeCards = expandDeck(activeHordeDeck, "horde", chaosMutations.horde);
+  const hostCards = expandDeck(activeHostDeck, "host", chaosMutations.host);
   const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
   const playerArchive = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
-  const shuffledHorde = shuffleWithState(hordeCards, randomState);
-  randomState = shuffledHorde.randomState;
-  const hordeArchive = applyDeveloperHordeOpeningArchive(seed, shuffledHorde.items);
+  const shuffledHost = shuffleWithState(hostCards, randomState);
+  randomState = shuffledHost.randomState;
+  const hostArchive = applyDeveloperHostOpeningArchive(seed, shuffledHost.items);
 
   const game: GameState = {
     seed,
     difficulty,
     gameMode,
-    hostRules: buildHostRules(activeHordeDeck.rulesProfile),
+    hostRules: buildHostRules(activeHostDeck.rulesProfile),
     chaosMutations,
     currentRandomState: randomState,
-    hordeDeckOrderHash: hordeArchive.map((card) => card.definitionId).join("|"),
+    hostDeckOrderHash: hostArchive.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
-    hordeTurnNumber: 0,
+    hostTurnNumber: 0,
     setupTurnsRemaining: effectiveSetupTurns,
-    setupCompletePendingHorde: false,
+    setupCompletePendingHost: false,
     openingHandAccepted: false,
     mulligansTaken: 0,
     player: {
@@ -77,14 +77,14 @@ export function createInitialGame(
       lifePaidThisTurn: 0,
       lifeLostThisTurn: 0,
     },
-    horde: {
-      archive: hordeArchive,
+    host: {
+      archive: hostArchive,
       field: [],
       memory: [],
       oblivion: [],
       poisonCounters: 0,
     },
-    combat: { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] },
+    combat: { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] },
     fieldEntriesThisTurn: [],
     eventQueue: [],
     log: [],
@@ -99,7 +99,7 @@ export function createInitialGame(
 }
 
 export function recordFieldEntry(game: GameState, card: CardInstance): void {
-  card.fieldEntryTurn = card.controller === "horde" ? game.hordeTurnNumber : game.turnNumber;
+  card.fieldEntryTurn = card.controller === "host" ? game.hostTurnNumber : game.turnNumber;
   game.fieldEntriesThisTurn.push({
     instanceId: card.instanceId,
     controller: card.controller,
@@ -151,14 +151,14 @@ function applyDeveloperOpeningHand(seed: string, archive: CardInstance[]): CardI
   return [...forced, ...remaining];
 }
 
-function applyDeveloperHordeOpeningArchive(seed: string, archive: CardInstance[]): CardInstance[] {
+function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[]): CardInstance[] {
   if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return archive;
-  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_HORDE_OPENING_ARCHIVE);
+  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_HOST_OPENING_ARCHIVE);
   const ordered = [...forced, ...remaining];
-  for (let index = 0; index < Math.min(DEVELOPER_HORDE_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
+  for (let index = 0; index < Math.min(DEVELOPER_HOST_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
     if (ordered[index].definitionId !== "graf_harvest") continue;
     const replacementIndex = ordered.findIndex(
-      (card, candidateIndex) => candidateIndex >= DEVELOPER_HORDE_PROTECTED_OPENING_SIZE && card.definitionId !== "graf_harvest",
+      (card, candidateIndex) => candidateIndex >= DEVELOPER_HOST_PROTECTED_OPENING_SIZE && card.definitionId !== "graf_harvest",
     );
     if (replacementIndex < 0) break;
     [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];

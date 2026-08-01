@@ -153,8 +153,8 @@ function findCard(game: GameState, id: string): CardInstance | undefined {
     ...game.player.field,
     ...game.player.memory,
     ...game.player.oblivion,
-    ...game.horde.field,
-    ...game.horde.memory,
-    ...game.horde.oblivion,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
   ].find((card) => card.instanceId === id);
 }

@@ -1,4 +1,4 @@
-import type { GameState, Side } from "../engine/GameTypes";
+import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import {
   addEnergySource,
@@ -14,7 +14,7 @@ import {
   sendCardToGraveyard,
   type PlaygroundActionResult,
 } from "./actions";
-import { addScenarioCard, configureExactHordeTurn, stageHordeQueue, type ScenarioCard, type ScenarioZoneKey } from "./scenario";
+import { addScenarioCard, configureExactHostTurn, scenarioSideToRuntime, stageHostQueue, type ScenarioCard, type ScenarioSide, type ScenarioZoneKey } from "./scenario";
 
 /**
  * A recorded playground action. This is the whole timeline format — recording is just appending
@@ -40,11 +40,11 @@ export type TimelineStep =
   /** Pick a card from the catalog and let it happen for real: a player card goes to Hand and casts
    *  through the normal path, a Host card goes on top of the Host Archive and the Host plays it
    *  on its turn. There is no third way to put a card into play — that is the whole point. */
-  | { kind: "playCard"; definitionId: string; cardName: string; side: Side }
+  | { kind: "playCard"; definitionId: string; cardName: string; side: ScenarioSide }
   | { kind: "play"; handId: string; cardName: string; free: boolean }
   | { kind: "destroy"; cardId: string; cardName: string }
   | { kind: "toGraveyard"; cardId: string; cardName: string }
-  | { kind: "clearBattlefield"; side: Side };
+  | { kind: "clearBattlefield"; side: ScenarioSide };
 
 export type StepOutcome = { ok: boolean; reason?: string; message?: string };
 
@@ -83,18 +83,18 @@ export function executeStep(step: TimelineStep): StepOutcome {
       store.endPlayerTurn();
       return readEngineOutcome("Turn advanced.");
     case "hordeTurn":
-      store.runHordeMain();
+      store.runHostMain();
       return readEngineOutcome("Host turn running.");
     case "hordeTurnExact": {
       const originalRules = structuredClone(store.game.hostRules);
-      const withQueue = step.entries ? stageHordeQueue(store.game, step.entries) : store.game;
+      const withQueue = step.entries ? stageHostQueue(store.game, step.entries) : store.game;
       if (withQueue.lastActionResult?.ok === false) {
         useGameStore.setState({ game: withQueue });
         return { ok: false, reason: withQueue.lastActionResult.reason };
       }
-      const staged = configureExactHordeTurn(withQueue, queuedCardCount(step));
+      const staged = configureExactHostTurn(withQueue, queuedCardCount(step));
       useGameStore.setState({ game: staged });
-      store.runHordeMain();
+      store.runHostMain();
       useGameStore.setState(({ game }) => ({ game: { ...game, hostRules: originalRules } }));
       return readEngineOutcome("Queued Host turn running.");
     }
@@ -121,7 +121,7 @@ export function executeStep(step: TimelineStep): StepOutcome {
     case "toGraveyard":
       return applyToGame((game) => sendCardToGraveyard(game, step.cardId));
     case "clearBattlefield":
-      return applyToGame((game) => clearBattlefield(game, step.side));
+      return applyToGame((game) => clearBattlefield(game, scenarioSideToRuntime(step.side)));
     case "play":
       return playCard(step);
     default:
@@ -144,7 +144,7 @@ function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): Ste
   const store = useGameStore.getState();
 
   if (step.side === "horde") {
-    // Staged on top and revealed as a single card. Running a whole Horde turn instead would untap,
+    // Staged on top and revealed as a single card. Running a whole Host turn instead would untap,
     // reveal the loaded deck's own cards and swing — playing one Goblin token would drag a Zombie
     // turn along with it, which is not what "play this card" means.
     const staged = addScenarioCard(store.game, "hordeLibraryTop", { definitionId: step.definitionId });
@@ -152,7 +152,7 @@ function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): Ste
       return { ok: false, reason: staged.lastActionResult?.reason ?? "Could not stage that card." };
     }
     useGameStore.setState({ game: staged });
-    store.resolveHordeCardFromTop();
+    store.resolveHostCardFromTop();
     return readEngineOutcome(`${step.cardName} is Invoked for the Host.`);
   }
 
@@ -218,16 +218,16 @@ function readEngineOutcome(message: string): StepOutcome {
 export function isPlaygroundBusy(): boolean {
   const state = useGameStore.getState();
   return (
-    state.resolvingHordeCombat ||
+    state.resolvingHostCombat ||
     state.summoningAnimationCount > 0 ||
-    state.hordeAutoTriggerCount > 0 ||
+    state.hostAutoTriggerCount > 0 ||
     state.playerAutoTriggerCount > 0 ||
     state.pendingTriggeredEffectCount > 0 ||
-    state.hordeMillAnimationQueue.length > 0 ||
+    state.hostMillAnimationQueue.length > 0 ||
     state.playerDiscardAnimationQueue.length > 0 ||
     state.landPlayAnimationQueue.length > 0 ||
     state.surgeTransitionActive ||
-    Boolean(state.hordeAttackAnimation) ||
+    Boolean(state.hostAttackAnimation) ||
     Boolean(state.playerAttackAnimation) ||
     Boolean(state.spellFightAnimation) ||
     Boolean(state.brokenWingsAnimation) ||

@@ -66,13 +66,13 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const deckTheme = cardThemeForDefinition(card.definitionId);
   const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
-  // Horde creatures Exhaust as a rule of the mode, not as a choice the player made, so they never
+  // Host creatures Exhaust as a rule of the mode, not as a choice the player made, so they never
   // get the grey "spent" treatment or the Exhausted badge. They DO lean as soon as they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
-  const usesHordeExhaustedStyle = card.controller === "horde" && card.kinds.includes("ECHO");
+  const usesHostExhaustedStyle = card.controller === "host" && card.kinds.includes("ECHO");
   const keywordToneClass = cardTheme
     ? `card-keyword-badge-${cardTheme}`
-    : card.controller === "horde"
+    : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
   const { imageUrl } = useCardDetails(card.definitionId);
@@ -117,7 +117,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       role={selectionDisabled ? undefined : "button"}
       aria-label={[
         localizedName,
-        card.exhausted && !usesHordeExhaustedStyle ? t("card.exhausted") : "",
+        card.exhausted && !usesHostExhaustedStyle ? t("card.exhausted") : "",
         stabilizing ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
       ].filter(Boolean).join(", ")}
       aria-disabled={selectionDisabled ? "true" : undefined}
@@ -149,8 +149,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
           : "overflow-hidden rounded-md border bg-stone-900 shadow-lg shadow-black/30",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
-        card.exhausted || (attacking && usesHordeExhaustedStyle) ? "card-tapped" : "",
-        (card.exhausted || attacking) && usesHordeExhaustedStyle ? "card-tapped-zombie" : "",
+        card.exhausted || (attacking && usesHostExhaustedStyle) ? "card-tapped" : "",
+        (card.exhausted || attacking) && usesHostExhaustedStyle ? "card-tapped-zombie" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
@@ -205,8 +205,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       {stabilizing && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.exhausted && !usesHordeExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}
-          {attacking && !(card.controller === "horde" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
+          {card.exhausted && !usesHostExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}
+          {attacking && !(card.controller === "host" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : null}
@@ -236,10 +236,10 @@ export function CardDefenseBadge({
   variant,
 }: {
   count: string;
-  variant: "horde" | "player";
+  variant: "host" | "player";
 }) {
   const t = useTranslation();
-  const label = variant === "horde"
+  const label = variant === "host"
     ? t("card.blockersAssigned", { count })
     : t("card.blockingOrder", { count });
 

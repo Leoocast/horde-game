@@ -1,6 +1,6 @@
 import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
-export function hordeSurgeTurn(game: GameState): number {
+export function hostSurgeTurn(game: GameState): number {
   return game.gameMode === "chaos" ? game.hostRules.surgeTurnChaos : game.hostRules.surgeTurn;
 }
 
@@ -16,10 +16,10 @@ export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: 
 
 export function resolveAffectedController(sourceController: Side, controller: unknown): Side | undefined {
   const text = String(controller ?? "SELF").toUpperCase();
-  if (text === "HORDE") return "horde";
+  if (text === "HOST") return "host";
   if (text === "PLAYER") return "player";
   if (text === "SELF") return sourceController;
-  if (text === "OPPONENT") return sourceController === "player" ? "horde" : "player";
+  if (text === "OPPONENT") return sourceController === "player" ? "host" : "player";
   return undefined;
 }
 
@@ -56,8 +56,8 @@ export function getPowerEndurance(
   const surgeBonus = game.hostRules.surgeBonus;
   if (
     surgeBonus &&
-    hordeInSurge(game) &&
-    card.controller === "horde" &&
+    hostInSurge(game) &&
+    card.controller === "host" &&
     card.kinds.includes("ECHO") &&
     card.subtypes.some((subtype) => surgeBonus.subtypes.some((bonusSubtype) => bonusSubtype.toLowerCase() === subtype.toLowerCase()))
   ) {
@@ -65,7 +65,7 @@ export function getPowerEndurance(
     endurance += surgeBonus.endurance;
   }
 
-  for (const source of [...game.player.field, ...game.horde.field]) {
+  for (const source of [...game.player.field, ...game.host.field]) {
     if (excludedBuffSourceIds?.has(source.instanceId)) continue;
     for (const effect of source.effects) {
       if (effect.type === "STATIC_BUFF") {
@@ -88,6 +88,6 @@ export function getPowerEndurance(
   return { power, endurance };
 }
 
-export function hordeInSurge(game: GameState): boolean {
-  return game.hordeTurnNumber >= hordeSurgeTurn(game);
+export function hostInSurge(game: GameState): boolean {
+  return game.hostTurnNumber >= hostSurgeTurn(game);
 }

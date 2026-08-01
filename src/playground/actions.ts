@@ -135,7 +135,7 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
 export function clearBattlefield(game: GameState, side: Side): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   const removed = next[side].field;
-  if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Host" : "Chronicler"} Field is already empty.`);
+  if (removed.length === 0) return fail(game, `The ${side === "host" ? "Host" : "Chronicler"} Field is already empty.`);
   for (const card of removed) card.zone = "memory";
   next[side].memory.push(...removed);
   next[side].field = [];
@@ -158,13 +158,13 @@ export function resolveAllEvents(game: GameState): PlaygroundActionResult {
 }
 
 function findBattlefieldCard(game: GameState, cardId: string): CardInstance | undefined {
-  return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === cardId);
+  return [...game.player.field, ...game.host.field].find((card) => card.instanceId === cardId);
 }
 
 function locateCard(game: GameState, cardId: string): { card: CardInstance; side: Side; zone: ZoneName } | undefined {
-  for (const side of ["player", "horde"] as const) {
+  for (const side of ["player", "host"] as const) {
     for (const zone of ["field", "hand", "archive", "memory", "oblivion"] as const) {
-      if (side === "horde" && zone === "hand") continue;
+      if (side === "host" && zone === "hand") continue;
       const card = (game[side] as unknown as Record<string, CardInstance[]>)[zone]?.find((item) => item.instanceId === cardId);
       if (card) return { card, side, zone };
     }
