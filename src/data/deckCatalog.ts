@@ -11,6 +11,13 @@ export type NewDeckCard = {
     en?: string;
     es?: string;
   };
+  /** Narrative text is authored for every card even when the printed layout hides it. */
+  flavorText: {
+    en: string;
+    es: string;
+  };
+  /** Card Studio printing flag; false preserves flavor in data without rendering it on the card. */
+  showFlavorText: boolean;
   quantity?: number;
   isToken?: boolean;
   energyCost?: number | { amount: number };

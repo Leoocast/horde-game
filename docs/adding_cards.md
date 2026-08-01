@@ -390,12 +390,16 @@ Entrada típica:
 ```
 
 El manifest solo acepta assets locales. El nombre, tipo y texto mostrado vienen del JSON del deck;
-`gameText` debe describir exactamente el comportamiento de Hostfall.
+`gameText` debe describir exactamente el comportamiento de Hostfall. Cada definición, incluidas las
+Fichas, debe declarar además `flavorText.en`, `flavorText.es` y el booleano `showFlavorText`. El
+flavor siempre existe en datos; `showFlavorText: false` solo evita imprimirlo cuando las reglas no
+dejan espacio suficiente en la carta.
 
 Las cartas impresas se producen con los estudios de `dev/tools/Decks/`. Para un deck jugable, el
 JSON runtime sigue siendo la única fuente de nombre, reglas, coste, estadísticas y cantidad;
-`studio.config.json` agrega únicamente datos de presentación como `artCrop`, `typeLineEs` y lore.
-No copiar `gameText` dentro de la configuración del estudio.
+también es la única fuente de flavor y de su visibilidad impresa. `studio.config.json` agrega
+únicamente datos de presentación como `artCrop` y `typeLineEs`. No copiar `gameText`, `flavorText`
+ni `showFlavorText` dentro de la configuración del estudio.
 
 Después de editar cualquiera de esas fuentes:
 

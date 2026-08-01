@@ -10,6 +10,7 @@ window.HostfallDeckData = [
     "def": 1,
     "desc": "Sin efecto adicional.",
     "lore": "Primero llega uno. Después, el horizonte entero empieza a gritar.",
+    "showFlavorText": true,
     "cantidad": 24,
     "isToken": true
   },
@@ -22,7 +23,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 3,
     "desc": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno.",
-    "lore": "",
+    "lore": "Cuenta las victorias por cuántos llegan antes de que se disipe el humo.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -34,7 +36,8 @@ window.HostfallDeckData = [
     "atk": 1,
     "def": 1,
     "desc": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo.",
-    "lore": "",
+    "lore": "Cada estandarte caído señala al siguiente saqueador el camino a la batalla.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -46,7 +49,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno.",
-    "lore": "",
+    "lore": "El grito es breve porque la carga ya comenzó.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -58,7 +62,8 @@ window.HostfallDeckData = [
     "atk": null,
     "def": null,
     "desc": "Los Trasgos aliados ganan Imponente.",
-    "lore": "",
+    "lore": "El ritmo no pregunta quién está listo.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -70,7 +75,8 @@ window.HostfallDeckData = [
     "atk": null,
     "def": null,
     "desc": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
-    "lore": "",
+    "lore": "Mil brazos débiles todavía lanzan mil piedras.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -82,7 +88,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1.",
-    "lore": "",
+    "lore": "Un buen jefe nunca llega sin testigos.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -94,7 +101,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1.",
-    "lore": "",
+    "lore": "Él lo llama formación. Todos los demás lo llaman multitud.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -106,7 +114,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante.",
-    "lore": "",
+    "lore": "Si nadie lo sigue, grita hasta que alguien lo hace.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -119,6 +128,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado.",
     "lore": "El silencio fue la única advertencia.",
+    "showFlavorText": false,
     "cantidad": 3
   },
   {
@@ -130,7 +140,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 3,
     "desc": "Sin efecto adicional.",
-    "lore": "",
+    "lore": "Tres discusiones, seis puños, ningún plan.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -142,7 +153,8 @@ window.HostfallDeckData = [
     "atk": 4,
     "def": 2,
     "desc": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados.",
-    "lore": "",
+    "lore": "Nunca falla al blanco que todos los demás están señalando.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -154,7 +166,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 3,
     "desc": "Reflejos\nAl ser invocado, inflige 1 de daño al Cronista y a cada enemigo.",
-    "lore": "",
+    "lore": "No hay un lado seguro de la cadena cuando empieza a girar.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -166,7 +179,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 3,
     "desc": "Los demás Trasgos aliados ganan +1/+1.",
-    "lore": "",
+    "lore": "La basura de un Trasgo es el arsenal de otro.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -178,7 +192,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida.",
-    "lore": "",
+    "lore": "Cada nuevo recluta es otra chispa en su mecha.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -190,7 +205,8 @@ window.HostfallDeckData = [
     "atk": 1,
     "def": 2,
     "desc": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
-    "lore": "",
+    "lore": "Su ejército crece exactamente a la velocidad de su confianza.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -202,7 +218,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio.",
-    "lore": "",
+    "lore": "Considera cada baja una oportunidad para practicar puntería.",
+    "showFlavorText": true,
     "cantidad": 2
   }
 ];

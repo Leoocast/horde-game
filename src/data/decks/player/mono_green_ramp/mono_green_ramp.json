@@ -17,6 +17,11 @@
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
+      "flavorText": {
+        "en": "Every root in Llanowar is a path, and every leaf a warning.",
+        "es": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -59,6 +64,11 @@
         "en": "When Invoked, put a +1/+1 counter on an ally and gain 1 Life.",
         "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
       },
+      "flavorText": {
+        "en": "Where their droplets touch the earth, even wounds take root.",
+        "es": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
+      },
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
         "amount": 1
@@ -119,6 +129,11 @@
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
+      "flavorText": {
+        "en": "Beneath the cowl, they keep secrets the forest entrusts only to the patient.",
+        "es": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -161,6 +176,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "Its venom does not kill at once; first it turns blood into obedience.",
+        "es": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -188,6 +208,11 @@
         "en": "Whenever another ally is Invoked, this card gains +1/+0 until the end of the turn.",
         "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
       },
+      "flavorText": {
+        "en": "They do not command the beasts. They run beside them and share their fury.",
+        "es": "No dirige a las bestias. Corre a su lado y comparte su furia."
+      },
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
         "amount": 3
@@ -246,6 +271,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "It has watched the same pass since before the invaders had names.",
+        "es": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -271,6 +301,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "When its shadow crosses the valley, even predators seek shelter.",
+        "es": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -297,6 +332,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "Its rings preserve the memory of forests that no longer exist.",
+        "es": "En sus anillos conserva la memoria de bosques que ya no existen."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 6
@@ -323,6 +363,11 @@
         "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
+      "flavorText": {
+        "en": "For an instant, the predator feels the void that devours the stars.",
+        "es": "Por un instante, el depredador siente el vacío que devora las estrellas."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -397,6 +442,11 @@
         "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
+      "flavorText": {
+        "en": "In the thicket there is no cruelty, only hunger and survival.",
+        "es": "En la espesura no hay crueldad, solo hambre y supervivencia."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 2
@@ -487,6 +537,11 @@
         "en": "Destroy a Support or an Echo with Flying.",
         "es": "Destruye un Apoyo o un Eco con Volar."
       },
+      "flavorText": {
+        "en": "Everything that rules the sky eventually meets the earth.",
+        "es": "Todo lo que domina el cielo termina por conocer la tierra."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -549,6 +604,11 @@
         "en": "The target Echo gains +3/+3 until the end of the turn.",
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
+      "flavorText": {
+        "en": "Nature asks no permission to exceed its limits.",
+        "es": "La naturaleza no pide permiso para superar sus límites."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -602,6 +662,11 @@
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
+      "flavorText": {
+        "en": "Beneath its branches, life waits for the moment to reclaim everything.",
+        "es": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
+      },
+      "showFlavorText": true,
       "quantity": 15,
       "energyCost": {
         "amount": 0

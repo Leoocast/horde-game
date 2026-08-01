@@ -27,6 +27,7 @@
         "en": "Every vow leaves something behind.",
         "es": "Todo juramento deja algo atrás."
       },
+      "showFlavorText": true,
       "quantity": 12,
       "energyCost": {
         "amount": 0
@@ -69,6 +70,7 @@
         "en": "The youngest learn to serve before they learn to feed.",
         "es": "Los más jóvenes aprenden a servir antes que a alimentarse."
       },
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
         "amount": 1
@@ -124,6 +126,7 @@
         "en": "The bells fall silent before its wings arrive.",
         "es": "Las campanas callan antes de que lleguen sus alas."
       },
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
         "amount": 2
@@ -155,6 +158,7 @@
         "en": "The court accepts every currency, especially the one that hurts.",
         "es": "La corte acepta toda moneda, especialmente la que duele."
       },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -202,6 +206,7 @@
         "en": "Courtesy ends at the first drawn blade.",
         "es": "La cortesía termina con la primera hoja desenvainada."
       },
+      "showFlavorText": false,
       "quantity": 3,
       "energyCost": {
         "amount": 3
@@ -250,6 +255,7 @@
         "en": "Nothing leaves the crypt without his permission.",
         "es": "Nada abandona la cripta sin su permiso."
       },
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
         "amount": 3
@@ -299,6 +305,7 @@
         "en": "One cut is enough. The vein does the rest.",
         "es": "Un corte basta. La vena hace el resto."
       },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -329,6 +336,7 @@
         "en": "Duty keeps the hunger on a short chain.",
         "es": "El deber mantiene el hambre atada con una cadena corta."
       },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -360,6 +368,7 @@
         "en": "Her court has waited centuries for the final guest.",
         "es": "Su corte ha esperado siglos al último invitado."
       },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 6
@@ -426,6 +435,7 @@
         "en": "Knowledge never asks whether the price was fair.",
         "es": "El conocimiento nunca pregunta si el precio fue justo."
       },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -468,6 +478,7 @@
         "en": "Pain is merely strength waiting for direction.",
         "es": "El dolor sólo es fuerza esperando una dirección."
       },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -533,6 +544,7 @@
         "en": "Even the dead have something left to surrender.",
         "es": "Hasta los muertos conservan algo que entregar."
       },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -595,6 +607,7 @@
         "en": "Hunger sharpens every step toward the Host.",
         "es": "El hambre afila cada paso hacia el Host."
       },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 2
@@ -642,6 +655,7 @@
         "en": "The last guest always pays for the feast.",
         "es": "El último invitado siempre paga el banquete."
       },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 3

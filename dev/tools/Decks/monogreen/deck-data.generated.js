@@ -10,6 +10,7 @@ window.HostfallDeckData = [
     "def": 1,
     "desc": "Agota: Gana {E}.",
     "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -22,6 +23,7 @@ window.HostfallDeckData = [
     "def": 2,
     "desc": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida.",
     "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces.",
+    "showFlavorText": true,
     "cantidad": 3
   },
   {
@@ -34,6 +36,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "Agota: Gana {E}.",
     "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -46,6 +49,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "Letal\nVeneno 1",
     "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -58,6 +62,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno.",
     "lore": "No dirige a las bestias. Corre a su lado y comparte su furia.",
+    "showFlavorText": true,
     "cantidad": 3
   },
   {
@@ -70,6 +75,7 @@ window.HostfallDeckData = [
     "def": 4,
     "desc": "Guardia aérea",
     "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -82,6 +88,7 @@ window.HostfallDeckData = [
     "def": 5,
     "desc": "Guardia aérea",
     "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -94,6 +101,7 @@ window.HostfallDeckData = [
     "def": 5,
     "desc": "Guardia aérea",
     "lore": "En sus anillos conserva la memoria de bosques que ya no existen.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -106,6 +114,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza.",
     "lore": "Por un instante, el depredador siente el vacío que devora las estrellas.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -118,6 +127,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo.",
     "lore": "En la espesura no hay crueldad, solo hambre y supervivencia.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -130,6 +140,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Destruye un Apoyo o un Eco con Volar.",
     "lore": "Todo lo que domina el cielo termina por conocer la tierra.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -142,6 +153,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "El Eco objetivo gana +3/+3 hasta el final del turno.",
     "lore": "La naturaleza no pide permiso para superar sus límites.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -154,6 +166,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Agota: Gana {E}.",
     "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo.",
+    "showFlavorText": true,
     "cantidad": 15
   }
 ];

@@ -147,8 +147,41 @@ test("card studios consume one generated projection instead of embedded or mirro
         false,
         `${deckId} duplicates runtime rules in presentation data`,
       );
+      assert.equal(
+        config.cards.some((card) => Object.hasOwn(card, "flavorTextEs") || Object.hasOwn(card, "lore")),
+        false,
+        `${deckId} duplicates runtime flavor in presentation data`,
+      );
+
+      const runtimeDeck = JSON.parse(fs.readFileSync(new URL(config.runtimeDeck, indexUrl), "utf8"));
+      const runtimeById = new Map(runtimeDeck.cards.map((card) => [card.id, card]));
+      for (const studioCard of buildStudioCards(deckId)) {
+        const runtimeCard = runtimeById.get(studioCard.id);
+        assert.ok(runtimeCard, `${deckId}/${studioCard.id} is missing from the runtime deck`);
+        assert.equal(studioCard.lore, runtimeCard.flavorText.es, `${deckId}/${studioCard.id} has stale flavor`);
+        assert.equal(
+          studioCard.showFlavorText,
+          runtimeCard.showFlavorText,
+          `${deckId}/${studioCard.id} has a stale flavor visibility flag`,
+        );
+      }
     }
   }
+
+  const sharedRenderer = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
+    "utf8",
+  );
+  const monoGreenRenderer = fs.readFileSync(
+    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+    "utf8",
+  );
+  assert.match(sharedRenderer, /card\.showFlavorText !== false/u);
+  assert.match(monoGreenRenderer, /card\.showFlavorText !== false/u);
+
+  const hiddenFlavor = buildStudioCards("vampires").find((card) => card.id === "court_duelist");
+  assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
+  assert.equal(hiddenFlavor.showFlavorText, false);
 
   for (const retiredMirror of [
     "../dev/tools/Decks/monogreen/mono-green.json",

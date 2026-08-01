@@ -35,6 +35,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "No grave stays full once the bells begin.",
+        "es": "Ninguna tumba permanece llena cuando comienzan las campanas."
+      },
+      "showFlavorText": true,
       "quantity": 21,
       "subtypes": [
         "Zombie"
@@ -59,6 +64,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "It took a village to bury it. The Host needed only one night to wake it.",
+        "es": "Hizo falta un pueblo para enterrarlo. La Hueste necesitó una sola noche para despertarlo."
+      },
+      "showFlavorText": true,
       "quantity": 4,
       "subtypes": [
         "Zombie",
@@ -84,6 +94,11 @@
         "en": "Allied Zombies gain Daunting.",
         "es": "Los Zombis aliados ganan Imponente."
       },
+      "flavorText": {
+        "en": "The first corpse opens the road. The rest make it wide.",
+        "es": "El primer cadáver abre el camino. Los demás lo ensanchan."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 1
@@ -194,6 +209,11 @@
         "en": "Whenever a non-token card is played, remove a +1/+1 counter from this Echo and Invoke a 2/2 Zombie Echo Token.",
         "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
       },
+      "flavorText": {
+        "en": "Each loosened knot leaves another grave open.",
+        "es": "Cada nudo que se suelta deja otra tumba abierta."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 6
@@ -255,6 +275,11 @@
         "en": "When this card dies, the Chronicler discards a card.",
         "es": "Cuando muera, el Cronista descarta una carta."
       },
+      "flavorText": {
+        "en": "The stench survives it and clings to every memory.",
+        "es": "El hedor le sobrevive y se aferra a cada recuerdo."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -298,6 +323,11 @@
         "en": "When Invoked, the Chronicler discards a card.",
         "es": "Al ser invocada, el Cronista descarta una carta."
       },
+      "flavorText": {
+        "en": "Its wrappings carry the breath of a sealed plague.",
+        "es": "Sus vendas traen el aliento de una plaga sellada."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -343,6 +373,11 @@
         "en": "The Chronicler loses 1 Life, discards a card, sacrifices an Echo, and sacrifices a Source.",
         "es": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente."
       },
+      "flavorText": {
+        "en": "The sickness takes little from each victim and leaves nothing whole.",
+        "es": "La enfermedad toma poco de cada víctima y no deja nada entero."
+      },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -396,6 +431,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "It nests where the air itself has begun to rot.",
+        "es": "Anida donde hasta el aire ha comenzado a pudrirse."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -438,6 +478,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "Every stitch remembers a different corpse.",
+        "es": "Cada costura recuerda un cadáver distinto."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 4
@@ -483,6 +528,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "The second design learned from every failure of the first.",
+        "es": "El segundo diseño aprendió de cada fracaso del primero."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 5
@@ -528,6 +578,11 @@
         "en": "When Invoked or when it dies, discard the top 2 cards of the Host Archive to its Memory.",
         "es": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
       },
+      "flavorText": {
+        "en": "Its cry is not a warning. It is an inventory.",
+        "es": "Su graznido no es una advertencia. Es un inventario."
+      },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -589,6 +644,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "The maze crumbled. It kept walking.",
+        "es": "El laberinto se derrumbó. Él siguió caminando."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -615,6 +675,11 @@
         "en": "While the Host has 7 or more cards in its Memory, this Echo gains +1/+1 and Daunting.",
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
       },
+      "flavorText": {
+        "en": "The longer the hunt lasts, the less of the hound remains.",
+        "es": "Cuanto más dura la cacería, menos queda del sabueso."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -681,6 +746,11 @@
         "en": "While the Host has 7 or more cards in its Memory, this Echo gains Daunting.",
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente."
       },
+      "flavorText": {
+        "en": "It follows the scent of old death through any fog.",
+        "es": "Sigue el olor de la muerte antigua a través de cualquier niebla."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 5
@@ -728,6 +798,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "Hunger taught them which bones still move.",
+        "es": "El hambre les enseñó qué huesos todavía se mueven."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -756,6 +831,11 @@
         "en": "Whenever another allied Zombie dies, put a +1/+1 counter on this card.",
         "es": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta."
       },
+      "flavorText": {
+        "en": "Every fallen companion leaves it something worth keeping.",
+        "es": "Cada compañero caído le deja algo que vale la pena conservar."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -802,6 +882,11 @@
         "en": "Other allied Zombies gain +1/+1. Whenever another allied Zombie dies, the Chronicler loses 1 Life.",
         "es": "Los demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida."
       },
+      "flavorText": {
+        "en": "It never raises its voice. The dead already know the order.",
+        "es": "Nunca alza la voz. Los muertos ya conocen la orden."
+      },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 3

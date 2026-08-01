@@ -190,7 +190,18 @@ export function buildStudioCards(deckId) {
         `${deckId}/${presentation.id}: nameEs duplicaría el nombre del JSON runtime. Corrige displayNameEs.`,
       );
     }
-    const runtimeFlavor = runtimeCard.flavorText?.es ?? "";
+    if (Object.hasOwn(presentation, "flavorTextEs") || Object.hasOwn(presentation, "lore")) {
+      throw new Error(
+        `${deckId}/${presentation.id}: el flavor debe vivir únicamente en flavorText del JSON runtime.`,
+      );
+    }
+    const runtimeFlavor = String(runtimeCard.flavorText?.es ?? "").trim();
+    if (!runtimeFlavor) {
+      throw new Error(`${deckId}/${presentation.id}: falta flavorText.es en el JSON runtime.`);
+    }
+    if (typeof runtimeCard.showFlavorText !== "boolean") {
+      throw new Error(`${deckId}/${presentation.id}: showFlavorText debe ser booleano en el JSON runtime.`);
+    }
     return {
       id: runtimeCard.id,
       art_crop: presentation.artCrop,
@@ -200,7 +211,8 @@ export function buildStudioCards(deckId) {
       atk: runtimeCard.power ?? null,
       def: authoredEndurance(runtimeCard),
       desc: visibleRules(runtimeCard, presentation, hiddenTraits),
-      lore: presentation.flavorTextEs ?? runtimeFlavor,
+      lore: runtimeFlavor,
+      showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
       ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
     };

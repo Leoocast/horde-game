@@ -928,7 +928,7 @@
             const cardNumberStr = String(index + 1).padStart(3, '0');
 
             const hasEffect = card.desc && card.desc.trim() !== "" && card.desc.trim().toLowerCase() !== "sin efecto adicional.";
-            const hasLore = card.lore && card.lore.trim() !== "";
+            const hasLore = card.showFlavorText !== false && card.lore && card.lore.trim() !== "";
             const isSource = card.tipo && card.tipo.toLowerCase().includes("fuente");
 
             const cardEl = document.createElement('div');

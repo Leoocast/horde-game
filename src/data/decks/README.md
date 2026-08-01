@@ -39,6 +39,8 @@ Card definitions should use stable ids and explicit structured data:
 
 - `id`
 - `name`
+- `flavorText.en` y `flavorText.es`: texto narrativo obligatorio y no vacío.
+- `showFlavorText`: booleano obligatorio; controla su impresión sin eliminarlo de los datos.
 - `quantity`
 - `energyCost.amount`
 - `kinds`
@@ -123,8 +125,9 @@ supported; the referenced file must exist under `public/cards`.
 
 Gameplay rules remain authoritative in this deck JSON. The matching
 `dev/tools/Decks/<deck>/studio.config.json` contains presentation-only data, and
-`scripts/card-studio-data.mjs` generates the data consumed by the HTML studio. Do not duplicate
-rules, costs, stats or quantities in the studio config.
+`scripts/card-studio-data.mjs` generates the data consumed by the HTML studio. Names, rules, costs,
+stats, quantities, bilingual flavor and the flavor visibility flag come from this JSON. Do not
+duplicate any of them in the studio config.
 
 The final PNG batch is tracked by `dev/tools/Decks/generation-manifest.json`, which hashes the runtime
 deck, presentation config, renderer, fonts, source art and every exported PNG. See

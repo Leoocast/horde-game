@@ -219,7 +219,7 @@
             const noAdditionalEffect =
                 effect.trim().toLocaleLowerCase("es") === "sin efecto adicional.";
             const hasEffect = effect.trim() !== "" && !noAdditionalEffect;
-            const hasLore = lore.trim() !== "";
+            const hasLore = card.showFlavorText !== false && lore.trim() !== "";
             const hasStats = card.atk !== null && card.atk !== undefined
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);

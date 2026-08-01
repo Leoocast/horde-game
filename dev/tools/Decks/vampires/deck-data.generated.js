@@ -10,6 +10,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Agota: Gana {E}.",
     "lore": "Todo juramento deja algo atrás.",
+    "showFlavorText": true,
     "cantidad": 12
   },
   {
@@ -22,6 +23,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno.",
     "lore": "Los más jóvenes aprenden a servir antes que a alimentarse.",
+    "showFlavorText": true,
     "cantidad": 3
   },
   {
@@ -34,6 +36,7 @@ window.HostfallDeckData = [
     "def": 2,
     "desc": "Volar\nDrenar",
     "lore": "Las campanas callan antes de que lleguen sus alas.",
+    "showFlavorText": true,
     "cantidad": 3
   },
   {
@@ -46,6 +49,7 @@ window.HostfallDeckData = [
     "def": 2,
     "desc": "Agota y paga 5 de Vida: Gana {E}.",
     "lore": "La corte acepta toda moneda, especialmente la que duele.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -58,6 +62,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno.",
     "lore": "La cortesía termina con la primera hoja desenvainada.",
+    "showFlavorText": false,
     "cantidad": 3
   },
   {
@@ -70,6 +75,7 @@ window.HostfallDeckData = [
     "def": 4,
     "desc": "Guardia aérea\nCuando reciba daño y sobreviva, ganas 2 de Vida.",
     "lore": "Nada abandona la cripta sin su permiso.",
+    "showFlavorText": true,
     "cantidad": 3
   },
   {
@@ -82,6 +88,7 @@ window.HostfallDeckData = [
     "def": 3,
     "desc": "Letal",
     "lore": "Un corte basta. La vena hace el resto.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -94,6 +101,7 @@ window.HostfallDeckData = [
     "def": 4,
     "desc": "Alerta",
     "lore": "El deber mantiene el hambre atada con una cadena corta.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -106,6 +114,7 @@ window.HostfallDeckData = [
     "def": 5,
     "desc": "Coste adicional: Paga la mitad de tu Vida.\nVolar. Alerta.\nDurante tu turno, este Eco tiene Drenar.",
     "lore": "Su corte ha esperado siglos al último invitado.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -118,6 +127,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas.",
     "lore": "El conocimiento nunca pregunta si el precio fue justo.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -130,6 +140,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno.",
     "lore": "El dolor sólo es fuerza esperando una dirección.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -142,6 +153,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Haz 3 de daño a un Eco. Gana 2 de Vida.",
     "lore": "Hasta los muertos conservan algo que entregar.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -154,6 +166,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Todos tus aliados ganan Drenar hasta el Final.",
     "lore": "El hambre afila cada paso hacia el Host.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -166,6 +179,7 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Destruye un enemigo. Pierdes Vida igual a su Fuerza.",
     "lore": "El último invitado siempre paga el banquete.",
+    "showFlavorText": true,
     "cantidad": 1
   }
 ];

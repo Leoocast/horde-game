@@ -31,6 +31,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "First comes one. Then the whole horizon starts screaming.",
+        "es": "Primero llega uno. Después, el horizonte entero empieza a gritar."
+      },
+      "showFlavorText": true,
       "energyCost": {
         "amount": 0
       },
@@ -56,6 +61,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "First comes one. Then the whole horizon starts screaming.",
+        "es": "Primero llega uno. Después, el horizonte entero empieza a gritar."
+      },
+      "showFlavorText": true,
       "energyCost": {
         "amount": 0
       },
@@ -80,6 +90,11 @@
         "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
         "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
       },
+      "flavorText": {
+        "en": "He counts victories by how many arrive before the smoke clears.",
+        "es": "Cuenta las victorias por cuántos llegan antes de que se disipe el humo."
+      },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -164,6 +179,11 @@
         "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
         "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
       },
+      "flavorText": {
+        "en": "Every fallen banner points the next raider toward battle.",
+        "es": "Cada estandarte caído señala al siguiente saqueador el camino a la batalla."
+      },
+      "showFlavorText": false,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -245,6 +265,11 @@
         "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
         "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
       },
+      "flavorText": {
+        "en": "The shout is short because the charge has already begun.",
+        "es": "El grito es breve porque la carga ya comenzó."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 2
@@ -301,6 +326,11 @@
         "en": "Allied Goblins gain Daunting.",
         "es": "Los Trasgos aliados ganan Imponente."
       },
+      "flavorText": {
+        "en": "The rhythm does not ask who is ready.",
+        "es": "El ritmo no pregunta quién está listo."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -345,6 +375,11 @@
         "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
         "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
+      "flavorText": {
+        "en": "A thousand weak arms still throw a thousand stones.",
+        "es": "Mil brazos débiles todavía lanzan mil piedras."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -380,6 +415,11 @@
         "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
       },
+      "flavorText": {
+        "en": "A good chief never arrives without witnesses.",
+        "es": "Un buen jefe nunca llega sin testigos."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -424,6 +464,11 @@
         "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
       },
+      "flavorText": {
+        "en": "He calls it a formation. Everyone else calls it a crowd.",
+        "es": "Él lo llama formación. Todos los demás lo llaman multitud."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 5
@@ -467,6 +512,11 @@
         "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
         "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
       },
+      "flavorText": {
+        "en": "If no one follows, he shouts until someone does.",
+        "es": "Si nadie lo sigue, grita hasta que alguien lo hace."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -535,6 +585,11 @@
         "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
         "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
       },
+      "flavorText": {
+        "en": "Silence was the only warning.",
+        "es": "El silencio fue la única advertencia."
+      },
+      "showFlavorText": false,
       "quantity": 3,
       "energyCost": {
         "amount": 3
@@ -606,6 +661,11 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
+      "flavorText": {
+        "en": "Three arguments, six fists, no plan.",
+        "es": "Tres discusiones, seis puños, ningún plan."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -629,6 +689,11 @@
         "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
         "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
       },
+      "flavorText": {
+        "en": "He never misses the target everyone else is pointing at.",
+        "es": "Nunca falla al blanco que todos los demás están señalando."
+      },
+      "showFlavorText": true,
       "quantity": 1,
       "energyCost": {
         "amount": 4
@@ -686,6 +751,11 @@
         "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
         "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
       },
+      "flavorText": {
+        "en": "There is no safe side of the chain once it begins to turn.",
+        "es": "No hay un lado seguro de la cadena cuando empieza a girar."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
@@ -727,6 +797,11 @@
         "en": "Other allied Goblins gain +1/+1.",
         "es": "Los demás Trasgos aliados ganan +1/+1."
       },
+      "flavorText": {
+        "en": "One Goblin's rubbish is another Goblin's arsenal.",
+        "es": "La basura de un Trasgo es el arsenal de otro."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 4
@@ -816,6 +891,11 @@
         "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
         "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
       },
+      "flavorText": {
+        "en": "Every new recruit is another spark in his fuse.",
+        "es": "Cada nuevo recluta es otra chispa en su mecha."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -882,6 +962,11 @@
         "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
         "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
       },
+      "flavorText": {
+        "en": "His army grows at exactly the speed of his confidence.",
+        "es": "Su ejército crece exactamente a la velocidad de su confianza."
+      },
+      "showFlavorText": false,
       "quantity": 1,
       "energyCost": {
         "amount": 3
@@ -945,6 +1030,11 @@
         "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
         "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
       },
+      "flavorText": {
+        "en": "He considers every casualty an opportunity for aim practice.",
+        "es": "Considera cada baja una oportunidad para practicar puntería."
+      },
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3

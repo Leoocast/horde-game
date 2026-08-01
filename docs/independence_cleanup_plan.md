@@ -178,9 +178,10 @@ de Vida aunque sus estudios y JSON ya tengan texto nuevo.
 
 ### Resultado L2
 
-- El JSON runtime es la fuente única de reglas, nombre, coste, estadísticas y cantidad para cada
-  deck jugable. `studio.config.json` conserva solamente presentación: arte, línea de tipo, lore y
-  excepciones visuales que no cambian reglas.
+- El JSON runtime es la fuente única de reglas, nombre, coste, estadísticas, cantidad y flavor para
+  cada deck jugable. `studio.config.json` conserva solamente presentación: arte, línea de tipo y
+  excepciones visuales que no cambian reglas. Cada carta conserva flavor bilingüe aunque su bandera
+  `showFlavorText` impida imprimirlo por falta de espacio.
 - Los cinco índices consumen `deck-data.generated.js`; ya no contienen arreglos de cartas
   embebidos. `scripts/card-studio-data.mjs --check` falla si la proyección deja de coincidir.
 - Se eliminaron cuatro mirrors editables: `mono-green.json`, `vampires.json`, `hunters.json` y
@@ -596,20 +597,36 @@ estadísticas + mismo efecto + misma cantidad.
   que queden después de esos cambios. Ninguna de esas fases autoriza cambios de balance.
 - Los decks vigentes se consideran esqueletos mecánicos ya balanceados. La identidad final de cada
   deck se diseñará en este orden: Crónica e historia, nombres y roles narrativos de las cartas,
-  correspondencia con las estadísticas/efectos congelados y, finalmente, arte. Esto aplica a todos
-  los decks y se difiere para una sesión futura.
+  correspondencia con las estadísticas/efectos conservados por defecto y, finalmente, arte. Este
+  orden aplica a todos los decks; La Última Lluvia es el primer pase narrativo autorizado.
+
+### Excepción narrativa y mecánica aprobada para La Última Lluvia (2026-08-01)
+
+- El pase narrativo del deck provisional `mono_green_ramp` comenzó con autorización explícita del
+  usuario. Su base aprobada vive en [`chronicle_last_rain.md`](chronicle_last_rain.md).
+- El jugador continúa siendo el Chronicler de todas las Crónicas. Iria, Voz de la Última Lluvia es
+  el Eco de Crónica y protagonista de este deck; no existe un Chronicler distinto por deck.
+- Iria conserva el contador +1/+1 al ser invocada y pasa de recuperar 1 a recuperar 3 de Vida.
+- Arven pierde Desborde y su primer disparo por invocación aliada de cada turno da +1/+1 hasta el
+  próximo turno del Chronicler. No recibe Alerta.
+- Desborde se retirará de todo el deck sin Rasgo sustituto. Fuera de estas excepciones se mantiene
+  el esqueleto mecánico aprobado.
+- Esta autorización cubre documentación narrativa. No inicia todavía la generación de arte ni el
+  corte de código, datos, ids, rutas o PNG.
 
 ### Pipeline narrativo futuro por deck
 
 1. Escribir la Crónica y la historia del deck.
-2. Definir quién es su Chronicler y qué representa narrativamente cada carta.
+2. Definir su protagonista o Eco de Crónica y qué representa narrativamente cada carta. El
+   Chronicler es el jugador compartido por todas las Crónicas, no un personaje nuevo por deck.
 3. Asignar nombres nuevos a los roles mecánicos existentes.
-4. Mantener exactamente los stats, costes, efectos, timing y cantidades actuales.
+4. Mantener los stats, costes, efectos, timing y cantidades actuales salvo excepciones de diseño
+   aprobadas y registradas de forma explícita.
 5. Crear el arte de acuerdo con esa identidad narrativa y registrar su procedencia.
 6. Regenerar los PNG finales y cambiar nombres técnicos, ids y rutas en un único corte verificado.
 
-Este pipeline se ejecutará para un solo deck a la vez y no comienza hasta nueva autorización del
-usuario.
+Este pipeline se ejecuta para un solo deck a la vez. La preparación narrativa de La Última Lluvia
+está autorizada y documentada; su implementación y su arte todavía requieren autorización expresa.
 
 ## Fase L6 — Arte y procedencia
 
@@ -619,11 +636,19 @@ Sustituir recursos derivados y demostrar derechos de uso.
 
 ### Deuda deliberada (2026-08-01)
 
-L6 queda diferida. No se crearán nombres ni arte aislados antes de definir la Crónica de cada deck.
-Los PNG, nombres e identidades actuales permanecen como material provisional unido al esqueleto
+L6 queda diferida. La base narrativa y los nombres de trabajo de La Última Lluvia ya están
+documentados, pero todavía no se generará su arte ni se hará el corte de producción. Los PNG,
+nombres e identidades runtime actuales permanecen como material provisional unido al esqueleto
 mecánico; Zombies y Goblins continúan con su exportación pausada. Esta deuda no bloquea trabajo
 interno del juego, pero sí bloquea declarar terminada la identidad final y la auditoría de
 publicación.
+
+La incorporación obligatoria de flavor bilingüe y `showFlavorText` al JSON runtime actualizó las
+entradas de los cuatro estudios sin regenerar imágenes. Por eso la comprobación de assets marca
+deliberadamente los 61 PNG actuales como stale/no verificables: 13 de Mono Green, 14 de Vampiros,
+17 de Zombies y 17 de Trasgos. Las proyecciones `deck-data.generated.js` sí están sincronizadas; los
+PNG y sus huellas se renovarán una sola vez junto con el arte, nombres e identidades definitivos de
+L6.
 
 ### Registro mínimo por recurso
 
@@ -755,6 +780,7 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | L4.5 | Migración interna de Acciones, eventos y reglas de la Hueste. | Runtime y datos normalizados usan el vocabulario Hostfall; `game.hostRules` reemplaza el contrato anterior. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blocker L4.5 en cero; validación del usuario OK. |
 | 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
 | 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
+| 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 62 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
 
 ## Plantilla para cerrar una fase
 

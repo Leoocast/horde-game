@@ -441,6 +441,29 @@ function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
     if (!Array.isArray(card.kinds) || card.kinds.length === 0) {
       errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "Hostfall cards must declare kinds[]." });
     }
+    if (
+      !card.flavorText ||
+      typeof card.flavorText !== "object" ||
+      typeof card.flavorText.en !== "string" ||
+      card.flavorText.en.trim().length === 0 ||
+      typeof card.flavorText.es !== "string" ||
+      card.flavorText.es.trim().length === 0
+    ) {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "schema",
+        message: "Hostfall cards must declare non-empty flavorText.en and flavorText.es.",
+      });
+    }
+    if (typeof card.showFlavorText !== "boolean") {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "schema",
+        message: "Hostfall cards must declare showFlavorText as a boolean.",
+      });
+    }
     const amount = typeof card.energyCost === "number"
       ? card.energyCost
       : Number(card.energyCost?.amount);

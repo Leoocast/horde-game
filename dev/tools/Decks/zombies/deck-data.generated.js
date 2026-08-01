@@ -9,7 +9,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Sin efecto adicional.",
-    "lore": "",
+    "lore": "Ninguna tumba permanece llena cuando comienzan las campanas.",
+    "showFlavorText": true,
     "cantidad": 21,
     "isToken": true
   },
@@ -22,7 +23,8 @@ window.HostfallDeckData = [
     "atk": 5,
     "def": 5,
     "desc": "Sin efecto adicional.",
-    "lore": "",
+    "lore": "Hizo falta un pueblo para enterrarlo. La Hueste necesitó una sola noche para despertarlo.",
+    "showFlavorText": true,
     "cantidad": 4,
     "isToken": true
   },
@@ -35,7 +37,8 @@ window.HostfallDeckData = [
     "atk": null,
     "def": null,
     "desc": "Los Zombis aliados ganan Imponente.",
-    "lore": "",
+    "lore": "El primer cadáver abre el camino. Los demás lo ensanchan.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -47,7 +50,8 @@ window.HostfallDeckData = [
     "atk": 0,
     "def": 0,
     "desc": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2.",
-    "lore": "",
+    "lore": "Cada nudo que se suelta deja otra tumba abierta.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -59,7 +63,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 4,
     "desc": "Cuando muera, el Cronista descarta una carta.",
-    "lore": "",
+    "lore": "El hedor le sobrevive y se aferra a cada recuerdo.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -71,7 +76,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocada, el Cronista descarta una carta.",
-    "lore": "",
+    "lore": "Sus vendas traen el aliento de una plaga sellada.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -83,7 +89,8 @@ window.HostfallDeckData = [
     "atk": null,
     "def": null,
     "desc": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente.",
-    "lore": "",
+    "lore": "La enfermedad toma poco de cada víctima y no deja nada entero.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -95,7 +102,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 1,
     "desc": "Volar",
-    "lore": "",
+    "lore": "Anida donde hasta el aire ha comenzado a pudrirse.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -107,7 +115,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 1,
     "desc": "Volar",
-    "lore": "",
+    "lore": "Cada costura recuerda un cadáver distinto.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -119,7 +128,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 4,
     "desc": "Volar",
-    "lore": "",
+    "lore": "El segundo diseño aprendió de cada fracaso del primero.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -131,7 +141,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 1,
     "desc": "Volar\nAl ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.",
-    "lore": "",
+    "lore": "Su graznido no es una advertencia. Es un inventario.",
+    "showFlavorText": false,
     "cantidad": 2
   },
   {
@@ -143,7 +154,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 2,
     "desc": "Imponente",
-    "lore": "",
+    "lore": "El laberinto se derrumbó. Él siguió caminando.",
+    "showFlavorText": true,
     "cantidad": 1
   },
   {
@@ -155,7 +167,8 @@ window.HostfallDeckData = [
     "atk": 3,
     "def": 2,
     "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente.",
-    "lore": "",
+    "lore": "Cuanto más dura la cacería, menos queda del sabueso.",
+    "showFlavorText": false,
     "cantidad": 1
   },
   {
@@ -167,7 +180,8 @@ window.HostfallDeckData = [
     "atk": 5,
     "def": 3,
     "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente.",
-    "lore": "",
+    "lore": "Sigue el olor de la muerte antigua a través de cualquier niebla.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -179,7 +193,8 @@ window.HostfallDeckData = [
     "atk": 1,
     "def": 1,
     "desc": "Letal\nFurtivo",
-    "lore": "",
+    "lore": "El hambre les enseñó qué huesos todavía se mueven.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -191,7 +206,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 4,
     "desc": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta.",
-    "lore": "",
+    "lore": "Cada compañero caído le deja algo que vale la pena conservar.",
+    "showFlavorText": true,
     "cantidad": 2
   },
   {
@@ -203,7 +219,8 @@ window.HostfallDeckData = [
     "atk": 2,
     "def": 2,
     "desc": "Letal\nLos demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida.",
-    "lore": "",
+    "lore": "Nunca alza la voz. Los muertos ya conocen la orden.",
+    "showFlavorText": false,
     "cantidad": 2
   }
 ];

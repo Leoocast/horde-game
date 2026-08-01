@@ -45,6 +45,22 @@ test("pending abilities are reported as WIP, not as errors", () => {
   }
 });
 
+test("every active card authors bilingual flavor and an explicit print flag", () => {
+  for (const entry of DECK_REGISTRY) {
+    for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.equal(typeof card.flavorText?.en, "string", `${entry.raw.id}/${card.id} lacks flavorText.en`);
+      assert.ok(card.flavorText.en.trim(), `${entry.raw.id}/${card.id} has empty flavorText.en`);
+      assert.equal(typeof card.flavorText?.es, "string", `${entry.raw.id}/${card.id} lacks flavorText.es`);
+      assert.ok(card.flavorText.es.trim(), `${entry.raw.id}/${card.id} has empty flavorText.es`);
+      assert.equal(
+        typeof card.showFlavorText,
+        "boolean",
+        `${entry.raw.id}/${card.id} must declare showFlavorText`,
+      );
+    }
+  }
+});
+
 test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {
   const invalid = {
     schemaVersion: "1.0.1",
@@ -115,6 +131,8 @@ test("Hostfall schema rejects unknown version, side and canonical vocabulary", (
   assert.match(messages, /Unknown Hostfall controller "HORDE"/u);
   assert.match(messages, /Unknown Hostfall controller "HOST" at "card\.abilities\[1\]\.targets\[0\]\.controller"/u);
   assert.match(messages, /Unknown Hostfall controller "ANY" at "card\.abilities\[1\]\.effects\[0\]\.controller"/u);
+  assert.match(messages, /non-empty flavorText\.en and flavorText\.es/u);
+  assert.match(messages, /showFlavorText as a boolean/u);
 });
 
 test("Host rules reject unknown keys, unsafe divisors and malformed profiles", () => {

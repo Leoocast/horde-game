@@ -5,8 +5,7 @@
     {
       "id": "goblin_token_1_1_red",
       "artCrop": "../../../../public/cards/goblins/goblin_token_1_1_red.png",
-      "typeLineEs": "Eco · Ficha — Trasgo",
-      "flavorTextEs": "Primero llega uno. Después, el horizonte entero empieza a gritar."
+      "typeLineEs": "Eco · Ficha — Trasgo"
     },
     {
       "id": "hobgoblin_bandit_lord",
@@ -51,8 +50,7 @@
     {
       "id": "goblin_surprise",
       "artCrop": "../../../../public/cards/goblins/goblin_surprise.png",
-      "typeLineEs": "Hechizo · Rápido",
-      "flavorTextEs": "El silencio fue la única advertencia."
+      "typeLineEs": "Hechizo · Rápido"
     },
     {
       "id": "mogg_mob",

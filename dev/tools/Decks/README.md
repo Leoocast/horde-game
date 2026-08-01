@@ -8,9 +8,9 @@ de reglas.
 Para un deck jugable:
 
 ```text
-src/data/decks/**/<deck>.json        reglas, nombre, coste, stats y cantidad
+src/data/decks/**/<deck>.json        reglas, nombre, coste, stats, cantidad y flavor
 dev/tools/Decks/<deck>/studio.config.json
-                                      arte, línea de tipo y lore de impresión
+                                      arte, línea de tipo y ajustes visuales
 scripts/card-studio-data.mjs          combina y valida ambas fuentes
 deck-data.generated.js                proyección generada; no se edita
 index.html                            renderer visual
@@ -20,6 +20,11 @@ dev/tools/Decks/generation-manifest.json hashes de entradas y salidas; no se dis
 
 `hunters` todavía es un preview sin deck runtime. Por eso su `studio.config.json` conserva sus
 definiciones completas hasta que se implemente como deck jugable.
+
+Cada carta de un deck jugable declara `flavorText.en`, `flavorText.es` y `showFlavorText` en su JSON
+runtime. El estudio siempre recibe el flavor desde allí. Si `showFlavorText` es `false`, el texto
+permanece en la proyección generada pero el renderer no lo imprime para dejar espacio a reglas
+extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para un deck runtime.
 
 ## Comandos
 

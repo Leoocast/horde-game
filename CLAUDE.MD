@@ -710,19 +710,37 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- Todos los decks vigentes son esqueletos mecánicos cuyo balance queda congelado. La identidad final
-  se hará más adelante y en orden narrativo: escribir una Crónica por deck, derivar nombres y roles,
-  hacerlos corresponder con los stats/efectos actuales y sólo después producir arte. L6 queda como
-  deuda deliberada; Zombies y Goblins mantienen pausada la exportación de PNG. L7 final depende de
-  ese trabajo y no puede declararse cerrada ni esconder sus blockers mientras falten reemplazos.
-  El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Chronicler
-  y significado narrativo, nombres, conservación exacta de mecánicas, arte/procedencia y corte final
-  de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no repite la migración del engine.
+- El flavor ya forma parte del contrato authored de los cuatro decks jugables: las 62 definiciones,
+  incluidas las Fichas, tienen `flavorText.en`, `flavorText.es` y un `showFlavorText` booleano. El
+  Card Studio toma ambos campos exclusivamente del JSON runtime; `showFlavorText: false` sólo evita
+  imprimir el flavor cuando el texto de reglas necesita el espacio, pero no elimina el contenido.
+  TypeScript, deck lint, proyección de Card Studio, 221/221 tests y build pasan. No se regeneraron
+  PNG: los 61 actuales quedan marcados como stale/no verificables hasta el pase de arte de L6.
+- La preparación narrativa del deck provisional `mono_green_ramp` está autorizada y documentada en
+  `docs/chronicle_last_rain.md`. Su Crónica de trabajo es **La Última Lluvia**; Iria, Voz de la
+  Última Lluvia es su Eco de Crónica y protagonista. El jugador sigue siendo el Chronicler común a
+  todas las Crónicas. El documento contiene el mapeo de las 13 definiciones y el brief para generar
+  arte más adelante; todavía no autoriza cambios de código, datos, ids, rutas, PNG o assets.
+- El usuario aprobó tres excepciones al esqueleto mecánico congelado para ese futuro corte: Iria
+  recuperará 3 de Vida conservando su contador +1/+1; Arven perderá Desborde y la primera invocación
+  aliada de cada turno le dará +1/+1 hasta el próximo turno, sin Alerta; Desborde se retirará de
+  todo el deck sin Rasgo sustituto. Fuera de esas excepciones se conserva el comportamiento actual.
+- Todos los decks vigentes parten de esqueletos mecánicos cuyo balance se conserva por defecto. La
+  identidad final se trabaja de uno en uno y en orden narrativo: escribir una Crónica, derivar
+  nombres y roles, hacerlos corresponder con los stats/efectos aprobados y sólo después producir
+  arte. L6 queda como deuda deliberada; Zombies y Goblins mantienen pausada la exportación de PNG.
+  L7 final depende de ese trabajo y no puede declararse cerrada ni esconder sus blockers mientras
+  falten reemplazos.
+  El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Eco de
+  Crónica y significado narrativo, nombres, conservación de mecánicas salvo excepciones aprobadas,
+  arte/procedencia y corte final de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no
+  repite la migración del engine.
 - El usuario descartó el rediseño mecánico previsto originalmente para L5. Mono Green, Zombies y
-  Goblins conservan exactamente costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias;
-  sólo se cambiarán posteriormente nombres, ids y rutas. No presentar ese trabajo como cumplimiento
-  del criterio original de independencia por rediseño. L6 queda para arte/procedencia y L7 para el
-  retiro final de identidades y archivos antiguos. Ninguna autoriza rebalanceo.
+  Goblins conservan por defecto costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias; las
+  únicas excepciones actuales son las de La Última Lluvia enumeradas arriba. No presentar ese
+  trabajo como cumplimiento del criterio original de independencia por rediseño. L6 queda para
+  arte/procedencia y L7 para el retiro final de identidades y archivos antiguos; cualquier nuevo
+  rebalanceo requiere aprobación explícita.
 - El ajuste final de L4 está cerrado y validado por el usuario. `EnergySystem.ts` consume
   Stored Energy antes de Energía disponible/Sources; el autopago agota sólo las Sources necesarias
   y deja las restantes elegibles para convertirse en reserva al terminar el turno. Las regresiones
@@ -943,10 +961,12 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
   usa `quita ... e Invoca ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
   `tests/deckCardText.test.js`.
-- Los estudios ya no mantienen copias editables de reglas. Para cada deck jugable,
-  `scripts/card-studio-data.mjs` deriva nombre, texto, coste, stats y cantidad del JSON runtime y
-  los combina con `studio.config.json`, que contiene solamente arte, línea de tipo, lore y
-  decisiones visuales. Cada índice consume `deck-data.generated.js`; el archivo es generado y no
+- Los estudios ya no mantienen copias editables de reglas ni flavor. Para cada deck jugable,
+  `scripts/card-studio-data.mjs` deriva nombre, texto, coste, stats, cantidad, `flavorText.es` y
+  `showFlavorText` del JSON runtime y los combina con `studio.config.json`, que contiene solamente
+  arte, línea de tipo y decisiones visuales. Toda carta, incluidas las Fichas, debe guardar
+  `flavorText.en`/`es` no vacíos aunque `showFlavorText: false` evite imprimirlos por falta de
+  espacio. Cada índice consume `deck-data.generated.js`; el archivo es generado y no
   se edita. Los mirrors anteriores y los arreglos embebidos fueron eliminados. Cazadores es la
   única excepción porque sigue siendo preview sin deck runtime: su configuración contiene las
   definiciones completas.
