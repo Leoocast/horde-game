@@ -1,7 +1,7 @@
 import { Play } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toArtCropImageUrl, useCardImage } from "../../utils/cardImages";
-import { CATALOG_DECKS, describeCardTypes, searchCatalog, type CatalogCard } from "../cardCatalog";
+import { useCardImage } from "../../utils/cardImages";
+import { CATALOG_DECKS, describeCardKinds, searchCatalog, type CatalogCard } from "../cardCatalog";
 import type { ScenarioZoneKey } from "../scenario";
 import type { TimelineStep } from "../timeline";
 import { SearchInput } from "./fields";
@@ -13,28 +13,28 @@ type Props = {
 };
 
 function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; label: string }> {
-  const isPermanent = (card.definition.cardTypes ?? []).some((type) =>
-    ["Creature", "Land", "Artifact", "Enchantment", "Planeswalker"].includes(type),
+  const isPermanent = (card.definition.kinds ?? []).some((type) =>
+    ["ECHO", "SOURCE", "SUPPORT"].includes(type),
   );
-  if (card.side === "horde") {
+  if (card.side === "host") {
     return [
-      ...(isPermanent ? ([{ zone: "hordeBattlefield", label: "Horde battlefield" }] as const) : []),
-      { zone: "hordeLibraryTop", label: "Top of Horde library" },
-      { zone: "hordeGraveyard", label: "Horde graveyard" },
-      { zone: "hordeExile", label: "Horde exile" },
+      ...(isPermanent ? ([{ zone: "hostField", label: "Host Field" }] as const) : []),
+      { zone: "hostArchiveTop", label: "Top of Host Archive" },
+      { zone: "hostMemory", label: "Host Memory" },
+      { zone: "hostOblivion", label: "Host Oblivion" },
     ];
   }
   return [
     { zone: "playerHand", label: "Your hand" },
-    ...(isPermanent ? ([{ zone: "playerBattlefield", label: "Your battlefield" }] as const) : []),
-    { zone: "playerLibraryTop", label: "Top of your library" },
-    { zone: "playerGraveyard", label: "Your graveyard" },
-    { zone: "playerExile", label: "Your exile" },
+    ...(isPermanent ? ([{ zone: "playerField", label: "Your Field" }] as const) : []),
+    { zone: "playerArchiveTop", label: "Top of your Archive" },
+    { zone: "playerMemory", label: "Your Memory" },
+    { zone: "playerOblivion", label: "Your Oblivion" },
   ];
 }
 
 function CardThumb({ definitionId, name, large = false }: { definitionId: string; name: string; large?: boolean }) {
-  const imageUrl = toArtCropImageUrl(useCardImage(definitionId));
+  const imageUrl = useCardImage(definitionId);
   return (
     <span className={`playground-thumb ${large ? "is-large" : ""}`} aria-hidden="true">
       {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="playground-thumb-fallback">{name.slice(0, 1)}</span>}
@@ -70,13 +70,13 @@ export function CardsPanel({ onDispatch }: Props) {
   const [selected, setSelected] = useState<CatalogCard | undefined>();
   const [zone, setZone] = useState<ScenarioZoneKey | undefined>();
   const [amount, setAmount] = useState(1);
-  const [tapped, setTapped] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
 
   const results = useMemo(() => searchCatalog(query, deckId || undefined), [query, deckId]);
   const visible = results.slice(0, RESULT_LIMIT);
   const destinations = selected ? destinationsFor(selected) : [];
   const activeZone = destinations.some((option) => option.zone === zone) ? zone : destinations[0]?.zone;
-  const isPermanent = activeZone === "playerBattlefield" || activeZone === "hordeBattlefield";
+  const isPermanent = activeZone === "playerField" || activeZone === "hostField";
 
   function select(card: CatalogCard) {
     setSelected(card);
@@ -93,9 +93,9 @@ export function CardsPanel({ onDispatch }: Props) {
               <CardThumb definitionId={selected.definition.id} name={selected.definition.name} large />
               <div>
                 <div className="playground-group-title">{selected.definition.name}</div>
-                <div className="playground-result-meta">{describeCardTypes(selected.definition)}</div>
+                <div className="playground-result-meta">{describeCardKinds(selected.definition)}</div>
                 <div className="playground-result-id">
-                  {selected.deckLabel} · {selected.definition.manaCost || "no cost"}
+                  {selected.deckLabel} · {selected.definition.energyCost || "no cost"}
                 </div>
               </div>
             </div>
@@ -140,8 +140,8 @@ export function CardsPanel({ onDispatch }: Props) {
               </label>
               {isPermanent && (
                 <label className="playground-checkbox">
-                  <input type="checkbox" checked={tapped} onChange={(event) => setTapped(event.target.checked)} />
-                  <span>Tapped</span>
+                  <input type="checkbox" checked={exhausted} onChange={(event) => setExhausted(event.target.checked)} />
+                  <span>Exhausted</span>
                 </label>
               )}
               <button
@@ -153,7 +153,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   onDispatch({
                     kind: "place",
                     zone: activeZone,
-                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && tapped ? { tapped: true } : {}) },
+                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && exhausted ? { exhausted: true } : {}) },
                   })
                 }
               >
@@ -200,7 +200,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   {card.isToken && <em>token</em>}
                 </span>
                 <span className="playground-result-meta">
-                  {card.definition.manaCost || "—"} · {describeCardTypes(card.definition)}
+                  {card.definition.energyCost || "—"} · {describeCardKinds(card.definition)}
                 </span>
                 <span className="playground-result-id">{card.definition.id}</span>
               </span>

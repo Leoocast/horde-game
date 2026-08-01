@@ -136,6 +136,16 @@ async function main() {
         );
     }
 
+    const scriptsDir = path.join(__dirname, '..', '..', '..', 'scripts');
+    const studioData = await import(
+        pathToFileURL(path.join(scriptsDir, 'card-studio-data.mjs')).href
+    );
+    const generationManifest = await import(
+        pathToFileURL(path.join(scriptsDir, 'card-generation-manifest.mjs')).href
+    );
+    studioData.syncStudioData({ deckIds: [deckId] });
+    generationManifest.assertIndependentArtSources(deckId);
+
     const { chromium } = requireExporterDependency('playwright');
     const sharp = requireExporterDependency('sharp');
     const executablePath = findBrowser();
@@ -277,6 +287,8 @@ async function main() {
             await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
+
+        generationManifest.recordDeckGeneration(deckId);
 
         console.log('');
         console.log(`Copia de trabajo: ${outputDir}`);

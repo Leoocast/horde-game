@@ -4,6 +4,9 @@
   "version": "0.16.0",
   "type": "module",
   "scripts": {
+    "audit:independence": "node scripts/audit-independence.mjs",
+    "cards:sync": "node scripts/card-studio-data.mjs --write",
+    "cards:check": "node scripts/card-studio-data.mjs --check && node scripts/check-card-assets.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "test": "node --test scripts/run-engine-tests.mjs",

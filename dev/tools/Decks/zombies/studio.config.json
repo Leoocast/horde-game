@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/horde/zombies/horde-zombies.json",
+  "cards": [
+    {
+      "id": "zombie_token",
+      "artCrop": "../../../../public/cards/zombies/zombie_token.png",
+      "typeLineEs": "Eco · Ficha — Zombi"
+    },
+    {
+      "id": "zombie_giant_token",
+      "artCrop": "../../../../public/cards/zombies/zombie_giant_token.png",
+      "typeLineEs": "Eco · Ficha — Zombi Gigante"
+    },
+    {
+      "id": "graf_harvest",
+      "artCrop": "../../../../public/cards/zombies/graf_harvest.png",
+      "typeLineEs": "Apoyo"
+    },
+    {
+      "id": "noosegraf_mob",
+      "artCrop": "../../../../public/cards/zombies/noosegraf_mob.png",
+      "typeLineEs": "Eco — Zombi"
+    },
+    {
+      "id": "rottenheart_ghoul",
+      "artCrop": "../../../../public/cards/zombies/rottenheart_ghoul.png",
+      "typeLineEs": "Eco — Zombi"
+    },
+    {
+      "id": "miasmic_mummy",
+      "artCrop": "../../../../public/cards/zombies/miasmic_mummy.png",
+      "typeLineEs": "Eco — Zombi Chacal"
+    },
+    {
+      "id": "smallpox",
+      "artCrop": "../../../../public/cards/zombies/smallpox.png",
+      "typeLineEs": "Hechizo"
+    },
+    {
+      "id": "blighted_bat",
+      "artCrop": "../../../../public/cards/zombies/blighted_bat.png",
+      "typeLineEs": "Eco — Zombi Murciélago"
+    },
+    {
+      "id": "stitchwing_skaab",
+      "artCrop": "../../../../public/cards/zombies/stitchwing_skaab.png",
+      "typeLineEs": "Eco — Zombi Horror"
+    },
+    {
+      "id": "advanced_stitchwing",
+      "artCrop": "../../../../public/cards/zombies/advanced_stitchwing.png",
+      "typeLineEs": "Eco — Zombi Horror"
+    },
+    {
+      "id": "crow_of_dark_tidings",
+      "artCrop": "../../../../public/cards/zombies/crow_of_dark_tidings.png",
+      "typeLineEs": "Eco — Zombi Ave"
+    },
+    {
+      "id": "cursed_minotaur",
+      "artCrop": "../../../../public/cards/zombies/cursed_minotaur.png",
+      "typeLineEs": "Eco — Zombi Minotauro"
+    },
+    {
+      "id": "thraben_foulbloods",
+      "artCrop": "../../../../public/cards/zombies/thraben_foulbloods.png",
+      "typeLineEs": "Eco — Zombi Perro"
+    },
+    {
+      "id": "hound_of_the_farbogs",
+      "artCrop": "../../../../public/cards/zombies/hound_of_the_farbogs.png",
+      "typeLineEs": "Eco — Zombi Perro"
+    },
+    {
+      "id": "rancid_rats",
+      "artCrop": "../../../../public/cards/zombies/rancid_rats.png",
+      "typeLineEs": "Eco — Zombi Rata"
+    },
+    {
+      "id": "gavony_unhallowed",
+      "artCrop": "../../../../public/cards/zombies/gavony_unhallowed.png",
+      "typeLineEs": "Eco — Zombi"
+    },
+    {
+      "id": "diregraf_captain",
+      "artCrop": "../../../../public/cards/zombies/diregraf_captain.png",
+      "typeLineEs": "Eco — Zombi Soldado"
+    }
+  ]
+}

@@ -2,24 +2,30 @@ import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
-import { toHighResImageUrl, useCardDetails } from "../utils/cardImages";
+import { canonicalizeLogText } from "../i18n/rulesText";
+import type { TranslationKey } from "../i18n/translations";
+import { useTranslation } from "../i18n/useTranslation";
+import { useLanguageStore } from "../store/useLanguageStore";
+import { useCardDetails } from "../utils/cardImages";
 import { GraveyardDetailsModal } from "./GraveyardViewerModal";
 
 type LogKind = "combat" | "spell" | "death" | "life" | "draw" | "turn" | "system";
 type LogEntry = { text: string; sourceIndex: number; turn: number; side: Side };
 type PreviewPosition = { left: number; top: number };
 
-const KIND_LABELS: Record<LogKind, string> = {
-  combat: "Combat",
-  spell: "Magic",
-  death: "Fallen",
-  life: "Vitality",
-  draw: "Cards",
-  turn: "Turn",
-  system: "Event",
+const KIND_LABELS: Record<LogKind, TranslationKey> = {
+  combat: "log.kindBattle",
+  spell: "log.kindAction",
+  death: "log.kindFallen",
+  life: "log.kindLife",
+  draw: "log.kindCards",
+  turn: "log.kindTurn",
+  system: "log.kindEvent",
 };
 
 export function GameLog({ game, className = "", variant = "panel" }: { game: GameState; className?: string; variant?: "panel" | "embedded" }) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -33,7 +39,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
   const suggestionsId = `game-log-card-suggestions-${useId().replace(/:/g, "")}`;
   const cards = useMemo(() => collectCards(game), [game]);
   const cardNames = useMemo(() => [...new Set(cards.map((card) => card.name).filter(Boolean))], [cards]);
-  const visibleLog = useMemo(() => annotateLog(game.log.slice(0, 80), game), [game]);
+  const visibleLog = useMemo(() => annotateLog(game.log.slice(0, 80), game, language), [game, language]);
   const previewDetails = useCardDetails(previewCard?.definitionId ?? "");
   const suggestions = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
@@ -117,12 +123,12 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
           value={query}
           type="text"
           role="combobox"
-          aria-label="Find a card in the chronicle"
+          aria-label={t("log.searchAria")}
           aria-autocomplete="list"
           aria-expanded={suggestionsOpen && suggestions.length > 0}
           aria-controls={suggestionsId}
           aria-activedescendant={suggestionsOpen && suggestions[activeSuggestion] ? `${suggestionsId}-option-${activeSuggestion}` : undefined}
-          placeholder="Find a card..."
+          placeholder={t("log.searchPlaceholder")}
           autoComplete="off"
           onFocus={() => setSuggestionsOpen(query.trim().length > 0 && !selectedCard)}
           onChange={(event) => {
@@ -132,7 +138,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
           }}
           onKeyDown={handleSearchKeyDown}
         />
-        {query && <button type="button" onClick={clearSearch} aria-label="Clear card search" title="Clear search"><X size={13} /></button>}
+        {query && <button type="button" onClick={clearSearch} aria-label={t("log.clearSearch")} title={t("log.clearSearch")}><X size={13} /></button>}
       </div>
       {suggestionsOpen && query.trim() && (
         <div id={suggestionsId} className="game-log-suggestions" role="listbox">
@@ -151,7 +157,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
               <span className="game-log-card-glyph" aria-hidden="true">+</span>
               <span>{highlightText(name, query)}</span>
             </button>
-          )) : <div className="game-log-no-results">No card names found</div>}
+          )) : <div className="game-log-no-results">{t("log.noCardNames")}</div>}
         </div>
       )}
     </div>
@@ -159,17 +165,16 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
   const matchNavigator = selectedCard ? (
     <div className="game-log-match-nav" aria-live="polite">
-      <span>{matchingIndices.length > 0 ? `${activeMatch + 1} of ${matchingIndices.length}` : "No matches"}</span>
-      <button type="button" disabled={matchingIndices.length === 0} onClick={() => navigateMatches(-1)} title="Previous match" aria-label="Previous match"><ChevronUp size={14} /></button>
-      <button type="button" disabled={matchingIndices.length === 0} onClick={() => navigateMatches(1)} title="Next match" aria-label="Next match"><ChevronDown size={14} /></button>
+      <span>{matchingIndices.length > 0 ? t("log.matchCount", { current: activeMatch + 1, total: matchingIndices.length }) : t("log.noMatches")}</span>
+      <button type="button" disabled={matchingIndices.length === 0} onClick={() => navigateMatches(-1)} title={t("log.previousMatch")} aria-label={t("log.previousMatch")}><ChevronUp size={14} /></button>
+      <button type="button" disabled={matchingIndices.length === 0} onClick={() => navigateMatches(1)} title={t("log.nextMatch")} aria-label={t("log.nextMatch")}><ChevronDown size={14} /></button>
     </div>
-  ) : <div className="game-log-match-count">{visibleLog.length} events</div>;
+  ) : <div className="game-log-match-count">{t("log.eventCount", { count: visibleLog.length })}</div>;
 
   let previousGroup = "";
   const entries = (
     <ol className="game-log-list">
       {visibleLog.map((entry) => {
-        const label = chroniclerLabel(entry.text);
         const kind = classifyLogEntry(entry.text);
         const matchPosition = matchingIndices.indexOf(entry.sourceIndex);
         const matches = matchPosition >= 0;
@@ -184,26 +189,26 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
           >
             {showDivider && (
               <div className="game-log-turn-divider">
-                <span>Turn {entry.turn}</span>
-                <i>{entry.side === "player" ? "Chronicler" : "Horde"}</i>
+                <span>{t("log.turn", { turn: entry.turn })}</span>
+                <i>{entry.side === "player" ? t("setup.playerSide") : t("setup.hostSide")}</i>
               </div>
             )}
             <div className="game-log-entry-body">
-              <div className="game-log-entry-meta"><span className={`game-log-kind game-log-kind-${kind}`}>{KIND_LABELS[kind]}</span></div>
+              <div className="game-log-entry-meta"><span className={`game-log-kind game-log-kind-${kind}`}>{t(KIND_LABELS[kind])}</span></div>
               <div className="game-log-entry-text">
-                {renderEntryText(label, cards, selectedCard, showCardPreview, () => {
+                {renderEntryText(entry.text, cards, selectedCard, showCardPreview, () => {
                   setPreviewCard(undefined);
                   setPreviewPosition(undefined);
                 }, (card) => {
                   setPreviewCard(undefined);
                   setDetailsCard(card);
-                })}
+                }, t("common.openDetails"))}
               </div>
             </div>
           </li>
         );
       })}
-      {visibleLog.length === 0 && <li className="game-log-empty">The chronicle has not begun.</li>}
+      {visibleLog.length === 0 && <li className="game-log-empty">{t("log.empty")}</li>}
     </ol>
   );
 
@@ -211,7 +216,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
     <>
       {previewCard && previewPosition && previewDetails.imageUrl && !detailsCard && (
         <div className="game-log-card-preview" style={previewPosition} aria-hidden="true">
-          <img src={toHighResImageUrl(previewDetails.imageUrl) ?? previewDetails.imageUrl} alt="" />
+          <img src={previewDetails.imageUrl} alt="" />
           <span>{previewCard.displayName}</span>
         </div>
       )}
@@ -226,7 +231,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
           onClose={() => setDetailsCard(undefined)}
           position={1}
           total={1}
-          contextLabel="Chronicle card"
+          contextLabel={t("log.cardContext")}
           backdropClassName="game-log-details-backdrop"
         />
       )}
@@ -244,7 +249,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
   return (
     <aside className={`game-log-panel old-panel-soft flex min-h-0 flex-col ${className}`}>
-      <div className="game-log-panel-title old-title">Chronicle <span>{visibleLog.length}</span></div>
+      <div className="game-log-panel-title old-title">{t("log.title")} <span>{visibleLog.length}</span></div>
       <div className="game-log-panel-search">{search}{matchNavigator}</div>
       <div className="game-log-scroll old-scrollbar">{entries}</div>
       {overlays}
@@ -254,33 +259,33 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
 function collectCards(game: GameState): CardInstance[] {
   return [
-    ...game.player.library, ...game.player.hand, ...game.player.battlefield, ...game.player.graveyard, ...game.player.exile,
-    ...game.horde.library, ...game.horde.battlefield, ...game.horde.graveyard, ...game.horde.exile,
-    ...(game.horde.pendingCard ? [game.horde.pendingCard] : []),
+    ...game.player.archive, ...game.player.hand, ...game.player.field, ...game.player.memory, ...game.player.oblivion,
+    ...game.host.archive, ...game.host.field, ...game.host.memory, ...game.host.oblivion,
+    ...(game.host.pendingCard ? [game.host.pendingCard] : []),
   ];
 }
 
-function annotateLog(entries: string[], game: GameState): LogEntry[] {
+function annotateLog(entries: string[], game: GameState, language: "en" | "es"): LogEntry[] {
   let turn = game.turnNumber;
   let side = game.activeSide;
   return entries.map((text, sourceIndex) => {
     let entrySide = side;
-    if (/^Horde turn ends/i.test(text)) {
-      entrySide = "horde";
-      side = "horde";
+    if (/^Host turn ends/i.test(text)) {
+      entrySide = "host";
+      side = "host";
     } else if (/Player starts the turn/i.test(text)) {
       entrySide = "player";
       const setupTransition = entries[sourceIndex - 1]?.includes("Setup turn complete");
-      side = setupTransition ? "player" : "horde";
+      side = setupTransition ? "player" : "host";
     } else if (/^(Player ends turn|Setup complete)/i.test(text)) {
       entrySide = "player";
       side = "player";
-    } else if (/^Horde untaps/i.test(text)) {
-      entrySide = "horde";
-      side = "horde";
+    } else if (/^Host readies/i.test(text)) {
+      entrySide = "host";
+      side = "host";
     }
-    const entryTurn = /^Horde turn ends/i.test(text) ? turn - 1 : turn;
-    const annotated = { text, sourceIndex, turn: Math.max(1, entryTurn), side: entrySide };
+    const entryTurn = /^Host turn ends/i.test(text) ? turn - 1 : turn;
+    const annotated = { text: canonicalizeLogText(text, language), sourceIndex, turn: Math.max(1, entryTurn), side: entrySide };
     if (/Player starts the turn/i.test(text)) turn -= 1;
     return annotated;
   });
@@ -293,6 +298,7 @@ function renderEntryText(
   onEnter: (event: React.SyntheticEvent<HTMLButtonElement>, card: CardInstance) => void,
   onLeave: () => void,
   onOpen: (card: CardInstance) => void,
+  openTitle: string,
 ): React.ReactNode {
   const cardByName = new Map<string, CardInstance>();
   for (const card of cards) if (!cardByName.has(card.name.toLocaleLowerCase())) cardByName.set(card.name.toLocaleLowerCase(), card);
@@ -314,7 +320,7 @@ function renderEntryText(
         onFocus={(event) => onEnter(event, card)}
         onBlur={onLeave}
         onClick={() => onOpen(card)}
-        title={`Open ${card.displayName}`}
+        title={`${openTitle}: ${card.displayName}`}
       >
         {active ? <mark>{part}</mark> : part}
       </button>
@@ -325,11 +331,11 @@ function renderEntryText(
 function classifyLogEntry(entry: string): LogKind {
   const value = entry.toLocaleLowerCase();
   if (/attack|block|combat|damage|deals/.test(value)) return "combat";
-  if (/cast|activat|counter|gets \+|creates|enters the battlefield/.test(value)) return "spell";
-  if (/dies|destroy|sacrifice|discard|mills|exile/.test(value)) return "death";
+  if (/play|action|reaction|counter|gets \+|invoke|invoca/.test(value)) return "spell";
+  if (/dies|muere|destroy|destruye|sacrifice|sacrifica|discard|descarta|banish|destierra/.test(value)) return "death";
   if (/life|poison/.test(value)) return "life";
   if (/draw|reveal/.test(value)) return "draw";
-  if (/turn|untap|phase|setup/.test(value)) return "turn";
+  if (/turn|turno|ready|prepara|phase|fase|setup/.test(value)) return "turn";
   return "system";
 }
 
@@ -342,8 +348,4 @@ function highlightText(text: string, search: string): React.ReactNode {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function chroniclerLabel(entry: string): string {
-  return entry.replace(/\bPlayer\b/g, "Chronicler").replace(/\bplayer\b/g, "Chronicler");
 }

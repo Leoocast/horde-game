@@ -46,7 +46,7 @@ import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } f
 type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
 
 const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon: LucideIcon }> = [
-  { id: "scenario", label: "Setup", description: "Seed, decks and Horde queue", icon: SlidersHorizontal },
+  { id: "scenario", label: "Setup", description: "Seed, decks and Host queue", icon: SlidersHorizontal },
   { id: "cards", label: "Cards", description: "Find, play or place cards", icon: Search },
   { id: "board", label: "Board", description: "Selection and saved states", icon: Layers3 },
   { id: "actions", label: "Actions", description: "Turn flow and energy", icon: Gamepad2 },
@@ -67,7 +67,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
   const pushToast = useToastStore((state) => state.pushToast);
   const [draft, setDraft] = useState<ScenarioDefinition>(() => cloneScenario(BLANK_SCENARIO));
   const [launch, setLaunch] = useState<ScenarioDefinition>();
-  const [hordeQueue, setHordeQueue] = useState<ScenarioCard[]>([]);
+  const [hostQueue, setHostQueue] = useState<ScenarioCard[]>([]);
   const [tab, setTab] = useState<PlaygroundTab>("scenario");
   const [steps, setSteps] = useState<TimelineStep[]>([]);
   const [recording, setRecording] = useState(true);
@@ -93,7 +93,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
       const snapshot = cloneScenario(definition);
       loadScenario(buildScenarioGame(snapshot), {
         playerDeckId: snapshot.playerDeckId,
-        hordeDeckId: snapshot.hordeDeckId,
+        hostDeckId: snapshot.hostDeckId,
       });
       setLaunch(snapshot);
       setReplayCursor(undefined);
@@ -135,12 +135,12 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
     return outcome;
   }
 
-  function executeHordeTurn() {
-    if (useGameStore.getState().hordeDeckId !== draft.hordeDeckId && !buildBoard(draft)) return;
+  function executeHostTurn() {
+    if (useGameStore.getState().hostDeckId !== draft.hostDeckId && !buildBoard(draft)) return;
     dispatch(
-      hordeQueue.length > 0
-        ? { kind: "hordeTurnExact", entries: structuredClone(hordeQueue) }
-        : { kind: "hordeTurn" },
+      hostQueue.length > 0
+        ? { kind: "hostTurnExact", entries: structuredClone(hostQueue) }
+        : { kind: "hostTurn" },
     );
   }
 
@@ -324,14 +324,14 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
             {tab === "scenario" && (
               <ScenarioPanel
                 draft={draft}
-                queue={hordeQueue}
-                onChangeQueue={setHordeQueue}
+                queue={hostQueue}
+                onChangeQueue={setHostQueue}
                 onChange={(definition) => {
-                  if (definition.hordeDeckId !== draft.hordeDeckId) setHordeQueue([]);
+                  if (definition.hostDeckId !== draft.hostDeckId) setHostQueue([]);
                   setDraft(definition);
                 }}
                 onUpdate={() => buildBoard(draft)}
-                onExecuteHordeTurn={executeHordeTurn}
+                onExecuteHostTurn={executeHostTurn}
               />
             )}
             {tab === "cards" && <CardsPanel onDispatch={dispatch} />}

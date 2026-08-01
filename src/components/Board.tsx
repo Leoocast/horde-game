@@ -1,9 +1,9 @@
 import { AlertTriangle, Home } from "lucide-react";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
-import { hordeInSurge } from "../engine/StaticEffects";
+import { hostInSurge } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
@@ -14,8 +14,8 @@ import { DuelHud, PlayerLifePanel } from "./DuelHud";
 import { Hand } from "./Hand";
 import { HandLimitOverlay } from "./HandLimitOverlay";
 import { OpeningHandOverlay } from "./OpeningHandOverlay";
-import { HordeAttackAnimator } from "./HordeAttackAnimator";
-import { HordeMillAnimator } from "./HordeMillAnimator";
+import { HostAttackAnimator } from "./HostAttackAnimator";
+import { HostMillAnimator } from "./HostMillAnimator";
 import { PhaseBanner } from "./PhaseBanner";
 import { PhaseOrb } from "./PhaseOrb";
 import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
@@ -27,14 +27,17 @@ import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
-import { TutorialGuide } from "./TutorialGuide";
 import { DefeatModal } from "./DefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
 import { BloodPactAnimator } from "./BloodSiphonAnimator";
 import { LifePaymentAnimator } from "./LifePaymentAnimator";
+import { LifestealAttackAnimator } from "./LifestealAttackAnimator";
 import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
+import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
+import { BrokenWingsAnimator } from "./BrokenWingsAnimator";
+import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 
 type Props = {
   playerName: string;
@@ -48,14 +51,18 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
-  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
   const lifePaymentAnimationActive = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimationActive = useGameStore((state) => Boolean(state.bloodPactAnimation));
   const drainEssenceAnimationActive = useGameStore((state) => Boolean(state.drainEssenceAnimation));
-  const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
-  // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
+  const finalBanquetAnimationActive = useGameStore((state) => Boolean(state.finalBanquetAnimation));
+  const brokenWingsAnimationActive = useGameStore((state) => Boolean(state.brokenWingsAnimation));
+  const energyFlowAnimationActive = useGameStore((state) => Boolean(state.energyFlowAnimation));
+  const poisonConsumeAnimationActive = useGameStore((state) => Boolean(state.poisonConsumeAnimation));
+  const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
+  // Smallpox turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Smallpox selection is pending — the
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
@@ -63,13 +70,14 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
+  const stopGamePresentation = useGameStore((state) => state.stopGamePresentation);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
-  const surgeReached = surgeTransitionShown || hordeInSurge(game);
+  const surgeReached = surgeTransitionShown || hostInSurge(game);
 
   useEffect(() => {
     if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
@@ -77,12 +85,16 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
 
   useEffect(() => {
     if (game.winner === "player") playCollection("winTheme");
-    else if (game.winner === "horde") playCollection("lossTheme");
+    else if (game.winner === "host") playCollection("lossTheme");
   }, [game.winner, playCollection]);
+
+  useLayoutEffect(() => {
+    if (game.winner === "host") stopGamePresentation();
+  }, [game.winner, stopGamePresentation]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
-    playSfx("skipNextBattle", { volume: 0.72 });
+    playSfx("skipNextBattle");
   }, [encounterEntering, game.openingHandAccepted, playSfx]);
 
   return (
@@ -101,8 +113,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <CounterTargetingOverlay game={game} />
       <SmallpoxSelectionOverlay game={game} />
       <SpellTargetingOverlay game={game} />
-      <HordeAttackAnimator />
-      <HordeMillAnimator />
+      <HostAttackAnimator />
+      <HostMillAnimator />
       <PlayerDiscardAnimator />
       <LandPlayAnimator />
       <EnergyRecycleAnimator />
@@ -112,30 +124,33 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <BurnAnimator />
       <BloodPactAnimator />
       <LifePaymentAnimator />
+      <LifestealAttackAnimator />
       <DrainEssenceAnimator />
-      {(hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      <FinalBanquetAnimator />
+      <BrokenWingsAnimator />
+      <EnergyFlowAnimator />
+      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || brokenWingsAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
       <CardPreview />
       <PlayerLifePanel game={game} playerName={playerName} />
       <ToastStack variant={game.winner ? "menu" : "game"} />
-      <TutorialGuide game={game} onReturnToMenu={onReturnToMenu} />
       {surgeTransitionActive && <SurgeTransition onComplete={completeSurgeTransition} />}
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
-          <div className="battlefield-side battlefield-side-horde">
-            <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
+          <div className="battlefield-side battlefield-side-host">
+            <Battlefield game={game} side="host" cards={game.host.field} />
           </div>
           <div className="battlefield-side battlefield-side-player">
-            <Battlefield game={game} side="player" cards={game.player.battlefield} />
+            <Battlefield game={game} side="player" cards={game.player.field} />
           </div>
         </section>
       </div>
       {game.openingHandAccepted && <Hand game={game} />}
       <OpeningHandOverlay game={game} />
 
-      {game.winner === "horde" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
       {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
 
       {homeConfirmationPresence.mounted && (

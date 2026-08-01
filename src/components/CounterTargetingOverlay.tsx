@@ -1,8 +1,8 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { findManualEnterTargetTrigger } from "../engine/EffectResolver";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { findManualInvokedTargetTrigger } from "../engine/EffectResolver";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -28,7 +28,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const source = counterTargeting ? findBattlefieldCard(game, counterTargeting.sourceId) : undefined;
   // A manual enters-the-battlefield trigger must resolve — right-click may deselect but never
   // cancel it. Read from the card's own data, never from a card name.
-  const preserveRequiredEffect = Boolean(findManualEnterTargetTrigger(source));
+  const preserveRequiredEffect = Boolean(findManualInvokedTargetTrigger(source));
   const target = counterTargeting?.targetId ? findBattlefieldCard(game, counterTargeting.targetId) : undefined;
   const end = lockedEnd ?? (counterTargeting ? { x: counterTargeting.x, y: counterTargeting.y } : undefined);
 
@@ -141,7 +141,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             suppressContextMenu
             suppressHoverOverlay
             suppressCardId
-            suppressSummoningSickness
+            suppressStabilizing
             highRes
             showFullImage={showFullSourceImage}
             showCostBadge={showFullSourceImage}
@@ -150,7 +150,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
         </div>
         <div className="counter-target-preview old-panel-soft">
           <span className="text-[#d6b879]">{target ? localizedCardName(target, language) : t("target.noSelection")}</span>
-          <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.toughness}` : "--/--"}</strong>
+          <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.endurance}` : "--/--"}</strong>
         </div>
         <div className="counter-target-actions">
           <button
@@ -172,12 +172,12 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
 }
 
 function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+  return [...game.player.field, ...game.host.field].find((card) => card.instanceId === id);
 }
 
-function getBuffedStats(game: GameState, card: CardInstance): { power: number; toughness: number } {
-  const stats = getPowerToughness(game, card);
-  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+function getBuffedStats(game: GameState, card: CardInstance): { power: number; endurance: number } {
+  const stats = getPowerEndurance(game, card);
+  return { power: stats.power + 1, endurance: stats.endurance + 1 };
 }
 
 function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {

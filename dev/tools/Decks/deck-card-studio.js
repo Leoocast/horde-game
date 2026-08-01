@@ -4,7 +4,7 @@
     const body = document.body;
     const container = document.getElementById("cards-container");
     const status = document.getElementById("studio-status");
-    const embeddedData = document.getElementById("deck-data");
+    const generatedData = window.HostfallDeckData;
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
     const cardText = window.HostfallCardText;
@@ -15,14 +15,22 @@
 
     const typeSymbols = {
         criatura: "♞",
+        eco: "◉",
+        echo: "◉",
         enchantment: "✦",
         encantamiento: "✦",
+        support: "✦",
+        apoyo: "✦",
         instant: "✧",
         instantáneo: "✧",
+        hechizo: "✧",
+        spell: "✧",
         sorcery: "☄",
         conjuro: "☄",
         energía: "◆",
         energy: "◆",
+        fuente: "◆",
+        source: "◆",
         tierra: "▲",
         land: "▲"
     };
@@ -37,9 +45,9 @@
     }
 
     function formatEffectText(value) {
+        const tapIconHtml = '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>';
         return cardText.formatEffectText(value, {
-            tapIconHtml:
-                '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>',
+            tapIconHtml,
             energyIconHtml:
                 '<span class="symbol-badge symbol-energy" title="Energía"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>',
         });
@@ -48,7 +56,39 @@
     function typeSymbol(type) {
         const normalized = String(type || "").toLocaleLowerCase("es");
 
-        if (theme === "zombies" || theme === "goblins" || theme === "vampires") {
+        if (
+            theme === "zombies"
+            || theme === "goblins"
+            || theme === "vampires"
+            || theme === "hunters"
+        ) {
+            if (theme === "hunters" && normalized.includes("trampa")) {
+                return `
+                    <svg class="fa-inline-icon tcg-trap-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                        <path fill="currentColor" d="M7 18h10l7 11 8-14 8 14 7-11h10L45 40H19L7 18Zm12 27h26v6H19v-6Z"></path>
+                        <path fill="currentColor" d="M12 10h8l4 8-6 4-6-12Zm32 0h8l-6 12-6-4 4-8Z"></path>
+                    </svg>
+                `;
+            }
+            if (normalized.includes("eco") || normalized.includes("echo")) {
+                return `
+                    <svg class="fa-inline-icon tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                        <path fill="currentColor" d="M32 20 39 32 32 44 25 32 32 20Z"></path>
+                        <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
+                    </svg>
+                `;
+            }
+            if (
+                theme === "vampires"
+                && (
+                    normalized.includes("fuente")
+                    || normalized.includes("source")
+                    || normalized.includes("energía")
+                    || normalized.includes("energy")
+                )
+            ) {
+                return '<svg class="fa-inline-icon tcg-source-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64"><path fill="currentColor" d="M32 4 58 24 32 60 6 24 32 4Zm0 8L15 25l17 24 17-24-17-13Z"></path></svg>';
+            }
             if (normalized.includes("criatura")) {
                 return `
                     <svg class="fa-inline-icon" aria-hidden="true" focusable="false" viewBox="0 0 512 512">
@@ -61,6 +101,8 @@
                 || normalized.includes("instant")
                 || normalized.includes("conjuro")
                 || normalized.includes("sorcery")
+                || normalized.includes("hechizo")
+                || normalized.includes("spell")
             ) {
                 return `
                     <svg class="fa-inline-icon tcg-spell-icon" aria-hidden="true" focusable="false" viewBox="0 0 576 512">
@@ -70,7 +112,12 @@
             }
         }
 
-        if (normalized.includes("encantamiento") || normalized.includes("enchantment")) {
+        if (
+            normalized.includes("encantamiento")
+            || normalized.includes("enchantment")
+            || normalized.includes("apoyo")
+            || normalized.includes("support")
+        ) {
             return '<span class="tcg-enchantment-icon">✦</span>';
         }
 
@@ -95,6 +142,15 @@
             `;
         }
 
+        if (theme === "hunters") {
+            return `
+                <svg class="tcg-faction-icon tcg-faction-icon--hunters" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" fill-rule="evenodd" d="M32 4 43 20l17 4-11 13 2 19-19-8-19 8 2-19L4 24l17-4L32 4Zm0 11-6 10-11 3 7 7-1 11 11-5 11 5-1-11 7-7-11-3-6-10Z" clip-rule="evenodd"></path>
+                    <path fill="currentColor" d="m11 8 6 2 6 12-7 3L11 8Zm42 0-5 17-7-3 6-12 6-2Z"></path>
+                </svg>
+            `;
+        }
+
         return "";
     }
 
@@ -104,14 +160,16 @@
         const isHordeToken =
             (theme === "zombies" || theme === "goblins")
             && Boolean(card.isToken);
-        const isVanillaHordeCreature =
+        const isVanillaHordeEcho =
             (theme === "zombies" || theme === "goblins")
-            && type.includes("criatura")
+            && (type.includes("criatura") || type.includes("eco") || type.includes("echo"))
             && description === "sin efecto adicional.";
         return type.includes("tierra")
             || type.includes("energía")
+            || type.includes("fuente")
+            || type.includes("source")
             || isHordeToken
-            || isVanillaHordeCreature;
+            || isVanillaHordeEcho;
     }
 
     function placeholderDataUrl(cardName) {
@@ -148,7 +206,7 @@
             empty.className = "empty-state";
             empty.textContent = "El JSON no contiene cartas.";
             container.appendChild(empty);
-            status.innerHTML = "<strong>0 cartas</strong>";
+            if (status) status.innerHTML = "<strong>0 cartas</strong>";
             return;
         }
 
@@ -221,7 +279,7 @@
                         ${hasEffect && hasLore ? '<div class="tcg-divider"></div>' : ""}
                         ${hasLore ? `<p class="tcg-flavor">${escapeHtml(lore)}</p>` : ""}
                         ${!hasEffect && !hasLore ? '<div class="tcg-empty-mark" aria-hidden="true"></div>' : ""}
-                        <div class="tcg-footer-info">${setCode} #${number} · Hostfall TCG</div>
+                        <div class="tcg-footer-info">${setCode} #${number} · © HOSTFALL 2026</div>
                     </div>
                 </div>
 
@@ -251,16 +309,15 @@
             container.appendChild(cardElement);
         });
 
-        status.innerHTML = `<strong>${cards.length} cartas</strong> · deck completo`;
+        if (status) status.innerHTML = `<strong>${cards.length} cartas</strong> · deck completo`;
     }
 
-    function readEmbeddedCards() {
-        if (!embeddedData) return [];
+    function readGeneratedCards() {
         try {
-            return normalizeCards(JSON.parse(embeddedData.textContent));
+            return normalizeCards(generatedData);
         } catch (error) {
             console.error(error);
-            status.textContent = `No se pudo leer el ejemplo incluido: ${error.message}`;
+            if (status) status.textContent = `No se pudieron leer los datos generados: ${error.message}`;
             return [];
         }
     }
@@ -275,5 +332,5 @@
         });
     });
 
-    renderCards(readEmbeddedCards());
+    renderCards(readGeneratedCards());
 })();

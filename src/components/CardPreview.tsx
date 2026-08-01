@@ -1,13 +1,13 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel, localizedKeywordTooltip, localizedTypeLine, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { cardThemeForDefinition, shouldShowFullCardImage, toHighResImageUrl, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardThemeForDefinition, shouldShowFullCardImage, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
-import { cardKeywords, cardStatState } from "../utils/selectors";
+import { cardTraits, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 
@@ -75,7 +75,7 @@ export function CardPreview() {
       return;
     }
     const observedAnchor = anchor;
-    const battlefieldSlot = observedAnchor.closest<HTMLElement>(".battlefield-card-slot, .battlefield-card-slot-compact");
+    const battlefieldSlot = observedAnchor.closest<HTMLElement>(".field-card-slot, .field-card-slot-compact");
 
     let scheduleFrame = 0;
     let settleFrame = 0;
@@ -158,15 +158,15 @@ export function CardPreview() {
 
   if (!details.imageUrl) return null;
 
-  const keywords = cardKeywords(game, card);
+  const traits = cardTraits(game, card);
   const stats = cardStatState(game, card, 0, heldStaticAuraBonus);
   const showFullCardPresentation = shouldShowFullCardImage(card.definitionId);
   const showFullCardStats = showFullCardPresentation && Boolean(stats.text);
   const deckTheme = cardThemeForDefinition(card.definitionId);
   const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
   const usesFullArtLayout = usesFullArtCardImage(card.definitionId);
-  const imageUrl = details.imageUrl ? toHighResImageUrl(details.imageUrl) ?? details.imageUrl : undefined;
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || card.displayName : card.displayName;
+  const imageUrl = details.imageUrl;
+  const displayName = localizedCardName(card, language);
 
   if (focusedCardId) {
     return (
@@ -188,11 +188,11 @@ export function CardPreview() {
             ].join(" ")}
           >
             {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-            {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
+            {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}
           </div>
-          {keywords && (
+          {traits && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
-              <KeywordExplanations keywords={keywords} chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
+              <TraitExplanations traits={traits} chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
             </div>
           )}
         </aside>
@@ -217,7 +217,7 @@ export function CardPreview() {
       style={hoverStyle}
     >
       {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-      {showFullCardPresentation && card.controller !== "horde" && <CardCostBadge card={card} />}
+      {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}
       {showFullCardStats && <CardStatsBadge stats={stats} preferSingleSword />}
     </div>
   );
@@ -226,7 +226,7 @@ export function CardPreview() {
 export function CardDetailsModal({
   card,
   imageUrl,
-  keywords,
+  traits,
   stats,
   text,
   fontSize,
@@ -241,7 +241,7 @@ export function CardDetailsModal({
 }: {
   card: CardInstance;
   imageUrl?: string;
-  keywords?: string;
+  traits?: string;
   stats?: string;
   text: string;
   fontSize: number;
@@ -289,7 +289,7 @@ export function CardDetailsModal({
             </button>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            {keywords && <KeywordPills keywords={keywords} />}
+            {traits && <TraitPills traits={traits} />}
             {stats && <span className="preview-stat-pill scale-110">{stats}</span>}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="old-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
@@ -315,16 +315,16 @@ export function CardDetailsModal({
   );
 }
 
-export function KeywordPills({ keywords, compact = false }: { keywords: string; compact?: boolean }) {
+export function TraitPills({ traits, compact = false }: { traits: string; compact?: boolean }) {
   const language = useLanguageStore((state) => state.language);
   return (
     <div className="flex flex-wrap gap-2">
-      {keywords.split(",").map((keyword) => {
+      {traits.split(",").map((keyword) => {
         const clean = keyword.trim();
         if (!clean) return null;
         return (
-          <GameTooltip key={clean} content={localizedKeywordTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(clean, language)))}</span>
+          <GameTooltip key={clean} content={localizedTraitTooltip(clean, language)}>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}</span>
           </GameTooltip>
         );
       })}
@@ -332,17 +332,17 @@ export function KeywordPills({ keywords, compact = false }: { keywords: string; 
   );
 }
 
-function KeywordExplanations({
-  keywords,
+function TraitExplanations({
+  traits,
   chaos = false,
   cardTheme,
 }: {
-  keywords: string;
+  traits: string;
   chaos?: boolean;
   cardTheme?: "zombie" | "goblin" | "vampire";
 }) {
   const language = useLanguageStore((state) => state.language);
-  const entries = keywords
+  const entries = traits
     .split(",")
     .map((keyword) => keyword.trim())
     .filter(Boolean);
@@ -353,20 +353,20 @@ function KeywordExplanations({
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill card-preview-keyword-badge">{renderKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}</div>
-          <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedKeywordTooltip(keyword, language)}</p>
+          <div className="keyword-pill card-preview-keyword-badge">{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}</div>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedTraitTooltip(keyword, language)}</p>
         </div>
       ))}
     </div>
   );
 }
 
-function renderKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^(TOXIC|TÓXICO)\s+\{(\d+)\}$/i);
-  if (!toxic) return keyword;
+function renderTraitLabel(keyword: string) {
+  const poison = keyword.match(/^(POISON|VENENO)\s+\{(\d+)\}$/i);
+  if (!poison) return keyword;
   return (
     <>
-      {toxic[1]} <span className="toxic-keyword-badge">{toxic[2]}</span>
+      {poison[1]} <span className="toxic-keyword-badge">{poison[2]}</span>
     </>
   );
 }
@@ -374,11 +374,11 @@ function renderKeywordLabel(keyword: string) {
 function findCard(game: ReturnType<typeof useGameStore.getState>["game"], id: string): CardInstance | undefined {
   return [
     ...game.player.hand,
-    ...game.player.battlefield,
-    ...game.player.graveyard,
-    ...game.player.exile,
-    ...game.horde.battlefield,
-    ...game.horde.graveyard,
-    ...game.horde.exile,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
   ].find((card) => card.instanceId === id);
 }

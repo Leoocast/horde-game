@@ -5,12 +5,12 @@ import { useTranslation } from "../i18n/useTranslation";
 
 type Props = {
   playerName: string;
-  hordeName: string;
+  hostName: string;
   encounterTone: EncounterTone;
   gameMode: GameMode;
 };
 
-export function EncounterTransition({ playerName, hordeName, encounterTone, gameMode }: Props) {
+export function EncounterTransition({ playerName, hostName, encounterTone, gameMode }: Props) {
   const t = useTranslation();
   const tone = gameMode === "chaos" ? "chaos" : encounterTone;
 
@@ -23,7 +23,7 @@ export function EncounterTransition({ playerName, hordeName, encounterTone, game
         <div className="encounter-transition-matchup">
           <strong className="encounter-transition-name encounter-transition-name-player">{playerName}</strong>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
-          <strong className="encounter-transition-name encounter-transition-name-horde">{hordeName}</strong>
+          <strong className="encounter-transition-name encounter-transition-name-host">{hostName}</strong>
         </div>
       </div>
     </div>

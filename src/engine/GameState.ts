@@ -1,6 +1,6 @@
-import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
-import { buildHordeRules } from "./HordeRules";
-import { emptyManaPool } from "./ManaSystem";
+import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Trait, Side } from "./GameTypes";
+import { buildHostRules } from "./HostRules";
+import { emptyEnergyPool } from "./EnergySystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 
@@ -10,69 +10,55 @@ const CHAOS_STARTING_LIFE = 35;
 const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
-const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
+const DEVELOPER_HOST_OPENING_ARCHIVE = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
+const DEVELOPER_HOST_PROTECTED_OPENING_SIZE = 2;
 const DEVELOPER_STARTING_LAND_COUNT = 4;
-
-const TUTORIAL_SEED = "tutorial";
-const TUTORIAL_OPENING_HAND = ["forest", "llanowar_elves"];
-// Kept tiny on purpose: the tutorial horde library is replaced (not just reordered) with these
-// cards. Turn 1 has no attack, so the Horde reveals and attacks with both on its first turn.
-// Ichorspit Basilisk can only block/kill one, so the survivor comes back for a second, shorter
-// attack/defend round on the Horde's next turn before the match ends.
-const TUTORIAL_HORDE_OPENING_LIBRARY = ["zombie_token", "zombie_token"];
-const TUTORIAL_STARTING_BATTLEFIELD = [
-  { definitionId: "forest", amount: 2 },
-  { definitionId: "beast_kin_ranger", amount: 1 },
-  { definitionId: "ichorspit_basilisk", amount: 1 },
-] as const;
 
 export function createInitialGame(
   playerDeck: DeckList,
-  hordeDeck: DeckList,
+  hostDeck: DeckList,
   seed = "hostfall-seed",
   setupTurns = 4,
   difficulty: DifficultyMode = "normal",
   gameMode: GameMode = "standard",
 ): GameState {
   const activePlayerDeck = gameMode === "chaos" ? prepareChaosDeck(playerDeck) : playerDeck;
-  const activeHordeDeck = gameMode === "chaos" ? prepareChaosDeck(hordeDeck) : hordeDeck;
+  const activeHostDeck = gameMode === "chaos" ? prepareChaosDeck(hostDeck) : hostDeck;
   const chaosMutations = gameMode === "chaos"
     ? {
         player: buildChaosMutations(activePlayerDeck, "player", seed),
-        horde: buildChaosMutations(activeHordeDeck, "horde", seed),
+        host: buildChaosMutations(activeHostDeck, "host", seed),
       }
-    : { player: {}, horde: {} };
+    : { player: {}, host: {} };
   const playerCards = limitPlayerDeckLands(
     expandDeck(activePlayerDeck, "player", chaosMutations.player),
     activePlayerDeck.gameplayLandCount ?? DEFAULT_PLAYER_DECK_LAND_COUNT,
   );
-  const hordeCards = expandDeck(activeHordeDeck, "horde", chaosMutations.horde);
+  const hostCards = expandDeck(activeHostDeck, "host", chaosMutations.host);
   const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
-  const playerLibrary = applyTutorialOpeningHand(seed, applyDeveloperOpeningHand(seed, shuffledPlayer.items));
-  const shuffledHorde = shuffleWithState(hordeCards, randomState);
-  randomState = shuffledHorde.randomState;
-  const hordeLibrary = applyTutorialHordeOpeningLibrary(seed, applyDeveloperHordeOpeningLibrary(seed, shuffledHorde.items));
+  const playerArchive = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
+  const shuffledHost = shuffleWithState(hostCards, randomState);
+  randomState = shuffledHost.randomState;
+  const hostArchive = applyDeveloperHostOpeningArchive(seed, shuffledHost.items);
 
   const game: GameState = {
     seed,
     difficulty,
     gameMode,
-    hordeRules: buildHordeRules(activeHordeDeck.rulesProfile),
+    hostRules: buildHostRules(activeHostDeck.rulesProfile),
     chaosMutations,
     currentRandomState: randomState,
-    hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),
+    hostDeckOrderHash: hostArchive.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
-    hordeTurnNumber: 0,
+    hostTurnNumber: 0,
     setupTurnsRemaining: effectiveSetupTurns,
-    setupCompletePendingHorde: false,
-    // The tutorial depends on a fixed scripted opening and starts immediately.
-    openingHandAccepted: seed.trim().toLowerCase() === TUTORIAL_SEED,
+    setupCompletePendingHost: false,
+    openingHandAccepted: false,
     mulligansTaken: 0,
     player: {
       life: seed.trim().toLowerCase() === DEVELOPER_SEED
@@ -80,45 +66,44 @@ export function createInitialGame(
         : gameMode === "chaos"
           ? CHAOS_STARTING_LIFE
           : STANDARD_STARTING_LIFE,
-      library: playerLibrary,
+      archive: playerArchive,
       hand: [],
-      battlefield: [],
-      graveyard: [],
-      exile: [],
-      manaPool: emptyManaPool(),
-      pendingStoredMana: 0,
+      field: [],
+      memory: [],
+      oblivion: [],
+      energyPool: emptyEnergyPool(),
+      pendingStoredEnergy: 0,
       energyActionUsedThisTurn: false,
       lifePaidThisTurn: 0,
       lifeLostThisTurn: 0,
     },
-    horde: {
-      library: hordeLibrary,
-      battlefield: [],
-      graveyard: [],
-      exile: [],
+    host: {
+      archive: hostArchive,
+      field: [],
+      memory: [],
+      oblivion: [],
       poisonCounters: 0,
     },
-    combat: { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] },
-    battlefieldEntriesThisTurn: [],
+    combat: { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] },
+    fieldEntriesThisTurn: [],
     eventQueue: [],
     log: [],
   };
 
   applyChaosStartingEnergy(game);
   applyDeveloperStartingBattlefield(game);
-  applyTutorialStartingBattlefield(game);
   const openingHandSize = seed.trim().toLowerCase() === DEVELOPER_SEED ? DEVELOPER_OPENING_HAND.length + DEVELOPER_RANDOM_OPENING_CARDS : 7;
   drawCards(game, "player", openingHandSize);
   game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${effectiveSetupTurns}. Mode: ${gameMode}.`);
   return game;
 }
 
-export function recordBattlefieldEntry(game: GameState, card: CardInstance): void {
-  card.battlefieldEntryTurn = card.controller === "horde" ? game.hordeTurnNumber : game.turnNumber;
-  game.battlefieldEntriesThisTurn.push({
+export function recordFieldEntry(game: GameState, card: CardInstance): void {
+  card.fieldEntryTurn = card.controller === "host" ? game.hostTurnNumber : game.turnNumber;
+  game.fieldEntriesThisTurn.push({
     instanceId: card.instanceId,
     controller: card.controller,
-    cardTypes: [...card.cardTypes],
+    kinds: [...card.kinds],
     subtypes: [...card.subtypes],
   });
 }
@@ -137,19 +122,19 @@ export function mulliganOpeningHand(game: GameState): GameState {
 
   const nextHandSize = next.player.hand.length - 1;
   const returnedCards = next.player.hand;
-  for (const card of returnedCards) card.zone = "library";
-  const shuffled = shuffleWithState([...returnedCards, ...next.player.library], next.currentRandomState);
+  for (const card of returnedCards) card.zone = "archive";
+  const shuffled = shuffleWithState([...returnedCards, ...next.player.archive], next.currentRandomState);
   next.currentRandomState = shuffled.randomState;
   next.player.hand = [];
-  next.player.library = shuffled.items;
+  next.player.archive = shuffled.items;
   drawCards(next, "player", nextHandSize);
   next.mulligansTaken += 1;
   next.log.unshift(`Player takes mulligan ${next.mulligansTaken} and draws ${nextHandSize} card(s).`);
   return next;
 }
 
-function forceCardsToFront(library: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
-  const remaining = [...library];
+function forceCardsToFront(archive: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
+  const remaining = [...archive];
   const forced: CardInstance[] = [];
   for (const definitionId of definitionIds) {
     const index = remaining.findIndex((card) => card.definitionId === definitionId);
@@ -160,26 +145,20 @@ function forceCardsToFront(library: CardInstance[], definitionIds: readonly stri
   return { forced, remaining };
 }
 
-function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_OPENING_HAND);
+function applyDeveloperOpeningHand(seed: string, archive: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return archive;
+  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_OPENING_HAND);
   return [...forced, ...remaining];
 }
 
-function applyTutorialOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== TUTORIAL_SEED) return library;
-  const { forced, remaining } = forceCardsToFront(library, TUTORIAL_OPENING_HAND);
-  return [...forced, ...remaining];
-}
-
-function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_HORDE_OPENING_LIBRARY);
+function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return archive;
+  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_HOST_OPENING_ARCHIVE);
   const ordered = [...forced, ...remaining];
-  for (let index = 0; index < Math.min(DEVELOPER_HORDE_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
+  for (let index = 0; index < Math.min(DEVELOPER_HOST_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
     if (ordered[index].definitionId !== "graf_harvest") continue;
     const replacementIndex = ordered.findIndex(
-      (card, candidateIndex) => candidateIndex >= DEVELOPER_HORDE_PROTECTED_OPENING_SIZE && card.definitionId !== "graf_harvest",
+      (card, candidateIndex) => candidateIndex >= DEVELOPER_HOST_PROTECTED_OPENING_SIZE && card.definitionId !== "graf_harvest",
     );
     if (replacementIndex < 0) break;
     [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];
@@ -187,43 +166,31 @@ function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]
   return ordered;
 }
 
-function applyTutorialHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== TUTORIAL_SEED) return library;
-  // Replace the whole library, not just reorder it: the tutorial needs to end in one Horde turn.
-  const { forced } = forceCardsToFront(library, TUTORIAL_HORDE_OPENING_LIBRARY);
-  return forced;
-}
-
 function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {
   for (const entry of entries) {
     for (let index = 0; index < entry.amount; index += 1) {
-      const libraryIndex = game.player.library.findIndex((card) => card.definitionId === entry.definitionId);
-      if (libraryIndex < 0) break;
-      const [card] = game.player.library.splice(libraryIndex, 1);
-      card.zone = "battlefield";
-      card.tapped = false;
-      card.summoningSickness = false;
-      game.player.battlefield.push(card);
+      const archiveIndex = game.player.archive.findIndex((card) => card.definitionId === entry.definitionId);
+      if (archiveIndex < 0) break;
+      const [card] = game.player.archive.splice(archiveIndex, 1);
+      card.zone = "field";
+      card.exhausted = false;
+      card.stabilizing = false;
+      game.player.field.push(card);
     }
   }
 }
 
 function applyDeveloperStartingBattlefield(game: GameState): void {
   if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
-  const landId = game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId;
+  const landId = game.player.archive.find((card) => card.kinds.includes("SOURCE"))?.definitionId;
   if (!landId) return;
   placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
-}
-
-function applyTutorialStartingBattlefield(game: GameState): void {
-  if (game.seed.trim().toLowerCase() !== TUTORIAL_SEED) return;
-  placeOnBattlefield(game, TUTORIAL_STARTING_BATTLEFIELD);
 }
 
 function limitPlayerDeckLands(cards: CardInstance[], maximum: number): CardInstance[] {
   let landsKept = 0;
   return cards.filter((card) => {
-    if (!card.cardTypes.includes("Land")) return true;
+    if (!card.kinds.includes("SOURCE")) return true;
     landsKept += 1;
     return landsKept <= maximum;
   });
@@ -232,11 +199,11 @@ function limitPlayerDeckLands(cards: CardInstance[], maximum: number): CardInsta
 function applyChaosStartingEnergy(game: GameState): void {
   if (game.gameMode !== "chaos") return;
   const normalizedSeed = game.seed.trim().toLowerCase();
-  if (normalizedSeed === DEVELOPER_SEED || normalizedSeed === TUTORIAL_SEED) return;
-  placeOnBattlefield(game, [{ definitionId: game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId ?? "", amount: 1 }]);
+  if (normalizedSeed === DEVELOPER_SEED) return;
+  placeOnBattlefield(game, [{ definitionId: game.player.archive.find((card) => card.kinds.includes("SOURCE"))?.definitionId ?? "", amount: 1 }]);
 }
 
-export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Keyword[]> = {}): CardInstance[] {
+export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Trait[]> = {}): CardInstance[] {
   const allDefinitions = [...(deck.cards ?? [])];
   return allDefinitions.flatMap((definition) =>
     Array.from({ length: definition.quantity ?? 1 }, (_, copyIndex) =>
@@ -245,12 +212,11 @@ export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<st
   );
 }
 
-export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosKeywords?: Keyword[]): CardInstance {
-  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosKeywords);
+export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosTraits?: Trait[]): CardInstance {
+  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosTraits);
 }
 
-export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosKeywords?: Keyword[]): CardInstance {
-  const chosenColor = definition.asEnters?.find((entry) => entry.storeAs === "chosenColor")?.defaultForThisDeck;
+export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosTraits?: Trait[]): CardInstance {
   const counters: Record<string, number> = {};
   for (const counter of definition.entersWithCounters ?? []) {
     counters[counter.counterType] = (counters[counter.counterType] ?? 0) + (counter.amount ?? 0);
@@ -264,36 +230,34 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     gameText: definition.gameText,
     owner: side,
     controller: side,
-    zone: "library",
+    zone: "archive",
     isToken: Boolean(definition.isToken),
-    manaCost: definition.manaCost ?? "",
-    manaValue: definition.manaValue ?? 0,
-    colors: definition.colors ?? [],
-    cardTypes: definition.cardTypes ?? [],
+    energyCost: definition.energyCost ?? 0,
+    kinds: definition.kinds ?? [],
+    modifiers: definition.modifiers ?? [],
     subtypes: definition.subtypes ?? [],
     basePower: definition.power ?? 0,
-    baseToughness: definition.toughness ?? 0,
-    keywords: chaosKeywords ? [...chaosKeywords] : definition.keywords ?? [],
-    chaosKeywords: chaosKeywords ? [...chaosKeywords] : [],
+    baseEndurance: definition.endurance ?? 0,
+    traits: chaosTraits ? [...chaosTraits] : definition.traits ?? [],
+    chaosTraits: chaosTraits ? [...chaosTraits] : [],
     triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
     additionalCost: definition.additionalCost,
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: definition.requiresTargets ?? [],
-    tapped: false,
-    entersTapped: Boolean(definition.entersTapped),
-    summoningSickness: (definition.cardTypes ?? []).includes("Creature"),
+    exhausted: false,
+    entersExhausted: Boolean(definition.entersExhausted),
+    stabilizing: (definition.kinds ?? []).includes("ECHO"),
     attacksMade: 0,
     activatedThisTurn: false,
     damageMarked: 0,
-    deathtouchDamage: false,
+    lethalDamage: false,
     counters,
     temporaryPower: 0,
-    temporaryToughness: 0,
+    temporaryEndurance: 0,
     untilNextPlayerTurnPower: 0,
-    untilNextPlayerTurnToughness: 0,
-    temporaryKeywords: [],
-    chosenColor,
+    untilNextPlayerTurnEndurance: 0,
+    temporaryTraits: [],
     attachTo: definition.attachTo,
     flags: { ...(definition.flags ?? {}) },
     variableCost: definition.variableCost,
@@ -302,7 +266,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
 
 export function drawCards(game: GameState, side: "player", amount: number): void {
   for (let i = 0; i < amount; i += 1) {
-    const card = game[side].library.shift();
+    const card = game[side].archive.shift();
     if (!card) break;
     card.zone = "hand";
     game[side].hand.push(card);

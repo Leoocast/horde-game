@@ -1,0 +1,770 @@
+# Plan de limpieza e independencia de Hostfall
+
+Estado: **L4 en curso — L4.1-L4.6a cerradas; L4.6b implementada y pendiente de validación manual**
+Última actualización: 2026-08-01
+Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
+este proceso.
+
+## Propósito
+
+Este documento coordina la limpieza necesaria para que Hostfall deje de depender de contenido,
+vocabulario y estructuras heredadas de Magic, incluyendo el código interno del juego.
+
+No reemplaza a [`game_vocabulary.md`](game_vocabulary.md): ese documento sigue siendo la fuente
+canónica de términos y conceptos de Hostfall. Este archivo define el orden de ejecución, los límites
+de cada fase, sus criterios de aceptación y el registro de decisiones.
+
+El proceso no es una opinión ni una certificación legal. Su objetivo es producir un build cuya
+identidad, contenido, recursos y lenguaje técnico pertenezcan a Hostfall y cuya procedencia pueda
+demostrarse.
+
+## Estado general
+
+| Etapa | Estado | Autorización |
+| --- | --- | --- |
+| Preparación del plan | Completada | Autorizada |
+| L0 — Punto seguro e inventario | Completada | Autorizada |
+| L1 — Basura y referencias explícitas | Completada | Autorizada |
+| L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
+| L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
+| L4 — Limpieza interna del engine | En curso: L4.1-L4.6a cerradas; L4.6b pendiente de validación manual | Autorizada por subfases |
+| L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
+| L6 — Arte y procedencia | No iniciada | No autorizada todavía |
+| L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
+
+## Protocolo de trabajo
+
+1. Se trabaja una sola fase a la vez.
+2. Antes de iniciar una fase se presenta su alcance exacto y los archivos previstos.
+3. Una autorización no permite adelantar trabajo de fases posteriores.
+4. No se hacen reemplazos globales en el engine. Cada dominio se migra como un cambio revisable.
+5. No se cambia arte, diseño visual o identidad de un mazo dentro de una fase técnica.
+6. No se borra un archivo hasta confirmar con búsquedas que no tiene consumidores.
+7. Al terminar una fase se entrega un resumen del diff, hallazgos, riesgos y verificaciones.
+8. La siguiente fase no comienza hasta recibir una instrucción explícita del usuario.
+
+Si una fase descubre un problema perteneciente a otra, se registra aquí y se difiere. No se amplía
+silenciosamente el alcance.
+
+## Invariantes que deben conservarse
+
+- Los mazos actuales deben seguir siendo jugables durante la migración técnica.
+- Las reglas reales permanecen en `src/engine`; los componentes no absorben lógica para facilitar
+  un renombre.
+- El orden de beats, triggers, daño, muertes y animaciones no debe cambiar accidentalmente.
+- El deck lint debe continuar distinguiendo habilidades implementadas, parciales y deliberadamente
+  ignoradas.
+- El generador visual no sustituye a los JSON runtime como fuente de reglas.
+- Los ids o adaptadores temporales se permiten solo si tienen una fase explícita de eliminación.
+- Ningún proveedor remoto de cartas puede regresar al runtime ni a los estudios.
+- Los cambios de presentación deben respetar el vocabulario cerrado en
+  [`game_vocabulary.md`](game_vocabulary.md).
+
+## Capas que se auditan por separado
+
+### 1. Producto visible
+
+UI, cartas impresas, imágenes, tooltips, logs, errores, texto accesible, nombres de mazos, iconos y
+capturas que recibe el jugador.
+
+### 2. Contenido authored
+
+JSON de decks, costes, estadísticas, Rasgos, efectos, composición de mazos, ids, nombres, texto de
+ambientación y metadata narrativa.
+
+### 3. Modelo interno
+
+Tipos TypeScript, nombres de propiedades, eventos, zonas, fases, acciones, recursos, comentarios y
+fixtures de prueba.
+
+### 4. Herramientas y residuos
+
+Estudios HTML, scripts, mirrors, documentos deprecated, assets no usados, datos de proveedores y
+archivos que no llegan al flujo normal pero siguen dentro del repositorio.
+
+### 5. Build distribuible
+
+Contenido real de `dist`, incluyendo todo lo que Vite copia desde `public`, aunque la UI no lo abra.
+
+## Fase L0 — Punto seguro e inventario
+
+### Objetivo
+
+Medir el estado real antes de limpiar. Esta fase no elimina, renombra ni rediseña contenido.
+
+### Trabajo permitido
+
+- Confirmar que el checkpoint de Git está limpio.
+- Ejecutar el baseline completo.
+- Crear un auditor reproducible para `src`, `public`, herramientas y `dist`.
+- Clasificar cada hallazgo por capa, severidad y fase responsable.
+- Registrar excepciones deliberadas, por ejemplo documentos internos de auditoría.
+
+### Trabajo excluido
+
+- Borrar HTML deprecated.
+- Renombrar tipos, zonas o propiedades.
+- Regenerar cartas.
+- Cambiar reglas, balance, nombres o arte.
+
+### Entregables
+
+- Resultado de TypeScript, deck lint, suite completa, build y `git diff --check`.
+- Script de auditoría repetible.
+- Inventario inicial con rutas y categorías.
+- Lista de strings prohibidos para producción y allowlist documental justificada.
+
+El baseline cerrado y sus cantidades viven en
+[`independence_inventory.md`](independence_inventory.md). El auditor reproducible quedó en
+`scripts/audit-independence.mjs` con modos normal, `--json` y `--strict`.
+
+### Criterio de aceptación
+
+El mismo comando debe poder detectar nuevamente los residuos sin depender de memoria humana. El
+baseline funcional debe permanecer verde.
+
+## Fase L1 — Basura y referencias explícitas
+
+### Objetivo
+
+Retirar residuos inequívocos sin cambiar ninguna mecánica.
+
+### Candidatos ya observados, pendientes de confirmar en L0
+
+- HTML antiguos bajo `dev/tools/Cards/`.
+- Créditos o referencias explícitas a Wizards.
+- El campo `source` del deck de Zombies que nombra Horde Magic.
+- Metadata histórica dentro de archivos que sí puedan terminar en el bundle.
+- Mirrors o ejemplos que ya no alimenten el flujo vigente.
+
+Las referencias dentro de documentación interna podrán conservarse únicamente si son necesarias
+para explicar la auditoría y nunca forman parte de `dist`.
+
+### Resultado L1
+
+- Se eliminó completo `dev/tools/Cards`: 27 archivos sin consumidores activos.
+- Se retiró la procedencia explícita del JSON de Zombies.
+- Se reescribió el único comentario de producción que nombraba Magic.
+- Los seis checks L1 quedaron en cero en source, herramientas y el build regenerado.
+- El auditor pasó de 9 a 6 categorías bloqueantes y de 3 a 2 advertencias; los bloqueos restantes
+  pertenecen a L2–L7.
+
+### Criterio de aceptación
+
+- Ningún archivo eliminado tenía consumidores activos.
+- El producto y el build no contienen referencias explícitas a Magic o Wizards.
+- Todas las verificaciones permanecen verdes.
+
+## Fase L2 — Fuente única para cartas
+
+### Objetivo
+
+Eliminar la divergencia entre datos runtime, estudios HTML y PNG exportados.
+
+### Trabajo previsto
+
+- Definir una única fuente de datos imprimibles por deck.
+- Separar claramente arte fuente, datos de carta y PNG generado.
+- Hacer que los estudios consuman datos locales, sin duplicar reglas en HTML embebido.
+- Guardar un hash de las entradas usadas para generar cada lote de PNG.
+- Fallar una verificación cuando un PNG sea anterior a sus datos fuente.
+- Regenerar las cartas con el vocabulario Hostfall vigente.
+
+### Problema conocido
+
+Los PNG de producción fueron exportados antes que varias correcciones de vocabulario. Algunos aún
+imprimen términos como `Criatura`, `Toque mortal`, `Daña primero`, `Horda` o construcciones antiguas
+de Vida aunque sus estudios y JSON ya tengan texto nuevo.
+
+### Resultado L2
+
+- El JSON runtime es la fuente única de reglas, nombre, coste, estadísticas y cantidad para cada
+  deck jugable. `studio.config.json` conserva solamente presentación: arte, línea de tipo, lore y
+  excepciones visuales que no cambian reglas.
+- Los cinco índices consumen `deck-data.generated.js`; ya no contienen arreglos de cartas
+  embebidos. `scripts/card-studio-data.mjs --check` falla si la proyección deja de coincidir.
+- Se eliminaron cuatro mirrors editables: `mono-green.json`, `vampires.json`, `hunters.json` y
+  `mono_green_ramp_card_generator.json`. Cazadores quedó como una única configuración preview
+  porque todavía no tiene deck runtime.
+- Los estudios dejaron de depender de CDN para tipografías e iconos. Sus entradas son locales y
+  enumerables.
+- El exportador sincroniza datos, rechaza arte circular y actualiza
+  `dev/tools/Decks/generation-manifest.json` con hashes del deck, presentación, renderer, fuentes,
+  arte y cada PNG de salida.
+- Se regeneraron y verificaron 13 PNG de Mono Green y 14 de Vampiros. Ambos lotes imprimen el
+  vocabulario vigente y pasan la prueba de frescura.
+
+### Excepción aceptada y diferida a L6
+
+Zombies y Trasgos no conservan arte fuente local. Sus estudios recibían URLs remotas hasta que se
+retiró Scryfall y ahora apuntan a sus propios PNG finales. Regenerarlos así anidaría una carta
+dentro de otra y sobrescribiría la única copia conservada; extraer el arte desde el raster final
+también duplicaría overlays y degradaría la imagen.
+
+El usuario autorizó conservar intactos esos 34 PNG y resolverlos al generar el arte definitivo en
+L6. El exportador continúa bloqueándolos deliberadamente para impedir una exportación recursiva.
+Esta excepción ya no impide cerrar L2: queda registrada como deuda explícita de assets para L6.
+
+No se inició L3 y los PNG actuales de ambas Huestes permanecen intactos.
+
+### Criterio de aceptación
+
+Una edición de datos tiene un solo lugar de origen y existe una forma objetiva de saber si las
+imágenes distribuidas están actualizadas. Los 34 PNG legacy sin arte fuente constituyen la excepción
+documentada y protegida hasta su sustitución en L6.
+
+## Fase L3 — Schema Hostfall para decks
+
+### Objetivo
+
+Hacer que los JSON authored hablen Hostfall. Durante esta fase un adaptador temporal podrá producir
+el modelo que todavía espere el engine.
+
+### Mapeo previsto
+
+| Legacy authored | Hostfall authored |
+| --- | --- |
+| `cardTypes` | `kinds` |
+| `Creature` | `ECHO` |
+| `Land` / `Energy` | `SOURCE` |
+| `Sorcery` | `SPELL` |
+| `Instant` | `SPELL` con modificador `QUICK` |
+| `Artifact` / `Enchantment` | `SUPPORT` |
+| `toughness` | `endurance` |
+| `keywords` | `traits` |
+| `manaCost`, `manaValue`, `colors` | modelo de `energyCost` |
+
+El diseño definitivo del coste de Energía debe preservar primero el comportamiento actual y luego
+retirar la compatibilidad de colores en L4.
+
+### Orden
+
+Se convierte un deck por vez. Cada conversión debe producir el mismo estado runtime que antes del
+cambio hasta que una fase de diseño autorice modificar reglas.
+
+### Avance L3.1 — Mono Green
+
+- `mono_green_ramp.json` usa schema `1.0.0` y ya no contiene campos authored legacy.
+- El coste usa una sola cantidad de Energía, sin colores; el adaptador genera el coste genérico que
+  todavía paga el engine conservando la cantidad de Fuentes requerida.
+- `hostfallDeckAdapter.ts` traduce tipos, Rasgos, Aguante, zonas, Agotar, eventos y generación de
+  Energía. Los decks `0.2.0` pasan por el mismo borde sin modificaciones.
+- El lint rechaza campos legacy dentro de cualquier deck `1.0.0`.
+- Las pruebas cubren los aliases, producción de Energía y la expansión de `SUPPORT` a las dos
+  categorías que todavía distingue el engine. No se migró ningún otro deck.
+
+### Avance L3.2 — Vampiros
+
+- El usuario validó Mono Green mediante una partida completa antes de autorizar este bloque.
+- El contrato canónico Hostfall se fijó en `1.0.0` para código, documentación y decks migrados.
+- `vampire_preview.json` usa `CHRONICLER`, `energyCost`, `kinds`, `modifiers`, `endurance`,
+  `traits`, `FIELD`, `QUICK`, `exhaust`, `requiresStabilized`, `SOURCE_IS_READY` y `GAIN_ENERGY`.
+- La Condesa conserva su identidad de `Chronicle Echo` mediante `CHRONICLE`; los Rasgos declarados
+  dentro de efectos también pasan por el adaptador, como `DRAIN` hacia el alias temporal del engine.
+- El auditor bajó el inventario authored legacy de 327 a 234 apariciones. Las restantes pertenecen
+  exclusivamente a Zombies y Trasgos, que continúan en `0.2.0` hasta sus respectivos bloques.
+- Mono Green y Vampiros fueron reexportados para renovar su huella de frescura bajo `1.0.0`; los
+  únicos PNG todavía no verificables son los 34 de Horda diferidos a L6.
+
+### Avance L3.3 — Zombies
+
+- El usuario validó Vampiros mediante una partida completa antes de autorizar este bloque.
+- `horde-zombies.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`, `SPELL`,
+  `energyCost`, `endurance`, `traits`, `FIELD`, `MEMORY`, `INVOKED` y controladores `HOST`.
+- `rulesProfile` habla Hostfall (`damagePerArchiveDiscard`, `poisonPerArchiveDiscard`,
+  `hostEchosHaveImpetus`) y el adaptador restaura temporalmente el contrato que consume L4.
+- Los aliases de reglas exclusivos de este deck se migraron a `BEGIN_READY`, `CARD_PLAYED`,
+  `ECHO_DIED`, `MEMORY_COUNT_AT_LEAST`, `DISCARD_OWN_ARCHIVE_TO_MEMORY` y costes de Energía.
+- Graf Harvest mantiene sus dos habilidades pendientes y Smallpox conserva su resolución custom;
+  ninguna habilidad WIP fue activada accidentalmente.
+- El auditor bajó el inventario authored legacy de 234 a 128 apariciones, todas pertenecientes a
+  Trasgos. Los 34 PNG de Zombies y Trasgos siguen bajo la excepción de arte aceptada para L6.
+
+### Avance L3.4 — Trasgos
+
+- El usuario validó Zombies mediante una partida completa antes de autorizar este bloque.
+- `goblin_assault_horde.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`,
+  `SPELL`, `QUICK`, `CHRONICLE`, `REFLEX`, `DAUNTING`, `FIELD` y `ECHO_DIED`.
+- Los aliases exclusivos de Trasgos hablan Hostfall en authoring: `BEGIN_BATTLE`,
+  `REVEAL_HOST_ROUND`, `DEAL_DAMAGE_TO_OPPONENT_ECHO`, `COUNT_ECHOS` y
+  `COUNT_ECHOS_INVOKED_THIS_TURN`. El adaptador restaura temporalmente los identificadores que
+  todavía consume L4.
+- General Kreat, Krenko y Pashalik declaran `CHRONICLE` sin conservar `supertypes: Legendary`.
+- El Card Studio de Trasgos consume los campos canónicos de coste, Aguante, Rasgos, tipos y
+  modificadores; no se regeneraron ni alteraron sus PNG.
+- Los cuatro decks activos usan ya el schema Hostfall. La auditoría reporta cero apariciones en
+  `legacy-authored-schema`; permanecen los 34 PNG de Horda diferidos a L6.
+- El usuario validó Trasgos mediante una partida completa. Con esa confirmación, L3 queda cerrada
+  y L4 pasa a ser la siguiente fase; todavía no se ha iniciado ningún cambio interno del engine.
+
+### Criterio de aceptación
+
+- Todos los decks usan el schema Hostfall.
+- El lint rechaza nuevos campos legacy en authored data.
+- Los aliases sobreviven únicamente en un adaptador identificado y testeado.
+
+## Fase L4 — Limpieza interna del engine
+
+### Objetivo
+
+Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por accidente.
+
+### Punto de entrada para el siguiente chat
+
+- L0-L3 y L4.1-L4.6b están cerradas y validadas.
+- L4.6c está cerrada y validada por el usuario.
+- El ajuste final de L4, prioridad de pago Stored Energy → Sources, está cerrado y validado por el
+  usuario. L4 queda completa.
+- Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
+  `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
+  `legacy-l44-card-states`, `legacy-l45-actions-events-host-rules` y
+  `legacy-l46-card-structure`, `legacy-l46-host-identity` y
+  `legacy-l46-playground-contract` están en cero.
+- `hostfallDeckAdapter.ts` ya deja pasar sin traducción identidad, estructura de carta, eventos,
+  Acciones y `rulesProfile`. Conserva únicamente la conversión de casing de zonas authored/runtime.
+- Escenarios y replays usan el contrato v3 Hostfall. Los boards/replays antiguos se descartaron por
+  decisión explícita: no hay migrador, las versiones retiradas se rechazan y localStorage usa un
+  namespace nuevo que elimina las entradas v1 al acceder al Playground.
+- Preservar comportamiento, ids y reglas. Verificar cada subfase con TypeScript, deck lint, suite,
+  build, auditoría y una partida dirigida del usuario antes de avanzar.
+
+### Subfases obligatorias
+
+1. Tipos de carta y Rasgos.
+2. Zonas.
+3. Energía y costes.
+4. Estados de cartas.
+5. Acciones, eventos y reglas de la Hueste.
+6. Store, componentes, playground y pruebas consumidoras.
+
+### Mapeos principales
+
+| Legacy interno | Hostfall interno |
+| --- | --- |
+| `library` | `archive` |
+| `battlefield` | `field` |
+| `graveyard` | `memory` |
+| `exile` | `oblivion` |
+| `tapped` | `exhausted` |
+| `summoningSickness` | `stabilizing` |
+| `manaPool` | `energyPool` |
+| `DEATHTOUCH` | `LETHAL` |
+| `REACH` | `SKYGUARD` |
+| `VIGILANCE` | `ALERT` |
+| `MENACE` | `DAUNTING` |
+| `FIRST_STRIKE` | `REFLEX` |
+| `SKULK` | `FURTIVE` |
+| `LIFESTEAL` | `DRAIN` |
+| `TRAMPLE` | `OVERFLOW` |
+| `HASTE` | `IMPETUS` |
+| `TOXIC_N` | `POISON_N` |
+
+`player`, `card`, `hand`, `attack`, `damage`, `draw` y otros términos genéricos no se renombran por
+rutina. Solo se cambia un término cuando el modelo Hostfall aporta una distinción real.
+
+### Estrategia de seguridad
+
+- Migrar un dominio completo y pequeño por cambio.
+- Mantener aliases únicamente en bordes de carga o compatibilidad.
+- No mantener dos copias mutables del mismo estado.
+- Mover reglas visuales puras a módulos testeables cuando sea necesario.
+- Decidir explícitamente si los saves de desarrollo se migran o reciben un version bump.
+
+### Criterio de aceptación
+
+`src/engine` usa el modelo Hostfall y cualquier vocabulario legacy restante está aislado en un
+adaptador con una fase de eliminación conocida.
+
+### Avance L4.1 — Tipos de carta y Rasgos
+
+- `src/engine/hostfallVocabulary.ts` define conjuntos cerrados para `CardKind`, `CardModifier` y
+  `Trait`, incluido `POISON_N`, junto con predicados compartidos para QUICK y validación.
+- El runtime conserva temporalmente los nombres de contenedor `cardTypes`/`keywords`, pero sus
+  valores ya son exclusivamente Hostfall; `modifiers` preserva QUICK y CHRONICLE sin volver a
+  codificarlos como tipos legacy. No existen dos arrays mutables para el mismo concepto.
+- Filtros, targeting, historial de entradas, combate, Rasgos impresos/temporales/estáticos, Chaos y
+  los consumidores mínimos de store/UI usan los mismos valores canónicos.
+- El adaptador dejó de traducir tipos y Rasgos. Mantiene sólo los aliases de los dominios de
+  L4.2-L4.6, además del cambio temporal de nombre de los contenedores que retirará L4.6.
+- El deck lint falla ante versión, side, kind, modifier o Trait desconocidos. La auditoría incorpora
+  el blocker específico `legacy-l41-card-model`, actualmente en cero.
+- El inventario L4 general bajó de 859 a 754 apariciones; las restantes pertenecen a zonas,
+  Energía, estados, eventos, identidad Host y limpieza posterior de consumidores.
+- Verificación automática: TypeScript, deck lint, Card Studio, 200/200 tests, auditoría, build y
+  `git diff --check` en verde.
+- El usuario validó los cuatro decks mediante dos pruebas dirigidas. El PNG vigente de General
+  Kreat no muestra `CHRONICLE`, como era esperable: los 34 PNG de Zombies y Trasgos continúan
+  deliberadamente pausados hasta el cambio de arte. Esta deuda visual no contradice el modificador
+  runtime ni bloquea L4.1.
+- La identidad futura de Chronicler de Trasgos se decidirá en una fase de arte posterior; el
+  candidato actual del usuario es Goblin Chainwhirler en lugar de General Kreat. L4 no cambia esa
+  asignación de contenido.
+
+### Avance L4.2 — Zonas
+
+- `src/engine/hostfallZones.ts` define el conjunto authored cerrado `ARCHIVE`, `HAND`, `FIELD`,
+  `MEMORY`, `OBLIVION` y su representación runtime en minúsculas.
+- `GameState`, `PlayerState`, `HordeState` y `CardInstance.zone` usan una sola representación:
+  `archive`, `hand`, `field`, `memory` y `oblivion`. No existen arrays legacy paralelos ni getters
+  que puedan desincronizarse al clonar el estado.
+- El historial de entradas y los consumidores de engine/store/UI se conectaron a la misma forma
+  canónica. El adaptador ya no traduce zonas a Library/Battlefield/Graveyard/Exile; únicamente
+  normaliza el casing del schema authored al runtime.
+- El deck lint rechaza zonas authored desconocidas y la auditoría incorpora el blocker
+  `legacy-l42-zones`, actualmente en cero. El inventario L4 general bajó de 754 a 419 apariciones;
+  las restantes corresponden a Energía, estados, eventos, identidad Host y nombres de borde que
+  se limpiarán en L4.3-L4.6.
+- Los nombres externos de zonas del Playground se conservaron durante esta subfase para que boards
+  y replays existentes sigan cargando. Como su shape no cambió, `SCENARIO_VERSION` permanece en 2;
+  L4.6 migrará esas claves consumidoras de forma conjunta.
+- Verificación automática: TypeScript, deck lint, Card Studio, 201/201 tests, auditoría y build en
+  verde. El usuario confirmó el smoke test manual completo el 2026-08-01; L4.2 queda cerrada.
+
+### Avance L4.3 — Energía y costes
+
+- `src/engine/EnergySystem.ts` reemplaza `ManaSystem.ts` con un único pool numérico:
+  `EnergyPool { available, stored }`. Se eliminaron colores, parsing de símbolos, `ManaPool`,
+  `manaCost`, `manaValue`, `genericMana` y los helpers de pago legacy del runtime.
+- `energyCost` llega como cantidad numérica desde el adaptador y permanece numérico en
+  `CardDefinition`/`CardInstance`; X se suma mediante `totalEnergyCost`. Los costes de Acciones usan
+  `energy` y conservan su atomicidad con pagos de vida.
+- En L4.3 el autopago agotaba Sources antes de consumir Stored Energy. Los Ecos que generan Energía siguen
+  requiriendo activación explícita, la reserva conserva su límite de 3 y la transición visual sólo
+  acredita la Energía al impactar el HUD.
+- Store, UI, Playground, escenarios y pruebas consumen el mismo modelo. El contrato externo de
+  escenarios ya era `energy`/`storedEnergy`, por lo que `SCENARIO_VERSION` permanece en 2.
+- La auditoría incorpora `legacy-l43-energy-model`, actualmente en cero. El inventario L4 general
+  bajó de 419 a 380 apariciones; las restantes pertenecen a estados, eventos, identidad Host y
+  nombres visuales/de borde previstos para L4.4-L4.6.
+- Verificación automática: TypeScript, deck lint, Card Studio, 202/202 tests, auditoría y build en
+  verde. El usuario confirmó los tres smoke tests el 2026-08-01; L4.3 queda cerrada.
+- Decisión funcional resuelta al cierre de L4: el autopago consume primero
+  Stored Energy y después Sources, de modo que la Energía normal sobrante sea la que pueda pasar a
+  reserva. L4.3 conservó temporalmente el orden Sources→Stored para no mezclar esa decisión con la
+  migración estructural; el ajuste final lo invirtió después de cerrar L4.6c.
+
+### Avance L4.4 — Estados de cartas
+
+- `CardInstance` usa exclusivamente `exhausted`, `entersExhausted` y `stabilizing`; los costes de
+  Acción usan `exhaust` y las restricciones de activación usan `requiresStabilized`.
+- Engine, combate, generación/pago de Energía, store y componentes consumen esos mismos campos.
+  `SOURCE_IS_READY` reemplaza `SOURCE_IS_UNTAPPED`, y los helpers de transición preparan el Field
+  mediante `readySide`/`completePlayerStabilization`.
+- El adaptador ya no traduce `exhaust`, `exhausted`, `requiresStabilized` ni `SOURCE_IS_READY`.
+  Al cerrar L4.4 quedaban aliases de eventos, Acciones y reglas Host; L4.5 ya los retiró y dejó
+  únicamente el borde estructural/de bando previsto para L4.6.
+- Los escenarios v2 conservan `tapped` y `summoningSickness` solamente como claves externas de
+  compatibilidad y las traducen al entrar/salir. No se cambió `SCENARIO_VERSION`; L4.6 decidirá y
+  ejecutará en conjunto el retiro o versionado de esas claves y de las zonas externas.
+- La auditoría incorpora `legacy-l44-card-states`, actualmente en cero. El inventario L4 general
+  bajó de 380 a 321 apariciones; las restantes pertenecen a eventos, identidad Host y bordes de
+  compatibilidad/presentación previstos para L4.5-L4.6.
+- Verificación automática: TypeScript, deck lint, Card Studio, 202/202 tests, auditoría y build en
+  verde. El usuario confirmó el smoke test manual completo el 2026-08-01; L4.4 queda cerrada.
+
+### Avance L4.5 — Acciones, eventos y reglas de la Hueste
+
+- `HostRules.ts`, `HostRulesProfile`, `DEFAULT_HOST_RULES`, `buildHostRules` y `game.hostRules`
+  reemplazan el contrato interno anterior. Daño, Veneno, Ímpetu y el bono de Oleada consumen
+  `damagePerArchiveDiscard`, `poisonPerArchiveDiscard`, `hostEchosHaveImpetus` y `endurance`.
+- Los eventos distinguen la invocación propia (`INVOKED`) de la observación agregada
+  (`ECHO_INVOKED`), y usan `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED` y `BEGIN_BATTLE`. Un Apoyo no
+  emite eventos reservados a Ecos al entrar o ser destruido.
+- Acciones, condiciones, cantidades y targets usan el vocabulario Hostfall, entre ellos
+  `DISCARD_OWN_ARCHIVE_TO_MEMORY`, `MEMORY_COUNT_AT_LEAST`, `COUNT_ECHOS`, `TARGET_ECHO` y
+  `ALL_ECHOS`. El adaptador ya no los degrada al modelo anterior.
+- El deck lint valida también perfiles de reglas, eventos, selectores, el contexto de `controller`
+  y metadata de habilidades `pending`/`ignored`/`custom`, incluidos discriminantes no-string; las
+  fixtures negativas legacy tienen una excepción explícita por línea y siguen protegiendo el
+  rechazo sin quedar fuera de la auditoría.
+- Las pruebas semánticas cubren Sunshower, Noosegraf por sus rutas reales, Crow, el umbral exacto
+  de Memoria, targets/conteos de Eco, destrucción de Apoyos, llegadas diferidas observadas por
+  General Kreat, Mini Surge, Surge y perfiles Host con valores no predeterminados. El HUD toma los
+  divisores de `hostRules`, sin asumir el valor 3.
+- Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker
+  `legacy-l45-actions-events-host-rules` en cero, build y `git diff --check` en verde. El usuario
+  confirmó el comportamiento y autorizó continuar el 2026-08-01; L4.5 queda cerrada.
+
+### Avance L4.6a — Estructura canónica de cartas
+
+- `CardDefinition`, `CardInstance`, filtros, historial y consumidores de engine/store/UI usan
+  exclusivamente `kinds`, `traits` y `endurance`; también se retiraron los nombres legacy de sus
+  variantes temporales, derivadas y helpers técnicos.
+- `Traits.ts` reemplaza `Keywords.ts`. El nombre authored singular `keyword` de las Acciones
+  canónicas permanece porque pertenece al contrato cerrado de habilidades, no al modelo legacy de
+  carta.
+- `hostfallDeckAdapter.ts` dejó de convertir `kinds`/`traits`/`endurance` y preserva esos campos al
+  cruzar al runtime. El deck lint y Card Studio tampoco contienen fallbacks a la estructura vieja.
+- La auditoría incorpora el blocker `legacy-l46-card-structure`, actualmente en cero. Los aliases
+  de bando, casing de zonas y escenarios v2 quedan deliberadamente para los siguientes bloques de
+  L4.6; tampoco se alteró en aquel bloque la prioridad Sources→Stored Energy, que se cambió al
+  cierre final de L4.
+- Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker L4.5 y
+  blocker L4.6a en cero, y build en verde. El usuario confirmó la validación visual dirigida el
+  2026-08-01; L4.6a queda cerrada.
+
+### Avance L4.6b — Identidad runtime de la Host
+
+- `Side` y la fase automática usan `host`; `GameState.host`, `HostState`, `hostTurnNumber`,
+  `setupCompletePendingHost` y `hostAttackers` reemplazan sus equivalentes legacy.
+- Engine, store y UI usan nombres Host, incluidos `HostController.ts`, `hostBeats.ts`,
+  `HostAttackAnimator.tsx`, `HostMillAnimator.tsx`, funciones, estado de animación, selectores,
+  tonos y clases de presentación. Los nombres propios como Rundvelt Hordemaster no se alteran.
+- El adaptador deja pasar `side: HOST` y controladores `HOST` sin downgrade. `normalizeDeck` produce
+  la identidad runtime `host`, y el deck lint protege el contrato authored canónico.
+- El schema v2 de escenarios/replays todavía conservaba temporalmente `horde*` en este punto; ese
+  borde fue retirado inmediatamente después en L4.6c.
+- La auditoría incorpora `legacy-l46-host-identity`, actualmente en cero. Rutas e ids authored de
+  decks permanecen fuera de este bloque porque identifican contenido y no el modelo runtime.
+- Verificación automática: TypeScript, deck lint, Card Studio, 218/218 tests, blockers L4.5,
+  L4.6a y L4.6b en cero, y build en verde. El usuario confirmó la validación visual el 2026-08-01;
+  L4.6b queda cerrada.
+
+### Avance L4.6c — Contrato externo del Playground
+
+- `SCENARIO_VERSION` sube a 3. `ScenarioDefinition`, snapshots y archivos usan directamente
+  `hostDeckId`, `hostTurnNumber`, `host`, lados/fase `host`, zonas `Field`/`Memory`/`Oblivion`/
+  `ArchiveTop`, y estados `exhausted`/`stabilizing`.
+- El timeline usa `hostTurn`/`hostTurnExact` y lados `player | host`; se eliminaron los conversores
+  de identidad que existían sólo para el borde v2.
+- Se conservan guardar, cargar, importar y exportar. Boards y replays usan namespaces v2 de
+  localStorage; al acceder, las tres claves v1 se eliminan. Los JSON anteriores se rechazan con un
+  error de versión. No existe migrador ni prueba de migración.
+- Se eliminó `dev/snapshots/player-base.json`, el único board externo antiguo encontrado en el repo.
+  No había replays externos guardados. Los ids físicos de decks y las preferencias generales de la
+  aplicación no se modificaron porque no son datos generados por el Playground.
+- La suite prueba round-trip del contrato v3 y rechazo de versiones retiradas. TypeScript, deck
+  lint, Card Studio, 220/220 tests, build, `git diff --check` y los blockers L4.6a-c pasan. El
+  usuario confirmó el smoke test manual de guardado, exportación, importación y carga el 2026-08-01;
+  L4.6c queda cerrada.
+
+### Ajuste final L4 — Prioridad de Stored Energy
+
+- `payEnergy` y el autopago consumen primero Stored Energy, después Energía disponible y finalmente
+  sólo las Sources necesarias. Los Ecos que generan Energía siguen siendo activaciones manuales.
+- Un coste mixto ya no agota Sources que la reserva cubre. Las Sources que permanecen listas pueden
+  pasar a Stored Energy al terminar el turno, respetando el límite de 3.
+- Las regresiones se cambiaron antes que el engine y fallaron en los tres caminos antiguos:
+  Energía generada manualmente, Sources automáticas normales y Crimson Energy. Tras el cambio,
+  esos casos, el pago insuficiente atómico y las 220/220 pruebas pasan.
+- El usuario confirmó el pago mixto, el número de Sources agotadas y la recuperación de reserva el
+  2026-08-01. L4 queda cerrada. L5 permanece expresamente fuera de alcance hasta nueva autorización.
+
+## Fase L5 — Independencia de los mazos
+
+### Objetivo
+
+Convertir los mazos derivados en contenido propio sin perder sus roles jugables.
+
+### Regla de rediseño
+
+Cambiar nombre y arte no basta. Cada carta se evalúa también por:
+
+- coste;
+- Fuerza y Aguante;
+- efecto o condición;
+- timing;
+- cantidad de copias;
+- relación con el resto del deck.
+
+Se puede conservar un rol amplio —productor de Energía, defensor, lord tribal, removal, crecimiento—
+sin conservar una ficha uno-a-uno de una carta publicada.
+
+### Orden recomendado
+
+1. Validar Vampiros como Crónica original de referencia.
+2. Crear una Hueste original a partir del espacio jugable de Zombies.
+3. Rediseñar Trasgos.
+4. Rediseñar Mono Green.
+
+Antes de tocar un deck se prepara una tabla carta por carta y el usuario aprueba el diseño. Solo un
+deck puede estar en migración de contenido a la vez.
+
+### Criterio de aceptación
+
+No existe una correspondencia sistemática de nombre nuevo + arte nuevo + mismo coste + mismas
+estadísticas + mismo efecto + misma cantidad.
+
+### Decisión de alcance del usuario (2026-08-01)
+
+- No se cambiará ningún coste, Fuerza, Aguante, efecto, timing, cantidad ni sinergia de Mono Green,
+  Zombies o Goblins. El balance actual queda congelado por decisión explícita del usuario.
+- Por tanto, L5 no se ejecutará como rediseño de contenido y no se afirmará que cumple el criterio
+  de aceptación original. El trabajo futuro se limitará a cambiar nombres, ids y rutas, conservando
+  exactamente el comportamiento vigente.
+- L6 seguirá ocupándose del arte y su procedencia; L7 retirará las identidades y archivos antiguos
+  que queden después de esos cambios. Ninguna de esas fases autoriza cambios de balance.
+- Los decks vigentes se consideran esqueletos mecánicos ya balanceados. La identidad final de cada
+  deck se diseñará en este orden: Crónica e historia, nombres y roles narrativos de las cartas,
+  correspondencia con las estadísticas/efectos congelados y, finalmente, arte. Esto aplica a todos
+  los decks y se difiere para una sesión futura.
+
+### Pipeline narrativo futuro por deck
+
+1. Escribir la Crónica y la historia del deck.
+2. Definir quién es su Chronicler y qué representa narrativamente cada carta.
+3. Asignar nombres nuevos a los roles mecánicos existentes.
+4. Mantener exactamente los stats, costes, efectos, timing y cantidades actuales.
+5. Crear el arte de acuerdo con esa identidad narrativa y registrar su procedencia.
+6. Regenerar los PNG finales y cambiar nombres técnicos, ids y rutas en un único corte verificado.
+
+Este pipeline se ejecutará para un solo deck a la vez y no comienza hasta nueva autorización del
+usuario.
+
+## Fase L6 — Arte y procedencia
+
+### Objetivo
+
+Sustituir recursos derivados y demostrar derechos de uso.
+
+### Deuda deliberada (2026-08-01)
+
+L6 queda diferida. No se crearán nombres ni arte aislados antes de definir la Crónica de cada deck.
+Los PNG, nombres e identidades actuales permanecen como material provisional unido al esqueleto
+mecánico; Zombies y Goblins continúan con su exportación pausada. Esta deuda no bloquea trabajo
+interno del juego, pero sí bloquea declarar terminada la identidad final y la auditoría de
+publicación.
+
+### Registro mínimo por recurso
+
+- ruta;
+- autor o proveedor;
+- licencia o contrato;
+- permiso comercial y de modificación;
+- fecha y comprobante;
+- atribución necesaria;
+- hash del archivo aprobado.
+
+Los art crops editables deben vivir en carpetas `art/`. Un PNG final de carta no puede convertirse
+en la fuente de arte de su propio generador.
+
+### Criterio de aceptación
+
+Cada recurso distribuido tiene procedencia documentada y todos los PNG fueron generados desde arte
+y datos locales aprobados.
+
+## Fase L7 — Retiro legacy y auditoría final
+
+### Objetivo
+
+Eliminar la capa de compatibilidad y revisar el build como un tercero.
+
+### Dependencia de las Crónicas y L6
+
+L7 final no puede cerrarse antes del pase narrativo y de L6: sin nombres, ids, rutas y arte de
+reemplazo no es posible borrar correctamente las identidades y recursos provisionales. No se
+debilitará la auditoría para ocultar esta deuda; sus blockers permanecerán visibles hasta que existan
+los reemplazos. Puede hacerse limpieza técnica no relacionada, pero no se marcará L7 completa ni se
+usará `--strict` como gate superado antes de ese corte final.
+
+L7 no repite la migración del engine de L4 ni autoriza cambios funcionales. Su alcance es retirar
+identidades, ids, rutas, imágenes, fixtures, comentarios y compatibilidades realmente obsoletas;
+resolver de forma explícita cualquier persistencia afectada; reconstruir `dist`; y pasar la
+auditoría final de nombres, recursos, procedencia y residuos técnicos.
+
+### Trabajo previsto
+
+- Borrar aliases y adaptadores temporales.
+- Retirar ids, fixtures, comentarios y nombres de pruebas derivados.
+- Borrar imágenes y archivos sustituidos.
+- Migrar o invalidar saves antiguos de forma explícita.
+- Ejecutar la auditoría sobre `dist`, no solamente sobre `src`.
+- Revisar nombres, imágenes, reglas, iconos, créditos y procedencia del producto final.
+
+### Criterio de aceptación
+
+Una persona que recibe únicamente el build no encuentra nombres, arte, texto, metadata, servicios
+ni terminología específica de Magic, y cada recurso tiene prueba de derechos comerciales.
+
+## Matriz de verificación
+
+Cada fase con cambios de código debe cerrar con:
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\typescript\lib\tsc.js -b
+```
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\lint-decks.mjs
+```
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts\run-engine-tests.mjs
+```
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js build
+```
+
+Además:
+
+- `git diff --check`;
+- auditor de independencia;
+- revisión del diff limitada a la fase;
+- confirmación de que no comenzó trabajo de la fase siguiente.
+
+Una fase exclusivamente documental puede cerrar con TypeScript y `git diff --check`; cualquier
+cambio en datos, scripts, assets o código exige la matriz completa.
+
+## Hallazgos preliminares
+
+Estos puntos justificaron el plan, pero no sustituyen el inventario reproducible de L0:
+
+- Existen cartas derivadas bajo `public/cards` y Vite copia `public` al build.
+- Algunos PNG no reflejan el vocabulario ya actualizado en sus fuentes.
+- El authored data todavía usa costes, colores, tipos y Rasgos legacy.
+- Al iniciar el plan, el engine todavía modelaba zonas, maná, tap y estabilización con nombres legacy.
+- Existe al menos una procedencia explícita de Horde Magic en datos de producción.
+- Existen herramientas HTML antiguas con créditos de Wizards.
+- La documentación de vocabulario estima 44 definiciones nombradas y tres fichas derivadas entre
+  Mono Green, Zombies y Goblins.
+
+Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarlos.
+
+## Registro de decisiones
+
+| Fecha | Decisión | Motivo |
+| --- | --- | --- |
+| 2026-07-31 | Trabajar fase por fase con aprobación explícita. | Evitar cambios amplios y mantener el juego funcional. |
+| 2026-07-31 | Usar el push limpio del usuario como checkpoint inicial. | Existe un punto de recuperación antes de L0. |
+| 2026-07-31 | Documentar el proceso antes de comenzar L0. | Mantener continuidad entre sesiones y agentes. |
+| 2026-07-31 | El auditor normal reporta sin fallar y `--strict` rechaza bloqueos. | Permite medir progreso durante la migración y usar el mismo script como gate final. |
+| 2026-07-31 | Eliminar todo `dev/tools/Cards` después de confirmar cero consumidores. | El árbol completo pertenecía al creador HTML deprecated; `dev/tools/Decks` permanece intacto como flujo vigente. |
+| 2026-07-31 | Permitir referencias históricas solo en documentación y auditoría internas. | No llegan a `dist` y son necesarias para explicar el proceso de independencia. |
+
+| 2026-07-31 | Derivar las reglas impresas desde el JSON runtime y limitar `studio.config.json` a presentación. | Evita dos copias editables de coste, stats, cantidad y texto de reglas sin adelantar el schema Hostfall de L3. |
+| 2026-07-31 | Rechazar un PNG final usado como arte de su propio estudio. | Evita sobrescritura circular y degradación silenciosa; Zombies y Trasgos requieren una decisión explícita. |
+
+## Registro de avance
+
+| Fecha | Fase | Acción | Resultado | Verificación |
+| --- | --- | --- | --- | --- |
+| 2026-07-31 | Preparación | Diseño inicial del proceso. | Documento creado; L0 todavía no iniciada. | TypeScript OK; `git diff --check` OK. |
+| 2026-07-31 | L0 | Baseline, auditor e inventario de source, tools, `public` y `dist`. | 9 categorías bloqueantes, 3 advertencias y 2 checks limpios; ninguna corrección adelantada. | TypeScript OK; deck lint OK; 194/194 tests; build OK; JSON y gate estricto validados. |
+| 2026-07-31 | L1 | Retiro de herramientas deprecated y referencias explícitas. | 27 archivos eliminados; los seis checks de L1 quedaron en cero; quedan 6 bloqueos, 2 advertencias y 6 checks limpios. | TypeScript OK; deck lint OK; 194/194 tests; build OK; auditor L1 limpio; `git diff --check` OK. |
+
+| 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
+| 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
+| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
+| 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos; partida completa del usuario OK. |
+| 2026-07-31 | L3.4 | Migración exclusiva de Trasgos y cierre de L3. | Los cuatro decks usan `1.0.0`; el inventario `legacy-authored-schema` llegó a cero y el usuario validó la partida. | TypeScript OK; deck lint OK; Card Studio OK; 199/199 tests; build OK; auditor OK para L3; `git diff --check` OK; partida completa del usuario OK. |
+| 2026-07-31 | L4.1 | Migración interna de tipos de carta, modificadores y Rasgos. | El runtime consume valores Hostfall sin traducción de tipos/Rasgos; el blocker `legacy-l41-card-model` quedó en cero. Los PNG pausados de Zombies/Trasgos siguen fuera de alcance. | TypeScript OK; deck lint OK; Card Studio OK; 200/200 tests; build OK; auditor OK para L4.1; `git diff --check` OK; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.2 | Migración interna de zonas. | Estado, engine y consumidores usan exclusivamente Archive, Field, Memory y Oblivion; `legacy-l42-zones` quedó en cero. | TypeScript OK; deck lint OK; Card Studio OK; 201/201 tests; build OK; auditor OK para L4.2; `git diff --check` OK; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.3 | Migración interna de Energía y costes. | Pool numérico único, costes `energyCost` numéricos y autopago Sources→Stored Energy; `legacy-l43-energy-model` quedó en cero. El cambio a Stored→Sources queda diferido al cierre de L4. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.3; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.4 | Migración interna de estados de cartas. | Runtime y consumidores usan `exhausted`, `entersExhausted`, `stabilizing`, `exhaust`, `requiresStabilized` y `SOURCE_IS_READY`; `legacy-l44-card-states` quedó en cero. El schema externo de escenarios v2 conserva temporalmente sus aliases. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.4; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.5 | Migración interna de Acciones, eventos y reglas de la Hueste. | Runtime y datos normalizados usan el vocabulario Hostfall; `game.hostRules` reemplaza el contrato anterior. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blocker L4.5 en cero; validación del usuario OK. |
+| 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
+| 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
+
+## Plantilla para cerrar una fase
+
+Al finalizar cada fase se agrega una entrada que incluya:
+
+- alcance ejecutado;
+- archivos creados, modificados y eliminados;
+- hallazgos diferidos;
+- decisiones tomadas;
+- resultados de TypeScript, lint, tests, build y auditoría;
+- riesgos conocidos;
+- estado de Git;
+- autorización necesaria para la siguiente fase.

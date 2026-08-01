@@ -20,6 +20,7 @@ export const sfxManifest = {
   skipNextBattle: new URL("../../assets/sounds/skip_next_battle.wav", import.meta.url).href,
   activateEffect: new URL("../../assets/sounds/activate_effect.wav", import.meta.url).href,
   buff: new URL("../../assets/sounds/buff.wav", import.meta.url).href,
+  monoGreenBuff: new URL("../../assets/sounds/monogreen_buff.mp3", import.meta.url).href,
   fireballCast1: new URL("../../assets/sounds/fireball_cast_1.wav", import.meta.url).href,
   fireballCast2: new URL("../../assets/sounds/fireball_cast_2.wav", import.meta.url).href,
   fireballCast3: new URL("../../assets/sounds/fireball_cast_3.wav", import.meta.url).href,
@@ -27,6 +28,46 @@ export const sfxManifest = {
 } as const;
 
 export type SfxId = keyof typeof sfxManifest;
+
+export type SfxGroupId = "interface" | "summoning" | "combat" | "effects" | "countess" | "fireball";
+
+export const sfxGroups: Array<{ id: SfxGroupId; label: string }> = [
+  { id: "interface", label: "Interface & cards" },
+  { id: "summoning", label: "Summoning" },
+  { id: "combat", label: "Combat" },
+  { id: "effects", label: "Effects" },
+  { id: "countess", label: "Countess voices" },
+  { id: "fireball", label: "Fireball variants" },
+];
+
+export const sfxMetadata: Record<SfxId, { label: string; group: SfxGroupId }> = {
+  click: { label: "Valid click", group: "interface" },
+  draw: { label: "Draw", group: "interface" },
+  drawOne: { label: "Draw one", group: "interface" },
+  playLand: { label: "Play land", group: "interface" },
+  playMonster: { label: "Play monster", group: "summoning" },
+  playMonsterEffect: { label: "Play monster effect", group: "summoning" },
+  playMonsterHeavy: { label: "Play monster heavy", group: "summoning" },
+  attack: { label: "Attack", group: "combat" },
+  bloodSplash: { label: "Blood splash", group: "combat" },
+  bloodSplash2: { label: "Blood splash 2", group: "combat" },
+  punch: { label: "Punch", group: "combat" },
+  defend: { label: "Defend", group: "combat" },
+  skipNextBattle: { label: "Skip / next battle", group: "effects" },
+  activateEffect: { label: "Activate effect", group: "effects" },
+  buff: { label: "Buff", group: "effects" },
+  monoGreenBuff: { label: "Mono Green buff", group: "effects" },
+  countessEnter: { label: "Countess enters", group: "countess" },
+  countessHumans: { label: "Countess · Humans", group: "countess" },
+  countessLaugh: { label: "Countess · Laugh", group: "countess" },
+  countessPour: { label: "Countess · Pour", group: "countess" },
+  countessThirdAttack: { label: "Countess · Third attack", group: "countess" },
+  countessWeak: { label: "Countess · Weak", group: "countess" },
+  fireballCast1: { label: "Fireball cast 1", group: "fireball" },
+  fireballCast2: { label: "Fireball cast 2", group: "fireball" },
+  fireballCast3: { label: "Fireball cast 3", group: "fireball" },
+  fireballHit: { label: "Fireball hit", group: "fireball" },
+};
 
 // Casts keep varied voices; impact currently has one canonical hit.
 export const fireballCastSfx: SfxId[] = ["fireballCast1", "fireballCast2", "fireballCast3"];

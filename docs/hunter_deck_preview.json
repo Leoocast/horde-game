@@ -1,0 +1,223 @@
+{
+  "schemaVersion": "preview-0.2",
+  "status": "concept",
+  "id": "player_monster_hunters",
+  "name": "Monster Hunters",
+  "displayNameEs": "Cazadores de Monstruos",
+  "deckSize": 40,
+  "identity": {
+    "manaColor": "R",
+    "visualTheme": "Rojo cobrizo, cuero oscuro, hierro, sangre y hueso",
+    "gameplay": [
+      "Marcar monstruos",
+      "Aturdir amenazas",
+      "Tender trampas para defender",
+      "Rematar presas marcadas",
+      "Permitir que Lyra ate un monstruo y lo vuelva contra la Horda",
+      "Cobrar recompensas mediante Trofeo de la Cacería"
+    ]
+  },
+  "setup": {
+    "startingBattlefield": [
+      {
+        "definitionId": "trofeo_de_la_caceria",
+        "quantity": 1,
+        "note": "Esta copia se extrae del deck antes de barajar."
+      }
+    ],
+    "startingHand": [],
+    "library": {
+      "note": "Se barajan las otras 39 cartas. La segunda copia de Trofeo de la Cacería permanece en la biblioteca y debe ser robada normalmente."
+    }
+  },
+  "mechanics": {
+    "MARCAR": {
+      "text": "Coloca una Marca sobre un monstruo. La Marca permanece mientras siga en el campo y un monstruo no puede tener más de una."
+    },
+    "ATURDIR": {
+      "text": "El monstruo no puede atacar durante el próximo turno de la Horda. Después pierde Aturdido."
+    },
+    "ATAR": {
+      "text": "Lyra gira y toma control de un monstruo marcado y aturdido. Endereza al monstruo y colócalo inmediatamente a la derecha de Lyra, unido visualmente por una correa.",
+      "rules": [
+        "Lyra es la única carta del preview que puede atar monstruos.",
+        "Lyra permanece girada y no se endereza normalmente mientras mantenga una presa atada.",
+        "El monstruo atado puede atacar y defender por el jugador.",
+        "El monstruo conserva fuerza, resistencia y keywords; sus demás habilidades quedan desactivadas.",
+        "Si Lyra se endereza, muere o deja el campo, el monstruo regresa a la Horda girado y pierde su Marca.",
+        "El jugador puede liberar voluntariamente al monstruo al comienzo de su turno.",
+        "Si el monstruo atado muere, va al cementerio de la Horda. Lyra no se endereza inmediatamente, pero podrá enderezarse normalmente en el próximo turno."
+      ]
+    }
+  },
+  "cards": [
+    {
+      "id": "territorio_de_caza",
+      "name": "Hunting Territory",
+      "displayNameEs": "Territorio de Caza",
+      "quantity": 12,
+      "manaCost": "",
+      "cardTypes": ["Land"],
+      "rulesTextEs": "Gira: agrega {R}.",
+      "imageUrl": "/cards/hunters/art/territorio_de_caza.webp"
+    },
+    {
+      "id": "trampa_de_mandibulas",
+      "name": "Jaw Trap",
+      "displayNameEs": "Trampa de Mandíbulas",
+      "quantity": 4,
+      "manaCost": "{R}",
+      "cardTypes": ["Trap"],
+      "power": 1,
+      "toughness": 1,
+      "keywords": ["DEFENDER"],
+      "rulesTextEs": "Defensor. Cuando bloquee a un monstruo, márcalo y atúrdelo. Al final del combate, sacrifica esta Trampa.",
+      "imageUrl": "/cards/hunters/art/trampa_de_mandibulas.webp"
+    },
+    {
+      "id": "red_de_garfios",
+      "name": "Hook Net",
+      "displayNameEs": "Red de Garfios",
+      "quantity": 3,
+      "manaCost": "{R}",
+      "cardTypes": ["Trap"],
+      "power": 0,
+      "toughness": 3,
+      "keywords": ["DEFENDER", "REACH"],
+      "rulesTextEs": "Defensor. Alcance. Puede bloquear por sí sola a un monstruo con Menace. Cuando bloquee a un monstruo marcado, atúrdelo. Al final del combate, sacrifica esta Trampa.",
+      "imageUrl": "/cards/hunters/art/red_de_garfios.webp"
+    },
+    {
+      "id": "rastreadora_de_huellas",
+      "name": "Trail Tracker",
+      "displayNameEs": "Rastreadora de Huellas",
+      "quantity": 3,
+      "manaCost": "{R}",
+      "cardTypes": ["Creature"],
+      "subtypes": ["Hunter"],
+      "power": 1,
+      "toughness": 2,
+      "rulesTextEs": "Cuando entre al campo, marca un monstruo.",
+      "imageUrl": "/cards/hunters/art/rastreadora_de_huellas.webp"
+    },
+    {
+      "id": "trampero_de_acero",
+      "name": "Steel Trapper",
+      "displayNameEs": "Trampero de Acero",
+      "quantity": 3,
+      "manaCost": "{1}{R}",
+      "cardTypes": ["Creature"],
+      "subtypes": ["Hunter"],
+      "power": 1,
+      "toughness": 2,
+      "rulesTextEs": "Cuando entre al campo, crea una Trampa improvisada 1/1 con Defensor. Cuando esa Trampa bloquee a un monstruo, atúrdelo. Sacrifícala al final del combate.",
+      "imageUrl": "/cards/hunters/art/trampero_de_acero.webp"
+    },
+    {
+      "id": "lancero_de_la_marca",
+      "name": "Marked Prey Lancer",
+      "displayNameEs": "Lancero de la Marca",
+      "quantity": 3,
+      "manaCost": "{1}{R}",
+      "cardTypes": ["Creature"],
+      "subtypes": ["Hunter"],
+      "power": 2,
+      "toughness": 2,
+      "rulesTextEs": "Cuando bloquee o pelee contra un monstruo marcado, obtiene +2/+0 durante ese combate.",
+      "imageUrl": "/cards/hunters/art/lancero_de_la_marca.webp"
+    },
+    {
+      "id": "lyra_ojo_de_la_caceria",
+      "name": "Lyra, Eye of the Hunt",
+      "displayNameEs": "Lyra, Ojo de la Cacería",
+      "quantity": 2,
+      "manaCost": "{3}{R}",
+      "cardTypes": ["Legendary", "Creature"],
+      "subtypes": ["Hunter"],
+      "power": 3,
+      "toughness": 4,
+      "rulesTextEs": "Cuando entre al campo, marca un monstruo. Gira: ata a Lyra un monstruo marcado y aturdido.",
+      "imageUrl": "/cards/hunters/art/lyra_ojo_de_la_caceria.webp"
+    },
+    {
+      "id": "flecha_sedante",
+      "name": "Sedative Arrow",
+      "displayNameEs": "Flecha Sedante",
+      "quantity": 3,
+      "manaCost": "{R}",
+      "cardTypes": ["Instant"],
+      "rulesTextEs": "Elige un monstruo. Si no está marcado, márcalo. Si ya está marcado, atúrdelo.",
+      "imageUrl": "/cards/hunters/art/flecha_sedante.webp"
+    },
+    {
+      "id": "contra_tu_manada",
+      "name": "Against Your Pack!",
+      "displayNameEs": "¡Contra tu manada!",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "cardTypes": ["Instant"],
+      "rulesTextEs": "Un monstruo atado pelea contra otro monstruo de la Horda.",
+      "imageUrl": "/cards/hunters/art/contra_tu_manada.webp"
+    },
+    {
+      "id": "rodear_a_la_presa",
+      "name": "Surround the Prey",
+      "displayNameEs": "Rodear a la Presa",
+      "quantity": 2,
+      "manaCost": "{1}{R}",
+      "cardTypes": ["Sorcery"],
+      "rulesTextEs": "Elige uno o dos Cazadores. Estos hacen daño combinado igual a su fuerza total a un monstruo marcado. Ese monstruo hace daño igual a su fuerza a uno de esos Cazadores.",
+      "imageUrl": "/cards/hunters/art/rodear_a_la_presa.webp"
+    },
+    {
+      "id": "trofeo_de_la_caceria",
+      "name": "Trophy of the Hunt",
+      "displayNameEs": "Trofeo de la Cacería",
+      "quantity": 2,
+      "manaCost": "{2}{R}",
+      "cardTypes": ["Enchantment"],
+      "rulesTextEs": "Siempre que muera un monstruo marcado, coloca un contador de Trofeo sobre este permanente. Cuando tenga tres contadores, retira tres y elige uno: ganas 3 vidas; o robas una carta.",
+      "deckRules": [
+        "Una copia comienza la partida en el campo.",
+        "La segunda copia permanece en la biblioteca y debe ser robada normalmente.",
+        "Si ambos Trofeos están en campo, cada uno obtiene su propio contador cuando muere un monstruo marcado."
+      ],
+      "imageUrl": "/cards/hunters/art/trofeo_de_la_caceria.webp"
+    },
+    {
+      "id": "la_gran_batida",
+      "name": "The Great Drive",
+      "displayNameEs": "La Gran Batida",
+      "quantity": 1,
+      "manaCost": "{3}{R}",
+      "cardTypes": ["Sorcery"],
+      "rulesTextEs": "Marca y aturde a todos los monstruos de la Horda.",
+      "imageUrl": "/cards/hunters/art/la_gran_batida.webp"
+    }
+  ],
+  "tokens": [
+    {
+      "id": "trampa_improvisada",
+      "name": "Improvised Trap",
+      "displayNameEs": "Trampa improvisada",
+      "cardTypes": ["Token", "Trap"],
+      "power": 1,
+      "toughness": 1,
+      "keywords": ["DEFENDER"],
+      "rulesTextEs": "Defensor. Cuando bloquee a un monstruo, atúrdelo. Al final del combate, sacrifica esta Trampa.",
+      "imageUrl": "/cards/hunters/art/trampa_improvisada.webp"
+    }
+  ],
+  "counts": {
+    "lands": 12,
+    "huntersAndTraps": 18,
+    "tacticsAndPermanents": 10,
+    "total": 40
+  },
+  "notes": [
+    "Este archivo es un preview de diseño y no está registrado como deck jugable.",
+    "Los nombres, costes, cantidades y textos pueden cambiar durante la iteración.",
+    "Marcar, Aturdir, Atar, las Trampas bloqueadoras y el setup del Trofeo requieren soporte nuevo en el motor.",
+    "Los artes son previews 3:2. Todavía no se exportaron cartas completas a PNG."
+  ]
+}

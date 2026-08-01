@@ -1,17 +1,19 @@
 import type { GameState } from "../engine/GameTypes";
-import { hordeInSurge } from "../engine/StaticEffects";
+import { hostInSurge } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
 
 export function GameStatusBadge({ game }: { game: GameState }) {
   const t = useTranslation();
   const status = game.winner
-    ? t(game.winner === "player" ? "game.playerWins" : "game.hordeWins")
+    ? t(game.winner === "player" ? "game.playerWins" : "game.hostWins")
     : game.gameMode === "chaos"
-      ? t(hordeInSurge(game) ? "game.chaosSurgeActive" : "game.chaosMutationActive")
+      ? t(hostInSurge(game) ? "game.chaosSurgeActive" : "game.chaosMutationActive")
       : game.setupTurnsRemaining > 0
         ? t("game.setupRemaining", { count: game.setupTurnsRemaining })
-        : t(hordeInSurge(game) ? "game.hordeSurgeActive" : "game.normalAlternation");
-  const phase = t((`phase.${game.phase === "horde" ? "main" : game.phase}`) as "phase.untap" | "phase.draw" | "phase.main" | "phase.combat" | "phase.end");
+        : t(hostInSurge(game) ? "game.hostSurgeActive" : "game.normalAlternation");
+  const phase = game.phase === "host"
+    ? t("phase.hostPhase")
+    : t((`phase.${game.phase}`) as "phase.untap" | "phase.draw" | "phase.main" | "phase.combat" | "phase.end");
   return (
     <div className="game-status h-14 min-w-0 px-3 py-2 text-[#f6e6b8]">
       <div className="game-status-kicker">{t("game.chronicleInProgress")}</div>

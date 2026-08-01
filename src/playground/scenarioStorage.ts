@@ -1,10 +1,16 @@
 import { BLANK_SCENARIO, SCENARIO_VERSION, cloneScenario, validateScenario, type ScenarioDefinition } from "./scenario";
 import type { TimelineStep } from "./timeline";
 
-const BOARD_STORAGE_KEY = "hostfall-playground-boards:v1";
-const REPLAY_STORAGE_KEY = "hostfall-playground-replays:v1";
-const LEGACY_STORAGE_KEY = "hostfall-playground-scenarios:v1";
-const BOARD_FILE_VERSION = 1;
+const BOARD_STORAGE_KEY = "hostfall-playground-boards:v2";
+const REPLAY_STORAGE_KEY = "hostfall-playground-replays:v2";
+const BOARD_FILE_VERSION = 2;
+
+// L4.6c intentionally discards pre-Hostfall Playground data instead of migrating test artifacts.
+const RETIRED_PLAYGROUND_STORAGE_KEYS = [
+  "hostfall-playground-boards:v1", // audit-allow legacy-l46c-retired-storage
+  "hostfall-playground-replays:v1", // audit-allow legacy-l46c-retired-storage
+  "hostfall-playground-scenarios:v1", // audit-allow legacy-l46c-retired-storage
+] as const;
 
 export type StoredBoard = {
   id: string;
@@ -21,10 +27,11 @@ export type StoredReplay = {
   steps: TimelineStep[];
 };
 
-/** Backward-compatible exported-file shape used by older saved playground scenarios. */
+/** A saved Playground flow and the Hostfall-native board state it starts from. */
 export type StoredScenario = StoredReplay;
 
 export function listStoredBoards(): StoredBoard[] {
+  discardRetiredPlaygroundStorage();
   return readEntries<StoredBoard>(BOARD_STORAGE_KEY, isStoredBoard);
 }
 
@@ -65,8 +72,12 @@ export function parseBoardFile(json: string): { board?: StoredBoard; problems: s
   }
 
   const source = parsed as Record<string, unknown>;
-  const definition = (typeof source.definition === "object" && source.definition !== null ? source.definition : source) as ScenarioDefinition;
-  if (typeof definition.seed !== "string" || typeof definition.zones !== "object" || definition.zones === null) {
+  const wrapped = typeof source.definition === "object" && source.definition !== null;
+  if (wrapped && source.version !== BOARD_FILE_VERSION) {
+    return { problems: [`Board file version ${String(source.version)} is retired; this build requires ${BOARD_FILE_VERSION}.`] };
+  }
+  const definition = (wrapped ? source.definition : source) as ScenarioDefinition;
+  if (typeof definition.version !== "number" || typeof definition.seed !== "string" || typeof definition.zones !== "object" || definition.zones === null) {
     return { problems: ["That file does not look like a Playground board."] };
   }
   const problems = validateScenario(definition);
@@ -75,15 +86,15 @@ export function parseBoardFile(json: string): { board?: StoredBoard; problems: s
   const boardDefinition: ScenarioDefinition = {
     ...cloneScenario(definition),
     turnNumber: 1,
-    hordeTurnNumber: 0,
+    hostTurnNumber: 0,
     phase: "main",
     activeSide: "player",
     player: { life: BLANK_SCENARIO.player.life, energy: 0, storedEnergy: 0 },
-    horde: { poisonCounters: 0 },
+    host: { poisonCounters: 0 },
     zones: {
       playerHand: definition.zones.playerHand,
-      playerBattlefield: definition.zones.playerBattlefield,
-      hordeBattlefield: definition.zones.hordeBattlefield,
+      playerField: definition.zones.playerField,
+      hostField: definition.zones.hostField,
     },
   };
 
@@ -99,11 +110,8 @@ export function parseBoardFile(json: string): { board?: StoredBoard; problems: s
 }
 
 export function listStoredReplays(): StoredReplay[] {
-  const current = readEntries<StoredReplay>(REPLAY_STORAGE_KEY, isStoredReplay);
-  const legacy = readEntries<StoredReplay>(LEGACY_STORAGE_KEY, isStoredReplay);
-  const seen = new Set(current.map((entry) => entry.id));
-  return [...current, ...legacy.filter((entry) => !seen.has(entry.id))]
-    .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  discardRetiredPlaygroundStorage();
+  return readEntries<StoredReplay>(REPLAY_STORAGE_KEY, isStoredReplay);
 }
 
 export function saveStoredReplay(name: string, definition: ScenarioDefinition, steps: TimelineStep[]): StoredReplay {
@@ -122,7 +130,6 @@ export function saveStoredReplay(name: string, definition: ScenarioDefinition, s
 
 export function deleteStoredReplay(id: string): void {
   writeEntries(REPLAY_STORAGE_KEY, listStoredReplays().filter((entry) => entry.id !== id));
-  writeEntries(LEGACY_STORAGE_KEY, readEntries<StoredReplay>(LEGACY_STORAGE_KEY, isStoredReplay).filter((entry) => entry.id !== id));
 }
 
 export function toScenarioFile(entry: StoredScenario): string {
@@ -142,12 +149,15 @@ export function parseScenarioFile(json: string): { entry?: StoredScenario; probl
 
   const source = parsed as Record<string, unknown>;
   const definition = (typeof source.definition === "object" && source.definition !== null ? source.definition : source) as ScenarioDefinition;
-  if (typeof definition.seed !== "string" || typeof definition.zones !== "object" || definition.zones === null) {
+  if (typeof definition.version !== "number" || typeof definition.seed !== "string" || typeof definition.zones !== "object" || definition.zones === null) {
     return { problems: ["That file does not look like a playground scenario."] };
   }
 
   const problems = validateScenario(definition);
   if (problems.length > 0) return { problems };
+  if (Array.isArray(source.steps) && !source.steps.every(isTimelineStep)) {
+    return { problems: ["That scenario contains retired or invalid replay steps."] };
+  }
 
   return {
     entry: {
@@ -180,13 +190,33 @@ function writeEntries(key: string, entries: unknown[]): void {
 function isStoredBoard(value: unknown): value is StoredBoard {
   if (!isStoredEntry(value)) return false;
   const definition = (value as Record<string, unknown>).definition;
-  return typeof definition === "object" && definition !== null;
+  return isCurrentScenarioDefinition(definition);
 }
 
 function isStoredReplay(value: unknown): value is StoredReplay {
   if (!isStoredEntry(value)) return false;
   const entry = value as Record<string, unknown>;
-  return typeof entry.definition === "object" && Array.isArray(entry.steps);
+  return isCurrentScenarioDefinition(entry.definition) && Array.isArray(entry.steps) && entry.steps.every(isTimelineStep);
+}
+
+function isCurrentScenarioDefinition(value: unknown): value is ScenarioDefinition {
+  if (typeof value !== "object" || value === null) return false;
+  const definition = value as Record<string, unknown>;
+  return definition.version === SCENARIO_VERSION && typeof definition.zones === "object" && definition.zones !== null;
+}
+
+const TIMELINE_STEP_KINDS = new Set<TimelineStep["kind"]>([
+  "advancePhase", "endTurn", "hostTurn", "hostTurnExact", "resolveNextEvent", "resolveAllEvents",
+  "draw", "addEnergySource", "refillEnergy", "addStoredEnergy", "drainEnergy", "place", "playCard",
+  "play", "destroy", "toGraveyard", "clearBattlefield",
+]);
+
+function isTimelineStep(value: unknown): value is TimelineStep {
+  if (typeof value !== "object" || value === null) return false;
+  const step = value as Record<string, unknown>;
+  if (typeof step.kind !== "string" || !TIMELINE_STEP_KINDS.has(step.kind as TimelineStep["kind"])) return false;
+  if ((step.kind === "playCard" || step.kind === "clearBattlefield") && step.side !== "player" && step.side !== "host") return false;
+  return true;
 }
 
 function isStoredEntry(value: unknown): boolean {
@@ -198,6 +228,11 @@ function isStoredEntry(value: unknown): boolean {
 function readSavedAt(value: unknown): string {
   if (typeof value !== "object" || value === null) return "";
   return String((value as Record<string, unknown>).savedAt ?? "");
+}
+
+function discardRetiredPlaygroundStorage(): void {
+  if (typeof window === "undefined") return;
+  for (const key of RETIRED_PLAYGROUND_STORAGE_KEYS) window.localStorage.removeItem(key);
 }
 
 function makeId(prefix: string): string {

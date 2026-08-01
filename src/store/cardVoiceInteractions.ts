@@ -4,7 +4,6 @@ import { matchesFilter } from "../engine/StaticEffects";
 
 export type CardVoiceCue = {
   sfx: SfxId;
-  volume: number;
 };
 
 export type CardVoiceCueMatch = {
@@ -14,7 +13,7 @@ export type CardVoiceCueMatch = {
 
 export type CardVoiceEvent =
   | {
-      type: "ENTERS_BATTLEFIELD";
+      type: "INVOKED";
       card: CardInstance;
       previousGame: GameState;
     }
@@ -46,17 +45,17 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
   {
     id: "countess-enters",
     sourceDefinitionId: "eternal_feast_countess",
-    event: "ENTERS_BATTLEFIELD",
+    event: "INVOKED",
     subject: "SOURCE",
-    cues: [{ sfx: "countessEnter", volume: 0.78 * 0.49 }],
+    cues: [{ sfx: "countessEnter" }],
   },
   {
     id: "countess-sees-human",
     sourceDefinitionId: "eternal_feast_countess",
-    event: "ENTERS_BATTLEFIELD",
+    event: "INVOKED",
     subject: "ALLY",
-    eventFilter: { cardTypes: ["Creature"], subtypes: ["Human"] },
-    cues: [{ sfx: "countessHumans", volume: 0.78 * 0.49 }],
+    eventFilter: { kinds: ["ECHO"], subtypes: ["Human"] },
+    cues: [{ sfx: "countessHumans" }],
   },
   {
     id: "countess-third-attack",
@@ -65,7 +64,7 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
     subject: "SOURCE",
     occurrence: 3,
     maxPerBatch: 1,
-    cues: [{ sfx: "countessThirdAttack", volume: 0.8 * 0.49 }],
+    cues: [{ sfx: "countessThirdAttack" }],
   },
   {
     id: "countess-defends",
@@ -74,8 +73,8 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
     subject: "SOURCE",
     speakChance: 0.5,
     cues: [
-      { sfx: "countessPour", volume: 0.78 * 0.49 },
-      { sfx: "countessWeak", volume: 0.78 * 0.49 },
+      { sfx: "countessPour" },
+      { sfx: "countessWeak" },
     ],
   },
 ];
@@ -130,8 +129,8 @@ function interactionSource(rule: CardVoiceRule, event: CardVoiceEvent): CardInst
   if (rule.subject === "SOURCE") {
     return event.card.definitionId === rule.sourceDefinitionId ? event.card : undefined;
   }
-  if (event.type !== "ENTERS_BATTLEFIELD") return undefined;
-  return event.previousGame[event.card.controller].battlefield.find(
+  if (event.type !== "INVOKED") return undefined;
+  return event.previousGame[event.card.controller].field.find(
     (candidate) =>
       candidate.definitionId === rule.sourceDefinitionId &&
       candidate.instanceId !== event.card.instanceId,

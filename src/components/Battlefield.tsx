@@ -1,13 +1,13 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { activatedAbilityFailureReason } from "../engine/GameActions";
-import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from "../engine/Keywords";
+import { blockRestrictionReason, canAttack, canBlockAttacker, hasTrait } from "../engine/Traits";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
-import { STORED_MANA_CAP } from "../engine/ManaSystem";
-import { getTutorialSpotlightZones, getTutorialStepId, isTutorialAwaitingContinue, isTutorialSeed } from "../engine/Tutorial";
+import { STORED_ENERGY_CAP } from "../engine/EnergySystem";
 import { useTranslation } from "../i18n/useTranslation";
 import { translate } from "../i18n/translations";
+import { canonicalizeRulesText } from "../i18n/rulesText";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -15,7 +15,10 @@ import { useToastStore } from "../store/useToastStore";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
-import { Card } from "./Card";
+import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
+import { Card, CardDefenseBadge } from "./Card";
+import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
+import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
 import {
@@ -43,6 +46,11 @@ const BATTLEFIELD_OVERFLOW_SAFE_INSET_PX = 132;
 const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
+const HEAVY_MONO_GREEN_CREATURE_IDS = new Set([
+  "magnigoth_sentry",
+  "colossadactyl",
+  "timberland_ancient",
+]);
 
 type EnergyChangeSource = "card" | "land" | "turn";
 
@@ -85,10 +93,11 @@ function BattlefieldRowSurface({
   otherPermanents,
   otherPermanentsTargetingActive = false,
 }: BattlefieldRowSurfaceProps) {
+  const t = useTranslation();
   return (
     <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
       {cardsEmpty ? (
-        <div aria-label="Empty battlefield" className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
+        <div aria-label={`${t("zones.field")}: 0`} className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
       ) : (
         <div
           ref={creatureRowRef}
@@ -115,9 +124,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const t = useTranslation();
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   // Cards already present when this Battlefield mounts belong to the loaded board, not to the
-  // next arrival wave. Starting empty made the first Horde summon replay every existing card's
+  // next arrival wave. Starting empty made the first Host summon replay every existing card's
   // entrance animation.
-  const animatedHordeIds = useRef<Set<string>>(createBattlefieldArrivalRegistry(cards));
+  const animatedHostIds = useRef<Set<string>>(createBattlefieldArrivalRegistry(cards));
   const entranceAnimatingIds = useRef<Set<string>>(new Set());
   const activeReflowAnimations = useRef<Map<string, Animation>>(new Map());
   const seenAutoPaidEvents = useRef<Set<number>>(new Set());
@@ -126,7 +135,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const creatureRowRef = useRef<HTMLDivElement>(null);
   const previousRects = useRef<Map<string, { left: number; top: number }>>(new Map());
   const reflowSampleFrame = useRef<number | undefined>(undefined);
-  const previousHordeEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
+  const previousHostEntrySignature = useRef(cards.map((card) => card.instanceId).join("|"));
   const previousPlayerAttackers = useRef<Set<string>>(new Set());
   const suppressNextSelectIds = useRef<Set<string>>(new Set());
   const battlefieldCardOrder = useRef<Map<string, number>>(new Map());
@@ -142,14 +151,16 @@ export function Battlefield({ game, side, cards }: Props) {
   const currentSwarmEntryWaveId = useRef<number | undefined>(undefined);
   const currentSwarmEntryWaveTurn = useRef<number | undefined>(undefined);
   const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
+  const [heavyLandingEvents, setHeavyLandingEvents] = useState<Record<string, number>>({});
+  const nextHeavyLandingEventId = useRef(0);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
-  const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
-  const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
+  const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
+  const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
-  const hordeAttackAnimationAttackerId = useGameStore((state) => state.hordeAttackAnimation?.attackerId);
-  const hordeAttackAnimationBlockerId = useGameStore((state) => state.hordeAttackAnimation?.blockerId);
+  const hostAttackAnimationAttackerId = useGameStore((state) => state.hostAttackAnimation?.attackerId);
+  const hostAttackAnimationBlockerId = useGameStore((state) => state.hostAttackAnimation?.blockerId);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -167,13 +178,14 @@ export function Battlefield({ game, side, cards }: Props) {
   const spellTargetingTargets = useGameStore((state) => state.spellTargeting?.targets);
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
+  const buffAnimationVariant = useGameStore((state) => state.buffAnimationVariant);
   const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
   const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
   const pendingTriggeredEffectSourceId = useGameStore((state) => state.pendingTriggeredEffectSourceId);
-  const hordeCombatVisualDamage = useGameStore((state) => state.hordeCombatVisualDamage);
-  const hordeCombatDeadCardIds = useGameStore((state) => state.hordeCombatDeadCardIds);
+  const hostCombatVisualDamage = useGameStore((state) => state.hostCombatVisualDamage);
+  const hostCombatDeadCardIds = useGameStore((state) => state.hostCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
@@ -182,7 +194,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const blockDragActive = useGameStore((state) => Boolean(state.blockDrag));
   const blockDragBlockerId = useGameStore((state) => state.blockDrag?.blockerId);
   const selectPlayerCreature = useGameStore((state) => state.selectPlayerCreature);
-  const selectHordeCreature = useGameStore((state) => state.selectHordeCreature);
+  const selectHostCreature = useGameStore((state) => state.selectHostCreature);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
@@ -197,21 +209,20 @@ export function Battlefield({ game, side, cards }: Props) {
   const updatePlayerAttackDrag = useGameStore((state) => state.updatePlayerAttackDrag);
   const cancelPlayerAttackDrag = useGameStore((state) => state.cancelPlayerAttackDrag);
   const endSummoningAnimation = useGameStore((state) => state.endSummoningAnimation);
-  const tutorialAcknowledgedStepId = useGameStore((state) => state.tutorialAcknowledgedStepId);
 
   // Combat casualties leave game state the instant their impact lands, so their triggers can
   // resolve in sequence. Removing them from the row right then would re-center every survivor
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
-  // let them all leave at once. This covers both animated Horde combat and the Horde's own
+  // let them all leave at once. This covers both animated Host combat and the Host's own
   // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
-  const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
+  const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
-  const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
-  const lands = displayedCards.filter((card) => card.cardTypes.includes("Land"));
-  const others = displayedCards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
-  const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
-  const storedManaCount = game.player.manaPool.colorless;
+  const creatures = displayedCards.filter((card) => card.kinds.includes("ECHO"));
+  const lands = displayedCards.filter((card) => card.kinds.includes("SOURCE"));
+  const others = displayedCards.filter((card) => !card.kinds.includes("ECHO") && !card.kinds.includes("SOURCE"));
+  const availableLandCount = lands.filter((card) => !card.exhausted && !card.activatedThisTurn).length;
+  const storedEnergyCount = game.player.energyPool.stored;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
   const energyTransitionSequence = useRef(0);
   const energyTransitionTimer = useRef<number | undefined>(undefined);
@@ -219,21 +230,18 @@ export function Battlefield({ game, side, cards }: Props) {
     normal?: EnergyTrackTransition;
     stored?: EnergyTrackTransition;
   }>({});
-  const hordeCombat = game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
-  // The Horde attacks with everything able, every turn. Declaring is a rules step that only runs
+  const hostCombat = game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
+  // The Host attacks with everything able, every turn. Declaring is a rules step that only runs
   // after summons and enter triggers, but the board should read as committed from the moment the
   // creatures land: they arrive already leaning with their attack chevron, and the effects then
   // play over a board that has stopped moving. Visual only — nothing here declares an attacker.
-  const hordeAttackPending =
-    side === "horde" &&
-    game.activeSide === "horde" &&
-    (game.phase === "horde" || game.phase === "combat") &&
-    game.combat.hordeAttackers.length === 0 &&
-    !resolvingHordeCombat &&
+  const hostAttackPending =
+    side === "host" &&
+    game.activeSide === "host" &&
+    (game.phase === "host" || game.phase === "combat") &&
+    game.combat.hostAttackers.length === 0 &&
+    !resolvingHostCombat &&
     !game.winner;
-  const tutorialStepId = isTutorialSeed(game) ? getTutorialStepId(game) : null;
-  const tutorialZones = tutorialStepId ? getTutorialSpotlightZones(game, tutorialStepId, tutorialAcknowledgedStepId === tutorialStepId) : [];
-  const tutorialAwaitingContinue = isTutorialAwaitingContinue(game, tutorialAcknowledgedStepId);
   const cropCreatureCards = ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS || creatureRowOverflowing;
 
   useLayoutEffect(() => {
@@ -244,7 +252,7 @@ export function Battlefield({ game, side, cards }: Props) {
       landCount: lands.length,
       phase: game.phase,
       seed: game.seed,
-      stored: storedManaCount,
+      stored: storedEnergyCount,
       turnNumber: game.turnNumber,
     };
     const previous = previousEnergyVisual.current;
@@ -303,7 +311,7 @@ export function Battlefield({ game, side, cards }: Props) {
     game.turnNumber,
     lands.length,
     side,
-    storedManaCount,
+    storedEnergyCount,
   ]);
 
   useLayoutEffect(() => () => {
@@ -397,12 +405,12 @@ export function Battlefield({ game, side, cards }: Props) {
       previousPlayerAttackers.current = currentAttackers;
     }
 
-    const currentHordeEntrySignature = cards.map((card) => card.instanceId).join("|");
-    if (side === "horde" && currentHordeEntrySignature !== previousHordeEntrySignature.current) {
-      for (const card of unregisteredBattlefieldArrivals(cards, animatedHordeIds.current)) {
+    const currentHostEntrySignature = cards.map((card) => card.instanceId).join("|");
+    if (side === "host" && currentHostEntrySignature !== previousHostEntrySignature.current) {
+      for (const card of unregisteredBattlefieldArrivals(cards, animatedHostIds.current)) {
         const visual = root.querySelector<HTMLElement>(`[data-card-slot-id="${card.instanceId}"]`);
         if (!visual) continue;
-        animatedHordeIds.current.add(card.instanceId);
+        animatedHostIds.current.add(card.instanceId);
         seenCardIds.current.add(card.instanceId);
         entranceAnimatingIds.current.add(card.instanceId);
         visual.style.opacity = "0";
@@ -423,7 +431,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0)) * 1000,
+            delay: (hostEntryDelay(card) + (card.kinds.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -441,7 +449,7 @@ export function Battlefield({ game, side, cards }: Props) {
         };
       }
     }
-    if (side === "horde") previousHordeEntrySignature.current = currentHordeEntrySignature;
+    if (side === "host") previousHostEntrySignature.current = currentHostEntrySignature;
 
     const summoningElements = [
       ...Array.from(root.querySelectorAll<HTMLElement>("[data-summoning='true']")),
@@ -450,7 +458,7 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       const summonedCard = id ? cards.find((item) => item.instanceId === id) : undefined;
-      const entranceExtraDelay = summonedCard?.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0;
+      const entranceExtraDelay = summonedCard?.kinds.includes("ECHO") ? rowShiftSettleDelay : 0;
       if (id) {
         seenCardIds.current.add(id);
         entranceAnimatingIds.current.add(id);
@@ -459,7 +467,7 @@ export function Battlefield({ game, side, cards }: Props) {
         [
           {
             opacity: 0,
-            transform: `translateY(${side === "horde" ? "-46px" : "46px"}) scale(1.55) rotate(${side === "horde" ? "-3deg" : "3deg"})`,
+            transform: `translateY(${side === "host" ? "-46px" : "46px"}) scale(1.55) rotate(${side === "host" ? "-3deg" : "3deg"})`,
             filter: "brightness(1.8) saturate(1.25)",
           },
           {
@@ -477,6 +485,21 @@ export function Battlefield({ game, side, cards }: Props) {
           fill: "both",
         },
       );
+      if (
+        side === "player" &&
+        id &&
+        summonedCard &&
+        HEAVY_MONO_GREEN_CREATURE_IDS.has(summonedCard.definitionId)
+      ) {
+        const leadInMs =
+          (Number(visual.dataset.entryDelay ?? 0) + entranceExtraDelay) * 1000 + 135;
+        window.setTimeout(() => {
+          if (!visual.isConnected || !entranceAnimatingIds.current.has(id)) return;
+          nextHeavyLandingEventId.current += 1;
+          const eventId = nextHeavyLandingEventId.current;
+          setHeavyLandingEvents((current) => ({ ...current, [id]: eventId }));
+        }, leadInMs);
+      }
       animation.onfinish = () => {
         // Do not leave the final fill frame attached to this stable DOM node: a retained
         // WAAPI transform/filter outranks the CSS activation and targeting animations that
@@ -561,13 +584,13 @@ export function Battlefield({ game, side, cards }: Props) {
 
   return (
     <>
-      <Zone title={side === "player" ? "Chronicler Battlefield" : "Horde Battlefield"} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
+      <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hostSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
         <div ref={boardRef} className="battlefield-side-content">
           <BattlefieldRowSurface
             cardsEmpty={creatures.length === 0}
             cropCreatureCards={cropCreatureCards}
             creatureRowRef={creatureRowRef}
-            dropTarget={side === "horde" ? "player-attack" : undefined}
+            dropTarget={side === "host" ? "player-attack" : undefined}
             otherPermanents={others.length > 0 ? renderOtherPermanentStacks(others) : undefined}
             otherPermanentsTargetingActive={otherPermanentsTargetingActive}
           >
@@ -582,20 +605,20 @@ export function Battlefield({ game, side, cards }: Props) {
   function LandDock() {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
-    const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
-    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
-    const normalManaSlots = Array.from({ length: 4 });
-    const storedManaSlots = Array.from({ length: 3 });
+    const smallpoxLandTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
+    const canSelectEnergyCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
+    const availableEnergySlots = Array.from({ length: MAX_PLAYER_LANDS });
+    const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
 
     return (
       <aside
         ref={landDockRef}
         data-player-mana-core="true"
         data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
-        data-audio-click={canSelectManaCore ? "valid" : undefined}
-        role={canSelectManaCore ? "button" : undefined}
-        tabIndex={canSelectManaCore ? 0 : undefined}
-        aria-label={`${t("game.normalMana")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedMana")}: ${storedManaCount} of ${STORED_MANA_CAP}.`}
+        data-audio-click={canSelectEnergyCore ? "valid" : undefined}
+        role={canSelectEnergyCore ? "button" : undefined}
+        tabIndex={canSelectEnergyCore ? 0 : undefined}
+        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${storedEnergyCount} of ${STORED_ENERGY_CAP}.`}
         className={[
           "player-mana-core",
           "player-mana-corner",
@@ -603,10 +626,10 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxLandSelectionActive ? "is-targeting" : "",
         ].join(" ")}
         onClick={() => {
-          if (canSelectManaCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+          if (canSelectEnergyCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
         }}
         onKeyDown={(event) => {
-          if (canSelectManaCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
+          if (canSelectEnergyCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
             event.preventDefault();
             lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
           }
@@ -623,8 +646,8 @@ export function Battlefield({ game, side, cards }: Props) {
                 className={`mana-energy-sweep energy-${energyTransitions.stored.direction} energy-source-${energyTransitions.stored.source}`}
               />
             )}
-            {storedManaSlots.map((_, index) => {
-              const state = index < storedManaCount ? "is-ready" : "is-empty";
+            {storedEnergySlots.map((_, index) => {
+              const state = index < storedEnergyCount ? "is-ready" : "is-empty";
               const transition = energyTransitions.stored;
               const changing = energySlotIsChanging(transition, index);
               return (
@@ -655,7 +678,7 @@ export function Battlefield({ game, side, cards }: Props) {
                 className={`mana-energy-sweep energy-${energyTransitions.normal.direction} energy-source-${energyTransitions.normal.source}`}
               />
             )}
-            {normalManaSlots.map((_, index) => {
+            {availableEnergySlots.map((_, index) => {
               const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
               const transition = energyTransitions.normal;
               const changing = energySlotIsChanging(transition, index);
@@ -737,7 +760,7 @@ export function Battlefield({ game, side, cards }: Props) {
       pendingTriggeredEffectSourceId ? new Set([pendingTriggeredEffectSourceId]) : undefined,
       battlefieldGroupKeys.current,
       battlefieldGroupMeta.current,
-      // Freeze grouping for the whole Horde sequence — combat impacts AND trigger/aura beats.
+      // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
       // The aura beat window (e.g. Graf Harvest announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
       holdCasualties,
@@ -770,69 +793,68 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
-    const useNewSummoning = side !== "horde";
+    const useNewSummoning = side !== "host";
     const newlyArrived = !seenCardIds.current.has(card.instanceId);
     const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
     const buffAnimationActive = Boolean(buffAnimationEventId && buffAnimationCardIds.includes(card.instanceId));
     const isOtherPermanent = keyPrefix === "other";
-    const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHordeCreatureId === card.instanceId;
+    const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHostCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
     const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
     const attacking =
       game.combat.playerAttackers.includes(card.instanceId) ||
-      game.combat.hordeAttackers.includes(card.instanceId) ||
-      (hordeAttackPending && canAttack(game, card));
+      game.combat.hostAttackers.includes(card.instanceId) ||
+      (hostAttackPending && canAttack(game, card));
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
-    const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
+    const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
-    const isLand = card.cardTypes.includes("Land");
+    const isLand = card.kinds.includes("SOURCE");
     const smallpoxTargetable = Boolean(
       smallpoxSelectionActive &&
         !smallpoxSelectionTargetId &&
         side === "player" &&
-        ((smallpoxSelectionKind === "sacrifice-creature" && card.cardTypes.includes("Creature")) ||
-          (smallpoxSelectionKind === "sacrifice-land" && card.cardTypes.includes("Land"))),
+        ((smallpoxSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
+          (smallpoxSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
     );
     const smallpoxTargetLocked = smallpoxSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
-    const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
-    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && !selectedPlayerAttacker && canAttack(game, card));
+    const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
+    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
-      hordeCombat &&
+      hostCombat &&
         side === "player" &&
-        card.cardTypes.includes("Creature") &&
+        card.kinds.includes("ECHO") &&
         !blocking &&
-        game.combat.hordeAttackers.some((attackerId) => {
-          const attacker = game.horde.battlefield.find((item) => item.instanceId === attackerId);
+        game.combat.hostAttackers.some((attackerId) => {
+          const attacker = game.host.field.find((item) => item.instanceId === attackerId);
           return attacker ? canBlockAttacker(game, card, attacker) : false;
         }),
     );
-    const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
-    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
+    const legalBlockTarget = Boolean(hostCombat && side === "host" && selectedBlocker && !selectedBlockerAssigned && game.combat.hostAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
+    const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
-      tutorialAwaitingContinue ||
       casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
-      (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && !selectableBlocker) ||
-      (hordeCombat && side === "horde" && !legalBlockTarget);
+      (playerCombat && side === "host") ||
+      (hostCombat && side === "player" && !selectableBlocker) ||
+      (hostCombat && side === "host" && !legalBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
-      (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
-    const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
+      (playerCombat && side === "host") ||
+      (hostCombat && side === "player" && card.kinds.includes("ECHO") && !selectableBlocker);
+    const actionable = !resolvingHostCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const primaryAbility = card.activatedAbilities[0];
     const effectAvailable = canUseActivatedAbility(card, primaryAbility);
     const showActivatedAbilityChrome = effectAvailable && !isLand;
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("Creature"));
+    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.kinds.includes("ECHO"));
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
@@ -850,25 +872,20 @@ export function Battlefield({ game, side, cards }: Props) {
     const spellLockedFriendly = Boolean(spellTargetLocked && card.controller === "player");
     const spellBuffPreview = spellLockedFriendly && spellCard && spellTargetingTargets ? spellBuffedStats(game, card, spellCard, spellTargetingTargets) : undefined;
     const counterBuffPreview = counterTargetLocked ? counterBuffedStats(game, card) : undefined;
-    const tutorialTargetable = tutorialZones.some(
-      (zone) =>
-        (zone.zone === "player-battlefield" && side === "player" && card.definitionId === zone.definitionId) ||
-        (zone.zone === "defend-targets" && ((side === "player" && card.definitionId === "ichorspit_basilisk" && legalBlocker) || (side === "horde" && game.combat.hordeAttackers.includes(card.instanceId)))),
-    );
     // A ghost is a card already gone from game state whose slot is held until combat ends. It
-    // must keep reading as dead even after hordeCombatDeadCardIds is cleared for the next impact.
+    // must keep reading as dead even after hostCombatDeadCardIds is cleared for the next impact.
     const isCombatGhost = casualtyIds.has(card.instanceId);
-    const visuallyDead = isCombatGhost || hordeCombatDeadCardIds.includes(card.instanceId);
+    const visuallyDead = isCombatGhost || hostCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
-    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable || tutorialTargetable;
-    const cardActionable = !tutorialAwaitingContinue && (actionable || cardTargetable);
+    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable;
+    const cardActionable = actionable || cardTargetable;
     const isDraggedDefender = blockDragBlockerId === card.instanceId;
-    const draggedDefender = blockDragActive ? game.player.battlefield.find((item) => item.instanceId === blockDragBlockerId) : undefined;
+    const draggedDefender = blockDragActive ? game.player.field.find((item) => item.instanceId === blockDragBlockerId) : undefined;
     const dragDefenseTargetable = Boolean(
       blockDragActive &&
         draggedDefender &&
-        side === "horde" &&
-        game.combat.hordeAttackers.includes(card.instanceId) &&
+        side === "host" &&
+        game.combat.hostAttackers.includes(card.instanceId) &&
         canBlockAttacker(game, draggedDefender, card),
     );
     const combatAvailabilityTone =
@@ -876,11 +893,12 @@ export function Battlefield({ game, side, cards }: Props) {
         ? "defense"
         : playerCombat && availablePlayerAttacker
           ? "attack"
-          : hordeCombat && actionable
+          : hostCombat && actionable
             ? "defense"
             : undefined;
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem =
+      !counterTargetingActive &&
       !smallpoxSelectionActive &&
       !spellTargetingActive &&
       !combatAvailabilityTone &&
@@ -892,7 +910,7 @@ export function Battlefield({ game, side, cards }: Props) {
       ? "card-target-gem"
       : playerCombat && actionable
         ? "card-attack-gem"
-        : hordeCombat && actionable
+        : hostCombat && actionable
           ? "card-defense-gem"
           : showActivatedAbilityChrome && !cardActionable
             ? "card-effect-available-gem"
@@ -906,14 +924,13 @@ export function Battlefield({ game, side, cards }: Props) {
         smallpoxTargetable ||
         smallpoxTargetLocked ||
         spellTargetable ||
-        spellTargetLocked ||
-        tutorialTargetable,
+        spellTargetLocked,
     );
-    const isFlying = card.cardTypes.includes("Creature") && hasKeyword(game, card, "FLYING");
+    const isFlying = card.kinds.includes("ECHO") && hasTrait(game, card, "FLYING");
     const combatAnimationActive =
       playerAttackAnimationId === card.instanceId ||
-      hordeAttackAnimationAttackerId === card.instanceId ||
-      hordeAttackAnimationBlockerId === card.instanceId;
+      hostAttackAnimationAttackerId === card.instanceId ||
+      hostAttackAnimationBlockerId === card.instanceId;
     const flyingIdleActive = Boolean(
       isFlying &&
         !newlyArrived &&
@@ -922,6 +939,13 @@ export function Battlefield({ game, side, cards }: Props) {
         !visuallyDead &&
         !speciallyDead,
     );
+    const heavyLandingEventId = heavyLandingEvents[card.instanceId];
+    const defenseBadgeCount =
+      side === "player" && blockerOrderLabel
+        ? blockerOrderLabel
+        : side === "host" && blockersAssigned > 0
+          ? `${blockersAssigned}`
+          : undefined;
 
     return (
       <motion.div
@@ -929,7 +953,7 @@ export function Battlefield({ game, side, cards }: Props) {
         data-card-layout-id={card.instanceId}
         initial={false}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0, y: side === "horde" ? 28 : -28, scale: 0.78, rotate: side === "horde" ? 3 : -3 }}
+        exit={{ opacity: 0, y: side === "host" ? 28 : -28, scale: 0.78, rotate: side === "host" ? 3 : -3 }}
         transition={{
           opacity: { duration: 0.18, ease: "easeOut" },
           scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
@@ -940,8 +964,8 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
-          card.tapped || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
-          card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
+          card.exhausted || (attacking && side === "host") ? "battlefield-layout-slot-tapped" : "",
+          card.kinds.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
@@ -961,7 +985,7 @@ export function Battlefield({ game, side, cards }: Props) {
           actionable && !combatAvailabilityTone ? "battlefield-card-actionable" : "",
           showActivatedAbilityChrome && !showEffectAvailabilityBorder && !actionable ? "battlefield-card-effect-available" : "",
           side === "player" && attacking ? "player-attacker-readied" : "",
-          side === "horde" && attacking ? "horde-attacker-readied" : "",
+          side === "host" && attacking ? "host-attacker-readied" : "",
           visuallyDead ? "combat-card-visually-dead" : "",
           speciallyDead ? "special-card-visually-dead" : "",
           effectActive ? "effect-card-lifted" : "",
@@ -974,13 +998,52 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
-          tutorialTargetable ? "counter-targetable-card" : "",
         ].join(" ")}
       >
       {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
-      {buffAnimationActive && <span key={`buff-${buffAnimationEventId}`} className="buff-rise-lines buff-rise-lines-blue" aria-hidden="true" />}
+      {heavyLandingEventId && (
+        <HeavyCreatureLanding
+          key={`heavy-landing-${heavyLandingEventId}`}
+          cardId={card.instanceId}
+          eventId={heavyLandingEventId}
+          onComplete={(cardId, eventId) => {
+            setHeavyLandingEvents((current) => {
+              if (current[cardId] !== eventId) return current;
+              const next = { ...current };
+              delete next[cardId];
+              return next;
+            });
+          }}
+        />
+      )}
+      {buffAnimationActive && (
+        buffAnimationVariant === "default"
+          ? (
+              <BuffSurgeAnimator
+                key={`buff-surge-${buffAnimationEventId}`}
+                eventId={buffAnimationEventId!}
+                palette="holy"
+                seedKey={card.instanceId}
+              />
+            )
+          : (
+              <>
+                <BuffSurgeAnimator
+                  key={`growth-surge-${buffAnimationEventId}`}
+                  eventId={buffAnimationEventId!}
+                  palette="nature"
+                  seedKey={card.instanceId}
+                />
+                <GrowthBuffAnimator
+                  key={`growth-${buffAnimationEventId}`}
+                  eventId={buffAnimationEventId!}
+                  variant={buffAnimationVariant}
+                />
+              </>
+            )
+      )}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
       {(burnImpactCardId === card.instanceId || burnImpactCardIds.includes(card.instanceId)) && (
@@ -993,22 +1056,21 @@ export function Battlefield({ game, side, cards }: Props) {
         compact={compact}
         cropTopHalf={isLand}
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
-        showCroppedTitle={!compact && card.cardTypes.includes("Creature") && shouldShowFullCardImage(card.definitionId)}
+        showCroppedTitle={!compact && card.kinds.includes("ECHO") && shouldShowFullCardImage(card.definitionId)}
         selected={selected}
         attacking={attacking}
         blocking={blocking}
         glowBorderWidth={4}
         actionable={cardActionable && !combatAvailabilityTone}
         effectAvailable={showActivatedAbilityChrome && !showEffectAvailabilityBorder}
-        accentColor={side === "player" && !hordeCombat ? assignedColor ?? attackerColor : undefined}
-        linkLabel={side === "player" && blockerOrderLabel ? blockerOrderLabel : side === "horde" && blockersAssigned > 0 ? `${blockersAssigned}` : undefined}
+        accentColor={side === "player" && !hostCombat ? assignedColor ?? attackerColor : undefined}
+        linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
         muted={muted}
         suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive || Boolean(tutorialStepId)}
-        visualDamageMarked={hordeCombatVisualDamage?.[card.instanceId]}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
+        visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
-          if (tutorialAwaitingContinue) return;
           if (legalAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
             return;
@@ -1026,7 +1088,6 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
-          if (tutorialAwaitingContinue) return;
           if (smallpoxSelectionActive) {
             if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
             return;
@@ -1037,12 +1098,12 @@ export function Battlefield({ game, side, cards }: Props) {
           }
           if (side === "player") {
             if (isLand) return;
-            if (!hordeCombat && !playerCombat && effectAvailable) {
+            if (!hostCombat && !playerCombat && effectAvailable) {
               selectActiveEffectCard(effectActive ? undefined : card.instanceId);
               selectPlayerCreature(undefined);
               return;
             }
-            if (hordeCombat) {
+            if (hostCombat) {
               if (assignedAttackerId) {
                 declareBlocker(card.instanceId, assignedAttackerId);
                 selectPlayerCreature(card.instanceId);
@@ -1057,15 +1118,21 @@ export function Battlefield({ game, side, cards }: Props) {
             }
             selectPlayerCreature(card.instanceId);
           } else {
-            if (hordeCombat && selectedPlayerCreatureId && game.combat.hordeAttackers.includes(card.instanceId)) {
+            if (hostCombat && selectedPlayerCreatureId && game.combat.hostAttackers.includes(card.instanceId)) {
               declareBlocker(selectedPlayerCreatureId, card.instanceId);
               selectPlayerCreature(undefined);
               return;
             }
-            selectHordeCreature(card.instanceId);
+            selectHostCreature(card.instanceId);
           }
         }}
       />
+      {defenseBadgeCount && (
+        <CardDefenseBadge
+          count={defenseBadgeCount}
+          variant={side === "host" ? "host" : "player"}
+        />
+      )}
       {combatAvailabilityTone && (
         <>
           <span
@@ -1105,7 +1172,7 @@ export function Battlefield({ game, side, cards }: Props) {
           className={[
             "card-actionable-gem card-actionable-gem-outside",
             actionGemTone,
-            dragDefenseTargetable ? "card-defense-gem-horde-target" : "",
+            dragDefenseTargetable ? "card-defense-gem-host-target" : "",
           ].join(" ")}
           aria-hidden="true"
         />
@@ -1118,23 +1185,23 @@ export function Battlefield({ game, side, cards }: Props) {
             event.stopPropagation();
             selectActiveEffectCard(undefined);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+              useAudioStore.getState().playSfx("activateEffect");
               triggerEffectActivationPulse(card.instanceId);
             }, 180);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+              useAudioStore.getState().playSfx("playLand");
               activateAbility(card.instanceId, primaryAbility.id);
             }, 620);
           }}
         >
-          {primaryAbility.effect.type === "ADD_MANA" || primaryAbility.effect.type === "ADD_MANA_DYNAMIC" ? (
+          {primaryAbility.effect.type === "GAIN_ENERGY" ? (
             <span className="effect-action-mana-copy">
-              <span className="effect-action-symbol effect-action-symbol-tap" title="Agotar / Activar">
+              <span className="effect-action-symbol effect-action-symbol-tap" title={t("card.exhaustAction")}>
                 <Hourglass aria-hidden="true" />
               </span>
               <span className="effect-action-mana-colon" aria-hidden="true">:</span>
-              <span className="effect-action-mana-label">Add</span>
-              <span className="effect-action-symbol effect-action-symbol-energy" title="Energía">
+              <span className="effect-action-mana-label">{t("card.generateEnergy")}</span>
+              <span className="effect-action-symbol effect-action-symbol-energy" title={t("card.energy")}>
                 <Zap aria-hidden="true" />
               </span>
             </span>
@@ -1182,12 +1249,12 @@ export function Battlefield({ game, side, cards }: Props) {
   }
 
   function getAttackerColor(attackerId: string): string | undefined {
-    const index = game.combat.hordeAttackers.indexOf(attackerId);
+    const index = game.combat.hostAttackers.indexOf(attackerId);
     if (index === -1) return undefined;
     return blockColors[index % blockColors.length];
   }
 
-  function hordeEntryDelay(card: CardInstance): number {
+  function hostEntryDelay(card: CardInstance): number {
     const index = cards.findIndex((item) => item.instanceId === card.instanceId);
     return Math.max(index, 0) * 0.04;
   }
@@ -1300,14 +1367,15 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
 
 type BuffStatPreviewValue = {
   power: number;
-  toughness: number;
+  endurance: number;
 };
 
 function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatPreviewValue }) {
   const theme = cardThemeForDefinition(card.definitionId);
+  const language = useLanguageStore((state) => state.language);
   return (
     <span
-      aria-label={`${stats.power} attack, ${stats.toughness} life after buff`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante después de potenciar` : `${stats.power} Power, ${stats.endurance} Endurance after empowering`}
       className={[
         "counter-target-stat-preview",
         theme ? `card-theme-${theme}` : "",
@@ -1315,18 +1383,18 @@ function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatP
     >
       <b>{stats.power}</b>
       <i aria-hidden="true">/</i>
-      <b>{stats.toughness}</b>
+      <b>{stats.endurance}</b>
     </span>
   );
 }
 
 function counterBuffedStats(game: GameState, card: CardInstance): BuffStatPreviewValue {
-  const stats = getPowerToughness(game, card);
-  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+  const stats = getPowerEndurance(game, card);
+  return { power: stats.power + 1, endurance: stats.endurance + 1 };
 }
 
 function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): BuffStatPreviewValue | undefined {
-  const stats = getPowerToughness(game, card);
+  const stats = getPowerEndurance(game, card);
   let powerDelta = 0;
   let toughnessDelta = 0;
 
@@ -1337,7 +1405,7 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
       const applies = Array.isArray(selected) ? selected.includes(card.instanceId) : selected === card.instanceId;
       if (applies) {
         powerDelta += Number(effect.power) || 0;
-        toughnessDelta += Number(effect.toughness) || 0;
+        toughnessDelta += Number(effect.endurance) || 0;
       }
     }
     if (Array.isArray(effect.effects)) {
@@ -1349,30 +1417,29 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
   if (powerDelta === 0 && toughnessDelta === 0) return undefined;
   return {
     power: stats.power + powerDelta,
-    toughness: stats.toughness + toughnessDelta,
+    endurance: stats.endurance + toughnessDelta,
   };
 }
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
-  if (ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC") {
-    const mana = ability.effect.mana as Record<string, number> | undefined;
-    const entry = mana ? Object.entries(mana)[0] : undefined;
-    const color = entry?.[0] === "chosenColor" ? "chosen" : entry?.[0] ?? String(ability.effect.manaColor ?? "G");
-    const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
-    return `{{T}}: Add ${amount > 1 ? amount : ""}{{${color}}}.`;
+  const language = useLanguageStore.getState().language;
+  if (ability.effect.type === "GAIN_ENERGY") {
+    const amount = Number(ability.effect.amount ?? 1);
+    return language === "es"
+      ? `Agota: genera ${amount} de Energía.`
+      : `Exhaust: Generate ${amount} Energy.`;
   }
   if (
     (ability.effect.type === "PUMP_UNTIL_END_OF_TURN" ||
       ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN") &&
     ability.effect.target === "SELF"
   ) {
-    const language = useLanguageStore.getState().language;
     const life = Number(ability.cost?.life ?? 0);
-    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
+    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.endurance ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.endurance ?? 0)}`;
     const untilNextTurn = ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN";
-    return language === "es"
+    return canonicalizeRulesText(language === "es"
       ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} ${untilNextTurn ? "hasta tu próximo turno" : "este turno"}.`
-      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`;
+      : `${life > 0 ? `Pay ${life} life: ` : ""}${stats} ${untilNextTurn ? "until your next turn" : "this turn"}.`, language);
   }
   return String(ability.effect.type).replaceAll("_", " ");
 }
@@ -1381,13 +1448,13 @@ type PointerEventEvent = globalThis.PointerEvent;
 
 function findDropBlockTarget(x: number, y: number, blockerId: string): { attackerId?: string; reason?: string } {
   const latest = useGameStore.getState().game;
-  const blocker = latest.player.battlefield.find((card) => card.instanceId === blockerId);
+  const blocker = latest.player.field.find((card) => card.instanceId === blockerId);
   if (!blocker) return {};
   for (const element of document.elementsFromPoint(x, y)) {
     const cardElement = element.closest<HTMLElement>("[data-card-id]");
     const candidateId = cardElement?.dataset.cardId;
-    if (!candidateId || !latest.combat.hordeAttackers.includes(candidateId)) continue;
-    const attacker = latest.horde.battlefield.find((card) => card.instanceId === candidateId);
+    if (!candidateId || !latest.combat.hostAttackers.includes(candidateId)) continue;
+    const attacker = latest.host.field.find((card) => card.instanceId === candidateId);
     if (!attacker) continue;
     const reason = blockRestrictionReason(latest, blocker, attacker);
     return reason ? { reason } : { attackerId: candidateId };
@@ -1397,10 +1464,12 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
 
 function showBlockToast(message: string): void {
   const language = useLanguageStore.getState().language;
-  const localizedMessage = message === "That creature cannot block."
+  const localizedMessage = message === "That Echo cannot defend." || message === "That creature cannot block."
     ? translate(language, "error.creatureCannotBlock")
-    : message === "Flying attackers need flying or reach to block."
+    : message === "Echoes with Flying require Flying or Skyguard to defend against them." || message === "Flying attackers need flying or reach to block."
       ? translate(language, "error.flyingBlock")
+      : message === "Furtive cannot be defended by Echoes with greater Power." || message === "Skulk cannot be blocked by creatures with greater power."
+        ? translate(language, "error.furtiveBlock")
       : message;
   useToastStore.getState().pushToast({
     title: translate(language, "error.cannotBlock"),

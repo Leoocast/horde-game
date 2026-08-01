@@ -78,11 +78,17 @@ Un `ScenarioDefinition` es la **definicion**, no el estado:
 
 ```ts
 type ScenarioDefinition = {
+  version: 3;
   playerDeckId: string;
-  hordeDeckId: string;
+  hostDeckId: string;
   seed: string;
-  setup: { life, energy, storedEnergy, turnNumber, phase, activeSide, poisonCounters, ... };
-  zones: { playerHand: string[]; playerBattlefield: string[]; hordeBattlefield: string[]; ... };
+  turnNumber: number;
+  hostTurnNumber: number;
+  phase: Phase;
+  activeSide: "player" | "host";
+  player: { life: number; energy: number; storedEnergy: number };
+  host: { poisonCounters: number };
+  zones: { playerHand?: ScenarioCard[]; playerField?: ScenarioCard[]; hostField?: ScenarioCard[]; ... };
 };
 ```
 
@@ -108,11 +114,11 @@ Las acciones mueven los mismos diales que el juego:
 - **Add source**: pone una tierra destapada mas (hasta el tope). La tierra sale del deck del player,
   no esta hardcodeado Forest.
 - **Refill**: destapa todas las tierras y devuelve la accion de Energia del turno.
-- **+1 stored**: `addStoredMana`, respeta el tope.
+- **+1 stored**: `addStoredEnergy`, respeta el tope.
 - **Drain all**: tapa todo y vacia el pool.
 
 El escenario configura lo mismo con dos campos (`energy`, `storedEnergy`), ambos clampeados a los
-topes del engine. Las tierras que el escenario liste en `playerBattlefield` cuentan contra el tope:
+topes del engine. Las tierras que el escenario liste en `playerField` cuentan contra el tope:
 el campo `energy` solo rellena el hueco que quede.
 
 ### Lab y partida son dos cosas, no dos botones
@@ -162,7 +168,7 @@ de vuelta a una `ScenarioDefinition` cuando se guarda. Hay test de ida y vuelta:
 tablero y reconstruirlo devuelve las mismas zonas. Las librerias no se fotografian a proposito — un
 escenario es una posicion inicial, no un save state.
 
-Ojo con las tierras: viajan como entradas normales de `playerBattlefield`, asi que el snapshot pone
+Ojo con las tierras: viajan como entradas normales de `playerField`, asi que el snapshot pone
 `energy: 0` o al recargar apareceria un segundo juego de tierras encima.
 
 ### Jugar una carta = jugarla de verdad
@@ -223,7 +229,7 @@ el arte de carga del juego parece que la partida arranca de cero. El fallback es
 ### Vida de la Horda
 
 No existe en el modelo: la Horda pierde por mill. El panel expone lo que si es su barra de vida:
-cartas en libreria, poison counters, `hordeTurnNumber` y si esta en surge.
+cartas en el Archivo, poison counters, `hostTurnNumber` y si esta en surge.
 
 ### Agregar cartas
 
@@ -292,7 +298,12 @@ siguiente incremento natural hacia el creador de flujos: guardar los targets en 
 
 ## Persistencia
 
-localStorage (`hostfall-playground-scenarios:v1`) mas export/import `.json`.
+localStorage separado para boards (`hostfall-playground-boards:v2`) y replays
+(`hostfall-playground-replays:v2`), mas export/import `.json` con `ScenarioDefinition` v3.
+
+L4.6c hizo un corte limpio: se mantienen todas las funciones, pero los JSON v1/v2 se rechazan y las
+claves v1 de localStorage se eliminan al acceder. No hay migrador porque estos datos son artefactos
+de prueba del Playground, no partidas del usuario.
 
 Un escenario guardado **lleva su flujo grabado dentro** (`{ definition, steps }`): un flujo sin su
 estado inicial no es reproducible, asi que viajan juntos siempre — al guardar, al exportar y al
@@ -300,8 +311,8 @@ cargar. Guardar hace upsert por nombre, no acumula copias.
 
 `parseScenarioFile` trata el archivo como input hostil: acepta tanto un export completo como una
 `ScenarioDefinition` pelada, y ante cualquier otra cosa devuelve problemas en vez de cargar medio
-escenario. Rechaza JSON invalido, objetos que no son escenarios, cartas inexistentes y archivos de
-una version de esquema mas nueva que el build. Todo eso esta en `tests/playgroundStorage.test.js`.
+escenario. Rechaza JSON invalido, objetos que no son escenarios, cartas inexistentes y cualquier
+version de esquema distinta de la vigente. Todo eso esta en `tests/playgroundStorage.test.js`.
 
 Leer localStorage tambien es defensivo: una entrada corrupta se descarta en vez de tumbar la
 pantalla.
@@ -364,8 +375,8 @@ Lo que falta para el creador de flujos completo:
 
 1. **Saber cuando termino un paso.** Reproducir depende de detectar el fin de cada paso, y hoy eso
    esta repartido en timers dentro del store. Probablemente haga falta un `isBusy` **derivado** de
-   las colas que ya existen (`summoningAnimationCount`, `hordeAutoTriggerCount`,
-   `hordeMillAnimationQueue`, `resolvingHordeCombat`...), no timers nuevos.
+   las colas que ya existen (`summoningAnimationCount`, `hostAutoTriggerCount`,
+   `hostMillAnimationQueue`, `resolvingHostCombat`...), no timers nuevos.
 2. **Estado de presentacion fuera de `GameState`.** Los epochs y colas del store no viajan en el
    escenario. Cargar un escenario tiene que limpiarlos con la misma disciplina que `reset`, o
    quedan callbacks de la partida anterior apuntando al escenario nuevo.

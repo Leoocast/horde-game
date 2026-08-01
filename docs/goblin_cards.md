@@ -25,8 +25,11 @@ below also call out valid-but-uninvoked Horde activations.
 ## Rundvelt Hordemaster
 
 - Other Goblins receive the static +1/+1 bonus, announced through the Static activation beat when it starts covering new Goblins.
-- A Goblin death exiles the top Horde card; an exiled Goblin creature currently enters immediately.
-- Any Goblin death gives Rundvelt an activation pulse. When Rundvelt itself is the Goblin that died, it uses the Death reveal beat beside the Horde graveyard before the exile resolves.
+- A Goblin death inspects the top card of the Host Archive. A Goblin Echo is Invoked immediately;
+  any other card moves to the bottom of the Archive.
+- The effect never uses Oblivion. Any Goblin death gives Rundvelt an activation pulse. When
+  Rundvelt itself is the Goblin that died, it uses the Death reveal beat beside the Host Memory
+  before the inspection resolves.
 
 ## Battle Cry Goblin
 

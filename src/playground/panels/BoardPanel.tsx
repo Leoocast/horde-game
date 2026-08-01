@@ -32,15 +32,15 @@ export function BoardPanel({
   const game = useGameStore((state) => state.game);
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   const [name, setName] = useState(initialName);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => setName(initialName), [initialName]);
 
   const handCard = game.player.hand.find((card) => card.instanceId === selectedHandId);
-  const permanent = [...game.player.battlefield, ...game.horde.battlefield].find(
-    (card) => card.instanceId === (selectedPlayerCreatureId ?? selectedHordeCreatureId),
+  const permanent = [...game.player.field, ...game.host.field].find(
+    (card) => card.instanceId === (selectedPlayerCreatureId ?? selectedHostCreatureId),
   );
   const target = permanent ?? handCard;
 
@@ -83,8 +83,8 @@ export function BoardPanel({
                 <div className="playground-library-info">
                   <strong>{board.name}</strong>
                   <span>{board.definition.zones.playerHand?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0} hand · {
-                    (board.definition.zones.playerBattlefield?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0) +
-                    (board.definition.zones.hordeBattlefield?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0)
+                    (board.definition.zones.playerField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0) +
+                    (board.definition.zones.hostField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0)
                   } field</span>
                 </div>
                 <div className="playground-library-actions">
@@ -147,18 +147,18 @@ export function BoardPanel({
           <button
             className="playground-button"
             type="button"
-            disabled={game.player.battlefield.length === 0}
+            disabled={game.player.field.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "player" })}
           >
-            <Eraser size={14} /> Your board ({game.player.battlefield.length})
+            <Eraser size={14} /> Chronicler Field ({game.player.field.length})
           </button>
           <button
             className="playground-button"
             type="button"
-            disabled={game.horde.battlefield.length === 0}
-            onClick={() => onDispatch({ kind: "clearBattlefield", side: "horde" })}
+            disabled={game.host.field.length === 0}
+            onClick={() => onDispatch({ kind: "clearBattlefield", side: "host" })}
           >
-            <Eraser size={14} /> Horde board ({game.horde.battlefield.length})
+            <Eraser size={14} /> Host Field ({game.host.field.length})
           </button>
         </div>
       </section>

@@ -4,9 +4,10 @@ import { pendingTriggerSources, resolveTriggeredEvent } from "../engine/EffectRe
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore } from "./useGameStore";
+import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 import {
   BUFF_ANIMATION_MS,
-  appendHordeMillAnimations,
+  appendHostMillAnimations,
   findTemporaryBuffedCardIds,
   notifyDiscardEffects,
   startBuffBeat,
@@ -14,10 +15,11 @@ import {
   uiCardName,
   uiText,
 } from "./presentationEffects";
+import { buffAnimationVariantForCard } from "./buffAnimation";
 
-// Automatic player reactions use the same contract as Horde beats: one source announces itself,
+// Automatic player reactions use the same contract as Host beats: one source announces itself,
 // then the engine commits that source's effect exactly when the presentation lands. The sequence
-// is intentionally separate from hordeBeats because each runner owns a different side's queued
+// is intentionally separate from hostBeats because each runner owns a different side's queued
 // triggers and uses a different tone/blocking state.
 const PLAYER_TRIGGER_RESOLVE_MS = 460;
 const PLAYER_TRIGGER_HANDOFF_MS = 620;
@@ -61,7 +63,7 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
         source = candidateSource;
         break;
       }
-      // Queue order is shared with Horde reactions. A player runner must yield when the event at
+      // Queue order is shared with Host reactions. A player runner must yield when the event at
       // the front belongs elsewhere; consuming it here would make that reaction resolve invisibly.
       break;
     }
@@ -69,7 +71,7 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
     return {
       game: next,
       playerAutoTriggerCount: event ? 1 : 0,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
     };
   });
 
@@ -80,7 +82,7 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
     return;
   }
 
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(claimedSource.instanceId);
   useToastStore.getState().pushToast({
     title: uiText("toast.chroniclerEffect"),
@@ -138,14 +140,25 @@ function resolvePlayerTriggerBeat(eventId: string, sourceId: string): {
     const lifeGainLanded = next.player.life > previous.player.life;
     presentationLanded = buffLanded || lifeGainLanded;
     hasMore = hasQueuedPlayerTriggers(next);
-    if (presentationLanded) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-    const buffBeat = buffLanded ? startBuffBeat(buffedCardIds) : undefined;
+    const source =
+      previous.player.field.find((card) => card.instanceId === sourceId) ??
+      next.player.field.find((card) => card.instanceId === sourceId);
+    const buffVariant = buffAnimationVariantForCard(source?.definitionId);
+    if (presentationLanded) {
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(buffVariant));
+    }
+    const buffBeat = buffLanded
+      ? startBuffBeat(
+          buffedCardIds,
+          buffVariant,
+        )
+      : undefined;
     const lifeBuffBeat = lifeGainLanded ? startLifeBuffBeat() : undefined;
     notifyDiscardEffects(previous, next);
     return {
       game: next,
       playerAutoTriggerCount: 1,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
       ...(buffBeat ?? {}),
       ...(lifeBuffBeat ?? {}),
     };

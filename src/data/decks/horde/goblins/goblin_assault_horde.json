@@ -1,16 +1,12 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "1.0.0",
   "id": "goblin_assault_horde",
-  "name": "Goblin Assault Horde",
-  "format": "horde",
-  "side": "HORDE",
-  "standardCheckedAt": null,
+  "name": "Goblin Assault Host",
+  "format": "host",
+  "side": "HOST",
   "deckSize": 50,
-  "colors": [
-    "R"
-  ],
-  "archetype": "horde",
-  "gamePlan": "Abrumar con fichas de Trasgo, señores tribales, creación de fichas y daño directo al atacar o sacrificar Trasgos.",
+  "archetype": "host",
+  "gamePlan": "Abrumar con fichas de Trasgo, señores tribales, invocación de fichas y daño directo al atacar o sacrificar Trasgos.",
   "rulesProfile": {
     "revealCount": 3,
     "stopOnNonToken": true,
@@ -19,9 +15,9 @@
     "surgeTurn": 10,
     "surgeTurnChaos": 8,
     "surgeExtraReveals": 2,
-    "damagePerMill": 3,
-    "poisonPerMill": 3,
-    "hordeCreaturesHaveHaste": true,
+    "damagePerArchiveDiscard": 3,
+    "poisonPerArchiveDiscard": 3,
+    "hostEchosHaveImpetus": true,
     "swarmTokenSubtypes": [
       "Goblin"
     ]
@@ -35,33 +31,20 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
-      "manaCost": null,
-      "manaValue": 0,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 0
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [],
+      "endurance": 1,
       "abilities": [],
-      "isToken": true,
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "search",
-        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
-        "imagePath": "data[0].image_uris.normal",
-        "fallbackImagePath": "data[0].image_uris.large",
-        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
-      }
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "traits": []
     }
   ],
   "cards": [
@@ -73,67 +56,45 @@
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
-      "manaCost": null,
-      "manaValue": 0,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 0
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [],
+      "endurance": 1,
       "abilities": [],
-      "isToken": true,
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "search",
-        "lookupQuery": "t:token t:goblin c:r pow=1 tou=1",
-        "imagePath": "data[0].image_uris.normal",
-        "fallbackImagePath": "data[0].image_uris.large",
-        "note": "Token searches can return multiple arts. Prefer selected Scryfall ID for stable art."
-      },
-      "quantity": 24
+      "quantity": 24,
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "traits": []
     },
     {
       "id": "hobgoblin_bandit_lord",
       "name": "Hobgoblin Bandit Lord",
       "displayNameEs": "Señor de los bandidos hobgoblin",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. When this creature enters, it launches a fireball at the best opposing creature; its damage equals the number of Goblins that entered this turn.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga; su daño es igual a la cantidad de Trasgos que entraron este turno."
+        "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
       },
       "quantity": 2,
-      "manaCost": "{1}{R}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin",
         "Rogue"
       ],
       "power": 2,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [
         {
           "id": "hobgoblin_bandit_lord_other_goblins_buff",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "targets": [],
           "conditions": [],
           "effects": [
@@ -142,8 +103,8 @@
               "scope": {
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -152,32 +113,32 @@
                 }
               },
               "power": 1,
-              "toughness": 1,
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
             }
           ]
         },
         {
           "id": "hobgoblin_bandit_lord_entered_goblins_damage",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+              "type": "DEAL_DAMAGE_TO_OPPONENT_ECHO",
               "targetPolicy": "BEST_LETHAL",
               "animation": "BURN",
               "amount": {
-                "type": "COUNT_PERMANENTS_ENTERED_THIS_TURN",
+                "type": "COUNT_ECHOS_INVOKED_THIS_TURN",
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -187,50 +148,38 @@
               "damageKind": "NON_COMBAT"
             }
           ],
-          "implementationNote": "PvE adaptation: on entry, Burn the best opposing creature for the number of Goblins that entered under Horde control this turn."
+          "implementationNote": "PvE adaptation: when Invoked, Burn the best enemy Echo for the number of allied Goblins Invoked this turn."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Hobgoblin Bandit Lord",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "rundvelt_hordemaster",
       "name": "Rundvelt Hordemaster",
       "displayNameEs": "Señor de la horda de Rundvelt",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. Whenever a Horde Goblin dies, exile the top Horde card; if it is a Goblin creature, put it onto the battlefield.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Siempre que muera un Trasgo de la Horda, exilia la primera carta de la Horda; si es una criatura Trasgo, ponla en el campo."
+        "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
       },
       "quantity": 2,
-      "manaCost": "{1}{R}",
-      "manaValue": 2,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [],
-      "triggerMessage": "Rundvelt Hordemaster triggers. Horde exiles the top card of its library.",
+      "endurance": 1,
+      "triggerMessage": "Rundvelt Hordemaster looks at the top card of the Archive.",
       "abilities": [
         {
           "id": "rundvelt_hordemaster_other_goblins_buff",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "targets": [],
           "conditions": [],
           "effects": [
@@ -239,8 +188,8 @@
               "scope": {
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -249,28 +198,28 @@
                 }
               },
               "power": 1,
-              "toughness": 1,
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
             }
           ]
         },
         {
-          "id": "rundvelt_hordemaster_goblin_died_exile",
+          "id": "rundvelt_hordemaster_goblin_died_inspect",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "PERMANENT_DIED"
+            "event": "ECHO_DIED"
           },
           "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": false,
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ],
                 "subtypes": [
                   "Goblin"
@@ -279,51 +228,39 @@
             }
           ],
           "effects": [],
-          "customHandler": "rundvelt_hordemaster_exile_top_if_goblin",
-          "implementationNote": "Exile the top card of the source controller's library. If it is a Goblin creature card, that player may cast it until the end of their next turn."
+          "customHandler": "rundvelt_hordemaster_inspect_top_if_goblin",
+          "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is a Goblin Echo; otherwise put it on the bottom of the Archive."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Rundvelt Hordemaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "battle_cry_goblin",
       "name": "Battle Cry Goblin",
       "displayNameEs": "Goblin del grito de guerra",
       "gameText": {
-        "en": "When this creature enters, Horde Goblins get +1/+0 until end of turn.",
-        "es": "Cuando esta criatura entra, los Trasgos de la Horda obtienen +1/+0 hasta el final del turno."
+        "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
+        "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
       },
       "quantity": 2,
-      "manaCost": "{1}{R}",
-      "manaValue": 2,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "battle_cry_goblin_enter_pump",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
@@ -334,8 +271,8 @@
               "scope": {
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -343,51 +280,39 @@
                 }
               },
               "power": 1,
-              "toughness": 0,
+              "endurance": 0,
               "duration": "END_OF_TURN",
               "animation": "BUFF"
             }
           ],
-          "implementationNote": "PvE adaptation: on entry, Horde Goblins get +1/+0 until end of turn. Haste and Pack tactics are omitted."
+          "implementationNote": "PvE adaptation: when Invoked, allied Goblins get +1/+0 until the end of the turn. Impetus and Pack tactics are omitted."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Battle Cry Goblin",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "goblin_war_drums",
       "name": "Goblin War Drums",
       "displayNameEs": null,
       "gameText": {
-        "en": "Horde creatures have Menace.",
-        "es": "Las criaturas de la Horda tienen Amenaza."
+        "en": "Allied Goblins gain Daunting.",
+        "es": "Los Trasgos aliados ganan Imponente."
       },
       "quantity": 1,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Enchantment"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "goblin_war_drums_grant_menace",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "targets": [],
           "conditions": [],
           "effects": [
@@ -396,54 +321,42 @@
               "scope": {
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ]
                 }
               },
-              "keyword": "MENACE",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+              "keyword": "DAUNTING",
+              "duration": "WHILE_SOURCE_ON_FIELD"
             }
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin War Drums",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
     },
     {
       "id": "raid_bombardment",
       "name": "Raid Bombardment",
       "displayNameEs": "Bombardeo de incursión",
       "gameText": {
-        "en": "After the Horde attack resolves, each attacking Goblin with power 2 or less adds 1 damage to a fireball volley against the player.",
-        "es": "Después de resolver el ataque de la Horda, cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a una salva de bolas de fuego contra el jugador."
+        "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
+        "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
       "quantity": 1,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Enchantment"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "raid_bombardment_small_attacker_damage",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "ATTACK_DECLARED"
           },
@@ -451,51 +364,39 @@
           "conditions": [],
           "effects": [],
           "customHandler": "raid_bombardment_small_attacker_damage",
-          "implementationNote": "PvE adaptation: capture each attacking Goblin with power 2 or less once, then deal the combined damage to the player as a Burn volley after the Horde attack sequence."
+          "implementationNote": "PvE adaptation: capture each attacking Goblin with Power 2 or less once, then deal the combined damage to the Chronicler as a Burn volley after the Host attack sequence."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Raid Bombardment",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
     },
     {
       "id": "beetleback_chief",
       "name": "Beetleback Chief",
       "displayNameEs": "Jefe lomo de escarabajo",
       "gameText": {
-        "en": "When this creature enters, create two 1/1 Goblins.",
-        "es": "Cuando esta criatura entra, crea dos Trasgos 1/1."
+        "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
-      "manaCost": "{2}{R}{R}",
-      "manaValue": 4,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "beetleback_chief_create_goblins",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
@@ -510,47 +411,35 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Beetleback Chief",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "siege_gang_commander",
       "name": "Siege-Gang Commander",
       "displayNameEs": "Comandante de sitiadores",
       "gameText": {
-        "en": "When this creature enters, create three 1/1 Goblins.",
-        "es": "Cuando esta criatura entra, crea tres Trasgos 1/1."
+        "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
-      "manaCost": "{3}{R}{R}",
-      "manaValue": 5,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 5
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "siege_gang_commander_create_goblins",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
@@ -565,59 +454,47 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Siege-Gang Commander",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "goblin_rabblemaster",
       "name": "Goblin Rabblemaster",
       "displayNameEs": "Agitador trasgo",
       "gameText": {
-        "en": "At the start of Horde combat, create a 1/1 Goblin. When this creature attacks, it gets +1/+0 for each other attacking Goblin.",
-        "es": "Al comienzo del combate de la Horda, crea un Trasgo 1/1. Cuando esta criatura ataca, obtiene +1/+0 por cada otro Trasgo atacante."
+        "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
+        "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
       },
       "quantity": 1,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "goblin_rabblemaster_other_goblins_must_attack",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "targets": [],
           "conditions": [],
           "effects": [],
           "customHandler": "goblin_rabblemaster_force_other_goblins_attack",
           "engineSupport": "ignored",
-          "implementationNote": "Deliberately omitted: the Horde's global rule already makes every able creature attack each combat."
+          "implementationNote": "Deliberately omitted: the Host's global rule already makes every able Echo attack each Battle."
         },
         {
           "id": "goblin_rabblemaster_begin_combat_token",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "BEGIN_COMBAT"
+            "event": "BEGIN_BATTLE"
           },
           "targets": [],
           "conditions": [
@@ -628,12 +505,12 @@
           ],
           "effects": [],
           "customHandler": "goblin_rabblemaster_begin_combat_token",
-          "implementationNote": "Create one 1/1 red Goblin creature token. It gains haste until end of turn."
+          "implementationNote": "Invoke one 1/1 Goblin Echo Token. It gains Impetus until the end of the turn."
         },
         {
           "id": "goblin_rabblemaster_attack_buff",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "ATTACK_DECLARED",
             "source": "SELF"
@@ -645,45 +522,32 @@
           "implementationNote": "This source gets +1/+0 until end of turn for each other attacking Goblin."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Rabblemaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "goblin_surprise",
       "name": "Goblin Surprise",
       "displayNameEs": "Sorpresa trasga",
       "gameText": {
-        "en": "The Horde chooses one: its creatures get +2/+0 until end of turn, or it performs another reveal round.",
-        "es": "La Horda elige uno: sus criaturas obtienen +2/+0 hasta el final del turno, o realiza otra ronda de revelado."
+        "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
+        "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
       },
       "quantity": 3,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "goblin_surprise_choose_mode",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {},
+          "speed": "QUICK",
           "targets": [],
           "conditions": [],
           "effects": [
@@ -701,13 +565,13 @@
                       "scope": {
                         "controller": "SELF",
                         "filters": {
-                          "cardTypes": [
-                            "Creature"
+                          "kinds": [
+                            "ECHO"
                           ]
                         }
                       },
                       "power": 2,
-                      "toughness": 0,
+                      "endurance": 0,
                       "duration": "END_OF_TURN",
                       "animation": "BUFF"
                     }
@@ -717,7 +581,7 @@
                   "id": "goblin_surprise_reveal",
                   "effects": [
                     {
-                      "type": "REVEAL_HORDE_ROUND"
+                      "type": "REVEAL_HOST_ROUND"
                     }
                   ]
                 }
@@ -726,13 +590,13 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Surprise",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "mogg_mob",
@@ -743,81 +607,60 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "manaCost": "{R}{R}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 3,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Mogg Mob",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "volley_veteran",
       "name": "Volley Veteran",
       "displayNameEs": "Veterano de salvas",
       "gameText": {
-        "en": "When this creature enters, it launches a fireball at the best opposing creature. Its damage equals the number of Horde Goblins.",
-        "es": "Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga. Su daño es igual a la cantidad de Trasgos de la Horda."
+        "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
+        "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
       },
       "quantity": 1,
-      "manaCost": "{3}{R}",
-      "manaValue": 4,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 4,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "volley_veteran_enter_damage",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+              "type": "DEAL_DAMAGE_TO_OPPONENT_ECHO",
               "targetPolicy": "BEST_LETHAL",
               "animation": "BURN",
               "amount": {
-                "type": "COUNT_PERMANENTS",
+                "type": "COUNT_ECHOS",
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -827,102 +670,78 @@
               "damageKind": "NON_COMBAT"
             }
           ],
-          "implementationNote": "Horde targeting policy chooses a lethal opposing creature when possible, then the highest-value creature."
+          "implementationNote": "Host targeting policy chooses a lethal enemy Echo when possible, then the highest-value Echo."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Volley Veteran",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "goblin_chainwhirler",
       "name": "Goblin Chainwhirler",
       "displayNameEs": null,
       "gameText": {
-        "en": "When this creature enters, it deals 1 damage to the player and every player creature.",
-        "es": "Cuando esta criatura entra, hace 1 de daño al jugador y a cada criatura del jugador."
+        "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
+        "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
       },
       "quantity": 2,
-      "manaCost": "{R}{R}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 3,
-      "toughness": 3,
-      "keywords": [
-        "FIRST_STRIKE"
-      ],
+      "endurance": 3,
       "abilities": [
         {
           "id": "goblin_chainwhirler_enter_damage_all",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "targets": [],
           "conditions": [],
           "effects": [],
           "customHandler": "goblin_chainwhirler_enter_damage_all",
-          "implementationNote": "Deal 1 damage to each opponent and each creature and planeswalker those opponents control."
+          "implementationNote": "Deal 1 damage to the Chronicler and each enemy Echo."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Chainwhirler",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "REFLEX"
+      ]
     },
     {
       "id": "goblin_trashmaster",
       "name": "Goblin Trashmaster",
       "displayNameEs": "Maestro chatarrero trasgo",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. The Horde may sacrifice a Goblin to destroy an artifact.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. La Horda puede sacrificar un Trasgo para destruir un artefacto."
+        "en": "Other allied Goblins gain +1/+1.",
+        "es": "Los demás Trasgos aliados ganan +1/+1."
       },
       "quantity": 2,
-      "manaCost": "{2}{R}{R}",
-      "manaValue": 4,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 3,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [
         {
           "id": "goblin_trashmaster_other_goblins_buff",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "targets": [],
           "conditions": [],
           "effects": [
@@ -931,8 +750,8 @@
               "scope": {
                 "controller": "SELF",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Goblin"
@@ -941,22 +760,21 @@
                 }
               },
               "power": 1,
-              "toughness": 1,
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD"
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
             }
           ]
         },
         {
           "id": "goblin_trashmaster_sacrifice_destroy_artifact",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
             "sacrifice": {
               "controller": "SELF",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ],
                 "subtypes": [
                   "Goblin"
@@ -967,11 +785,11 @@
           "targets": [
             {
               "id": "targetArtifact",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
-                  "Artifact"
+                "kinds": [
+                  "SUPPORT"
                 ]
               }
             }
@@ -985,49 +803,34 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Goblin Trashmaster",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "general_kreat_the_boltbringer",
       "name": "General Kreat, the Boltbringer",
       "displayNameEs": "General Kreat, la Crearrayos",
       "gameText": {
-        "en": "When Horde Goblins attack, create one 1/1 Goblin attacking. Whenever another Horde creature enters, the player loses 1 life.",
-        "es": "Cuando los Trasgos de la Horda atacan, crea un Trasgo 1/1 atacando. Siempre que otra criatura de la Horda entre, el jugador pierde 1 vida."
+        "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
+        "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
       },
       "quantity": 1,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "supertypes": [
-        "Legendary"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin",
         "Soldier"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "general_kreat_goblins_attack_token",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "ATTACK_DECLARED"
           },
@@ -1035,25 +838,25 @@
           "conditions": [],
           "effects": [],
           "customHandler": "general_kreat_goblins_attack_token",
-          "implementationNote": "Whenever one or more Goblins controlled by the source controller attack, create one 1/1 red Goblin creature token tapped and attacking. Trigger only once for each attack declaration."
+          "implementationNote": "Whenever one or more allied Goblins attack, Invoke one 1/1 Goblin Echo Token exhausted and attacking. Trigger only once for each attack declaration."
         },
         {
           "id": "general_kreat_other_creature_enters_damage",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "INVOKED"
           },
           "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": true,
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -1063,48 +866,36 @@
           "implementationNote": "Deal 1 damage to each opponent."
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "General Kreat, the Boltbringer",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": []
     },
     {
       "id": "krenko_tin_street_kingpin",
       "name": "Krenko, Tin Street Kingpin",
       "displayNameEs": "Krenko, líder de la Calle Hojalata",
       "gameText": {
-        "en": "When this creature attacks, put a +1/+1 counter on it, then create that many 1/1 Goblins attacking, equal to its new power.",
-        "es": "Cuando esta criatura ataca, pon un contador +1/+1 sobre ella y luego crea esa cantidad de Trasgos 1/1 atacando, igual a su nueva fuerza."
+        "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
+        "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
       },
       "quantity": 1,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "supertypes": [
-        "Legendary"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin"
       ],
       "power": 1,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "krenko_tin_street_kingpin_attack_grow_and_tokens",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "ATTACK_DECLARED",
             "source": "SELF"
@@ -1125,7 +916,7 @@
                   "type": "CREATE_TOKEN",
                   "player": "SELF",
                   "tokenId": "goblin_token_1_1_red",
-                  "tapped": true,
+                  "exhausted": true,
                   "attacking": true,
                   "amount": {
                     "type": "STAT",
@@ -1138,62 +929,50 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Krenko, Tin Street Kingpin",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": []
     },
     {
       "id": "pashalik_mons",
       "name": "Pashalik Mons",
       "displayNameEs": "Pashalik Mons",
       "gameText": {
-        "en": "Whenever a Horde Goblin dies, launch a 1-damage fireball at a random player creature.",
-        "es": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador."
+        "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
+        "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
       },
       "quantity": 2,
-      "manaCost": "{2}{R}",
-      "manaValue": 3,
-      "colors": [
-        "R"
-      ],
-      "colorIdentity": [
-        "R"
-      ],
-      "supertypes": [
-        "Legendary"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Goblin",
         "Warrior"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "pashalik_mons_goblin_died_damage",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "PERMANENT_DIED"
+            "event": "ECHO_DIED"
           },
           "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": false,
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ],
                 "subtypes": [
                   "Goblin"
@@ -1203,17 +982,17 @@
           ],
           "effects": [
             {
-              "type": "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
+              "type": "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO",
               "amount": 1,
               "damageKind": "NON_COMBAT",
               "animation": "BURN",
               "target": {
-                "zone": "BATTLEFIELD",
+                "zone": "FIELD",
                 "controller": "OPPONENT",
                 "selection": "RANDOM",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ]
                 }
               }
@@ -1221,21 +1000,14 @@
           ]
         }
       ],
-      "needsVerification": false,
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Pashalik Mons",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": []
     }
   ],
-  "engineSupportNeeded": [
-    {
-      "id": "temporary_cast_permission_from_exile",
-      "usedBy": [
-        "rundvelt_hordemaster_goblin_died_exile"
-      ]
-    }
-  ]
+  "engineSupportNeeded": []
 }

@@ -7,8 +7,8 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { gameEffectDescription } from "../utils/cardText";
-import { cardKeywords, cardStats } from "../utils/selectors";
-import { KeywordPills } from "./CardPreview";
+import { cardTraits, cardStats } from "../utils/selectors";
+import { TraitPills } from "./CardPreview";
 
 type Props = {
   game: GameState;
@@ -150,7 +150,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
 function GraveyardCardTile({ card, index, onClick }: { card: CardInstance; index: number; onClick: () => void }) {
   const language = useLanguageStore((state) => state.language);
   const details = useCardDetails(card.definitionId);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
+  const displayName = localizedCardName(card, language);
 
   return (
     <button
@@ -206,10 +206,10 @@ export function GraveyardDetailsModal({
   const language = useLanguageStore((state) => state.language);
   const displayCard = graveyardDisplayCard(card);
   const details = useCardDetails(displayCard.definitionId);
-  const displayName = language === "es" ? displayCard.displayNameEs || details.displayName || localizedCardName(displayCard, language) : localizedCardName(displayCard, language);
-  const keywords = cardKeywords(game, displayCard);
+  const displayName = localizedCardName(displayCard, language);
+  const traits = cardTraits(game, displayCard);
   const stats = cardStats(game, displayCard);
-  const text = cleanCardDescriptionText(undefined, undefined, keywords, gameEffectDescription(displayCard, language));
+  const text = cleanCardDescriptionText(undefined, undefined, traits, gameEffectDescription(displayCard, language));
 
   return (
     <div
@@ -246,13 +246,13 @@ export function GraveyardDetailsModal({
             <header className="deck-collection-modal-header">
               <p>{contextLabel ?? t("graveyard.card")} <span>{position} / {total}</span></p>
               <div><h2>{displayName}</h2></div>
-              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(displayCard, language)}</small>
+              <small>{localizedTypeLine(displayCard, language)}</small>
             </header>
 
-            {(keywords || stats) && (
+            {(traits || stats) && (
               <div className="deck-collection-modal-badges">
                 {stats && <span className="deck-collection-modal-stats">{stats}</span>}
-                {keywords && <KeywordPills keywords={keywords} />}
+                {traits && <TraitPills traits={traits} />}
               </div>
             )}
 
@@ -277,14 +277,14 @@ export function GraveyardDetailsModal({
 function graveyardDisplayCard(card: CardInstance): CardInstance {
   return {
     ...card,
-    tapped: false,
-    summoningSickness: false,
+    exhausted: false,
+    stabilizing: false,
     activatedThisTurn: false,
     damageMarked: 0,
-    deathtouchDamage: false,
+    lethalDamage: false,
     counters: {},
     temporaryPower: 0,
-    temporaryToughness: 0,
-    temporaryKeywords: [],
+    temporaryEndurance: 0,
+    temporaryTraits: [],
   };
 }

@@ -6,6 +6,23 @@ Este es un documento narrativo, no una fuente de implementación. Para implement
 `docs/adding_cards.md`; ante cualquier diferencia mandan los JSON registrados, el engine y los
 tests.
 
+> **Actualización canónica de identidad:** el vocabulario y la ontología narrativa vigentes viven
+> en `docs/game_vocabulary.md`. Las secciones mecánicas inferiores todavía documentan el prototipo
+> legacy y por eso conservan términos de Magic que deben migrarse.
+
+## Crónicas, fragmentos y protagonistas
+
+Cada mazo del jugador es una **Crónica** y debe contar una historia, no limitarse a reunir cartas de
+un mismo arquetipo. Sus cartas representan fragmentos de memoria con los que el Cronista
+reconstruye un Capítulo; los Ecos Invocados son reconstrucciones de las figuras recordadas, no las
+personas históricas originales.
+
+Cuando la protagonista o el protagonista aparece como carta, se distingue como `Chronicle Echo /
+Eco de Crónica`. Esta designación expresa importancia narrativa y visual, pero no concede reglas
+ni unicidad. Una Crónica puede contener otros Ecos de Crónica si son figuras centrales de su
+relato. El `keyCardId` técnico existente solo selecciona la carta de portada del mazo y no sustituye
+la declaración narrativa de protagonista.
+
 ## Concepto central
 
 Un jugador humano (el "Player") se enfrenta en solitario a una horda de criaturas controlada por el sistema (la "Horde"). No es un duelo simétrico de Magic: la Horda no tiene mano, no tiene vida, no paga maná de forma normal y no toma decisiones estratégicas — revela cartas de su propio mazo de forma automática y ataca con todo lo que puede. El Player sí juega con las reglas clásicas de Magic (tierras, maná, criaturas, instants, sorceries, combate con bloqueos).
@@ -53,8 +70,8 @@ El comportamiento de cada Horda viene de `rulesProfile` en su deck. Los dos deck
 - **Mini Surge**: en el turno 6 de la Horda revela 1 carta adicional una sola vez.
 - **Surge**: comienza en el turno 10 de la Horda, o en el 8 en Chaos, y añade 2 revelados por
   turno. No depende del tamaño del cementerio.
-- **Haste implícito**: sus criaturas pueden atacar al entrar porque ambos perfiles actuales tienen
-  `hordeCreaturesHaveHaste: true`. Por eso Haste no se muestra como badge.
+- **Ímpetu implícito**: sus Ecos pueden atacar al entrar porque ambos perfiles actuales tienen
+  `hostEchosHaveImpetus: true`. Por eso Ímpetu no se muestra como badge.
 - **Ataca con todo lo que puede** cada combate suyo — no elige selectivamente.
 - El Player **pierde por vida a 0**; la **Horda "pierde" por quedarse sin amenazas / vaciar su mazo** (mill).
 
@@ -91,19 +108,19 @@ Tema: zombies negros/azules, cementerio, discard, sinergia de graveyard.
 - Diregraf Captain: lord de zombies (+1/+1 a otros zombies) + Deathtouch, y cuando muere un zombie, el Player pierde 1 vida.
 
 ### Goblin Assault Horde (mazo seleccionable, 50 cartas)
-Tema: trasgos rojos, generación masiva de tokens, sacrificio, daño directo.
+Tema: trasgos rojos, generación masiva de tokens y daño directo.
 - **Goblin Token** (1/1 rojo, x25): volumen puro.
 - Varios "lords" que dan +1/+1 a otros goblins (Hobgoblin Bandit Lord, Rundvelt Hordemaster, Goblin Trashmaster).
 - Generadores de tokens al entrar (Beetleback Chief, Siege-Gang Commander) o al atacar (Goblin Rabblemaster, Krenko Tin Street Kingpin, General Kreat).
-- Sacrificio de goblins para daño directo (Siege-Gang Commander). Mogg Mob es deliberadamente
-  una criatura vanilla 3/3 en este modo.
+- Los modos activados de sacrificio de Siege-Gang Commander y Pashalik Mons están omitidos
+  deliberadamente. Mogg Mob es una criatura vanilla 3/3 en este modo.
 - Goblin War Drums / Raid Bombardment: enchantments que dan Menace global o pegan daño extra por atacantes chicos.
 - Goblin Chainwhirler: daño en área al entrar (1 a Player y a todo lo que controla).
 - Varias legendarias (General Kreat, Krenko, Pashalik Mons) con triggers de generar tokens al atacar o al morir un goblin.
 
-Este mazo es jugable y seleccionable, pero tiene más habilidades marcadas
-`engineSupport: "pending"` que Zombies. El comando `scripts/lint-decks.mjs` es la fuente vigente de
-esa lista; no se duplica aquí para evitar que vuelva a quedar atrasada.
+Este mazo es jugable, seleccionable y no conserva habilidades `engineSupport: "pending"`.
+Zombies sí mantiene trabajo parcial declarado. El comando `scripts/lint-decks.mjs` es la fuente
+vigente de esa lista; no se duplica aquí para evitar que vuelva a quedar atrasada.
 
 ## Estética y tono (importante para lore)
 
@@ -116,8 +133,8 @@ esa lista; no se duplica aquí para evitar que vuelva a quedar atrasada.
 ## Limitaciones mecánicas actuales (para que el lore no prometa de más)
 
 - Sólo existen dos Hosts: Zombies negro/azul, predeterminado, y Goblins rojo. Ambos son
-  seleccionables; Goblins conserva varias habilidades WIP declaradas.
-- El Player solo tiene un mazo: mono-verde ramp. No hay otros colores/arquetipos de Player implementados.
+  seleccionables; Zombies conserva trabajo parcial declarado y Goblins está completamente soportado.
+- El Chronicler tiene dos mazos seleccionables: mono-verde ramp y Vampiros.
 - No hay parser de texto de Magic real ni intención de tenerlo: cada carta nueva se implementa
   mediante JSON y efectos genéricos de `EffectResolver`. Una habilidad incompleta debe marcarse
   `pending`, `ignored` o `custom`; una habilidad sin marcador que no coincide con el vocabulario

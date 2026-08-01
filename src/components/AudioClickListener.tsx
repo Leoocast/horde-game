@@ -19,7 +19,7 @@ export function AudioClickListener() {
       }
       const audio = useAudioStore.getState();
       audio.resumeMusic();
-      audio.playSfx("click", { volume: 0.65 });
+      audio.playSfx("click");
     }
 
     document.addEventListener("pointerdown", unlockMusic, { capture: true, once: true });
@@ -39,7 +39,7 @@ function clearCardSelection() {
   const game = useGameStore.getState();
   game.selectHand(undefined);
   game.selectPlayerCreature(undefined);
-  game.selectHordeCreature(undefined);
+  game.selectHostCreature(undefined);
   game.selectActiveEffectCard(undefined);
   game.setFocusedCardId(undefined);
 }

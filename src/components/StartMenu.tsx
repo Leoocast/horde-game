@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
@@ -21,10 +21,10 @@ type Props = {
   onSelectDeck: (deckId: string) => void;
   onOpenDeck: (deckId: string) => void;
   onViewDeck: (returnScreen?: "setup" | "chaos") => void;
-  hordeDecks: InspectableDeck[];
-  selectedHordeDeckId: string;
-  onSelectHordeDeck: (deckId: string) => void;
-  onViewHordeDeck: (returnScreen?: "setup" | "chaos") => void;
+  hostDecks: InspectableDeck[];
+  selectedHostDeckId: string;
+  onSelectHostDeck: (deckId: string) => void;
+  onViewHostDeck: (returnScreen?: "setup" | "chaos") => void;
   initialScreen?: MenuScreen;
   preserveMusicOnMount?: boolean;
   requestInitialName?: boolean;
@@ -32,6 +32,8 @@ type Props = {
   onRestartFirstTime?: () => void;
   /** Only provided in development builds; the menu entry does not exist without it. */
   onOpenPlayground?: () => void;
+  /** Only provided in development builds; edits the checked-in per-file audio mix. */
+  onOpenAudioLab?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -44,7 +46,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -53,7 +55,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [setupClosing, setSetupClosing] = useState(false);
-  const [showTutorialConfirm, setShowTutorialConfirm] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
   const [nameEditorClosing, setNameEditorClosing] = useState(false);
@@ -68,7 +69,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
-  const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
+  const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
 
   useEffect(() => {
@@ -101,7 +102,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         if (!nameRequired) closeNameEditor();
         return;
       }
-      if (showTutorialConfirm || showDeveloperWarning) return;
+      if (showDeveloperWarning) return;
       if (menuScreen === "home") return;
       event.preventDefault();
       if (menuScreen === "setup" || menuScreen === "chaos") setSetupClosing(true);
@@ -109,7 +110,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor, showTutorialConfirm]);
+  }, [menuScreen, nameEditorClosing, nameRequired, showDeveloperWarning, showNameEditor]);
 
   function openNameEditor() {
     setNameDraft(playerName);
@@ -133,7 +134,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     completeOnboarding(nextName);
     setNameRequired(false);
     onNameSaved?.(nextName);
-    playSfx("playLand", { volume: 0.62 });
+    playSfx("playLand");
     setNameEditorClosing(true);
     window.setTimeout(() => {
       setShowNameEditor(false);
@@ -188,7 +189,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   function changeDifficulty(nextMode: DifficultyMode) {
     if (nextMode === mode) return;
     const rate = nextMode === "easy" ? 1.08 : nextMode === "hard" ? 0.9 : 1;
-    playSfx("playLand", { volume: 0.76, rate });
+    playSfx("playLand", { rate });
     setMode(nextMode);
   }
 
@@ -232,11 +233,21 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
             <h1 className="main-menu-title">Hostfall</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
-            {onOpenPlayground && (
-              <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
-                <Construction size={15} aria-hidden="true" />
-                <span>Playground</span>
-              </button>
+            {(onOpenPlayground || onOpenAudioLab) && (
+              <div className="main-menu-developer-tools">
+                {onOpenPlayground && (
+                  <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
+                    <Construction size={15} aria-hidden="true" />
+                    <span>Playground</span>
+                  </button>
+                )}
+                {onOpenAudioLab && (
+                  <button className="main-menu-playground" type="button" onClick={onOpenAudioLab} title="Audio mix authoring tool">
+                    <AudioLines size={15} aria-hidden="true" />
+                    <span>Audio Lab</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -253,7 +264,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
             </button>
-            <button className="main-menu-entry group" type="button" onClick={() => setShowTutorialConfirm(true)}>
+            <button className="main-menu-entry is-disabled group" type="button" disabled title={t("menu.howToPlayUnavailable")}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.howToPlay")}</span>
             </button>
@@ -341,7 +352,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           <DecksView collection="chronicles" decks={decks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "chronicles"} />
         )}
         {menuScreen === "hosts" && (
-          <DecksView collection="hosts" decks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
+          <DecksView collection="hosts" decks={hostDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
         )}
         </div>
       ) : (
@@ -351,11 +362,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           selectedPlayerDeckId={selectedDeckId}
           onSelectPlayerDeck={onSelectDeck}
           onInspectPlayerDeck={() => onViewDeck(menuScreen === "chaos" ? "chaos" : "setup")}
-          hordeDeck={selectedHordeDeck}
-          hordeDecks={hordeDecks}
-          selectedHordeDeckId={selectedHordeDeckId}
-          onSelectHordeDeck={onSelectHordeDeck}
-          onInspectHordeDeck={() => onViewHordeDeck(menuScreen === "chaos" ? "chaos" : "setup")}
+          hostDeck={selectedHostDeck}
+          hostDecks={hostDecks}
+          selectedHostDeckId={selectedHostDeckId}
+          onSelectHostDeck={onSelectHostDeck}
+          onInspectHostDeck={() => onViewHostDeck(menuScreen === "chaos" ? "chaos" : "setup")}
           chaos={menuScreen === "chaos"}
           mode={mode}
           onModeChange={changeDifficulty}
@@ -376,10 +387,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           launching={launching}
           closing={setupClosing}
         />
-      )}
-
-      {showTutorialConfirm && (
-        <TutorialUnderConstructionModal onClose={() => setShowTutorialConfirm(false)} />
       )}
 
       {showDeveloperWarning && (
@@ -497,11 +504,11 @@ type ExpeditionSetupProps = {
   selectedPlayerDeckId: string;
   onSelectPlayerDeck: (deckId: string) => void;
   onInspectPlayerDeck: () => void;
-  hordeDeck?: InspectableDeck;
-  hordeDecks: InspectableDeck[];
-  selectedHordeDeckId: string;
-  onSelectHordeDeck: (deckId: string) => void;
-  onInspectHordeDeck: () => void;
+  hostDeck?: InspectableDeck;
+  hostDecks: InspectableDeck[];
+  selectedHostDeckId: string;
+  onSelectHostDeck: (deckId: string) => void;
+  onInspectHostDeck: () => void;
   mode: DifficultyMode;
   onModeChange: (mode: DifficultyMode) => void;
   selectedMode: (typeof modes)[number];
@@ -549,13 +556,13 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
 
           <SetupCombatant
-            eyebrow={t("setup.hordeSide")}
-            side="horde"
-            deck={props.hordeDeck}
-            decks={props.hordeDecks}
-            selectedDeckId={props.selectedHordeDeckId}
-            onSelectDeck={props.onSelectHordeDeck}
-            onInspect={props.onInspectHordeDeck}
+            eyebrow={t("setup.hostSide")}
+            side="host"
+            deck={props.hostDeck}
+            decks={props.hostDecks}
+            selectedDeckId={props.selectedHostDeckId}
+            onSelectDeck={props.onSelectHostDeck}
+            onInspect={props.onInspectHostDeck}
           />
         </div>
 
@@ -565,7 +572,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
             <div className="expedition-section-heading">
               <div><p>{t("setup.chooseFate")}</p><h2 id="difficulty-heading">{t("setup.difficulty")}</h2></div>
-              <HordeAwakening turns={props.selectedMode.setupTurns} />
+              <HostAwakening turns={props.selectedMode.setupTurns} />
             </div>
             <div className="expedition-mode-grid">
               {modes.map((item) => (
@@ -616,7 +623,7 @@ function ChaosRules() {
   const rules = [
     { value: "2", label: t("chaos.cardsDrawn"), detail: t("chaos.eachTurn") },
     { value: "0", label: t("chaos.preparation"), detail: t("chaos.noWait") },
-    { value: "VIII", label: t("chaos.surge"), detail: t("chaos.hordeTurn") },
+    { value: "VIII", label: t("chaos.surge"), detail: t("chaos.hostTurn") },
     { value: "?", label: t("chaos.mutations"), detail: t("chaos.everyCreatureChanges") },
   ];
   return (
@@ -645,7 +652,7 @@ function ChaosSigils() {
   );
 }
 
-function HordeAwakening({ turns }: { turns: number }) {
+function HostAwakening({ turns }: { turns: number }) {
   const t = useTranslation();
   const previousTurns = useRef(turns);
   const [direction, setDirection] = useState<"idle" | "easier" | "harder">("idle");
@@ -670,7 +677,7 @@ function HordeAwakening({ turns }: { turns: number }) {
 
 function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect }: {
   eyebrow: string;
-  side: "player" | "horde";
+  side: "player" | "host";
   deck?: InspectableDeck;
   decks: InspectableDeck[];
   selectedDeckId: string;
@@ -680,10 +687,10 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = deck ? findSetupKeyCard(deck) : undefined;
-  const details = useDeckCardDetails(deck?.id ?? "missing", keyCard, deck?.images ?? { cards: {} });
-  const keyCardName = language === "es" ? keyCard?.displayNameEs || details.displayName || localizedCardName(keyCard, language) : localizedCardName(keyCard, language);
+  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
+  const keyCardName = localizedCardName(keyCard, language);
   return (
-    <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
+    <article className={`expedition-combatant ${side === "host" ? "expedition-combatant-host" : "expedition-combatant-player"}`}>
       <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button></div>
       <div className="expedition-deck-feature">
         <div className="expedition-deck-art">
@@ -705,52 +712,6 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
 function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
   const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
   return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
-}
-
-function TutorialUnderConstructionModal({ onClose }: { onClose: () => void }) {
-  const t = useTranslation();
-  const [closing, setClosing] = useState(false);
-
-  useEffect(() => {
-    if (!closing) return;
-    const timeout = window.setTimeout(onClose, 160);
-    return () => window.clearTimeout(timeout);
-  }, [closing, onClose]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setClosing(true);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  return (
-    <div
-      className={`tutorial-construction-backdrop ${closing ? "is-closing" : ""}`}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) setClosing(true);
-      }}
-    >
-      <section className="tutorial-construction-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-construction-title">
-        <button className="tutorial-construction-close" type="button" onClick={() => setClosing(true)} title={t("common.close")}>
-          <X size={18} />
-        </button>
-        <div className="tutorial-construction-icon" aria-hidden="true">
-          <Construction size={30} />
-        </div>
-        <p className="tutorial-construction-kicker">{t("tutorial.lockedKicker")}</p>
-        <h2 id="tutorial-construction-title">{t("tutorial.underConstruction")}</h2>
-        <div className="tutorial-construction-rule" />
-        <p className="tutorial-construction-copy">
-          {t("tutorial.copy")}
-        </p>
-        <button className="tutorial-construction-action" type="button" onClick={() => setClosing(true)}>
-          {t("tutorial.return")}
-        </button>
-      </section>
-    </div>
-  );
 }
 
 function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {
@@ -779,27 +740,27 @@ function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onE
   return (
     <div
       data-preserve-settings-menu="true"
-      className={`tutorial-construction-backdrop ${isClosing ? "is-closing" : ""}`}
+      className={`notice-modal-backdrop ${isClosing ? "is-closing" : ""}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setClosingAction("cancel");
       }}
     >
-      <section className="tutorial-construction-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
-        <button className="tutorial-construction-close" type="button" onClick={() => setClosingAction("cancel")} title={t("common.close")}>
+      <section className="notice-modal developer-warning-modal" role="dialog" aria-modal="true" aria-labelledby="developer-warning-title">
+        <button className="notice-modal-close" type="button" onClick={() => setClosingAction("cancel")} title={t("common.close")}>
           <X size={18} />
         </button>
-        <div className="tutorial-construction-icon developer-warning-icon" aria-hidden="true">
+        <div className="notice-modal-icon developer-warning-icon" aria-hidden="true">
           <AlertTriangle size={30} />
         </div>
-        <p className="tutorial-construction-kicker">{t("developer.kicker")}</p>
+        <p className="notice-modal-kicker">{t("developer.kicker")}</p>
         <h2 id="developer-warning-title">{t("developer.title")}</h2>
-        <div className="tutorial-construction-rule" />
-        <p className="tutorial-construction-copy">
+        <div className="notice-modal-rule" />
+        <p className="notice-modal-copy">
           {t("developer.copy")}
         </p>
         <div className="developer-warning-actions">
-          <button className="tutorial-construction-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>{t("common.cancel")}</button>
-          <button className="tutorial-construction-action" type="button" onClick={() => setClosingAction("enable")}>{t("developer.enable")}</button>
+          <button className="notice-modal-action is-secondary" type="button" onClick={() => setClosingAction("cancel")}>{t("common.cancel")}</button>
+          <button className="notice-modal-action" type="button" onClick={() => setClosingAction("enable")}>{t("developer.enable")}</button>
         </div>
       </section>
     </div>

@@ -2,14 +2,14 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "luci
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { canonicalizeRulesText } from "../i18n/rulesText";
 import { useTranslation } from "../i18n/useTranslation";
 import type { AppLanguage } from "../i18n/translations";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { KeywordPills } from "./CardPreview";
-import { DeckCardVisual } from "./DeckCardVisual";
+import { TraitPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -191,12 +191,11 @@ function DeckCardTile({
   onClick: () => void;
 }) {
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const localArt = usesGeneratedCardFrame(deck, card);
+  const details = useDeckCardDetails(card, deck.images);
+  const displayName = localizedCardName(card, language);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
-  const playHoverSound = () => playSfx("drawOne", { volume: 0.42 });
+  const playHoverSound = () => playSfx("drawOne");
 
   return (
     <button
@@ -219,18 +218,7 @@ function DeckCardTile({
           </span>
         )}
         <div className={["deck-detail-card-image", showFullCardImage ? "is-full-card" : ""].join(" ")}>
-          {details.imageUrl && localArt ? (
-            <DeckCardVisual
-              card={card}
-              imageUrl={details.imageUrl}
-              displayName={displayName}
-              typeLine={localizedTypeLine(card, language)}
-              description={authoredCardText(card, language)}
-              flavorText={authoredFlavorText(card, language)}
-              credit="HOSTFALL — ORIGINAL ART"
-              className="hostfall-vampire"
-            />
-          ) : details.imageUrl ? (
+          {details.imageUrl ? (
             <img src={details.imageUrl} alt={displayName} draggable={false} />
           ) : (
             <MissingCardArt card={card} />
@@ -246,7 +234,7 @@ function DeckCardTile({
 function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: InspectableDeck; card?: NewDeckCard; pinned: boolean; onClearPin: () => void; onDetails: () => void }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
+  const details = useDeckCardDetails(card, deck.images);
   if (!card) {
     return (
       <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
@@ -255,8 +243,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
     );
   }
 
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
+  const displayName = localizedCardName(card, language);
+  const text = deckCardDescription(card, language);
   const hasText = text.length > 0;
   const showFullCardImage = usesFullCardImage(deck, card);
 
@@ -266,7 +254,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         <div>
           <span className="deck-detail-info-kicker">{t("deck.selectedCard")}</span>
           <h2>{displayName}</h2>
-          <p>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(card, language)}</p>
+          <p>{localizedTypeLine(card, language)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {pinned && (
@@ -288,7 +276,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         )}
         <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
           {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
-          {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
+          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact />}
         </div>
         {hasText && (
           <div className="deck-detail-rules">
@@ -327,12 +315,11 @@ function DeckInspectorDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(deck.id, card, deck.images);
-  const displayName = language === "es" ? card.displayNameEs || details.displayName || localizedCardName(card, language) : localizedCardName(card, language);
-  const text = deckCardDescription(card, language, details.oracleText, details.flavorText);
-  const keywords = deckKeywords(card);
+  const details = useDeckCardDetails(card, deck.images);
+  const displayName = localizedCardName(card, language);
+  const text = deckCardDescription(card, language);
+  const traits = deckTraits(card);
   const cardStats = stats(card);
-  const localArt = usesGeneratedCardFrame(deck, card);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [closing, setClosing] = useState(false);
@@ -359,7 +346,7 @@ function DeckInspectorDetailsModal({
     timers.current.push(window.setTimeout(() => {
       if (direction === "next") onNext();
       else onPrevious();
-      playSfx("drawOne", { volume: 0.52 });
+      playSfx("drawOne");
       setTransition(`enter-${direction}`);
       timers.current.push(window.setTimeout(() => {
         setTransition("idle");
@@ -400,18 +387,7 @@ function DeckInspectorDetailsModal({
               <ChevronLeft size={24} />
             </button>
             <div className={["deck-collection-modal-art", showFullCardImage ? "is-full-card" : ""].join(" ")}>
-              {details.imageUrl && localArt ? (
-                <DeckCardVisual
-                  card={card}
-                  imageUrl={details.imageUrl}
-                  displayName={displayName}
-                  typeLine={localizedTypeLine(card, language)}
-                  description={authoredCardText(card, language)}
-                  flavorText={authoredFlavorText(card, language)}
-                  credit="HOSTFALL — ORIGINAL ART"
-                  className="hostfall-vampire"
-                />
-              ) : details.imageUrl ? (
+              {details.imageUrl ? (
                 <img src={details.imageUrl} alt={displayName} draggable={false} />
               ) : (
                 <MissingCardArt card={card} />
@@ -428,13 +404,13 @@ function DeckInspectorDetailsModal({
               <div>
                 <h2>{displayName}</h2>
               </div>
-              <small>{details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : localizedTypeLine(card, language)}</small>
+              <small>{localizedTypeLine(card, language)}</small>
             </header>
 
-            {(keywords || cardStats) && (
+            {(traits || cardStats) && (
               <div className="deck-collection-modal-badges">
                 {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
-                {keywords && <KeywordPills keywords={keywords} />}
+                {traits && <TraitPills traits={traits} />}
               </div>
             )}
 
@@ -474,28 +450,20 @@ function uniqueCards(cards: NewDeckCard[]): CardCopy[] {
 }
 
 function stats(card: NewDeckCard): string | undefined {
-  if (typeof card.power !== "number" || typeof card.toughness !== "number") return undefined;
-  return `${card.power}/${card.toughness}`;
+  if (typeof card.power !== "number" || typeof card.endurance !== "number") return undefined;
+  return `${card.power}/${card.endurance}`;
 }
 
-function deckKeywords(card: NewDeckCard): string {
-  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword).filter((keyword) => keyword !== "TRAMPLE"));
-  for (const ability of card.abilities ?? []) {
-    if (ability.customHandler === "toxic_1" || ability.id?.toLowerCase().includes("toxic_1")) keywords.add("TOXIC {1}");
-  }
-  return [...keywords].filter(Boolean).join(", ");
+function deckTraits(card: NewDeckCard): string {
+  const traits = new Set((card.traits ?? []).map(formatDeckTrait).filter((keyword) => keyword !== "OVERFLOW"));
+  return [...traits].filter(Boolean).join(", ");
 }
 
-function formatDeckKeyword(keyword: string): string {
+function formatDeckTrait(keyword: string): string {
   const text = String(keyword).trim();
-  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
-  if (toxic) return `TOXIC {${toxic[1]}}`;
+  const poison = text.match(/^POISON_(\d+)$/u);
+  if (poison) return `POISON {${poison[1]}}`;
   return text.toUpperCase();
-}
-
-function usesGeneratedCardFrame(deck: InspectableDeck, card: NewDeckCard): boolean {
-  const image = deck.images.cards[card.id];
-  return image?.source === "local" && image.imageKind !== "card";
 }
 
 function usesFullCardImage(deck: InspectableDeck, card: NewDeckCard): boolean {
@@ -503,31 +471,16 @@ function usesFullCardImage(deck: InspectableDeck, card: NewDeckCard): boolean {
   return image?.imageKind === "card" || (image?.showFullCardImage ?? deck.images.defaults?.showFullCardImage ?? false);
 }
 
-function authoredCardText(card: NewDeckCard, language: AppLanguage): string {
-  return card.gameText?.[language] ?? card.gameText?.en ?? "";
-}
-
-function authoredFlavorText(card: NewDeckCard, language: AppLanguage): string {
-  const flavorText = card.flavorText;
-  if (typeof flavorText === "string") return flavorText;
-  if (!flavorText || typeof flavorText !== "object") return "";
-  const localized = flavorText as Partial<Record<AppLanguage, unknown>>;
-  const value = localized[language] ?? localized.en;
-  return typeof value === "string" ? value : "";
-}
-
 function describeCardFromJson(card: NewDeckCard): string {
   const abilities = card.abilities ?? [];
   return abilities.map(describeAbility).filter(Boolean).join("\n\n");
 }
 
-function deckCardDescription(card: NewDeckCard, language: AppLanguage, oracleText?: string, flavorText?: string): string {
-  void oracleText;
-  void flavorText;
+function deckCardDescription(card: NewDeckCard, language: AppLanguage): string {
   const authored = card.gameText?.[language] ?? card.gameText?.en;
-  if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), authored);
+  if (authored) return cleanCardDescriptionText(undefined, undefined, deckTraits(card), canonicalizeRulesText(authored, language));
   const generated = describeCardFromJson(card);
-  if (generated) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), generated);
+  if (generated) return cleanCardDescriptionText(undefined, undefined, deckTraits(card), generated);
   return language === "es" ? "Sin efecto adicional." : "No additional effect.";
 }
 

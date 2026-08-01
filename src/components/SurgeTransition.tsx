@@ -12,7 +12,7 @@ export function SurgeTransition({ onComplete }: Props) {
   const playSfx = useAudioStore((state) => state.playSfx);
 
   useEffect(() => {
-    playSfx("playMonsterHeavy", { volume: 0.92, rate: 0.88 });
+    playSfx("playMonsterHeavy", { rate: 0.88 });
   }, [playSfx]);
 
   return (

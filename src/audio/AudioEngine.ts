@@ -1,5 +1,6 @@
 import { sfxManifest, type SfxId } from "./soundManifest";
 import { battleThemeIds, menuThemeIds, musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "./musicManifest";
+import { dbToGain, projectAudioMix, type AudioMixConfig } from "./audioMix";
 
 type AudioSettings = {
   enabled: boolean;
@@ -9,7 +10,6 @@ type AudioSettings = {
 };
 
 type PlayOptions = {
-  volume?: number;
   rate?: number;
 };
 
@@ -33,6 +33,7 @@ const SFX_POOL_SIZE = 3;
 
 class AudioEngine {
   private settings: AudioSettings = DEFAULT_SETTINGS;
+  private mix: AudioMixConfig = projectAudioMix;
   private sfxCache = new Map<SfxId, HTMLAudioElement[]>();
   private activeSfx = new Set<HTMLAudioElement>();
   private preparedMusic = new Map<string, HTMLAudioElement>();
@@ -50,6 +51,15 @@ class AudioEngine {
       musicVolume: clamp01(settings.musicVolume ?? this.settings.musicVolume),
     };
     this.syncMusicSettings();
+  }
+
+  setMix(mix: AudioMixConfig) {
+    this.mix = mix;
+    this.syncMusicSettings();
+  }
+
+  resetMix() {
+    this.setMix(projectAudioMix);
   }
 
   async preloadSfx(ids: SfxId[] = Object.keys(sfxManifest) as SfxId[]) {
@@ -70,7 +80,7 @@ class AudioEngine {
     }));
   }
 
-  playSfx(id: SfxId, options: PlayOptions = {}) {
+  playSfx(id: SfxId, options: PlayOptions = {}): HTMLAudioElement | undefined {
     if (!this.settings.enabled) return;
     const pool = this.getSfxPool(id);
     // `paused` is not a reliable ownership signal while a freshly requested
@@ -81,7 +91,7 @@ class AudioEngine {
     if (!pool.includes(instance)) pool.push(instance);
     instance.pause();
     instance.currentTime = 0;
-    instance.volume = clamp01(volumeToGain(this.settings.sfxVolume) * (options.volume ?? 1));
+    instance.volume = clamp01(volumeToGain(this.settings.sfxVolume) * dbToGain(this.mix.sfx[id]));
     instance.playbackRate = options.rate ?? 1;
     instance.preload = "auto";
     this.activeSfx.add(instance);
@@ -95,6 +105,7 @@ class AudioEngine {
     void instance.play().catch(() => {
       cleanup();
     });
+    return instance;
   }
 
   stopAllSfx() {
@@ -219,7 +230,7 @@ class AudioEngine {
 
   private syncMusicSettings() {
     if (!this.music) return;
-    this.music.volume = volumeToGain(this.settings.musicVolume);
+    this.music.volume = this.currentMusicGain();
     if (!this.settings.musicEnabled) {
       this.pausedByMute = true;
       this.music.pause();
@@ -237,7 +248,7 @@ class AudioEngine {
     const music = this.preparedMusic.get(key) ?? createAudio(musicCollections[id][variant]);
     this.preparedMusic.delete(key);
     music.loop = musicCollections[id].loop !== false;
-    music.volume = volumeToGain(this.settings.musicVolume);
+    music.volume = this.currentMusicGain();
     try {
       music.currentTime = Math.max(0, startAt);
     } catch {
@@ -261,6 +272,13 @@ class AudioEngine {
     const pool = Array.from({ length: SFX_POOL_SIZE }, () => createAudio(sfxManifest[id]));
     this.sfxCache.set(id, pool);
     return pool;
+  }
+
+  private currentMusicGain() {
+    const trimDb = this.currentCollectionId
+      ? this.mix.music[this.currentCollectionId][this.currentVariant]
+      : 0;
+    return clamp01(volumeToGain(this.settings.musicVolume) * dbToGain(trimDb));
   }
 }
 

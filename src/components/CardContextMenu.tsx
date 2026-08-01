@@ -9,7 +9,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
 import { gameEffectDescription } from "../utils/cardText";
-import { cardKeywords, cardStats } from "../utils/selectors";
+import { cardTraits, cardStats } from "../utils/selectors";
 import { CardDetailsModal } from "./CardPreview";
 
 const MENU_WIDTH = 220;
@@ -29,10 +29,10 @@ export function CardContextMenu() {
   const card = menu ? findCard(game, menu.cardId) : undefined;
   const detailsCard = detailsCardId ? findCard(game, detailsCardId) : undefined;
   const details = useCardDetails(detailsCard?.definitionId ?? "");
-  const keywords = detailsCard ? cardKeywords(game, detailsCard) : undefined;
+  const traits = detailsCard ? cardTraits(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
   const detailsText = detailsCard
-    ? cleanCardDescriptionText(undefined, undefined, keywords, gameEffectDescription(detailsCard, language))
+    ? cleanCardDescriptionText(undefined, undefined, traits, gameEffectDescription(detailsCard, language))
     : "";
 
   const position = useMemo(() => {
@@ -71,9 +71,7 @@ export function CardContextMenu() {
       <CardDetailsModal
         card={detailsCard}
         imageUrl={details.imageUrl}
-        displayName={details.displayName}
-        typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
-        keywords={keywords}
+        traits={traits}
         stats={stats}
         text={detailsText}
         fontSize={detailsFontSize}
@@ -83,10 +81,10 @@ export function CardContextMenu() {
     ) : null;
   }
 
-  const firstAbility = card.activatedAbilities.find((ability) => !isManaAbility(ability));
+  const firstAbility = card.activatedAbilities.find((ability) => !isEnergyAbility(ability));
   const hasActivatedEffect = Boolean(firstAbility);
   const canActivate = Boolean(firstAbility && !activatedAbilityFailureReason(game, card, firstAbility));
-  const activateLabel = firstAbility?.cost?.tap ? t("card.tapForEffect") : t("card.activateEffect");
+  const activateLabel = firstAbility?.cost?.exhaust ? t("card.exhaustForEffect") : t("card.activateEffect");
 
   function openDetails() {
     setDetailsCardId(card?.instanceId);
@@ -99,11 +97,11 @@ export function CardContextMenu() {
     const abilityId = firstAbility.id;
     closeMenu();
     window.setTimeout(() => {
-      useAudioStore.getState().playSfx("activateEffect", { volume: 0.85 });
+      useAudioStore.getState().playSfx("activateEffect");
       triggerEffectActivationPulse(cardId);
     }, 180);
     window.setTimeout(() => {
-      useAudioStore.getState().playSfx("playLand", { volume: 0.78 });
+      useAudioStore.getState().playSfx("playLand");
       activateAbility(cardId, abilityId);
     }, 620);
   }
@@ -133,9 +131,7 @@ export function CardContextMenu() {
         <CardDetailsModal
           card={detailsCard}
           imageUrl={details.imageUrl}
-          displayName={details.displayName}
-          typeLineText={details.typeLine && (language === "en" || details.language === "es") ? details.typeLine : undefined}
-          keywords={keywords}
+          traits={traits}
           stats={stats}
           text={detailsText}
           fontSize={detailsFontSize}
@@ -147,18 +143,18 @@ export function CardContextMenu() {
   );
 }
 
-function isManaAbility(ability: CardInstance["activatedAbilities"][number]): boolean {
-  return ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC";
+function isEnergyAbility(ability: CardInstance["activatedAbilities"][number]): boolean {
+  return ability.effect.type === "GAIN_ENERGY";
 }
 
 function findCard(game: GameState, id: string): CardInstance | undefined {
   return [
     ...game.player.hand,
-    ...game.player.battlefield,
-    ...game.player.graveyard,
-    ...game.player.exile,
-    ...game.horde.battlefield,
-    ...game.horde.graveyard,
-    ...game.horde.exile,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
   ].find((card) => card.instanceId === id);
 }

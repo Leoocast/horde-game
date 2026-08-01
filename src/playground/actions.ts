@@ -2,8 +2,14 @@ import { destroyPermanent } from "../engine/EffectResolver";
 import { drainEventQueue, drainNextEvent } from "../engine/EventQueue";
 import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { drawCards } from "../engine/GameState";
-import type { CardInstance, Color, GameState, Side, ZoneName } from "../engine/GameTypes";
-import { STORED_MANA_CAP, addMana, addStoredMana, emptyManaPool, parseManaCost } from "../engine/ManaSystem";
+import type { CardInstance, GameState, Side, ZoneName } from "../engine/GameTypes";
+import {
+  STORED_ENERGY_CAP,
+  addAvailableEnergy,
+  addStoredEnergy as addStoredEnergyToPool,
+  emptyEnergyPool,
+  totalEnergyCost,
+} from "../engine/EnergySystem";
 import { placeEnergySources, playerEnergyDefinitionId } from "./scenario";
 
 /**
@@ -27,16 +33,14 @@ function succeed(game: GameState, message: string): PlaygroundActionResult {
 
 export function drawPlayerCard(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  if (next.player.library.length === 0) return fail(game, "The player library is empty.");
+  if (next.player.archive.length === 0) return fail(game, "The Chronicler Archive is empty.");
   drawCards(next, "player", 1);
   return succeed(next, "Playground draws a card.");
 }
 
 /**
- * Energy, not colors. What the player sees as energy is two things in the engine: untapped lands
- * (available energy) and the colorless pool (stored energy). Adding green mana to the pool would
- * pay for cards while showing up nowhere on the board, so the playground moves the same dials the
- * game does.
+ * The Playground manipulates the same two Energy sources as the game: ready Sources and Stored
+ * Energy. It never creates a second, hidden resource channel.
  */
 export function addEnergySource(game: GameState, amount = 1): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
@@ -48,16 +52,16 @@ export function addEnergySource(game: GameState, amount = 1): PlaygroundActionRe
   return succeed(next, `Playground adds ${placed} energy source(s).`);
 }
 
-/** Untaps every energy source and hands the Energy action back — a fresh turn's worth of energy
+/** Readies every Energy Source and hands the Energy action back — a fresh turn's worth of Energy
  *  without advancing the turn. */
 export function refillEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const lands = next.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  const lands = next.player.field.filter((card) => card.kinds.includes("SOURCE"));
   if (lands.length === 0) return fail(game, "There are no energy sources to refill. Add one first.");
   let restored = 0;
   for (const land of lands) {
-    if (land.tapped || land.activatedThisTurn) restored += 1;
-    land.tapped = false;
+    if (land.exhausted || land.activatedThisTurn) restored += 1;
+    land.exhausted = false;
     land.activatedThisTurn = false;
   }
   next.player.energyActionUsedThisTurn = false;
@@ -66,22 +70,22 @@ export function refillEnergy(game: GameState): PlaygroundActionResult {
 
 export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const added = addStoredMana(next, amount);
-  if (added === 0) return fail(game, `Stored energy is already at its cap of ${STORED_MANA_CAP}.`);
+  const added = addStoredEnergyToPool(next, amount);
+  if (added === 0) return fail(game, `Stored energy is already at its cap of ${STORED_ENERGY_CAP}.`);
   return succeed(next, `Playground stores ${added} energy.`);
 }
 
-/** Spends everything: taps every energy source and empties the pool. The counterpart to refill,
+/** Spends everything: Exhausts every Energy Source and empties the pool. The counterpart to refill,
  *  for testing what a card does with nothing left. */
 export function drainEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  for (const card of next.player.battlefield) {
-    if (!card.cardTypes.includes("Land")) continue;
-    card.tapped = true;
+  for (const card of next.player.field) {
+    if (!card.kinds.includes("SOURCE")) continue;
+    card.exhausted = true;
     card.activatedThisTurn = true;
   }
-  next.player.manaPool = emptyManaPool();
-  next.player.pendingStoredMana = 0;
+  next.player.energyPool = emptyEnergyPool();
+  next.player.pendingStoredEnergy = 0;
   return succeed(next, "Playground drains all energy.");
 }
 
@@ -89,27 +93,22 @@ export function drainEnergy(game: GameState): PlaygroundActionResult {
  * Tops the pool up to exactly the card's printed cost so the normal cast path can pay it. The cast
  * itself still runs every check, trigger and target requirement — this only removes the cost.
  */
-export function grantManaForCard(game: GameState, handId: string): PlaygroundActionResult {
+export function grantEnergyForCard(game: GameState, handId: string): PlaygroundActionResult {
   const card = game.player.hand.find((item) => item.instanceId === handId);
   if (!card) return fail(game, "That card is not in hand.");
   const next = structuredClone(game) as GameState;
-  const cost = parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0);
-  for (const [key, color] of [["green", "G"], ["red", "R"], ["blue", "U"], ["white", "W"], ["black", "B"]] as const) {
-    const missing = cost[key] - next.player.manaPool[key];
-    if (missing > 0) next.player.manaPool = addMana(next.player.manaPool, color as Color, missing);
-  }
-  // Generic cost is covered with green: every colored symbol is already paid above, and the engine's
-  // payment routine spends colored mana on generic when nothing else is left.
-  const totalColored = cost.green + cost.red + cost.blue + cost.white + cost.black;
-  if (cost.colorless > 0) next.player.manaPool = addMana(next.player.manaPool, "G", cost.colorless);
-  return succeed(next, `Playground grants ${totalColored + cost.colorless} mana for ${card.name}.`);
+  const cost = totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0);
+  const pooled = next.player.energyPool.available + next.player.energyPool.stored;
+  const granted = Math.max(0, cost - pooled);
+  next.player.energyPool = addAvailableEnergy(next.player.energyPool, granted);
+  return succeed(next, `Playground grants ${granted} Energy for ${card.name}.`);
 }
 
 /** Real destruction: death triggers included. */
 export function destroyCard(game: GameState, cardId: string): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   const card = findBattlefieldCard(next, cardId);
-  if (!card) return fail(game, "Select a permanent on the battlefield first.");
+  if (!card) return fail(game, "Select a card on the Field first.");
   destroyPermanent(next, card);
   drainEventQueue(next);
   return succeed(next, `Playground destroys ${card.name}.`);
@@ -121,11 +120,11 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
   const located = locateCard(next, cardId);
   if (!located) return fail(game, "That card is not in play.");
   const { card, side, zone } = located;
-  if (zone === "graveyard") return fail(game, `${card.name} is already in the graveyard.`);
+  if (zone === "memory") return fail(game, `${card.name} is already in Memory.`);
   removeFromZone(next, side, zone, cardId);
-  card.zone = "graveyard";
-  next[side].graveyard.push(card);
-  return succeed(next, `Playground moves ${card.name} to the graveyard.`);
+  card.zone = "memory";
+  next[side].memory.push(card);
+  return succeed(next, `Playground moves ${card.name} to Memory.`);
 }
 
 /**
@@ -135,11 +134,11 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
  */
 export function clearBattlefield(game: GameState, side: Side): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const removed = next[side].battlefield;
-  if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Horde" : "player"} board is already empty.`);
-  for (const card of removed) card.zone = "graveyard";
-  next[side].graveyard.push(...removed);
-  next[side].battlefield = [];
+  const removed = next[side].field;
+  if (removed.length === 0) return fail(game, `The ${side === "host" ? "Host" : "Chronicler"} Field is already empty.`);
+  for (const card of removed) card.zone = "memory";
+  next[side].memory.push(...removed);
+  next[side].field = [];
   return succeed(next, `Playground clears ${removed.length} permanent(s) from the ${side} board.`);
 }
 
@@ -159,13 +158,13 @@ export function resolveAllEvents(game: GameState): PlaygroundActionResult {
 }
 
 function findBattlefieldCard(game: GameState, cardId: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === cardId);
+  return [...game.player.field, ...game.host.field].find((card) => card.instanceId === cardId);
 }
 
 function locateCard(game: GameState, cardId: string): { card: CardInstance; side: Side; zone: ZoneName } | undefined {
-  for (const side of ["player", "horde"] as const) {
-    for (const zone of ["battlefield", "hand", "library", "graveyard", "exile"] as const) {
-      if (side === "horde" && zone === "hand") continue;
+  for (const side of ["player", "host"] as const) {
+    for (const zone of ["field", "hand", "archive", "memory", "oblivion"] as const) {
+      if (side === "host" && zone === "hand") continue;
       const card = (game[side] as unknown as Record<string, CardInstance[]>)[zone]?.find((item) => item.instanceId === cardId);
       if (card) return { card, side, zone };
     }

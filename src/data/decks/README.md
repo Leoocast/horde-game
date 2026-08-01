@@ -21,16 +21,16 @@ src/data/decks/
 
 ## Deck JSON
 
-The deck file describes gameplay data. The current schema is `0.2.0`.
+The deck file describes gameplay data. Every active deck uses Hostfall schema `1.0.0`.
 
 Required top-level fields:
 
-- `schemaVersion`: format version, currently `"0.2.0"`.
+- `schemaVersion`: `"1.0.0"` for Hostfall-authored decks.
 - `id`: stable deck id.
 - `name`: display name.
-- `side`: `"PLAYER"` or `"HORDE"`.
+- `side`: `"CHRONICLER"` or `"HOST"`.
 - `deckSize`: total card count.
-- `gameplayLandCount`: optional player-deck override for the number of authored Land copies kept
+- `gameplayLandCount`: optional player-deck override for the number of authored Source copies kept
   when a game is created; decks without it keep the default of nine.
 - `cards`: card definitions.
 - `tokens`: token definitions, if any.
@@ -40,14 +40,13 @@ Card definitions should use stable ids and explicit structured data:
 - `id`
 - `name`
 - `quantity`
-- `manaCost`
-- `manaValue`
-- `colors`
-- `cardTypes`
+- `energyCost.amount`
+- `kinds`
+- `modifiers`, such as `QUICK`
 - `subtypes`
 - `power`
-- `toughness`
-- `keywords`
+- `endurance`
+- `traits`
 - `abilities`
 
 ## Abilities
@@ -65,7 +64,7 @@ Common ability fields:
 
 - `id`: stable ability id.
 - `kind`: ability kind.
-- `zone`: where it works, usually `"BATTLEFIELD"` or `"HAND"`.
+- `zone`: where it works, usually `"FIELD"` or `"HAND"`.
 - `cost`: structured cost data.
 - `trigger`: event data for triggered abilities.
 - `targets`: target requirements.
@@ -80,15 +79,15 @@ Example:
 {
   "id": "llanowar_elves_add_green",
   "kind": "ACTIVATED",
-  "zone": "BATTLEFIELD",
-  "cost": { "tap": true },
+  "zone": "FIELD",
+  "cost": { "exhaust": true },
   "targets": [],
   "conditions": [],
   "effects": [
     {
-      "type": "ADD_MANA",
+      "type": "GAIN_ENERGY",
       "player": "SELF",
-      "mana": { "G": 1 }
+      "amount": 1
     }
   ]
 }
@@ -96,7 +95,7 @@ Example:
 
 ## Image Manifest
 
-The image file keeps remote lookup data separate from gameplay data.
+The image file maps every card id to a checked-in local asset.
 
 Required top-level fields:
 
@@ -110,26 +109,44 @@ Each card entry should be keyed by card id:
 ```json
 {
   "llanowar_elves": {
-    "source": "scryfallNamed",
-    "exact": "Llanowar Elves",
-    "set": "fdn"
+    "source": "local",
+    "imageKind": "card",
+    "imageUrl": "/cards/mono_green_ramp/llanowar_elves.png"
   }
 }
 ```
 
-The deck inspector uses this manifest to verify card art. Prefer this file over legacy root-level image lookup files.
+The game and deck inspector use this manifest directly. Remote lookups and fallbacks are not
+supported; the referenced file must exist under `public/cards`.
+
+## Printed card generation
+
+Gameplay rules remain authoritative in this deck JSON. The matching
+`dev/tools/Decks/<deck>/studio.config.json` contains presentation-only data, and
+`scripts/card-studio-data.mjs` generates the data consumed by the HTML studio. Do not duplicate
+rules, costs, stats or quantities in the studio config.
+
+The final PNG batch is tracked by `dev/tools/Decks/generation-manifest.json`, which hashes the runtime
+deck, presentation config, renderer, fonts, source art and every exported PNG. See
+`dev/tools/Decks/README.md` for the complete workflow.
 
 ## Runtime actual
 
-Los tres decks registrados usan este esquema en partida, no sólo en el inspector:
+Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo en el inspector:
 
 - `mono_green_ramp`
+- `vampire_chronicle_preview`
 - `horde_zombies`
 - `goblin_assault_horde`
 
-`normalizeDeck` convierte `abilities[]` al modelo runtime. `EffectResolver` contiene el registro
-real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad sin
-`engineSupport` debe sobrevivir completa a la normalización o el lint falla.
+Mono Green, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
+
+`hostfallDeckAdapter` conserva temporalmente sólo la normalización de casing de zonas;
+`kinds`, `traits`, `endurance`, eventos, Acciones y reglas pasan sin degradación. `normalizeDeck`
+convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
+registro real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad
+sin `engineSupport` debe sobrevivir completa a la normalización o el lint falla. El lint también
+rechaza cualquier campo authored legacy que reaparezca dentro de un deck `1.0.0`.
 
 Marcadores admitidos:
 

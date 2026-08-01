@@ -1,7 +1,10 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
+import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "./hostfallDeckAdapter";
 import type { EffectDefinition } from "../engine/GameTypes";
+import { isCardKind, isCardModifier, isTrait } from "../engine/hostfallVocabulary";
+import { isHostfallAuthoredZone } from "../engine/hostfallZones";
 import {
   AMOUNT_TYPES,
   AUTHORING_TRIGGER_EVENTS,
@@ -44,7 +47,9 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
   for (const entry of DECK_REGISTRY) {
     const deckId = entry.deck.id;
     const report: DeckLintReport = { deckId, label: entry.label, cards: [] };
-    const authoredCards = [...entry.raw.cards, ...(entry.raw.tokens ?? [])];
+    lintHostfallSchema(entry.raw, errors);
+    const compatibleDeck = adaptHostfallDeck(entry.raw);
+    const authoredCards = [...compatibleDeck.cards, ...(compatibleDeck.tokens ?? [])];
     if (!authoredCards.some((card) => card.id === entry.presentation.keyCardId)) {
       errors.push({
         deckId,
@@ -53,12 +58,12 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
         message: `Deck presentation references unknown key card "${entry.presentation.keyCardId}".`,
       });
     }
-    if (entry.deck.side === "horde" && !entry.presentation.encounterTone) {
+    if (entry.deck.side === "host" && !entry.presentation.encounterTone) {
       errors.push({
         deckId,
         cardId: entry.presentation.keyCardId,
         abilityId: "presentation.encounterTone",
-        message: "Horde deck presentation must declare an encounter tone.",
+        message: "Host deck presentation must declare an encounter tone.",
       });
     }
     for (const card of authoredCards) {
@@ -67,6 +72,444 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
     reports.push(report);
   }
   return { errors, reports };
+}
+
+const LEGACY_HOSTFALL_AUTHORING_KEYS = new Set([
+  "cardTypes",
+  "colorIdentity",
+  "coloredMana",
+  "colors",
+  "damagePerMill",
+  "entersTapped",
+  "genericMana",
+  "hordeCreaturesHaveHaste",
+  "keywords",
+  "mana",
+  "manaCost",
+  "manaValue",
+  "permanentType",
+  "poisonPerMill",
+  "requiresNoSummoningSickness",
+  "tap",
+  "tapped",
+  "toughness",
+]);
+
+const LEGACY_HOSTFALL_AUTHORING_VALUES = new Set([
+  "ADD_MANA",
+  "ALL_CREATURES",
+  "Artifact",
+  "BATTLEFIELD",
+  "Creature",
+  "DEATHTOUCH",
+  "Energy",
+  "ENTERS_BATTLEFIELD",
+  "Enchantment",
+  "EXILE",
+  "EXILE_CARD_FROM_GRAVEYARD",
+  "FIRST_STRIKE",
+  "GRAVEYARD",
+  "GRAVEYARD_COUNT_AT_LEAST",
+  "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
+  "HASTE",
+  "HORDE",
+  "HORDE_DIRECTIVE_ONLY",
+  "IGNORED_FOR_HORDE_MVP",
+  "INSTANT",
+  "Instant",
+  "Land",
+  "LIBRARY",
+  "LIFESTEAL",
+  "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY",
+  "LOWEST_MANA_VALUE_THEN_RANDOM",
+  "MENACE",
+  "MILL_SELF",
+  "PLAYER",
+  "PLAYER_CHOOSES",
+  "REACH",
+  "SKULK",
+  "SOURCE_IS_UNTAPPED",
+  "TAP_HORDE_CREATURES_FOR_MANA",
+  "SORCERY",
+  "Sorcery",
+  "TRAMPLE",
+  "VIGILANCE",
+  "WHILE_SOURCE_ON_BATTLEFIELD",
+  "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+  "BEGIN_UPKEEP",
+  "CARD_CAST",
+  "CAST_CARD_IS_NON_TOKEN",
+  "CREATURE_DIED",
+  "COUNT_PERMANENTS",
+  "COUNT_PERMANENTS_ENTERED_THIS_TURN",
+  "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+  "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
+  "BEGIN_COMBAT",
+  "PERMANENT_DIED",
+  "REVEAL_HORDE_ROUND",
+  "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
+]);
+
+const HOST_RULE_KEYS = new Set([
+  "revealCount",
+  "stopOnNonToken",
+  "miniSurgeTurn",
+  "miniSurgeExtraReveals",
+  "surgeTurn",
+  "surgeTurnChaos",
+  "surgeExtraReveals",
+  "surgeBonus",
+  "damagePerArchiveDiscard",
+  "poisonPerArchiveDiscard",
+  "hostEchosHaveImpetus",
+  "swarmTokenSubtypes",
+]);
+
+const HOST_RULE_POSITIVE_INTEGERS = [
+  "revealCount",
+  "surgeTurn",
+  "surgeTurnChaos",
+  "damagePerArchiveDiscard",
+  "poisonPerArchiveDiscard",
+] as const;
+
+const HOST_RULE_NON_NEGATIVE_INTEGERS = ["miniSurgeTurn", "miniSurgeExtraReveals", "surgeExtraReveals"] as const;
+
+const HOSTFALL_AUTHORED_TYPE_VALUES = new Set([
+  "ACTIVE_PLAYER_IS",
+  "ADD_COUNTERS",
+  "ALL_ECHOS",
+  "ANOTHER_ALLIED_ECHO_DIED",
+  "BANISH_CARD_FROM_MEMORY",
+  "CHOOSE",
+  "COUNT_ECHOS",
+  "COUNT_ECHOS_INVOKED_THIS_TURN",
+  "CREATE_TOKEN",
+  "CURRENT_LIFE_FRACTION",
+  "DEAL_DAMAGE",
+  "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+  "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO",
+  "DEAL_DAMAGE_TO_TARGET",
+  "DESTROY",
+  "DESTROY_TARGET",
+  "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+  "DRAW_CARD",
+  "EACH_OPPONENT_DISCARDS",
+  "EACH_OPPONENT_LOSES_LIFE",
+  "EACH_OPPONENT_SACRIFICES",
+  "EVENT_OBJECT_MATCHES",
+  "EXHAUST_HOST_ECHOS_FOR_ENERGY",
+  "FIRST_LIFE_LOSS_THIS_TURN",
+  "GAIN_ENERGY",
+  "GAIN_LIFE",
+  "GRANT_KEYWORD",
+  "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+  "LOSE_LIFE",
+  "MEMORY_COUNT_AT_LEAST",
+  "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
+  "MODIFY_STATS",
+  "NOT",
+  "PLAYED_CARD_IS_NON_TOKEN",
+  "PUMP_UNTIL_NEXT_PLAYER_TURN",
+  "PUT_COUNTER",
+  "REMOVE_COUNTER",
+  "REPEAT_ACTIVATION_WHILE_POSSIBLE",
+  "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+  "REVEAL_HOST_ROUND",
+  "SACRIFICE_SELF",
+  "SEQUENCE",
+  "SOURCE_IS_READY",
+  "STAT",
+]);
+
+export function lintHostfallDeckSchema(deck: NewDeckList): DeckLintIssue[] {
+  const errors: DeckLintIssue[] = [];
+  lintHostfallSchema(deck, errors);
+  return errors;
+}
+
+function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
+  if (deck.schemaVersion !== HOSTFALL_DECK_SCHEMA_VERSION) {
+    errors.push({
+      deckId: deck.id,
+      cardId: "(deck)",
+      abilityId: "schema",
+      message: `Unsupported schemaVersion "${String(deck.schemaVersion)}"; expected "${HOSTFALL_DECK_SCHEMA_VERSION}".`,
+    });
+    return;
+  }
+  if (deck.side !== "HOST" && deck.side !== "CHRONICLER") {
+    errors.push({
+      deckId: deck.id,
+      cardId: "(deck)",
+      abilityId: "schema",
+      message: `Unknown side "${String(deck.side)}"; expected "HOST" or "CHRONICLER".`,
+    });
+  }
+  lintHostRulesProfile(deck, errors);
+
+  const reportVocabulary = (
+    values: unknown,
+    cardId: string,
+    path: string,
+    label: string,
+    predicate: (value: unknown) => boolean,
+  ): void => {
+    if (!Array.isArray(values)) {
+      errors.push({ deckId: deck.id, cardId, abilityId: "schema", message: `${path} must be an array.` });
+      return;
+    }
+    for (const value of values) {
+      if (!predicate(value)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall ${label} "${String(value)}" at "${path}".`,
+        });
+      }
+    }
+  };
+
+  const visit = (value: unknown, cardId: string, path: string): void => {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => visit(item, cardId, `${path}[${index}]`));
+      return;
+    }
+    if (typeof value === "string") {
+      if (LEGACY_HOSTFALL_AUTHORING_VALUES.has(value) || /^TOXIC_\d+$/u.test(value) || /^toxic_\d+$/u.test(value)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Hostfall schema cannot use legacy value "${value}" at "${path}".`,
+        });
+      }
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      const nextPath = path ? `${path}.${key}` : key;
+      if (key === "kinds") reportVocabulary(nestedValue, cardId, nextPath, "kind", isCardKind);
+      if (key === "modifiers") reportVocabulary(nestedValue, cardId, nextPath, "modifier", isCardModifier);
+      if (key === "traits") reportVocabulary(nestedValue, cardId, nextPath, "trait", isTrait);
+      if (key === "zone" && !isHostfallAuthoredZone(nestedValue)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall zone "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "eventObject" && nestedValue !== "echo") {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall eventObject "${String(nestedValue)}" at "${nextPath}"; expected "echo".`,
+        });
+      }
+      const parentType = String((value as Record<string, unknown>).type ?? "");
+      if (key === "type" && (typeof nestedValue !== "string" || !HOSTFALL_AUTHORED_TYPE_VALUES.has(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall authored type "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "event" && (typeof nestedValue !== "string" || !AUTHORING_TRIGGER_EVENTS.has(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall authored event "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "speed" && !["QUICK", "MAIN"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall speed "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      const allowedControllers = nextPath.includes(".targets[")
+        ? ["SELF", "OPPONENT", "ANY"]
+        : ["SELF", "OPPONENT", "HOST", "CHRONICLER"];
+      if (key === "controller" && !allowedControllers.includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall controller "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "kind" && !["STATIC", "TRIGGERED", "ACTIVATED", "SPELL"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall ability kind "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "duration" && !["WHILE_SOURCE_ON_FIELD", "END_OF_TURN", "NEXT_PLAYER_TURN"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall duration "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "activationMode" && !["HOST_DIRECTIVE_ONLY", "IGNORED_FOR_HOST_MVP"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall activationMode "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "selectionRule" && !["LOWEST_ENERGY_COST_THEN_RANDOM", "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall selectionRule "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "selection" && !["CHRONICLER_CHOOSES", "RANDOM"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall selection "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "targetPolicy" && nestedValue !== "BEST_LETHAL") {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall targetPolicy "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "permanentKind" && !["ECHO", "SOURCE", "SUPPORT"].includes(String(nestedValue))) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall permanentKind "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "source" && "event" in (value as Record<string, unknown>) && nestedValue !== "SELF") {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall trigger source "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (key === "keyword" && parentType.includes("KEYWORD") && !isTrait(nestedValue)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall trait "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      if (LEGACY_HOSTFALL_AUTHORING_KEYS.has(key)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Hostfall schema cannot use legacy field "${nextPath}".`,
+        });
+      }
+      visit(nestedValue, cardId, nextPath);
+    }
+  };
+
+  for (const [key, value] of Object.entries(deck)) {
+    if (key === "cards" || key === "tokens") continue;
+    if (LEGACY_HOSTFALL_AUTHORING_KEYS.has(key)) {
+      errors.push({ deckId: deck.id, cardId: "(deck)", abilityId: "schema", message: `Hostfall schema cannot use legacy field "deck.${key}".` });
+    }
+    visit(value, "(deck)", `deck.${key}`);
+  }
+
+  for (const card of [...deck.cards, ...(deck.tokens ?? [])]) {
+    if (!Array.isArray(card.kinds) || card.kinds.length === 0) {
+      errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "Hostfall cards must declare kinds[]." });
+    }
+    const amount = typeof card.energyCost === "number"
+      ? card.energyCost
+      : Number(card.energyCost?.amount);
+    if (!Number.isInteger(amount) || amount < 0) {
+      errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "energyCost.amount must be a non-negative integer." });
+    }
+    visit(card, card.id, "card");
+  }
+}
+
+function lintHostRulesProfile(deck: NewDeckList, errors: DeckLintIssue[]): void {
+  const raw = deck.rulesProfile;
+  if (raw === undefined) return;
+  const report = (message: string) => errors.push({
+    deckId: deck.id,
+    cardId: "(deck)",
+    abilityId: "rulesProfile",
+    message,
+  });
+  if (deck.side !== "HOST") report("rulesProfile is only valid for HOST decks.");
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    report("rulesProfile must be an object.");
+    return;
+  }
+  for (const key of Object.keys(raw)) {
+    if (!HOST_RULE_KEYS.has(key)) report(`Unknown Host rule "${key}".`);
+  }
+  for (const key of HOST_RULE_POSITIVE_INTEGERS) {
+    if (raw[key] !== undefined && (!Number.isInteger(raw[key]) || Number(raw[key]) <= 0)) {
+      report(`${key} must be a positive integer.`);
+    }
+  }
+  for (const key of HOST_RULE_NON_NEGATIVE_INTEGERS) {
+    if (raw[key] !== undefined && (!Number.isInteger(raw[key]) || Number(raw[key]) < 0)) {
+      report(`${key} must be a non-negative integer.`);
+    }
+  }
+  for (const key of ["stopOnNonToken", "hostEchosHaveImpetus"] as const) {
+    if (raw[key] !== undefined && typeof raw[key] !== "boolean") report(`${key} must be boolean.`);
+  }
+  if (
+    raw.swarmTokenSubtypes !== undefined &&
+    (!Array.isArray(raw.swarmTokenSubtypes) ||
+      raw.swarmTokenSubtypes.length === 0 ||
+      raw.swarmTokenSubtypes.some((value) => typeof value !== "string" || value.trim().length === 0))
+  ) {
+    report("swarmTokenSubtypes must be a non-empty array of non-empty strings.");
+  }
+  if (raw.surgeBonus !== undefined) {
+    const bonus = raw.surgeBonus;
+    if (!bonus || typeof bonus !== "object" || Array.isArray(bonus)) {
+      report("surgeBonus must be an object.");
+    } else {
+      const data = bonus as Record<string, unknown>;
+      for (const key of Object.keys(data)) {
+        if (!["power", "endurance", "subtypes"].includes(key)) report(`Unknown Host surgeBonus rule "${key}".`);
+      }
+      for (const key of ["power", "endurance"] as const) {
+        if (typeof data[key] !== "number" || !Number.isFinite(data[key])) report(`surgeBonus.${key} must be a finite number.`);
+      }
+      if (
+        !Array.isArray(data.subtypes) ||
+        data.subtypes.length === 0 ||
+        data.subtypes.some((value) => typeof value !== "string" || value.trim().length === 0)
+      ) {
+        report("surgeBonus.subtypes must be a non-empty array of non-empty strings.");
+      }
+    }
+  }
 }
 
 function lintCard(deckId: string, card: NewDeckCard, errors: DeckLintIssue[]): CardLintRow {
@@ -125,8 +568,8 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
   if (kind === "ACTIVATED" && (ability.effects ?? []).length > 1) {
     report(`Activated abilities support a single effect today; ${ability.effects?.length} declared (the rest would be dropped).`);
   }
-  if (ability.requiresNoSummoningSickness !== undefined && typeof ability.requiresNoSummoningSickness !== "boolean") {
-    report(`requiresNoSummoningSickness must be boolean.`);
+  if (ability.requiresStabilized !== undefined && typeof ability.requiresStabilized !== "boolean") {
+    report(`requiresStabilized must be boolean.`);
   }
   if (ability.cost?.life !== undefined) {
     const life = ability.cost.life;
@@ -155,7 +598,7 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
     normalized.effects.length +
     normalized.activatedAbilities.length +
     normalized.requiresTargets.length +
-    normalized.extraKeywords +
+    normalized.extraTraits +
     (normalized.hasAdditionalCost ? 1 : 0);
   if (produced === 0) {
     report(`Ability produces nothing after normalization — it would silently not exist in game.`);
@@ -173,7 +616,7 @@ type NormalizedView = {
   effects: EffectDefinition[];
   activatedAbilities: Array<{ effect: unknown }>;
   requiresTargets: Array<{ id: string }>;
-  extraKeywords: number;
+  extraTraits: number;
   hasAdditionalCost: boolean;
 };
 
@@ -181,16 +624,16 @@ function normalizeIsolated(card: NewDeckCard, ability: NewDeckAbility): Normaliz
   const syntheticDeck: NewDeckList = {
     id: "lint",
     name: "lint",
-    side: "horde",
+    side: "host",
     cards: [{ ...card, abilities: [ability] }],
   };
   const definition = normalizeDeck(syntheticDeck).cards[0];
-  const baseKeywords = card.keywords?.length ?? 0;
+  const baseTraits = card.traits?.length ?? 0;
   return {
     effects: definition.effects ?? [],
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: (definition.requiresTargets ?? []) as Array<{ id: string }>,
-    extraKeywords: Math.max(0, (definition.keywords?.length ?? 0) - baseKeywords),
+    extraTraits: Math.max(0, (definition.traits?.length ?? 0) - baseTraits),
     hasAdditionalCost: Boolean(definition.additionalCost),
   };
 }

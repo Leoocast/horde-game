@@ -1,30 +1,20 @@
-export type Side = "player" | "horde";
+import type { CardKind, CardModifier, Trait } from "./hostfallVocabulary";
+import type { ZoneName } from "./hostfallZones";
+
+export type { Trait } from "./hostfallVocabulary";
+export type { ZoneName } from "./hostfallZones";
+
+export type Side = "player" | "host";
 export type DifficultyMode = "easy" | "normal" | "hard";
 // `chaos` is retained only for legacy saves/tests. The experiment is deprecated and no longer
 // exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
-export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
-export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
-export type Color = "G" | "R" | "U" | "W" | "B" | "C";
-export type Keyword =
-  | "FLYING"
-  | "REACH"
-  | "VIGILANCE"
-  | "MENACE"
-  | "DEATHTOUCH"
-  | "TRAMPLE"
-  | "HEXPROOF"
-  | "HASTE"
-  | "SKULK"
-  | string;
-
-export type ManaPool = {
-  green: number;
-  red: number;
-  blue: number;
-  white: number;
-  black: number;
-  colorless: number;
+export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "host";
+export type EnergyPool = {
+  /** Energy already produced this turn but not yet spent. */
+  available: number;
+  /** Persistent reserve, capped by STORED_ENERGY_CAP. */
+  stored: number;
 };
 
 export type EffectDefinition = {
@@ -33,10 +23,9 @@ export type EffectDefinition = {
 };
 
 export type ActionCost = {
-  tap?: boolean;
+  exhaust?: boolean;
   sacrificeSelf?: boolean;
-  genericMana?: number;
-  coloredMana?: Partial<Record<Color, number>>;
+  energy?: number;
   life?: number | {
     type: "CURRENT_LIFE_FRACTION";
     numerator: number;
@@ -48,7 +37,7 @@ export type ActionCost = {
 export type ActivatedAbility = {
   id: string;
   cost?: ActionCost;
-  requiresNoSummoningSickness?: boolean;
+  requiresStabilized?: boolean;
   requiresTargets?: TargetRequirement[];
   effect: EffectDefinition;
 };
@@ -65,9 +54,9 @@ export type TargetRequirement = {
 };
 
 export type CardFilter = {
-  cardTypes?: string[];
+  kinds?: CardKind[];
   subtypes?: string[];
-  keywords?: Keyword[];
+  traits?: Trait[];
   excludeSelf?: boolean;
   isToken?: boolean;
 };
@@ -82,18 +71,17 @@ export type CardDefinition = {
   };
   quantity?: number;
   isToken?: boolean;
-  manaCost?: string;
-  manaValue?: number;
-  colors?: Color[];
-  cardTypes?: string[];
+  energyCost?: number;
+  kinds?: CardKind[];
+  modifiers?: CardModifier[];
   subtypes?: string[];
   power?: number | null;
-  toughness?: number | null;
-  keywords?: Keyword[];
-  /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
-   * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
+  endurance?: number | null;
+  traits?: Trait[];
+  /** Player-facing text shown when a Host trigger of this card resolves. Kept as card data so
+   * new Host cards don't need a branch in useGameStore's trigger-message switch. */
   triggerMessage?: string;
-  entersTapped?: boolean;
+  entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
   additionalCost?: ActionCost;
   activatedAbilities?: ActivatedAbility[];
@@ -105,7 +93,6 @@ export type CardDefinition = {
     eachTargetMinimum?: number;
   };
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
-  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
   attachTo?: { targetRef: string };
   flags?: Record<string, boolean>;
 };
@@ -119,31 +106,31 @@ export type DeckList = {
   gameplayLandCount?: number;
   cards: CardDefinition[];
   tokens?: CardDefinition[];
-  /** Raw per-deck horde rules from the deck JSON; parsed by buildHordeRules at game start. */
+  /** Raw per-deck Host rules from the deck JSON; parsed by buildHostRules at game start. */
   rulesProfile?: Record<string, unknown>;
 };
 
-/** Per-deck Horde behavior. Defaults (HordeRules.ts) reproduce the classic Zombie-mode rules;
- *  a horde deck overrides them from its JSON `rulesProfile` — never from code. */
-export type HordeRulesProfile = {
-  /** Cards revealed on a normal Horde turn. */
+/** Per-deck Host behavior. Defaults (HostRules.ts) reproduce the current Zombie-mode rules;
+ *  a Host deck overrides them from its JSON `rulesProfile` — never from code. */
+export type HostRulesProfile = {
+  /** Cards revealed on a normal Host turn. */
   revealCount: number;
   /** Stop the normal reveal early when a non-token card is revealed. */
   stopOnNonToken: boolean;
-  /** One-time extra reveals on this Horde turn (0 disables). */
+  /** One-time extra reveals on this Host turn (0 disables). */
   miniSurgeTurn: number;
   miniSurgeExtraReveals: number;
-  /** Permanent surge from this Horde turn on. */
+  /** Permanent surge from this Host turn on. */
   surgeTurn: number;
   surgeTurnChaos: number;
   surgeExtraReveals: number;
   /** Optional stat bonus while in surge, e.g. the Zombie deck's +1/+0 to Zombies. */
-  surgeBonus?: { power: number; toughness: number; subtypes: string[] };
-  /** Combat damage the player must deal to mill one Horde card. */
-  damagePerMill: number;
-  /** Poison counters consumed to mill one Horde card at end of turn. */
-  poisonPerMill: number;
-  hordeCreaturesHaveHaste: boolean;
+  surgeBonus?: { power: number; endurance: number; subtypes: string[] };
+  /** Combat damage the Chronicler must deal to discard one Host Archive card. */
+  damagePerArchiveDiscard: number;
+  /** Poison counters consumed to discard one Host Archive card at end of turn. */
+  poisonPerArchiveDiscard: number;
+  hostEchosHaveImpetus: boolean;
   /** Token subtypes grouped/ordered by arrival wave (board layout and attack order). */
   swarmTokenSubtypes: string[];
 };
@@ -162,39 +149,37 @@ export type CardInstance = {
   controller: Side;
   zone: ZoneName;
   isToken: boolean;
-  manaCost: string;
-  manaValue: number;
-  colors: Color[];
-  cardTypes: string[];
+  energyCost: number;
+  kinds: CardKind[];
+  modifiers: CardModifier[];
   subtypes: string[];
   basePower: number;
-  baseToughness: number;
-  keywords: Keyword[];
-  chaosKeywords: Keyword[];
+  baseEndurance: number;
+  traits: Trait[];
+  chaosTraits: Trait[];
   triggerMessage?: string;
   effects: EffectDefinition[];
   additionalCost?: ActionCost;
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
-  tapped: boolean;
-  entersTapped: boolean;
-  summoningSickness: boolean;
-  /** Controller turn in which this permanent most recently entered the battlefield.
-   *  Used by pure battlefield layout to keep later Horde copies in a new visual stack. */
-  battlefieldEntryTurn?: number;
+  exhausted: boolean;
+  entersExhausted: boolean;
+  stabilizing: boolean;
+  /** Controller turn in which this permanent most recently entered the Field.
+   *  Used by pure Field layout to keep later Host copies in a new visual stack. */
+  fieldEntryTurn?: number;
   /** Number of player combats this permanent has actually attacked in. */
   attacksMade?: number;
   activatedThisTurn: boolean;
   damageMarked: number;
-  deathtouchDamage: boolean;
+  lethalDamage: boolean;
   counters: Record<string, number>;
   temporaryPower: number;
-  temporaryToughness: number;
+  temporaryEndurance: number;
   /** Stats that survive end-step cleanup and expire when the next player turn begins. */
   untilNextPlayerTurnPower?: number;
-  untilNextPlayerTurnToughness?: number;
-  temporaryKeywords: Keyword[];
-  chosenColor?: Color;
+  untilNextPlayerTurnEndurance?: number;
+  temporaryTraits: Trait[];
   xValuePaid?: number;
   attachTo?: { targetRef: string };
   attachedTo?: string;
@@ -204,13 +189,13 @@ export type CardInstance = {
 
 export type PlayerState = {
   life: number;
-  library: CardInstance[];
+  archive: CardInstance[];
   hand: CardInstance[];
-  battlefield: CardInstance[];
-  graveyard: CardInstance[];
-  exile: CardInstance[];
-  manaPool: ManaPool;
-  pendingStoredMana: number;
+  field: CardInstance[];
+  memory: CardInstance[];
+  oblivion: CardInstance[];
+  energyPool: EnergyPool;
+  pendingStoredEnergy: number;
   energyActionUsedThisTurn: boolean;
   /** Life paid as a cost during the current active turn. Reset whenever either side starts a turn. */
   lifePaidThisTurn: number;
@@ -218,25 +203,25 @@ export type PlayerState = {
   lifeLostThisTurn: number;
 };
 
-export type HordeState = {
-  library: CardInstance[];
-  battlefield: CardInstance[];
-  graveyard: CardInstance[];
-  exile: CardInstance[];
+export type HostState = {
+  archive: CardInstance[];
+  field: CardInstance[];
+  memory: CardInstance[];
+  oblivion: CardInstance[];
   poisonCounters: number;
   /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
   pendingCard?: CardInstance;
-  /** Extra normal reveal rounds requested by a Horde spell. HordeController consumes these
-   * inside the current turn; they never advance the Horde turn counter or add Surge reveals. */
+  /** Extra normal reveal rounds requested by a Host spell. HostController consumes these
+   * inside the current turn; they never advance the Host turn counter or add Surge reveals. */
   pendingRevealRounds?: number;
 };
 
 export type CombatState = {
   playerAttackers: string[];
-  hordeAttackers: string[];
+  hostAttackers: string[];
   blockers: Record<string, string[]>;
-  /** Damage captured when attackers are declared but deliberately held until the animated Horde
+  /** Damage captured when attackers are declared but deliberately held until the animated Host
    * attack sequence ends. Attacker ids make each attacker count once even with multiple blockers. */
   pendingDamageVolleys: Array<{
     sourceId?: string;
@@ -254,10 +239,10 @@ export type EventItem = {
   triggerController?: Side;
 };
 
-export type BattlefieldEntryRecord = {
+export type FieldEntryRecord = {
   instanceId: string;
   controller: Side;
-  cardTypes: string[];
+  kinds: CardKind[];
   subtypes: string[];
 };
 
@@ -265,24 +250,24 @@ export type GameState = {
   seed: string;
   difficulty: DifficultyMode;
   gameMode: GameMode;
-  hordeRules: HordeRulesProfile;
-  chaosMutations: Record<Side, Record<string, Keyword[]>>;
+  hostRules: HostRulesProfile;
+  chaosMutations: Record<Side, Record<string, Trait[]>>;
   currentRandomState: number;
-  hordeDeckOrderHash?: string;
+  hostDeckOrderHash?: string;
   activeSide: Side;
   phase: Phase;
   turnNumber: number;
-  hordeTurnNumber: number;
+  hostTurnNumber: number;
   setupTurnsRemaining: number;
-  setupCompletePendingHorde: boolean;
+  setupCompletePendingHost: boolean;
   openingHandAccepted: boolean;
   mulligansTaken: number;
   player: PlayerState;
-  horde: HordeState;
+  host: HostState;
   combat: CombatState;
   /** Permanents that entered since the current turn began. Rules may count entries even if the
    * permanent later changes zones; presentation and logs must not be used as rules history. */
-  battlefieldEntriesThisTurn: BattlefieldEntryRecord[];
+  fieldEntriesThisTurn: FieldEntryRecord[];
   eventQueue: EventItem[];
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of
@@ -299,6 +284,9 @@ export type CastOptions = {
    *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
   deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
+  /** Commits the cast and every non-fight effect, leaving the fight effect for a later
+   *  presentation impact. The store must resolve the deferred effect before unlocking play. */
+  deferFightResolution?: boolean;
 };
 
 export type AbilityOptions = {

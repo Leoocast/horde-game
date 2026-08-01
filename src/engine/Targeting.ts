@@ -1,9 +1,9 @@
-import type { CardInstance, GameState, Side, TargetRequirement } from "./GameTypes";
-import { getPowerToughness, matchesFilter } from "./StaticEffects";
+import type { CardFilter, CardInstance, GameState, Side, TargetRequirement } from "./GameTypes";
+import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { pickRandom } from "./RNG";
 
 export function allBattlefield(game: GameState): CardInstance[] {
-  return [...game.player.battlefield, ...game.horde.battlefield];
+  return [...game.player.field, ...game.host.field];
 }
 
 export function findPermanent(game: GameState, id: string): CardInstance | undefined {
@@ -18,10 +18,10 @@ export function targetCandidatesWithSelectedTargets(game: GameState, sourceSide:
   const wanted = req.controller === "SELF" ? sourceSide : req.controller === "OPPONENT" ? opponent(sourceSide) : undefined;
   return allBattlefield(game).filter((card) => {
     if (wanted && card.controller !== wanted) return false;
-    if (req.type.includes("CREATURE") && !card.cardTypes.includes("Creature")) return false;
-    if (req.type.includes("LAND") && !card.cardTypes.includes("Land")) return false;
-    const filters = req.filters as { cardTypes?: string[]; subtypes?: string[]; anyOf?: Array<{ cardTypes?: string[]; subtypes?: string[] }>; excludeTargetIds?: string[] } | undefined;
-    if (filters?.cardTypes?.length && !filters.cardTypes.every((type) => card.cardTypes.includes(type))) return false;
+    if (req.type.includes("ECHO") && !card.kinds.includes("ECHO")) return false;
+    if (req.type.includes("LAND") && !card.kinds.includes("SOURCE")) return false;
+    const filters = req.filters as (CardFilter & { anyOf?: CardFilter[]; excludeTargetIds?: string[] }) | undefined;
+    if (filters?.kinds?.length && !filters.kinds.every((type) => card.kinds.includes(type))) return false;
     if (filters?.subtypes?.length && !filters.subtypes.every((type) => card.subtypes.includes(type))) return false;
     if (filters?.anyOf?.length && !filters.anyOf.some((filter) => matchesFilter(card, filter))) return false;
     if (targetExcludedByPreviousSelection(card, filters?.excludeTargetIds, selectedTargets)) return false;
@@ -68,29 +68,29 @@ function targetExcludedByPreviousSelection(card: CardInstance, excludeTargetIds:
   return false;
 }
 
-export function chooseHordeTarget(game: GameState, kind: "destroy" | "damage", damage = 0): string | undefined {
-  const creatures = game.player.battlefield.filter((card) => card.cardTypes.includes("Creature"));
+export function chooseHostTarget(game: GameState, kind: "destroy" | "damage", damage = 0): string | undefined {
+  const creatures = game.player.field.filter((card) => card.kinds.includes("ECHO"));
   if (creatures.length === 0) return undefined;
   if (kind === "damage") {
-    const lethal = creatures.filter((card) => getPowerToughness(game, card).toughness - card.damageMarked <= damage);
+    const lethal = creatures.filter((card) => getPowerEndurance(game, card).endurance - card.damageMarked <= damage);
     if (lethal.length > 0) return bestCreature(game, lethal)?.instanceId;
   }
   return bestCreature(game, creatures)?.instanceId;
 }
 
 function bestCreature(game: GameState, cards: CardInstance[]): CardInstance | undefined {
-  const scored = cards.map((card) => ({ card, score: Number((card as unknown as { targetPriority?: number }).targetPriority ?? card.manaValue) }));
+  const scored = cards.map((card) => ({ card, score: Number((card as unknown as { targetPriority?: number }).targetPriority ?? card.energyCost) }));
   const max = Math.max(...scored.map((item) => item.score));
   const tied = scored.filter((item) => item.score === max).map((item) => item.card);
   return pickRandom(game, tied);
 }
 
 export function weakestCreature(game: GameState, side: Side): CardInstance | undefined {
-  const creatures = game[side].battlefield.filter((card) => card.cardTypes.includes("Creature"));
+  const creatures = game[side].field.filter((card) => card.kinds.includes("ECHO"));
   if (creatures.length === 0) return undefined;
   const scored = creatures.map((card) => {
-    const stats = getPowerToughness(game, card);
-    return { card, score: stats.power + stats.toughness };
+    const stats = getPowerEndurance(game, card);
+    return { card, score: stats.power + stats.endurance };
   });
   const min = Math.min(...scored.map((item) => item.score));
   const tied = scored.filter((item) => item.score === min).map((item) => item.card);
@@ -98,5 +98,5 @@ export function weakestCreature(game: GameState, side: Side): CardInstance | und
 }
 
 export function opponent(side: Side): Side {
-  return side === "player" ? "horde" : "player";
+  return side === "player" ? "host" : "player";
 }

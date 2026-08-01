@@ -2,7 +2,6 @@
   "schemaVersion": "1.0.0",
   "provider": "local",
   "defaults": {
-    "cacheKey": "mono-green-ramp-local-v1",
     "showFullCardImage": true
   },
   "cards": {

@@ -1,48 +1,48 @@
 import { create } from "zustand";
 import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameMode, GameState, Phase } from "../engine/GameTypes";
-import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHordeDeck, getPlayerDeck } from "../data/decks";
+import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHostDeck, getPlayerDeck } from "../data/decks";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { activateAbility as activateEngineAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
 import { lifeCostAmount } from "../engine/ActionCosts";
 import {
-  applyHordeAttackEvent,
-  beginHordeCombat,
-  buildHordeAttackEvents,
+  applyHostAttackEvent,
+  beginHostCombat,
+  buildHostAttackEvents,
   checkWinLoss,
   declareBlocker,
-  declareHordeAttackers,
-  finishHordeCombat,
-  isHordeAttackEventCurrent,
-  pendingHordeCombatDamageVolley,
-  refreshHordeAttackEvent,
-  resolvePendingHordeCombatDamageVolleys,
-  resolvePlayerAttackerLifesteal,
+  declareHostAttackers,
+  finishHostCombat,
+  isHostAttackEventCurrent,
+  pendingHostCombatDamageVolley,
+  refreshHostAttackEvent,
+  resolvePendingHostCombatDamageVolleys,
+  resolvePlayerAttackerDrain,
+  resolvePlayerAttackerPoison,
   resolvePlayerCombat,
   sortPlayerAttackersLeftToRight,
   togglePlayerAttacker,
-  type HordeAttackEvent,
+  type HostAttackEvent,
 } from "../engine/CombatResolver";
-import { finishHordeTurn, revealHordeCardFromTop, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
-import { canAttack, hasKeyword } from "../engine/Keywords";
-import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
-import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualEnterTargetTrigger, hasEffectPresentation, resolveEffect, triggerConditionMet } from "../engine/EffectResolver";
+import { finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
+import { canAttack, hasTrait } from "../engine/Traits";
+import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
+import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
 import { type StaticAura } from "../engine/StaticAuras";
 import { drainEventQueue } from "../engine/EventQueue";
-import { targetCandidates } from "../engine/Targeting";
-import type { TutorialStepId } from "../engine/Tutorial";
+import { targetCandidates, targetRequirementIsBuff } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { canPlayerRecycleEnergy, playerHandOverflow } from "../engine/GameRules";
 import {
   captureStaticAuraBeats,
-  hasEnterBattlefieldTrigger,
-  hordeSequenceEpoch,
-  resetHordeSequence,
-  scheduleHordeArrivalEffects,
-  scheduleQueuedHordeTriggers,
-  startHordeCombatSequence,
-} from "./hordeBeats";
+  hasInvokedTrigger,
+  hostSequenceEpoch,
+  resetHostSequence,
+  scheduleHostArrivalEffects,
+  scheduleQueuedHostTriggers,
+  startHostCombatSequence,
+} from "./hostBeats";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { advanceSmallpoxSequence, runSmallpoxSequence } from "./smallpoxSequence";
 import {
@@ -51,7 +51,7 @@ import {
   scheduleQueuedPlayerTriggers,
 } from "./playerBeats";
 import {
-  appendHordeMillAnimations,
+  appendHostMillAnimations,
   discardPauseInProgress,
   findBattlefieldCard,
   findTemporaryBuffedCardIds,
@@ -72,39 +72,49 @@ import {
   type CardVoiceCue,
   type CardVoiceEvent,
 } from "./cardVoiceInteractions";
+import {
+  buffAnimationVariantForCard,
+  type BuffAnimationVariant,
+} from "./buffAnimation";
+import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 
 export type GameStore = {
   game: GameState;
   gameSessionId: number;
-  hordeAttackAnimation?: HordeAttackAnimation;
+  hostAttackAnimation?: HostAttackAnimation;
   burnAnimation?: BurnAnimationState;
   burnImpactCardId?: string;
   burnImpactCardIds: string[];
   burnImpactEventId?: number;
   lifeDamageAnimationId?: number;
   lifePaymentAnimation?: LifePaymentAnimationState;
+  lifestealAttackAnimations: LifestealAttackAnimationState[];
+  poisonAttackAnimation?: PoisonAttackAnimationState;
+  poisonConsumeAnimation?: PoisonConsumeAnimationState;
   bloodPactAnimation?: BloodPactAnimationState;
   drainEssenceAnimation?: DrainEssenceAnimationState;
+  finalBanquetAnimation?: FinalBanquetAnimationState;
+  energyFlowAnimation?: EnergyFlowAnimationState;
   deathRevealCard?: CardInstance;
-  hordeSpellCard?: CardInstance;
-  /** Horde static auras whose announcement beat has not played yet. */
+  hostSpellCard?: CardInstance;
+  /** Host static auras whose announcement beat has not played yet. */
   pendingStaticAuras: StaticAura[];
   /** Stat bonus withheld from each card until its aura's beat plays. Presentation only. */
-  heldStaticAuraBonuses: Record<string, { power: number; toughness: number }>;
+  heldStaticAuraBonuses: Record<string, { power: number; endurance: number }>;
   playerAttackAnimation?: PlayerAttackAnimation;
-  resolvingHordeCombat: boolean;
+  resolvingHostCombat: boolean;
   summoningAnimationCount: number;
   pendingTriggeredEffectCount: number;
   pendingTriggeredEffectSourceId?: string;
-  hordeAutoTriggerCount: number;
+  hostAutoTriggerCount: number;
   playerAutoTriggerCount: number;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
-  hordeCombatVisualDamage?: Record<string, number>;
-  hordeCombatDeadCardIds: string[];
+  hostCombatVisualDamage?: Record<string, number>;
+  hostCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
-  hordeMillAnimationQueue: HordeMillAnimationItem[];
-  hordeMillPreviewCards: CardInstance[];
+  hostMillAnimationQueue: HostMillAnimationItem[];
+  hostMillPreviewCards: CardInstance[];
   playerDiscardAnimationQueue: PlayerDiscardAnimationItem[];
   landPlayAnimationQueue: LandPlayAnimationItem[];
   energyRecycleAnimation?: EnergyRecycleAnimation;
@@ -120,32 +130,32 @@ export type GameStore = {
   smallpoxSelection?: SmallpoxSelectionState;
   spellTargeting?: SpellTargetingState;
   spellFightAnimation?: SpellFightAnimationState;
+  brokenWingsAnimation?: BrokenWingsAnimationState;
   pendingSpellHandId?: string;
   buffAnimationCardIds: string[];
   buffAnimationEventId?: number;
+  buffAnimationVariant: BuffAnimationVariant;
   lifeBuffAnimationId?: number;
   selectedHandId?: string;
   selectedPlayerCreatureId?: string;
-  selectedHordeCreatureId?: string;
+  selectedHostCreatureId?: string;
   activeEffectCardId?: string;
   closingEffectCardId?: string;
   activatingEffectCardId?: string;
   hoveredCardId?: string;
   focusedCardId?: string;
-  tutorialAcknowledgedStepId?: TutorialStepId;
   seed: string;
   playerDeckId: string;
-  hordeDeckId: string;
-  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hordeDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
+  hostDeckId: string;
+  reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hostDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
   /** Plants an already-built GameState (Playground scenarios). Same store cleanup as `reset`. */
-  loadScenario: (game: GameState, deckIds: { playerDeckId: string; hordeDeckId: string }) => void;
+  loadScenario: (game: GameState, deckIds: { playerDeckId: string; hostDeckId: string }) => void;
   setSeed: (seed: string) => void;
   acceptOpeningHand: () => void;
   mulliganOpeningHand: () => void;
-  acknowledgeTutorialStep: (stepId: TutorialStepId) => void;
   selectHand: (id?: string) => void;
   selectPlayerCreature: (id?: string) => void;
-  selectHordeCreature: (id?: string) => void;
+  selectHostCreature: (id?: string) => void;
   selectActiveEffectCard: (id?: string) => void;
   triggerEffectActivationPulse: (id: string) => void;
   updateCounterTargetPointer: (x: number, y: number) => void;
@@ -168,7 +178,7 @@ export type GameStore = {
   setHoveredCardId: (id?: string) => void;
   setFocusedCardId: (id?: string) => void;
   advancePhase: (phase?: Phase) => void;
-  endPlayerTurn: () => void;
+  endPlayerTurn: (options?: { runHostAfter?: boolean }) => void;
   playLand: (id: string) => void;
   startEnergyRecycle: (id: string, origin: { x: number; y: number }) => void;
   setEnergyRecycleDragActive: (active: boolean) => void;
@@ -177,8 +187,16 @@ export type GameStore = {
   setBloodPactAnimationPhase: (id: string, phase: BloodPactAnimationState["phase"]) => void;
   completeBloodPactAnimation: (id: string) => void;
   completeLifePaymentAnimation: (id: string) => void;
+  completeLifestealAttackAnimation: (id: string) => void;
+  completePoisonAttackAnimation: (id: string) => void;
+  completePoisonConsumeAnimation: (id: string) => void;
   resolveDrainEssenceAnimation: (id: string) => void;
   completeDrainEssenceAnimation: (id: string) => void;
+  beginFinalBanquetStrike: (id: string) => void;
+  beginFinalBanquetImpact: (id: string) => void;
+  completeFinalBanquetAnimation: (id: string) => void;
+  resolveEnergyFlowAnimation: (id: string) => void;
+  completeEnergyFlowAnimation: (id: string) => void;
   activateAbility: (id: string, abilityId: string, options?: AbilityOptions) => void;
   toggleAttacker: (id: string) => void;
   attackAll: () => void;
@@ -187,12 +205,12 @@ export type GameStore = {
   endSummoningAnimation: () => void;
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
-  runHordeMain: () => void;
-  /** Playground only: one Horde card enters from the top of its library, with its beats, without
-   *  running a Horde turn. */
-  resolveHordeCardFromTop: () => void;
+  runHostMain: () => void;
+  /** Playground only: one Host card enters from the top of its Archive, with its beats, without
+   *  running a Host turn. */
+  resolveHostCardFromTop: () => void;
   completeSurgeTransition: () => void;
-  prepareHordeAttackers: () => void;
+  prepareHostAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
   startBlockDrag: (blockerId: string, x: number, y: number) => void;
@@ -201,21 +219,22 @@ export type GameStore = {
   startPlayerAttackDrag: (attackerId: string, x: number, y: number) => void;
   updatePlayerAttackDrag: (x: number, y: number) => void;
   cancelPlayerAttackDrag: () => void;
-  queueHordeMillPreview: (card: CardInstance) => void;
+  queueHostMillPreview: (card: CardInstance) => void;
   openCardContextMenu: (cardId: string, x: number, y: number) => void;
   closeCardContextMenu: () => void;
   completePlayerDiscardAnimation: (id: string) => void;
   materializeLandPlayAnimation: (id: string) => void;
   completeLandPlayAnimation: (id: string) => void;
-  resolveHordeCombat: () => void;
-  finishHordeTurn: () => void;
-  completeHordeMillAnimation: (id: string) => void;
-  triggerEndGame: (winner: "player" | "horde") => void;
+  resolveHostCombat: () => void;
+  finishHostTurn: () => void;
+  completeHostMillAnimation: (id: string) => void;
+  triggerEndGame: (winner: "player" | "host") => void;
+  stopGamePresentation: () => void;
 };
 
-const SEED_STORAGE_KEY = "horde-game-seed";
+const SEED_STORAGE_KEY = "horde-game-seed"; // audit-allow legacy-l46b-compatibility
 const defaultSeed = readStoredSeed();
-const HORDE_ATTACK_ANIMATION_MS = 500;
+const HOST_ATTACK_ANIMATION_MS = 500;
 const COMBAT_VOLLEY_LEAD_IN_MS = 360;
 const COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS = 220;
 const COMBAT_VOLLEY_IMPACT_MS = 638;
@@ -223,15 +242,24 @@ const COMBAT_VOLLEY_ANIMATION_MS = 1220;
 const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
 const COMBAT_VOLLEY_MAX_PROJECTILES = 6;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
-const PLAYER_ATTACK_LIFESTEAL_IMPACT_MS = 275;
-const HORDE_MILL_ANIMATION_MS = 720;
+const HOST_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
 const PLAYER_ATTACK_NEXT_AFTER_MILL_MS = 470;
 const SUMMONING_ANIMATION_SAFETY_CLEAR_MS = 900;
 const BLOOD_PACT_ANIMATION_SAFETY_CLEAR_MS = 2200;
 const LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS = 1100;
+const LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 1100;
+const POISON_ATTACK_ANIMATION_SAFETY_CLEAR_MS = 900;
+const POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS = 1200;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
+const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
+const ENERGY_FLOW_ANIMATION_SAFETY_CLEAR_MS = 1500;
+const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
+const SPELL_FIGHT_IMPACT_MS = 520;
+const SPELL_FIGHT_DEATH_FADE_MS = 260;
+const BROKEN_WINGS_IMPACT_MS = 420;
+const BROKEN_WINGS_DEATH_FADE_MS = 260;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
@@ -240,11 +268,23 @@ let bloodPactAnimationSafetyTimer: number | undefined;
 let bloodPactAfterCommit: (() => void) | undefined;
 let lifePaymentAnimationSafetyTimer: number | undefined;
 let lifePaymentAfterCommit: (() => void) | undefined;
+const lifestealAttackAnimationSafetyTimers = new Map<string, number>();
+let lifestealAttackAnimationEventId = 0;
+let poisonAttackAnimationSafetyTimer: number | undefined;
+let poisonAttackAnimationEventId = 0;
+let poisonConsumeAnimationSafetyTimer: number | undefined;
+let poisonConsumeRunHostAfterMill = false;
 let drainEssenceAnimationSafetyTimer: number | undefined;
 let drainEssenceCommit: (() => Partial<GameStore>) | undefined;
 let drainEssenceAfterCommit: (() => void) | undefined;
+let finalBanquetAnimationSafetyTimer: number | undefined;
+let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
+let energyFlowAnimationSafetyTimer: number | undefined;
+let energyFlowCommit: (() => Partial<GameStore>) | undefined;
+let energyFlowAfterCommit: (() => void) | undefined;
+let hostCombatSequenceId = 0;
 
-type HordeAttackAnimation = {
+type HostAttackAnimation = {
   attackerId: string;
   attackerDies: boolean;
   blockerId?: string;
@@ -260,12 +300,31 @@ type PlayerAttackAnimation = {
   eventId: number;
 };
 
+export type LifestealAttackAnimationState = {
+  id: string;
+  attackerId: string;
+  amount: number;
+};
+
+export type PoisonAttackAnimationState = {
+  id: string;
+  attackerId: string;
+  amount: number;
+};
+
+export type PoisonConsumeAnimationState = {
+  id: string;
+  amount: number;
+  millCount: number;
+  runHostAfter: boolean;
+};
+
 type AutoPaidLandAnimation = {
   ids: string[];
   eventId: number;
 };
 
-export type HordeMillAnimationItem = {
+export type HostMillAnimationItem = {
   id: string;
   card: CardInstance;
   preview?: boolean;
@@ -312,6 +371,22 @@ export type DrainEssenceAnimationState = {
   targetId: string;
   origin?: { left: number; top: number; width: number; height: number };
   phase: "extracting" | "resolved";
+};
+
+export type FinalBanquetAnimationState = {
+  id: string;
+  card: CardInstance;
+  targetId: string;
+  amount: number;
+  origin?: { left: number; top: number; width: number; height: number };
+  phase: "siphon" | "strike" | "impact";
+};
+
+export type EnergyFlowAnimationState = {
+  id: string;
+  sourceId: string;
+  amount: number;
+  phase: "travel" | "impact";
 };
 
 export type BurnAnimationState = {
@@ -381,47 +456,56 @@ export type SpellFightAnimationState = {
   eventId: number;
 };
 
+export type BrokenWingsAnimationState = {
+  id: string;
+  targetId: string;
+};
+
 /** Every piece of presentation state that must NOT survive into a new game. It lives outside
  *  `GameState` (animation queues, targeting, selections), so anything that swaps the game in has to
  *  clear it here — otherwise callbacks and beats from the previous match land on the new board. */
 function createCleanUiState(): Partial<GameStore> {
   return {
-    tutorialAcknowledgedStepId: undefined,
     selectedHandId: undefined,
     selectedPlayerCreatureId: undefined,
-    selectedHordeCreatureId: undefined,
+    selectedHostCreatureId: undefined,
     activeEffectCardId: undefined,
     closingEffectCardId: undefined,
     activatingEffectCardId: undefined,
     hoveredCardId: undefined,
     focusedCardId: undefined,
-    hordeAttackAnimation: undefined,
+    hostAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
     burnImpactCardIds: [],
     burnImpactEventId: undefined,
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
+    lifestealAttackAnimations: [],
+    poisonAttackAnimation: undefined,
+    poisonConsumeAnimation: undefined,
     bloodPactAnimation: undefined,
     drainEssenceAnimation: undefined,
+    finalBanquetAnimation: undefined,
+    energyFlowAnimation: undefined,
     deathRevealCard: undefined,
-    hordeSpellCard: undefined,
+    hostSpellCard: undefined,
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
     playerAttackAnimation: undefined,
-    resolvingHordeCombat: false,
+    resolvingHostCombat: false,
     summoningAnimationCount: 0,
     pendingTriggeredEffectCount: 0,
     pendingTriggeredEffectSourceId: undefined,
-    hordeAutoTriggerCount: 0,
+    hostAutoTriggerCount: 0,
     playerAutoTriggerCount: 0,
     surgeTransitionActive: false,
     surgeTransitionShown: false,
-    hordeCombatVisualDamage: undefined,
-    hordeCombatDeadCardIds: [],
+    hostCombatVisualDamage: undefined,
+    hostCombatDeadCardIds: [],
     specialDeadCardIds: [],
-    hordeMillAnimationQueue: [],
-    hordeMillPreviewCards: [],
+    hostMillAnimationQueue: [],
+    hostMillPreviewCards: [],
     playerDiscardAnimationQueue: [],
     landPlayAnimationQueue: [],
     energyRecycleAnimation: undefined,
@@ -437,43 +521,50 @@ function createCleanUiState(): Partial<GameStore> {
     smallpoxSelection: undefined,
     spellTargeting: undefined,
     spellFightAnimation: undefined,
+    brokenWingsAnimation: undefined,
     pendingSpellHandId: undefined,
     buffAnimationCardIds: [],
     buffAnimationEventId: undefined,
+    buffAnimationVariant: "default",
     lifeBuffAnimationId: undefined,
   };
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHordeDeck(DEFAULT_HORDE_DECK_ID), defaultSeed, 3),
+  game: createInitialGame(getPlayerDeck(DEFAULT_PLAYER_DECK_ID), getHostDeck(DEFAULT_HOST_DECK_ID), defaultSeed, 3),
   gameSessionId: 0,
-  hordeAttackAnimation: undefined,
+  hostAttackAnimation: undefined,
   burnAnimation: undefined,
   burnImpactCardId: undefined,
   burnImpactCardIds: [],
   burnImpactEventId: undefined,
   lifeDamageAnimationId: undefined,
   lifePaymentAnimation: undefined,
+  lifestealAttackAnimations: [],
+  poisonAttackAnimation: undefined,
+  poisonConsumeAnimation: undefined,
   bloodPactAnimation: undefined,
   drainEssenceAnimation: undefined,
+  finalBanquetAnimation: undefined,
+  energyFlowAnimation: undefined,
   deathRevealCard: undefined,
-  hordeSpellCard: undefined,
+  hostSpellCard: undefined,
   pendingStaticAuras: [],
   heldStaticAuraBonuses: {},
   playerAttackAnimation: undefined,
-  resolvingHordeCombat: false,
+  resolvingHostCombat: false,
   summoningAnimationCount: 0,
   pendingTriggeredEffectCount: 0,
   pendingTriggeredEffectSourceId: undefined,
-  hordeAutoTriggerCount: 0,
+  hostAutoTriggerCount: 0,
   playerAutoTriggerCount: 0,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
-  hordeCombatVisualDamage: undefined,
-  hordeCombatDeadCardIds: [],
+  hostCombatVisualDamage: undefined,
+  hostCombatDeadCardIds: [],
   specialDeadCardIds: [],
-  hordeMillAnimationQueue: [],
-  hordeMillPreviewCards: [],
+  hostMillAnimationQueue: [],
+  hostMillPreviewCards: [],
   playerDiscardAnimationQueue: [],
   landPlayAnimationQueue: [],
   energyRecycleAnimation: undefined,
@@ -489,41 +580,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
   smallpoxSelection: undefined,
   spellTargeting: undefined,
   spellFightAnimation: undefined,
+  brokenWingsAnimation: undefined,
   pendingSpellHandId: undefined,
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
+  buffAnimationVariant: "default",
   lifeBuffAnimationId: undefined,
-  tutorialAcknowledgedStepId: undefined,
   seed: defaultSeed,
   playerDeckId: DEFAULT_PLAYER_DECK_ID,
-  hordeDeckId: DEFAULT_HORDE_DECK_ID,
-  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hordeDeckId = get().hordeDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
-    clearBloodPactPresentation();
-    clearLifePaymentPresentation();
-    clearDrainEssencePresentation();
+  hostDeckId: DEFAULT_HOST_DECK_ID,
+  reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hostDeckId = get().hostDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
+    cancelScheduledPresentation();
     set((state) => {
-      resetHordeSequence();
-      resetPlayerTriggerSequence();
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
-      const next = createInitialGame(getPlayerDeck(playerDeckId), getHordeDeck(hordeDeckId), seed, setupTurns, difficulty, gameMode);
+      const next = createInitialGame(getPlayerDeck(playerDeckId), getHostDeck(hostDeckId), seed, setupTurns, difficulty, gameMode);
       return {
         ...createCleanUiState(),
         game: next,
         gameSessionId: state.gameSessionId + 1,
         seed,
         playerDeckId,
-        hordeDeckId,
+        hostDeckId,
       };
     });
   },
   loadScenario: (game, deckIds) => {
-    clearBloodPactPresentation();
-    clearLifePaymentPresentation();
-    clearDrainEssencePresentation();
+    cancelScheduledPresentation();
     set((state) => {
-      resetHordeSequence();
-      resetPlayerTriggerSequence();
       useAudioStore.getState().setMusicVariant("battle");
       return {
         ...createCleanUiState(),
@@ -531,7 +615,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gameSessionId: state.gameSessionId + 1,
         seed: game.seed,
         playerDeckId: deckIds.playerDeckId,
-        hordeDeckId: deckIds.hordeDeckId,
+        hostDeckId: deckIds.hostDeckId,
       };
     });
   },
@@ -561,10 +645,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });
   },
-  acknowledgeTutorialStep: (stepId) => set({ tutorialAcknowledgedStepId: stepId }),
   selectHand: (id) => set({ selectedHandId: id }),
   selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
-  selectHordeCreature: (id) => set({ selectedHordeCreatureId: id }),
+  selectHostCreature: (id) => set({ selectedHostCreatureId: id }),
   selectActiveEffectCard: (id) =>
     set(({ activeEffectCardId }) => {
       if (activeEffectCloseTimer) {
@@ -597,7 +680,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lockCounterTarget: (targetId) =>
     set(({ counterTargeting }) => {
       if (!counterTargeting) return {};
-      useAudioStore.getState().playSfx("playLand", { volume: 0.72 });
+      useAudioStore.getState().playSfx("playLand");
       return { counterTargeting: { ...counterTargeting, targetId } };
     }),
   deselectCounterTarget: () =>
@@ -624,7 +707,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
       const previousLife = next.player.life;
-      const manualTrigger = findManualEnterTargetTrigger(source);
+      const manualTrigger = findManualInvokedTargetTrigger(source);
       if (manualTrigger) {
         resolveEffect(next, manualTrigger.effect as EffectDefinition, {
           source,
@@ -635,14 +718,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
           },
         });
       }
-      useAudioStore.getState().playSfx("buff", { volume: 0.82 });
+      const buffVariant = buffAnimationVariantForCard(source.definitionId);
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(buffVariant));
       const lifeBeat = startLifeBuffBeat();
       return {
         game: next,
         counterTargeting: undefined,
         pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
         pendingTriggeredEffectSourceId: undefined,
-        ...startBuffBeat([target.instanceId]),
+        ...startBuffBeat(
+          [target.instanceId],
+          buffVariant,
+        ),
         lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
     }),
@@ -653,7 +740,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lockSmallpoxSelectionTarget: (targetId) =>
     set(({ smallpoxSelection }) => {
       if (!smallpoxSelection) return {};
-      useAudioStore.getState().playSfx("playLand", { volume: 0.72 });
+      useAudioStore.getState().playSfx("playLand");
       return { smallpoxSelection: { ...smallpoxSelection, targetId } };
     }),
   deselectSmallpoxSelectionTarget: () =>
@@ -673,11 +760,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     set({ smallpoxSelection: undefined, specialDeadCardIds: [targetId] });
-    useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+    useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
       set((state) => {
         const resolved = structuredClone(state.game) as GameState;
-        const target = resolved.player.battlefield.find((card) => card.instanceId === targetId);
+        const target = resolved.player.field.find((card) => card.instanceId === targetId);
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
@@ -685,7 +772,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }, 260);
   },
   selectHandLimitDiscard: (id) => {
-    if (id) useAudioStore.getState().playSfx("playLand", { volume: 0.68 });
+    if (id) useAudioStore.getState().playSfx("playLand");
     set({ handLimitSelectionId: id, hoveredCardId: undefined, focusedCardId: undefined });
   },
   confirmHandLimitDiscard: () => {
@@ -732,8 +819,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!valid) return {};
       const targets = { ...spellTargeting.targets, [req.id]: targetId };
       const nextStep = spellTargeting.stepIndex + 1;
-      useAudioStore.getState().playSfx(nextStep >= card.requiresTargets.length ? "playLand" : "buff", { volume: 0.68 });
-      const buffBeat = req.controller === "SELF" ? startBuffBeat([targetId]) : undefined;
+      useAudioStore.getState().playSfx("playLand");
+      const targetIsBuff = targetRequirementIsBuff(card, req);
+      const previewVariant = buffAnimationVariantForCard(card.definitionId, true);
+      const buffBeat = targetIsBuff && previewVariant !== "growth-preview"
+        ? startBuffBeat(
+            [targetId],
+            previewVariant,
+          )
+        : undefined;
       return {
         spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets },
         ...(buffBeat ?? {}),
@@ -748,20 +842,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const activeReq = card.requiresTargets[stepIndex];
       const targetReqIndex = activeReq && spellTargeting.targets[activeReq.id] ? stepIndex : Math.max(0, stepIndex - 1);
       const req = card.requiresTargets[targetReqIndex];
+      const removedTargetWasBuff = Boolean(req && targetRequirementIsBuff(card, req));
       const targets = { ...spellTargeting.targets };
       if (req) delete targets[req.id];
       return {
         spellTargeting: { ...spellTargeting, stepIndex: targetReqIndex, targets },
-        buffAnimationCardIds: req?.controller === "SELF" ? [] : get().buffAnimationCardIds,
+        buffAnimationCardIds: removedTargetWasBuff ? [] : get().buffAnimationCardIds,
+        buffAnimationVariant: removedTargetWasBuff ? "default" : get().buffAnimationVariant,
       };
     }),
-  cancelSpellTargeting: () => set({ spellTargeting: undefined, selectedHandId: undefined, focusedCardId: undefined, buffAnimationCardIds: [] }),
+  cancelSpellTargeting: () => set({
+    spellTargeting: undefined,
+    selectedHandId: undefined,
+    focusedCardId: undefined,
+    buffAnimationCardIds: [],
+    buffAnimationVariant: "default",
+  }),
   confirmSpellTargeting: () => set((state) => runConfirmSpellTargeting(state)),
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
   advancePhase: (phase) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       playDrawOneIfPlayerDrew(game, next);
@@ -774,17 +876,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitSelectionId: undefined,
       };
     }),
-  endPlayerTurn: () =>
+  endPlayerTurn: (options) =>
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
         return { handLimitDiscardActive: true, handLimitSelectionId: undefined };
       }
+      const poisonPerArchiveDiscard = game.hostRules.poisonPerArchiveDiscard;
+      const poisonMills = Math.floor(game.host.poisonCounters / poisonPerArchiveDiscard);
+      if (poisonMills > 0) {
+        const animation: PoisonConsumeAnimationState = {
+          id: `poison-consume-${Date.now()}`,
+          amount: poisonMills * poisonPerArchiveDiscard,
+          millCount: poisonMills,
+          runHostAfter: options?.runHostAfter === true,
+        };
+        schedulePoisonConsumeAnimationSafetyClear(animation.id);
+        useAudioStore.getState().playSfx("activateEffect");
+        return {
+          poisonConsumeAnimation: animation,
+          handLimitDiscardActive: false,
+          handLimitSelectionId: undefined,
+        };
+      }
       const next = endPlayerTurn(game);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) };
+      return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) };
     }),
   playLand: (id) =>
     set((state) => {
@@ -828,7 +947,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return {};
       }
       const card = state.game.player.hand.find((item) => item.instanceId === id);
-      if (!card?.cardTypes.includes("Land")) return {};
+      if (!card?.kinds.includes("SOURCE")) return {};
       if (!canPlayerRecycleEnergy(state.game)) {
         showActionToast(
           state.game.setupTurnsRemaining > 0
@@ -837,7 +956,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         );
         return {};
       }
-      useAudioStore.getState().playSfx("playLand", { volume: 0.62 });
+      useAudioStore.getState().playSfx("playLand");
       return {
         energyRecycleAnimation: {
           id: `energy-recycle-${card.instanceId}-${Date.now()}`,
@@ -856,7 +975,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!active) return {};
       const next = recycleEnergy(state.game, active.card.instanceId);
       const succeeded = next.lastActionResult?.ok === true;
-      if (succeeded) useAudioStore.getState().playSfx("drawOne", { volume: 0.84 });
+      if (succeeded) useAudioStore.getState().playSfx("drawOne");
       else showActionToast(next.lastActionResult?.reason);
       return {
         game: next,
@@ -942,6 +1061,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     afterCommit?.();
   },
+  completeLifestealAttackAnimation: (id) => {
+    set((state) => {
+      const timer = lifestealAttackAnimationSafetyTimers.get(id);
+      if (timer !== undefined && typeof window !== "undefined") window.clearTimeout(timer);
+      lifestealAttackAnimationSafetyTimers.delete(id);
+      if (!state.lifestealAttackAnimations.some((animation) => animation.id === id)) return {};
+      return {
+        lifestealAttackAnimations: state.lifestealAttackAnimations.filter((animation) => animation.id !== id),
+      };
+    });
+  },
+  completePoisonAttackAnimation: (id) => {
+    set((state) => {
+      if (state.poisonAttackAnimation?.id !== id) return {};
+      if (poisonAttackAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+        window.clearTimeout(poisonAttackAnimationSafetyTimer);
+      }
+      poisonAttackAnimationSafetyTimer = undefined;
+      return { poisonAttackAnimation: undefined };
+    });
+  },
+  completePoisonConsumeAnimation: (id) => {
+    const active = get().poisonConsumeAnimation;
+    if (active?.id !== id) return;
+    if (poisonConsumeAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+      window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+    }
+    poisonConsumeAnimationSafetyTimer = undefined;
+    const previous = get().game;
+    const next = endPlayerTurn(previous);
+    playDrawOneIfPlayerDrew(previous, next);
+    let millAnimationQueued = false;
+    set((state) => {
+      const hostMillAnimationQueue = appendHostMillAnimations(state, previous, next);
+      millAnimationQueued = hostMillAnimationQueue.length > 0;
+      return {
+        game: next,
+        poisonConsumeAnimation: undefined,
+        handLimitDiscardActive: false,
+        handLimitSelectionId: undefined,
+        hostMillAnimationQueue,
+      };
+    });
+    if (active.runHostAfter && millAnimationQueued) {
+      poisonConsumeRunHostAfterMill = true;
+    } else if (active.runHostAfter && typeof window !== "undefined") {
+      window.setTimeout(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
+          latest.runHostMain();
+        }
+      }, 0);
+    }
+  },
   resolveDrainEssenceAnimation: (id) => {
     const active = get().drainEssenceAnimation;
     if (active?.id !== id || active.phase === "resolved") return;
@@ -992,11 +1165,80 @@ export const useGameStore = create<GameStore>((set, get) => ({
       afterCommit?.();
     }
   },
+  beginFinalBanquetStrike: (id) =>
+    set((state) => {
+      if (state.finalBanquetAnimation?.id !== id || state.finalBanquetAnimation.phase === "strike") return {};
+      return {
+        finalBanquetAnimation: {
+          ...state.finalBanquetAnimation,
+          phase: "strike",
+        },
+      };
+    }),
+  beginFinalBanquetImpact: (id) =>
+    set((state) => {
+      const active = state.finalBanquetAnimation;
+      if (active?.id !== id || active.phase === "impact") return {};
+      return {
+        finalBanquetAnimation: {
+          ...active,
+          phase: "impact",
+        },
+        specialDeadCardIds: state.specialDeadCardIds.includes(active.targetId)
+          ? state.specialDeadCardIds
+          : [...state.specialDeadCardIds, active.targetId],
+      };
+    }),
+  completeFinalBanquetAnimation: (id) => {
+    const active = get().finalBanquetAnimation;
+    if (active?.id !== id) return;
+    if (finalBanquetAnimationSafetyTimer && typeof window !== "undefined") {
+      window.clearTimeout(finalBanquetAnimationSafetyTimer);
+      finalBanquetAnimationSafetyTimer = undefined;
+    }
+    const commit = finalBanquetCommit;
+    finalBanquetCommit = undefined;
+    const patch = commit?.() ?? {};
+    set({
+      ...patch,
+      finalBanquetAnimation: undefined,
+      pendingSpellHandId: undefined,
+      specialDeadCardIds: [],
+    });
+  },
+  resolveEnergyFlowAnimation: (id) => {
+    const active = get().energyFlowAnimation;
+    if (active?.id !== id || active.phase === "impact") return;
+    const commit = energyFlowCommit;
+    const afterCommit = energyFlowAfterCommit;
+    energyFlowCommit = undefined;
+    energyFlowAfterCommit = undefined;
+    set({
+      ...(commit?.() ?? {}),
+      energyFlowAnimation: {
+        ...active,
+        phase: "impact",
+      },
+    });
+    afterCommit?.();
+  },
+  completeEnergyFlowAnimation: (id) => {
+    const active = get().energyFlowAnimation;
+    if (active?.id !== id) return;
+    if (active.phase === "travel") get().resolveEnergyFlowAnimation(id);
+    if (energyFlowAnimationSafetyTimer && typeof window !== "undefined") {
+      window.clearTimeout(energyFlowAnimationSafetyTimer);
+      energyFlowAnimationSafetyTimer = undefined;
+    }
+    set({ energyFlowAnimation: undefined });
+  },
   activateAbility: (id, abilityId, options) => {
     let shouldSchedulePlayerTriggers = false;
     let startedLifePaymentAnimationId: string | undefined;
+    let startedEnergyFlowAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
+      const source = state.game.player.field.find((card) => card.instanceId === id);
       const next = activateEngineAbility(state.game, id, abilityId, {
         ...options,
         deferReactiveTriggers: true,
@@ -1014,6 +1256,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
           ? () => scheduleQueuedPlayerTriggers()
           : undefined;
       }
+      const storedEnergyGained = next.lastActionResult?.ok === true
+        ? Math.max(0, next.player.energyPool.stored - state.game.player.energyPool.stored)
+        : 0;
+      const usesEnergyFlowAnimation = Boolean(
+        storedEnergyGained > 0 &&
+        source &&
+        (
+          source.definitionId === "llanowar_elves" ||
+          source.definitionId === "druid_of_the_cowl" ||
+          source.definitionId === "tithe_acolyte"
+        ),
+      );
+      if (usesEnergyFlowAnimation) {
+        const animationId = `energy-flow-${source!.instanceId}-${Date.now()}`;
+        const staged = structuredClone(next) as GameState;
+        staged.player.energyPool = { ...state.game.player.energyPool };
+        startedEnergyFlowAnimationId = animationId;
+        energyFlowCommit = () => {
+          const committed = structuredClone(useGameStore.getState().game) as GameState;
+          committed.player.energyPool.stored += storedEnergyGained;
+          return {
+            game: committed,
+            playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
+          };
+        };
+        energyFlowAfterCommit = shouldSchedulePlayerTriggers && paidLife === 0
+          ? () => scheduleQueuedPlayerTriggers()
+          : undefined;
+        return {
+          game: staged,
+          activeEffectCardId: undefined,
+          lifePaymentAnimation: paidLife > 0
+            ? { id: startedLifePaymentAnimationId!, amount: paidLife }
+            : undefined,
+          energyFlowAnimation: {
+            id: animationId,
+            sourceId: source!.instanceId,
+            amount: storedEnergyGained,
+            phase: "travel",
+          },
+          playerAutoTriggerCount: 0,
+        };
+      }
       return {
         game: next,
         activeEffectCardId: undefined,
@@ -1023,9 +1308,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerAutoTriggerCount: shouldSchedulePlayerTriggers ? 1 : 0,
       };
     });
+    if (startedEnergyFlowAnimationId) {
+      scheduleEnergyFlowAnimationSafetyClear(startedEnergyFlowAnimationId);
+    }
     if (startedLifePaymentAnimationId) {
       scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
-    } else if (shouldSchedulePlayerTriggers) {
+    } else if (!startedEnergyFlowAnimationId && shouldSchedulePlayerTriggers) {
       scheduleQueuedPlayerTriggers();
     }
   },
@@ -1042,11 +1330,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (game.activeSide !== "player" || game.phase !== "combat") return {};
       const next = structuredClone(game) as GameState;
       const selected = new Set(next.combat.playerAttackers);
-      for (const card of next.player.battlefield) {
-        if (!card.cardTypes.includes("Creature") || selected.has(card.instanceId)) continue;
+      for (const card of next.player.field) {
+        if (!card.kinds.includes("ECHO") || selected.has(card.instanceId)) continue;
         if (!canAttack(next, card)) continue;
         selected.add(card.instanceId);
-        if (!hasKeyword(next, card, "VIGILANCE")) card.tapped = true;
+        if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
@@ -1057,8 +1345,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       const attackers = new Set(next.combat.playerAttackers);
-      for (const card of next.player.battlefield) {
-        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "VIGILANCE")) card.tapped = false;
+      for (const card of next.player.field) {
+        if (attackers.has(card.instanceId) && !hasTrait(next, card, "ALERT")) card.exhausted = false;
       }
       next.combat.playerAttackers = [];
       next.log.unshift("Player cancels attackers.");
@@ -1069,10 +1357,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolvePlayerCombat: () => set((state) => {
     const next = resolvePlayerCombat(state.game);
     const gainedLife = next.player.life > state.game.player.life;
-    if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+    if (gainedLife) useAudioStore.getState().playSfx("buff");
     return {
       game: next,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, state.game, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, state.game, next),
       ...(gainedLife ? startLifeBuffBeat() : {}),
     };
   }),
@@ -1086,7 +1374,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (attackers.length === 0) {
       const resolved = resolvePlayerCombat(game);
       const next = advancePhase(resolved, "end");
-      set((state) => ({ game: next, selectedPlayerCreatureId: undefined, hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next) }));
+      set((state) => ({ game: next, selectedPlayerCreatureId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) }));
       return;
     }
 
@@ -1094,7 +1382,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const attackVoiceCues = new Map(
       resolveCardVoiceCueBatch(
         attackers.flatMap((attackerId) => {
-          const card = game.player.battlefield.find((candidate) => candidate.instanceId === attackerId);
+          const card = game.player.field.find((candidate) => candidate.instanceId === attackerId);
           return card
             ? [{
                 type: "ATTACKS" as const,
@@ -1110,33 +1398,63 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const attackerMillCards = previewMillCards.filter((item) => item.attackerIndex === index);
       const startAt = elapsed;
       window.setTimeout(() => {
-        useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+        useAudioStore.getState().playSfx("attack");
         const voiceCue = attackVoiceCues.get(attackerId);
         if (voiceCue) playCardVoiceCue(voiceCue);
         set({ playerAttackAnimation: { attackerId, eventId: index } });
       }, startAt);
       window.setTimeout(() => {
         useGameStore.setState((state) => {
-          const next = resolvePlayerAttackerLifesteal(state.game, attackerId);
-          if (next.player.life <= state.game.player.life) return {};
-          useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-          return { game: next, ...startLifeBuffBeat() };
+          const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
+          const lifeGain = afterLifesteal.player.life - state.game.player.life;
+          const next = resolvePlayerAttackerPoison(afterLifesteal, attackerId);
+          const poisonGain = next.host.poisonCounters - state.game.host.poisonCounters;
+          let lifestealAnimation: LifestealAttackAnimationState | undefined;
+          let poisonAnimation: PoisonAttackAnimationState | undefined;
+          if (lifeGain > 0) {
+            lifestealAttackAnimationEventId += 1;
+            lifestealAnimation = {
+              id: `lifesteal-attack-${lifestealAttackAnimationEventId}`,
+              attackerId,
+              amount: lifeGain,
+            };
+            scheduleLifestealAttackAnimationSafetyClear(lifestealAnimation.id);
+            useAudioStore.getState().playSfx("buff");
+          }
+          if (poisonGain > 0) {
+            poisonAttackAnimationEventId += 1;
+            poisonAnimation = {
+              id: `poison-attack-${poisonAttackAnimationEventId}`,
+              attackerId,
+              amount: poisonGain,
+            };
+            schedulePoisonAttackAnimationSafetyClear(poisonAnimation.id);
+          }
+          if (!lifestealAnimation && !poisonAnimation) return {};
+          return {
+            game: next,
+            ...(lifeGain > 0 ? startLifeBuffBeat() : {}),
+            lifestealAttackAnimations: lifestealAnimation
+              ? [...state.lifestealAttackAnimations, lifestealAnimation]
+              : state.lifestealAttackAnimations,
+            poisonAttackAnimation: poisonAnimation ?? state.poisonAttackAnimation,
+          };
         });
-      }, startAt + PLAYER_ATTACK_LIFESTEAL_IMPACT_MS);
+      }, startAt + PLAYER_ATTACK_MILL_START_MS);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
-          useGameStore.getState().queueHordeMillPreview(preview.card);
-        }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
+          useGameStore.getState().queueHostMillPreview(preview.card);
+        }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
       elapsed +=
         attackerMillCards.length > 0
-          ? PLAYER_ATTACK_MILL_START_MS + (attackerMillCards.length - 1) * (HORDE_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
+          ? PLAYER_ATTACK_MILL_START_MS + (attackerMillCards.length - 1) * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
           : PLAYER_ATTACK_ANIMATION_MS;
     });
 
     window.setTimeout(() => {
       const latest = get().game;
-      const resolved = resolvePlayerCombat(latest, { skipLifesteal: true });
+      const resolved = resolvePlayerCombat(latest, { skipDrain: true, skipPoison: true });
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
@@ -1144,22 +1462,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
         selectedPlayerCreatureId: undefined,
-        hordeMillPreviewCards: [],
-        hordeMillAnimationQueue: previewMillCards.length > 0 ? state.hordeMillAnimationQueue : appendHordeMillAnimations(state, latest, next),
+        hostMillPreviewCards: [],
+        hostMillAnimationQueue: previewMillCards.length > 0 ? state.hostMillAnimationQueue : appendHostMillAnimations(state, latest, next),
       }));
     }, elapsed + 40);
   },
-  runHordeMain: () => {
+  runHostMain: () => {
     const state = get();
     if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
     const { game } = state;
     if (!state.surgeTransitionShown) {
-      const preview = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
-      if (hordeInSurge(preview)) {
+      const preview = runHostMainPhase(game, { deferInvokedTriggers: true });
+      if (hostInSurge(preview)) {
         set({
           surgeTransitionActive: true,
           surgeTransitionShown: true,
-          selectedHordeCreatureId: undefined,
+          selectedHostCreatureId: undefined,
           selectedPlayerCreatureId: undefined,
           hoveredCardId: undefined,
           focusedCardId: undefined,
@@ -1167,83 +1485,83 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
     }
-    const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
-    const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
-    const enteredCards = main.horde.battlefield.filter((card) => !previousHordeBattlefieldIds.has(card.instanceId));
-    const triggerCards = enteredCards.filter(hasEnterBattlefieldTrigger);
-    if (main.horde.pendingCard) {
-      const pendingCard = main.horde.pendingCard;
+    const previousHostBattlefieldIds = new Set(game.host.field.map((card) => card.instanceId));
+    const main = runHostMainPhase(game, { deferInvokedTriggers: true });
+    const enteredCards = main.host.field.filter((card) => !previousHostBattlefieldIds.has(card.instanceId));
+    const triggerCards = enteredCards.filter(hasInvokedTrigger);
+    if (main.host.pendingCard) {
+      const pendingCard = main.host.pendingCard;
       set({
         game: main,
-        selectedHordeCreatureId: undefined,
+        selectedHostCreatureId: undefined,
         selectedPlayerCreatureId: undefined,
-        hordeAutoTriggerCount: triggerCards.length,
+        hostAutoTriggerCount: triggerCards.length,
         summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-        hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
+        hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
-      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
+      scheduleHostArrivalEffects(enteredCards, () => runSmallpoxSequence(pendingCard));
       return;
     }
-    if (main.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
+    if (main.host.field.length > game.host.field.length) useAudioStore.getState().playSfx("draw");
     set({
       game: main,
-      selectedHordeCreatureId: undefined,
+      selectedHostCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
-      hordeAutoTriggerCount: triggerCards.length,
+      hostAutoTriggerCount: triggerCards.length,
       summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, game, main),
+      hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
     });
     // Before any frame renders the new creatures: hold back the buffs they just gained so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
-    scheduleHordeArrivalEffects(triggerCards, () => startHordeCombatSequence());
+    scheduleHostArrivalEffects(enteredCards, () => startHostCombatSequence());
   },
   /**
-   * Playground only. Same beats as `runHordeMain` — enter triggers, static aura capture, mill
+   * Playground only. Same beats as `runHostMain` — enter triggers, static aura capture, mill
    * animations, the Smallpox hand-off — but for exactly one card and without starting combat.
-   * Playing a single Goblin token in the lab used to run a whole Zombie Horde turn, which is not
+   * Playing a single Goblin token in the lab used to run a whole Zombie Host turn, which is not
    * what "play this card" means anywhere.
    */
-  resolveHordeCardFromTop: () => {
+  resolveHostCardFromTop: () => {
     const state = get();
     const { game } = state;
-    const previousIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
-    const next = revealHordeCardFromTop(game, { deferEnterBattlefieldTriggers: true });
+    const previousIds = new Set(game.host.field.map((card) => card.instanceId));
+    const next = revealHostCardFromTop(game, { deferInvokedTriggers: true });
     if (next.lastActionResult?.ok === false) {
       set({ game: next });
       return;
     }
-    const entered = next.horde.battlefield.filter((card) => !previousIds.has(card.instanceId));
-    const triggerCards = entered.filter(hasEnterBattlefieldTrigger);
-    const pendingCard = next.horde.pendingCard;
+    const entered = next.host.field.filter((card) => !previousIds.has(card.instanceId));
+    const triggerCards = entered.filter(hasInvokedTrigger);
+    const pendingCard = next.host.pendingCard;
 
     if (entered.length > 0) useAudioStore.getState().playSfx("draw");
     set({
       game: next,
-      selectedHordeCreatureId: undefined,
+      selectedHostCreatureId: undefined,
       selectedPlayerCreatureId: undefined,
-      hordeAutoTriggerCount: triggerCards.length,
+      hostAutoTriggerCount: triggerCards.length,
       summoningAnimationCount: state.summoningAnimationCount + entered.length,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, game, next),
     });
     // Before any frame renders the new permanent: hold back the buffs it just granted so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
     if (pendingCard) {
-      scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
+      scheduleHostArrivalEffects(entered, () => runSmallpoxSequence(pendingCard));
       return;
     }
-    scheduleHordeArrivalEffects(triggerCards, () => scheduleQueuedHordeTriggers());
+    scheduleHostArrivalEffects(entered, () => scheduleQueuedHostTriggers());
   },
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;
     set({ surgeTransitionActive: false });
-    get().runHordeMain();
+    get().runHostMain();
   },
-  prepareHordeAttackers: () => {
+  prepareHostAttackers: () => {
     if (discardPauseInProgress(get())) return;
-    startHordeCombatSequence();
+    startHostCombatSequence();
   },
   declareBlocker: (blockerId, attackerId) =>
     set(({ game }) => {
@@ -1258,7 +1576,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       next.combat.blockers = {};
-      return { game: next, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined, blockDrag: undefined };
+      return { game: next, selectedHostCreatureId: undefined, selectedPlayerCreatureId: undefined, blockDrag: undefined };
     }),
   startBlockDrag: (blockerId, x, y) => set({ blockDrag: { blockerId, startX: x, startY: y, x, y } }),
   updateBlockDrag: (x, y) =>
@@ -1272,19 +1590,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerAttackDrag: playerAttackDrag ? { ...playerAttackDrag, x, y } : undefined,
     })),
   cancelPlayerAttackDrag: () => set({ playerAttackDrag: undefined }),
-  queueHordeMillPreview: (card) =>
+  queueHostMillPreview: (card) =>
     set((state) => ({
-      hordeMillAnimationQueue: [
-        ...state.hordeMillAnimationQueue,
+      hostMillAnimationQueue: [
+        ...state.hostMillAnimationQueue,
         {
-          id: `horde-mill-preview-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          id: `host-mill-preview-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           card,
           preview: true,
         },
       ],
-      hordeMillPreviewCards: state.hordeMillPreviewCards.some((item) => item.instanceId === card.instanceId)
-        ? state.hordeMillPreviewCards
-        : [...state.hordeMillPreviewCards, card],
+      hostMillPreviewCards: state.hostMillPreviewCards.some((item) => item.instanceId === card.instanceId)
+        ? state.hostMillPreviewCards
+        : [...state.hostMillPreviewCards, card],
     })),
   openCardContextMenu: (cardId, x, y) => set({ cardContextMenu: { cardId, x, y }, focusedCardId: undefined }),
   closeCardContextMenu: () => set({ cardContextMenu: undefined }),
@@ -1301,65 +1619,89 @@ export const useGameStore = create<GameStore>((set, get) => ({
       landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
       summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
-  completeHordeMillAnimation: (id) =>
-    set((state) => ({
-      hordeMillAnimationQueue: state.hordeMillAnimationQueue.filter((item) => item.id !== id),
-    })),
-  resolveHordeCombat: () => {
+  completeHostMillAnimation: (id) => {
+    let shouldRunHost = false;
+    set((state) => {
+      const hostMillAnimationQueue = state.hostMillAnimationQueue.filter((item) => item.id !== id);
+      if (hostMillAnimationQueue.length === 0 && poisonConsumeRunHostAfterMill) {
+        poisonConsumeRunHostAfterMill = false;
+        shouldRunHost = true;
+      }
+      return { hostMillAnimationQueue };
+    });
+    if (shouldRunHost && typeof window !== "undefined") {
+      window.setTimeout(() => {
+        const latest = useGameStore.getState();
+        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
+          latest.runHostMain();
+        }
+      }, 0);
+    }
+  },
+  resolveHostCombat: () => {
     const state = get();
     if (discardPauseInProgress(state)) return;
-    const { game, hordeAttackAnimation, playerAttackAnimation, burnAnimation } = state;
-    if (hordeAttackAnimation || playerAttackAnimation || burnAnimation) return;
+    const { game, hostAttackAnimation, playerAttackAnimation, burnAnimation } = state;
+    if (hostAttackAnimation || playerAttackAnimation || burnAnimation) return;
 
-    const attackEvents = buildHordeAttackEvents(game);
+    const attackEvents = buildHostAttackEvents(game);
+    const sequenceId = ++hostCombatSequenceId;
     if (attackEvents.length === 0) {
-      runPendingHordeCombatVolleyOrFinish();
+      runPendingHostCombatVolleyOrFinish(sequenceId);
       return;
     }
-    set({ resolvingHordeCombat: true, selectedHordeCreatureId: undefined, selectedPlayerCreatureId: undefined });
-    runHordeCombatEventSequence(attackEvents, 0);
+    set({ resolvingHostCombat: true, selectedHostCreatureId: undefined, selectedPlayerCreatureId: undefined });
+    runHostCombatEventSequence(attackEvents, 0, sequenceId);
   },
-  finishHordeTurn: () =>
+  finishHostTurn: () =>
     set((state) => {
       if (discardPauseInProgress(state)) return {};
       const { game } = state;
-      const next = finishHordeTurn(game);
+      const next = finishHostTurn(game);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, hordeAutoTriggerCount: 0 };
+      return { game: next, hostAutoTriggerCount: 0 };
     }),
-  triggerEndGame: (winner) =>
+  triggerEndGame: (winner) => {
     set((state) => {
       const next = structuredClone(state.game) as GameState;
       next.winner = winner;
-      return { game: next };
-    }),
+      return { ...createCleanUiState(), game: next };
+    });
+    get().stopGamePresentation();
+  },
+  stopGamePresentation: () => {
+    cancelScheduledPresentation();
+    useAudioStore.getState().stopAllSfx();
+    set(createCleanUiState());
+  },
 }));
 
-function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number): void {
+function runHostCombatEventSequence(events: HostAttackEvent[], index: number, sequenceId: number): void {
+  if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
   const plannedEvent = events[index];
   if (!plannedEvent) {
-    runPendingHordeCombatVolleyOrFinish();
+    runPendingHostCombatVolleyOrFinish(sequenceId);
     return;
   }
   const currentGame = useGameStore.getState().game;
-  if (!isHordeAttackEventCurrent(currentGame, plannedEvent)) {
-    runHordeCombatEventSequence(events, index + 1);
+  if (!isHostAttackEventCurrent(currentGame, plannedEvent)) {
+    runHostCombatEventSequence(events, index + 1, sequenceId);
     return;
   }
-  const event = refreshHordeAttackEvent(currentGame, plannedEvent);
+  const event = refreshHostAttackEvent(currentGame, plannedEvent);
   if (!event) {
-    runHordeCombatEventSequence(events, index + 1);
+    runHostCombatEventSequence(events, index + 1, sequenceId);
     return;
   }
-  useAudioStore.getState().playSfx("attack", { volume: 0.75 });
+  useAudioStore.getState().playSfx("attack");
   const blocker = event.blockerId
-    ? currentGame.player.battlefield.find((card) => card.instanceId === event.blockerId)
+    ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
-  if (event.blockerDies) useAudioStore.getState().playSfx("defend", { volume: 0.68 });
+  if (event.blockerDies) useAudioStore.getState().playSfx("defend");
   useGameStore.setState({
-    hordeCombatVisualDamage: nextVisualDamage(event),
-    hordeAttackAnimation: {
+    hostCombatVisualDamage: nextVisualDamage(event),
+    hostAttackAnimation: {
       attackerId: event.attackerId,
       attackerDies: event.attackerDies,
       blockerId: event.blockerId,
@@ -1372,27 +1714,37 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number):
   });
 
   window.setTimeout(() => {
+    if (sequenceId !== hostCombatSequenceId) return;
+    let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
-      const next = applyHordeAttackEvent(previous, event);
+      const next = applyHostAttackEvent(previous, event);
+      // Combat is presented one impact at a time. Declare a lethal impact immediately instead of
+      // waiting for finishHostCombat after every remaining attacker has played its animation.
+      checkWinLoss(next);
+      gameEnded = Boolean(next.winner);
       const gainedLife = next.player.life > previous.player.life;
-      if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+      if (gainedLife) useAudioStore.getState().playSfx("buff");
       notifyDiscardEffects(previous, next);
+      if (gameEnded) return { ...createCleanUiState(), game: next };
       return {
         game: next,
-        hordeCombatDeadCardIds: nextDeadCardIds(event),
+        hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
-  }, HORDE_ATTACK_ANIMATION_MS - 35);
+    if (gameEnded) useGameStore.getState().stopGamePresentation();
+  }, HOST_ATTACK_ANIMATION_MS - 35);
 
   window.setTimeout(() => {
-    useGameStore.setState({ hordeAttackAnimation: undefined });
+    if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+    useGameStore.setState({ hostAttackAnimation: undefined });
     scheduleQueuedCombatReactions(() => {
-      useGameStore.setState({ hordeCombatDeadCardIds: [] });
-      runHordeCombatEventSequence(events, index + 1);
+      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      useGameStore.setState({ hostCombatDeadCardIds: [] });
+      runHostCombatEventSequence(events, index + 1, sequenceId);
     });
-  }, HORDE_ATTACK_ANIMATION_MS);
+  }, HOST_ATTACK_ANIMATION_MS);
 }
 
 function scheduleQueuedCombatReactions(onComplete: () => void): void {
@@ -1400,7 +1752,7 @@ function scheduleQueuedCombatReactions(onComplete: () => void): void {
     scheduleQueuedPlayerTriggers(() => scheduleQueuedCombatReactions(onComplete));
     return;
   }
-  scheduleQueuedHordeTriggers(() => {
+  scheduleQueuedHostTriggers(() => {
     if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
       scheduleQueuedCombatReactions(onComplete);
       return;
@@ -1409,34 +1761,35 @@ function scheduleQueuedCombatReactions(onComplete: () => void): void {
   });
 }
 
-function runPendingHordeCombatVolleyOrFinish(): void {
+function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
+  if (combatSequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
   const state = useGameStore.getState();
-  const volley = pendingHordeCombatDamageVolley(state.game);
+  const volley = pendingHostCombatDamageVolley(state.game);
   if (!volley || volley.damage <= 0) {
-    finishAnimatedHordeCombat();
+    finishAnimatedHostCombat();
     return;
   }
 
-  const sequenceId = hordeSequenceEpoch();
+  const sequenceId = hostSequenceEpoch();
   const source = volley.sourceId
-    ? state.game.horde.battlefield.find((card) => card.instanceId === volley.sourceId)
+    ? state.game.host.field.find((card) => card.instanceId === volley.sourceId)
     : undefined;
   const projectileCount = Math.max(1, Math.min(COMBAT_VOLLEY_MAX_PROJECTILES, volley.attackerCount));
   const volleyDelay = (projectileCount - 1) * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
 
-  useGameStore.setState({ hordeAutoTriggerCount: 1 });
+  useGameStore.setState({ hostAutoTriggerCount: 1 });
   if (source) {
-    useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+    useAudioStore.getState().playSfx("activateEffect");
     useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
     useToastStore.getState().pushToast({
-      title: uiText("toast.hordeEffect"),
+      title: uiText("toast.hostEffect"),
       message: uiText("toast.cardTrigger", { card: uiCardName(source) }),
-      tone: "horde",
+      tone: "host",
     });
   }
 
   window.setTimeout(() => {
-    if (sequenceId !== hordeSequenceEpoch()) return;
+    if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
     useGameStore.setState({
       burnAnimation: {
         id: `combat-volley-${Date.now()}`,
@@ -1449,52 +1802,57 @@ function runPendingHordeCombatVolleyOrFinish(): void {
     for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {
       const projectileDelay = projectileIndex * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
       window.setTimeout(() => {
-        if (sequenceId !== hordeSequenceEpoch()) return;
-        useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx), { volume: 0.64 });
+        if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
+        useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
       }, COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS + projectileDelay);
 
       window.setTimeout(() => {
-        if (sequenceId !== hordeSequenceEpoch()) return;
-        useAudioStore.getState().playSfx(fireballHitSfx, { volume: 0.72 });
+        if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
+        useAudioStore.getState().playSfx(fireballHitSfx);
         if (projectileIndex !== projectileCount - 1) return;
-        useGameStore.setState((current) => ({
-          game: resolvePendingHordeCombatDamageVolleys(current.game),
-          lifeDamageAnimationId: Date.now(),
-        }));
+        let gameEnded = false;
+        useGameStore.setState((current) => {
+          const next = resolvePendingHostCombatDamageVolleys(current.game);
+          gameEnded = Boolean(next.winner);
+          return gameEnded
+            ? { ...createCleanUiState(), game: next }
+            : { game: next, lifeDamageAnimationId: Date.now() };
+        });
+        if (gameEnded) useGameStore.getState().stopGamePresentation();
       }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
     }
 
     window.setTimeout(() => {
-      if (sequenceId !== hordeSequenceEpoch()) return;
+      if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
       useGameStore.setState({ burnAnimation: undefined });
-      finishAnimatedHordeCombat();
+      finishAnimatedHostCombat();
     }, COMBAT_VOLLEY_ANIMATION_MS + volleyDelay);
   }, COMBAT_VOLLEY_LEAD_IN_MS);
 }
 
-function finishAnimatedHordeCombat(): void {
+function finishAnimatedHostCombat(): void {
   const previous = useGameStore.getState().game;
-  const resolved = finishHordeCombat(previous, { deferTriggeredEvents: true });
+  const resolved = finishHostCombat(previous, { deferTriggeredEvents: true });
   const next = advancePhase(resolved, "end");
   notifyDiscardEffects(previous, next);
   useGameStore.setState({
     game: next,
-    hordeAttackAnimation: undefined,
+    hostAttackAnimation: undefined,
     burnAnimation: undefined,
     burnImpactCardId: undefined,
     burnImpactCardIds: [],
     deathRevealCard: undefined,
-    hordeSpellCard: undefined,
+    hostSpellCard: undefined,
     // Failsafe: an aura whose beat never got to play must not keep its buff hidden forever.
     pendingStaticAuras: [],
     heldStaticAuraBonuses: {},
-    resolvingHordeCombat: false,
-    hordeCombatVisualDamage: undefined,
-    hordeCombatDeadCardIds: [],
-    selectedHordeCreatureId: undefined,
+    resolvingHostCombat: false,
+    hostCombatVisualDamage: undefined,
+    hostCombatDeadCardIds: [],
+    selectedHostCreatureId: undefined,
     selectedPlayerCreatureId: undefined,
   });
-  scheduleQueuedHordeTriggers();
+  scheduleQueuedHostTriggers();
 }
 
 function pickRandomSfx(ids: SfxId[]): SfxId {
@@ -1528,6 +1886,28 @@ function clearLifePaymentPresentation(): void {
   lifePaymentAfterCommit = undefined;
 }
 
+function clearLifestealAttackPresentation(): void {
+  if (typeof window !== "undefined") {
+    for (const timer of lifestealAttackAnimationSafetyTimers.values()) window.clearTimeout(timer);
+  }
+  lifestealAttackAnimationSafetyTimers.clear();
+}
+
+function clearPoisonAttackPresentation(): void {
+  if (poisonAttackAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(poisonAttackAnimationSafetyTimer);
+  }
+  poisonAttackAnimationSafetyTimer = undefined;
+}
+
+function clearPoisonConsumePresentation(): void {
+  if (poisonConsumeAnimationSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+  }
+  poisonConsumeAnimationSafetyTimer = undefined;
+  poisonConsumeRunHostAfterMill = false;
+}
+
 function clearDrainEssencePresentation(): void {
   if (drainEssenceAnimationSafetyTimer && typeof window !== "undefined") {
     window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1535,6 +1915,49 @@ function clearDrainEssencePresentation(): void {
   drainEssenceAnimationSafetyTimer = undefined;
   drainEssenceCommit = undefined;
   drainEssenceAfterCommit = undefined;
+}
+
+function clearFinalBanquetPresentation(): void {
+  if (finalBanquetAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(finalBanquetAnimationSafetyTimer);
+  }
+  finalBanquetAnimationSafetyTimer = undefined;
+  finalBanquetCommit = undefined;
+}
+
+function clearEnergyFlowPresentation(): void {
+  if (energyFlowAnimationSafetyTimer && typeof window !== "undefined") {
+    window.clearTimeout(energyFlowAnimationSafetyTimer);
+  }
+  energyFlowAnimationSafetyTimer = undefined;
+  energyFlowCommit = undefined;
+  energyFlowAfterCommit = undefined;
+}
+
+function cancelScheduledPresentation(): void {
+  hostCombatSequenceId += 1;
+  resetHostSequence();
+  resetPlayerTriggerSequence();
+
+  if (typeof window !== "undefined") {
+    if (activeEffectCloseTimer !== undefined) window.clearTimeout(activeEffectCloseTimer);
+    if (effectActivationPulseTimer !== undefined) window.clearTimeout(effectActivationPulseTimer);
+    if (summoningAnimationSafetyTimer !== undefined) window.clearTimeout(summoningAnimationSafetyTimer);
+    if (landPlaySummoningSafetyTimer !== undefined) window.clearTimeout(landPlaySummoningSafetyTimer);
+  }
+  activeEffectCloseTimer = undefined;
+  effectActivationPulseTimer = undefined;
+  summoningAnimationSafetyTimer = undefined;
+  landPlaySummoningSafetyTimer = undefined;
+
+  clearBloodPactPresentation();
+  clearLifePaymentPresentation();
+  clearLifestealAttackPresentation();
+  clearPoisonAttackPresentation();
+  clearPoisonConsumePresentation();
+  clearDrainEssencePresentation();
+  clearFinalBanquetPresentation();
+  clearEnergyFlowPresentation();
 }
 
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
@@ -1552,6 +1975,36 @@ function scheduleLifePaymentAnimationSafetyClear(id: string): void {
   }, LIFE_PAYMENT_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleLifestealAttackAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  const previousTimer = lifestealAttackAnimationSafetyTimers.get(id);
+  if (previousTimer !== undefined) window.clearTimeout(previousTimer);
+  const timer = window.setTimeout(() => {
+    useGameStore.getState().completeLifestealAttackAnimation(id);
+  }, LIFESTEAL_ATTACK_ANIMATION_SAFETY_CLEAR_MS);
+  lifestealAttackAnimationSafetyTimers.set(id, timer);
+}
+
+function schedulePoisonAttackAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (poisonAttackAnimationSafetyTimer !== undefined) {
+    window.clearTimeout(poisonAttackAnimationSafetyTimer);
+  }
+  poisonAttackAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completePoisonAttackAnimation(id);
+  }, POISON_ATTACK_ANIMATION_SAFETY_CLEAR_MS);
+}
+
+function schedulePoisonConsumeAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (poisonConsumeAnimationSafetyTimer !== undefined) {
+    window.clearTimeout(poisonConsumeAnimationSafetyTimer);
+  }
+  poisonConsumeAnimationSafetyTimer = window.setTimeout(() => {
+    useGameStore.getState().completePoisonConsumeAnimation(id);
+  }, POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
   if (typeof window === "undefined") return;
   if (drainEssenceAnimationSafetyTimer) window.clearTimeout(drainEssenceAnimationSafetyTimer);
@@ -1563,15 +2016,41 @@ function scheduleDrainEssenceAnimationSafetyClear(id: string): void {
   }, DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS);
 }
 
+function scheduleFinalBanquetAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (finalBanquetAnimationSafetyTimer) window.clearTimeout(finalBanquetAnimationSafetyTimer);
+  finalBanquetAnimationSafetyTimer = window.setTimeout(() => {
+    const store = useGameStore.getState();
+    if (store.finalBanquetAnimation?.id !== id) return;
+    store.completeFinalBanquetAnimation(id);
+  }, FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS);
+}
+
+function scheduleEnergyFlowAnimationSafetyClear(id: string): void {
+  if (typeof window === "undefined") return;
+  if (energyFlowAnimationSafetyTimer) window.clearTimeout(energyFlowAnimationSafetyTimer);
+  energyFlowAnimationSafetyTimer = window.setTimeout(() => {
+    const store = useGameStore.getState();
+    if (store.energyFlowAnimation?.id !== id) return;
+    store.completeEnergyFlowAnimation(id);
+  }, ENERGY_FLOW_ANIMATION_SAFETY_CLEAR_MS);
+}
+
 function combatResolutionInProgress(state: GameStore): boolean {
   return Boolean(
     state.playerAttackAnimation ||
-      state.hordeAttackAnimation ||
+      state.hostAttackAnimation ||
       state.burnAnimation ||
       state.lifePaymentAnimation ||
+      state.lifestealAttackAnimations.length > 0 ||
+      state.poisonConsumeAnimation ||
       state.bloodPactAnimation ||
       state.drainEssenceAnimation ||
-      state.resolvingHordeCombat ||
+      state.finalBanquetAnimation ||
+      state.energyFlowAnimation ||
+      state.pendingSpellHandId ||
+      state.spellFightAnimation ||
+      state.resolvingHostCombat ||
       state.playerAutoTriggerCount > 0 ||
       state.energyRecycleAnimation ||
       discardPauseInProgress(state),
@@ -1605,14 +2084,14 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
   let previousMill = 0;
 
   attackers.forEach((attackerId, attackerIndex) => {
-    const attacker = game.player.battlefield.find((card) => card.instanceId === attackerId);
+    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
     if (!attacker) return;
-    totalDamage += getPowerToughness(game, attacker).power;
-    const nextMill = Math.floor(totalDamage / game.hordeRules.damagePerMill);
+    totalDamage += getPowerEndurance(game, attacker).power;
+    const nextMill = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
     const newMill = nextMill - previousMill;
     previousMill = nextMill;
     for (let index = 0; index < newMill; index += 1) {
-      const card = game.horde.library[previews.length];
+      const card = game.host.archive[previews.length];
       if (card) previews.push({ attackerIndex, cardIndexInHit: index, card });
     }
   });
@@ -1621,17 +2100,17 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
 }
 
 function findMarkedCreatureIds(game: GameState): string[] {
-  return [...game.player.battlefield, ...game.horde.battlefield]
+  return [...game.player.field, ...game.host.field]
     .filter((card) => {
-      if (!card.cardTypes.includes("Creature")) return false;
-      const { toughness } = getPowerToughness(game, card);
-      return card.damageMarked >= toughness || card.deathtouchDamage;
+      if (!card.kinds.includes("ECHO")) return false;
+      const { endurance } = getPowerEndurance(game, card);
+      return card.damageMarked >= endurance || card.lethalDamage;
     })
     .map((card) => card.instanceId);
 }
 
-function hasManualEnterTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
-  return Boolean(card && findManualEnterTargetTrigger(card));
+function hasManualInvokedTargetTrigger(card?: GameState["player"]["hand"][number]): boolean {
+  return Boolean(card && findManualInvokedTargetTrigger(card));
 }
 
 function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation: string): boolean {
@@ -1648,21 +2127,21 @@ function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation:
   });
 }
 
-function findCardCastReactionSources(game: GameState, card: CardInstance): CardInstance[] {
-  const previewEvent: EventItem = { id: "preview-card-cast", type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } };
-  return game.horde.battlefield.filter((source) =>
+function findCardPlayedReactionSources(game: GameState, card: CardInstance): CardInstance[] {
+  const previewEvent: EventItem = { id: "preview-card-played", type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } };
+  return game.host.field.filter((source) =>
     source.effects.some(
       (effect) =>
         effect.type === "TRIGGERED_ABILITY" &&
-        effect.trigger === "CARD_CAST" &&
+        effect.trigger === "CARD_PLAYED" &&
         !effectNeedsManualTarget(effect.effect) &&
         triggerConditionMet(game, effect.condition as Record<string, unknown> | undefined, source, previewEvent),
     ),
   );
 }
 
-function cardCastReactionMessage(card: CardInstance): string {
-  const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "CARD_CAST");
+function cardPlayedReactionMessage(card: CardInstance): string {
+  const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "CARD_PLAYED");
   const effect = trigger?.effect as EffectDefinition | undefined;
   const inner = effect?.type === "SEQUENCE"
     ? ((effect.effects as EffectDefinition[] | undefined)?.find((item) => EFFECT_ANNOUNCEMENTS[String(item.type)] === "createsTokens") ?? effect)
@@ -1671,7 +2150,7 @@ function cardCastReactionMessage(card: CardInstance): string {
   return uiText("toast.cardTrigger", { card: uiCardName(card) });
 }
 
-const CARD_CAST_REACTION_RESOLVE_MS = 620;
+const CARD_PLAYED_REACTION_RESOLVE_MS = 620;
 const MANUAL_TRIGGER_AFTER_REACTION_MS = 420;
 
 const MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS = 60;
@@ -1698,7 +2177,7 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
     window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS);
     return;
   }
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+  useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
   window.setTimeout(() => {
     useGameStore.setState({
@@ -1714,17 +2193,17 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
 }
 
 // Card already entered play (or resolved) synchronously with `deferReactiveTriggers`; this only
-// resolves the Horde's reaction to that cast (e.g. Noosegraf Mob), so it can glow and finish
-// *after* the card is already visible, without delaying the cast itself. Horde resolves before
+// resolves the Host's reaction to that cast (e.g. Noosegraf Mob), so it can glow and finish
+// *after* the card is already visible, without delaying the cast itself. Host resolves before
 // any manual trigger on the just-cast card (APNAP: non-active player's trigger goes on top of the stack).
-function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {
-  useGameStore.setState((state) => ({ hordeAutoTriggerCount: state.hordeAutoTriggerCount + 1 }));
-  useAudioStore.getState().playSfx("activateEffect", { volume: 0.82 });
+function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {
+  useGameStore.setState((state) => ({ hostAutoTriggerCount: state.hostAutoTriggerCount + 1 }));
+  useAudioStore.getState().playSfx("activateEffect");
   for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
   useToastStore.getState().pushToast({
-    title: uiText("toast.hordeEffect"),
-    message: sources.length === 1 ? cardCastReactionMessage(sources[0]) : uiText("toast.hordeResolves"),
-    tone: "horde",
+    title: uiText("toast.hostEffect"),
+    message: sources.length === 1 ? cardPlayedReactionMessage(sources[0]) : uiText("toast.hostResolves"),
+    tone: "host",
   });
   window.setTimeout(() => {
     useGameStore.setState((state) => {
@@ -1732,21 +2211,21 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       const next = structuredClone(previous) as GameState;
       drainEventQueue(next);
       const triggeredBuffCardIds = findTemporaryBuffedCardIds(previous, next);
-      if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+      if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff");
       const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
-      const newHordeCreatures = next.horde.battlefield.filter((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
-      if (newHordeCreatures.length > 0) useAudioStore.getState().playSfx(monsterSfx(newHordeCreatures[0]));
+      const newHostCreatures = next.host.field.filter((card) => !previous.host.field.some((old) => old.instanceId === card.instanceId));
+      if (newHostCreatures.length > 0) useAudioStore.getState().playSfx(monsterSfx(newHostCreatures[0]));
       notifyDiscardEffects(previous, next);
       return {
         game: next,
-        hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
-        summoningAnimationCount: state.summoningAnimationCount + newHordeCreatures.length,
-        hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+        hostAutoTriggerCount: Math.max(0, state.hostAutoTriggerCount - 1),
+        summoningAnimationCount: state.summoningAnimationCount + newHostCreatures.length,
+        hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
         ...(buffBeat ?? {}),
       };
     });
     if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
-  }, CARD_CAST_REACTION_RESOLVE_MS);
+  }, CARD_PLAYED_REACTION_RESOLVE_MS);
 }
 
 function buildCastCardPatch(
@@ -1758,9 +2237,9 @@ function buildCastCardPatch(
   const { game } = state;
   const card = game.player.hand.find((item) => item.instanceId === id);
   const usesBloodPactAnimation = Boolean(card && effectsUseAnimation(card.effects, "BLOOD_PACT"));
-  const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
-  const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
-  const reactionSources = card ? findCardCastReactionSources(game, card) : [];
+  const sfx = card && card.kinds.includes("ECHO") ? monsterSfx(card) : undefined;
+  const readySourceIds = new Set(game.player.field.filter((item) => item.kinds.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
+  const reactionSources = card ? findCardPlayedReactionSources(game, card) : [];
   const next = castCard(game, id, {
     ...options,
     deferPlayerTriggers: Boolean(card && lifeCostAmount(card.additionalCost, game.player.life) > 0),
@@ -1778,23 +2257,33 @@ function buildCastCardPatch(
     ? Math.max(0, next.player.lifePaidThisTurn - game.player.lifePaidThisTurn)
     : 0;
   const triggeredBuffCardIds = findTemporaryBuffedCardIds(game, next);
+  const triggeredBuffVariant =
+    triggeredBuffCardIds
+      .map((cardId) => findBattlefieldCard(next, cardId))
+      .map((buffedCard) => buffAnimationVariantForCard(buffedCard?.definitionId))
+      .find((variant) => variant !== "default") ??
+    "default";
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
-  if (castSucceeded && card) playBattlefieldEntryVoiceInteraction(game, next, card.instanceId);
-  if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
+  if (castSucceeded && card) playInvokedVoiceInteraction(game, next, card.instanceId);
+  if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend");
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
-  if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-  const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
+  if (triggeredBuffCardIds.length > 0) {
+    useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant));
+  }
+  const buffBeat = triggeredBuffCardIds.length > 0
+    ? startBuffBeat(triggeredBuffCardIds, triggeredBuffVariant)
+    : undefined;
   const autoPaidLandIds = castSucceeded
-    ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+    ? next.player.field.filter((item) => item.kinds.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
-  const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
-  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery"));
+  const manualTriggeredCard = hasManualInvokedTargetTrigger(card) && castSucceeded ? card : undefined;
+  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.kinds.includes("SPELL") && !card.kinds.includes("SPELL"));
   if (startsSummoningAnimation) scheduleSummoningAnimationSafetyClear();
   const continueAfterPlayerTriggers = () => {
     if (reactionSources.length > 0) {
-      scheduleCardCastReaction(reactionSources, manualTriggeredCard);
+      scheduleCardPlayedReaction(reactionSources, manualTriggeredCard);
     } else if (manualTriggeredCard) {
       scheduleManualTriggerOverlay(manualTriggeredCard, 420);
     }
@@ -1824,7 +2313,7 @@ function buildCastCardPatch(
       hoveredCardId: undefined,
       focusedCardId: undefined,
       activeEffectCardId: undefined,
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, game, next),
+      hostMillAnimationQueue: appendHostMillAnimations(state, game, next),
       lifeDamageAnimationId: lostLife && paidLife === 0 && !bloodPactAnimation ? Date.now() : state.lifeDamageAnimationId,
       lifePaymentAnimation,
       bloodPactAnimation,
@@ -1853,17 +2342,24 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
+  const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
+  const usesBrokenWingsAnimation = card.definitionId === "broken_wings";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (
     latest: GameState,
-    presentation: { deferContinuation?: boolean } = {},
+    presentation: {
+      deferContinuation?: boolean;
+      suppressLifeLossPresentation?: boolean;
+      deferFightResolution?: boolean;
+    } = {},
   ) => {
-    const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
-    const reactionSources = findCardCastReactionSources(latest, card);
+    const readySourceIds = new Set(latest.player.field.filter((item) => item.kinds.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
+    const reactionSources = findCardPlayedReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
       deferPlayerTriggers: lifeCostAmount(card.additionalCost, latest.player.life) > 0 || isTargetDamageSpell || isDestroySpell,
       deferReactiveTriggers: reactionSources.length > 0 || isDestroySpell,
+      deferFightResolution: presentation.deferFightResolution,
     });
     const castSucceeded = next.lastActionResult?.ok === true;
     const lostLife = castSucceeded && next.player.life < latest.player.life;
@@ -1873,25 +2369,35 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const gainedLife = castSucceeded && next.player.life > latest.player.life;
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
-    if (castSucceeded) playBattlefieldEntryVoiceInteraction(latest, next, card.instanceId);
-    if (lostLife && paidLife === 0) useAudioStore.getState().playSfx("defend", { volume: 0.62 });
-    if (gainedLife) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
+    if (castSucceeded) playInvokedVoiceInteraction(latest, next, card.instanceId);
+    if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
+      useAudioStore.getState().playSfx("defend");
+    }
+    if (gainedLife) useAudioStore.getState().playSfx("buff");
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
-    if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff", { volume: 0.72 });
-    const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
+    const triggeredBuffVariant = buffAnimationVariantForCard(card.definitionId);
+    if (triggeredBuffCardIds.length > 0) {
+      useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant));
+    }
+    const buffBeat = triggeredBuffCardIds.length > 0
+      ? startBuffBeat(
+          triggeredBuffCardIds,
+          triggeredBuffVariant,
+        )
+      : undefined;
     const autoPaidLandIds = castSucceeded
-      ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+      ? next.player.field.filter((item) => item.kinds.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
     const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
     const lifeBuffBeat = gainedLife ? startLifeBuffBeat() : undefined;
     const continueAfterPlayerTriggers = () => {
-      if (reactionSources.length > 0) scheduleCardCastReaction(reactionSources, undefined);
+      if (reactionSources.length > 0) scheduleCardPlayedReaction(reactionSources, undefined);
     };
     const continueAfterPayment = () => {
       if (isDestroySpell && castSucceeded) {
         // Destruction can queue opposing death reactions before a LIFE_LOST reaction. Let the
         // shared runner preserve that queue order, then continue with reactions to the cast itself.
-        window.setTimeout(() => scheduleQueuedHordeTriggers(continueAfterPlayerTriggers), 0);
+        window.setTimeout(() => scheduleQueuedHostTriggers(continueAfterPlayerTriggers), 0);
       } else if (playerTriggersQueued) {
         // `resolveSpell` runs inside a Zustand state update. Start the player beat on the next task
         // so it reads the just-committed LIFE_LOST event instead of the previous store snapshot.
@@ -1916,8 +2422,10 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       spellFightAnimation: undefined,
       hoveredCardId: undefined,
       focusedCardId: undefined,
-      hordeMillAnimationQueue: appendHordeMillAnimations(useGameStore.getState(), latest, next),
-      lifeDamageAnimationId: lostLife && paidLife === 0 ? Date.now() : useGameStore.getState().lifeDamageAnimationId,
+      hostMillAnimationQueue: appendHostMillAnimations(useGameStore.getState(), latest, next),
+      lifeDamageAnimationId: lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation
+        ? Date.now()
+        : useGameStore.getState().lifeDamageAnimationId,
       lifePaymentAnimation,
       playerAutoTriggerCount: playerTriggersQueued ? 1 : useGameStore.getState().playerAutoTriggerCount,
       autoPaidLandAnimation,
@@ -1957,9 +2465,82 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       focusedCardId: undefined,
     };
   }
+  if (usesFinalBanquetAnimation) {
+    const targetId = String(targets.targetCreature ?? "");
+    const target = game.host.field.find((candidate) => candidate.instanceId === targetId);
+    if (!target) return {};
+    const sourceRect = typeof document === "undefined"
+      ? undefined
+      : (
+          document.querySelector<HTMLElement>(`[data-spell-source-card-id="${handId}"]`) ??
+          document.querySelector<HTMLElement>(`[data-hand-card-id="${handId}"]`)
+        )?.getBoundingClientRect();
+    const animationId = `final-banquet-${card.instanceId}-${Date.now()}`;
+    finalBanquetCommit = () =>
+      resolveSpell(useGameStore.getState().game, { suppressLifeLossPresentation: true });
+    scheduleFinalBanquetAnimationSafetyClear(animationId);
+    return {
+      finalBanquetAnimation: {
+        id: animationId,
+        card,
+        targetId,
+        amount: Math.max(0, getPowerEndurance(game, target).power),
+        origin: sourceRect
+          ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
+          : undefined,
+        phase: "siphon",
+      },
+      spellTargeting: undefined,
+      spellFightAnimation: undefined,
+      pendingSpellHandId: handId,
+      selectedHandId: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
+    };
+  }
   if (!isFightSpell) {
     if (isDestroySpell && destroyTargetIds.length > 0) {
-      useAudioStore.getState().playSfx("attack", { volume: 0.72 });
+      if (usesBrokenWingsAnimation) {
+        const animationId = `broken-wings-${card.instanceId}-${Date.now()}`;
+        const gameSessionId = state.gameSessionId;
+        window.setTimeout(() => {
+          const current = useGameStore.getState();
+          if (
+            current.gameSessionId !== gameSessionId ||
+            current.pendingSpellHandId !== handId ||
+            current.brokenWingsAnimation?.id !== animationId
+          ) return;
+          useAudioStore.getState().playSfx("attack");
+          useGameStore.setState({ specialDeadCardIds: destroyTargetIds });
+
+          window.setTimeout(() => {
+            const latest = useGameStore.getState();
+            if (
+              latest.gameSessionId !== gameSessionId ||
+              latest.pendingSpellHandId !== handId ||
+              latest.brokenWingsAnimation?.id !== animationId
+            ) return;
+            useGameStore.setState({
+              ...resolveSpell(latest.game),
+              brokenWingsAnimation: undefined,
+              specialDeadCardIds: [],
+              pendingSpellHandId: undefined,
+            });
+          }, BROKEN_WINGS_DEATH_FADE_MS);
+        }, BROKEN_WINGS_IMPACT_MS);
+        return {
+          spellTargeting: undefined,
+          selectedHandId: undefined,
+          focusedCardId: undefined,
+          pendingSpellHandId: handId,
+          brokenWingsAnimation: {
+            id: animationId,
+            targetId: destroyTargetIds[0],
+          },
+          specialDeadCardIds: [],
+        };
+      }
+      useAudioStore.getState().playSfx("attack");
       window.setTimeout(() => {
         useGameStore.setState((state) => ({
           ...resolveSpell(state.game),
@@ -1976,7 +2557,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       };
     }
     if (isTargetDamageSpell) {
-      useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+      useAudioStore.getState().playSfx("attack");
       const resolved = resolveSpell(game);
       const deadCardIds = findMarkedCreatureIds(resolved.game);
       if (deadCardIds.length > 0) {
@@ -1998,7 +2579,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       };
     }
     if (isSourceDamageSpell) {
-      useAudioStore.getState().playSfx("attack", { volume: 0.76 });
+      useAudioStore.getState().playSfx("attack");
       window.setTimeout(() => {
         useGameStore.setState(({ game }) => {
           const deadCardIds = findMarkedCreatureIds(game);
@@ -2011,7 +2592,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
             destroyMarkedCreatures(next);
             return { game: next, specialDeadCardIds: [] };
           });
-          scheduleQueuedHordeTriggers();
+          scheduleQueuedHostTriggers();
         }, 260);
       }, 520);
     }
@@ -2023,40 +2604,70 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       spellFightAnimation: isSourceDamageSpell ? { friendlyId, enemyId, enemyMoves: false, eventId: Date.now() } : undefined,
     };
   }
-  useAudioStore.getState().playSfx("attack", { volume: 0.76 });
-  window.setTimeout(() => {
-    const resolved = resolveSpell(useGameStore.getState().game);
-    const deadCardIds = findMarkedCreatureIds(resolved.game);
-    useGameStore.setState({ ...resolved, specialDeadCardIds: deadCardIds });
-    if (deadCardIds.length > 0) {
+  const staged = resolveSpell(game, { deferFightResolution: true });
+  const castSucceeded = staged.game?.lastActionResult?.ok === true;
+  if (castSucceeded) {
+    window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (current.pendingSpellHandId !== handId) return;
+      useAudioStore.getState().playSfx("attack");
+      useGameStore.setState({
+        spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
+      });
+
       window.setTimeout(() => {
-        useGameStore.setState(({ game }) => {
-          const next = structuredClone(game) as GameState;
-          destroyMarkedCreatures(next);
-          return { game: next, specialDeadCardIds: [] };
+        const impactState = useGameStore.getState();
+        if (impactState.pendingSpellHandId !== handId) return;
+        const next = structuredClone(impactState.game) as GameState;
+        const source =
+          next.player.memory.find((candidate) => candidate.instanceId === handId) ??
+          card;
+        const fightEffects = card.effects.filter((effect) => hasEffectPresentation([effect], "fight"));
+        resolveEffects(next, fightEffects, {
+          source,
+          side: "player",
+          targets,
         });
-        scheduleQueuedHordeTriggers();
-      }, 260);
-    }
-  }, 520);
+        const deadCardIds = findMarkedCreatureIds(next);
+        useGameStore.setState({
+          game: next,
+          spellFightAnimation: undefined,
+          pendingSpellHandId: undefined,
+          specialDeadCardIds: deadCardIds,
+        });
+        if (deadCardIds.length > 0) {
+          window.setTimeout(() => {
+            useGameStore.setState(({ game: latest }) => {
+              const resolvedDeaths = structuredClone(latest) as GameState;
+              destroyMarkedCreatures(resolvedDeaths);
+              return { game: resolvedDeaths, specialDeadCardIds: [] };
+            });
+            scheduleQueuedHostTriggers();
+          }, SPELL_FIGHT_DEATH_FADE_MS);
+        }
+      }, SPELL_FIGHT_IMPACT_MS);
+    }, SPELL_FIGHT_BUFF_LEAD_IN_MS);
+  }
   return {
+    ...staged,
     spellTargeting: undefined,
     selectedHandId: undefined,
     focusedCardId: undefined,
-    spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },
+    pendingSpellHandId: castSucceeded ? handId : undefined,
+    spellFightAnimation: undefined,
   };
 }
 
-function playBattlefieldEntryVoiceInteraction(
+function playInvokedVoiceInteraction(
   previousGame: GameState,
   nextGame: GameState,
   cardId: string,
 ): void {
-  if (previousGame.player.battlefield.some((card) => card.instanceId === cardId)) return;
-  const enteredCard = nextGame.player.battlefield.find((card) => card.instanceId === cardId);
+  if (previousGame.player.field.some((card) => card.instanceId === cardId)) return;
+  const enteredCard = nextGame.player.field.find((card) => card.instanceId === cardId);
   if (!enteredCard) return;
   playCardVoiceInteraction({
-    type: "ENTERS_BATTLEFIELD",
+    type: "INVOKED",
     card: enteredCard,
     previousGame,
   });
@@ -2068,19 +2679,19 @@ function playCardVoiceInteraction(event: CardVoiceEvent): void {
 }
 
 function playCardVoiceCue(cue: CardVoiceCue): void {
-  useAudioStore.getState().playSfx(cue.sfx, { volume: cue.volume });
+  useAudioStore.getState().playSfx(cue.sfx);
 }
 
-function nextVisualDamage(event: HordeAttackEvent): Record<string, number> {
-  const current = useGameStore.getState().hordeCombatVisualDamage ?? {};
+function nextVisualDamage(event: HostAttackEvent): Record<string, number> {
+  const current = useGameStore.getState().hostCombatVisualDamage ?? {};
   const next = { ...current };
   if (event.attackerDamageMarked !== undefined) next[event.attackerId] = event.attackerDamageMarked;
   if (event.blockerId && event.blockerDamageMarked !== undefined) next[event.blockerId] = event.blockerDamageMarked;
   return next;
 }
 
-function nextDeadCardIds(event: HordeAttackEvent): string[] {
-  const next = new Set(useGameStore.getState().hordeCombatDeadCardIds);
+function nextDeadCardIds(event: HostAttackEvent): string[] {
+  const next = new Set(useGameStore.getState().hostCombatDeadCardIds);
   if (event.attackerDies) next.add(event.attackerId);
   if (event.blockerDies && event.blockerId) next.add(event.blockerId);
   return [...next];

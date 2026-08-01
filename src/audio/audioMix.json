@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "unit": "dB",
+  "sfx": {
+    "click": 0,
+    "draw": 0,
+    "drawOne": 0,
+    "playLand": 0,
+    "playMonster": 0,
+    "playMonsterEffect": 0,
+    "playMonsterHeavy": 0,
+    "attack": -3,
+    "bloodSplash": -17,
+    "bloodSplash2": -11,
+    "countessEnter": -11,
+    "countessHumans": -11,
+    "countessLaugh": -5.5,
+    "countessPour": -11,
+    "countessThirdAttack": -11,
+    "countessWeak": -11,
+    "punch": -15,
+    "defend": 0,
+    "skipNextBattle": 0,
+    "activateEffect": 0,
+    "buff": 0,
+    "monoGreenBuff": -13,
+    "fireballCast1": -8,
+    "fireballCast2": -6.5,
+    "fireballCast3": -5,
+    "fireballHit": -7.5
+  },
+  "music": {
+    "zombiesBattle1": {
+      "battle": -9,
+      "climax": -9
+    },
+    "goblinsBattle1": {
+      "battle": -7,
+      "climax": -7
+    },
+    "clownsBattle1": {
+      "battle": -4,
+      "climax": -4
+    },
+    "fairyBattle1": {
+      "battle": 0,
+      "climax": 0
+    },
+    "piratesBattle1": {
+      "battle": 0,
+      "climax": 0
+    },
+    "piratesBattle2": {
+      "battle": 0,
+      "climax": 0
+    },
+    "piratesBattle3": {
+      "battle": 0,
+      "climax": 0
+    },
+    "otherBattle1": {
+      "battle": 0,
+      "climax": 0
+    },
+    "otherBattle2": {
+      "battle": 0,
+      "climax": 0
+    },
+    "otherBattle3": {
+      "battle": 0,
+      "climax": 0
+    },
+    "otherBattle4": {
+      "battle": 0,
+      "climax": 0
+    },
+    "otherBattleGoty1": {
+      "battle": 0,
+      "climax": 0
+    },
+    "mainMenuMoonlitJourney": {
+      "battle": 0,
+      "climax": 0
+    },
+    "mainMenuWhispersBeyond": {
+      "battle": 0,
+      "climax": 0
+    },
+    "mainMenuFalconreach": {
+      "battle": 0,
+      "climax": 0
+    },
+    "mainMenuAmbient7": {
+      "battle": 0,
+      "climax": 0
+    },
+    "winTheme": {
+      "battle": 0,
+      "climax": 0
+    },
+    "lossTheme": {
+      "battle": 0,
+      "climax": 0
+    }
+  }
+}

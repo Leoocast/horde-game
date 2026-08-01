@@ -8,11 +8,11 @@ export function enqueue(game: GameState, event: Omit<EventItem, "id">): void {
     payload: {
       ...(event.payload ?? {}),
       // Only permanents already in play when the event happened may react to it. Without this,
-      // a creature that reaches the battlefield BECAUSE of this event reacts to it: Rundvelt
-      // exiling Pashalik onto the battlefield made Pashalik burn for the death that summoned it.
-      // The event's own source is always allowed — a dying card has already left the battlefield
+      // an Echo that reaches the Field BECAUSE of this event reacts to it: Rundvelt
+      // Invoking Pashalik from the Archive made Pashalik burn for the death that summoned it.
+      // The event's own source is always allowed — a dying card has already left the Field
       // by the time its death event is queued.
-      witnessIds: [...game.player.battlefield, ...game.horde.battlefield].map((card) => card.instanceId),
+      witnessIds: [...game.player.field, ...game.host.field].map((card) => card.instanceId),
     },
   });
 }
@@ -30,7 +30,7 @@ export function drainNextEvent(game: GameState): boolean {
 // `deferController` resolves every triggered source EXCEPT that side's, re-queuing any event
 // that still has a trigger for the deferred side so it can be drained later. Used so a player
 // cast can apply its own reactive triggers (e.g. Beast-Kin's self-buff) immediately while the
-// Horde's reaction to the same cast is held back to glow after the card is visible.
+// Host's reaction to the same cast is held back to glow after the card is visible.
 export function drainEventQueue(
   game: GameState,
   options?: { deferController?: Side; deferControllers?: Side[] },

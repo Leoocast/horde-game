@@ -1,16 +1,12 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "1.0.0",
   "id": "mono_green_ramp",
   "name": "Mono-Green Ramp 39",
   "format": "casual",
-  "side": "PLAYER",
-  "standardCheckedAt": null,
+  "side": "CHRONICLER",
   "deckSize": 39,
-  "colors": [
-    "G"
-  ],
   "archetype": "ramp",
-  "gamePlan": "Acelerar maná con criaturas, desarrollar amenazas verdes con alcance y usar trucos de combate o remoción basada en criaturas para controlar la mesa.",
+  "gamePlan": "Acelera tu Energía con Ecos, desarrolla amenazas con Guardia aérea y usa Hechizos de Batalla o destrucción basada en Ecos para controlar el Campo.",
   "tokens": [],
   "cards": [
     {
@@ -18,104 +14,78 @@
       "name": "Llanowar Elves",
       "displayNameEs": "Elfos de Llanowar",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "227",
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [
         "Elf",
         "Druid"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [],
+      "endurance": 1,
       "abilities": [
         {
           "id": "llanowar_elves_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Llanowar Elves",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "sunshower_druid",
       "name": "Sunshower Druid",
       "displayNameEs": "Druida de la lluvia solar",
       "gameText": {
-        "en": "When this creature enters, put a +1/+1 counter on an allied creature and gain 1 life.",
-        "es": "Cuando esta criatura entra, pon un contador +1/+1 sobre una criatura aliada y ganas 1 vida."
+        "en": "When Invoked, put a +1/+1 counter on an ally and gain 1 Life.",
+        "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
       },
       "quantity": 3,
-      "setCode": "BLB",
-      "collectorNumber": "195",
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [
         "Frog",
         "Druid"
       ],
       "power": 0,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "sunshower_druid_enter_counter_and_life",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "INVOKED",
+            "source": "SELF"
           },
           "targets": [
             {
               "id": "targetCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -136,170 +106,116 @@
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Sunshower Druid",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "druid_of_the_cowl",
       "name": "Druid of the Cowl",
-      "displayNameEs": "Druid of the Cowl",
+      "displayNameEs": "Druida de la capucha",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "setCode": "M19",
-      "collectorNumber": "177",
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Elf",
         "Druid"
       ],
       "power": 1,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [
         {
           "id": "druid_of_the_cowl_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Druid of the Cowl",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "ichorspit_basilisk",
       "name": "Ichorspit Basilisk",
       "displayNameEs": "Basilisco escupeicor",
       "gameText": {
-        "en": "When this creature deals combat damage to the Horde, give the Horde 1 poison counter.",
-        "es": "Cuando esta criatura hace daño de combate a la Horda, la Horda recibe 1 contador de veneno."
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "ONE",
-      "collectorNumber": "170",
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Phyrexian",
         "Basilisk"
       ],
       "power": 1,
-      "toughness": 3,
-      "keywords": [
-        "DEATHTOUCH"
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": [
-        {
-          "id": "ichorspit_basilisk_toxic_1",
-          "kind": "STATIC",
-          "zone": "BATTLEFIELD",
-          "targets": [],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "toxic_1",
-          "implementationNote": "Cuando esta criatura hace daño de combate a un jugador, ese jugador obtiene un contador de veneno. Toxic 1 no depende de la cantidad de daño."
-        }
-      ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Ichorspit Basilisk",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "traits": [
+        "LETHAL",
+        "POISON_1"
+      ]
     },
     {
       "id": "beast_kin_ranger",
       "name": "Beast-Kin Ranger",
       "displayNameEs": "Guardabosque bestial",
       "gameText": {
-        "en": "Whenever another allied creature enters, this creature gets +1/+0 until end of turn.",
-        "es": "Siempre que otra criatura aliada entre, esta criatura obtiene +1/+0 hasta el final del turno."
+        "en": "Whenever another ally is Invoked, this card gains +1/+0 until the end of the turn.",
+        "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
       },
       "quantity": 3,
-      "setCode": "FDN",
-      "collectorNumber": "100",
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Elf",
         "Ranger"
       ],
       "power": 3,
-      "toughness": 3,
-      "keywords": [
-        "TRAMPLE"
-      ],
+      "endurance": 3,
       "abilities": [
         {
           "id": "beast_kin_ranger_other_creature_enters",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "INVOKED"
           },
           "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": true,
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -309,18 +225,18 @@
               "type": "MODIFY_STATS",
               "target": "SELF",
               "power": 1,
-              "toughness": 0,
+              "endurance": 0,
               "duration": "END_OF_TURN"
             }
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Beast-Kin Ranger",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "OVERFLOW"
+      ]
     },
     {
       "id": "magnigoth_sentry",
@@ -331,34 +247,21 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "556",
-      "manaCost": "{3}{G}",
-      "manaValue": 4,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Treefolk"
       ],
       "power": 4,
-      "toughness": 4,
-      "keywords": [
-        "REACH"
-      ],
+      "endurance": 4,
       "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Magnigoth Sentry",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
     },
     {
       "id": "colossadactyl",
@@ -369,35 +272,22 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "setCode": "LCI",
-      "collectorNumber": "180",
-      "manaCost": "{2}{G}{G}",
-      "manaValue": 4,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Dinosaur"
       ],
       "power": 4,
-      "toughness": 5,
-      "keywords": [
-        "REACH",
-        "TRAMPLE"
-      ],
+      "endurance": 5,
       "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Colossadactyl",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD",
+        "OVERFLOW"
+      ]
     },
     {
       "id": "timberland_ancient",
@@ -408,101 +298,64 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "setCode": "MOM",
-      "collectorNumber": "210",
-      "manaCost": "{4}{G}{G}",
-      "manaValue": 6,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 6
+      },
       "subtypes": [
         "Treefolk"
       ],
       "power": 6,
-      "toughness": 5,
-      "keywords": [
-        "REACH",
-        "TRAMPLE"
-      ],
+      "endurance": 5,
       "abilities": [],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Timberland Ancient",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD",
+        "OVERFLOW"
+      ]
     },
     {
       "id": "cosmic_hunger",
       "name": "Cosmic Hunger",
       "displayNameEs": "Hambre cósmica",
       "gameText": {
-        "en": "Choose an allied creature and another creature. The allied creature deals damage equal to its power to the other creature.",
-        "es": "Elige una criatura aliada y otra criatura. La criatura aliada hace daño igual a su fuerza a la otra criatura."
+        "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
+        "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "quantity": 2,
-      "setCode": "MOM",
-      "collectorNumber": "182",
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "cosmic_hunger_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{1}{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "sourceCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "SELF",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             },
             {
               "id": "damageTarget",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
                 "anyOf": [
                   {
-                    "cardTypes": [
-                      "Creature"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Planeswalker"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Battle"
+                    "kinds": [
+                      "ECHO"
                     ]
                   }
                 ],
@@ -528,66 +381,53 @@
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Cosmic Hunger",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "ruthless_predation",
       "name": "Ruthless Predation",
       "displayNameEs": "Depredación despiadada",
       "gameText": {
-        "en": "An allied creature gets +1/+2 until end of turn, then fights an enemy creature.",
-        "es": "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga."
+        "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
+        "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "quantity": 1,
-      "setCode": "ONE",
-      "collectorNumber": "182",
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Sorcery"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "ruthless_predation_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "SORCERY",
-          "cost": {
-            "mana": "{1}{G}"
-          },
+          "speed": "MAIN",
           "targets": [
             {
               "id": "yourCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "SELF",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             },
             {
               "id": "opponentCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "OPPONENT",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -598,7 +438,7 @@
               "type": "MODIFY_STATS",
               "target": "yourCreature",
               "power": 1,
-              "toughness": 2,
+              "endurance": 2,
               "duration": "END_OF_TURN"
             },
             {
@@ -634,70 +474,49 @@
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Ruthless Predation",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
     },
     {
       "id": "broken_wings",
       "name": "Broken Wings",
       "displayNameEs": "Alas rotas",
       "gameText": {
-        "en": "Destroy an artifact, an enchantment, or a creature with Flying.",
-        "es": "Destruye un artefacto, un encantamiento o una criatura con Vuelo."
+        "en": "Destroy a Support or an Echo with Flying.",
+        "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "214",
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "broken_wings_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{2}{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "targetPermanent",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
                 "anyOf": [
                   {
-                    "cardTypes": [
-                      "Artifact"
+                    "kinds": [
+                      "SUPPORT"
                     ]
                   },
                   {
-                    "cardTypes": [
-                      "Enchantment"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Creature"
+                    "kinds": [
+                      "ECHO"
                     ],
-                    "keywords": [
+                    "traits": [
                       "FLYING"
                     ]
                   }
@@ -714,56 +533,43 @@
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Broken Wings",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "giant_growth",
       "name": "Giant Growth",
       "displayNameEs": "Crecimiento gigante",
       "gameText": {
-        "en": "Target creature gets +3/+3 until end of turn.",
-        "es": "La criatura objetivo obtiene +3/+3 hasta el final del turno."
+        "en": "The target Echo gains +3/+3 until the end of the turn.",
+        "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "quantity": 2,
-      "setCode": "FDN",
-      "collectorNumber": "223",
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "giant_growth_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "targetCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -774,75 +580,60 @@
               "type": "MODIFY_STATS",
               "target": "targetCreature",
               "power": 3,
-              "toughness": 3,
+              "endurance": 3,
               "duration": "END_OF_TURN"
             }
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Giant Growth",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "forest",
       "name": "Forest",
       "displayNameEs": "Bosque",
       "gameText": {
-        "en": "{{T}}: Add {G}.",
-        "es": "{{T}}: Agrega {G}."
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
       },
       "quantity": 15,
-      "setCode": "FDN",
-      "collectorNumber": null,
-      "needsVerification": true,
-      "verificationNote": "La lista no especifica el número de coleccionista o arte exacto entre las múltiples versiones de Forest en Foundations.",
-      "manaCost": null,
-      "manaValue": 0,
-      "colors": [],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Land"
-      ],
+      "energyCost": {
+        "amount": 0
+      },
       "subtypes": [
         "Forest"
       ],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "forest_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
       ],
-      "scryfall": {
-        "lookupMode": "named",
-        "lookupQuery": "Forest",
-        "imagePath": "image_uris.normal",
-        "fallbackImagePath": "image_uris.large"
-      }
+      "kinds": [
+        "SOURCE"
+      ],
+      "traits": []
     }
   ],
   "engineSupportNeeded": []

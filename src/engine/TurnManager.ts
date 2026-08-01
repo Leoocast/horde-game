@@ -1,46 +1,46 @@
 import type { GameState } from "./GameTypes";
-import { emptyManaPool } from "./ManaSystem";
+import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
 
-export function untapSide(game: GameState, side: "player" | "horde"): void {
-  for (const card of game[side].battlefield) {
-    card.tapped = false;
+export function readySide(game: GameState, side: "player" | "host"): void {
+  for (const card of game[side].field) {
+    card.exhausted = false;
     card.activatedThisTurn = false;
-    if (side === "player") card.summoningSickness = false;
+    if (card.kinds.includes("ECHO")) card.stabilizing = false;
   }
 }
 
 export function cleanupEndStep(game: GameState): void {
-  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+  for (const card of [...game.player.field, ...game.host.field]) {
     card.damageMarked = 0;
-    card.deathtouchDamage = false;
+    card.lethalDamage = false;
     card.temporaryPower = 0;
-    card.temporaryToughness = 0;
-    card.temporaryKeywords = [];
+    card.temporaryEndurance = 0;
+    card.temporaryTraits = [];
     delete card.flags.burnSmoke;
   }
-  game.player.manaPool = { ...emptyManaPool(), colorless: game.player.manaPool.colorless };
-  game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
+  game.player.energyPool = { ...emptyEnergyPool(), stored: game.player.energyPool.stored };
+  game.combat = { playerAttackers: [], hostAttackers: [], blockers: {}, pendingDamageVolleys: [] };
 }
 
-export function clearPlayerSummoningSickness(game: GameState): void {
-  for (const card of game.player.battlefield) {
-    if (card.cardTypes.includes("Creature")) card.summoningSickness = false;
+export function completePlayerStabilization(game: GameState): void {
+  for (const card of game.player.field) {
+    if (card.kinds.includes("ECHO")) card.stabilizing = false;
   }
 }
 
 export function startPlayerTurn(game: GameState): void {
-  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+  for (const card of [...game.player.field, ...game.host.field]) {
     card.untilNextPlayerTurnPower = 0;
-    card.untilNextPlayerTurnToughness = 0;
+    card.untilNextPlayerTurnEndurance = 0;
   }
   game.activeSide = "player";
   game.phase = "untap";
-  game.battlefieldEntriesThisTurn = [];
-  // Setup can grant consecutive player turns without a Horde turn between them.
-  // A reserve only belongs to the player turn that immediately precedes the Horde,
-  // so an older setup turn must never refill stored mana later.
-  game.player.pendingStoredMana = 0;
+  game.fieldEntriesThisTurn = [];
+  // Setup can grant consecutive player turns without a Host turn between them.
+  // A reserve only belongs to the player turn that immediately precedes the Host,
+  // so an older setup turn must never refill Stored Energy later.
+  game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;
   game.player.lifePaidThisTurn = 0;
   game.player.lifeLostThisTurn = 0;
@@ -49,10 +49,10 @@ export function startPlayerTurn(game: GameState): void {
 
 export function startPlayerTurnReady(game: GameState): void {
   startPlayerTurn(game);
-  untapSide(game, "player");
+  readySide(game, "player");
   performPlayerDraw(game);
   game.phase = "main";
-  game.log.unshift("Player starts the turn, untaps, and draws.");
+  game.log.unshift("Player starts the turn, readies their Field, and draws.");
 }
 
 export function performPlayerDraw(game: GameState): void {

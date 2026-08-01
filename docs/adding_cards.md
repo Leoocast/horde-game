@@ -60,7 +60,7 @@ src/data/decks/
   horde/<deck_id>/
 ```
 
-El esquema actual es `0.2.0`. Una criatura vanilla mínima:
+El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un Eco vanilla mínimo:
 
 ```json
 {
@@ -68,18 +68,16 @@ El esquema actual es `0.2.0`. Una criatura vanilla mínima:
   "name": "Example Guardian",
   "displayNameEs": "Guardián de ejemplo",
   "gameText": {
-    "en": "Whenever another allied Elf enters, this creature gets +1/+0 until end of turn.",
-    "es": "Siempre que otro Elfo aliado entre, esta criatura obtiene +1/+0 hasta el final del turno."
+    "en": "Whenever another allied Elf is Invoked, this Echo gains +1/+0 until the end of the turn.",
+    "es": "Siempre que otro Elfo aliado sea invocado, este Eco gana +1/+0 hasta el final del turno."
   },
   "quantity": 2,
-  "manaCost": "{2}{G}",
-  "manaValue": 3,
-  "colors": ["G"],
-  "cardTypes": ["Creature"],
+  "energyCost": { "amount": 3 },
+  "kinds": ["ECHO"],
   "subtypes": ["Elf", "Warrior"],
   "power": 3,
-  "toughness": 3,
-  "keywords": ["REACH"],
+  "endurance": 3,
+  "traits": ["SKYGUARD"],
   "abilities": []
 }
 ```
@@ -93,17 +91,16 @@ Reglas:
 - `deckSize` debe coincidir con la suma de `quantity` en `cards`.
 - Los tokens reutilizables deben estar en `tokens`; `tokens` no se expande dentro de la library.
   Algunos decks también pueden llevar esa misma ficha como carta real de `cards`.
-- `cardTypes`, `subtypes`, `keywords`, `power` y `toughness` son datos estructurados. No se deriva
-  gameplay del texto de Scryfall.
-- `displayNameEs` es el nombre local del juego; imagen, oracle text y flavor text se consultan
-  mediante el manifest.
+- `kinds`, `subtypes`, `traits`, `power` y `endurance` son datos estructurados. No se deriva
+  gameplay de texto o metadata externos.
+- `displayNameEs` es el nombre local del juego; la imagen se resuelve mediante el manifest local.
 - `gameText` describe lo que la carta hace realmente en Hostfall, en inglés y español. Los
   detalles de carta no usan oracle text de Magic para explicar reglas, porque varias cartas
   tienen adaptaciones PvE o habilidades deliberadamente inactivas.
 
 Si se está creando un deck de Horda, su personalidad global vive en `rulesProfile`: cantidad de
-revelados, parada en no-token, Mini Surge, Surge, mill por daño o poison, Haste implícito,
-`surgeBonus` y subtipos agrupados por oleada. Esas reglas se construyen con `buildHordeRules`; no
+revelados, parada en no-token, Mini Surge, Surge, descarte del Archivo por daño o Veneno, Ímpetu implícito,
+`surgeBonus` y subtipos agrupados por oleada. Esas reglas se construyen con `buildHostRules`; no
 hardcodearlas por id del deck.
 
 ## 2. Declarar habilidades
@@ -112,10 +109,10 @@ Cada habilidad usa uno de cuatro `kind`:
 
 | Kind | Uso |
 | --- | --- |
-| `STATIC` | Buffs o keywords continuas mientras la fuente está en el campo. |
+| `STATIC` | Pasivas continuas mientras la Fuente permanece en el Campo. |
 | `TRIGGERED` | Reacción a un evento del engine. |
 | `ACTIVATED` | Efecto que se activa pagando un coste. |
-| `SPELL` | Resolución de un instant o sorcery desde la mano o desde el revelado de la Horda. |
+| `SPELL` | Resolución de un Hechizo desde la Mano o desde el revelado de la Hueste. |
 
 ### Habilidad estática
 
@@ -123,29 +120,29 @@ Cada habilidad usa uno de cuatro `kind`:
 {
   "id": "example_other_elves_buff",
   "kind": "STATIC",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "effects": [
     {
       "type": "MODIFY_STATS",
-      "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+      "duration": "WHILE_SOURCE_ON_FIELD",
       "scope": {
         "controller": "SELF",
         "filters": {
-          "cardTypes": ["Creature"],
+          "kinds": ["ECHO"],
           "subtypes": ["Elf"],
           "excludeSelf": true
         }
       },
       "power": 1,
-      "toughness": 1
+      "endurance": 1
     }
   ]
 }
 ```
 
 `normalizeDeck` convierte esta forma en `STATIC_BUFF`. `GRANT_KEYWORD` con la misma duración se
-convierte en `STATIC_GRANT_KEYWORD`. Los stats y keywords se calculan continuamente en
-`StaticEffects.ts` y `Keywords.ts`; no se guardan como copias del bonus en cada carta.
+convierte en `STATIC_GRANT_KEYWORD`. Las estadísticas y los Rasgos se calculan continuamente en
+`StaticEffects.ts` y `Traits.ts`; no se guardan como copias del bonus en cada carta.
 
 Las auras estáticas de la Horda reciben presentación automáticamente: el store captura la nueva
 cobertura, retiene temporalmente el bonus visual y lo libera durante su beat. No hay que programar
@@ -157,9 +154,9 @@ una animación por nombre de carta.
 {
   "id": "example_self_enters_draw",
   "kind": "TRIGGERED",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "trigger": {
-    "event": "ENTERS_BATTLEFIELD",
+    "event": "INVOKED",
     "source": "SELF"
   },
   "conditions": [],
@@ -179,7 +176,7 @@ Los eventos y condiciones aceptados cambian con el engine. No mantener una lista
 guía: consultar `AUTHORING_TRIGGER_EVENTS`, `ENGINE_TRIGGER_EVENTS` y
 `TRIGGER_CONDITION_TYPES` en `effectVocabulary.ts`. El deck lint rechaza valores desconocidos.
 
-Los triggers de Horda se resuelven mediante `EventQueue` y `hordeBeats.ts`:
+Los triggers de la Host se resuelven mediante `EventQueue` y `hostBeats.ts`:
 
 - un source por beat;
 - sólo reaccionan permanentes que presenciaron el evento;
@@ -192,19 +189,17 @@ Los triggers de Horda se resuelven mediante `EventQueue` y `hordeBeats.ts`:
 {
   "id": "example_add_mana",
   "kind": "ACTIVATED",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "cost": {
-    "tap": true
+    "exhaust": true
   },
   "targets": [],
   "conditions": [],
   "effects": [
     {
-      "type": "ADD_MANA",
+      "type": "GAIN_ENERGY",
       "player": "SELF",
-      "mana": {
-        "G": 1
-      }
+      "amount": 1
     }
   ]
 }
@@ -214,15 +209,16 @@ Limitaciones actuales:
 
 - El normalizador sólo admite un efecto por habilidad activada; el lint falla si se declaran más.
 - El flujo genérico de `GameActions.activateAbility` es para el player, durante su main phase.
-- Los costes runtime soportados hoy son los que lee `GameActions.ts`: `tap`, `genericMana`,
-  `coloredMana` (`G`, `R`, `U`, `W`, `B`), `sacrificeSelf` y `life`.
+- El schema Hostfall usa `exhaust`, `sacrificeSelf` y `life`; el adaptador los traduce al contrato
+  runtime actual. No agregar costes de colores. Si una Acción necesita pagar Energía además de
+  Agotar, ampliar primero el modelo tipado y el adaptador.
 - `life` debe ser un entero positivo (el deck lint lo valida), se paga atómicamente con el resto
   del coste y nunca puede reducir al player por debajo de 1. Cada pago pasa por la ruta genérica de
   pérdida, por lo que emite `LIFE_LOST` y `LIFE_PAID`: se acumula en
   `player.lifeLostThisTurn` y `player.lifePaidThisTurn`, respectivamente. Ambos contadores se
   reinician cada vez que comienza un turno, sea del player o de la Horda.
 - Una habilidad que sólo tiene sentido cuando su criatura ya puede atacar puede declarar
-  `requiresNoSummoningSickness: true`. Engine y UI la bloquean mientras la fuente tenga fatiga de
+  `requiresStabilized: true`. Engine y UI la bloquean mientras la fuente esté Estabilizándose,
   invocación, antes de cobrar cualquier coste.
 - La Horda no tiene una política genérica que decida cuándo activar habilidades. Una habilidad
   puede normalizar correctamente y aun así no ser invocada durante una partida de Horda.
@@ -236,17 +232,14 @@ Limitaciones actuales:
   "id": "example_growth_spell",
   "kind": "SPELL",
   "zone": "HAND",
-  "speed": "INSTANT",
-  "cost": {
-    "mana": "{G}"
-  },
+  "speed": "QUICK",
   "targets": [
     {
       "id": "targetCreature",
-      "zone": "BATTLEFIELD",
+      "zone": "FIELD",
       "controller": "SELF",
       "filters": {
-        "cardTypes": ["Creature"]
+        "kinds": ["ECHO"]
       }
     }
   ],
@@ -256,7 +249,7 @@ Limitaciones actuales:
       "type": "MODIFY_STATS",
       "target": "targetCreature",
       "power": 2,
-      "toughness": 2,
+      "endurance": 2,
       "duration": "END_OF_TURN"
     }
   ]
@@ -346,14 +339,14 @@ Antes de añadir código de presentación, comprobar:
 - `EFFECT_PRESENTATIONS` en `EffectResolver.ts`: clasifica fight, source damage y destroy para que
   el store elija una animación sin reaprender tipos.
 - `EFFECT_ANNOUNCEMENTS`: permite generar mensajes de tokens, mill, discard o pérdida de vida.
-- `hordeBeats.ts`: handlers genéricos para Burn, auras estáticas, death reveal y pulse normal.
+- `hostBeats.ts`: handlers genéricos para Burn, auras estáticas, death reveal y pulse normal.
 - `presentationEffects.ts`: helpers de buff, vida, descarte, mill y pago automático.
 - `docs/animation_contracts.md`: orden y tiempos que no se deben romper.
 
 Para un look nuevo de la Horda:
 
 1. Definir una señal genérica en los datos o evento.
-2. Añadir un `HordeBeatHandler` que reclame esa señal.
+2. Añadir un `HostBeatHandler` que reclame esa señal.
 3. No comprobar nombres ni `definitionId`.
 4. Resolver el engine exactamente cuando el impacto visual aterriza.
 5. Llamar `done()` sólo cuando el beat y cualquier reflow relevante hayan terminado.
@@ -389,16 +382,37 @@ Entrada típica:
 ```json
 {
   "example_guardian": {
-    "source": "scryfallNamed",
-    "exact": "Example Guardian",
-    "set": "abc"
+    "source": "local",
+    "imageKind": "card",
+    "imageUrl": "/cards/example_deck/example_guardian.png"
   }
 }
 ```
 
-El gameplay nunca depende de la respuesta de Scryfall. El manifest aporta imagen, nombre impreso
-y type line. El texto de reglas mostrado en detalles viene de `gameText`; no debe copiar oracle
-text cuando el comportamiento de Hostfall sea distinto.
+El manifest solo acepta assets locales. El nombre, tipo y texto mostrado vienen del JSON del deck;
+`gameText` debe describir exactamente el comportamiento de Hostfall.
+
+Las cartas impresas se producen con los estudios de `dev/tools/Decks/`. Para un deck jugable, el
+JSON runtime sigue siendo la única fuente de nombre, reglas, coste, estadísticas y cantidad;
+`studio.config.json` agrega únicamente datos de presentación como `artCrop`, `typeLineEs` y lore.
+No copiar `gameText` dentro de la configuración del estudio.
+
+Después de editar cualquiera de esas fuentes:
+
+```powershell
+node scripts/card-studio-data.mjs --write
+node scripts/card-studio-data.mjs --check
+```
+
+`deck-data.generated.js` es un artefacto generado y no se edita a mano. El exportador
+`dev/tools/Decks/export_cards.cjs <deck>` vuelve a producir los PNG y actualiza
+`dev/tools/Decks/generation-manifest.json`. `node scripts/check-card-assets.mjs` falla si cambió el
+deck, la presentación, el renderer, las fuentes tipográficas o el arte después de exportar.
+
+El arte fuente debe vivir separado del PNG final, normalmente en `public/cards/<deck>/art/`. El
+exportador rechaza una carta que use como `artCrop` un PNG de su propia carpeta final para evitar
+cartas anidadas y sobrescritura circular. El contrato completo está en
+`dev/tools/Decks/README.md`.
 
 Al añadir una carta a un deck existente, añadir también su entrada al manifest. Al crear un deck
 nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí derivan engine, inspector,
@@ -459,6 +473,8 @@ el tablero alrededor de la prueba.
 - [ ] La carta está en el JSON correcto con id estable y cantidad correcta.
 - [ ] `deckSize` sigue coincidiendo con la suma de cartas del deck.
 - [ ] Tiene entrada en el manifest de imágenes.
+- [ ] Tiene presentación y arte fuente separados en el estudio correspondiente.
+- [ ] `card-studio-data.mjs --check` y `check-card-assets.mjs` pasan después de exportar.
 - [ ] Cada habilidad está soportada o marcada explícitamente con `engineSupport`.
 - [ ] No hay lógica por nombre de carta.
 - [ ] Los target ids declarados coinciden con los usados por los efectos.

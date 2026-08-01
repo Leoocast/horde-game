@@ -1,7 +1,7 @@
 import { BatteryCharging, ChevronRight, Hand, Plus, SkipForward, Skull, Zap, ZapOff } from "lucide-react";
 import type { ReactNode } from "react";
 import { MAX_PLAYER_LANDS, playerLandCount } from "../../engine/GameRules";
-import { STORED_MANA_CAP } from "../../engine/ManaSystem";
+import { STORED_ENERGY_CAP } from "../../engine/EnergySystem";
 import { useGameStore } from "../../store/useGameStore";
 import type { TimelineStep } from "../timeline";
 
@@ -14,10 +14,10 @@ export function ActionsPanel({ onDispatch }: Props) {
   const game = useGameStore((state) => state.game);
 
   const sources = playerLandCount(game);
-  const available = game.player.battlefield.filter(
-    (card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn,
+  const available = game.player.field.filter(
+    (card) => card.kinds.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
   ).length;
-  const stored = game.player.manaPool.colorless;
+  const stored = game.player.energyPool.stored;
 
   return (
     <div className="playground-panel">
@@ -31,8 +31,8 @@ export function ActionsPanel({ onDispatch }: Props) {
           </button>
         </div>
         <div className="playground-button-row">
-          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hordeTurn" })}>
-            <Skull size={14} /> Horde turn
+          <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "hostTurn" })}>
+            <Skull size={14} /> Host turn
           </button>
           <button className="playground-button" type="button" onClick={() => onDispatch({ kind: "draw" })}>
             <Hand size={14} /> Draw card
@@ -42,7 +42,7 @@ export function ActionsPanel({ onDispatch }: Props) {
 
       <Group
         title="Energy"
-        badge={`${available}/${sources} ready · ${stored}/${STORED_MANA_CAP} stored`}
+        badge={`${available}/${sources} ready · ${stored}/${STORED_ENERGY_CAP} stored`}
       >
         <div className="playground-meter" aria-label={`${available} of ${sources} energy ready`}>
           {Array.from({ length: MAX_PLAYER_LANDS }).map((_, index) => (
@@ -52,7 +52,7 @@ export function ActionsPanel({ onDispatch }: Props) {
             />
           ))}
           <span className="playground-meter-split" />
-          {Array.from({ length: STORED_MANA_CAP }).map((_, index) => (
+          {Array.from({ length: STORED_ENERGY_CAP }).map((_, index) => (
             <span key={`stored-${index}`} className={`playground-pip is-stored ${index < stored ? "is-ready" : "is-empty"}`} />
           ))}
         </div>
@@ -61,7 +61,7 @@ export function ActionsPanel({ onDispatch }: Props) {
             className="playground-button is-primary"
             type="button"
             disabled={sources >= MAX_PLAYER_LANDS}
-            title="Puts one more untapped land on the battlefield"
+            title="Invokes one more Ready Source onto the Field"
             onClick={() => onDispatch({ kind: "addEnergySource" })}
           >
             <Plus size={14} /> Add source
@@ -69,7 +69,7 @@ export function ActionsPanel({ onDispatch }: Props) {
           <button
             className="playground-button"
             type="button"
-            title="Untaps every land and gives the Energy action back"
+            title="Readies every Source and restores the Energy Action"
             onClick={() => onDispatch({ kind: "refillEnergy" })}
           >
             <BatteryCharging size={14} /> Refill
@@ -79,12 +79,12 @@ export function ActionsPanel({ onDispatch }: Props) {
           <button
             className="playground-button"
             type="button"
-            disabled={stored >= STORED_MANA_CAP}
+            disabled={stored >= STORED_ENERGY_CAP}
             onClick={() => onDispatch({ kind: "addStoredEnergy" })}
           >
             <Zap size={14} /> +1 stored
           </button>
-          <button className="playground-button" type="button" title="Taps every land and empties the pool" onClick={() => onDispatch({ kind: "drainEnergy" })}>
+          <button className="playground-button" type="button" title="Exhausts every Source and empties stored Energy" onClick={() => onDispatch({ kind: "drainEnergy" })}>
             <ZapOff size={14} /> Drain all
           </button>
         </div>

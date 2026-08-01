@@ -1,26 +1,14 @@
 import type { AppLanguage } from "./translations";
+import { canonicalCardKindLine, traitVocabularyLabel, traitVocabularyTooltip } from "./gameVocabulary";
 
 type LocalizableCard = {
   name?: string;
   displayName?: string;
   displayNameEs?: string | null;
-  cardTypes?: string[];
+  kinds?: string[];
+  modifiers?: string[];
   subtypes?: string[];
-};
-
-const SPANISH_TYPES: Record<string, string> = {
-  Artifact: "Artefacto",
-  Basic: "Básica",
-  Creature: "Criatura",
-  Enchantment: "Encantamiento",
-  Energy: "Energía",
-  Instant: "Instantáneo",
-  Land: "Tierra",
-  Legendary: "Legendaria",
-  Planeswalker: "Planeswalker",
-  Snow: "Nevada",
-  Sorcery: "Conjuro",
-  Token: "Ficha",
+  isToken?: boolean;
 };
 
 const SPANISH_SUBTYPES: Record<string, string> = {
@@ -52,65 +40,21 @@ export function localizedCardName(card: LocalizableCard | undefined, language: A
 }
 
 export function localizedTypeLine(card: LocalizableCard, language: AppLanguage): string {
-  const cardTypes = card.cardTypes ?? [];
+  const kinds = card.kinds ?? [];
   const subtypes = card.subtypes ?? [];
-  const types = language === "es" ? cardTypes.map((type) => SPANISH_TYPES[type] ?? type) : cardTypes;
   const localizedSubtypes = language === "es" ? subtypes.map((subtype) => SPANISH_SUBTYPES[subtype] ?? subtype) : subtypes;
-  return [...types, localizedSubtypes.length ? `— ${localizedSubtypes.join(" ")}` : ""].filter(Boolean).join(" ");
+  return canonicalCardKindLine(kinds, localizedSubtypes, language, card.isToken, card.modifiers ?? []);
 }
 
-export function localizedKeywordLabel(keyword: string, language: AppLanguage): string {
-  const text = keyword.trim();
-  if (language !== "es") return text.replace(/_/g, " ");
-  const toxic = text.match(/^TOXIC\s+\{(\d+)\}$/i);
-  if (toxic) return `TÓXICO {${toxic[1]}}`;
-  const labels: Record<string, string> = {
-    DEATHTOUCH: "TOQUE MORTAL",
-    FIRST_STRIKE: "DAÑAR PRIMERO",
-    FLYING: "VOLAR",
-    HASTE: "PRISA",
-    HEXPROOF: "ANTIMALEFICIO",
-    LIFESTEAL: "ROBO DE VIDA",
-    MENACE: "AMENAZA",
-    REACH: "ALCANCE",
-    SKULK: "ESCURRIDIZO",
-    TRAMPLE: "ARROLLAR",
-    VIGILANCE: "VIGILANCIA",
-  };
-  return labels[text.toUpperCase()] ?? text;
+export function localizedTraitLabel(keyword: string, language: AppLanguage): string {
+  return traitVocabularyLabel(keyword, language).toLocaleUpperCase(language);
 }
 
-export function naturalCaseKeywordLabel(keyword: string): string {
-  const lowerCaseKeyword = keyword.toLocaleLowerCase();
-  return lowerCaseKeyword.charAt(0).toLocaleUpperCase() + lowerCaseKeyword.slice(1);
+export function naturalCaseTraitLabel(keyword: string): string {
+  const lowerCaseTrait = keyword.toLocaleLowerCase();
+  return lowerCaseTrait.charAt(0).toLocaleUpperCase() + lowerCaseTrait.slice(1);
 }
 
-export function localizedKeywordTooltip(keyword: string, language: AppLanguage): string {
-  const upper = keyword.trim().toUpperCase();
-  if (language !== "es") {
-    if (upper === "FLYING") return "Can only be blocked by creatures with flying or reach.";
-    if (upper === "REACH") return "Can block creatures with flying.";
-    if (upper === "VIGILANCE") return "Attacking does not tap this creature.";
-    if (upper === "MENACE") return "This creature can only be blocked by two or more creatures.";
-    if (upper === "DEATHTOUCH") return "Any damage this creature deals to another creature is lethal.";
-    if (upper === "FIRST_STRIKE") return "Deals combat damage before creatures without first strike.";
-    if (upper === "TRAMPLE") return "Excess combat damage can carry over to the defending side.";
-    if (upper === "HASTE") return "Can attack and use tap abilities immediately.";
-    if (upper === "LIFESTEAL") return "Combat damage dealt by this creature restores that much life.";
-    if (upper === "SKULK") return "Can't be blocked by creatures with greater power.";
-    if (upper.startsWith("TOXIC")) return "When this creature deals combat damage to the Horde, it adds poison counters.";
-    return "Keyword ability.";
-  }
-  if (upper === "FLYING") return "Solo puede ser bloqueada por criaturas con volar o alcance.";
-  if (upper === "REACH") return "Puede bloquear criaturas con volar.";
-  if (upper === "VIGILANCE") return "Atacar no gira esta criatura.";
-  if (upper === "MENACE") return "Esta criatura solo puede ser bloqueada por dos o más criaturas.";
-  if (upper === "DEATHTOUCH") return "Cualquier daño que haga a otra criatura es letal.";
-  if (upper === "FIRST_STRIKE") return "Hace daño de combate antes que las criaturas sin dañar primero.";
-  if (upper === "TRAMPLE") return "El daño de combate sobrante puede pasar al bando defensor.";
-  if (upper === "HASTE") return "Puede atacar y usar habilidades de girar inmediatamente.";
-  if (upper === "LIFESTEAL") return "El daño de combate que hace esta criatura recupera esa cantidad de vida.";
-  if (upper === "SKULK") return "No puede ser bloqueada por criaturas con mayor fuerza.";
-  if (upper.startsWith("TOXIC")) return "Cuando hace daño de combate a la Horda, añade contadores de veneno.";
-  return "Habilidad de palabra clave.";
+export function localizedTraitTooltip(keyword: string, language: AppLanguage): string {
+  return traitVocabularyTooltip(keyword, language);
 }
