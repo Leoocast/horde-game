@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L0 completada; esperando autorización de L1**  
+Estado: **L1 completada; esperando autorización de L2**
 Última actualización: 2026-07-31  
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -24,8 +24,8 @@ demostrarse.
 | --- | --- | --- |
 | Preparación del plan | Completada | Autorizada |
 | L0 — Punto seguro e inventario | Completada | Autorizada |
-| L1 — Basura y referencias explícitas | No iniciada | Esperando autorización |
-| L2 — Fuente única para cartas | No iniciada | No autorizada todavía |
+| L1 — Basura y referencias explícitas | Completada | Autorizada |
+| L2 — Fuente única para cartas | No iniciada | Esperando autorización |
 | L3 — Schema Hostfall para decks | No iniciada | No autorizada todavía |
 | L4 — Limpieza interna del engine | No iniciada | No autorizada todavía |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
@@ -139,6 +139,15 @@ Retirar residuos inequívocos sin cambiar ninguna mecánica.
 
 Las referencias dentro de documentación interna podrán conservarse únicamente si son necesarias
 para explicar la auditoría y nunca forman parte de `dist`.
+
+### Resultado L1
+
+- Se eliminó completo `dev/tools/Cards`: 27 archivos sin consumidores activos.
+- Se retiró la procedencia explícita del JSON de Zombies.
+- Se reescribió el único comentario de producción que nombraba Magic.
+- Los seis checks L1 quedaron en cero en source, herramientas y el build regenerado.
+- El auditor pasó de 9 a 6 categorías bloqueantes y de 3 a 2 advertencias; los bloqueos restantes
+  pertenecen a L2–L7.
 
 ### Criterio de aceptación
 
@@ -392,6 +401,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | Usar el push limpio del usuario como checkpoint inicial. | Existe un punto de recuperación antes de L0. |
 | 2026-07-31 | Documentar el proceso antes de comenzar L0. | Mantener continuidad entre sesiones y agentes. |
 | 2026-07-31 | El auditor normal reporta sin fallar y `--strict` rechaza bloqueos. | Permite medir progreso durante la migración y usar el mismo script como gate final. |
+| 2026-07-31 | Eliminar todo `dev/tools/Cards` después de confirmar cero consumidores. | El árbol completo pertenecía al creador HTML deprecated; `dev/tools/Decks` permanece intacto como flujo vigente. |
+| 2026-07-31 | Permitir referencias históricas solo en documentación y auditoría internas. | No llegan a `dist` y son necesarias para explicar el proceso de independencia. |
 
 ## Registro de avance
 
@@ -399,6 +410,7 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | --- | --- | --- | --- | --- |
 | 2026-07-31 | Preparación | Diseño inicial del proceso. | Documento creado; L0 todavía no iniciada. | TypeScript OK; `git diff --check` OK. |
 | 2026-07-31 | L0 | Baseline, auditor e inventario de source, tools, `public` y `dist`. | 9 categorías bloqueantes, 3 advertencias y 2 checks limpios; ninguna corrección adelantada. | TypeScript OK; deck lint OK; 194/194 tests; build OK; JSON y gate estricto validados. |
+| 2026-07-31 | L1 | Retiro de herramientas deprecated y referencias explícitas. | 27 archivos eliminados; los seis checks de L1 quedaron en cero; quedan 6 bloqueos, 2 advertencias y 6 checks limpios. | TypeScript OK; deck lint OK; 194/194 tests; build OK; auditor L1 limpio; `git diff --check` OK. |
 
 ## Plantilla para cerrar una fase
 

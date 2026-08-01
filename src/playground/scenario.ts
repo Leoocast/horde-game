@@ -34,8 +34,8 @@ export type ScenarioCard = {
 /**
  * The game has ONE resource, shown as energy: untapped lands on the battlefield are available
  * energy, and the colorless pool is stored energy (capped at `STORED_MANA_CAP`). The engine's
- * `ManaPool` still carries colors because card costs are printed in Magic symbols, but nothing the
- * player sees is per-color — so a scenario configures energy, not colors.
+ * `ManaPool` still carries colors as a legacy implementation detail, but nothing the player sees
+ * is per-color — so a scenario configures energy, not colors.
  */
 export type ScenarioDefinition = {
   version: number;
