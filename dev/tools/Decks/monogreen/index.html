@@ -5,12 +5,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hostfall — Deck Mono Green</title>
-    <!-- Font Awesome & Google Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.min.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;600;700;800&family=Oswald:wght@600;700&display=swap');
+        @font-face {
+            font-family: "Cinzel";
+            src: url("../../../../public/fonts/mono-green/cinzel-latin.woff2") format("woff2");
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Cinzel Decorative";
+            src: url("../../../../public/fonts/mono-green/cinzel-decorative-latin.woff2") format("woff2");
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Lora";
+            src: url("../../../../public/fonts/mono-green/lora-normal-latin.woff2") format("woff2");
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Lora";
+            src: url("../../../../public/fonts/mono-green/lora-italic-latin.woff2") format("woff2");
+            font-style: italic;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Oswald";
+            src: url("../../../../public/fonts/mono-green/oswald-latin.woff2") format("woff2");
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Outfit";
+            src: url("../../../../public/fonts/mono-green/outfit-latin.woff2") format("woff2");
+            font-display: swap;
+        }
 
         :root {
             --gold-light: #ead9a8;
@@ -265,6 +296,12 @@
                 0 0 8px rgba(92, 160, 108, 0.14);
         }
 
+        .tcg-element-icon svg {
+            width: 34px;
+            height: 34px;
+            fill: currentColor;
+        }
+
         .tcg-title {
             flex: 1;
             min-width: 0;
@@ -441,9 +478,15 @@
         }
 
         /* --- CAJA DE TEXTO Y DESCRIPCIÓN --- */
-        .tcg-type-text .fa-scroll {
+        .tcg-type-text .tcg-type-symbol {
             display: inline-block;
-            font-size: 34px !important;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            fill: currentColor;
+        }
+
+        .tcg-type-text .tcg-type-symbol--spell {
             transform: translateY(3px);
         }
 
@@ -844,154 +887,10 @@
         <!-- Renderizado dinámico vía JavaScript -->
     </div>
 
+    <script src="./deck-data.generated.js"></script>
     <script src="../deck-card-text.js"></script>
     <script>
-        // Datos del Deck Mono Green extraídos directamente de mono-green.json
-        const deckData = [
-            {
-                "id": "llanowar_elves",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/llanowar_elves.jpg",
-                "nombre": "Elfos de Llanowar",
-                "tipo": "Eco — Elfo Druida",
-                "costo": 1,
-                "atk": 1,
-                "def": 1,
-                "desc": "Agota: Gana {E}.",
-                "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
-            },
-            {
-                "id": "sunshower_druid",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/sunshower_druid.jpg",
-                "nombre": "Druida de la lluvia solar",
-                "tipo": "Eco — Rana Druida",
-                "costo": 1,
-                "atk": 0,
-                "def": 2,
-                "desc": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida.",
-                "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
-            },
-            {
-                "id": "druid_of_the_cowl",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/druid_of_the_cowl.jpg",
-                "nombre": "Druida de la capucha",
-                "tipo": "Eco — Elfo Druida",
-                "costo": 2,
-                "atk": 1,
-                "def": 3,
-                "desc": "Agota: Gana {E}.",
-                "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
-            },
-            {
-                "id": "ichorspit_basilisk",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/ichorspit_basilisk.jpg",
-                "nombre": "Basilisco escupeicor",
-                "tipo": "Eco — Pirexiano Basilisco",
-                "costo": 3,
-                "atk": 1,
-                "def": 3,
-                "desc": "Letal\nVeneno 1",
-                "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
-            },
-            {
-                "id": "beast_kin_ranger",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
-                "nombre": "Guardabosque bestial",
-                "tipo": "Eco — Elfo Explorador",
-                "costo": 3,
-                "atk": 3,
-                "def": 3,
-                "desc": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno.",
-                "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
-            },
-            {
-                "id": "magnigoth_sentry",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/magnigoth_sentry.jpg",
-                "nombre": "Centinela mágnigoth",
-                "tipo": "Eco — Pueblo-arbóreo",
-                "costo": 4,
-                "atk": 4,
-                "def": 4,
-                "desc": "Guardia aérea",
-                "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
-            },
-            {
-                "id": "colossadactyl",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/colossadactyl.jpg",
-                "nombre": "Colosadáctilo",
-                "tipo": "Eco — Dinosaurio",
-                "costo": 4,
-                "atk": 4,
-                "def": 5,
-                "desc": "Guardia aérea",
-                "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
-            },
-            {
-                "id": "timberland_ancient",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/timberland_ancient.jpg",
-                "nombre": "Anciano forestal",
-                "tipo": "Eco — Pueblo-arbóreo",
-                "costo": 6,
-                "atk": 6,
-                "def": 5,
-                "desc": "Guardia aérea",
-                "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
-            },
-            {
-                "id": "cosmic_hunger",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/cosmic_hunger.jpg",
-                "nombre": "Hambre cósmica",
-                "tipo": "Hechizo · Rápido",
-                "costo": 2,
-                "atk": null,
-                "def": null,
-                "desc": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza.",
-                "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
-            },
-            {
-                "id": "ruthless_predation",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/ruthless_predation.jpg",
-                "nombre": "Depredación despiadada",
-                "tipo": "Hechizo",
-                "costo": 2,
-                "atk": null,
-                "def": null,
-                "desc": "Un aliado gana +1/+2 hasta el final del turno.\nLuego lucha contra un enemigo.",
-                "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
-            },
-            {
-                "id": "broken_wings",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/broken_wings.jpg",
-                "nombre": "Alas rotas",
-                "tipo": "Hechizo · Rápido",
-                "costo": 3,
-                "atk": null,
-                "def": null,
-                "desc": "Destruye un Apoyo o un Eco con Volar.",
-                "lore": "Todo lo que domina el cielo termina por conocer la tierra."
-            },
-            {
-                "id": "giant_growth",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/giant_growth.jpg",
-                "nombre": "Crecimiento gigante",
-                "tipo": "Hechizo · Rápido",
-                "costo": 1,
-                "atk": null,
-                "def": null,
-                "desc": "El Eco objetivo gana +3/+3 hasta el final del turno.",
-                "lore": "La naturaleza no pide permiso para superar sus límites."
-            },
-            {
-                "id": "forest",
-                "art_crop": "../../../../public/cards/mono_green_ramp/art/forest.jpg",
-                "nombre": "Bosque",
-                "tipo": "Fuente — Bosque",
-                "costo": 0,
-                "atk": null,
-                "def": null,
-                "desc": "Agota: Gana {E}.",
-                "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
-            }
-        ];
+        const deckData = window.HostfallDeckData;
 
         // Función para formatear el texto de descripción y reemplazar {E} por el ícono de Energía
         function formatEffectText(text) {
@@ -1009,9 +908,16 @@
                     <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
                 </svg>
             `;
-            if (tipo.includes("Hechizo")) return '<i class="fa-solid fa-scroll" style="font-size: 28px; color: #86efac;"></i>';
-            if (tipo.includes("Fuente")) return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';
-            return '<i class="fa-solid fa-gem" style="font-size: 28px; color: #86efac;"></i>';
+            if (tipo.includes("Hechizo")) return `
+                <svg class="tcg-type-symbol tcg-type-symbol--spell" aria-hidden="true" viewBox="0 0 576 512">
+                    <path d="M0 80v48c0 17.7 14.3 32 32 32H48 96V80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48V384c0 35.3 28.7 64 64 64s64-28.7 64-64v-5.3c0-32.4 26.3-58.7 58.7-58.7H480V128c0-53-43-96-96-96H112zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16H314.7c-14.7 0-26.7 11.9-26.7 26.7V384c0 53-43 96-96 96H368h96z"></path>
+                </svg>
+            `;
+            return `
+                <svg class="tcg-type-symbol" aria-hidden="true" viewBox="0 0 64 64">
+                    <path d="M32 4 58 24 32 60 6 24 32 4Zm0 8L15 25l17 24 17-24-17-13Z"></path>
+                </svg>
+            `;
         }
 
         // Renderizado de las cartas
@@ -1037,7 +943,9 @@
                         ${!isSource ? `<div class="tcg-mana-gem"><span data-cost="${card.costo}">${card.costo}</span></div>` : ''}
                         <div class="tcg-title-wrap">
                             <div class="tcg-title">${card.nombre}</div>
-                            <div class="tcg-element-icon"><i class="fa-solid fa-leaf"></i></div>
+                            <div class="tcg-element-icon" aria-hidden="true">
+                                <svg viewBox="0 0 64 64"><path d="M54 7C33 8 18 17 13 33c-3 10 1 18 9 22 8 3 17 0 22-8 7-11 8-25 10-40ZM17 52c8-12 17-21 29-31-10 5-21 12-31 23l2 8Z"></path></svg>
+                            </div>
                         </div>
                     </div>
 
@@ -1079,8 +987,6 @@
 
             container.appendChild(cardEl);
         });
-
-        if (window.lucide) lucide.createIcons();
 
     </script>
 </body>

@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L1 completada; esperando autorización de L2**
+Estado: **L2 completada; L3 pendiente de autorización**
 Última actualización: 2026-07-31  
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -25,7 +25,7 @@ demostrarse.
 | Preparación del plan | Completada | Autorizada |
 | L0 — Punto seguro e inventario | Completada | Autorizada |
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
-| L2 — Fuente única para cartas | No iniciada | Esperando autorización |
+| L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | No iniciada | No autorizada todavía |
 | L4 — Limpieza interna del engine | No iniciada | No autorizada todavía |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
@@ -176,10 +176,42 @@ Los PNG de producción fueron exportados antes que varias correcciones de vocabu
 imprimen términos como `Criatura`, `Toque mortal`, `Daña primero`, `Horda` o construcciones antiguas
 de Vida aunque sus estudios y JSON ya tengan texto nuevo.
 
+### Resultado L2
+
+- El JSON runtime es la fuente única de reglas, nombre, coste, estadísticas y cantidad para cada
+  deck jugable. `studio.config.json` conserva solamente presentación: arte, línea de tipo, lore y
+  excepciones visuales que no cambian reglas.
+- Los cinco índices consumen `deck-data.generated.js`; ya no contienen arreglos de cartas
+  embebidos. `scripts/card-studio-data.mjs --check` falla si la proyección deja de coincidir.
+- Se eliminaron cuatro mirrors editables: `mono-green.json`, `vampires.json`, `hunters.json` y
+  `mono_green_ramp_card_generator.json`. Cazadores quedó como una única configuración preview
+  porque todavía no tiene deck runtime.
+- Los estudios dejaron de depender de CDN para tipografías e iconos. Sus entradas son locales y
+  enumerables.
+- El exportador sincroniza datos, rechaza arte circular y actualiza
+  `dev/tools/Decks/generation-manifest.json` con hashes del deck, presentación, renderer, fuentes,
+  arte y cada PNG de salida.
+- Se regeneraron y verificaron 13 PNG de Mono Green y 14 de Vampiros. Ambos lotes imprimen el
+  vocabulario vigente y pasan la prueba de frescura.
+
+### Excepción aceptada y diferida a L6
+
+Zombies y Trasgos no conservan arte fuente local. Sus estudios recibían URLs remotas hasta que se
+retiró Scryfall y ahora apuntan a sus propios PNG finales. Regenerarlos así anidaría una carta
+dentro de otra y sobrescribiría la única copia conservada; extraer el arte desde el raster final
+también duplicaría overlays y degradaría la imagen.
+
+El usuario autorizó conservar intactos esos 34 PNG y resolverlos al generar el arte definitivo en
+L6. El exportador continúa bloqueándolos deliberadamente para impedir una exportación recursiva.
+Esta excepción ya no impide cerrar L2: queda registrada como deuda explícita de assets para L6.
+
+No se inició L3 y los PNG actuales de ambas Huestes permanecen intactos.
+
 ### Criterio de aceptación
 
 Una edición de datos tiene un solo lugar de origen y existe una forma objetiva de saber si las
-imágenes distribuidas están actualizadas.
+imágenes distribuidas están actualizadas. Los 34 PNG legacy sin arte fuente constituyen la excepción
+documentada y protegida hasta su sustitución en L6.
 
 ## Fase L3 — Schema Hostfall para decks
 
@@ -404,6 +436,9 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | Eliminar todo `dev/tools/Cards` después de confirmar cero consumidores. | El árbol completo pertenecía al creador HTML deprecated; `dev/tools/Decks` permanece intacto como flujo vigente. |
 | 2026-07-31 | Permitir referencias históricas solo en documentación y auditoría internas. | No llegan a `dist` y son necesarias para explicar el proceso de independencia. |
 
+| 2026-07-31 | Derivar las reglas impresas desde el JSON runtime y limitar `studio.config.json` a presentación. | Evita dos copias editables de coste, stats, cantidad y texto de reglas sin adelantar el schema Hostfall de L3. |
+| 2026-07-31 | Rechazar un PNG final usado como arte de su propio estudio. | Evita sobrescritura circular y degradación silenciosa; Zombies y Trasgos requieren una decisión explícita. |
+
 ## Registro de avance
 
 | Fecha | Fase | Acción | Resultado | Verificación |
@@ -411,6 +446,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | Preparación | Diseño inicial del proceso. | Documento creado; L0 todavía no iniciada. | TypeScript OK; `git diff --check` OK. |
 | 2026-07-31 | L0 | Baseline, auditor e inventario de source, tools, `public` y `dist`. | 9 categorías bloqueantes, 3 advertencias y 2 checks limpios; ninguna corrección adelantada. | TypeScript OK; deck lint OK; 194/194 tests; build OK; JSON y gate estricto validados. |
 | 2026-07-31 | L1 | Retiro de herramientas deprecated y referencias explícitas. | 27 archivos eliminados; los seis checks de L1 quedaron en cero; quedan 6 bloqueos, 2 advertencias y 6 checks limpios. | TypeScript OK; deck lint OK; 194/194 tests; build OK; auditor L1 limpio; `git diff --check` OK. |
+
+| 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
 
 ## Plantilla para cerrar una fase
 

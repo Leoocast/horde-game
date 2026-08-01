@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/player/vampire_preview/vampire_preview.json",
+  "cards": [
+    {
+      "id": "crimson_energy",
+      "artCrop": "../../../../public/cards/vampires/art/crimson_energy.webp",
+      "typeLineEs": "Fuente — Santuario"
+    },
+    {
+      "id": "blood_page",
+      "artCrop": "../../../../public/cards/vampires/art/blood_page.webp",
+      "typeLineEs": "Eco — Vampiro Sirviente"
+    },
+    {
+      "id": "crimson_bat",
+      "artCrop": "../../../../public/cards/vampires/art/crimson_bat.webp",
+      "typeLineEs": "Eco — Murciélago Vampiro"
+    },
+    {
+      "id": "tithe_acolyte",
+      "artCrop": "../../../../public/cards/vampires/art/tithe_acolyte.webp",
+      "typeLineEs": "Eco — Vampiro Clérigo"
+    },
+    {
+      "id": "court_duelist",
+      "artCrop": "../../../../public/cards/vampires/art/court_duelist.webp",
+      "typeLineEs": "Eco — Vampiro Guerrero"
+    },
+    {
+      "id": "crypt_guardian",
+      "artCrop": "../../../../public/cards/vampires/art/crypt_guardian.webp",
+      "typeLineEs": "Eco — Vampiro Caballero"
+    },
+    {
+      "id": "black_vein_executioner",
+      "artCrop": "../../../../public/cards/vampires/art/black_vein_executioner.webp",
+      "typeLineEs": "Eco — Vampiro Asesino"
+    },
+    {
+      "id": "blood_sentinel",
+      "artCrop": "../../../../public/cards/vampires/art/blood_sentinel.webp",
+      "typeLineEs": "Eco — Vampiro Caballero"
+    },
+    {
+      "id": "eternal_feast_countess",
+      "artCrop": "../../../../public/cards/vampires/art/eternal_feast_countess.webp",
+      "typeLineEs": "Eco de Crónica — Vampiro Noble",
+      "traitPlacement": "after-first-rule",
+      "groupTraits": true
+    },
+    {
+      "id": "blood_pact",
+      "artCrop": "../../../../public/cards/vampires/art/blood_pact.webp",
+      "typeLineEs": "Hechizo"
+    },
+    {
+      "id": "crimson_impulse",
+      "artCrop": "../../../../public/cards/vampires/art/crimson_impulse.webp",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "drain_essence",
+      "artCrop": "../../../../public/cards/vampires/art/drain_essence.webp",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "predatory_thirst",
+      "artCrop": "../../../../public/cards/vampires/art/predatory_thirst.webp",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "final_banquet",
+      "artCrop": "../../../../public/cards/vampires/art/final_banquet.webp",
+      "typeLineEs": "Hechizo · Rápido"
+    }
+  ]
+}

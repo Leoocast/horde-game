@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
+import {
+  STUDIO_DECKS,
+  buildStudioCards,
+  generatedStudioData,
+  loadStudioConfig,
+  syncStudioData,
+} from "../scripts/card-studio-data.mjs";
 
 function loadDeckCardTextFormatter() {
   const source = fs.readFileSync(
@@ -112,30 +119,44 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
 test("local Vampire studio art paths resolve to real files", () => {
   const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
+  for (const card of buildStudioCards("vampires")) {
+    assert.doesNotMatch(card.art_crop, /^https?:/iu, `${card.id} still uses remote art`);
+    assert.ok(
+      fs.existsSync(new URL(card.art_crop, indexUrl)),
+      `${card.id} points to missing art: ${card.art_crop}`,
+    );
+  }
+});
 
-  const sources = [
-    JSON.parse(embeddedJson),
-    JSON.parse(
-      fs.readFileSync(
-        new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
-        "utf8",
-      ),
-    ),
-  ];
+test("card studios consume one generated projection instead of embedded or mirrored data", () => {
+  assert.deepEqual(syncStudioData({ check: true }), []);
 
-  for (const cards of sources) {
-    for (const card of cards) {
-      if (/^https?:/i.test(card.art_crop)) continue;
-      assert.ok(
-        fs.existsSync(new URL(card.art_crop, indexUrl)),
-        `${card.id} points to missing art: ${card.art_crop}`,
+  for (const [deckId, definition] of Object.entries(STUDIO_DECKS)) {
+    const indexUrl = new URL(`../${definition.directory}/index.html`, import.meta.url);
+    const generatedUrl = new URL(`../${definition.directory}/deck-data.generated.js`, import.meta.url);
+    const indexHtml = fs.readFileSync(indexUrl, "utf8");
+    assert.match(indexHtml, /<script src="\.\/deck-data\.generated\.js"><\/script>/u);
+    assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
+    assert.equal(fs.readFileSync(generatedUrl, "utf8"), generatedStudioData(deckId));
+
+    const { config } = loadStudioConfig(deckId);
+    if (!config.previewOnly) {
+      assert.ok(config.runtimeDeck, `${deckId} must derive rules from a runtime deck`);
+      assert.equal(
+        config.cards.some((card) => Object.hasOwn(card, "rulesTextEs")),
+        false,
+        `${deckId} duplicates runtime rules in presentation data`,
       );
     }
+  }
+
+  for (const retiredMirror of [
+    "../dev/tools/Decks/monogreen/mono-green.json",
+    "../dev/tools/Decks/vampires/vampires.json",
+    "../dev/tools/Decks/hunters/hunters.json",
+    "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
+  ]) {
+    assert.equal(fs.existsSync(new URL(retiredMirror, import.meta.url)), false, `${retiredMirror} survived`);
   }
 });
 
@@ -202,13 +223,6 @@ test("card generators print the Hostfall copyright footer", () => {
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {
-  const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
-
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL("../src/data/decks/player/vampire_preview/vampire_preview.json", import.meta.url),
@@ -216,16 +230,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
     ),
   );
   const studioSources = [
-    { label: "embedded index", cards: JSON.parse(embeddedJson), includesQuantity: true },
-    {
-      label: "vampires.json",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    },
+    { label: "generated studio projection", cards: buildStudioCards("vampires"), includesQuantity: true },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
@@ -282,11 +287,6 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
 });
 
 test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(/const deckData = (\[[\s\S]*?\]);/)?.[1];
-  assert.ok(embeddedJson, "Mono Green index must contain its embedded deck JSON");
-
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -297,28 +297,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
     ),
   );
   const studioSources = [
-    { label: "embedded index", cards: JSON.parse(embeddedJson) },
-    {
-      label: "mono-green.json",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL("../dev/tools/Decks/monogreen/mono-green.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    },
-    {
-      label: "card generator mirror",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL(
-            "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
-            import.meta.url,
-          ),
-          "utf8",
-        ),
-      ),
-    },
+    { label: "generated studio projection", cards: buildStudioCards("monogreen") },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
@@ -391,14 +370,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
 });
 
 test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/zombies/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Zombie index must contain its embedded deck JSON");
-
-  const studioCards = JSON.parse(embeddedJson);
+  const studioCards = buildStudioCards("zombies");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL("../src/data/decks/horde/zombies/horde-zombies.json", import.meta.url),
@@ -502,14 +474,7 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
 });
 
 test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/goblins/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Goblin index must contain its embedded deck JSON");
-
-  const studioCards = JSON.parse(embeddedJson);
+  const studioCards = buildStudioCards("goblins");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -613,19 +578,7 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
 
 test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   const indexUrl = new URL("../dev/tools/Decks/hunters/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Hunter index must contain its embedded deck JSON");
-
-  const embeddedCards = JSON.parse(embeddedJson);
-  const mirrorCards = JSON.parse(
-    fs.readFileSync(
-      new URL("../dev/tools/Decks/hunters/hunters.json", import.meta.url),
-      "utf8",
-    ),
-  );
+  const previewCards = buildStudioCards("hunters");
   const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|Agrega|vidas)\b|\{\{T\}\})/iu;
   const expectedTypes = {
     territorio_de_caza: "Fuente — Territorio",
@@ -643,15 +596,14 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
     trampa_improvisada: "Eco · Ficha — Trampa",
   };
 
-  assert.equal(embeddedCards.length, 13, "Hunter preview must keep its 13 definitions");
+  assert.equal(previewCards.length, 13, "Hunter preview must keep its 13 definitions");
   assert.equal(
-    embeddedCards.reduce((total, card) => total + card.cantidad, 0),
+    previewCards.reduce((total, card) => total + card.cantidad, 0),
     40,
     "Hunter preview must keep its 40-card authored composition",
   );
-  assert.deepEqual(embeddedCards, mirrorCards, "Hunter embedded data and hunters.json diverged");
 
-  for (const card of embeddedCards) {
+  for (const card of previewCards) {
     assert.equal(card.tipo, expectedTypes[card.id], `Hunter preview has a stale type for ${card.id}`);
     assert.doesNotMatch(
       `${card.tipo}\n${card.desc}`,
@@ -676,25 +628,12 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
 });
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
-  const loadEmbeddedDeck = (relativePath, pattern) => {
-    const html = fs.readFileSync(new URL(relativePath, import.meta.url), "utf8");
-    const json = html.match(pattern)?.[1];
-    assert.ok(json, `${relativePath} must contain embedded deck data`);
-    return JSON.parse(json);
-  };
-  const scriptDeckPattern = /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/;
   const studioDecks = [
-    [
-      "Mono Green",
-      loadEmbeddedDeck(
-        "../dev/tools/Decks/monogreen/index.html",
-        /const deckData = (\[[\s\S]*?\]);/,
-      ),
-    ],
-    ["Vampires", loadEmbeddedDeck("../dev/tools/Decks/vampires/index.html", scriptDeckPattern)],
-    ["Zombies", loadEmbeddedDeck("../dev/tools/Decks/zombies/index.html", scriptDeckPattern)],
-    ["Goblins", loadEmbeddedDeck("../dev/tools/Decks/goblins/index.html", scriptDeckPattern)],
-    ["Hunters", loadEmbeddedDeck("../dev/tools/Decks/hunters/index.html", scriptDeckPattern)],
+    ["Mono Green", buildStudioCards("monogreen")],
+    ["Vampires", buildStudioCards("vampires")],
+    ["Zombies", buildStudioCards("zombies")],
+    ["Goblins", buildStudioCards("goblins")],
+    ["Hunters", buildStudioCards("hunters")],
   ];
   const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
 

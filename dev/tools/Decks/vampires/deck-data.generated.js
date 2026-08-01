@@ -1,4 +1,5 @@
-[
+/* Generado por scripts/card-studio-data.mjs. No editar a mano. */
+window.HostfallDeckData = [
   {
     "id": "crimson_energy",
     "art_crop": "../../../../public/cards/vampires/art/crimson_energy.webp",
@@ -8,7 +9,8 @@
     "atk": null,
     "def": null,
     "desc": "Agota: Gana {E}.",
-    "lore": "Todo juramento deja algo atrás."
+    "lore": "Todo juramento deja algo atrás.",
+    "cantidad": 12
   },
   {
     "id": "blood_page",
@@ -19,7 +21,8 @@
     "atk": 1,
     "def": 3,
     "desc": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno.",
-    "lore": "Los más jóvenes aprenden a servir antes que a alimentarse."
+    "lore": "Los más jóvenes aprenden a servir antes que a alimentarse.",
+    "cantidad": 3
   },
   {
     "id": "crimson_bat",
@@ -30,7 +33,8 @@
     "atk": 2,
     "def": 2,
     "desc": "Volar\nDrenar",
-    "lore": "Las campanas callan antes de que lleguen sus alas."
+    "lore": "Las campanas callan antes de que lleguen sus alas.",
+    "cantidad": 3
   },
   {
     "id": "tithe_acolyte",
@@ -41,7 +45,8 @@
     "atk": 1,
     "def": 2,
     "desc": "Agota y paga 5 de Vida: Gana {E}.",
-    "lore": "La corte acepta toda moneda, especialmente la que duele."
+    "lore": "La corte acepta toda moneda, especialmente la que duele.",
+    "cantidad": 2
   },
   {
     "id": "court_duelist",
@@ -52,7 +57,8 @@
     "atk": 3,
     "def": 3,
     "desc": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno.",
-    "lore": "La cortesía termina con la primera hoja desenvainada."
+    "lore": "La cortesía termina con la primera hoja desenvainada.",
+    "cantidad": 3
   },
   {
     "id": "crypt_guardian",
@@ -63,7 +69,8 @@
     "atk": 2,
     "def": 4,
     "desc": "Guardia aérea\nCuando reciba daño y sobreviva, ganas 2 de Vida.",
-    "lore": "Nada abandona la cripta sin su permiso."
+    "lore": "Nada abandona la cripta sin su permiso.",
+    "cantidad": 3
   },
   {
     "id": "black_vein_executioner",
@@ -74,7 +81,8 @@
     "atk": 1,
     "def": 3,
     "desc": "Letal",
-    "lore": "Un corte basta. La vena hace el resto."
+    "lore": "Un corte basta. La vena hace el resto.",
+    "cantidad": 2
   },
   {
     "id": "blood_sentinel",
@@ -85,7 +93,8 @@
     "atk": 3,
     "def": 4,
     "desc": "Alerta",
-    "lore": "El deber mantiene el hambre atada con una cadena corta."
+    "lore": "El deber mantiene el hambre atada con una cadena corta.",
+    "cantidad": 2
   },
   {
     "id": "eternal_feast_countess",
@@ -96,7 +105,8 @@
     "atk": 5,
     "def": 5,
     "desc": "Coste adicional: Paga la mitad de tu Vida.\nVolar. Alerta.\nDurante tu turno, este Eco tiene Drenar.",
-    "lore": "Su corte ha esperado siglos al último invitado."
+    "lore": "Su corte ha esperado siglos al último invitado.",
+    "cantidad": 2
   },
   {
     "id": "blood_pact",
@@ -107,7 +117,8 @@
     "atk": null,
     "def": null,
     "desc": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas.",
-    "lore": "El conocimiento nunca pregunta si el precio fue justo."
+    "lore": "El conocimiento nunca pregunta si el precio fue justo.",
+    "cantidad": 2
   },
   {
     "id": "crimson_impulse",
@@ -118,7 +129,8 @@
     "atk": null,
     "def": null,
     "desc": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno.",
-    "lore": "El dolor sólo es fuerza esperando una dirección."
+    "lore": "El dolor sólo es fuerza esperando una dirección.",
+    "cantidad": 2
   },
   {
     "id": "drain_essence",
@@ -129,7 +141,8 @@
     "atk": null,
     "def": null,
     "desc": "Haz 3 de daño a un Eco. Gana 2 de Vida.",
-    "lore": "Hasta los muertos conservan algo que entregar."
+    "lore": "Hasta los muertos conservan algo que entregar.",
+    "cantidad": 2
   },
   {
     "id": "predatory_thirst",
@@ -140,7 +153,8 @@
     "atk": null,
     "def": null,
     "desc": "Todos tus aliados ganan Drenar hasta el Final.",
-    "lore": "El hambre afila cada paso hacia el Host."
+    "lore": "El hambre afila cada paso hacia el Host.",
+    "cantidad": 1
   },
   {
     "id": "final_banquet",
@@ -151,6 +165,7 @@
     "atk": null,
     "def": null,
     "desc": "Destruye un enemigo. Pierdes Vida igual a su Fuerza.",
-    "lore": "El último invitado siempre paga el banquete."
+    "lore": "El último invitado siempre paga el banquete.",
+    "cantidad": 1
   }
-]
+];

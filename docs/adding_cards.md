@@ -398,6 +398,28 @@ Entrada típica:
 El manifest solo acepta assets locales. El nombre, tipo y texto mostrado vienen del JSON del deck;
 `gameText` debe describir exactamente el comportamiento de Hostfall.
 
+Las cartas impresas se producen con los estudios de `dev/tools/Decks/`. Para un deck jugable, el
+JSON runtime sigue siendo la única fuente de nombre, reglas, coste, estadísticas y cantidad;
+`studio.config.json` agrega únicamente datos de presentación como `artCrop`, `typeLineEs` y lore.
+No copiar `gameText` dentro de la configuración del estudio.
+
+Después de editar cualquiera de esas fuentes:
+
+```powershell
+node scripts/card-studio-data.mjs --write
+node scripts/card-studio-data.mjs --check
+```
+
+`deck-data.generated.js` es un artefacto generado y no se edita a mano. El exportador
+`dev/tools/Decks/export_cards.cjs <deck>` vuelve a producir los PNG y actualiza
+`dev/tools/Decks/generation-manifest.json`. `node scripts/check-card-assets.mjs` falla si cambió el
+deck, la presentación, el renderer, las fuentes tipográficas o el arte después de exportar.
+
+El arte fuente debe vivir separado del PNG final, normalmente en `public/cards/<deck>/art/`. El
+exportador rechaza una carta que use como `artCrop` un PNG de su propia carpeta final para evitar
+cartas anidadas y sobrescritura circular. El contrato completo está en
+`dev/tools/Decks/README.md`.
+
 Al añadir una carta a un deck existente, añadir también su entrada al manifest. Al crear un deck
 nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí derivan engine, inspector,
 catálogo e imágenes.
@@ -457,6 +479,8 @@ el tablero alrededor de la prueba.
 - [ ] La carta está en el JSON correcto con id estable y cantidad correcta.
 - [ ] `deckSize` sigue coincidiendo con la suma de cartas del deck.
 - [ ] Tiene entrada en el manifest de imágenes.
+- [ ] Tiene presentación y arte fuente separados en el estudio correspondiente.
+- [ ] `card-studio-data.mjs --check` y `check-card-assets.mjs` pasan después de exportar.
 - [ ] Cada habilidad está soportada o marcada explícitamente con `engineSupport`.
 - [ ] No hay lógica por nombre de carta.
 - [ ] Los target ids declarados coinciden con los usados por los efectos.

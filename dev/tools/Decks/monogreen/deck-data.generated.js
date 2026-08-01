@@ -1,4 +1,5 @@
-[
+/* Generado por scripts/card-studio-data.mjs. No editar a mano. */
+window.HostfallDeckData = [
   {
     "id": "llanowar_elves",
     "art_crop": "../../../../public/cards/mono_green_ramp/art/llanowar_elves.jpg",
@@ -8,7 +9,8 @@
     "atk": 1,
     "def": 1,
     "desc": "Agota: Gana {E}.",
-    "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
+    "lore": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia.",
+    "cantidad": 2
   },
   {
     "id": "sunshower_druid",
@@ -19,7 +21,8 @@
     "atk": 0,
     "def": 2,
     "desc": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida.",
-    "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
+    "lore": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces.",
+    "cantidad": 3
   },
   {
     "id": "druid_of_the_cowl",
@@ -30,7 +33,8 @@
     "atk": 1,
     "def": 3,
     "desc": "Agota: Gana {E}.",
-    "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
+    "lore": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes.",
+    "cantidad": 2
   },
   {
     "id": "ichorspit_basilisk",
@@ -41,7 +45,8 @@
     "atk": 1,
     "def": 3,
     "desc": "Letal\nVeneno 1",
-    "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
+    "lore": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia.",
+    "cantidad": 2
   },
   {
     "id": "beast_kin_ranger",
@@ -52,7 +57,8 @@
     "atk": 3,
     "def": 3,
     "desc": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno.",
-    "lore": "No dirige a las bestias. Corre a su lado y comparte su furia."
+    "lore": "No dirige a las bestias. Corre a su lado y comparte su furia.",
+    "cantidad": 3
   },
   {
     "id": "magnigoth_sentry",
@@ -63,7 +69,8 @@
     "atk": 4,
     "def": 4,
     "desc": "Guardia aérea",
-    "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
+    "lore": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre.",
+    "cantidad": 2
   },
   {
     "id": "colossadactyl",
@@ -74,7 +81,8 @@
     "atk": 4,
     "def": 5,
     "desc": "Guardia aérea",
-    "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
+    "lore": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio.",
+    "cantidad": 2
   },
   {
     "id": "timberland_ancient",
@@ -85,7 +93,8 @@
     "atk": 6,
     "def": 5,
     "desc": "Guardia aérea",
-    "lore": "En sus anillos conserva la memoria de bosques que ya no existen."
+    "lore": "En sus anillos conserva la memoria de bosques que ya no existen.",
+    "cantidad": 1
   },
   {
     "id": "cosmic_hunger",
@@ -96,7 +105,8 @@
     "atk": null,
     "def": null,
     "desc": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza.",
-    "lore": "Por un instante, el depredador siente el vacío que devora las estrellas."
+    "lore": "Por un instante, el depredador siente el vacío que devora las estrellas.",
+    "cantidad": 2
   },
   {
     "id": "ruthless_predation",
@@ -106,8 +116,9 @@
     "costo": 2,
     "atk": null,
     "def": null,
-    "desc": "Un aliado gana +1/+2 hasta el final del turno.\nLuego lucha contra un enemigo.",
-    "lore": "En la espesura no hay crueldad, solo hambre y supervivencia."
+    "desc": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo.",
+    "lore": "En la espesura no hay crueldad, solo hambre y supervivencia.",
+    "cantidad": 1
   },
   {
     "id": "broken_wings",
@@ -118,7 +129,8 @@
     "atk": null,
     "def": null,
     "desc": "Destruye un Apoyo o un Eco con Volar.",
-    "lore": "Todo lo que domina el cielo termina por conocer la tierra."
+    "lore": "Todo lo que domina el cielo termina por conocer la tierra.",
+    "cantidad": 2
   },
   {
     "id": "giant_growth",
@@ -129,7 +141,8 @@
     "atk": null,
     "def": null,
     "desc": "El Eco objetivo gana +3/+3 hasta el final del turno.",
-    "lore": "La naturaleza no pide permiso para superar sus límites."
+    "lore": "La naturaleza no pide permiso para superar sus límites.",
+    "cantidad": 2
   },
   {
     "id": "forest",
@@ -140,6 +153,7 @@
     "atk": null,
     "def": null,
     "desc": "Agota: Gana {E}.",
-    "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
+    "lore": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo.",
+    "cantidad": 15
   }
-]
+];

@@ -120,6 +120,17 @@ Each card entry should be keyed by card id:
 The game and deck inspector use this manifest directly. Remote lookups and fallbacks are not
 supported; the referenced file must exist under `public/cards`.
 
+## Printed card generation
+
+Gameplay rules remain authoritative in this deck JSON. The matching
+`dev/tools/Decks/<deck>/studio.config.json` contains presentation-only data, and
+`scripts/card-studio-data.mjs` generates the data consumed by the HTML studio. Do not duplicate
+rules, costs, stats or quantities in the studio config.
+
+The final PNG batch is tracked by `dev/tools/Decks/generation-manifest.json`, which hashes the runtime
+deck, presentation config, renderer, fonts, source art and every exported PNG. See
+`dev/tools/Decks/README.md` for the complete workflow.
+
 ## Runtime actual
 
 Los tres decks registrados usan este esquema en partida, no sólo en el inspector:

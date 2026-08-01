@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { verifyGenerationManifest } from "./card-generation-manifest.mjs";
 
 const ROOT = process.cwd();
 const STRICT = process.argv.includes("--strict");
@@ -254,7 +255,7 @@ const derivedDistAssetRoots = [
   "dist/cards/zombies",
   "dist/cards/goblins",
 ];
-const generatedCardPngs = walk("public/cards").filter((file) => path.extname(file).toLowerCase() === ".png");
+const cardAssetFreshness = verifyGenerationManifest();
 const provenanceFiles = walk("docs").filter((file) => /(?:resource|asset)[_-]?provenance/i.test(path.basename(file)));
 const deprecatedCardTools = walk("dev/tools/Cards");
 
@@ -312,12 +313,12 @@ const checks = [
   finding(
     "unverifiable-generated-pngs",
     "warning",
-    "L2",
-    "Generated card PNGs without a freshness manifest",
-    "There is no source hash proving that checked-in PNGs match current studio data.",
+    "L6",
+    "Generated card PNGs without a valid freshness proof",
+    "Every checked-in PNG must match the current local data, renderer and source-art hashes.",
     {
-      count: fs.existsSync(absolute("public/cards/generation-manifest.json")) ? 0 : generatedCardPngs.length,
-      samples: generatedCardPngs.map(relative),
+      count: cardAssetFreshness.unverifiedPngs.length,
+      samples: cardAssetFreshness.unverifiedPngs,
     },
   ),
   finding(

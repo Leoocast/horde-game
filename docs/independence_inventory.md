@@ -114,6 +114,12 @@ La revisión visual confirmó que algunos PNG distribuidos son anteriores al voc
 Los tests actuales comparan estudios y JSON, pero no pueden leer el texto rasterizado dentro de los
 PNG. L2 debe introducir una prueba de frescura basada en entradas y hashes, no depender de OCR.
 
+Cierre de L2 (2026-07-31): el manifest y la verificación por hashes ya existen. Mono Green (13 PNG)
+y Vampiros (14 PNG) fueron regenerados y son verificables. Los 34 PNG de Zombies y Trasgos siguen
+sin prueba válida porque sus estudios apuntan circularmente a esos mismos PNG como arte; el
+exportador ahora los rechaza antes de sobrescribirlos. El usuario aceptó conservarlos intactos y
+resolverlos con arte fuente nuevo en L6.
+
 ## L3 — Authored data legacy
 
 El auditor contó 425 apariciones de campos legacy en los cuatro decks activos:
@@ -203,7 +209,8 @@ comentarios y aliases una vez que el engine ya no dependa de ellos.
 | Hallazgo | Fase responsable |
 | --- | --- |
 | Referencias explícitas y herramientas antiguas | L1 |
-| PNG sin prueba de frescura y texto rasterizado obsoleto | L2 |
+| Pipeline y prueba de frescura de PNG | L2 |
+| 34 PNG legacy sin arte fuente separado | L6 |
 | 425 campos legacy en authored data | L3 |
 | 859 coincidencias en engine/store/playground | L4 |
 | 47 identidades derivadas | L5 |

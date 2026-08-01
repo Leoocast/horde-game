@@ -1,4 +1,5 @@
-[
+/* Generado por scripts/card-studio-data.mjs. No editar a mano. */
+window.HostfallDeckData = [
   {
     "id": "territorio_de_caza",
     "art_crop": "../../../../public/cards/hunters/art/territorio_de_caza.webp",
@@ -156,4 +157,4 @@
     "cantidad": 0,
     "isToken": true
   }
-]
+];

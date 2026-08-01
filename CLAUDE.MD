@@ -859,15 +859,26 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
   usa `quita ... e Invoca ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
   `tests/deckCardText.test.js`.
+- Los estudios ya no mantienen copias editables de reglas. Para cada deck jugable,
+  `scripts/card-studio-data.mjs` deriva nombre, texto, coste, stats y cantidad del JSON runtime y
+  los combina con `studio.config.json`, que contiene solamente arte, línea de tipo, lore y
+  decisiones visuales. Cada índice consume `deck-data.generated.js`; el archivo es generado y no
+  se edita. Los mirrors anteriores y los arreglos embebidos fueron eliminados. Cazadores es la
+  única excepción porque sigue siendo preview sin deck runtime: su configuración contiene las
+  definiciones completas.
+  `export_cards.cjs` sincroniza la proyección, exige arte local separado, exporta a
+  `public/cards/` y actualiza `dev/tools/Decks/generation-manifest.json`. Ese manifest prueba frescura
+  con hashes del deck, configuración, renderer, fuentes, arte y PNG. Los estudios no dependen de
+  CDN. El flujo y los comandos están en `dev/tools/Decks/README.md`.
 - El estudio de Zombies y `horde-zombies.json` comparten vocabulario visible Hostfall para sus 17
   definiciones: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo`, `Hueste`, `Archivo`, `Memoria`,
   `Cronista`, `Imponente`, `Letal` y `Furtivo`. Crear fichas se redacta con `Invoca`; enviar cartas
   del Archivo a la Memoria se escribe completo y no recibe keyword. `Apoyo` conserva el glifo del
   tipo Support. Habilidades todavia inactivas, como regresar los Stitchwing desde la Memoria, y las
   activaciones pendientes de Graf Harvest permanecen en los datos internos pero no se imprimen.
-  Este pase no cambia nombres, arte, cantidades, balance, ids, tipos o keywords del motor ni
-  regenera PNGs. La regresion compara cantidad, coste, stats, tipos y texto del estudio contra el
-  deck runtime, y rechaza vocabulario visible retirado.
+  La regresión compara cantidad, coste, stats, tipos y texto del estudio contra el deck runtime, y
+  rechaza vocabulario visible retirado. Sus 17 PNG todavía no fueron regenerados: no existe arte
+  fuente separado y el exportador bloquea sus rutas circulares antes de sobrescribirlos.
   Smallpox imprime `sacrifica una Fuente`: la Fuente es la carta permanente elegida, mientras que
   Energía es el recurso que genera. Su prompt runtime también pide `Elige una Fuente para
   Sacrificar`. El índice usa el mismo header mínimo de los decks migrados y su glifo de Eco mide
@@ -882,10 +893,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Hueste todavía no tiene una política para usarla. La obligación de atacar del Agitador continúa
   omitida porque la regla global de la Hueste ya la cumple. El header es mínimo, el glifo de Eco
   mide 56px y la regresión compara cantidad, coste, stats, tipo y reglas contra el deck runtime.
-  Este pase tampoco cambia nombres, arte, cantidades, balance, ids o aliases del motor ni regenera
-  los PNG de `public/cards/goblins/`.
+  Sus 17 PNG tampoco fueron regenerados: no existe arte fuente separado y el exportador bloquea
+  sus rutas circulares antes de sobrescribirlos. El usuario aceptó conservar esta excepción hasta
+  que el arte definitivo los sustituya en L6. No se cambiaron nombres, arte, balance, ids ni
+  aliases del motor.
 - Cazadores sigue siendo un estudio preview de 13 definiciones y 40 cartas, sin deck runtime ni
-  mecánicas registradas. Su JSON embebido y `hunters.json` deben ser idénticos. La presentación usa
+  mecánicas registradas. `hunters/studio.config.json` es su única fuente editable y genera la
+  proyección que consume el índice. La presentación usa
   `Fuente`, `Eco`, `Eco · Ficha`, `Eco de Crónica`, `Apoyo`, `Hechizo` y `Hechizo · Rápido`;
   `Trampa` es subtipo de Eco, no tipo adicional, y conserva su glifo propio. Lyra es el Eco de
   Crónica. `Marcado`, `Aturdido` y `Atado` están definidos en `docs/game_vocabulary.md` solamente
@@ -922,7 +936,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Pacto e Impulso permanecen en dos copias, Sed en una y Banquete Final cuesta 3. La regresion del
   estudio compara coste, stats, cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
   `.command`, escribe cada PNG en `exported-png/` y tambien lo sincroniza directamente con la
-  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente.
+  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente. Los 14
+  PNG de Vampiros fueron regenerados con el vocabulario vigente y tienen huella válida en el
+  manifest de generación.
   El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+1 sobrevive la limpieza del turno del
   player, aplica al bloquear durante el combate de la Horda y se elimina al comenzar el siguiente
   turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 5 vidas.
@@ -933,6 +949,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   HTML (`MonoGreenHandCardFace`, `HostfallCardFace`, `DeckCardVisual` y el prototipo Sunshower)
   fueron eliminados: las cartas vigentes se producen con los generadores bajo `dev/tools/Decks/`
   y el juego consume exclusivamente sus imagenes completas.
+
+  Los 13 PNG de Mono Green fueron regenerados con el vocabulario vigente y tienen huella válida
+  en el manifest de generación.
 
   El estudio Mono Green y sus dos espejos JSON imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
   `Hechizo`, `Hechizo · Rápido`, `Guardia aérea`, `Letal` y `Veneno 1`) sin cambiar los ids,
