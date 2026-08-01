@@ -67,6 +67,10 @@ function authoredEndurance(card) {
   return card.endurance ?? card.toughness ?? null;
 }
 
+function authoredIsToken(card) {
+  return Boolean(card.isToken || card.kinds?.includes("TOKEN"));
+}
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
@@ -198,7 +202,7 @@ export function buildStudioCards(deckId) {
       desc: visibleRules(runtimeCard, presentation, hiddenTraits),
       lore: presentation.flavorTextEs ?? runtimeFlavor,
       cantidad: runtimeCard.quantity,
-      ...(runtimeCard.isToken ? { isToken: true } : {}),
+      ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
     };
   });
 

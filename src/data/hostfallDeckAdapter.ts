@@ -29,7 +29,26 @@ const LEGACY_ZONE_BY_HOSTFALL_ZONE: Record<string, string> = {
 };
 
 const LEGACY_EVENT_BY_HOSTFALL_EVENT: Record<string, string> = {
+  BEGIN_READY: "BEGIN_UPKEEP",
+  CARD_PLAYED: "CARD_CAST",
+  ECHO_DIED: "CREATURE_DIED",
   INVOKED: "ENTERS_BATTLEFIELD",
+};
+
+const LEGACY_VALUE_BY_HOSTFALL_VALUE: Record<string, string> = {
+  ANOTHER_ALLIED_ECHO_DIED: "ANOTHER_CREATURE_YOU_CONTROL_DIED",
+  BANISH_CARD_FROM_MEMORY: "EXILE_CARD_FROM_GRAVEYARD",
+  CHRONICLER_CHOOSES: "PLAYER_CHOOSES",
+  DISCARD_OWN_ARCHIVE_TO_MEMORY: "MILL_SELF",
+  EXHAUST_HOST_ECHOS_FOR_ENERGY: "TAP_HORDE_CREATURES_FOR_MANA",
+  HOST_DIRECTIVE_ONLY: "HORDE_DIRECTIVE_ONLY",
+  IGNORED_FOR_HOST_MVP: "IGNORED_FOR_HORDE_MVP",
+  LOWEST_ENERGY_COST_THEN_RANDOM: "LOWEST_MANA_VALUE_THEN_RANDOM",
+  LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY: "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY",
+  MEMORY_COUNT_AT_LEAST: "GRAVEYARD_COUNT_AT_LEAST",
+  MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO: "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
+  PLAYED_CARD_IS_NON_TOKEN: "CAST_CARD_IS_NON_TOKEN",
+  RETURN_SELF_FROM_MEMORY_TO_FIELD: "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
 };
 
 export function isHostfallDeck(rawDeck: NewDeckList): boolean {
@@ -45,6 +64,9 @@ export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
   return {
     ...rawDeck,
     side: rawDeck.side === "HOST" ? "HORDE" : "PLAYER",
+    rulesProfile: rawDeck.rulesProfile
+      ? adaptNestedAuthoring(rawDeck.rulesProfile) as Record<string, unknown>
+      : undefined,
     cards: rawDeck.cards.map(adaptHostfallCard),
     tokens: rawDeck.tokens?.map(adaptHostfallCard),
   };
@@ -109,6 +131,7 @@ function nestedLegacyTraits(traits: unknown): unknown {
 }
 
 function adaptNestedAuthoring(value: unknown): unknown {
+  if (typeof value === "string") return LEGACY_VALUE_BY_HOSTFALL_VALUE[value] ?? value;
   if (Array.isArray(value)) {
     return value.flatMap((item) => {
       if (!item || typeof item !== "object") return [adaptNestedAuthoring(item)];
@@ -151,6 +174,50 @@ function adaptNestedAuthoring(value: unknown): unknown {
     }
     if (key === "requiresStabilized") {
       adapted.requiresNoSummoningSickness = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "energy") {
+      adapted.mana = typeof nestedValue === "number" ? `{${nestedValue}}` : adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "exhausted") {
+      adapted.tapped = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "permanentKind" && typeof nestedValue === "string") {
+      adapted.permanentType = LEGACY_KIND_BY_HOSTFALL_KIND[nestedValue]?.[0] ?? nestedValue;
+      continue;
+    }
+    if (key === "controller" && nestedValue === "HOST") {
+      adapted.controller = "HORDE";
+      continue;
+    }
+    if (key === "damagePerArchiveDiscard") {
+      adapted.damagePerMill = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "poisonPerArchiveDiscard") {
+      adapted.poisonPerMill = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "hostEchosHaveImpetus") {
+      adapted.hordeCreaturesHaveHaste = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "requiredEnergy") {
+      adapted.requiredMana = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "hostDirective") {
+      adapted.hordeDirective = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "hostErrata") {
+      adapted.hordeErrata = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "hostVersion") {
+      adapted.hordeVersion = adaptNestedAuthoring(nestedValue);
       continue;
     }
     if (key === "type" && nestedValue === "SOURCE_IS_READY") {

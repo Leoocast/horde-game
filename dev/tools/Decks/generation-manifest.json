@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "monogreen": {
-      "inputHash": "df52590d4183c589b7242ac48a37bb3d37869720144ff1cc478c0758fefa678d",
+      "inputHash": "499484ea1055dc8f80347c612612d44fc7aa9323cd8db7b1d4308185e6677733",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -106,7 +106,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "dc7bcaafe6221670b7fc1e0ab2e7a7b5fdc30400ebef2f122021546cf8347f3e"
+          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
         },
         {
           "path": "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
@@ -117,7 +117,7 @@
         {
           "id": "llanowar_elves",
           "path": "public/cards/mono_green_ramp/llanowar_elves.png",
-          "sha256": "187ea52ec957de9e475f72d917975c459ff76e1af7e64378d9d74a75fd328793",
+          "sha256": "8f1c7182428f71712bacb5b015fa22f7aa9fa5cef2457602f78a7dc8f0422841",
           "width": 976,
           "height": 1360
         },
@@ -208,7 +208,7 @@
       ]
     },
     "vampires": {
-      "inputHash": "c155ea64d59cf73c2311c465c84ad3d37c4f78c90d95a6663506abf1a0ac2cdc",
+      "inputHash": "006ef90224a7d7939dc8a7ffb247614609834d5c1c44b1c13a51dcb087f4accb",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -324,7 +324,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "dc7bcaafe6221670b7fc1e0ab2e7a7b5fdc30400ebef2f122021546cf8347f3e"
+          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
         },
         {
           "path": "src/data/decks/player/vampire_preview/vampire_preview.json",

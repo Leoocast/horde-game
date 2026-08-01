@@ -141,8 +141,8 @@ Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo 
 - `horde_zombies`
 - `goblin_assault_horde`
 
-Mono Green y Vampiros ya están authored en `1.0.0`; Zombies y Trasgos permanecen temporalmente en
-`0.2.0` y el adaptador los deja intactos hasta su migración.
+Mono Green, Vampiros y Zombies ya están authored en `1.0.0`; Trasgos permanece temporalmente en
+`0.2.0` y el adaptador lo deja intacto hasta su migración.
 
 `hostfallDeckAdapter` traduce temporalmente el schema `1.0.0` al contrato legacy del engine;
 `normalizeDeck` convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el

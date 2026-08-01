@@ -146,6 +146,10 @@ Avance L3.2 (2026-07-31): Vampiros también usa schema Hostfall `1.0.0`. El audi
 apariciones, concentradas exclusivamente en Zombies y Trasgos; ambos permanecen en `0.2.0` hasta
 sus respectivos bloques. Mono Green y Vampiros conservan huellas de generación válidas.
 
+Avance L3.3 (2026-07-31): Zombies usa schema Hostfall `1.0.0`. El auditor bajó a 128 apariciones,
+todas dentro de Trasgos, el último deck que permanece en `0.2.0`. Las 17 imágenes de Zombies
+continúan dentro de la excepción de arte sin fuente separada aceptada para L6.
+
 ## L4 — Modelo interno legacy
 
 Se contaron 859 coincidencias en `src/engine`, `src/store` y `src/playground`. El número representa
@@ -219,7 +223,7 @@ comentarios y aliases una vez que el engine ya no dependa de ellos.
 | Referencias explícitas y herramientas antiguas | L1 |
 | Pipeline y prueba de frescura de PNG | L2 |
 | 34 PNG legacy sin arte fuente separado | L6 |
-| 234 campos legacy restantes en authored data (baseline: 425) | L3 |
+| 128 campos legacy restantes en authored data (baseline: 425) | L3 |
 | 859 coincidencias en engine/store/playground | L4 |
 | 47 identidades derivadas | L5 |
 | 60 assets derivados y ausencia de procedencia | L6 |

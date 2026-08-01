@@ -379,10 +379,10 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
   );
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Encantamientos?|Horda|Amenaza|cementerio|jugador|entra|obtiene|Zombies?)\b|Toque mortal|Escurridizo|se lance|\bcrea(?:r)?\b)/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
+    DAUNTING: "Imponente",
     FLYING: "Volar",
-    MENACE: "Imponente",
-    SKULK: "Furtivo",
+    FURTIVE: "Furtivo",
+    LETHAL: "Letal",
   };
 
   assert.equal(studioCards.length, 17, "Zombie studio must keep its 17 card definitions");
@@ -405,7 +405,7 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
     const rulesText = /^Sin efecto (?:activo )?adicional\.$/u.test(runtimeCard.gameText?.es ?? "")
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? [])
+    const keywordText = (runtimeCard.traits ?? [])
       .map((keyword) => keywordLabels[keyword] ?? keyword);
     const expectedRules = [...keywordText, ...rulesText].filter(Boolean).join("\n");
     const studioCard = studioCards.find((card) => card.id === runtimeCard.id);
@@ -421,10 +421,10 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
       runtimeCard.quantity,
       `Zombie studio has a stale quantity for ${runtimeCard.id}`,
     );
-    if (!runtimeCard.isToken) {
+    if (!runtimeCard.kinds.includes("TOKEN")) {
       assert.equal(
         studioCard.costo,
-        runtimeCard.manaValue,
+        runtimeCard.energyCost.amount,
         `Zombie studio has a stale cost for ${runtimeCard.id}`,
       );
     }
@@ -435,29 +435,29 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
     );
     assert.equal(
       studioCard.def ?? null,
-      runtimeCard.toughness ?? null,
-      `Zombie studio has stale toughness for ${runtimeCard.id}`,
+      runtimeCard.endurance ?? null,
+      `Zombie studio has stale endurance for ${runtimeCard.id}`,
     );
 
-    if (runtimeCard.isToken) {
+    if (runtimeCard.kinds.includes("TOKEN")) {
       assert.match(
         studioCard.tipo,
         /^Eco · Ficha\b/u,
         `Zombie studio has a stale token type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Creature")) {
+    } else if (runtimeCard.kinds.includes("ECHO")) {
       assert.match(
         studioCard.tipo,
         /^Eco\b/u,
         `Zombie studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+    } else if (runtimeCard.kinds.includes("SPELL")) {
       assert.equal(
         studioCard.tipo,
         "Hechizo",
         `Zombie studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Enchantment")) {
+    } else if (runtimeCard.kinds.includes("SUPPORT")) {
       assert.equal(
         studioCard.tipo,
         "Apoyo",

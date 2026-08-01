@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L3 en progreso; Vampiros listo para prueba del usuario**
+Estado: **L3 en progreso; Zombies listo para prueba del usuario**
 Última actualización: 2026-07-31  
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -26,7 +26,7 @@ demostrarse.
 | L0 — Punto seguro e inventario | Completada | Autorizada |
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
-| L3 — Schema Hostfall para decks | En progreso: 2/4 decks | Autorizada por partes |
+| L3 — Schema Hostfall para decks | En progreso: 3/4 decks | Autorizada por partes |
 | L4 — Limpieza interna del engine | No iniciada | No autorizada todavía |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
@@ -266,6 +266,20 @@ cambio hasta que una fase de diseño autorice modificar reglas.
 - Mono Green y Vampiros fueron reexportados para renovar su huella de frescura bajo `1.0.0`; los
   únicos PNG todavía no verificables son los 34 de Horda diferidos a L6.
 
+### Avance L3.3 — Zombies
+
+- El usuario validó Vampiros mediante una partida completa antes de autorizar este bloque.
+- `horde-zombies.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`, `SPELL`,
+  `energyCost`, `endurance`, `traits`, `FIELD`, `MEMORY`, `INVOKED` y controladores `HOST`.
+- `rulesProfile` habla Hostfall (`damagePerArchiveDiscard`, `poisonPerArchiveDiscard`,
+  `hostEchosHaveImpetus`) y el adaptador restaura temporalmente el contrato que consume L4.
+- Los aliases de reglas exclusivos de este deck se migraron a `BEGIN_READY`, `CARD_PLAYED`,
+  `ECHO_DIED`, `MEMORY_COUNT_AT_LEAST`, `DISCARD_OWN_ARCHIVE_TO_MEMORY` y costes de Energía.
+- Graf Harvest mantiene sus dos habilidades pendientes y Smallpox conserva su resolución custom;
+  ninguna habilidad WIP fue activada accidentalmente.
+- El auditor bajó el inventario authored legacy de 234 a 128 apariciones, todas pertenecientes a
+  Trasgos. Los 34 PNG de Zombies y Trasgos siguen bajo la excepción de arte aceptada para L6.
+
 ### Criterio de aceptación
 
 - Todos los decks usan el schema Hostfall.
@@ -473,7 +487,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 
 | 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
 | 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
-| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; auditor con sólo los 34 PNG de Horda esperados como advertencia de frescura. Pendiente prueba del usuario antes de migrar Zombies. |
+| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
+| 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos. Pendiente prueba del usuario antes de migrar Trasgos. |
 
 ## Plantilla para cerrar una fase
 

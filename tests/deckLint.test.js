@@ -115,3 +115,50 @@ test("Vampires are authored in Hostfall schema and adapt to the current engine",
     mana: { G: 1 },
   });
 });
+
+test("Zombies are authored in Hostfall schema and adapt to the current engine", () => {
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "horde_zombies");
+  assert.ok(entry);
+  assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
+  assert.equal(entry.raw.side, "HOST");
+  assert.equal(entry.raw.cards.reduce((total, card) => total + card.quantity, 0), 50);
+  assertNoLegacyAuthoring(entry.raw);
+  assert.doesNotMatch(
+    JSON.stringify(entry.raw),
+    /"(?:ANOTHER_CREATURE_YOU_CONTROL_DIED|BEGIN_UPKEEP|CARD_CAST|CAST_CARD_IS_NON_TOKEN|CREATURE_DIED|GRAVEYARD_COUNT_AT_LEAST|HORDE|MILL_SELF|PLAYER_CHOOSES|RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD|TAP_HORDE_CREATURES_FOR_MANA)"/u,
+  );
+
+  const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  assert.deepEqual(rawById.zombie_token.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.zombie_token.energyCost, { amount: 2 });
+  assert.deepEqual(rawById.graf_harvest.kinds, ["SUPPORT"]);
+  assert.equal(rawById.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
+  assert.deepEqual(rawById.rancid_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.equal(rawById.crow_of_dark_tidings.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(rawById.diregraf_captain.abilities[1].trigger.event, "ECHO_DIED");
+  assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
+  assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
+  assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
+  assert.equal(entry.raw.rulesProfile.surgeBonus.endurance, 0);
+
+  const adapted = adaptHostfallDeck(entry.raw);
+  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
+  assert.equal(adapted.side, "HORDE");
+  assert.equal(adapted.rulesProfile.damagePerMill, 3);
+  assert.equal(adapted.rulesProfile.poisonPerMill, 3);
+  assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
+  assert.equal(adapted.rulesProfile.surgeBonus.toughness, 0);
+  assert.deepEqual(byId.zombie_token.cardTypes, ["Creature"]);
+  assert.equal(byId.zombie_token.isToken, true);
+  assert.equal(byId.zombie_token.manaValue, 2);
+  assert.deepEqual(byId.graf_harvest.cardTypes, ["Enchantment"]);
+  assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
+  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["Creature"]);
+  assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "MENACE");
+  assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_UPKEEP");
+  assert.deepEqual(byId.rancid_rats.keywords, ["DEATHTOUCH", "SKULK"]);
+  assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "MILL_SELF");
+  assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "CREATURE_DIED");
+  assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_CREATURE_YOU_CONTROL_DIED");
+});

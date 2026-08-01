@@ -33,6 +33,25 @@ const ZONE_BY_LEGACY_ZONE = Object.freeze({
   LIBRARY: "ARCHIVE",
 });
 
+const HOSTFALL_VALUE_BY_LEGACY_VALUE = Object.freeze({
+  ANOTHER_CREATURE_YOU_CONTROL_DIED: "ANOTHER_ALLIED_ECHO_DIED",
+  BEGIN_UPKEEP: "BEGIN_READY",
+  CARD_CAST: "CARD_PLAYED",
+  CAST_CARD_IS_NON_TOKEN: "PLAYED_CARD_IS_NON_TOKEN",
+  CREATURE_DIED: "ECHO_DIED",
+  EXILE_CARD_FROM_GRAVEYARD: "BANISH_CARD_FROM_MEMORY",
+  GRAVEYARD_COUNT_AT_LEAST: "MEMORY_COUNT_AT_LEAST",
+  GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE: "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
+  HORDE_DIRECTIVE_ONLY: "HOST_DIRECTIVE_ONLY",
+  IGNORED_FOR_HORDE_MVP: "IGNORED_FOR_HOST_MVP",
+  LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY: "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY",
+  LOWEST_MANA_VALUE_THEN_RANDOM: "LOWEST_ENERGY_COST_THEN_RANDOM",
+  MILL_SELF: "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+  PLAYER_CHOOSES: "CHRONICLER_CHOOSES",
+  RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD: "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+  TAP_HORDE_CREATURES_FOR_MANA: "EXHAUST_HOST_ECHOS_FOR_ENERGY",
+});
+
 function unique(values) {
   return [...new Set(values)];
 }
@@ -49,7 +68,17 @@ function hostfallTraits(keywords) {
   }));
 }
 
+function legacyEnergyAmount(value) {
+  if (typeof value === "number") return Math.max(0, value);
+  if (typeof value !== "string") return value;
+  return [...value.matchAll(/\{([^}]+)\}/gu)].reduce((total, match) => {
+    const numeric = Number(match[1]);
+    return total + (Number.isFinite(numeric) ? numeric : 1);
+  }, 0);
+}
+
 function migrateNested(value) {
+  if (typeof value === "string") return HOSTFALL_VALUE_BY_LEGACY_VALUE[value] ?? value;
   if (Array.isArray(value)) {
     const migratedItems = value
       .map(migrateNested)
@@ -84,6 +113,54 @@ function migrateNested(value) {
     }
     if (key === "requiresNoSummoningSickness") {
       migrated.requiresStabilized = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "mana") {
+      if (value.type === "ADD_MANA") {
+        migrated.mana = migrateNested(nestedValue);
+        continue;
+      }
+      migrated.energy = legacyEnergyAmount(nestedValue);
+      continue;
+    }
+    if (key === "tapped") {
+      migrated.exhausted = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "permanentType" && typeof nestedValue === "string") {
+      migrated.permanentKind = hostfallKinds([nestedValue])[0] ?? nestedValue;
+      continue;
+    }
+    if (key === "controller" && nestedValue === "HORDE") {
+      migrated.controller = "HOST";
+      continue;
+    }
+    if (key === "damagePerMill") {
+      migrated.damagePerArchiveDiscard = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "poisonPerMill") {
+      migrated.poisonPerArchiveDiscard = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "hordeCreaturesHaveHaste") {
+      migrated.hostEchosHaveImpetus = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "requiredMana") {
+      migrated.requiredEnergy = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "hordeDirective") {
+      migrated.hostDirective = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "hordeErrata") {
+      migrated.hostErrata = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "hordeVersion") {
+      migrated.hostVersion = migrateNested(nestedValue);
       continue;
     }
     if (key === "type" && nestedValue === "SOURCE_IS_UNTAPPED") {
@@ -162,6 +239,9 @@ function migrateCard(card) {
     migrated[key] = migrateNested(value);
   }
   migrated.kinds = unique(kinds);
+  if (!migrated.energyCost) {
+    migrated.energyCost = { amount: Math.max(0, Number(card.manaValue ?? 0)) };
+  }
   if (modifiers.length > 0) migrated.modifiers = modifiers;
   migrated.traits = unique([...hostfallTraits(card.keywords), ...poisonTraits]);
   return migrated;
@@ -178,7 +258,7 @@ function migrateDeck(deck) {
       continue;
     }
     if (key === "side") {
-      migrated.side = value === "HORDE" ? "HOST" : "CHRONICLER";
+      migrated.side = String(value).toUpperCase() === "HORDE" ? "HOST" : "CHRONICLER";
       continue;
     }
     if (key === "colors") continue;
