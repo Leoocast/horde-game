@@ -27,7 +27,6 @@ type Props = {
   suppressSummoningSickness?: boolean;
   suppressCardId?: boolean;
   onSelect?: () => void;
-  onMana?: () => void;
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
@@ -49,7 +48,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -82,7 +81,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
   const summoningSick = !suppressSummoningSickness && card.zone === "field" && card.cardTypes.includes("ECHO") && card.summoningSickness;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
-  void onMana;
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
     : "";
@@ -260,12 +258,11 @@ export type CardStatDisplay = ReturnType<typeof cardStatState>;
 export function CardCostBadge({
   card,
 }: {
-  card: { manaCost?: string; manaValue?: number };
+  card: { energyCost?: number; variableCost?: { hasX?: boolean } };
 }) {
-  const manaCost = card.manaCost?.trim();
-  if (!manaCost) return null;
-  const label = manaCost.includes("{X}") ? "X" : card.manaValue;
-  if (label === undefined) return null;
+  const printedCost = Math.max(0, Number(card.energyCost) || 0);
+  const label = card.variableCost?.hasX ? "X" : printedCost;
+  if (label === 0) return null;
 
   return (
     <div className="card-cost-badge" aria-hidden="true">

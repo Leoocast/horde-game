@@ -83,7 +83,7 @@ test("a player defender's death mid-sequence keeps its slot even with lands on t
   const board = makeBoard();
   const blocker = addCard(game, customCard("blocker", "player"));
   const survivor = addCard(game, customCard("survivor", "player"));
-  // Lands are drawn by the mana core, never by the creature row, so they too look "unregistered".
+  // Sources are drawn by the Energy core, never by the creature row, so they too look "unregistered".
   const forests = Array.from({ length: 5 }, () => addCard(game, cardFromDeck("forest", "player")));
 
   renderFrame(board, [blocker, survivor, ...forests], true);

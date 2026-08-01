@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties } fro
 import { useGameStore } from "../store/useGameStore";
 
 type Point = { x: number; y: number };
-type ManaPath = {
+type EnergyPath = {
   origin: Point;
   target: Point;
   controlA: Point;
@@ -23,19 +23,19 @@ const FLOW_MOTES = [
   { delay: 0.136, scale: 0.64, offset: 6 },
 ] as const;
 
-export function ManaFlowAnimator() {
-  const animation = useGameStore((state) => state.manaFlowAnimation);
-  const resolve = useGameStore((state) => state.resolveManaFlowAnimation);
-  const complete = useGameStore((state) => state.completeManaFlowAnimation);
+export function EnergyFlowAnimator() {
+  const animation = useGameStore((state) => state.energyFlowAnimation);
+  const resolve = useGameStore((state) => state.resolveEnergyFlowAnimation);
+  const complete = useGameStore((state) => state.completeEnergyFlowAnimation);
   const reduceMotion = useReducedMotion();
-  const [path, setPath] = useState<ManaPath | null>(null);
+  const [path, setPath] = useState<EnergyPath | null>(null);
 
   useLayoutEffect(() => {
     if (!animation) {
       setPath(null);
       return;
     }
-    setPath(readManaPath(animation.sourceId));
+    setPath(readEnergyPath(animation.sourceId));
   }, [animation?.id, animation?.sourceId]);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function ManaFlowAnimator() {
     return () => window.clearTimeout(timer);
   }, [animation, complete, reduceMotion]);
 
-  const samples = useMemo(() => path ? sampleManaPath(path, 20) : [], [path]);
+  const samples = useMemo(() => path ? sampleEnergyPath(path, 20) : [], [path]);
   if (!animation || !path) return null;
 
   const xFrames = samples.map((point) => point.x - path.origin.x);
@@ -139,7 +139,7 @@ export function ManaFlowAnimator() {
   );
 }
 
-function readManaPath(sourceId: string): ManaPath {
+function readEnergyPath(sourceId: string): EnergyPath {
   const sourceRect = document.querySelector<HTMLElement>(`[data-card-slot-id="${sourceId}"]`)?.getBoundingClientRect();
   const targetRect =
     document.querySelector<HTMLElement>("[data-energy-kind='stored'][data-energy-state='empty']")?.getBoundingClientRect() ??
@@ -169,7 +169,7 @@ function readManaPath(sourceId: string): ManaPath {
   };
 }
 
-function sampleManaPath(path: ManaPath, steps: number): Point[] {
+function sampleEnergyPath(path: EnergyPath, steps: number): Point[] {
   return Array.from({ length: steps + 1 }, (_, index) => {
     const t = index / steps;
     const inverse = 1 - t;

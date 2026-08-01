@@ -26,14 +26,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const lifePaymentAnimating = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimating = useGameStore((state) => Boolean(state.bloodPactAnimation));
   const drainEssenceAnimating = useGameStore((state) => Boolean(state.drainEssenceAnimation));
-  const manaFlowAnimating = useGameStore((state) => Boolean(state.manaFlowAnimation));
+  const energyFlowAnimating = useGameStore((state) => Boolean(state.energyFlowAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   const summoningAnimationCount = useGameStore((state) => state.summoningAnimationCount);
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hordeAutoTriggerCount = useGameStore((state) => state.hordeAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.smallpoxSelection));
-  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || manaFlowAnimating || resolvingHordeCombat;
+  const attackAnimating = hordeAttackAnimating || playerAttackAnimating || hordeMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || energyFlowAnimating || resolvingHordeCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(
     summoningAnimationCount,

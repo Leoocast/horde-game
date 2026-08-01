@@ -7,7 +7,7 @@ import {
   destroyCard,
   drainEnergy,
   drawPlayerCard,
-  grantManaForCard,
+  grantEnergyForCard,
   refillEnergy,
   resolveAllEvents,
   resolveNextEvent,
@@ -176,7 +176,7 @@ function playCard(step: Extract<TimelineStep, { kind: "play" }>): StepOutcome {
   if (!card) return { ok: false, reason: `${step.cardName} is no longer in hand.` };
 
   if (step.free) {
-    const granted = grantManaForCard(store.game, step.handId);
+    const granted = grantEnergyForCard(store.game, step.handId);
     useGameStore.setState({ game: granted.game });
     if (!granted.ok) return granted;
   }
@@ -231,7 +231,7 @@ export function isPlaygroundBusy(): boolean {
     Boolean(state.playerAttackAnimation) ||
     Boolean(state.spellFightAnimation) ||
     Boolean(state.brokenWingsAnimation) ||
-    Boolean(state.manaFlowAnimation) ||
+    Boolean(state.energyFlowAnimation) ||
     Boolean(state.burnAnimation) ||
     Boolean(state.energyRecycleAnimation)
   );

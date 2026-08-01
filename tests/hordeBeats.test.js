@@ -669,7 +669,7 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
     game,
     lifeDamageAnimationId: undefined,
     lifePaymentAnimation: undefined,
-    manaFlowAnimation: undefined,
+    energyFlowAnimation: undefined,
     pendingTriggeredEffectCount: 0,
     playerAutoTriggerCount: 0,
   });
@@ -681,30 +681,30 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
   assert.equal(afterActivation.game.player.lifePaidThisTurn, 5);
   assert.equal(afterActivation.lifeDamageAnimationId, undefined);
   assert.equal(afterActivation.lifePaymentAnimation?.amount, 5);
-  assert.equal(afterActivation.manaFlowAnimation?.sourceId, acolyte.instanceId);
-  assert.equal(afterActivation.manaFlowAnimation?.phase, "travel");
-  assert.equal(afterActivation.game.player.manaPool.colorless, 0);
+  assert.equal(afterActivation.energyFlowAnimation?.sourceId, acolyte.instanceId);
+  assert.equal(afterActivation.energyFlowAnimation?.phase, "travel");
+  assert.equal(afterActivation.game.player.energyPool.stored, 0);
   assert.equal(
     afterActivation.game.player.field.find((card) => card.instanceId === acolyte.instanceId)?.tapped,
     true,
   );
 
   const lifePaymentId = afterActivation.lifePaymentAnimation?.id;
-  const manaFlowId = afterActivation.manaFlowAnimation?.id;
+  const energyFlowId = afterActivation.energyFlowAnimation?.id;
   assert.equal(typeof lifePaymentId, "string");
-  assert.equal(typeof manaFlowId, "string");
+  assert.equal(typeof energyFlowId, "string");
 
-  afterActivation.resolveManaFlowAnimation(manaFlowId);
+  afterActivation.resolveEnergyFlowAnimation(energyFlowId);
   const atHud = useGameStore.getState();
-  assert.equal(atHud.game.player.manaPool.colorless, 1);
-  assert.equal(atHud.manaFlowAnimation?.phase, "impact");
+  assert.equal(atHud.game.player.energyPool.stored, 1);
+  assert.equal(atHud.energyFlowAnimation?.phase, "impact");
   assert.equal(atHud.lifePaymentAnimation?.id, lifePaymentId);
 
-  atHud.completeManaFlowAnimation(manaFlowId);
+  atHud.completeEnergyFlowAnimation(energyFlowId);
   useGameStore.getState().completeLifePaymentAnimation(lifePaymentId);
-  assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
+  assert.equal(useGameStore.getState().energyFlowAnimation, undefined);
   assert.equal(useGameStore.getState().lifePaymentAnimation, undefined);
-  assert.equal(useGameStore.getState().game.player.manaPool.colorless, 1);
+  assert.equal(useGameStore.getState().game.player.energyPool.stored, 1);
 });
 
 test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {
@@ -1020,7 +1020,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
   }
 });
 
-test("mana creatures tap first and fill stored mana when their flow reaches the HUD", async () => {
+test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches the HUD", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1049,42 +1049,42 @@ test("mana creatures tap first and fill stored mana when their flow reaches the 
   useAudioStore.setState({ playSfx: () => undefined });
 
   try {
-    const game = createTestGame("mana-flow-presentation");
+    const game = createTestGame("energy-flow-presentation");
     const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player"));
     const forest = addCard(game, cardFromDeck("forest", "player"));
     useGameStore.setState({
       game,
       playerDeckId: "mono_green_ramp",
-      manaFlowAnimation: undefined,
+      energyFlowAnimation: undefined,
       playerAutoTriggerCount: 0,
     });
 
     useGameStore.getState().activateAbility(llanowar.instanceId, "llanowar_elves_add_green");
 
     const duringTravel = useGameStore.getState();
-    assert.equal(duringTravel.manaFlowAnimation?.sourceId, llanowar.instanceId);
-    assert.equal(duringTravel.manaFlowAnimation?.phase, "travel");
-    assert.equal(duringTravel.game.player.manaPool.colorless, 0);
+    assert.equal(duringTravel.energyFlowAnimation?.sourceId, llanowar.instanceId);
+    assert.equal(duringTravel.energyFlowAnimation?.phase, "travel");
+    assert.equal(duringTravel.game.player.energyPool.stored, 0);
     assert.equal(
       duringTravel.game.player.field.find((card) => card.instanceId === llanowar.instanceId)?.tapped,
       true,
     );
 
-    const animationId = duringTravel.manaFlowAnimation?.id;
+    const animationId = duringTravel.energyFlowAnimation?.id;
     assert.equal(typeof animationId, "string");
-    duringTravel.resolveManaFlowAnimation(animationId);
+    duringTravel.resolveEnergyFlowAnimation(animationId);
 
     const atHud = useGameStore.getState();
-    assert.equal(atHud.game.player.manaPool.colorless, 1);
-    assert.equal(atHud.manaFlowAnimation?.phase, "impact");
+    assert.equal(atHud.game.player.energyPool.stored, 1);
+    assert.equal(atHud.energyFlowAnimation?.phase, "impact");
 
-    atHud.completeManaFlowAnimation(animationId);
-    assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
-    assert.equal(useGameStore.getState().game.player.manaPool.colorless, 1);
+    atHud.completeEnergyFlowAnimation(animationId);
+    assert.equal(useGameStore.getState().energyFlowAnimation, undefined);
+    assert.equal(useGameStore.getState().game.player.energyPool.stored, 1);
 
     useGameStore.getState().activateAbility(forest.instanceId, "forest_add_green");
-    assert.equal(useGameStore.getState().manaFlowAnimation, undefined);
-    assert.equal(useGameStore.getState().game.player.manaPool.green, 1);
+    assert.equal(useGameStore.getState().energyFlowAnimation, undefined);
+    assert.equal(useGameStore.getState().game.player.energyPool.available, 1);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;

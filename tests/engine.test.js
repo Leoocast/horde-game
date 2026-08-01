@@ -18,7 +18,7 @@ import { hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
-import { queueUnusedNormalMana, releasePendingStoredMana } from "../src/engine/ManaSystem";
+import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { sortKeywordsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
@@ -92,7 +92,7 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
   );
   assert.deepEqual(
     ["tithe_acolyte", "crimson_impulse", "drain_essence"].map(
-      (definitionId) => [definitionId, card(definitionId).manaValue],
+      (definitionId) => [definitionId, card(definitionId).energyCost],
     ),
     [
       ["tithe_acolyte", 1],
@@ -197,7 +197,7 @@ test("Chaos removes other permanents but keeps creatures, energy, instants, and 
   assert.equal(prepared.deckSize, 4);
 });
 
-test("Chaos starts with one energy and no stored mana", () => {
+test("Chaos starts with one Source and no Stored Energy", () => {
   const chaosPlayerDeck = {
     id: "chaos-player",
     name: "Chaos Player",
@@ -226,7 +226,7 @@ test("Chaos starts with one energy and no stored mana", () => {
   assert.equal(game.player.life, 35);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, 1);
-  assert.equal(game.player.manaPool.colorless, 0);
+  assert.equal(game.player.energyPool.stored, 0);
   assert.equal(game.player.hand.length, 7);
   assert.equal(game.player.archive.length, 8);
   assert.equal(game.horde.archive.some((card) => card.definitionId === "chaos_harvest"), false);
@@ -352,21 +352,21 @@ test("standard games keep nine energy cards in the player deck", () => {
   assert.equal(cards.filter((card) => card.cardTypes.includes("SOURCE")).length, 9);
 });
 
-test("unused normal mana stays pending until the Horde turn ends", () => {
+test("unused Source Energy stays pending until the Horde turn ends", () => {
   const game = createTestGame();
   const lands = addForests(game, 5);
   lands[0].tapped = true;
 
-  assert.equal(queueUnusedNormalMana(game), 3);
-  assert.equal(game.player.pendingStoredMana, 3);
-  assert.equal(game.player.manaPool.colorless, 0);
-  assert.equal(queueUnusedNormalMana(game), 0);
-  assert.equal(releasePendingStoredMana(game), 3);
-  assert.equal(game.player.pendingStoredMana, 0);
-  assert.equal(game.player.manaPool.colorless, 3);
+  assert.equal(queueUnusedNormalEnergy(game), 3);
+  assert.equal(game.player.pendingStoredEnergy, 3);
+  assert.equal(game.player.energyPool.stored, 0);
+  assert.equal(queueUnusedNormalEnergy(game), 0);
+  assert.equal(releasePendingStoredEnergy(game), 3);
+  assert.equal(game.player.pendingStoredEnergy, 0);
+  assert.equal(game.player.energyPool.stored, 3);
 });
 
-test("spent lands do not become stored mana", () => {
+test("spent Sources do not become Stored Energy", () => {
   const game = createTestGame();
   const lands = addForests(game, 3);
   for (const land of lands) {
@@ -377,17 +377,17 @@ test("spent lands do not become stored mana", () => {
   const hordeTurn = endPlayerTurn(game);
   const nextPlayerTurn = finishHordeTurn(hordeTurn);
 
-  assert.equal(hordeTurn.player.pendingStoredMana, 0);
-  assert.equal(nextPlayerTurn.player.manaPool.colorless, 0);
+  assert.equal(hordeTurn.player.pendingStoredEnergy, 0);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
-test("unused mana from an earlier setup turn does not refill yellow mana", () => {
+test("unused Energy from an earlier setup turn does not refill Stored Energy", () => {
   const game = createInitialGame(playerDeck, hordeDeck, "setup-reserve", 2);
   const lands = addForests(game, 3);
 
   const finalSetupTurn = endPlayerTurn(game);
   assert.equal(finalSetupTurn.setupTurnsRemaining, 1);
-  assert.equal(finalSetupTurn.player.pendingStoredMana, 0);
+  assert.equal(finalSetupTurn.player.pendingStoredEnergy, 0);
 
   for (const land of lands) {
     const currentLand = finalSetupTurn.player.field.find((card) => card.instanceId === land.instanceId);
@@ -397,11 +397,11 @@ test("unused mana from an earlier setup turn does not refill yellow mana", () =>
   const hordeTurn = endPlayerTurn(finalSetupTurn);
   const nextPlayerTurn = finishHordeTurn(hordeTurn);
 
-  assert.equal(hordeTurn.player.pendingStoredMana, 0);
-  assert.equal(nextPlayerTurn.player.manaPool.colorless, 0);
+  assert.equal(hordeTurn.player.pendingStoredEnergy, 0);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
-test("Llanowar and Druid fill stored mana immediately, then pending land mana appears after the Horde", () => {
+test("Llanowar and Druid fill Stored Energy immediately, then pending Source Energy appears after the Host", () => {
   const game = createTestGame();
   addForests(game, 1);
   const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player"));
@@ -412,25 +412,41 @@ test("Llanowar and Druid fill stored mana immediately, then pending land mana ap
   const hordeTurn = endPlayerTurn(afterAbilities);
   const nextPlayerTurn = finishHordeTurn(hordeTurn);
 
-  assert.equal(afterAbilities.player.manaPool.colorless, 2);
+  assert.equal(afterAbilities.player.energyPool.stored, 2);
   assert.equal(afterAbilities.player.field.find((card) => card.instanceId === llanowar.instanceId)?.tapped, true);
   assert.equal(afterAbilities.player.field.find((card) => card.instanceId === druid.instanceId)?.tapped, true);
-  assert.equal(hordeTurn.player.manaPool.colorless, 2);
-  assert.equal(hordeTurn.player.pendingStoredMana, 1);
-  assert.equal(nextPlayerTurn.player.pendingStoredMana, 0);
-  assert.equal(nextPlayerTurn.player.manaPool.colorless, 3);
+  assert.equal(hordeTurn.player.energyPool.stored, 2);
+  assert.equal(hordeTurn.player.pendingStoredEnergy, 1);
+  assert.equal(nextPlayerTurn.player.pendingStoredEnergy, 0);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 3);
 });
 
-test("stored yellow mana can pay a colored creature cost", () => {
+test("Stored Energy can pay a creature cost", () => {
   const game = createTestGame();
-  game.player.manaPool.colorless = 1;
+  game.player.energyPool.stored = 1;
   const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player", "hand"), "player", "hand");
 
   const result = castCard(game, llanowar.instanceId);
 
   assert.equal(result.player.hand.some((card) => card.instanceId === llanowar.instanceId), false);
   assert.equal(result.player.field.some((card) => card.instanceId === llanowar.instanceId), true);
-  assert.equal(result.player.manaPool.colorless, 0);
+  assert.equal(result.player.energyPool.stored, 0);
+});
+
+test("manually generated Source Energy is visible in the pool and is spent before Stored Energy", () => {
+  const game = createTestGame();
+  game.player.energyPool.stored = 1;
+  const forest = addCard(game, cardFromDeck("forest", "player"));
+  const llanowar = addCard(game, cardFromDeck("llanowar_elves", "player", "hand"), "player", "hand");
+
+  const generated = activateAbility(game, forest.instanceId, "forest_add_green");
+  assert.deepEqual(generated.player.energyPool, { available: 1, stored: 1 });
+
+  const result = castCard(generated, llanowar.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, true);
+  assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
+  assert.equal(result.player.field.find((card) => card.instanceId === forest.instanceId)?.tapped, true);
 });
 
 test("the player draws one card normally after setup", () => {
@@ -527,17 +543,17 @@ test("energy cannot be recycled during setup and no more than four can be in pla
   assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === fifthEnergy.instanceId), true);
 });
 
-test("automatic payment spends normal land mana before stored yellow mana", () => {
+test("automatic payment spends Source Energy before Stored Energy", () => {
   const game = createTestGame();
-  game.player.manaPool.colorless = 3;
+  game.player.energyPool.stored = 3;
   const [land] = addForests(game, 1);
-  const manaCreature = addCard(game, cardFromDeck("llanowar_elves", "player"));
+  const energyEcho = addCard(game, cardFromDeck("llanowar_elves", "player"));
   const spell = addCard(
     game,
-    customCard("three_mana_spell", "player", {
+    customCard("three_energy_spell", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{2}{G}",
+      energyCost: 3,
     }),
     "player",
     "hand",
@@ -547,20 +563,13 @@ test("automatic payment spends normal land mana before stored yellow mana", () =
 
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.tapped, true);
-  assert.equal(result.player.field.find((card) => card.instanceId === manaCreature.instanceId)?.tapped, false);
-  assert.deepEqual(result.player.manaPool, {
-    green: 0,
-    red: 0,
-    blue: 0,
-    white: 0,
-    black: 0,
-    colorless: 1,
-  });
+  assert.equal(result.player.field.find((card) => card.instanceId === energyEcho.instanceId)?.tapped, false);
+  assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
 });
 
 test("Crimson Energy is a universal source that pays generic costs before stored energy", () => {
   const game = createTestGame();
-  game.player.manaPool.colorless = 1;
+  game.player.energyPool.stored = 1;
   const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
   const secondEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
   const spell = addCard(
@@ -568,7 +577,7 @@ test("Crimson Energy is a universal source that pays generic costs before stored
     customCard("crimson_two_energy_spell", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{2}",
+      energyCost: 2,
     }),
     "player",
     "hand",
@@ -580,7 +589,7 @@ test("Crimson Energy is a universal source that pays generic costs before stored
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.field.find((card) => card.instanceId === firstEnergy.instanceId)?.tapped, true);
   assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.tapped, true);
-  assert.equal(result.player.manaPool.colorless, 1);
+  assert.equal(result.player.energyPool.stored, 1);
 });
 
 test("spell life costs normalize from deck abilities and can never reduce the player to zero", () => {
@@ -614,7 +623,7 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
     customCard("life_spell_at_zero", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{G}",
+      energyCost: 1,
       additionalCost: { life: 3 },
     }),
     "player",
@@ -785,7 +794,7 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   assert.equal(hasKeyword(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
 });
 
-test("Crimson Impulse rejects an enemy target before spending mana or life", () => {
+test("Crimson Impulse rejects an enemy target before spending Energy or life", () => {
   const game = createTestGame("crimson-impulse-illegal-target");
   game.player.life = 10;
   addForests(game, 1);
@@ -983,7 +992,7 @@ test("Final Banquet destroys only a Horde creature and loses its last known effe
   assert.equal(result.horde.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet rejects allied targets before paying mana", () => {
+test("Final Banquet rejects allied targets before paying Energy", () => {
   const game = createTestGame("final-banquet-invalid-target");
   game.player.life = 20;
   addForests(game, 3);
@@ -1060,25 +1069,25 @@ test("Final Banquet preserves Horde death triggers after the destruction", () =>
   assert.equal(result.horde.archive.length, 0);
 });
 
-test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets next turn", () => {
+test("life payment is atomic with Energy, emits LIFE_PAID, accumulates, and resets next turn", () => {
   const unaffordable = createTestGame();
   unaffordable.player.life = 10;
-  const manaLockedSpell = addCard(
+  const energyLockedSpell = addCard(
     unaffordable,
-    customCard("mana_locked_life_spell", "player", {
+    customCard("energy_locked_life_spell", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{G}",
+      energyCost: 1,
       additionalCost: { life: 3 },
     }),
     "player",
     "hand",
   );
 
-  const failedForMana = castCard(unaffordable, manaLockedSpell.instanceId);
+  const failedForEnergy = castCard(unaffordable, energyLockedSpell.instanceId);
 
-  assert.equal(failedForMana.player.life, 10);
-  assert.equal(failedForMana.player.lifePaidThisTurn, 0);
+  assert.equal(failedForEnergy.player.life, 10);
+  assert.equal(failedForEnergy.player.lifePaidThisTurn, 0);
 
   const game = createTestGame();
   game.player.life = 4;
@@ -1100,7 +1109,7 @@ test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets
     customCard("pay_three_life_spell", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{G}",
+      energyCost: 1,
       additionalCost: { life: 3 },
     }),
     "player",
@@ -1124,14 +1133,14 @@ test("life payment is atomic with mana, emits LIFE_PAID, accumulates, and resets
 test("activated life costs are atomic and obey the one-life minimum", () => {
   const game = createTestGame();
   game.player.life = 3;
-  game.player.manaPool.colorless = 1;
+  game.player.energyPool.stored = 1;
   const acolyte = addCard(
     game,
     customCard("life_cost_activator", "player", {
       activatedAbilities: [
         {
           id: "pay_life_activation",
-          cost: { tap: true, genericMana: 1, life: 3 },
+          cost: { tap: true, energy: 1, life: 3 },
           effect: { type: "PUMP_UNTIL_END_OF_TURN", target: "SELF", power: 1, toughness: 1 },
         },
       ],
@@ -1143,7 +1152,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(blocked.lastActionResult?.ok, false);
   assert.equal(blocked.player.life, 3);
   assert.equal(blocked.player.lifePaidThisTurn, 0);
-  assert.equal(blocked.player.manaPool.colorless, 1);
+  assert.equal(blocked.player.energyPool.stored, 1);
   assert.equal(blocked.player.field.find((card) => card.instanceId === acolyte.instanceId)?.tapped, false);
   assert.equal(blocked.player.field.find((card) => card.instanceId === acolyte.instanceId)?.activatedThisTurn, false);
 
@@ -1154,7 +1163,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(paid.lastActionResult?.ok, true);
   assert.equal(paid.player.life, 1);
   assert.equal(paid.player.lifePaidThisTurn, 3);
-  assert.equal(paid.player.manaPool.colorless, 0);
+  assert.equal(paid.player.energyPool.stored, 0);
   assert.equal(activated?.tapped, true);
   assert.equal(activated?.activatedThisTurn, true);
   assert.equal(activated?.temporaryPower, 1);
@@ -1171,13 +1180,13 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(result.lastActionResult?.ok, true);
   assert.equal(result.player.life, 5);
   assert.equal(result.player.lifePaidThisTurn, 5);
-  assert.equal(result.player.manaPool.colorless, 1);
+  assert.equal(result.player.energyPool.stored, 1);
   assert.equal(activated?.tapped, true);
   assert.equal(activated?.activatedThisTurn, true);
 
   const fullReserve = createTestGame();
   fullReserve.player.life = 10;
-  fullReserve.player.manaPool.colorless = 3;
+  fullReserve.player.energyPool.stored = 3;
   const blockedAcolyte = addCard(fullReserve, cardFromDeck("tithe_acolyte", "player"));
 
   const blocked = activateAbility(fullReserve, blockedAcolyte.instanceId, "tithe_acolyte_generate");
@@ -1186,7 +1195,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(blocked.lastActionResult?.ok, false);
   assert.equal(blocked.player.life, 10);
   assert.equal(blocked.player.lifePaidThisTurn, 0);
-  assert.equal(blocked.player.manaPool.colorless, 3);
+  assert.equal(blocked.player.energyPool.stored, 3);
   assert.equal(unchanged?.tapped, false);
   assert.equal(unchanged?.activatedThisTurn, false);
 });
@@ -1415,7 +1424,7 @@ test("player triggers can stay queued and resolve one source at a time for prese
   assert.deepEqual(pendingTriggerSources(deferred, queuedLifeLoss), []);
 });
 
-test("a failed cast does not move cards, tap mana sources, or spend mana", () => {
+test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () => {
   const game = createTestGame();
   const [land] = addForests(game, 1);
   const spell = addCard(
@@ -1423,19 +1432,19 @@ test("a failed cast does not move cards, tap mana sources, or spend mana", () =>
     customCard("unaffordable_spell", "player", {
       zone: "hand",
       cardTypes: ["SPELL"],
-      manaCost: "{2}{G}",
+      energyCost: 3,
     }),
     "player",
     "hand",
   );
-  const manaBefore = structuredClone(game.player.manaPool);
+  const energyBefore = structuredClone(game.player.energyPool);
 
   const result = castCard(game, spell.instanceId);
 
   assert.equal(result.player.hand.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.memory.length, 0);
   assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.tapped, false);
-  assert.deepEqual(result.player.manaPool, manaBefore);
+  assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
 test("Giant Growth applies +3/+3 and cleanup removes the temporary buff", () => {

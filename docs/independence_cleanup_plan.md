@@ -1,7 +1,7 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L4 en curso — L4.1 implementada, pendiente de validación manual**
-Última actualización: 2026-07-31  
+Estado: **L4 en curso — L4.2 cerrada; L4.3 implementada, pendiente de validación manual**
+Última actualización: 2026-08-01
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
 
@@ -27,7 +27,7 @@ demostrarse.
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | En curso: L4.1 cerrada; L4.2 pendiente de validación manual | Autorizada por subfases |
+| L4 — Limpieza interna del engine | En curso: L4.1 y L4.2 cerradas; L4.3 pendiente de validación manual | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
@@ -311,15 +311,15 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 
 ### Punto de entrada para el siguiente chat
 
-- L0, L1, L2 y L3 están cerradas y validadas.
-- Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema` está en cero.
-- `hostfallDeckAdapter.ts` es el único borde temporal entre authored data y el contrato legacy del
-  engine. No retirarlo completo antes de migrar sus consumidores por dominio.
-- La auditoría registra 859 apariciones de vocabulario interno legacy como baseline de L4.
-- Comenzar por L4.1, Tipos de carta y Rasgos. Mantener zonas, Energía, estados, eventos, store y
-  playground fuera de ese primer bloque salvo el alias mínimo indispensable.
+- L0-L3, L4.1 y L4.2 están cerradas y validadas.
+- L4.3 sustituyó el modelo de maná de seis canales por `EnergyPool { available, stored }`, pero está
+  pendiente del smoke test manual del usuario. No iniciar L4.4 antes de esa validación.
+- Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
+  `legacy-l41-card-model`, `legacy-l42-zones` y `legacy-l43-energy-model` están en cero.
+- `hostfallDeckAdapter.ts` sigue siendo el borde temporal para estados, eventos y reglas Host de
+  L4.4-L4.6. No retirarlo completo antes de migrar esos consumidores por dominio.
 - Preservar comportamiento, ids y reglas. Verificar cada subfase con TypeScript, deck lint, suite,
-  build, auditoría y una partida del usuario antes de avanzar.
+  build, auditoría y una partida dirigida del usuario antes de avanzar.
 
 ### Subfases obligatorias
 
@@ -411,7 +411,26 @@ adaptador con una fase de eliminación conocida.
   y replays existentes sigan cargando. Como su shape no cambió, `SCENARIO_VERSION` permanece en 2;
   L4.6 migrará esas claves consumidoras de forma conjunta.
 - Verificación automática: TypeScript, deck lint, Card Studio, 201/201 tests, auditoría y build en
-  verde. Falta el smoke test manual antes de cerrar L4.2 y autorizar L4.3.
+  verde. El usuario confirmó el smoke test manual completo el 2026-08-01; L4.2 queda cerrada.
+
+### Avance L4.3 — Energía y costes
+
+- `src/engine/EnergySystem.ts` reemplaza `ManaSystem.ts` con un único pool numérico:
+  `EnergyPool { available, stored }`. Se eliminaron colores, parsing de símbolos, `ManaPool`,
+  `manaCost`, `manaValue`, `genericMana` y los helpers de pago legacy del runtime.
+- `energyCost` llega como cantidad numérica desde el adaptador y permanece numérico en
+  `CardDefinition`/`CardInstance`; X se suma mediante `totalEnergyCost`. Los costes de Acciones usan
+  `energy` y conservan su atomicidad con pagos de vida.
+- El autopago agota Sources antes de consumir Stored Energy. Los Ecos que generan Energía siguen
+  requiriendo activación explícita, la reserva conserva su límite de 3 y la transición visual sólo
+  acredita la Energía al impactar el HUD.
+- Store, UI, Playground, escenarios y pruebas consumen el mismo modelo. El contrato externo de
+  escenarios ya era `energy`/`storedEnergy`, por lo que `SCENARIO_VERSION` permanece en 2.
+- La auditoría incorpora `legacy-l43-energy-model`, actualmente en cero. El inventario L4 general
+  bajó de 419 a 380 apariciones; las restantes pertenecen a estados, eventos, identidad Host y
+  nombres visuales/de borde previstos para L4.4-L4.6.
+- Verificación automática: TypeScript, deck lint, Card Studio, 202/202 tests, auditoría y build en
+  verde. Falta el smoke test manual del usuario antes de cerrar L4.3 e iniciar L4.4.
 
 ## Fase L5 — Independencia de los mazos
 
@@ -529,7 +548,7 @@ Estos puntos justificaron el plan, pero no sustituyen el inventario reproducible
 - Existen cartas derivadas bajo `public/cards` y Vite copia `public` al build.
 - Algunos PNG no reflejan el vocabulario ya actualizado en sus fuentes.
 - El authored data todavía usa costes, colores, tipos y Rasgos legacy.
-- El engine todavía modela zonas, mana, tap y estabilización con nombres legacy.
+- Al iniciar el plan, el engine todavía modelaba zonas, maná, tap y estabilización con nombres legacy.
 - Existe al menos una procedencia explícita de Horde Magic en datos de producción.
 - Existen herramientas HTML antiguas con créditos de Wizards.
 - La documentación de vocabulario estima 44 definiciones nombradas y tres fichas derivadas entre
@@ -565,6 +584,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos; partida completa del usuario OK. |
 | 2026-07-31 | L3.4 | Migración exclusiva de Trasgos y cierre de L3. | Los cuatro decks usan `1.0.0`; el inventario `legacy-authored-schema` llegó a cero y el usuario validó la partida. | TypeScript OK; deck lint OK; Card Studio OK; 199/199 tests; build OK; auditor OK para L3; `git diff --check` OK; partida completa del usuario OK. |
 | 2026-07-31 | L4.1 | Migración interna de tipos de carta, modificadores y Rasgos. | El runtime consume valores Hostfall sin traducción de tipos/Rasgos; el blocker `legacy-l41-card-model` quedó en cero. Los PNG pausados de Zombies/Trasgos siguen fuera de alcance. | TypeScript OK; deck lint OK; Card Studio OK; 200/200 tests; build OK; auditor OK para L4.1; `git diff --check` OK; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.2 | Migración interna de zonas. | Estado, engine y consumidores usan exclusivamente Archive, Field, Memory y Oblivion; `legacy-l42-zones` quedó en cero. | TypeScript OK; deck lint OK; Card Studio OK; 201/201 tests; build OK; auditor OK para L4.2; `git diff --check` OK; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.3 | Migración interna de Energía y costes. | Pool numérico único, costes `energyCost` numéricos y autopago Sources→Stored Energy; `legacy-l43-energy-model` quedó en cero. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.3; validación manual pendiente. |
 
 ## Plantilla para cerrar una fase
 

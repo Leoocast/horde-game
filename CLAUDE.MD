@@ -67,7 +67,7 @@ src/
     EffectResolver.ts     efectos genericos
     Targeting.ts          candidatos de target
     Keywords.ts           keywords dinamicas/static grants
-    ManaSystem.ts         mana y autopago con tierras
+    EnergySystem.ts       Energía numérica, reserva y autopago con Sources
     StaticEffects.ts      stats y filtros
 
   store/
@@ -120,7 +120,7 @@ scripts/
   lint-decks.mjs          corre el deck lint standalone con reporte por deck (ready/vanilla/WIP)
 
 tests/
-  engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
+  engine.test.js          tests deterministas del engine (seed, Energía, combate, etc.)
   deckLint.test.js        el lint como test: un hueco silencioso en un deck JSON rompe la suite
   battlefieldLayout.test.js  layout del campo: slots sostenidos y agrupado congelado
   engineTestUtils.js      helpers para armar game state de prueba
@@ -170,20 +170,20 @@ que se decida retomarlo explícitamente.
 
 Tiene:
 - life
-- library
+- archive
 - hand
-- battlefield
-- graveyard
-- exile
-- manaPool
+- field
+- memory
+- oblivion
+- energyPool (`available` y `stored`)
 
 Puede:
-- jugar tierras
-- castear criaturas, instants y sorceries segun fase
+- jugar Sources
+- jugar Ecos y Spells según fase
 - atacar a la Horda
 - bloquear ataques de Horda
-- usar habilidades activadas genericas con costes de tap, mana, sacrificio propio o vida
-- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_LOST`
+- usar Acciones activadas genéricas con costes de agotar, Energía, sacrificio propio o vida
+- pagar vida como coste sin poder bajar de 1; el pago es atómico con la Energía, emite `LIFE_LOST`
   ademas de `LIFE_PAID`, y se acumula por separado en `player.lifeLostThisTurn` y
   `player.lifePaidThisTurn` hasta el siguiente turno
 - una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
@@ -192,16 +192,16 @@ Puede:
 ### Horde
 
 Tiene:
-- library
-- battlefield
-- graveyard
-- exile
+- archive
+- field
+- memory
+- oblivion
 - poisonCounters
 
 No tiene:
 - mano
 - vida
-- mana normal
+- Energía disponible
 
 La Horda pierde por mill/estado sin amenazas, y el player pierde si llega a 0 vida.
 
@@ -375,7 +375,7 @@ Efecto generico de tap:
   3. al confirmar hace pulse dorado + `activate_effect.wav`
   4. luego se tapa con animacion + sonido land
   5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
-     hasta el siguiente socket amarillo vacio; el mana almacenado se compromete al impacto. El
+     hasta el siguiente socket amarillo vacío; la Energía almacenada se compromete al impacto. El
      ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
   6. Tithe Acolyte reutiliza ese flujo dorado sin reemplazar su pago de vida: la mordida y el viaje
      corren en la misma activacion, pero la Energia almacenada tampoco se acredita hasta que la
@@ -710,13 +710,20 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.2 está implementada y pendiente de validación manual. `GameState`, `CardInstance` y sus
+- L4.3 está implementada y pendiente de validación manual. `EnergySystem.ts` reemplaza el modelo de
+  seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
+  cantidades numéricas. El autopago agota Sources antes de gastar Stored Energy, los Ecos de
+  generación siguen requiriendo activación explícita y el límite de reserva continúa en 3. Store,
+  HUD, animación de flujo, Playground y escenarios ya consumen este modelo; `SCENARIO_VERSION`
+  permanece en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
+  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática pasa 202/202 tests. No
+  iniciar L4.4 hasta la prueba del usuario.
+- L4.2 está cerrada y validada por el usuario. `GameState`, `CardInstance` y sus
   consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
   igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas
   desconocidas y `legacy-l42-zones` debe permanecer en cero. Las claves externas del Playground
   (`playerBattlefield`, `hordeLibraryTop`, etc.) se conservan como contrato de compatibilidad hasta
-  L4.6, por lo que no se subió `SCENARIO_VERSION` ni se invalidaron boards guardados. No iniciar
-  L4.3 hasta la prueba del usuario.
+  L4.6, por lo que no se subió `SCENARIO_VERSION` ni se invalidaron boards guardados.
 - L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
   tienen vocabulario cerrado; `cardTypes`/`keywords` son nombres de contenedor temporales pero ya
   contienen valores Hostfall, y `modifiers` conserva QUICK/CHRONICLE. Filtros, targeting, historial,
@@ -724,8 +731,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   valores. `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia Energía,
-  estados, eventos y reglas Host legacy; ya no traduce valores de tipos, Rasgos o zonas. Mono Green,
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia estados,
+  eventos y reglas Host legacy; ya no traduce valores de tipos, Rasgos, zonas ni costes. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.
@@ -797,8 +804,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
   `LIFE_PAID`. Los impactos animados posteriores se recalculan contra el board actual, de modo que
   dejar pasar un atacante puede buffear al Paje antes de que haga dano como bloqueador de otro.
-- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
-  mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
+- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola línea antes de robar 2. El pago es atómico con la
+  Energía, no se permite si dejaría al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
   consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
   queda diferido hasta terminar su presentacion dedicada `BLOOD_PACT`: la carta real sale desde su
   posicion en la mano hacia un punto entre el centro y el lateral derecho, el mordisco golpea el
@@ -835,7 +842,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
   aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
   bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
-  `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
+  `targetCandidatesWithSelectedTargets` antes de gastar Energía o vida, así que llamadas directas al
   engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
   un `LIFE_LOST` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
   durante el turno de la Horda, igual que con habilidades activadas.
@@ -1103,7 +1110,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
   defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
-  generico de `Card.actionable`. Las criaturas con activacion de mana disponible usan una tercera
+  genérico de `Card.actionable`. Las criaturas con generación de Energía disponible usan una tercera
   corona dorada con el mismo fade y tampoco muestran rombo; las tierras quedan excluidas de ese
   chrome aunque internamente tambien tengan una habilidad de agotar. Las tres coronas son exteriores: su
   borde interior termina justo donde empieza la silueta de la carta, sin comerse el arte ni parecer

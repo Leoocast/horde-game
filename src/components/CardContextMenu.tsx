@@ -81,7 +81,7 @@ export function CardContextMenu() {
     ) : null;
   }
 
-  const firstAbility = card.activatedAbilities.find((ability) => !isManaAbility(ability));
+  const firstAbility = card.activatedAbilities.find((ability) => !isEnergyAbility(ability));
   const hasActivatedEffect = Boolean(firstAbility);
   const canActivate = Boolean(firstAbility && !activatedAbilityFailureReason(game, card, firstAbility));
   const activateLabel = firstAbility?.cost?.tap ? t("card.tapForEffect") : t("card.activateEffect");
@@ -143,8 +143,8 @@ export function CardContextMenu() {
   );
 }
 
-function isManaAbility(ability: CardInstance["activatedAbilities"][number]): boolean {
-  return ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC";
+function isEnergyAbility(ability: CardInstance["activatedAbilities"][number]): boolean {
+  return ability.effect.type === "GAIN_ENERGY";
 }
 
 function findCard(game: GameState, id: string): CardInstance | undefined {

@@ -9,17 +9,14 @@ export type DifficultyMode = "easy" | "normal" | "hard";
 // exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
-export type Color = "G" | "R" | "U" | "W" | "B" | "C";
 /** @deprecated Field names still say keyword until L4.6; values are Hostfall Traits from L4.1. */
 export type Keyword = Trait;
 
-export type ManaPool = {
-  green: number;
-  red: number;
-  blue: number;
-  white: number;
-  black: number;
-  colorless: number;
+export type EnergyPool = {
+  /** Energy already produced this turn but not yet spent. */
+  available: number;
+  /** Persistent reserve, capped by STORED_ENERGY_CAP. */
+  stored: number;
 };
 
 export type EffectDefinition = {
@@ -30,8 +27,7 @@ export type EffectDefinition = {
 export type ActionCost = {
   tap?: boolean;
   sacrificeSelf?: boolean;
-  genericMana?: number;
-  coloredMana?: Partial<Record<Color, number>>;
+  energy?: number;
   life?: number | {
     type: "CURRENT_LIFE_FRACTION";
     numerator: number;
@@ -77,9 +73,7 @@ export type CardDefinition = {
   };
   quantity?: number;
   isToken?: boolean;
-  manaCost?: string;
-  manaValue?: number;
-  colors?: Color[];
+  energyCost?: number;
   cardTypes?: CardKind[];
   modifiers?: CardModifier[];
   subtypes?: string[];
@@ -101,7 +95,6 @@ export type CardDefinition = {
     eachTargetMinimum?: number;
   };
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
-  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
   attachTo?: { targetRef: string };
   flags?: Record<string, boolean>;
 };
@@ -158,9 +151,7 @@ export type CardInstance = {
   controller: Side;
   zone: ZoneName;
   isToken: boolean;
-  manaCost: string;
-  manaValue: number;
-  colors: Color[];
+  energyCost: number;
   cardTypes: CardKind[];
   modifiers: CardModifier[];
   subtypes: string[];
@@ -191,7 +182,6 @@ export type CardInstance = {
   untilNextPlayerTurnPower?: number;
   untilNextPlayerTurnToughness?: number;
   temporaryKeywords: Keyword[];
-  chosenColor?: Color;
   xValuePaid?: number;
   attachTo?: { targetRef: string };
   attachedTo?: string;
@@ -206,8 +196,8 @@ export type PlayerState = {
   field: CardInstance[];
   memory: CardInstance[];
   oblivion: CardInstance[];
-  manaPool: ManaPool;
-  pendingStoredMana: number;
+  energyPool: EnergyPool;
+  pendingStoredEnergy: number;
   energyActionUsedThisTurn: boolean;
   /** Life paid as a cost during the current active turn. Reset whenever either side starts a turn. */
   lifePaidThisTurn: number;

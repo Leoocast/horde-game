@@ -4,7 +4,7 @@ import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
-import { canPay, parseManaCost, payMana, payManaAutomatically, storedManaSpace } from "./ManaSystem";
+import { canPayEnergy, payEnergy, payEnergyAutomatically, storedEnergySpace, totalEnergyCost } from "./EnergySystem";
 import { targetCandidatesWithSelectedTargets } from "./Targeting";
 import { isQuickSpell } from "./hostfallVocabulary";
 
@@ -45,8 +45,8 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   if (targetFailure) return fail(next, targetFailure);
   const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
   if (lifeFailure) return fail(next, lifeFailure);
-  const cost = parseManaCost(card.manaCost, options.xValue ?? 0);
-  if (!payManaAutomatically(next, cost)) return fail(next, `Not enough available Energy to play ${card.name}.`);
+  const cost = totalEnergyCost(card.energyCost, options.xValue ?? 0);
+  if (!payEnergyAutomatically(next, cost)) return fail(next, `Not enough available Energy to play ${card.name}.`);
   payLifeCost(next, card.additionalCost, card.instanceId, card.name);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
@@ -116,8 +116,8 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   if (!card || !ability) return fail(next, "That Action is not available.", { silent: true });
   const failure = activatedAbilityFailureReason(next, card, ability);
   if (failure) return fail(next, failure);
-  const cost = activatedAbilityManaCost(ability.cost);
-  next.player.manaPool = payMana(next.player.manaPool, cost);
+  const cost = activatedAbilityEnergyCost(ability.cost);
+  next.player.energyPool = payEnergy(next.player.energyPool, cost);
   payLifeCost(next, ability.cost, card.instanceId, card.name);
   if (ability.cost?.tap) card.tapped = true;
   card.activatedThisTurn = true;
@@ -134,28 +134,20 @@ export function activatedAbilityFailureReason(game: GameState, card: CardInstanc
   if (ability.requiresNoSummoningSickness && card.cardTypes.includes("ECHO") && card.summoningSickness) {
     return `${card.name} cannot use this Action while Stabilizing.`;
   }
-  if (card.cardTypes.includes("ECHO") && ability.effect.type === "ADD_MANA" && storedManaSpace(game) === 0) {
+  if (card.cardTypes.includes("ECHO") && ability.effect.type === "GAIN_ENERGY" && storedEnergySpace(game) === 0) {
     return "Stored Energy is already full.";
   }
   if (ability.cost?.tap) {
     if (card.tapped) return `${card.name} is already Exhausted.`;
     if (card.summoningSickness && card.cardTypes.includes("ECHO")) return `${card.name} is Stabilizing.`;
   }
-  const cost = activatedAbilityManaCost(ability.cost);
-  if (!canPay(game.player.manaPool, cost)) return `Not enough Energy to use ${card.name}.`;
+  const cost = activatedAbilityEnergyCost(ability.cost);
+  if (!canPayEnergy(game.player.energyPool, cost)) return `Not enough Energy to use ${card.name}.`;
   return lifeCostFailureReason(game, ability.cost, card.name);
 }
 
-function activatedAbilityManaCost(actionCost?: ActionCost) {
-  const generic = Number(actionCost?.genericMana ?? 0);
-  const colored = actionCost?.coloredMana;
-  const cost = { ...parseManaCost(""), colorless: generic };
-  cost.green = Number(colored?.G ?? 0);
-  cost.red = Number(colored?.R ?? 0);
-  cost.blue = Number(colored?.U ?? 0);
-  cost.white = Number(colored?.W ?? 0);
-  cost.black = Number(colored?.B ?? 0);
-  return cost;
+function activatedAbilityEnergyCost(actionCost?: ActionCost): number {
+  return Math.max(0, Number(actionCost?.energy ?? 0));
 }
 
 function payLifeCost(game: GameState, cost: ActionCost | undefined, sourceId: string, sourceName: string): void {

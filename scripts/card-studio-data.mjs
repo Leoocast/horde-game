@@ -56,7 +56,7 @@ function authoredEnergyAmount(card) {
   if (card.energyCost && typeof card.energyCost === "object") {
     return Number(card.energyCost.amount ?? 0);
   }
-  return Number(card.manaValue ?? 0);
+  return 0;
 }
 
 function authoredTraits(card) {

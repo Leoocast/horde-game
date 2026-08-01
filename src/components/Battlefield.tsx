@@ -4,7 +4,7 @@ import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from 
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
-import { STORED_MANA_CAP } from "../engine/ManaSystem";
+import { STORED_ENERGY_CAP } from "../engine/EnergySystem";
 import { useTranslation } from "../i18n/useTranslation";
 import { translate } from "../i18n/translations";
 import { canonicalizeRulesText } from "../i18n/rulesText";
@@ -222,7 +222,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const lands = displayedCards.filter((card) => card.cardTypes.includes("SOURCE"));
   const others = displayedCards.filter((card) => !card.cardTypes.includes("ECHO") && !card.cardTypes.includes("SOURCE"));
   const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
-  const storedManaCount = game.player.manaPool.colorless;
+  const storedEnergyCount = game.player.energyPool.stored;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
   const energyTransitionSequence = useRef(0);
   const energyTransitionTimer = useRef<number | undefined>(undefined);
@@ -252,7 +252,7 @@ export function Battlefield({ game, side, cards }: Props) {
       landCount: lands.length,
       phase: game.phase,
       seed: game.seed,
-      stored: storedManaCount,
+      stored: storedEnergyCount,
       turnNumber: game.turnNumber,
     };
     const previous = previousEnergyVisual.current;
@@ -311,7 +311,7 @@ export function Battlefield({ game, side, cards }: Props) {
     game.turnNumber,
     lands.length,
     side,
-    storedManaCount,
+    storedEnergyCount,
   ]);
 
   useLayoutEffect(() => () => {
@@ -606,19 +606,19 @@ export function Battlefield({ game, side, cards }: Props) {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
     const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
-    const canSelectManaCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
-    const normalManaSlots = Array.from({ length: 4 });
-    const storedManaSlots = Array.from({ length: 3 });
+    const canSelectEnergyCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
+    const availableEnergySlots = Array.from({ length: MAX_PLAYER_LANDS });
+    const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
 
     return (
       <aside
         ref={landDockRef}
         data-player-mana-core="true"
         data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
-        data-audio-click={canSelectManaCore ? "valid" : undefined}
-        role={canSelectManaCore ? "button" : undefined}
-        tabIndex={canSelectManaCore ? 0 : undefined}
-        aria-label={`${t("game.normalMana")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedMana")}: ${storedManaCount} of ${STORED_MANA_CAP}.`}
+        data-audio-click={canSelectEnergyCore ? "valid" : undefined}
+        role={canSelectEnergyCore ? "button" : undefined}
+        tabIndex={canSelectEnergyCore ? 0 : undefined}
+        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${storedEnergyCount} of ${STORED_ENERGY_CAP}.`}
         className={[
           "player-mana-core",
           "player-mana-corner",
@@ -626,10 +626,10 @@ export function Battlefield({ game, side, cards }: Props) {
           smallpoxLandSelectionActive ? "is-targeting" : "",
         ].join(" ")}
         onClick={() => {
-          if (canSelectManaCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+          if (canSelectEnergyCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
         }}
         onKeyDown={(event) => {
-          if (canSelectManaCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
+          if (canSelectEnergyCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
             event.preventDefault();
             lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
           }
@@ -646,8 +646,8 @@ export function Battlefield({ game, side, cards }: Props) {
                 className={`mana-energy-sweep energy-${energyTransitions.stored.direction} energy-source-${energyTransitions.stored.source}`}
               />
             )}
-            {storedManaSlots.map((_, index) => {
-              const state = index < storedManaCount ? "is-ready" : "is-empty";
+            {storedEnergySlots.map((_, index) => {
+              const state = index < storedEnergyCount ? "is-ready" : "is-empty";
               const transition = energyTransitions.stored;
               const changing = energySlotIsChanging(transition, index);
               return (
@@ -678,7 +678,7 @@ export function Battlefield({ game, side, cards }: Props) {
                 className={`mana-energy-sweep energy-${energyTransitions.normal.direction} energy-source-${energyTransitions.normal.source}`}
               />
             )}
-            {normalManaSlots.map((_, index) => {
+            {availableEnergySlots.map((_, index) => {
               const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
               const transition = energyTransitions.normal;
               const changing = energySlotIsChanging(transition, index);
@@ -1194,7 +1194,7 @@ export function Battlefield({ game, side, cards }: Props) {
             }, 620);
           }}
         >
-          {primaryAbility.effect.type === "ADD_MANA" || primaryAbility.effect.type === "ADD_MANA_DYNAMIC" ? (
+          {primaryAbility.effect.type === "GAIN_ENERGY" ? (
             <span className="effect-action-mana-copy">
               <span className="effect-action-symbol effect-action-symbol-tap" title={t("card.exhaustAction")}>
                 <Hourglass aria-hidden="true" />
@@ -1423,10 +1423,8 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
 
 function abilityButtonText(ability: CardInstance["activatedAbilities"][number]): string {
   const language = useLanguageStore.getState().language;
-  if (ability.effect.type === "ADD_MANA" || ability.effect.type === "ADD_MANA_DYNAMIC") {
-    const mana = ability.effect.mana as Record<string, number> | undefined;
-    const entry = mana ? Object.entries(mana)[0] : undefined;
-    const amount = Number(entry?.[1] ?? ability.effect.amount ?? 1);
+  if (ability.effect.type === "GAIN_ENERGY") {
+    const amount = Number(ability.effect.amount ?? 1);
     return language === "es"
       ? `Agota: genera ${amount} de Energía.`
       : `Exhaust: Generate ${amount} Energy.`;

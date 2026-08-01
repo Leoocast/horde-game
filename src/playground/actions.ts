@@ -2,8 +2,14 @@ import { destroyPermanent } from "../engine/EffectResolver";
 import { drainEventQueue, drainNextEvent } from "../engine/EventQueue";
 import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { drawCards } from "../engine/GameState";
-import type { CardInstance, Color, GameState, Side, ZoneName } from "../engine/GameTypes";
-import { STORED_MANA_CAP, addMana, addStoredMana, emptyManaPool, parseManaCost } from "../engine/ManaSystem";
+import type { CardInstance, GameState, Side, ZoneName } from "../engine/GameTypes";
+import {
+  STORED_ENERGY_CAP,
+  addAvailableEnergy,
+  addStoredEnergy as addStoredEnergyToPool,
+  emptyEnergyPool,
+  totalEnergyCost,
+} from "../engine/EnergySystem";
 import { placeEnergySources, playerEnergyDefinitionId } from "./scenario";
 
 /**
@@ -33,10 +39,8 @@ export function drawPlayerCard(game: GameState): PlaygroundActionResult {
 }
 
 /**
- * Energy, not colors. What the player sees as energy is two things in the engine: untapped lands
- * (available energy) and the colorless pool (stored energy). Adding green mana to the pool would
- * pay for cards while showing up nowhere on the board, so the playground moves the same dials the
- * game does.
+ * The Playground manipulates the same two Energy sources as the game: ready Sources and Stored
+ * Energy. It never creates a second, hidden resource channel.
  */
 export function addEnergySource(game: GameState, amount = 1): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
@@ -66,8 +70,8 @@ export function refillEnergy(game: GameState): PlaygroundActionResult {
 
 export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const added = addStoredMana(next, amount);
-  if (added === 0) return fail(game, `Stored energy is already at its cap of ${STORED_MANA_CAP}.`);
+  const added = addStoredEnergyToPool(next, amount);
+  if (added === 0) return fail(game, `Stored energy is already at its cap of ${STORED_ENERGY_CAP}.`);
   return succeed(next, `Playground stores ${added} energy.`);
 }
 
@@ -80,8 +84,8 @@ export function drainEnergy(game: GameState): PlaygroundActionResult {
     card.tapped = true;
     card.activatedThisTurn = true;
   }
-  next.player.manaPool = emptyManaPool();
-  next.player.pendingStoredMana = 0;
+  next.player.energyPool = emptyEnergyPool();
+  next.player.pendingStoredEnergy = 0;
   return succeed(next, "Playground drains all energy.");
 }
 
@@ -89,20 +93,15 @@ export function drainEnergy(game: GameState): PlaygroundActionResult {
  * Tops the pool up to exactly the card's printed cost so the normal cast path can pay it. The cast
  * itself still runs every check, trigger and target requirement — this only removes the cost.
  */
-export function grantManaForCard(game: GameState, handId: string): PlaygroundActionResult {
+export function grantEnergyForCard(game: GameState, handId: string): PlaygroundActionResult {
   const card = game.player.hand.find((item) => item.instanceId === handId);
   if (!card) return fail(game, "That card is not in hand.");
   const next = structuredClone(game) as GameState;
-  const cost = parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0);
-  for (const [key, color] of [["green", "G"], ["red", "R"], ["blue", "U"], ["white", "W"], ["black", "B"]] as const) {
-    const missing = cost[key] - next.player.manaPool[key];
-    if (missing > 0) next.player.manaPool = addMana(next.player.manaPool, color as Color, missing);
-  }
-  // Generic cost is covered with green: every colored symbol is already paid above, and the engine's
-  // payment routine spends colored mana on generic when nothing else is left.
-  const totalColored = cost.green + cost.red + cost.blue + cost.white + cost.black;
-  if (cost.colorless > 0) next.player.manaPool = addMana(next.player.manaPool, "G", cost.colorless);
-  return succeed(next, `Playground grants ${totalColored + cost.colorless} Energy for ${card.name}.`);
+  const cost = totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0);
+  const pooled = next.player.energyPool.available + next.player.energyPool.stored;
+  const granted = Math.max(0, cost - pooled);
+  next.player.energyPool = addAvailableEnergy(next.player.energyPool, granted);
+  return succeed(next, `Playground grants ${granted} Energy for ${card.name}.`);
 }
 
 /** Real destruction: death triggers included. */

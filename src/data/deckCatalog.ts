@@ -1,4 +1,3 @@
-import type { Color } from "../engine/GameTypes";
 import type { CardKind, CardModifier, Trait } from "../engine/hostfallVocabulary";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
@@ -20,12 +19,6 @@ export type NewDeckCard = {
   endurance?: number | null;
   traits?: Trait[];
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  manaCost?: string;
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  manaValue?: number;
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  colors?: Color[];
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
   cardTypes?: CardKind[];
   subtypes?: string[];
   power?: number | null;
@@ -37,7 +30,6 @@ export type NewDeckCard = {
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number }>;
   flags?: Record<string, boolean>;
-  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
   attachTo?: { targetRef: string };
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
   requiresDistribution?: { counterType: string; totalAmount: number; eachTargetMinimum?: number };

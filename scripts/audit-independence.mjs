@@ -234,6 +234,15 @@ const l41Text = [...productionText, ...testText]
 const l42Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => relative(file) !== "src/data/deckLint.ts");
+const l43Text = textFiles(["src", "tests"])
+  .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => ![
+    "src/data/deckLint.ts",
+    "src/data/hostfallDeckAdapter.ts",
+    "src/i18n/rulesText.ts",
+    "tests/deckLint.test.js",
+    "tests/vocabulary.test.js",
+  ].includes(relative(file)));
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -276,6 +285,20 @@ const l42LegacyPatterns = [
   {
     label: "legacy state zone property",
     pattern: /(?:^|[,{}]\s*)(?:library|battlefield|graveyard|exile)\s*:/mu,
+  },
+];
+const l43LegacyPatterns = [
+  {
+    label: "legacy Energy state or cost identifier",
+    pattern: /\b(?:ManaPool|manaPool|manaCost|manaValue|genericMana|coloredMana|pendingStoredMana|STORED_MANA_CAP)\b/u,
+  },
+  {
+    label: "legacy Energy helper or animation identifier",
+    pattern: /\b(?:emptyManaPool|storedManaSpace|queueUnusedNormalMana|releasePendingStoredMana|addStoredMana|parseManaCost|canPayWithAutomaticMana|payManaAutomatically|grantManaForCard|ManaFlowAnimationState|manaFlowAnimation)\b/u,
+  },
+  {
+    label: "legacy Energy effect identifier",
+    pattern: /["']ADD_MANA(?:_DYNAMIC)?["']/u,
   },
 ];
 
@@ -378,6 +401,14 @@ const checks = [
     "Legacy zones in active runtime state",
     "GameState and CardInstance must use archive, field, memory and oblivion without parallel legacy arrays.",
     scanTextPatterns(l42Text, l42LegacyPatterns),
+  ),
+  finding(
+    "legacy-l43-energy-model",
+    "blocker",
+    "L4.3",
+    "Legacy Energy state or cost model in active consumers",
+    "Runtime, UI, Playground and migrated tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
+    scanTextPatterns(l43Text, l43LegacyPatterns),
   ),
   finding(
     "legacy-internal-vocabulary",

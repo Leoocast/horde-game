@@ -95,7 +95,7 @@ export function CardsPanel({ onDispatch }: Props) {
                 <div className="playground-group-title">{selected.definition.name}</div>
                 <div className="playground-result-meta">{describeCardTypes(selected.definition)}</div>
                 <div className="playground-result-id">
-                  {selected.deckLabel} · {selected.definition.manaCost || "no cost"}
+                  {selected.deckLabel} · {selected.definition.energyCost || "no cost"}
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   {card.isToken && <em>token</em>}
                 </span>
                 <span className="playground-result-meta">
-                  {card.definition.manaCost || "—"} · {describeCardTypes(card.definition)}
+                  {card.definition.energyCost || "—"} · {describeCardTypes(card.definition)}
                 </span>
                 <span className="playground-result-id">{card.definition.id}</span>
               </span>

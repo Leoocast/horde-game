@@ -5,7 +5,7 @@ import { recordFieldEntry } from "./GameState";
 import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
-import { releasePendingStoredMana } from "./ManaSystem";
+import { releasePendingStoredEnergy } from "./EnergySystem";
 
 type HordeMainOptions = {
   deferEnterBattlefieldTriggers?: boolean;
@@ -78,9 +78,9 @@ export function finishHordeTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
   untapSide(next, "horde");
-  const releasedMana = releasePendingStoredMana(next);
+  const releasedEnergy = releasePendingStoredEnergy(next);
   startPlayerTurnReady(next);
-  if (releasedMana > 0) next.log.unshift(`Player gains ${releasedMana} stored mana.`);
+  if (releasedEnergy > 0) next.log.unshift(`Player gains ${releasedEnergy} Stored Energy.`);
   next.log.unshift("Horde turn ends.");
   return next;
 }

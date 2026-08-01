@@ -38,9 +38,9 @@ export function isHostfallDeck(rawDeck: NewDeckList): boolean {
 }
 
 /**
- * Temporary L4 bridge. L4.1 keeps card-kind, modifier and Trait values in Hostfall vocabulary;
- * this adapter still translates the domains scheduled for L4.3-L4.6 (Energy, states, events and
- * Host rules). Authored zone casing is normalized without translating back to legacy names. The
+ * Temporary L4 bridge. Card kinds, modifiers, Traits and the core Energy cost/pool contract already
+ * stay in Hostfall vocabulary; this adapter still translates the domains scheduled for L4.4-L4.6
+ * (states, events and Host rules). Authored zone casing stays canonical. The
  * cardTypes/keywords container aliases remain until consumer cleanup.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
@@ -71,9 +71,7 @@ export function adaptHostfallCard(card: NewDeckCard): NewDeckCard {
 
   return {
     ...adapted,
-    manaCost: amount > 0 ? `{${amount}}` : "",
-    manaValue: amount,
-    colors: [],
+    energyCost: amount,
     cardTypes: hostfallKinds,
     modifiers: modifiers ?? [],
     isToken: Boolean(card.isToken || hostfallKinds.includes("TOKEN")),
@@ -125,10 +123,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
       adapted.requiresNoSummoningSickness = adaptNestedAuthoring(nestedValue);
       continue;
     }
-    if (key === "energy") {
-      adapted.mana = typeof nestedValue === "number" ? `{${nestedValue}}` : adaptNestedAuthoring(nestedValue);
-      continue;
-    }
     if (key === "exhausted") {
       adapted.tapped = adaptNestedAuthoring(nestedValue);
       continue;
@@ -151,10 +145,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
     }
     if (key === "hostEchosHaveImpetus") {
       adapted.hordeCreaturesHaveHaste = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "requiredEnergy") {
-      adapted.requiredMana = adaptNestedAuthoring(nestedValue);
       continue;
     }
     if (key === "hostDirective") {
@@ -192,11 +182,5 @@ function adaptNestedAuthoring(value: unknown): unknown {
     adapted[key] = adaptNestedAuthoring(nestedValue);
   }
 
-  if (adapted.type === "GAIN_ENERGY") {
-    const amount = Math.max(0, Number(adapted.amount ?? 1));
-    adapted.type = "ADD_MANA";
-    adapted.mana = { G: amount };
-    delete adapted.amount;
-  }
   return adapted;
 }

@@ -106,14 +106,13 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
   assert.deepEqual(byId.ruthless_predation.cardTypes, ["SPELL"]);
   assert.deepEqual(byId.ruthless_predation.modifiers, []);
   assert.deepEqual(byId.forest.cardTypes, ["SOURCE"]);
-  assert.equal(byId.colossadactyl.manaCost, "{4}");
-  assert.equal(byId.colossadactyl.manaValue, 4);
+  assert.equal(byId.colossadactyl.energyCost, 4);
   assert.equal(byId.colossadactyl.toughness, 5);
 
   const energyAction = byId.llanowar_elves.abilities[0];
   assert.equal(energyAction.zone, "field");
   assert.deepEqual(energyAction.cost, { tap: true });
-  assert.deepEqual(energyAction.effects[0], { type: "ADD_MANA", player: "SELF", mana: { G: 1 } });
+  assert.deepEqual(energyAction.effects[0], { type: "GAIN_ENERGY", player: "SELF", amount: 1 });
 
   const brokenWingsFilter = byId.broken_wings.abilities[0].targets[0].filters;
   assert.deepEqual(brokenWingsFilter.anyOf, [
@@ -154,9 +153,9 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
   assert.equal(byId.court_duelist.abilities[0].requiresNoSummoningSickness, true);
   assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { tap: true, life: 5 });
   assert.deepEqual(byId.tithe_acolyte.abilities[0].effects[0], {
-    type: "ADD_MANA",
+    type: "GAIN_ENERGY",
     player: "SELF",
-    mana: { G: 1 },
+    amount: 1,
   });
 });
 
@@ -195,7 +194,7 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(adapted.rulesProfile.surgeBonus.toughness, 0);
   assert.deepEqual(byId.zombie_token.cardTypes, ["ECHO", "TOKEN"]);
   assert.equal(byId.zombie_token.isToken, true);
-  assert.equal(byId.zombie_token.manaValue, 2);
+  assert.equal(byId.zombie_token.energyCost, 2);
   assert.deepEqual(byId.graf_harvest.cardTypes, ["SUPPORT"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
   assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["ECHO"]);

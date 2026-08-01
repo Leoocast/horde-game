@@ -1,5 +1,5 @@
 import type { GameState } from "./GameTypes";
-import { emptyManaPool } from "./ManaSystem";
+import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
 
 export function untapSide(game: GameState, side: "player" | "horde"): void {
@@ -19,7 +19,7 @@ export function cleanupEndStep(game: GameState): void {
     card.temporaryKeywords = [];
     delete card.flags.burnSmoke;
   }
-  game.player.manaPool = { ...emptyManaPool(), colorless: game.player.manaPool.colorless };
+  game.player.energyPool = { ...emptyEnergyPool(), stored: game.player.energyPool.stored };
   game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
 }
 
@@ -39,8 +39,8 @@ export function startPlayerTurn(game: GameState): void {
   game.fieldEntriesThisTurn = [];
   // Setup can grant consecutive player turns without a Horde turn between them.
   // A reserve only belongs to the player turn that immediately precedes the Horde,
-  // so an older setup turn must never refill stored mana later.
-  game.player.pendingStoredMana = 0;
+  // so an older setup turn must never refill Stored Energy later.
+  game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;
   game.player.lifePaidThisTurn = 0;
   game.player.lifeLostThisTurn = 0;

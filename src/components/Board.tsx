@@ -37,7 +37,7 @@ import { LifestealAttackAnimator } from "./LifestealAttackAnimator";
 import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { BrokenWingsAnimator } from "./BrokenWingsAnimator";
-import { ManaFlowAnimator } from "./ManaFlowAnimator";
+import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 
 type Props = {
   playerName: string;
@@ -59,7 +59,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const drainEssenceAnimationActive = useGameStore((state) => Boolean(state.drainEssenceAnimation));
   const finalBanquetAnimationActive = useGameStore((state) => Boolean(state.finalBanquetAnimation));
   const brokenWingsAnimationActive = useGameStore((state) => Boolean(state.brokenWingsAnimation));
-  const manaFlowAnimationActive = useGameStore((state) => Boolean(state.manaFlowAnimation));
+  const energyFlowAnimationActive = useGameStore((state) => Boolean(state.energyFlowAnimation));
   const poisonConsumeAnimationActive = useGameStore((state) => Boolean(state.poisonConsumeAnimation));
   const resolvingHordeCombat = useGameStore((state) => state.resolvingHordeCombat);
   // Smallpox turns the Horde's auto-trigger against the player, so hordeAutoTriggerCount stays > 0
@@ -128,8 +128,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <DrainEssenceAnimator />
       <FinalBanquetAnimator />
       <BrokenWingsAnimator />
-      <ManaFlowAnimator />
-      {!game.winner && (hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || brokenWingsAnimationActive || manaFlowAnimationActive || poisonConsumeAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      <EnergyFlowAnimator />
+      {!game.winner && (hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || brokenWingsAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHordeCombat) && !smallpoxSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

@@ -68,7 +68,7 @@ archivo no corre nunca.
 
 | Archivo | Cubre |
 | --- | --- |
-| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
+| `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
 | `tests/hordeBeats.test.js` | Regresiones de presentacion del store: cola visual bajo timers retrasados, orden compartido player/Horda, curaciones y perdida de vida/robo de hechizos. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall y el borde temporal para los dominios L4 todavía pendientes |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: keywords, stats, contadores, creación de fichas, párrafos y rutas de arte |

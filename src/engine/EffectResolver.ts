@@ -4,7 +4,7 @@ import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
 import { isTrait } from "./hostfallVocabulary";
-import { addMana, addStoredMana } from "./ManaSystem";
+import { addAvailableEnergy, addStoredEnergy } from "./EnergySystem";
 import { randomInt } from "./RNG";
 import { getPowerToughness, matchesFilter } from "./StaticEffects";
 import { chooseHordeTarget, findPermanent } from "./Targeting";
@@ -69,18 +69,14 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   HORDE_INSPECT_TOP_GOBLIN: (game) => {
     inspectTopGoblin(game);
   },
-  ADD_MANA: (game, effect, context) => {
-    const mana = effect.mana as Record<string, number> | undefined;
+  GAIN_ENERGY: (game, effect, context) => {
+    const amount = Math.max(0, Number(effect.amount ?? 1));
     if (context.side === "player" && context.source?.cardTypes.includes("ECHO")) {
-      const manaAmounts = Object.values(mana ?? { G: Number(effect.amount ?? 1) });
-      const amount = manaAmounts.reduce<number>((total, value) => total + Number(value), 0);
-      const added = addStoredMana(game, amount);
-      if (added > 0) game.log.unshift(`${context.source.name} adds ${added} stored mana.`);
+      const added = addStoredEnergy(game, amount);
+      if (added > 0) game.log.unshift(`${context.source.name} adds ${added} Stored Energy.`);
       return;
     }
-    for (const [color, amount] of Object.entries(mana ?? { G: effect.amount ?? 1 })) {
-      game.player.manaPool = addMana(game.player.manaPool, color, Number(amount));
-    }
+    game.player.energyPool = addAvailableEnergy(game.player.energyPool, amount);
   },
   DRAW_CARD: (game, effect) => {
     drawCards(game, "player", Number(effect.amount ?? 1));

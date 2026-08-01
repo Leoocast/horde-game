@@ -27,9 +27,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     gameText: card.gameText,
     quantity: card.quantity,
     isToken: Boolean(card.isToken),
-    manaCost: card.manaCost ?? "",
-    manaValue: card.manaValue ?? 0,
-    colors: card.colors,
+    energyCost: normalizeEnergyCost(card.energyCost),
     cardTypes: card.cardTypes,
     modifiers: card.modifiers,
     subtypes: card.subtypes,
@@ -39,7 +37,6 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     entersTapped: card.entersTapped,
     entersWithCounters: card.entersWithCounters,
     flags: card.flags,
-    asEnters: card.asEnters,
     attachTo: card.attachTo,
     variableCost: card.variableCost,
     requiresDistribution: card.requiresDistribution,
@@ -58,6 +55,11 @@ function normalizeSpellCost(abilities: NewDeckAbility[]): ActionCost | undefined
 
 function normalizeKeywords(card: NewDeckCard): Keyword[] {
   return [...(card.keywords ?? [])];
+}
+
+function normalizeEnergyCost(value: NewDeckCard["energyCost"]): number {
+  if (typeof value === "number") return Math.max(0, value);
+  return Math.max(0, Number(value?.amount ?? 0));
 }
 
 function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbility[] {

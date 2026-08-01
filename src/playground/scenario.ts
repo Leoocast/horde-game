@@ -2,11 +2,10 @@ import { DEFAULT_HORDE_DECK_ID, DEFAULT_PLAYER_DECK_ID, findCardDefinition, getH
 import { MAX_PLAYER_LANDS, playerLandCount } from "../engine/GameRules";
 import { createCardInstance, createInitialGame } from "../engine/GameState";
 import type { CardInstance, DifficultyMode, GameMode, GameState, Phase, Side } from "../engine/GameTypes";
-import { STORED_MANA_CAP, emptyManaPool } from "../engine/ManaSystem";
+import { STORED_ENERGY_CAP, emptyEnergyPool } from "../engine/EnergySystem";
 
 /** Bump when the shape changes in a way older exported JSON can't satisfy.
- *  v2 replaced the per-color mana pool with the two resources the game actually has: energy
- *  sources on the battlefield, and stored energy in the pool. */
+ *  v2 exposes the two Energy resources used by scenarios: Sources on the Field and Stored Energy. */
 export const SCENARIO_VERSION = 2;
 
 export type ScenarioZoneKey =
@@ -32,10 +31,8 @@ export type ScenarioCard = {
 };
 
 /**
- * The game has ONE resource, shown as energy: untapped lands on the battlefield are available
- * energy, and the colorless pool is stored energy (capped at `STORED_MANA_CAP`). The engine's
- * `ManaPool` still carries colors as a legacy implementation detail, but nothing the player sees
- * is per-color — so a scenario configures energy, not colors.
+ * The game has one resource: untapped Sources provide available Energy, and the Energy Pool holds
+ * Stored Energy (capped at `STORED_ENERGY_CAP`). Scenarios configure those two visible quantities.
  */
 export type ScenarioDefinition = {
   version: number;
@@ -53,7 +50,7 @@ export type ScenarioDefinition = {
     life: number;
     /** Untapped energy sources (lands) on the battlefield, capped at `MAX_PLAYER_LANDS`. */
     energy: number;
-    /** Stored energy in the pool, capped at `STORED_MANA_CAP`. */
+    /** Stored energy in the pool, capped at `STORED_ENERGY_CAP`. */
     storedEnergy: number;
   };
   horde: { poisonCounters: number };
@@ -100,7 +97,7 @@ export const BLANK_SCENARIO: ScenarioDefinition = {
   activeSide: "player",
   // Full energy by default, sources and reserve both: a blank board you cannot cast anything from
   // is not a useful starting point for testing a card.
-  player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: STORED_MANA_CAP },
+  player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: STORED_ENERGY_CAP },
   horde: { poisonCounters: 0 },
   zones: {},
 };
@@ -129,7 +126,7 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
       // Sources are captured as ordinary Field entries below (exhausted state included), so the
       // top-up field has to stay at zero or a reload would add a second set of them.
       energy: 0,
-      storedEnergy: Math.min(game.player.manaPool.colorless, STORED_MANA_CAP),
+      storedEnergy: Math.min(game.player.energyPool.stored, STORED_ENERGY_CAP),
     },
     horde: { poisonCounters: game.horde.poisonCounters },
     zones: {
@@ -232,8 +229,8 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   game.phase = scenario.phase;
   game.activeSide = scenario.activeSide;
   game.player.life = scenario.player.life;
-  game.player.manaPool = { ...emptyManaPool(), colorless: clamp(scenario.player.storedEnergy, 0, STORED_MANA_CAP) };
-  game.player.pendingStoredMana = 0;
+  game.player.energyPool = { ...emptyEnergyPool(), stored: clamp(scenario.player.storedEnergy, 0, STORED_ENERGY_CAP) };
+  game.player.pendingStoredEnergy = 0;
   game.player.energyActionUsedThisTurn = false;
   game.horde.poisonCounters = scenario.horde.poisonCounters;
   delete game.horde.pendingCard;

@@ -13,7 +13,7 @@ import {
 import { advancePhase } from "../src/engine/PhaseManager";
 import { runHordeMain } from "../src/engine/HordeController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
-import { STORED_MANA_CAP } from "../src/engine/ManaSystem";
+import { STORED_ENERGY_CAP } from "../src/engine/EnergySystem";
 
 function scenario(overrides = {}) {
   return { ...BLANK_SCENARIO, ...overrides, zones: { ...BLANK_SCENARIO.zones, ...(overrides.zones ?? {}) } };
@@ -41,12 +41,8 @@ test("energy is configured as sources and stored energy, both clamped to the eng
   const game = buildScenarioGame(scenario({ player: { life: 50, energy: 99, storedEnergy: 99 } }));
 
   assert.equal(game.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, MAX_PLAYER_LANDS);
-  assert.equal(game.player.manaPool.colorless, STORED_MANA_CAP);
-  // One resource: nothing colored is ever configured or produced.
-  assert.deepEqual(
-    { green: game.player.manaPool.green, red: game.player.manaPool.red, blue: game.player.manaPool.blue },
-    { green: 0, red: 0, blue: 0 },
-  );
+  assert.equal(game.player.energyPool.stored, STORED_ENERGY_CAP);
+  assert.deepEqual(game.player.energyPool, { available: 0, stored: STORED_ENERGY_CAP });
 });
 
 test("lands listed in a zone count against the energy field instead of stacking past the cap", () => {
@@ -79,7 +75,7 @@ test("zone entries become real card instances in the right zone", () => {
   );
 
   assert.equal(game.player.life, 12);
-  assert.equal(game.player.manaPool.colorless, 3);
+  assert.equal(game.player.energyPool.stored, 3);
   assert.equal(game.horde.poisonCounters, 2);
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["giant_growth"]);
@@ -204,7 +200,7 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   assert.deepEqual(zoneIds(rebuilt.horde.field), zoneIds(game.horde.field));
   assert.equal(rebuilt.player.life, 31);
   assert.equal(rebuilt.horde.poisonCounters, 4);
-  assert.equal(rebuilt.player.manaPool.colorless, 1);
+  assert.equal(rebuilt.player.energyPool.stored, 1);
 
   // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
   assert.equal(rebuilt.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, 2);
@@ -244,7 +240,7 @@ test("saved boards keep only the hand and battlefields", () => {
   assert.equal(rebuilt.horde.field.some((card) => card.definitionId === "zombie_token"), true);
   assert.equal(rebuilt.player.memory.length, 0);
   assert.equal(rebuilt.player.life, BLANK_SCENARIO.player.life);
-  assert.equal(rebuilt.player.manaPool.colorless, 0);
+  assert.equal(rebuilt.player.energyPool.stored, 0);
 });
 
 test("Horde library queues preserve their authored top-to-bottom order", () => {

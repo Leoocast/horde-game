@@ -8,7 +8,7 @@ import {
   destroyCard,
   drainEnergy,
   drawPlayerCard,
-  grantManaForCard,
+  grantEnergyForCard,
   refillEnergy,
   resolveAllEvents,
   resolveNextEvent,
@@ -17,7 +17,7 @@ import {
 import { BLANK_SCENARIO, buildScenarioGame } from "../src/playground/scenario";
 import { castCard } from "../src/engine/GameActions";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
-import { STORED_MANA_CAP } from "../src/engine/ManaSystem";
+import { STORED_ENERGY_CAP } from "../src/engine/EnergySystem";
 
 function scenario(overrides = {}) {
   return { ...BLANK_SCENARIO, ...overrides, zones: { ...BLANK_SCENARIO.zones, ...(overrides.zones ?? {}) } };
@@ -56,12 +56,12 @@ test("energy sources are lands on the battlefield and stop at the land cap", () 
 
 test("drain taps every source and empties the pool; refill gives it all back", () => {
   const start = buildScenarioGame(scenario({ player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 2 } }));
-  assert.equal(start.player.manaPool.colorless, 2);
+  assert.equal(start.player.energyPool.stored, 2);
 
   const drained = drainEnergy(start);
   assert.equal(drained.ok, true);
   assert.ok(drained.game.player.field.every((card) => card.tapped));
-  assert.equal(drained.game.player.manaPool.colorless, 0);
+  assert.equal(drained.game.player.energyPool.stored, 0);
 
   const refilled = refillEnergy(drained.game);
   assert.equal(refilled.ok, true);
@@ -77,8 +77,8 @@ test("drain taps every source and empties the pool; refill gives it all back", (
 test("stored energy respects the engine's cap instead of growing forever", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
 
-  for (let round = 0; round < STORED_MANA_CAP; round += 1) game = addStoredEnergy(game).game;
-  assert.equal(game.player.manaPool.colorless, STORED_MANA_CAP);
+  for (let round = 0; round < STORED_ENERGY_CAP; round += 1) game = addStoredEnergy(game).game;
+  assert.equal(game.player.energyPool.stored, STORED_ENERGY_CAP);
 
   const overflow = addStoredEnergy(game);
   assert.equal(overflow.ok, false);
@@ -86,7 +86,7 @@ test("stored energy respects the engine's cap instead of growing forever", () =>
 });
 
 test("play free grants exactly the printed cost and the card then casts through the normal path", () => {
-  // No energy anywhere: the only way this cast can succeed is the granted mana.
+  // No Energy anywhere: the only way this cast can succeed is the explicit Playground grant.
   const start = buildScenarioGame(
     scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "llanowar_elves" }] } }),
   );
@@ -96,13 +96,13 @@ test("play free grants exactly the printed cost and the card then casts through 
   assert.equal(blocked.lastActionResult.ok, false);
   assert.match(blocked.lastActionResult.reason, /not enough available Energy/i);
 
-  const granted = grantManaForCard(start, handId);
+  const granted = grantEnergyForCard(start, handId);
   assert.equal(granted.ok, true);
   const cast = castCard(granted.game, handId);
   assert.equal(cast.lastActionResult.ok, true);
   assert.equal(cast.player.field.filter((card) => card.definitionId === "llanowar_elves").length, 1);
   // The grant is exact: casting spent all of it.
-  assert.deepEqual(cast.player.manaPool, { green: 0, red: 0, blue: 0, white: 0, black: 0, colorless: 0 });
+  assert.deepEqual(cast.player.energyPool, { available: 0, stored: 0 });
 });
 
 test("destroy runs death triggers and to-graveyard does not", () => {

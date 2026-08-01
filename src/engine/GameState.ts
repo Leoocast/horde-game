@@ -1,6 +1,6 @@
 import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
 import { buildHordeRules } from "./HordeRules";
-import { emptyManaPool } from "./ManaSystem";
+import { emptyEnergyPool } from "./EnergySystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 
@@ -71,8 +71,8 @@ export function createInitialGame(
       field: [],
       memory: [],
       oblivion: [],
-      manaPool: emptyManaPool(),
-      pendingStoredMana: 0,
+      energyPool: emptyEnergyPool(),
+      pendingStoredEnergy: 0,
       energyActionUsedThisTurn: false,
       lifePaidThisTurn: 0,
       lifeLostThisTurn: 0,
@@ -217,7 +217,6 @@ export function createToken(definition: CardDefinition, side: Side, suffix: stri
 }
 
 export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosKeywords?: Keyword[]): CardInstance {
-  const chosenColor = definition.asEnters?.find((entry) => entry.storeAs === "chosenColor")?.defaultForThisDeck;
   const counters: Record<string, number> = {};
   for (const counter of definition.entersWithCounters ?? []) {
     counters[counter.counterType] = (counters[counter.counterType] ?? 0) + (counter.amount ?? 0);
@@ -233,9 +232,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     controller: side,
     zone: "archive",
     isToken: Boolean(definition.isToken),
-    manaCost: definition.manaCost ?? "",
-    manaValue: definition.manaValue ?? 0,
-    colors: definition.colors ?? [],
+    energyCost: definition.energyCost ?? 0,
     cardTypes: definition.cardTypes ?? [],
     modifiers: definition.modifiers ?? [],
     subtypes: definition.subtypes ?? [],
@@ -261,7 +258,6 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     untilNextPlayerTurnPower: 0,
     untilNextPlayerTurnToughness: 0,
     temporaryKeywords: [],
-    chosenColor,
     attachTo: definition.attachTo,
     flags: { ...(definition.flags ?? {}) },
     variableCost: definition.variableCost,

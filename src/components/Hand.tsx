@@ -3,7 +3,7 @@ import type { CardInstance } from "../engine/GameTypes";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
-import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
+import { canPayWithAutomaticEnergy, totalEnergyCost } from "../engine/EnergySystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
@@ -55,7 +55,7 @@ export function Hand({ game }: { game: GameState }) {
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
-  const manaFlowAnimating = useGameStore((state) => Boolean(state.manaFlowAnimation));
+  const energyFlowAnimating = useGameStore((state) => Boolean(state.energyFlowAnimation));
   const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
   const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
@@ -265,7 +265,7 @@ export function Hand({ game }: { game: GameState }) {
       lifePaymentAnimating ||
       bloodPactAnimating ||
       energyRecycleAnimation ||
-      manaFlowAnimating ||
+      energyFlowAnimating ||
       unresolvedTriggerCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode),
   );
@@ -478,7 +478,7 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.cardTypes.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayLifeCost(game, card.additionalCost)) return false;
-  if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
+  if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
@@ -502,7 +502,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return t("error.notEnoughLife", { amount: lifeCostAmount(card.additionalCost, game.player.life), card: card.displayName });
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return t("error.noTargets", { card: card.displayName });
-  return t("error.notEnoughMana", { card: card.displayName });
+  return t("error.notEnoughEnergy", { card: card.displayName });
 }
 
 type EnergyRecycleHint = {

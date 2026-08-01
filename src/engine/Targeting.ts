@@ -79,7 +79,7 @@ export function chooseHordeTarget(game: GameState, kind: "destroy" | "damage", d
 }
 
 function bestCreature(game: GameState, cards: CardInstance[]): CardInstance | undefined {
-  const scored = cards.map((card) => ({ card, score: Number((card as unknown as { targetPriority?: number }).targetPriority ?? card.manaValue) }));
+  const scored = cards.map((card) => ({ card, score: Number((card as unknown as { targetPriority?: number }).targetPriority ?? card.energyCost) }));
   const max = Math.max(...scored.map((item) => item.score));
   const tied = scored.filter((item) => item.score === max).map((item) => item.card);
   return pickRandom(game, tied);
