@@ -313,8 +313,8 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 
 - L0-L3 y L4.1-L4.6b están cerradas y validadas.
 - L4.6c está cerrada y validada por el usuario.
-- El ajuste final de L4, prioridad de pago Stored Energy → Sources, está implementado y pendiente
-  únicamente de una prueba manual corta.
+- El ajuste final de L4, prioridad de pago Stored Energy → Sources, está cerrado y validado por el
+  usuario. L4 queda completa.
 - Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
   `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
   `legacy-l44-card-states`, `legacy-l45-actions-events-host-rules` y
@@ -547,8 +547,8 @@ adaptador con una fase de eliminación conocida.
 - Las regresiones se cambiaron antes que el engine y fallaron en los tres caminos antiguos:
   Energía generada manualmente, Sources automáticas normales y Crimson Energy. Tras el cambio,
   esos casos, el pago insuficiente atómico y las 220/220 pruebas pasan.
-- L5 permanece expresamente fuera de alcance. Falta verificar visualmente un único pago mixto antes
-  de cerrar L4.
+- El usuario confirmó el pago mixto, el número de Sources agotadas y la recuperación de reserva el
+  2026-08-01. L4 queda cerrada. L5 permanece expresamente fuera de alcance hasta nueva autorización.
 
 ## Fase L5 — Independencia de los mazos
 
@@ -585,11 +585,45 @@ deck puede estar en migración de contenido a la vez.
 No existe una correspondencia sistemática de nombre nuevo + arte nuevo + mismo coste + mismas
 estadísticas + mismo efecto + misma cantidad.
 
+### Decisión de alcance del usuario (2026-08-01)
+
+- No se cambiará ningún coste, Fuerza, Aguante, efecto, timing, cantidad ni sinergia de Mono Green,
+  Zombies o Goblins. El balance actual queda congelado por decisión explícita del usuario.
+- Por tanto, L5 no se ejecutará como rediseño de contenido y no se afirmará que cumple el criterio
+  de aceptación original. El trabajo futuro se limitará a cambiar nombres, ids y rutas, conservando
+  exactamente el comportamiento vigente.
+- L6 seguirá ocupándose del arte y su procedencia; L7 retirará las identidades y archivos antiguos
+  que queden después de esos cambios. Ninguna de esas fases autoriza cambios de balance.
+- Los decks vigentes se consideran esqueletos mecánicos ya balanceados. La identidad final de cada
+  deck se diseñará en este orden: Crónica e historia, nombres y roles narrativos de las cartas,
+  correspondencia con las estadísticas/efectos congelados y, finalmente, arte. Esto aplica a todos
+  los decks y se difiere para una sesión futura.
+
+### Pipeline narrativo futuro por deck
+
+1. Escribir la Crónica y la historia del deck.
+2. Definir quién es su Chronicler y qué representa narrativamente cada carta.
+3. Asignar nombres nuevos a los roles mecánicos existentes.
+4. Mantener exactamente los stats, costes, efectos, timing y cantidades actuales.
+5. Crear el arte de acuerdo con esa identidad narrativa y registrar su procedencia.
+6. Regenerar los PNG finales y cambiar nombres técnicos, ids y rutas en un único corte verificado.
+
+Este pipeline se ejecutará para un solo deck a la vez y no comienza hasta nueva autorización del
+usuario.
+
 ## Fase L6 — Arte y procedencia
 
 ### Objetivo
 
 Sustituir recursos derivados y demostrar derechos de uso.
+
+### Deuda deliberada (2026-08-01)
+
+L6 queda diferida. No se crearán nombres ni arte aislados antes de definir la Crónica de cada deck.
+Los PNG, nombres e identidades actuales permanecen como material provisional unido al esqueleto
+mecánico; Zombies y Goblins continúan con su exportación pausada. Esta deuda no bloquea trabajo
+interno del juego, pero sí bloquea declarar terminada la identidad final y la auditoría de
+publicación.
 
 ### Registro mínimo por recurso
 
@@ -614,6 +648,19 @@ y datos locales aprobados.
 ### Objetivo
 
 Eliminar la capa de compatibilidad y revisar el build como un tercero.
+
+### Dependencia de las Crónicas y L6
+
+L7 final no puede cerrarse antes del pase narrativo y de L6: sin nombres, ids, rutas y arte de
+reemplazo no es posible borrar correctamente las identidades y recursos provisionales. No se
+debilitará la auditoría para ocultar esta deuda; sus blockers permanecerán visibles hasta que existan
+los reemplazos. Puede hacerse limpieza técnica no relacionada, pero no se marcará L7 completa ni se
+usará `--strict` como gate superado antes de ese corte final.
+
+L7 no repite la migración del engine de L4 ni autoriza cambios funcionales. Su alcance es retirar
+identidades, ids, rutas, imágenes, fixtures, comentarios y compatibilidades realmente obsoletas;
+resolver de forma explícita cualquier persistencia afectada; reconstruir `dist`; y pasar la
+auditoría final de nombres, recursos, procedencia y residuos técnicos.
 
 ### Trabajo previsto
 

@@ -710,11 +710,24 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- El ajuste final de L4 está implementado y pendiente de un smoke manual. `EnergySystem.ts` consume
+- Todos los decks vigentes son esqueletos mecánicos cuyo balance queda congelado. La identidad final
+  se hará más adelante y en orden narrativo: escribir una Crónica por deck, derivar nombres y roles,
+  hacerlos corresponder con los stats/efectos actuales y sólo después producir arte. L6 queda como
+  deuda deliberada; Zombies y Goblins mantienen pausada la exportación de PNG. L7 final depende de
+  ese trabajo y no puede declararse cerrada ni esconder sus blockers mientras falten reemplazos.
+  El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Chronicler
+  y significado narrativo, nombres, conservación exacta de mecánicas, arte/procedencia y corte final
+  de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no repite la migración del engine.
+- El usuario descartó el rediseño mecánico previsto originalmente para L5. Mono Green, Zombies y
+  Goblins conservan exactamente costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias;
+  sólo se cambiarán posteriormente nombres, ids y rutas. No presentar ese trabajo como cumplimiento
+  del criterio original de independencia por rediseño. L6 queda para arte/procedencia y L7 para el
+  retiro final de identidades y archivos antiguos. Ninguna autoriza rebalanceo.
+- El ajuste final de L4 está cerrado y validado por el usuario. `EnergySystem.ts` consume
   Stored Energy antes de Energía disponible/Sources; el autopago agota sólo las Sources necesarias
   y deja las restantes elegibles para convertirse en reserva al terminar el turno. Las regresiones
   cubren pago manual, pago automático, Crimson Energy y fallo atómico; 220/220 tests pasan. No se
-  comenzó L5.
+  comenzó L5. El smoke de pago mixto y recuperación de reserva pasó el 2026-08-01; L4 queda completa.
 - L4.6c está cerrada y validada por el usuario. Escenarios y
   replays usan schema v3 Hostfall (`host`, zonas canónicas, `exhausted`/`stabilizing` y timeline
   `hostTurn`); las funciones de guardar/cargar/importar/exportar se conservan. No hay migración:
