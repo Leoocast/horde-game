@@ -27,7 +27,7 @@ demostrarse.
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | En curso: L4.1 cerrada; L4.2 iniciada | Autorizada por subfases |
+| L4 — Limpieza interna del engine | En curso: L4.1 cerrada; L4.2 pendiente de validación manual | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
@@ -392,6 +392,26 @@ adaptador con una fase de eliminación conocida.
 - La identidad futura de Chronicler de Trasgos se decidirá en una fase de arte posterior; el
   candidato actual del usuario es Goblin Chainwhirler en lugar de General Kreat. L4 no cambia esa
   asignación de contenido.
+
+### Avance L4.2 — Zonas
+
+- `src/engine/hostfallZones.ts` define el conjunto authored cerrado `ARCHIVE`, `HAND`, `FIELD`,
+  `MEMORY`, `OBLIVION` y su representación runtime en minúsculas.
+- `GameState`, `PlayerState`, `HordeState` y `CardInstance.zone` usan una sola representación:
+  `archive`, `hand`, `field`, `memory` y `oblivion`. No existen arrays legacy paralelos ni getters
+  que puedan desincronizarse al clonar el estado.
+- El historial de entradas y los consumidores de engine/store/UI se conectaron a la misma forma
+  canónica. El adaptador ya no traduce zonas a Library/Battlefield/Graveyard/Exile; únicamente
+  normaliza el casing del schema authored al runtime.
+- El deck lint rechaza zonas authored desconocidas y la auditoría incorpora el blocker
+  `legacy-l42-zones`, actualmente en cero. El inventario L4 general bajó de 754 a 419 apariciones;
+  las restantes corresponden a Energía, estados, eventos, identidad Host y nombres de borde que
+  se limpiarán en L4.3-L4.6.
+- Los nombres externos de zonas del Playground se conservaron durante esta subfase para que boards
+  y replays existentes sigan cargando. Como su shape no cambió, `SCENARIO_VERSION` permanece en 2;
+  L4.6 migrará esas claves consumidoras de forma conjunta.
+- Verificación automática: TypeScript, deck lint, Card Studio, 201/201 tests, auditoría y build en
+  verde. Falta el smoke test manual antes de cerrar L4.2 y autorizar L4.3.
 
 ## Fase L5 — Independencia de los mazos
 

@@ -206,7 +206,7 @@ export type GameStore = {
   resolvePlayerCombat: () => void;
   finishPlayerCombat: () => void;
   runHordeMain: () => void;
-  /** Playground only: one Horde card enters from the top of its library, with its beats, without
+  /** Playground only: one Host card enters from the top of its Archive, with its beats, without
    *  running a Horde turn. */
   resolveHordeCardFromTop: () => void;
   completeSurgeTransition: () => void;

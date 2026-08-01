@@ -10,7 +10,7 @@ const CHAOS_STARTING_LIFE = 35;
 const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["broken_wings", "broken_wings"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HORDE_OPENING_LIBRARY = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
+const DEVELOPER_HORDE_OPENING_ARCHIVE = ["goblin_token_1_1_red", "rundvelt_hordemaster"];
 const DEVELOPER_HORDE_PROTECTED_OPENING_SIZE = 2;
 const DEVELOPER_STARTING_LAND_COUNT = 4;
 
@@ -39,10 +39,10 @@ export function createInitialGame(
   let randomState = hashSeed(seed);
   const shuffledPlayer = shuffleWithState(playerCards, randomState);
   randomState = shuffledPlayer.randomState;
-  const playerLibrary = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
+  const playerArchive = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
   const shuffledHorde = shuffleWithState(hordeCards, randomState);
   randomState = shuffledHorde.randomState;
-  const hordeLibrary = applyDeveloperHordeOpeningLibrary(seed, shuffledHorde.items);
+  const hordeArchive = applyDeveloperHordeOpeningArchive(seed, shuffledHorde.items);
 
   const game: GameState = {
     seed,
@@ -51,7 +51,7 @@ export function createInitialGame(
     hordeRules: buildHordeRules(activeHordeDeck.rulesProfile),
     chaosMutations,
     currentRandomState: randomState,
-    hordeDeckOrderHash: hordeLibrary.map((card) => card.definitionId).join("|"),
+    hordeDeckOrderHash: hordeArchive.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
     turnNumber: 1,
@@ -66,11 +66,11 @@ export function createInitialGame(
         : gameMode === "chaos"
           ? CHAOS_STARTING_LIFE
           : STANDARD_STARTING_LIFE,
-      library: playerLibrary,
+      archive: playerArchive,
       hand: [],
-      battlefield: [],
-      graveyard: [],
-      exile: [],
+      field: [],
+      memory: [],
+      oblivion: [],
       manaPool: emptyManaPool(),
       pendingStoredMana: 0,
       energyActionUsedThisTurn: false,
@@ -78,14 +78,14 @@ export function createInitialGame(
       lifeLostThisTurn: 0,
     },
     horde: {
-      library: hordeLibrary,
-      battlefield: [],
-      graveyard: [],
-      exile: [],
+      archive: hordeArchive,
+      field: [],
+      memory: [],
+      oblivion: [],
       poisonCounters: 0,
     },
     combat: { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] },
-    battlefieldEntriesThisTurn: [],
+    fieldEntriesThisTurn: [],
     eventQueue: [],
     log: [],
   };
@@ -98,9 +98,9 @@ export function createInitialGame(
   return game;
 }
 
-export function recordBattlefieldEntry(game: GameState, card: CardInstance): void {
-  card.battlefieldEntryTurn = card.controller === "horde" ? game.hordeTurnNumber : game.turnNumber;
-  game.battlefieldEntriesThisTurn.push({
+export function recordFieldEntry(game: GameState, card: CardInstance): void {
+  card.fieldEntryTurn = card.controller === "horde" ? game.hordeTurnNumber : game.turnNumber;
+  game.fieldEntriesThisTurn.push({
     instanceId: card.instanceId,
     controller: card.controller,
     cardTypes: [...card.cardTypes],
@@ -133,7 +133,7 @@ export function mulliganOpeningHand(game: GameState): GameState {
   return next;
 }
 
-function forceCardsToFront(library: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
+function forceCardsToFront(archive: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
   const remaining = [...archive];
   const forced: CardInstance[] = [];
   for (const definitionId of definitionIds) {
@@ -145,15 +145,15 @@ function forceCardsToFront(library: CardInstance[], definitionIds: readonly stri
   return { forced, remaining };
 }
 
-function applyDeveloperOpeningHand(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_OPENING_HAND);
+function applyDeveloperOpeningHand(seed: string, archive: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return archive;
+  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_OPENING_HAND);
   return [...forced, ...remaining];
 }
 
-function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]): CardInstance[] {
-  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return library;
-  const { forced, remaining } = forceCardsToFront(library, DEVELOPER_HORDE_OPENING_LIBRARY);
+function applyDeveloperHordeOpeningArchive(seed: string, archive: CardInstance[]): CardInstance[] {
+  if (seed.trim().toLowerCase() !== DEVELOPER_SEED) return archive;
+  const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_HORDE_OPENING_ARCHIVE);
   const ordered = [...forced, ...remaining];
   for (let index = 0; index < Math.min(DEVELOPER_HORDE_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
     if (ordered[index].definitionId !== "graf_harvest") continue;
@@ -169,9 +169,9 @@ function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]
 function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {
   for (const entry of entries) {
     for (let index = 0; index < entry.amount; index += 1) {
-      const libraryIndex = game.player.archive.findIndex((card) => card.definitionId === entry.definitionId);
-      if (libraryIndex < 0) break;
-      const [card] = game.player.archive.splice(libraryIndex, 1);
+      const archiveIndex = game.player.archive.findIndex((card) => card.definitionId === entry.definitionId);
+      if (archiveIndex < 0) break;
+      const [card] = game.player.archive.splice(archiveIndex, 1);
       card.zone = "field";
       card.tapped = false;
       card.summoningSickness = false;

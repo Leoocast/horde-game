@@ -231,6 +231,9 @@ const internalText = textFiles(["src/engine", "src/store", "src/playground"]);
 const testText = textFiles(["tests"]);
 const l41Text = [...productionText, ...testText]
   .filter((file) => relative(file) !== "src/data/deckLint.ts");
+const l42Text = textFiles(["src", "tests"])
+  .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => relative(file) !== "src/data/deckLint.ts");
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -259,6 +262,20 @@ const l41LegacyPatterns = [
   {
     label: "retired L4.1 runtime identifier",
     pattern: /\b(?:deathtouchDamage|getToxicAmount|resolvePlayerAttackerLifesteal)\b/u,
+  },
+];
+const l42LegacyPatterns = [
+  {
+    label: "legacy GameState zone member",
+    pattern: /\.(?:library|battlefield|graveyard|exile)\b/u,
+  },
+  {
+    label: "legacy CardInstance zone value",
+    pattern: /\bzone\s*(?::|[!=]==?)\s*["'](?:library|battlefield|graveyard|exile)["']/u,
+  },
+  {
+    label: "legacy state zone property",
+    pattern: /(?:^|[,{}]\s*)(?:library|battlefield|graveyard|exile)\s*:/mu,
   },
 ];
 
@@ -353,6 +370,14 @@ const checks = [
     "Legacy card kinds or Traits in active consumers",
     "Runtime, UI and migrated tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
     scanTextPatterns(l41Text, l41LegacyPatterns),
+  ),
+  finding(
+    "legacy-l42-zones",
+    "blocker",
+    "L4.2",
+    "Legacy zones in active runtime state",
+    "GameState and CardInstance must use archive, field, memory and oblivion without parallel legacy arrays.",
+    scanTextPatterns(l42Text, l42LegacyPatterns),
   ),
   finding(
     "legacy-internal-vocabulary",

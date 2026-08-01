@@ -150,7 +150,7 @@ export function flashAutoPaidLands(ids: string[]): { ids: string[]; eventId: num
   return { ids, eventId: Date.now() };
 }
 
-// Discards are derived from the card diff (hand -> graveyard), never from log text:
+// Discards are derived from the card diff (Hand -> Memory), never from log text:
 // the log is display-only and its wording must stay free to change or localize.
 export function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "horde" }): void {
   const previousPlayerGraveyardIds = new Set(previous.player.memory.map((card) => card.instanceId));

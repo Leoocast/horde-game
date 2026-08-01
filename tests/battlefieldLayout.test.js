@@ -137,8 +137,8 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
   const groupMeta = new Map();
   const left = addCard(game, customCard("ghoul", "horde", { power: 2, toughness: 2 }));
   const right = addCard(game, customCard("ghoul", "horde", { power: 2, toughness: 2 }));
-  left.battlefieldEntryTurn = 1;
-  right.battlefieldEntryTurn = 1;
+  left.fieldEntryTurn = 1;
+  right.fieldEntryTurn = 1;
   cardOrder.set(left.instanceId, 0);
   cardOrder.set(right.instanceId, 1);
   familyOrder.set(left.definitionId, 0);
@@ -162,9 +162,9 @@ test("non-token Horde copies stack only when they entered during the same Horde 
   const firstBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
   const interveningZombie = addCard(game, customCard("intervening_zombie", "horde", { subtypes: ["Zombie"] }));
   const laterBat = addCard(game, cardFromDeck("blighted_bat", "horde"));
-  firstBat.battlefieldEntryTurn = 1;
-  interveningZombie.battlefieldEntryTurn = 1;
-  laterBat.battlefieldEntryTurn = 2;
+  firstBat.fieldEntryTurn = 1;
+  interveningZombie.fieldEntryTurn = 1;
+  laterBat.fieldEntryTurn = 2;
   [firstBat, interveningZombie, laterBat].forEach((card, index) => {
     cardOrder.set(card.instanceId, index);
     if (!familyOrder.has(card.definitionId)) familyOrder.set(card.definitionId, index);
@@ -184,7 +184,7 @@ test("non-token Horde copies stack only when they entered during the same Horde 
     "the later Blighted Bat keeps its summon position instead of joining the old stack",
   );
 
-  laterBat.battlefieldEntryTurn = 1;
+  laterBat.fieldEntryTurn = 1;
   const sameTurn = groupBattlefieldCopies(
     game,
     [firstBat, interveningZombie, laterBat],

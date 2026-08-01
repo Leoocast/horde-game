@@ -84,7 +84,7 @@ export function groupBattlefieldCopies(
         : swarmToken
           ? `swarm-wave-${swarmWaveId ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
           : card.controller === "horde"
-            ? `horde-turn-${card.battlefieldEntryTurn ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
+            ? `horde-turn-${card.fieldEntryTurn ?? card.instanceId}-${card.definitionId}-${visualStatsKey}`
             : `copy-${card.definitionId}-${visualStatsKey}`);
     lastGroupKeys?.set(card.instanceId, groupingKey);
     groupOfCard.set(card.instanceId, groupingKey);

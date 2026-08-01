@@ -25,13 +25,13 @@ export type StaticAuraSnapshot = Record<string, string[]>;
 
 export function collectStaticAuras(game: GameState, controller?: Side): StaticAura[] {
   const auras: StaticAura[] = [];
-  const battlefield = [...game.player.field, ...game.horde.field];
-  for (const source of battlefield) {
+  const field = [...game.player.field, ...game.horde.field];
+  for (const source of field) {
     if (controller && source.controller !== controller) continue;
     source.effects.forEach((effect, index) => {
       if (!STATIC_AURA_EFFECT_TYPES.has(effect.type)) return;
       const affectedController = resolveAffectedController(source.controller, effect.controller);
-      const affected = battlefield.filter(
+      const affected = field.filter(
         (card) =>
           (!affectedController || card.controller === affectedController) &&
           matchesFilter(card, effect.filter as CardFilter | undefined, source),

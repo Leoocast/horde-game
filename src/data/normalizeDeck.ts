@@ -94,7 +94,7 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
   for (const rawEffect of ability.effects ?? []) {
     const effect = rawEffect as EffectDefinition;
     const scope = effect.scope && typeof effect.scope === "object" ? (effect.scope as Record<string, unknown>) : undefined;
-    if (effect.type === "MODIFY_STATS" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+    if (effect.type === "MODIFY_STATS" && effect.duration === "WHILE_SOURCE_ON_FIELD") {
       if (effect.condition) {
         normalized.push({
           type: "STATIC_CONDITIONAL_BUFF",
@@ -114,7 +114,7 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
       });
       continue;
     }
-    if (effect.type === "GRANT_KEYWORD" && effect.duration === "WHILE_SOURCE_ON_BATTLEFIELD") {
+    if (effect.type === "GRANT_KEYWORD" && effect.duration === "WHILE_SOURCE_ON_FIELD") {
       if (effect.condition) {
         normalized.push({
           type: "STATIC_CONDITIONAL_GRANT_KEYWORD",

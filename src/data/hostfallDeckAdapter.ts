@@ -185,10 +185,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
       adapted.eventObject = "permanent";
       continue;
     }
-    if (key === "duration" && nestedValue === "WHILE_SOURCE_ON_FIELD") {
-      adapted.duration = "WHILE_SOURCE_ON_BATTLEFIELD";
-      continue;
-    }
     if (key === "speed" && typeof nestedValue === "string") {
       adapted.speed = nestedValue === "QUICK" ? "INSTANT" : nestedValue === "MAIN" ? "SORCERY" : nestedValue;
       continue;

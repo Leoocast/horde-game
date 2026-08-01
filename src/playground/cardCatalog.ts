@@ -16,7 +16,7 @@ export type CatalogCard = {
  *  shows up here the moment it is registered — the Playground never keeps its own card list.
  *
  * Deduplicated per deck by definition id: a deck may legitimately list the same id in both `cards`
- * and `tokens` (the Goblin horde runs Goblin tokens as real library cards), and `findCardDefinition`
+ * and `tokens` (the Goblin Host runs Goblin tokens as real Archive cards), and `findCardDefinition`
  * resolves such an id to a single definition anyway. `key` is unique and stable for React lists. */
 export const CATALOG_CARDS: CatalogCard[] = DECK_REGISTRY.flatMap((entry) => {
   const seen = new Set<string>();

@@ -37,8 +37,8 @@ export type TimelineStep =
   | { kind: "addStoredEnergy" }
   | { kind: "drainEnergy" }
   | { kind: "place"; zone: ScenarioZoneKey; entry: ScenarioCard }
-  /** Pick a card from the catalog and let it happen for real: a player card goes to hand and casts
-   *  through the normal path, a Horde card goes on top of the Horde library and the Horde plays it
+  /** Pick a card from the catalog and let it happen for real: a player card goes to Hand and casts
+   *  through the normal path, a Host card goes on top of the Host Archive and the Host plays it
    *  on its turn. There is no third way to put a card into play — that is the whole point. */
   | { kind: "playCard"; definitionId: string; cardName: string; side: Side }
   | { kind: "play"; handId: string; cardName: string; free: boolean }
@@ -135,10 +135,10 @@ function queuedCardCount(step: Extract<TimelineStep, { kind: "hordeTurnExact" }>
 
 /**
  * "Play this card", routed by whose card it is. Neither branch invents a path: the player's card
- * lands in hand and goes through the same cast the Hand does, and the Horde's card goes on top of
- * its library and is revealed by the Horde's own turn — which is the only way a Horde card ever
- * enters play in this game. That is why a sorcery like Smallpox cannot be "placed" on a
- * battlefield: nothing in the game does that, so the playground doesn't offer it.
+ * lands in Hand and goes through the same cast the Hand does, and the Host's card goes on top of
+ * its Archive and is revealed by the Host's own turn — which is the only way a Host card ever
+ * enters play in this game. That is why a Spell like Smallpox cannot be "placed" on the
+ * Field: nothing in the game does that, so the playground doesn't offer it.
  */
 function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): StepOutcome {
   const store = useGameStore.getState();

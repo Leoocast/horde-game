@@ -115,7 +115,7 @@ export function cloneScenario(definition: ScenarioDefinition): ScenarioDefinitio
  * You place cards, you look at them, you save what you are looking at.
  *
  * Libraries are deliberately not captured — a scenario is a starting position, not a save state,
- * and the library is whatever the deck holds minus what the scenario places.
+ * and the Archive is whatever the deck holds minus what the scenario places.
  */
 export function snapshotScenario(game: GameState, base: ScenarioDefinition): ScenarioDefinition {
   return {
@@ -126,7 +126,7 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
     activeSide: game.activeSide,
     player: {
       life: game.player.life,
-      // Lands are captured as ordinary battlefield entries below (tapped state included), so the
+      // Sources are captured as ordinary Field entries below (exhausted state included), so the
       // top-up field has to stay at zero or a reload would add a second set of them.
       energy: 0,
       storedEnergy: Math.min(game.player.manaPool.colorless, STORED_MANA_CAP),
@@ -144,7 +144,7 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
   };
 }
 
-/** Board-library snapshots deliberately keep only the player's hand and both battlefields. */
+/** Board snapshots deliberately keep only the player's Hand and both Fields. */
 export function snapshotBoard(game: GameState, base: ScenarioDefinition): ScenarioDefinition {
   const snapshot = snapshotScenario(game, base);
   return {
@@ -302,8 +302,8 @@ function zoneEntries(definition: ScenarioDefinition): Array<[ScenarioZoneKey, Sc
 
 /**
  * `createInitialGame` always draws an opening hand (and, for some seeds/modes, puts permanents in
- * play). A scenario defines its own zones, so those cards go back to the top of the library in the
- * order they left it — the library ends up in exactly its post-shuffle order.
+ * play). A scenario defines its own zones, so those cards go back to the top of the Archive in the
+ * order they left it — the Archive ends up in exactly its post-shuffle order.
  */
 function returnPlayerCardsToLibrary(game: GameState): void {
   const returned = [...game.player.hand, ...game.player.field];
@@ -319,7 +319,7 @@ function returnPlayerCardsToLibrary(game: GameState): void {
 
 function applyZones(game: GameState, scenario: ScenarioDefinition): void {
   const counter = { next: 0 };
-  // Library tops are applied last so the cards placed elsewhere are already out of the library and
+  // Archive tops are applied last so the cards placed elsewhere are already out of the Archive and
   // can't be pulled twice; within a zone, the listed order is the resulting order.
   const zones = zoneEntries(scenario).sort(([a], [b]) => Number(a.endsWith("LibraryTop")) - Number(b.endsWith("LibraryTop")));
   for (const [zone, entries] of zones) {
@@ -348,14 +348,14 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
 }
 
 /**
- * Prefers a real copy out of that side's library so deck counts stay honest, and only mints a new
+ * Prefers a real copy out of that side's Archive so deck counts stay honest, and only mints a new
  * instance when the deck doesn't have one (e.g. testing a Goblin token in a Zombie match). Either
  * way the result is a normal `CardInstance`, never a playground-only shape.
  */
 function takeCard(game: GameState, side: Side, definitionId: string, counter: { next: number }): CardInstance | undefined {
-  const library = game[side].archive;
-  const index = library.findIndex((card) => card.definitionId === definitionId);
-  if (index >= 0) return library.splice(index, 1)[0];
+  const archive = game[side].archive;
+  const index = archive.findIndex((card) => card.definitionId === definitionId);
+  if (index >= 0) return archive.splice(index, 1)[0];
   const definition = findCardDefinition(definitionId);
   if (!definition) return undefined;
   let instanceId = "";

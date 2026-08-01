@@ -176,9 +176,9 @@ export type CardInstance = {
   tapped: boolean;
   entersTapped: boolean;
   summoningSickness: boolean;
-  /** Controller turn in which this permanent most recently entered the battlefield.
-   *  Used by pure battlefield layout to keep later Horde copies in a new visual stack. */
-  battlefieldEntryTurn?: number;
+  /** Controller turn in which this permanent most recently entered the Field.
+   *  Used by pure Field layout to keep later Host copies in a new visual stack. */
+  fieldEntryTurn?: number;
   /** Number of player combats this permanent has actually attacked in. */
   attacksMade?: number;
   activatedThisTurn: boolean;
@@ -251,7 +251,7 @@ export type EventItem = {
   triggerController?: Side;
 };
 
-export type BattlefieldEntryRecord = {
+export type FieldEntryRecord = {
   instanceId: string;
   controller: Side;
   cardTypes: CardKind[];
@@ -279,7 +279,7 @@ export type GameState = {
   combat: CombatState;
   /** Permanents that entered since the current turn began. Rules may count entries even if the
    * permanent later changes zones; presentation and logs must not be used as rules history. */
-  battlefieldEntriesThisTurn: BattlefieldEntryRecord[];
+  fieldEntriesThisTurn: FieldEntryRecord[];
   eventQueue: EventItem[];
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of

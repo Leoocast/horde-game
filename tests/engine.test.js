@@ -41,6 +41,21 @@ test("same seed produces the same player and Horde deck order", () => {
   assert.equal(first.currentRandomState, second.currentRandomState);
 });
 
+test("game state exposes only canonical Hostfall zones", () => {
+  const game = createInitialGame(playerDeck, hordeDeck, "canonical-zones", 3);
+  for (const side of [game.player, game.horde]) {
+    for (const retired of ["library", "battlefield", "graveyard", "exile"]) {
+      assert.equal(Object.hasOwn(side, retired), false, `retired zone ${retired} leaked into GameState`);
+    }
+    for (const canonical of ["archive", "field", "memory", "oblivion"]) {
+      assert.equal(Array.isArray(side[canonical]), true, `missing canonical zone ${canonical}`);
+    }
+  }
+  assert.ok(game.player.archive.every((card) => card.zone === "archive"));
+  assert.ok(game.player.hand.every((card) => card.zone === "hand"));
+  assert.ok(game.horde.archive.every((card) => card.zone === "archive"));
+});
+
 test("the registered Vampire chronicle starts as its complete playable deck", () => {
   const vampireDeck = getPlayerDeck("vampire_chronicle_preview");
   const game = createInitialGame(vampireDeck, hordeDeck, "vampire-integration", 3);
@@ -2444,13 +2459,13 @@ test("revealing one Horde card plays that card and nothing else", () => {
   assert.ok(landed, `${top.name} should have entered play or gone to the graveyard`);
 });
 
-test("revealing from an empty Horde library reports a reason instead of doing nothing", () => {
+test("revealing from an empty Host Archive reports a reason instead of doing nothing", () => {
   const game = createTestGame("horde-single-reveal-empty");
   game.horde.archive = [];
 
   const next = revealHordeCardFromTop(game);
   assert.equal(next.lastActionResult.ok, false);
-  assert.match(next.lastActionResult.reason, /library is empty/i);
+  assert.match(next.lastActionResult.reason, /Host Archive is empty/i);
 });
 
 test("Chaos Surge begins on the eighth Horde turn", () => {

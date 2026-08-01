@@ -111,6 +111,7 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
   assert.equal(byId.colossadactyl.toughness, 5);
 
   const energyAction = byId.llanowar_elves.abilities[0];
+  assert.equal(energyAction.zone, "field");
   assert.deepEqual(energyAction.cost, { tap: true });
   assert.deepEqual(energyAction.effects[0], { type: "ADD_MANA", player: "SELF", mana: { G: 1 } });
 

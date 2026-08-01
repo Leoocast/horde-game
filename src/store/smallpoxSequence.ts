@@ -119,7 +119,7 @@ function finishSmallpoxSequence(): void {
     if (card) {
       card.zone = "memory";
       next.horde.memory.push(card);
-      next.log.unshift(`${card.name} goes to the Horde graveyard.`);
+      next.log.unshift(`${card.name} goes to the Host Memory.`);
       useAudioStore.getState().playSfx("draw");
     }
     return {

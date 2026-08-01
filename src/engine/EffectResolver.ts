@@ -1,5 +1,5 @@
 import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
-import { createToken, drawCards, recordBattlefieldEntry } from "./GameState";
+import { createToken, drawCards, recordFieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
@@ -14,7 +14,7 @@ export type ResolveContext = {
   side: Side;
   targets?: Record<string, string | string[]>;
   distribution?: Record<string, number>;
-  /** Last known battlefield stats, keyed by instance id. Destruction records them so later
+  /** Last known Field stats, keyed by instance id. Destruction records them so later
    *  effects in the same sequence can still use the destroyed object's effective stats. */
   lastKnownStats?: Record<string, { power: number; toughness: number }>;
   tokenDefinitions?: CardInstance[] | never;
@@ -532,7 +532,7 @@ function markTriggerSourceResolved(event: EventItem, sourceId: string): void {
 
 export function triggeredSourcesForEvent(game: GameState, event: EventItem): CardInstance[] {
   // Self-scoped: only the permanent named by the event reacts, never every other card carrying
-  // the same ability. Both sources are still on the battlefield when these events resolve.
+  // the same ability. Both sources are still on the Field when these events resolve.
   if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_DAMAGE") {
     const source = [...game.player.field, ...game.horde.field].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
@@ -568,7 +568,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
   );
 }
 
-// `deferSelfTriggers` queues the card's own enters-the-battlefield ability instead of resolving
+// `deferSelfTriggers` queues the card's own invoked ability instead of resolving
 // it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
 // Without it, Beetleback Chief Invoked from the Archive by Rundvelt simply spat out its tokens
 // with no activation of its own, while the same card arriving through the normal Horde reveal
@@ -689,7 +689,7 @@ function inspectTopGoblin(game: GameState): void {
   card.tapped = false;
   card.summoningSickness = false;
   game.horde.field.push(card);
-  recordBattlefieldEntry(game, card);
+  recordFieldEntry(game, card);
   game.log.unshift(`${card.name} is Invoked from the Host Archive.`);
   runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
@@ -723,7 +723,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     token.summoningSickness = controller === "player";
     token.tapped = Boolean(effect.tapped);
     game[controller].field.push(token);
-    recordBattlefieldEntry(game, token);
+    recordFieldEntry(game, token);
     runEnterBattlefieldTriggers(game, token, undefined, {
       deferSelfTriggers: true,
       causeSourceId: context.source?.instanceId,
@@ -993,7 +993,7 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
       ? context.side === "player" ? "horde" : "player"
       : context.side;
     const filters = data.filters as CardFilter | undefined;
-    return game.battlefieldEntriesThisTurn.filter((entry) => {
+    return game.fieldEntriesThisTurn.filter((entry) => {
       if (entry.controller !== controller) return false;
       if (filters?.excludeSelf && entry.instanceId === context.source?.instanceId) return false;
       if (filters?.cardTypes?.some((type) => !entry.cardTypes.includes(type))) return false;

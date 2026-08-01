@@ -36,7 +36,7 @@ export function startPlayerTurn(game: GameState): void {
   }
   game.activeSide = "player";
   game.phase = "untap";
-  game.battlefieldEntriesThisTurn = [];
+  game.fieldEntriesThisTurn = [];
   // Setup can grant consecutive player turns without a Horde turn between them.
   // A reserve only belongs to the player turn that immediately precedes the Horde,
   // so an older setup turn must never refill stored mana later.

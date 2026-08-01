@@ -1,7 +1,7 @@
 import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
-import { recordBattlefieldEntry } from "./GameState";
+import { recordFieldEntry } from "./GameState";
 import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
 import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
@@ -15,7 +15,7 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   const next = structuredClone(game) as GameState;
   const rules = next.hordeRules;
   const wasInSurge = hordeInSurge(next);
-  next.battlefieldEntriesThisTurn = [];
+  next.fieldEntriesThisTurn = [];
   next.hordeTurnNumber += 1;
   next.activeSide = "horde";
   next.phase = "horde";
@@ -54,7 +54,7 @@ export function runFullHordeTurn(game: GameState): GameState {
 }
 
 /**
- * Reveals and plays exactly ONE card off the top of the Horde library, through the same path the
+ * Reveals and plays exactly ONE card off the top of the Host Archive, through the same path the
  * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No untap, no reveal count,
  * no surge, no combat: this is a single card entering play, not a turn.
  *
@@ -64,7 +64,7 @@ export function runFullHordeTurn(game: GameState): GameState {
 export function revealHordeCardFromTop(game: GameState, options: HordeMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
   if (next.horde.archive.length === 0) {
-    next.lastActionResult = { ok: false, reason: "The Horde library is empty." };
+    next.lastActionResult = { ok: false, reason: "The Host Archive is empty." };
     return next;
   }
   revealAndPlayOne(next, options);
@@ -121,7 +121,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
   game.log.unshift(`Horde reveals ${card.name}.`);
   // Bridge: Smallpox needs a bespoke, player-interactive multi-step resolution (Horde sacrifices,
   // then the player chooses life/discard/creature/land) that can't run inside this synchronous
-  // reveal. Park it unresolved; the store drives the sequence and moves it to the graveyard itself.
+  // reveal. Park it unresolved; the store drives the sequence and moves it to Memory itself.
   if (card.definitionId === "smallpox") {
     game.horde.pendingCard = card;
     return card;
@@ -140,7 +140,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
   game.horde.field.push(card);
-  recordBattlefieldEntry(game, card);
+  recordFieldEntry(game, card);
   if (!options.deferEnterBattlefieldTriggers) runEnterBattlefieldTriggers(game, card);
   enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   return card;

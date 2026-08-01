@@ -101,7 +101,7 @@ export function beginHordeCombat(game: GameState, options: { deferTriggeredEvent
 
 export function declareHordeAttackers(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {
   const next = structuredClone(game) as GameState;
-  const attackers = sortCardsByBattlefieldOrder(
+  const attackers = sortCardsByFieldOrder(
     next.horde.field,
     next.horde.field.filter((card) => canAttack(next, card)),
   );
@@ -118,7 +118,7 @@ export function declareHordeAttackers(game: GameState, options: { deferTriggered
     },
   });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
-  next.combat.hordeAttackers = sortCardsByBattlefieldOrder(
+  next.combat.hordeAttackers = sortCardsByFieldOrder(
     next.horde.field,
     next.combat.hordeAttackers
       .map((id) => next.horde.field.find((card) => card.instanceId === id))
@@ -447,13 +447,13 @@ export function sortPlayerAttackersLeftToRight(game: GameState, attackerIds: str
   const attackers = attackerIds
     .map((id) => game.player.field.find((card) => card.instanceId === id))
     .filter((card): card is CardInstance => Boolean(card));
-  return sortBattlefieldCardsByVisualOrder(game, game.player.field, attackers).map((card) => card.instanceId);
+  return sortFieldCardsByVisualOrder(game, game.player.field, attackers).map((card) => card.instanceId);
 }
 
-/** Horde battlefield insertion order is summon order. Never regroup identical definitions here:
+/** Host Field insertion order is summon order. Never regroup identical definitions here:
  * stacking is a visual concern, while combat must preserve the chronology in which cards entered. */
-function sortCardsByBattlefieldOrder(battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
-  const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+function sortCardsByFieldOrder(field: CardInstance[], cards: CardInstance[]): CardInstance[] {
+  const entryIndex = new Map(field.map((card, index) => [card.instanceId, index]));
   return [...cards].sort(
     (left, right) =>
       (entryIndex.get(left.instanceId) ?? Number.MAX_SAFE_INTEGER) -
@@ -461,14 +461,14 @@ function sortCardsByBattlefieldOrder(battlefield: CardInstance[], cards: CardIns
   );
 }
 
-function sortBattlefieldCardsByVisualOrder(game: GameState, battlefield: CardInstance[], cards: CardInstance[]): CardInstance[] {
-  const entryIndex = new Map(battlefield.map((card, index) => [card.instanceId, index]));
+function sortFieldCardsByVisualOrder(game: GameState, field: CardInstance[], cards: CardInstance[]): CardInstance[] {
+  const entryIndex = new Map(field.map((card, index) => [card.instanceId, index]));
   // Horde swarm tokens are re-summoned throughout the encounter and reuse the same
   // definitionIds. The board groups swarm tokens (per-deck subtypes in hordeRules) by
   // arrival wave so a later wave stays where it entered instead of jumping back into
   // the first stack. For attack ordering, that visual wave order equals entry order.
   const familyIndex = new Map<string, number>();
-  for (const card of battlefield) {
+  for (const card of field) {
     if (isEntryWaveToken(game, card)) continue;
     const index = entryIndex.get(card.instanceId) ?? Number.MAX_SAFE_INTEGER;
     if (!familyIndex.has(card.definitionId)) familyIndex.set(card.definitionId, index);

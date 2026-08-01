@@ -24,11 +24,11 @@ export const IDENTITY_VOCABULARY = {
 } as const satisfies Record<string, LocalizedTerm>;
 
 export const ZONE_VOCABULARY = {
-  library: { en: "Archive", es: "Archivo" },
+  archive: { en: "Archive", es: "Archivo" },
   hand: { en: "Hand", es: "Mano" },
-  battlefield: { en: "Field", es: "Campo" },
-  graveyard: { en: "Memory", es: "Memoria" },
-  exile: { en: "Oblivion", es: "Olvido" },
+  field: { en: "Field", es: "Campo" },
+  memory: { en: "Memory", es: "Memoria" },
+  oblivion: { en: "Oblivion", es: "Olvido" },
 } as const satisfies Record<ZoneName, LocalizedTerm>;
 
 export const PHASE_VOCABULARY = {

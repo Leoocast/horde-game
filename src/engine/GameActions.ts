@@ -1,6 +1,6 @@
 import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
-import { drawCards, recordBattlefieldEntry } from "./GameState";
+import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
@@ -64,7 +64,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     if (card.attachTo?.targetRef) card.attachedTo = String(options.targets?.[card.attachTo.targetRef] ?? "");
     applyVariableCounters(card);
     next.player.field.push(card);
-    recordBattlefieldEntry(next, card);
+    recordFieldEntry(next, card);
     runEnterBattlefieldTriggers(next, card, options.targets);
   }
   enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
@@ -182,7 +182,7 @@ function moveHandToBattlefield(game: GameState, card: { instanceId: string; zone
   permanent.zone = "field";
   permanent.tapped = permanent.entersTapped;
   game.player.field.push(permanent);
-  recordBattlefieldEntry(game, permanent);
+  recordFieldEntry(game, permanent);
 }
 
 function applyVariableCounters(card: import("./GameTypes").CardInstance): void {

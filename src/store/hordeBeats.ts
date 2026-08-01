@@ -59,7 +59,7 @@ const SPELL_REVEAL_ENTER_MS = 280;
 const SPELL_REVEAL_BUFF_MS = 680;
 const SPELL_REVEAL_HOLD_MS = 1120;
 const SPELL_REVEAL_EXIT_MS = 300;
-// A card entering or leaving the battlefield re-centers the row, and Battlefield FLIP-animates
+// A card entering or leaving the Field re-centers the row, and the Field FLIP-animates
 // that move over 360ms. A beat that changed the board waits it out, so the next attacker never
 // charges across a row that is still sliding into place.
 const BOARD_SETTLE_MS = 560;
@@ -292,7 +292,7 @@ type HordeBeatContext = {
   sources: CardInstance[];
   sequenceId: number;
   /** Commits this beat's engine effect. Call once, at the moment the animation lands. Returns
-   *  true when the battlefield changed, i.e. the row is about to reflow. */
+   *  true when the Field changed, i.e. the row is about to reflow. */
   resolve: () => boolean;
   /** Hands control back to the queue so the next beat can start. */
   done: () => void;
@@ -391,10 +391,10 @@ export function scheduleQueuedHordeTriggers(onComplete?: () => void): void {
 
 // Commits one beat's engine effect. With `sourceId`, only that card's triggers resolve and the
 // event stays queued for the remaining reactors; without it, the event is fully consumed.
-// Reports whether the battlefield gained or lost a card, so the caller knows to wait for the
+// Reports whether the Field gained or lost a card, so the caller knows to wait for the
 // row's reflow before starting the next beat.
 function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
-  let battlefieldChanged = false;
+  let fieldChanged = false;
   useGameStore.setState((state) => {
     const previous = state.game;
     const next = structuredClone(previous) as GameState;
@@ -423,7 +423,7 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
       (card) => !previous.horde.field.some((old) => old.instanceId === card.instanceId),
     );
     if (summoned[0]) useAudioStore.getState().playSfx(monsterSfx(summoned[0]));
-    battlefieldChanged =
+    fieldChanged =
       next.horde.field.length !== previous.horde.field.length ||
       next.player.field.length !== previous.player.field.length;
     notifyDiscardEffects(previous, next);
@@ -433,7 +433,7 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
       hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
     };
   });
-  return battlefieldChanged;
+  return fieldChanged;
 }
 
 function pickRandom(ids: SfxId[]): SfxId {
@@ -484,7 +484,7 @@ const burnBeatHandler: HordeBeatHandler = {
         commit();
         return;
       }
-      // Keep lethal targets on the battlefield through the same death fade used by
+      // Keep lethal targets on the Field through the same death fade used by
       // fight/destroy spells. Committing Burn immediately removed the DOM node before
       // the death class could render.
     }, BURN_IMPACT_MS);
@@ -646,10 +646,10 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
   claims: (event) => event.type === "HORDE_GROUP_BUFF",
   run: ({ event, sequenceId, resolve, done }) => {
     const game = useGameStore.getState().game;
-    const battlefieldSource = event.sourceId
+    const fieldSource = event.sourceId
       ? game.horde.field.find((card) => card.instanceId === event.sourceId)
       : undefined;
-    const source = battlefieldSource ?? (event.sourceId
+    const source = fieldSource ?? (event.sourceId
       ? game.horde.memory.find((card) => card.instanceId === event.sourceId)
       : undefined);
     const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
@@ -662,7 +662,7 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
     // A permanent's ETB presentation already supplied the activation pulse and toast before it
     // queued this event. Keep the stat change as its own beat, but land only the shared buff lines
     // so one effect never reads as the card activating twice.
-    if (battlefieldSource) {
+    if (fieldSource) {
       useGameStore.setState({ hordeAutoTriggerCount: 1 });
       window.setTimeout(() => {
         if (sequenceId !== hordeAutoTriggerSequenceId) return;
@@ -677,7 +677,7 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
       return;
     }
 
-    // Instants have no battlefield slot to activate from, so they use the dedicated reveal card.
+    // Spells have no Field slot to activate from, so they use the dedicated reveal card.
     useGameStore.setState({ hordeSpellCard: source, hordeAutoTriggerCount: 1 });
     useAudioStore.getState().playSfx("drawOne");
 
@@ -711,8 +711,8 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
   },
 };
 
-// A card that triggers on its own death has no battlefield slot left to pulse, so present it
-// beside its graveyard first. Generic: any dies-trigger whose source already left play.
+// A card that triggers on its own death has no Field slot left to pulse, so present it
+// beside its Memory first. Generic: any dies-trigger whose source already left play.
 const deathRevealBeatHandler: HordeBeatHandler = {
   id: "death-reveal",
   claims: (_event, sources, game) =>
@@ -737,9 +737,9 @@ const deathRevealBeatHandler: HordeBeatHandler = {
       useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
     }, DEATH_REVEAL_LEAD_IN_MS + DEATH_REVEAL_ENTER_MS);
 
-    // Strict order: reveal, activate, card leaves for the graveyard, and only THEN the effect
+    // Strict order: reveal, activate, card leaves for Memory, and only THEN the effect
     // resolves. Resolving while the reveal is still on screen made whatever the effect puts on
-    // the battlefield land mid-animation and stutter it.
+    // the Field entry mid-animation and stutter it.
     window.setTimeout(() => {
       if (sequenceId !== hordeAutoTriggerSequenceId) return;
       useGameStore.setState({ deathRevealCard: undefined });

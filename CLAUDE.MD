@@ -710,15 +710,22 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
+- L4.2 está implementada y pendiente de validación manual. `GameState`, `CardInstance` y sus
+  consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
+  igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas
+  desconocidas y `legacy-l42-zones` debe permanecer en cero. Las claves externas del Playground
+  (`playerBattlefield`, `hordeLibraryTop`, etc.) se conservan como contrato de compatibilidad hasta
+  L4.6, por lo que no se subió `SCENARIO_VERSION` ni se invalidaron boards guardados. No iniciar
+  L4.3 hasta la prueba del usuario.
 - L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
   tienen vocabulario cerrado; `cardTypes`/`keywords` son nombres de contenedor temporales pero ya
   contienen valores Hostfall, y `modifiers` conserva QUICK/CHRONICLE. Filtros, targeting, historial,
   combate, Rasgos temporales/estáticos, Chaos y los consumidores mínimos de UI/store usan los mismos
-  valores. `legacy-l41-card-model` debe permanecer en cero. L4.2 puede migrar únicamente zonas.
+  valores. `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia zonas, Energía,
-  estados, eventos y reglas Host legacy; ya no traduce valores de tipos o Rasgos. Mono Green,
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia Energía,
+  estados, eventos y reglas Host legacy; ya no traduce valores de tipos, Rasgos o zonas. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.
