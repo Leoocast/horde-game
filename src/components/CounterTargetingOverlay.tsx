@@ -2,7 +2,7 @@ import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { findManualInvokedTargetTrigger } from "../engine/EffectResolver";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -150,7 +150,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
         </div>
         <div className="counter-target-preview old-panel-soft">
           <span className="text-[#d6b879]">{target ? localizedCardName(target, language) : t("target.noSelection")}</span>
-          <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.toughness}` : "--/--"}</strong>
+          <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.endurance}` : "--/--"}</strong>
         </div>
         <div className="counter-target-actions">
           <button
@@ -175,9 +175,9 @@ function findBattlefieldCard(game: GameState, id: string): CardInstance | undefi
   return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === id);
 }
 
-function getBuffedStats(game: GameState, card: CardInstance): { power: number; toughness: number } {
-  const stats = getPowerToughness(game, card);
-  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+function getBuffedStats(game: GameState, card: CardInstance): { power: number; endurance: number } {
+  const stats = getPowerEndurance(game, card);
+  return { power: stats.power + 1, endurance: stats.endurance + 1 };
 }
 
 function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {

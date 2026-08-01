@@ -80,7 +80,7 @@ test("Countess defense has half silence and evenly split spoken variants", () =>
 test("player combat persists confirmed attack counts on each creature", () => {
   let game = createTestGame("countess-confirmed-attacks");
   const countess = addCard(game, cardFromDeck("eternal_feast_countess", "player"));
-  addCard(game, customCard("countess_attack_observer", "horde", { toughness: 99 }));
+  addCard(game, customCard("countess_attack_observer", "horde", { endurance: 99 }));
 
   for (let expected = 1; expected <= 3; expected += 1) {
     game.combat.playerAttackers = [countess.instanceId];

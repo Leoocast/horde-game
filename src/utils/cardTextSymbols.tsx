@@ -18,23 +18,23 @@ export function cleanReminderText(text: string): string {
     .trim();
 }
 
-export function cleanCardDescriptionText(oracleText?: string, flavorText?: string, keywords = "", fallbackText = ""): string {
-  const cleanedOracle = stripKeywordOnlyLines(cleanReminderText(oracleText ?? ""), keywords);
+export function cleanCardDescriptionText(oracleText?: string, flavorText?: string, traits = "", fallbackText = ""): string {
+  const cleanedOracle = stripTraitOnlyLines(cleanReminderText(oracleText ?? ""), traits);
   if (cleanedOracle) return cleanedOracle;
   const cleanedFlavor = cleanReminderText(flavorText ?? "");
   if (cleanedFlavor) return cleanedFlavor;
-  return stripKeywordOnlyLines(cleanReminderText(fallbackText), keywords);
+  return stripTraitOnlyLines(cleanReminderText(fallbackText), traits);
 }
 
-function stripKeywordOnlyLines(text: string, keywords: string): string {
+function stripTraitOnlyLines(text: string, traits: string): string {
   if (!text) return "";
   const keywordSet = new Set(
-    keywords
+    traits
       .split(",")
-      .map((keyword) => normalizeKeywordLine(keyword))
+      .map((keyword) => normalizeTraitLine(keyword))
       .filter(Boolean),
   );
-  const baseKeywords = new Set([
+  const baseTraits = new Set([
     "FLYING", "SKYGUARD", "ALERT", "DAUNTING", "LETHAL", "OVERFLOW", "IMPETUS", "HEXPROOF", "FURTIVE", "DRAIN",
     "SKYGUARD", "ALERT", "DAUNTING", "LETHAL", "REFLEX", "FURTIVE", "DRAIN", "OVERFLOW", "IMPETUS", "POISON 1",
     "GUARDIA AÉREA", "ALERTA", "IMPONENTE", "LETAL", "REFLEJOS", "FURTIVO", "DRENAR", "DESBORDE", "ÍMPETU", "VENENO 1",
@@ -46,9 +46,9 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
       block
         .split("\n")
         .filter((line) => {
-          const normalized = normalizeKeywordLine(line);
+          const normalized = normalizeTraitLine(line);
           if (!normalized) return false;
-          return !isKeywordOnlyLine(normalized, keywordSet, baseKeywords);
+          return !isTraitOnlyLine(normalized, keywordSet, baseTraits);
         })
         .join("\n")
         .trim(),
@@ -57,9 +57,9 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
   return blocks.join("\n\n").trim();
 }
 
-function isKeywordOnlyLine(normalizedLine: string, keywordSet: Set<string>, baseKeywords: Set<string>): boolean {
-  const knownKeywords = new Set([...baseKeywords, ...keywordSet]);
-  if (knownKeywords.has(normalizedLine)) return true;
+function isTraitOnlyLine(normalizedLine: string, keywordSet: Set<string>, baseTraits: Set<string>): boolean {
+  const knownTraits = new Set([...baseTraits, ...keywordSet]);
+  if (knownTraits.has(normalizedLine)) return true;
 
   // Imported rule text can combine multiple Traits on one line. They already have their own
   // badges, so the whole line is redundant when every item is a known Trait.
@@ -67,10 +67,10 @@ function isKeywordOnlyLine(normalizedLine: string, keywordSet: Set<string>, base
     .split(/[,;]/)
     .map((part) => part.trim())
     .filter(Boolean);
-  return parts.length > 1 && parts.every((part) => knownKeywords.has(part));
+  return parts.length > 1 && parts.every((part) => knownTraits.has(part));
 }
 
-function normalizeKeywordLine(text: string): string {
+function normalizeTraitLine(text: string): string {
   return text
     .replace(/\{(\d+)\}/g, "$1")
     .replace(/[_-]/g, " ")

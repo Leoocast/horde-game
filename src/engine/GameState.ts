@@ -1,4 +1,4 @@
-import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
+import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Trait, Side } from "./GameTypes";
 import { buildHostRules } from "./HostRules";
 import { emptyEnergyPool } from "./EnergySystem";
 import { hashSeed, shuffleWithState } from "./RNG";
@@ -103,7 +103,7 @@ export function recordFieldEntry(game: GameState, card: CardInstance): void {
   game.fieldEntriesThisTurn.push({
     instanceId: card.instanceId,
     controller: card.controller,
-    cardTypes: [...card.cardTypes],
+    kinds: [...card.kinds],
     subtypes: [...card.subtypes],
   });
 }
@@ -182,7 +182,7 @@ function placeOnBattlefield(game: GameState, entries: readonly { definitionId: s
 
 function applyDeveloperStartingBattlefield(game: GameState): void {
   if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
-  const landId = game.player.archive.find((card) => card.cardTypes.includes("SOURCE"))?.definitionId;
+  const landId = game.player.archive.find((card) => card.kinds.includes("SOURCE"))?.definitionId;
   if (!landId) return;
   placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
 }
@@ -190,7 +190,7 @@ function applyDeveloperStartingBattlefield(game: GameState): void {
 function limitPlayerDeckLands(cards: CardInstance[], maximum: number): CardInstance[] {
   let landsKept = 0;
   return cards.filter((card) => {
-    if (!card.cardTypes.includes("SOURCE")) return true;
+    if (!card.kinds.includes("SOURCE")) return true;
     landsKept += 1;
     return landsKept <= maximum;
   });
@@ -200,10 +200,10 @@ function applyChaosStartingEnergy(game: GameState): void {
   if (game.gameMode !== "chaos") return;
   const normalizedSeed = game.seed.trim().toLowerCase();
   if (normalizedSeed === DEVELOPER_SEED) return;
-  placeOnBattlefield(game, [{ definitionId: game.player.archive.find((card) => card.cardTypes.includes("SOURCE"))?.definitionId ?? "", amount: 1 }]);
+  placeOnBattlefield(game, [{ definitionId: game.player.archive.find((card) => card.kinds.includes("SOURCE"))?.definitionId ?? "", amount: 1 }]);
 }
 
-export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Keyword[]> = {}): CardInstance[] {
+export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Trait[]> = {}): CardInstance[] {
   const allDefinitions = [...(deck.cards ?? [])];
   return allDefinitions.flatMap((definition) =>
     Array.from({ length: definition.quantity ?? 1 }, (_, copyIndex) =>
@@ -212,11 +212,11 @@ export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<st
   );
 }
 
-export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosKeywords?: Keyword[]): CardInstance {
-  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosKeywords);
+export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosTraits?: Trait[]): CardInstance {
+  return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosTraits);
 }
 
-export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosKeywords?: Keyword[]): CardInstance {
+export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosTraits?: Trait[]): CardInstance {
   const counters: Record<string, number> = {};
   for (const counter of definition.entersWithCounters ?? []) {
     counters[counter.counterType] = (counters[counter.counterType] ?? 0) + (counter.amount ?? 0);
@@ -233,13 +233,13 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     zone: "archive",
     isToken: Boolean(definition.isToken),
     energyCost: definition.energyCost ?? 0,
-    cardTypes: definition.cardTypes ?? [],
+    kinds: definition.kinds ?? [],
     modifiers: definition.modifiers ?? [],
     subtypes: definition.subtypes ?? [],
     basePower: definition.power ?? 0,
-    baseToughness: definition.toughness ?? 0,
-    keywords: chaosKeywords ? [...chaosKeywords] : definition.keywords ?? [],
-    chaosKeywords: chaosKeywords ? [...chaosKeywords] : [],
+    baseEndurance: definition.endurance ?? 0,
+    traits: chaosTraits ? [...chaosTraits] : definition.traits ?? [],
+    chaosTraits: chaosTraits ? [...chaosTraits] : [],
     triggerMessage: definition.triggerMessage,
     effects: definition.effects ?? [],
     additionalCost: definition.additionalCost,
@@ -247,17 +247,17 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     requiresTargets: definition.requiresTargets ?? [],
     exhausted: false,
     entersExhausted: Boolean(definition.entersExhausted),
-    stabilizing: (definition.cardTypes ?? []).includes("ECHO"),
+    stabilizing: (definition.kinds ?? []).includes("ECHO"),
     attacksMade: 0,
     activatedThisTurn: false,
     damageMarked: 0,
     lethalDamage: false,
     counters,
     temporaryPower: 0,
-    temporaryToughness: 0,
+    temporaryEndurance: 0,
     untilNextPlayerTurnPower: 0,
-    untilNextPlayerTurnToughness: 0,
-    temporaryKeywords: [],
+    untilNextPlayerTurnEndurance: 0,
+    temporaryTraits: [],
     attachTo: definition.attachTo,
     flags: { ...(definition.flags ?? {}) },
     variableCost: definition.variableCost,

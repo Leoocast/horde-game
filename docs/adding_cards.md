@@ -142,7 +142,7 @@ Cada habilidad usa uno de cuatro `kind`:
 
 `normalizeDeck` convierte esta forma en `STATIC_BUFF`. `GRANT_KEYWORD` con la misma duración se
 convierte en `STATIC_GRANT_KEYWORD`. Las estadísticas y los Rasgos se calculan continuamente en
-`StaticEffects.ts` y `Keywords.ts`; no se guardan como copias del bonus en cada carta.
+`StaticEffects.ts` y `Traits.ts`; no se guardan como copias del bonus en cada carta.
 
 Las auras estáticas de la Horda reciben presentación automáticamente: el store captura la nueva
 cobertura, retiene temporalmente el bonus visual y lo libera durante su beat. No hay que programar

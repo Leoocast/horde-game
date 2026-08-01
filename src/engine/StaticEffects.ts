@@ -8,9 +8,9 @@ export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: 
   if (!filter) return true;
   if (filter.excludeSelf && source && source.instanceId === card.instanceId) return false;
   if (typeof filter.isToken === "boolean" && card.isToken !== filter.isToken) return false;
-  if (filter.cardTypes?.length && !filter.cardTypes.every((type) => card.cardTypes.includes(type))) return false;
+  if (filter.kinds?.length && !filter.kinds.every((type) => card.kinds.includes(type))) return false;
   if (filter.subtypes?.length && !filter.subtypes.every((type) => card.subtypes.includes(type))) return false;
-  if (filter.keywords?.length && !filter.keywords.every((keyword) => card.keywords.includes(keyword))) return false;
+  if (filter.traits?.length && !filter.traits.every((keyword) => card.traits.includes(keyword))) return false;
   return true;
 }
 
@@ -37,32 +37,32 @@ export function staticConditionMet(game: GameState, condition: unknown, source: 
   return true;
 }
 
-export function getPowerToughness(
+export function getPowerEndurance(
   game: GameState,
   card: CardInstance,
   excludedBuffSourceIds?: Set<string>,
-): { power: number; toughness: number } {
+): { power: number; endurance: number } {
   let power =
     card.basePower +
     (card.counters["+1/+1"] ?? 0) +
     card.temporaryPower +
     (card.untilNextPlayerTurnPower ?? 0);
-  let toughness =
-    card.baseToughness +
+  let endurance =
+    card.baseEndurance +
     (card.counters["+1/+1"] ?? 0) +
-    card.temporaryToughness +
-    (card.untilNextPlayerTurnToughness ?? 0);
+    card.temporaryEndurance +
+    (card.untilNextPlayerTurnEndurance ?? 0);
 
   const surgeBonus = game.hostRules.surgeBonus;
   if (
     surgeBonus &&
     hordeInSurge(game) &&
     card.controller === "horde" &&
-    card.cardTypes.includes("ECHO") &&
+    card.kinds.includes("ECHO") &&
     card.subtypes.some((subtype) => surgeBonus.subtypes.some((bonusSubtype) => bonusSubtype.toLowerCase() === subtype.toLowerCase()))
   ) {
     power += surgeBonus.power;
-    toughness += surgeBonus.endurance;
+    endurance += surgeBonus.endurance;
   }
 
   for (const source of [...game.player.field, ...game.horde.field]) {
@@ -73,19 +73,19 @@ export function getPowerToughness(
         if (affectedController && card.controller !== affectedController) continue;
         if (!matchesFilter(card, effect.filter as CardFilter | undefined, source)) continue;
         power += Number(effect.power ?? 0);
-        toughness += Number(effect.toughness ?? 0);
+        endurance += Number(effect.endurance ?? 0);
         continue;
       }
       if (effect.type === "STATIC_CONDITIONAL_BUFF") {
         if (effect.target === "SELF" && card.instanceId !== source.instanceId) continue;
         if (!staticConditionMet(game, effect.condition, source)) continue;
         power += Number(effect.power ?? 0);
-        toughness += Number(effect.toughness ?? 0);
+        endurance += Number(effect.endurance ?? 0);
       }
     }
   }
 
-  return { power, toughness };
+  return { power, endurance };
 }
 
 export function hordeInSurge(game: GameState): boolean {

@@ -5,7 +5,7 @@ type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default">;
 
 /**
  * Preserved natural-shield VFX. It is intentionally not wired to the current mono-green buffs:
- * keep it available for a future toughness, protection, hexproof, or indestructible effect.
+ * keep it available for a future endurance, protection, hexproof, or indestructible effect.
  */
 export function NatureShieldAnimator({
   eventId,

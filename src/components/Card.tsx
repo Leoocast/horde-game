@@ -1,10 +1,10 @@
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { localizedCardName, localizedTraitLabel, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
 import { cardThemeForDefinition, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
-import { cardKeywords, cardStatState } from "../utils/selectors";
+import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { Heart, Shield, Sword, Swords } from "lucide-react";
@@ -55,9 +55,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const heldStaticAuraBonus = useGameStore((state) => state.heldStaticAuraBonuses[card.instanceId]);
   const stats = cardStatState(game, card, visualDamageMarked, heldStaticAuraBonus);
-  const visibleKeywords =
-    (card.zone === "field" || card.zone === "hand") && card.cardTypes.includes("ECHO")
-      ? cardKeywords(game, card)
+  const visibleTraits =
+    (card.zone === "field" || card.zone === "hand") && card.kinds.includes("ECHO")
+      ? cardTraits(game, card)
           .split(",")
           .map((keyword) => keyword.trim())
           .filter((keyword) => keyword !== "IMPETUS")
@@ -69,7 +69,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   // Horde creatures Exhaust as a rule of the mode, not as a choice the player made, so they never
   // get the grey "spent" treatment or the Exhausted badge. They DO lean as soon as they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
-  const usesHordeExhaustedStyle = card.controller === "horde" && card.cardTypes.includes("ECHO");
+  const usesHordeExhaustedStyle = card.controller === "horde" && card.kinds.includes("ECHO");
   const keywordToneClass = cardTheme
     ? `card-keyword-badge-${cardTheme}`
     : card.controller === "horde"
@@ -79,7 +79,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
-  const stabilizing = !suppressStabilizing && card.zone === "field" && card.cardTypes.includes("ECHO") && card.stabilizing;
+  const stabilizing = !suppressStabilizing && card.zone === "field" && card.kinds.includes("ECHO") && card.stabilizing;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
@@ -212,11 +212,11 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ) : null}
         </div>
       </div>
-      {visibleKeywords.length > 0 && (
+      {visibleTraits.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
-          {visibleKeywords.map((keyword) => (
+          {visibleTraits.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", keyword === "LETHAL" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", keywordToneClass].join(" ")}>
-              {renderBattlefieldKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}
+              {renderBattlefieldTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}
             </span>
           ))}
         </div>
@@ -286,7 +286,7 @@ export function CardStatsBadge({
 
   return (
     <div
-      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.toughness} de Aguante` : `${stats.power} Power, ${stats.toughness} Endurance`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante` : `${stats.power} Power, ${stats.endurance} Endurance`}
       className={[
         "card-stat-badge",
         stats.damaged ? "is-damaged" : "",
@@ -299,12 +299,12 @@ export function CardStatsBadge({
         <b>{stats.power}</b>
       </span>
       <i aria-hidden="true" />
-      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.endurance}</b></span>
     </div>
   );
 }
 
-function renderBattlefieldKeywordLabel(keyword: string) {
+function renderBattlefieldTraitLabel(keyword: string) {
   const poison = keyword.match(/^(POISON|VENENO)\s+\{?(\d+)\}?$/i);
   if (!poison) return keyword;
   return (

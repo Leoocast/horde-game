@@ -6,7 +6,7 @@ export function readySide(game: GameState, side: "player" | "horde"): void {
   for (const card of game[side].field) {
     card.exhausted = false;
     card.activatedThisTurn = false;
-    if (card.cardTypes.includes("ECHO")) card.stabilizing = false;
+    if (card.kinds.includes("ECHO")) card.stabilizing = false;
   }
 }
 
@@ -15,8 +15,8 @@ export function cleanupEndStep(game: GameState): void {
     card.damageMarked = 0;
     card.lethalDamage = false;
     card.temporaryPower = 0;
-    card.temporaryToughness = 0;
-    card.temporaryKeywords = [];
+    card.temporaryEndurance = 0;
+    card.temporaryTraits = [];
     delete card.flags.burnSmoke;
   }
   game.player.energyPool = { ...emptyEnergyPool(), stored: game.player.energyPool.stored };
@@ -25,14 +25,14 @@ export function cleanupEndStep(game: GameState): void {
 
 export function completePlayerStabilization(game: GameState): void {
   for (const card of game.player.field) {
-    if (card.cardTypes.includes("ECHO")) card.stabilizing = false;
+    if (card.kinds.includes("ECHO")) card.stabilizing = false;
   }
 }
 
 export function startPlayerTurn(game: GameState): void {
   for (const card of [...game.player.field, ...game.horde.field]) {
     card.untilNextPlayerTurnPower = 0;
-    card.untilNextPlayerTurnToughness = 0;
+    card.untilNextPlayerTurnEndurance = 0;
   }
   game.activeSide = "player";
   game.phase = "untap";

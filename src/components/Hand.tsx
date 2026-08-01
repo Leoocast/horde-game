@@ -203,7 +203,7 @@ export function Hand({ game }: { game: GameState }) {
   function isInEnergyRecycleZone(card: CardInstance, pointerX: number, pointerY: number): boolean {
     const dragStart = dragStartPointers.current.get(card.instanceId);
     return (
-      card.cardTypes.includes("SOURCE") &&
+      card.kinds.includes("SOURCE") &&
       isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
       pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
       pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
@@ -212,7 +212,7 @@ export function Hand({ game }: { game: GameState }) {
   }
 
   function playCard(card: CardInstance) {
-    if (!card.cardTypes.includes("SOURCE") && card.requiresTargets.length > 0) {
+    if (!card.kinds.includes("SOURCE") && card.requiresTargets.length > 0) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
       return;
     }
@@ -476,14 +476,14 @@ export function Hand({ game }: { game: GameState }) {
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
-  if (card.cardTypes.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
+  if (card.kinds.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayLifeCost(game, card.additionalCost)) return false;
   if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
 function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
-  return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("SOURCE") && canPlayerRecycleEnergy(game);
+  return pendingTriggeredEffectCount === 0 && card.kinds.includes("SOURCE") && canPlayerRecycleEnergy(game);
 }
 
 function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount: number, t: ReturnType<typeof useTranslation>): string {
@@ -493,7 +493,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     if (isQuickSpell(card)) return t("error.instantTiming");
     return t("error.mainTiming");
   }
-  if (card.cardTypes.includes("SOURCE")) {
+  if (card.kinds.includes("SOURCE")) {
     if (!canPlayerPutAnotherLand(game)) return t("error.landLimit", { count: MAX_PLAYER_LANDS });
     if (game.player.energyActionUsedThisTurn) return t("error.energyUsed");
     return t("error.landUnavailable");
@@ -559,7 +559,7 @@ function playFromHand(
   friendly?: string,
   enemy?: string,
 ): void {
-  if (card.cardTypes.includes("SOURCE")) {
+  if (card.kinds.includes("SOURCE")) {
     playLand(card.instanceId);
     return;
   }

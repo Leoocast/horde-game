@@ -1,4 +1,4 @@
-import type { CardDefinition, DeckList, Keyword, Side } from "./GameTypes";
+import type { CardDefinition, DeckList, Trait, Side } from "./GameTypes";
 import { hashSeed, nextRandom } from "./RNG";
 
 const SECOND_KEYWORD_CHANCE = 0.25;
@@ -16,11 +16,11 @@ export function prepareChaosDeck(deck: DeckList): DeckList {
   };
 }
 
-export function buildChaosMutations(deck: DeckList, side: Side, seed: string): Record<string, Keyword[]> {
-  const pool = chaosKeywordPool(deck);
+export function buildChaosMutations(deck: DeckList, side: Side, seed: string): Record<string, Trait[]> {
+  const pool = chaosTraitPool(deck);
   const creatures = uniqueDefinitions([...(deck.cards ?? []), ...(deck.tokens ?? [])].filter(isCreature));
   let randomState = hashSeed(`${seed}:chaos:${side}:${deck.id}`);
-  const mutations: Record<string, Keyword[]> = {};
+  const mutations: Record<string, Trait[]> = {};
 
   const random = () => {
     const [value, nextState] = nextRandom(randomState);
@@ -30,35 +30,35 @@ export function buildChaosMutations(deck: DeckList, side: Side, seed: string): R
 
   for (const creature of creatures) {
     const available = [...pool];
-    const keywords: Keyword[] = [];
-    if (available.length > 0) takeKeyword(available, keywords, random);
+    const traits: Trait[] = [];
+    if (available.length > 0) takeTrait(available, traits, random);
 
     let continuationChance = SECOND_KEYWORD_CHANCE;
     while (available.length > 0 && random() < continuationChance) {
-      takeKeyword(available, keywords, random);
-      continuationChance = nextContinuationChance(keywords.length);
+      takeTrait(available, traits, random);
+      continuationChance = nextContinuationChance(traits.length);
     }
-    mutations[creature.id] = keywords;
+    mutations[creature.id] = traits;
   }
 
   return mutations;
 }
 
-export function chaosKeywordPool(deck: DeckList): Keyword[] {
+export function chaosTraitPool(deck: DeckList): Trait[] {
   const pool = [...(deck.cards ?? []), ...(deck.tokens ?? [])]
     .filter(isCreature)
-    .flatMap((card) => card.keywords ?? [])
+    .flatMap((card) => card.traits ?? [])
     .filter((keyword) => String(keyword).trim().toUpperCase() !== "IMPETUS");
   return [...new Set(pool)];
 }
 
 export function isChaosDeckCard(card: CardDefinition): boolean {
-  const types = card.cardTypes ?? [];
+  const types = card.kinds ?? [];
   return types.some((type) => type === "ECHO" || type === "SOURCE" || type === "SPELL");
 }
 
 function isCreature(card: CardDefinition): boolean {
-  return (card.cardTypes ?? []).includes("ECHO");
+  return (card.kinds ?? []).includes("ECHO");
 }
 
 function uniqueDefinitions(definitions: CardDefinition[]): CardDefinition[] {
@@ -70,10 +70,10 @@ function uniqueDefinitions(definitions: CardDefinition[]): CardDefinition[] {
   });
 }
 
-function takeKeyword(available: Keyword[], keywords: Keyword[], random: () => number): void {
+function takeTrait(available: Trait[], traits: Trait[], random: () => number): void {
   const index = Math.floor(random() * available.length);
   const [keyword] = available.splice(index, 1);
-  if (keyword) keywords.push(keyword);
+  if (keyword) traits.push(keyword);
 }
 
 function nextContinuationChance(keywordCount: number): number {

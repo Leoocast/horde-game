@@ -260,7 +260,7 @@ function clamp(value: number, min: number, max: number): number {
 export function playerEnergyDefinitionId(game: GameState): string | undefined {
   const zones = [game.player.field, game.player.archive, game.player.hand, game.player.memory];
   for (const zone of zones) {
-    const land = zone.find((card) => card.cardTypes.includes("SOURCE"));
+    const land = zone.find((card) => card.kinds.includes("SOURCE"));
     if (land) return land.definitionId;
   }
   return undefined;
@@ -309,7 +309,7 @@ function returnPlayerCardsToLibrary(game: GameState): void {
   for (const card of returned) {
     card.zone = "archive";
     card.exhausted = false;
-    card.stabilizing = card.cardTypes.includes("ECHO");
+    card.stabilizing = card.kinds.includes("ECHO");
   }
   game.player.hand = [];
   game.player.field = [];

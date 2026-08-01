@@ -2,11 +2,11 @@ import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, 
 import { createToken, drawCards, recordFieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
-import { hasKeyword } from "./Keywords";
+import { hasTrait } from "./Traits";
 import { isTrait } from "./hostfallVocabulary";
 import { addAvailableEnergy, addStoredEnergy } from "./EnergySystem";
 import { randomInt } from "./RNG";
-import { getPowerToughness, matchesFilter } from "./StaticEffects";
+import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { chooseHordeTarget, findPermanent } from "./Targeting";
 
 export type ResolveContext = {
@@ -16,7 +16,7 @@ export type ResolveContext = {
   distribution?: Record<string, number>;
   /** Last known Field stats, keyed by instance id. Destruction records them so later
    *  effects in the same sequence can still use the destroyed object's effective stats. */
-  lastKnownStats?: Record<string, { power: number; toughness: number }>;
+  lastKnownStats?: Record<string, { power: number; endurance: number }>;
   tokenDefinitions?: CardInstance[] | never;
   event?: EventItem;
 };
@@ -39,7 +39,7 @@ export function registeredEffectTypes(): Set<string> {
 
 type EffectHandler = (game: GameState, effect: EffectDefinition, context: ResolveContext) => void;
 
-// Wrapper/static types are consumed elsewhere (resolveTriggeredEvent, StaticEffects, Keywords);
+// Wrapper/static types are consumed elsewhere (resolveTriggeredEvent, StaticEffects, Traits);
 // resolving them directly is deliberately a no-op.
 const skipWrapperOrStatic: EffectHandler = () => {};
 
@@ -71,7 +71,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   GAIN_ENERGY: (game, effect, context) => {
     const amount = Math.max(0, Number(effect.amount ?? 1));
-    if (context.side === "player" && context.source?.cardTypes.includes("ECHO")) {
+    if (context.side === "player" && context.source?.kinds.includes("ECHO")) {
       const added = addStoredEnergy(game, amount);
       if (added > 0) game.log.unshift(`${context.source.name} adds ${added} Stored Energy.`);
       return;
@@ -109,7 +109,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const opponent = context.side === "player" ? "horde" : "player";
     const amount = Number(effect.amount ?? 1);
     const targetIds = game[opponent].field
-      .filter((card) => card.cardTypes.includes("ECHO"))
+      .filter((card) => card.kinds.includes("ECHO"))
       .map((card) => card.instanceId);
     if (effect.animation === "BURN_VOLLEY") {
       enqueue(game, {
@@ -140,7 +140,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         enqueueBurnDamage(game, context.source, target, amount, "BURN");
         return;
       }
-      dealDamageToCreature(game, target, amount, Boolean(context.source && hasKeyword(game, context.source, "LETHAL")));
+      dealDamageToCreature(game, target, amount, Boolean(context.source && hasTrait(game, context.source, "LETHAL")));
       game.log.unshift(`${context.source?.name ?? "Horde"} deals ${amount} damage to ${target.name}.`);
       destroyMarkedCreatures(game);
     }
@@ -181,7 +181,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       .filter((card) => matchesFilter(card, filter, source))
       .length;
     source.temporaryPower += amount * Number(effect.power ?? 0);
-    source.temporaryToughness += amount * Number(effect.toughness ?? 0);
+    source.temporaryEndurance += amount * Number(effect.endurance ?? 0);
   },
   PUMP_GROUP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const controller = effect.controller === "OPPONENT"
@@ -197,14 +197,14 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         payload: {
           affectedIds: targets.map((target) => target.instanceId),
           power: Number(effect.power ?? 0),
-          toughness: Number(effect.toughness ?? 0),
+          endurance: Number(effect.endurance ?? 0),
         },
       });
       return;
     }
     for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
-      target.temporaryToughness += Number(effect.toughness ?? 0);
+      target.temporaryEndurance += Number(effect.endurance ?? 0);
     }
   },
   PUT_COUNTER: (game, effect, context) => {
@@ -243,8 +243,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const targets = resolveTargetCards(game, effect, context);
     for (const target of targets) {
       target.temporaryPower += Number(effect.power ?? 0);
-      target.temporaryToughness += Number(effect.toughness ?? 0);
-      game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until end of turn.`);
+      target.temporaryEndurance += Number(effect.endurance ?? 0);
+      game.log.unshift(`${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.endurance ?? 0)} until end of turn.`);
     }
   },
   PUMP_UNTIL_NEXT_PLAYER_TURN: (game, effect, context) => {
@@ -252,25 +252,25 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     for (const target of targets) {
       target.untilNextPlayerTurnPower =
         (target.untilNextPlayerTurnPower ?? 0) + Number(effect.power ?? 0);
-      target.untilNextPlayerTurnToughness =
-        (target.untilNextPlayerTurnToughness ?? 0) + Number(effect.toughness ?? 0);
+      target.untilNextPlayerTurnEndurance =
+        (target.untilNextPlayerTurnEndurance ?? 0) + Number(effect.endurance ?? 0);
       game.log.unshift(
-        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.toughness ?? 0)} until the next player turn.`,
+        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.endurance ?? 0)} until the next player turn.`,
       );
     }
   },
   GRANT_KEYWORD_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
     if (isTrait(effect.keyword)) {
-      for (const target of targets) target.temporaryKeywords.push(effect.keyword);
+      for (const target of targets) target.temporaryTraits.push(effect.keyword);
     }
   },
   DEAL_DAMAGE_FROM_SOURCE_POWER: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
-      const amount = getPowerToughness(game, source).power;
-      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "LETHAL"));
+      const amount = getPowerEndurance(game, source).power;
+      dealDamageToCreature(game, target, amount, hasTrait(game, source, "LETHAL"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
       destroyMarkedCreatures(game);
     }
@@ -280,7 +280,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const target = findPermanent(game, String(context.targets?.[String(effect.target)] ?? ""));
     if (source && target) {
       const amount = resolveDamageAmount(game, effect.amount, context);
-      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "LETHAL"));
+      dealDamageToCreature(game, target, amount, hasTrait(game, source, "LETHAL"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
     }
   },
@@ -295,10 +295,10 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
-      const sourcePower = getPowerToughness(game, source).power;
-      const targetPower = getPowerToughness(game, target).power;
-      dealDamageToCreature(game, target, sourcePower, hasKeyword(game, source, "LETHAL"));
-      dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "LETHAL"));
+      const sourcePower = getPowerEndurance(game, source).power;
+      const targetPower = getPowerEndurance(game, target).power;
+      dealDamageToCreature(game, target, sourcePower, hasTrait(game, source, "LETHAL"));
+      dealDamageToCreature(game, source, targetPower, hasTrait(game, target, "LETHAL"));
       game.log.unshift(`${source.name} and ${target.name} fight.`);
     }
   },
@@ -404,7 +404,7 @@ function handleDestroy(game: GameState, effect: EffectDefinition, context: Resol
   const targets = resolveTargetCards(game, effect, context);
   for (const target of targets) {
     context.lastKnownStats ??= {};
-    context.lastKnownStats[target.instanceId] = getPowerToughness(game, target);
+    context.lastKnownStats[target.instanceId] = getPowerEndurance(game, target);
     destroyPermanent(game, target);
   }
 }
@@ -422,9 +422,9 @@ function resolveDamageAmount(game: GameState, amount: unknown, context: ResolveC
     const instanceId = String(context.targets?.[objectRef] ?? "");
     const source = findPermanent(game, instanceId);
     const stat = String(data.stat ?? "").toUpperCase();
-    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    const stats = source ? getPowerEndurance(game, source) : context.lastKnownStats?.[instanceId];
     if (!stats) return 0;
-    return stat === "TOUGHNESS" ? stats.toughness : stats.power;
+    return stat === "TOUGHNESS" ? stats.endurance : stats.power;
   }
   return Number(amount) || 0;
 }
@@ -492,11 +492,11 @@ function resolveHostGroupBuffEvent(game: GameState, event: EventItem): void {
     Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [],
   );
   const power = Number(event.payload?.power ?? 0);
-  const toughness = Number(event.payload?.toughness ?? 0);
+  const endurance = Number(event.payload?.endurance ?? 0);
   for (const target of game.horde.field) {
     if (!affectedIds.has(target.instanceId)) continue;
     target.temporaryPower += power;
-    target.temporaryToughness += toughness;
+    target.temporaryEndurance += endurance;
   }
 }
 
@@ -600,14 +600,14 @@ export function runInvokedTriggers(
       }
     }
   }
-  if (card.cardTypes.includes("ECHO")) {
+  if (card.kinds.includes("ECHO")) {
     enqueue(game, {
       type: "ECHO_INVOKED",
       sourceId: card.instanceId,
       payload: {
         controller: card.controller,
         definitionId: card.definitionId,
-        cardTypes: card.cardTypes,
+        kinds: card.kinds,
         subtypes: card.subtypes,
         causeSourceId: options.causeSourceId,
       },
@@ -628,10 +628,10 @@ export function enqueueSurvivedDamageEvent(
   amount: number,
   payload: Record<string, unknown> = {},
 ): void {
-  if (amount <= 0 || !target.cardTypes.includes("ECHO")) return;
+  if (amount <= 0 || !target.kinds.includes("ECHO")) return;
   if (!game[target.controller].field.some((card) => card.instanceId === target.instanceId)) return;
-  const { toughness } = getPowerToughness(game, target);
-  if (target.damageMarked >= toughness || target.lethalDamage) return;
+  const { endurance } = getPowerEndurance(game, target);
+  if (target.damageMarked >= endurance || target.lethalDamage) return;
   enqueue(game, {
     type: "SURVIVED_DAMAGE",
     sourceId: target.instanceId,
@@ -648,8 +648,8 @@ export function enqueueSurvivedDamageEvent(
 export function destroyMarkedCreatures(game: GameState): void {
   for (const side of ["player", "horde"] as const) {
     for (const card of [...game[side].field]) {
-      const { toughness } = getPowerToughness(game, card);
-      if (card.cardTypes.includes("ECHO") && (card.damageMarked >= toughness || card.lethalDamage)) {
+      const { endurance } = getPowerEndurance(game, card);
+      if (card.kinds.includes("ECHO") && (card.damageMarked >= endurance || card.lethalDamage)) {
         destroyPermanent(game, card);
       }
     }
@@ -663,18 +663,18 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   card.exhausted = false;
   card.damageMarked = 0;
   game[side].memory.push(card);
-  const isEcho = card.cardTypes.includes("ECHO");
+  const isEcho = card.kinds.includes("ECHO");
   game.log.unshift(`${card.name} ${isEcho ? "dies" : "is destroyed"}.`);
   if (!isEcho) return;
   enqueue(game, {
     type: "THIS_DIES",
     sourceId: card.instanceId,
-    payload: { controller: side, definitionId: card.definitionId, cardTypes: card.cardTypes, subtypes: card.subtypes },
+    payload: { controller: side, definitionId: card.definitionId, kinds: card.kinds, subtypes: card.subtypes },
   });
   enqueue(game, {
     type: "ECHO_DIED",
     sourceId: card.instanceId,
-    payload: { controller: side, definitionId: card.definitionId, cardTypes: card.cardTypes, subtypes: card.subtypes },
+    payload: { controller: side, definitionId: card.definitionId, kinds: card.kinds, subtypes: card.subtypes },
   });
 }
 
@@ -685,7 +685,7 @@ function inspectTopGoblin(game: GameState): void {
     return;
   }
   game.log.unshift(`Rundvelt Hordemaster inspects ${card.name}.`);
-  if (!card.cardTypes.includes("ECHO") || !card.subtypes.includes("Goblin")) {
+  if (!card.kinds.includes("ECHO") || !card.subtypes.includes("Goblin")) {
     game.horde.archive.push(card);
     game.log.unshift(`${card.name} moves to the bottom of the Host Archive.`);
     return;
@@ -726,7 +726,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
       game.gameMode === "chaos" ? game.chaosMutations[controller][found.id] : undefined,
     );
     token.zone = "field";
-    token.stabilizing = token.cardTypes.includes("ECHO") &&
+    token.stabilizing = token.kinds.includes("ECHO") &&
       (controller === "player" || !game.hostRules.hostEchosHaveImpetus);
     token.exhausted = Boolean(effect.exhausted);
     game[controller].field.push(token);
@@ -763,7 +763,7 @@ function resolveTargetCards(game: GameState, effect: EffectDefinition, context: 
   }
   if (target?.type === "ALL_ECHOS") {
     const controller = target.controller === "SELF" ? context.side : context.side === "player" ? "horde" : "player";
-    return game[controller].field.filter((card) => card.cardTypes.includes("ECHO"));
+    return game[controller].field.filter((card) => card.kinds.includes("ECHO"));
   }
   return [];
 }
@@ -854,11 +854,11 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
 
 function eventObjectMatchesFilters(event: EventItem, filters?: Record<string, unknown>): boolean {
   if (!filters) return true;
-  const cardTypes = Array.isArray(filters.cardTypes) ? filters.cardTypes.map(String) : [];
+  const kinds = Array.isArray(filters.kinds) ? filters.kinds.map(String) : [];
   const subtypes = Array.isArray(filters.subtypes) ? filters.subtypes.map(String) : [];
-  const eventCardTypes = Array.isArray(event.payload?.cardTypes) ? event.payload.cardTypes.map(String) : [];
+  const eventCardKinds = Array.isArray(event.payload?.kinds) ? event.payload.kinds.map(String) : [];
   const eventSubtypes = Array.isArray(event.payload?.subtypes) ? event.payload.subtypes.map(String) : [];
-  return cardTypes.every((type) => eventCardTypes.includes(type)) && subtypes.every((subtype) => eventSubtypes.includes(subtype));
+  return kinds.every((type) => eventCardKinds.includes(type)) && subtypes.every((subtype) => eventSubtypes.includes(subtype));
 }
 
 function effectConditionMet(
@@ -903,7 +903,7 @@ function queueRandomOpponentEchoDamage(
     : undefined;
   const filters = targetDefinition?.filters as CardFilter | undefined;
   const candidates = game[opponent].field.filter((card) =>
-    card.cardTypes.includes("ECHO") && matchesFilter(card, filters, context.source)
+    card.kinds.includes("ECHO") && matchesFilter(card, filters, context.source)
   );
   if (candidates.length === 0) {
     game.log.unshift(`${context.source?.name ?? "Effect"} has no valid Burn target.`);
@@ -983,16 +983,16 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
       ? context.source?.instanceId ?? ""
       : String(context.targets?.[objectRef] ?? "");
     const source = objectRef === "SELF" ? context.source : findPermanent(game, instanceId);
-    const stats = source ? getPowerToughness(game, source) : context.lastKnownStats?.[instanceId];
+    const stats = source ? getPowerEndurance(game, source) : context.lastKnownStats?.[instanceId];
     if (!stats) return 0;
-    return String(data.stat ?? "").toUpperCase() === "TOUGHNESS" ? stats.toughness : stats.power;
+    return String(data.stat ?? "").toUpperCase() === "TOUGHNESS" ? stats.endurance : stats.power;
   }
   if (data.type === "COUNT_ECHOS") {
     const controller = data.controller === "OPPONENT"
       ? context.side === "player" ? "horde" : "player"
       : context.side;
     return game[controller].field.filter((card) =>
-      card.cardTypes.includes("ECHO") &&
+      card.kinds.includes("ECHO") &&
       matchesFilter(card, data.filters as CardFilter | undefined, context.source)
     ).length;
   }
@@ -1003,9 +1003,9 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
     const filters = data.filters as CardFilter | undefined;
     return game.fieldEntriesThisTurn.filter((entry) => {
       if (entry.controller !== controller) return false;
-      if (!entry.cardTypes.includes("ECHO")) return false;
+      if (!entry.kinds.includes("ECHO")) return false;
       if (filters?.excludeSelf && entry.instanceId === context.source?.instanceId) return false;
-      if (filters?.cardTypes?.some((type) => !entry.cardTypes.includes(type))) return false;
+      if (filters?.kinds?.some((type) => !entry.kinds.includes(type))) return false;
       if (filters?.subtypes?.some((subtype) => !entry.subtypes.includes(subtype))) return false;
       return true;
     }).length;

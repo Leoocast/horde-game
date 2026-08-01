@@ -158,15 +158,15 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.deepEqual(byId.ichorspit_basilisk.keywords, ["LETHAL", "POISON_1"]);
-  assert.deepEqual(byId.colossadactyl.keywords, ["SKYGUARD", "OVERFLOW"]);
-  assert.deepEqual(byId.cosmic_hunger.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.ichorspit_basilisk.traits, ["LETHAL", "POISON_1"]);
+  assert.deepEqual(byId.colossadactyl.traits, ["SKYGUARD", "OVERFLOW"]);
+  assert.deepEqual(byId.cosmic_hunger.kinds, ["SPELL"]);
   assert.deepEqual(byId.cosmic_hunger.modifiers, ["QUICK"]);
-  assert.deepEqual(byId.ruthless_predation.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.ruthless_predation.kinds, ["SPELL"]);
   assert.deepEqual(byId.ruthless_predation.modifiers, []);
-  assert.deepEqual(byId.forest.cardTypes, ["SOURCE"]);
-  assert.equal(byId.colossadactyl.energyCost, 4);
-  assert.equal(byId.colossadactyl.toughness, 5);
+  assert.deepEqual(byId.forest.kinds, ["SOURCE"]);
+  assert.deepEqual(byId.colossadactyl.energyCost, { amount: 4 });
+  assert.equal(byId.colossadactyl.endurance, 5);
 
   const energyAction = byId.llanowar_elves.abilities[0];
   assert.equal(energyAction.zone, "field");
@@ -175,8 +175,8 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
 
   const brokenWingsFilter = byId.broken_wings.abilities[0].targets[0].filters;
   assert.deepEqual(brokenWingsFilter.anyOf, [
-    { cardTypes: ["SUPPORT"] },
-    { cardTypes: ["ECHO"], keywords: ["FLYING"] },
+    { kinds: ["SUPPORT"] },
+    { kinds: ["ECHO"], traits: ["FLYING"] },
   ]);
 });
 
@@ -199,15 +199,15 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.deepEqual(byId.eternal_feast_countess.cardTypes, ["ECHO"]);
+  assert.deepEqual(byId.eternal_feast_countess.kinds, ["ECHO"]);
   assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
-  assert.deepEqual(byId.eternal_feast_countess.keywords, ["FLYING", "ALERT"]);
+  assert.deepEqual(byId.eternal_feast_countess.traits, ["FLYING", "ALERT"]);
   assert.equal(byId.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(byId.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
-  assert.deepEqual(byId.crimson_impulse.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.crimson_impulse.kinds, ["SPELL"]);
   assert.deepEqual(byId.crimson_impulse.modifiers, ["QUICK"]);
-  assert.deepEqual(byId.blood_pact.cardTypes, ["SPELL"]);
-  assert.deepEqual(byId.crimson_energy.cardTypes, ["SOURCE"]);
+  assert.deepEqual(byId.blood_pact.kinds, ["SPELL"]);
+  assert.deepEqual(byId.crimson_energy.kinds, ["SOURCE"]);
   assert.equal(byId.court_duelist.requiresStabilized, undefined);
   assert.equal(byId.court_duelist.abilities[0].requiresStabilized, true);
   assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { exhaust: true, life: 5 });
@@ -251,15 +251,15 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
   assert.equal(adapted.rulesProfile.surgeBonus.endurance, 0);
-  assert.deepEqual(byId.zombie_token.cardTypes, ["ECHO", "TOKEN"]);
+  assert.deepEqual(byId.zombie_token.kinds, ["ECHO", "TOKEN"]);
   assert.equal(byId.zombie_token.isToken, true);
-  assert.equal(byId.zombie_token.energyCost, 2);
-  assert.deepEqual(byId.graf_harvest.cardTypes, ["SUPPORT"]);
+  assert.deepEqual(byId.zombie_token.energyCost, { amount: 2 });
+  assert.deepEqual(byId.graf_harvest.kinds, ["SUPPORT"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
-  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["ECHO"]);
+  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
-  assert.deepEqual(byId.rancid_rats.keywords, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(byId.rancid_rats.traits, ["LETHAL", "FURTIVE"]);
   assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
@@ -296,16 +296,16 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
-  assert.deepEqual(byId.goblin_token_1_1_red.cardTypes, ["ECHO", "TOKEN"]);
+  assert.deepEqual(byId.goblin_token_1_1_red.kinds, ["ECHO", "TOKEN"]);
   assert.equal(byId.goblin_token_1_1_red.isToken, true);
-  assert.deepEqual(byId.goblin_war_drums.cardTypes, ["SUPPORT"]);
+  assert.deepEqual(byId.goblin_war_drums.kinds, ["SUPPORT"]);
   assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_BATTLE");
   assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
-  assert.deepEqual(byId.goblin_chainwhirler.keywords, ["REFLEX"]);
-  assert.deepEqual(byId.general_kreat_the_boltbringer.cardTypes, ["ECHO"]);
+  assert.deepEqual(byId.goblin_chainwhirler.traits, ["REFLEX"]);
+  assert.deepEqual(byId.general_kreat_the_boltbringer.kinds, ["ECHO"]);
   assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
   assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");

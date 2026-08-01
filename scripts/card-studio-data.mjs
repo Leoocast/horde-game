@@ -60,11 +60,11 @@ function authoredEnergyAmount(card) {
 }
 
 function authoredTraits(card) {
-  return card.traits ?? card.keywords ?? [];
+  return card.traits ?? [];
 }
 
 function authoredEndurance(card) {
-  return card.endurance ?? card.toughness ?? null;
+  return card.endurance ?? null;
 }
 
 function authoredIsToken(card) {

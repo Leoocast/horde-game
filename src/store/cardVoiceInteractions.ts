@@ -54,7 +54,7 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
     sourceDefinitionId: "eternal_feast_countess",
     event: "INVOKED",
     subject: "ALLY",
-    eventFilter: { cardTypes: ["ECHO"], subtypes: ["Human"] },
+    eventFilter: { kinds: ["ECHO"], subtypes: ["Human"] },
     cues: [{ sfx: "countessHumans" }],
   },
   {

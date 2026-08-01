@@ -9,7 +9,7 @@ import {
 } from "../engine/EffectResolver";
 import { enqueue } from "../engine/EventQueue";
 import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticAuras, type StaticAuraSnapshot } from "../engine/StaticAuras";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -273,7 +273,7 @@ export function flushStaticAuraBeats(): void {
           auraKey: aura.key,
           affectedIds: aura.affectedIds,
           power: aura.power,
-          toughness: aura.toughness,
+          endurance: aura.endurance,
           keyword: aura.keyword,
         },
       });
@@ -613,8 +613,8 @@ function burnLethalTargetIds(game: GameState, targetIds: string[], amount: numbe
   if (amount <= 0) return [];
   return targetIds.filter((targetId) => {
     const target = findBattlefieldCard(game, targetId);
-    if (!target?.cardTypes.includes("ECHO")) return false;
-    return target.damageMarked + amount >= getPowerToughness(game, target).toughness;
+    if (!target?.kinds.includes("ECHO")) return false;
+    return target.damageMarked + amount >= getPowerEndurance(game, target).endurance;
   });
 }
 
@@ -843,12 +843,12 @@ function staticAuraBeatMessage(source: CardInstance, event: EventItem): string {
   const cardName = uiCardName(source);
   const count = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.length : 0;
   const keyword = typeof event.payload?.keyword === "string" ? event.payload.keyword : undefined;
-  if (keyword) return uiText("toast.staticAuraKeyword", { card: cardName, keyword: uiTraitLabel(keyword), count });
+  if (keyword) return uiText("toast.staticAuraTrait", { card: cardName, keyword: uiTraitLabel(keyword), count });
   const power = Number(event.payload?.power ?? 0);
-  const toughness = Number(event.payload?.toughness ?? 0);
+  const endurance = Number(event.payload?.endurance ?? 0);
   return uiText("toast.staticAuraBuff", {
     card: cardName,
-    bonus: `${power >= 0 ? "+" : ""}${power}/${toughness >= 0 ? "+" : ""}${toughness}`,
+    bonus: `${power >= 0 ? "+" : ""}${power}/${endurance >= 0 ? "+" : ""}${endurance}`,
     count,
   });
 }

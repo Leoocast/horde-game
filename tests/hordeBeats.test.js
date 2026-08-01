@@ -112,8 +112,8 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
   try {
     resetHordeSequence();
     const game = createTestGame("chainwhirler-throttled-beat");
-    const fragile = addCard(game, customCard("fragile_player_creature", "player", { toughness: 1 }));
-    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { toughness: 2 }));
+    const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
+    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
     const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
     enqueue(game, {
       type: "BURN_VOLLEY_DAMAGE",
@@ -201,7 +201,7 @@ test("the shared reaction runner hands surviving damage to the player and animat
     game.player.life = 10;
     const attacker = addCard(game, customCard("crypt_reaction_attacker", "horde", {
       power: 1,
-      toughness: 2,
+      endurance: 2,
     }));
     const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
     game.activeSide = "horde";
@@ -597,7 +597,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     addForests(game, 1);
     const ally = addCard(game, customCard("crimson_impulse_store_ally", "player", {
       power: 2,
-      toughness: 2,
+      endurance: 2,
     }));
     const attacker = addCard(game, customCard("crimson_impulse_store_attacker", "horde"), "horde");
     const page = addCard(game, cardFromDeck("blood_page", "player"));
@@ -723,12 +723,12 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
   };
 
   const [
-    { hasKeyword },
+    { hasTrait },
     { useAudioStore },
     { useGameStore },
     { addCard, addForests, cardFromDeck, createTestGame, customCard },
   ] = await Promise.all([
-    import("../src/engine/Keywords"),
+    import("../src/engine/Traits"),
     import("../src/store/useAudioStore"),
     import("../src/store/useGameStore"),
     import("./engineTestUtils"),
@@ -742,11 +742,11 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
     addForests(game, 2);
     const firstAlly = addCard(game, customCard("predatory_thirst_store_ally_one", "player", {
       power: 2,
-      toughness: 3,
+      endurance: 3,
     }));
     const secondAlly = addCard(game, customCard("predatory_thirst_store_ally_two", "player", {
       power: 1,
-      toughness: 2,
+      endurance: 2,
     }));
     const enemy = addCard(game, customCard("predatory_thirst_store_enemy", "horde"));
     const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
@@ -763,10 +763,10 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
     const result = useGameStore.getState();
     const firstBuffed = result.game.player.field.find((card) => card.instanceId === firstAlly.instanceId);
     const secondBuffed = result.game.player.field.find((card) => card.instanceId === secondAlly.instanceId);
-    assert.equal(hasKeyword(result.game, firstBuffed, "DRAIN"), true);
-    assert.equal(hasKeyword(result.game, secondBuffed, "DRAIN"), true);
+    assert.equal(hasTrait(result.game, firstBuffed, "DRAIN"), true);
+    assert.equal(hasTrait(result.game, secondBuffed, "DRAIN"), true);
     assert.equal(
-      hasKeyword(result.game, result.game.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"),
+      hasTrait(result.game, result.game.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"),
       false,
     );
     assert.deepEqual(result.buffAnimationCardIds, [firstAlly.instanceId, secondAlly.instanceId]);
@@ -853,7 +853,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
   };
 
   const [
-    { getPowerToughness },
+    { getPowerEndurance },
     { useAudioStore },
     { useGameStore },
     { addCard, addForests, cardFromDeck, createTestGame, customCard },
@@ -873,11 +873,11 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     addForests(game, 2);
     const friendly = addCard(game, customCard("ruthless_store_friendly", "player", {
       power: 2,
-      toughness: 2,
+      endurance: 2,
     }));
     const enemy = addCard(game, customCard("ruthless_store_enemy", "horde", {
       power: 1,
-      toughness: 5,
+      endurance: 5,
     }));
     const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
     useGameStore.setState({
@@ -902,7 +902,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     useGameStore.getState().confirmSpellTargeting();
     const afterConfirm = useGameStore.getState();
     const buffedFriendly = afterConfirm.game.player.field.find((card) => card.instanceId === friendly.instanceId);
-    assert.deepEqual(getPowerToughness(afterConfirm.game, buffedFriendly), { power: 3, toughness: 4 });
+    assert.deepEqual(getPowerEndurance(afterConfirm.game, buffedFriendly), { power: 3, endurance: 4 });
     assert.equal(buffedFriendly.damageMarked, 0);
     assert.deepEqual(afterConfirm.buffAnimationCardIds, [friendly.instanceId]);
     assert.equal(afterConfirm.buffAnimationVariant, "growth-strong");

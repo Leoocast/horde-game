@@ -24,7 +24,7 @@ export type PoisonTrait = `POISON_${number}`;
 export type Trait = BaseTrait | PoisonTrait;
 
 export type CardKindView = Readonly<{
-  cardTypes: readonly CardKind[];
+  kinds: readonly CardKind[];
   modifiers?: readonly CardModifier[];
 }>;
 
@@ -46,7 +46,7 @@ export function isTrait(value: unknown): value is Trait {
 }
 
 export function hasCardKind(card: CardKindView, kind: CardKind): boolean {
-  return card.cardTypes.includes(kind);
+  return card.kinds.includes(kind);
 }
 
 export function hasCardModifier(card: CardKindView, modifier: CardModifier): boolean {

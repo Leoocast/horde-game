@@ -1,5 +1,5 @@
 import type { CardFilter, CardInstance, GameState, Side, TargetRequirement } from "./GameTypes";
-import { getPowerToughness, matchesFilter } from "./StaticEffects";
+import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { pickRandom } from "./RNG";
 
 export function allBattlefield(game: GameState): CardInstance[] {
@@ -18,10 +18,10 @@ export function targetCandidatesWithSelectedTargets(game: GameState, sourceSide:
   const wanted = req.controller === "SELF" ? sourceSide : req.controller === "OPPONENT" ? opponent(sourceSide) : undefined;
   return allBattlefield(game).filter((card) => {
     if (wanted && card.controller !== wanted) return false;
-    if (req.type.includes("ECHO") && !card.cardTypes.includes("ECHO")) return false;
-    if (req.type.includes("LAND") && !card.cardTypes.includes("SOURCE")) return false;
+    if (req.type.includes("ECHO") && !card.kinds.includes("ECHO")) return false;
+    if (req.type.includes("LAND") && !card.kinds.includes("SOURCE")) return false;
     const filters = req.filters as (CardFilter & { anyOf?: CardFilter[]; excludeTargetIds?: string[] }) | undefined;
-    if (filters?.cardTypes?.length && !filters.cardTypes.every((type) => card.cardTypes.includes(type))) return false;
+    if (filters?.kinds?.length && !filters.kinds.every((type) => card.kinds.includes(type))) return false;
     if (filters?.subtypes?.length && !filters.subtypes.every((type) => card.subtypes.includes(type))) return false;
     if (filters?.anyOf?.length && !filters.anyOf.some((filter) => matchesFilter(card, filter))) return false;
     if (targetExcludedByPreviousSelection(card, filters?.excludeTargetIds, selectedTargets)) return false;
@@ -69,10 +69,10 @@ function targetExcludedByPreviousSelection(card: CardInstance, excludeTargetIds:
 }
 
 export function chooseHordeTarget(game: GameState, kind: "destroy" | "damage", damage = 0): string | undefined {
-  const creatures = game.player.field.filter((card) => card.cardTypes.includes("ECHO"));
+  const creatures = game.player.field.filter((card) => card.kinds.includes("ECHO"));
   if (creatures.length === 0) return undefined;
   if (kind === "damage") {
-    const lethal = creatures.filter((card) => getPowerToughness(game, card).toughness - card.damageMarked <= damage);
+    const lethal = creatures.filter((card) => getPowerEndurance(game, card).endurance - card.damageMarked <= damage);
     if (lethal.length > 0) return bestCreature(game, lethal)?.instanceId;
   }
   return bestCreature(game, creatures)?.instanceId;
@@ -86,11 +86,11 @@ function bestCreature(game: GameState, cards: CardInstance[]): CardInstance | un
 }
 
 export function weakestCreature(game: GameState, side: Side): CardInstance | undefined {
-  const creatures = game[side].field.filter((card) => card.cardTypes.includes("ECHO"));
+  const creatures = game[side].field.filter((card) => card.kinds.includes("ECHO"));
   if (creatures.length === 0) return undefined;
   const scored = creatures.map((card) => {
-    const stats = getPowerToughness(game, card);
-    return { card, score: stats.power + stats.toughness };
+    const stats = getPowerEndurance(game, card);
+    return { card, score: stats.power + stats.endurance };
   });
   const min = Math.min(...scored.map((item) => item.score));
   const tied = scored.filter((item) => item.score === min).map((item) => item.card);

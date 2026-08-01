@@ -66,7 +66,7 @@ src/
     HordeController.ts    revelado/turno de la Horda
     EffectResolver.ts     efectos genericos
     Targeting.ts          candidatos de target
-    Keywords.ts           keywords dinamicas/static grants
+    Traits.ts             Rasgos dinamicos/static grants
     EnergySystem.ts       Energía numérica, reserva y autopago con Sources
     StaticEffects.ts      stats y filtros
 
@@ -710,12 +710,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.5 está implementada y pendiente de validación manual. El runtime usa `INVOKED`/
+- L4.6a está implementada y pendiente de una validación visual corta. Definiciones, instancias,
+  filtros, historial y consumidores usan exclusivamente `kinds`, `traits` y `endurance`, incluidas
+  sus variantes temporales y derivadas. `Traits.ts` reemplaza `Keywords.ts`; el adaptador ya no
+  degrada la estructura de carta. TypeScript, deck lint, Card Studio, 216/216 tests, auditoría y
+  build pasan; `legacy-l46-card-structure` está en cero. Los bandos, escenarios y la prioridad de
+  Energía siguen fuera de este bloque.
+- L4.5 está cerrada y validada por el usuario. El runtime usa `INVOKED`/
   `ECHO_INVOKED`, `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED`, `BEGIN_BATTLE` y Acciones/condiciones
   Hostfall sin downgrade en el adaptador. `game.hostRules` se construye con `buildHostRules` y usa
   divisores de descarte del Archivo, Ímpetu y `endurance` canónicos. El lint valida el contrato
   authored completo; 216/216 tests, TypeScript, deck lint, Card Studio, auditoría y build pasan, y
-  `legacy-l45-actions-events-host-rules` está en cero. L4.6 no ha comenzado.
+  `legacy-l45-actions-events-host-rules` está en cero.
 - L4.4 está cerrada y validada por el usuario. `CardInstance` usa `exhausted`,
   `entersExhausted` y `stabilizing`; los costes usan `exhaust`, las restricciones
   `requiresStabilized` y la condición canónica es `SOURCE_IS_READY`. El adaptador dejó de traducir
@@ -738,15 +744,15 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   (`playerBattlefield`, `hordeLibraryTop`, etc.) se conservan como contrato de compatibilidad hasta
   L4.6, por lo que no se subió `SCENARIO_VERSION` ni se invalidaron boards guardados.
 - L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
-  tienen vocabulario cerrado; `cardTypes`/`keywords` son nombres de contenedor temporales pero ya
-  contienen valores Hostfall, y `modifiers` conserva QUICK/CHRONICLE. Filtros, targeting, historial,
-  combate, Rasgos temporales/estáticos, Chaos y los consumidores mínimos de UI/store usan los mismos
-  valores. `legacy-l41-card-model` debe permanecer en cero.
+  tienen vocabulario cerrado, y `modifiers` conserva QUICK/CHRONICLE. L4.6a retiró posteriormente
+  los nombres de contenedor temporales de aquella migración. Filtros, targeting, historial, combate,
+  Rasgos temporales/estáticos, Chaos y UI/store usan los mismos valores canónicos.
+  `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` conserva únicamente el puente estructural y de
-  bandos previsto para L4.6; ya no traduce valores de tipos, Rasgos, zonas, costes, estados,
-  eventos, Acciones ni reglas de la Hueste. Mono Green,
+  `GAIN_ENERGY`. Tras L4.6a, `src/data/hostfallDeckAdapter.ts` conserva únicamente el puente de
+  bandos y casing de zonas previsto para los bloques restantes de L4.6; ya no traduce estructura de
+  carta, costes, estados, eventos, Acciones ni reglas de la Hueste. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.

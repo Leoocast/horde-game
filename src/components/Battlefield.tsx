@@ -1,8 +1,8 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { activatedAbilityFailureReason } from "../engine/GameActions";
-import { blockRestrictionReason, canAttack, canBlockAttacker, hasKeyword } from "../engine/Keywords";
+import { blockRestrictionReason, canAttack, canBlockAttacker, hasTrait } from "../engine/Traits";
 import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { STORED_ENERGY_CAP } from "../engine/EnergySystem";
 import { useTranslation } from "../i18n/useTranslation";
@@ -218,9 +218,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
-  const creatures = displayedCards.filter((card) => card.cardTypes.includes("ECHO"));
-  const lands = displayedCards.filter((card) => card.cardTypes.includes("SOURCE"));
-  const others = displayedCards.filter((card) => !card.cardTypes.includes("ECHO") && !card.cardTypes.includes("SOURCE"));
+  const creatures = displayedCards.filter((card) => card.kinds.includes("ECHO"));
+  const lands = displayedCards.filter((card) => card.kinds.includes("SOURCE"));
+  const others = displayedCards.filter((card) => !card.kinds.includes("ECHO") && !card.kinds.includes("SOURCE"));
   const availableLandCount = lands.filter((card) => !card.exhausted && !card.activatedThisTurn).length;
   const storedEnergyCount = game.player.energyPool.stored;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
@@ -431,7 +431,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
+            delay: (hordeEntryDelay(card) + (card.kinds.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -458,7 +458,7 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       const summonedCard = id ? cards.find((item) => item.instanceId === id) : undefined;
-      const entranceExtraDelay = summonedCard?.cardTypes.includes("ECHO") ? rowShiftSettleDelay : 0;
+      const entranceExtraDelay = summonedCard?.kinds.includes("ECHO") ? rowShiftSettleDelay : 0;
       if (id) {
         seenCardIds.current.add(id);
         entranceAnimatingIds.current.add(id);
@@ -811,23 +811,23 @@ export function Battlefield({ game, side, cards }: Props) {
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
     const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
-    const isLand = card.cardTypes.includes("SOURCE");
+    const isLand = card.kinds.includes("SOURCE");
     const smallpoxTargetable = Boolean(
       smallpoxSelectionActive &&
         !smallpoxSelectionTargetId &&
         side === "player" &&
-        ((smallpoxSelectionKind === "sacrifice-creature" && card.cardTypes.includes("ECHO")) ||
-          (smallpoxSelectionKind === "sacrifice-land" && card.cardTypes.includes("SOURCE"))),
+        ((smallpoxSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
+          (smallpoxSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
     );
     const smallpoxTargetLocked = smallpoxSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
-    const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
-    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
+    const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
+    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
       hordeCombat &&
         side === "player" &&
-        card.cardTypes.includes("ECHO") &&
+        card.kinds.includes("ECHO") &&
         !blocking &&
         game.combat.hordeAttackers.some((attackerId) => {
           const attacker = game.horde.field.find((item) => item.instanceId === attackerId);
@@ -835,7 +835,7 @@ export function Battlefield({ game, side, cards }: Props) {
         }),
     );
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
-    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("ECHO") && (legalBlocker || selected || blocking));
+    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
@@ -846,7 +846,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && card.cardTypes.includes("ECHO") && !selectableBlocker);
+      (hordeCombat && side === "player" && card.kinds.includes("ECHO") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const primaryAbility = card.activatedAbilities[0];
     const effectAvailable = canUseActivatedAbility(card, primaryAbility);
@@ -854,7 +854,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("ECHO"));
+    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.kinds.includes("ECHO"));
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
@@ -926,7 +926,7 @@ export function Battlefield({ game, side, cards }: Props) {
         spellTargetable ||
         spellTargetLocked,
     );
-    const isFlying = card.cardTypes.includes("ECHO") && hasKeyword(game, card, "FLYING");
+    const isFlying = card.kinds.includes("ECHO") && hasTrait(game, card, "FLYING");
     const combatAnimationActive =
       playerAttackAnimationId === card.instanceId ||
       hordeAttackAnimationAttackerId === card.instanceId ||
@@ -965,7 +965,7 @@ export function Battlefield({ game, side, cards }: Props) {
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
           card.exhausted || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
-          card.cardTypes.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
+          card.kinds.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
@@ -1056,7 +1056,7 @@ export function Battlefield({ game, side, cards }: Props) {
         compact={compact}
         cropTopHalf={isLand}
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
-        showCroppedTitle={!compact && card.cardTypes.includes("ECHO") && shouldShowFullCardImage(card.definitionId)}
+        showCroppedTitle={!compact && card.kinds.includes("ECHO") && shouldShowFullCardImage(card.definitionId)}
         selected={selected}
         attacking={attacking}
         blocking={blocking}
@@ -1367,7 +1367,7 @@ function flyingIdleVariables(instanceId: string): CSSProperties {
 
 type BuffStatPreviewValue = {
   power: number;
-  toughness: number;
+  endurance: number;
 };
 
 function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatPreviewValue }) {
@@ -1375,7 +1375,7 @@ function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatP
   const language = useLanguageStore((state) => state.language);
   return (
     <span
-      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.toughness} de Aguante después de potenciar` : `${stats.power} Power, ${stats.toughness} Endurance after empowering`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante después de potenciar` : `${stats.power} Power, ${stats.endurance} Endurance after empowering`}
       className={[
         "counter-target-stat-preview",
         theme ? `card-theme-${theme}` : "",
@@ -1383,18 +1383,18 @@ function BuffStatPreview({ card, stats }: { card: CardInstance; stats: BuffStatP
     >
       <b>{stats.power}</b>
       <i aria-hidden="true">/</i>
-      <b>{stats.toughness}</b>
+      <b>{stats.endurance}</b>
     </span>
   );
 }
 
 function counterBuffedStats(game: GameState, card: CardInstance): BuffStatPreviewValue {
-  const stats = getPowerToughness(game, card);
-  return { power: stats.power + 1, toughness: stats.toughness + 1 };
+  const stats = getPowerEndurance(game, card);
+  return { power: stats.power + 1, endurance: stats.endurance + 1 };
 }
 
 function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstance, targets: Record<string, string | string[]>): BuffStatPreviewValue | undefined {
-  const stats = getPowerToughness(game, card);
+  const stats = getPowerEndurance(game, card);
   let powerDelta = 0;
   let toughnessDelta = 0;
 
@@ -1405,7 +1405,7 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
       const applies = Array.isArray(selected) ? selected.includes(card.instanceId) : selected === card.instanceId;
       if (applies) {
         powerDelta += Number(effect.power) || 0;
-        toughnessDelta += Number(effect.toughness) || 0;
+        toughnessDelta += Number(effect.endurance) || 0;
       }
     }
     if (Array.isArray(effect.effects)) {
@@ -1417,7 +1417,7 @@ function spellBuffedStats(game: GameState, card: CardInstance, spell: CardInstan
   if (powerDelta === 0 && toughnessDelta === 0) return undefined;
   return {
     power: stats.power + powerDelta,
-    toughness: stats.toughness + toughnessDelta,
+    endurance: stats.endurance + toughnessDelta,
   };
 }
 
@@ -1435,7 +1435,7 @@ function abilityButtonText(ability: CardInstance["activatedAbilities"][number]):
     ability.effect.target === "SELF"
   ) {
     const life = Number(ability.cost?.life ?? 0);
-    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.toughness ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.toughness ?? 0)}`;
+    const stats = `${Number(ability.effect.power ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.power ?? 0)}/${Number(ability.effect.endurance ?? 0) >= 0 ? "+" : ""}${Number(ability.effect.endurance ?? 0)}`;
     const untilNextTurn = ability.effect.type === "PUMP_UNTIL_NEXT_PLAYER_TURN";
     return canonicalizeRulesText(language === "es"
       ? `${life > 0 ? `Paga ${life} vidas: ` : ""}${stats} ${untilNextTurn ? "hasta tu próximo turno" : "este turno"}.`

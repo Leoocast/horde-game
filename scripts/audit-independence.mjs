@@ -279,6 +279,9 @@ const l44Text = textFiles(["src", "tests"])
 const l45Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".json", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => relative(file) !== "src/data/deckLint.ts");
+const l46CardStructureText = textFiles(["src", "tests"])
+  .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => !["src/data/deckLint.ts", "tests/deckLint.test.js"].includes(relative(file)));
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -379,6 +382,16 @@ const l45LegacyPatterns = [
   {
     label: "legacy speed downgrade in the Hostfall adapter",
     pattern: /nestedValue\s*===\s*["']QUICK["'][^\n]+["']INSTANT["']|nestedValue\s*===\s*["']MAIN["'][^\n]+["']SORCERY["']/u,
+  },
+];
+const l46CardStructureLegacyPatterns = [
+  {
+    label: "legacy card structure field",
+    pattern: /\b(?:baseToughness|cardTypes|chaosKeywords|keywords|temporaryKeywords|temporaryToughness|toughness|untilNextPlayerTurnToughness)\b/u,
+  },
+  {
+    label: "legacy card structure helper or type",
+    pattern: /\b(?:CardType|CardTypes|getPowerToughness|Keyword|Keywords)\b/u,
   },
 ];
 
@@ -510,6 +523,14 @@ const checks = [
       "audit-allow legacy-l45-rejection-fixture",
       ["tests/deckLint.test.js"],
     ),
+  ),
+  finding(
+    "legacy-l46-card-structure",
+    "blocker",
+    "L4.6a",
+    "Legacy card structure in runtime consumers",
+    "Runtime, UI and migrated tests must use kinds, traits and endurance without structural aliases.",
+    scanTextPatterns(l46CardStructureText, l46CardStructureLegacyPatterns),
   ),
   finding(
     "legacy-internal-vocabulary",

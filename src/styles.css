@@ -14747,7 +14747,7 @@
   background: rgb(3 10 10 / 0.64);
 }
 
-/* Keyword explanations outside the card retain their compact UI plaque. */
+/* Trait explanations outside the card retain their compact UI plaque. */
 .keyword-pill {
   min-height: 1.55rem;
   height: auto;

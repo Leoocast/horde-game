@@ -56,7 +56,7 @@ export function addEnergySource(game: GameState, amount = 1): PlaygroundActionRe
  *  without advancing the turn. */
 export function refillEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const lands = next.player.field.filter((card) => card.cardTypes.includes("SOURCE"));
+  const lands = next.player.field.filter((card) => card.kinds.includes("SOURCE"));
   if (lands.length === 0) return fail(game, "There are no energy sources to refill. Add one first.");
   let restored = 0;
   for (const land of lands) {
@@ -80,7 +80,7 @@ export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionRe
 export function drainEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   for (const card of next.player.field) {
-    if (!card.cardTypes.includes("SOURCE")) continue;
+    if (!card.kinds.includes("SOURCE")) continue;
     card.exhausted = true;
     card.activatedThisTurn = true;
   }

@@ -154,7 +154,7 @@ Data contract:
 
 - Nothing is declared per card. `collectStaticAuras` (`src/engine/StaticAuras.ts`) reads every `STATIC_BUFF` / `STATIC_GRANT_KEYWORD` already on the battlefield and reports who each one currently covers.
 - The store keeps a snapshot of that coverage and announces only auras whose covered set **grew**. An aura that only lost a creature is not re-announced.
-- Everything here is presentation-only. Rules are untouched: `getPowerToughness` and `getKeywords` never read any of it.
+- Everything here is presentation-only. Rules are untouched: `getPowerEndurance` and `getTraits` never read any of it.
 
 The announcement is **two-phase**, and the split is the whole point:
 

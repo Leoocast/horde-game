@@ -598,7 +598,7 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
     normalized.effects.length +
     normalized.activatedAbilities.length +
     normalized.requiresTargets.length +
-    normalized.extraKeywords +
+    normalized.extraTraits +
     (normalized.hasAdditionalCost ? 1 : 0);
   if (produced === 0) {
     report(`Ability produces nothing after normalization — it would silently not exist in game.`);
@@ -616,7 +616,7 @@ type NormalizedView = {
   effects: EffectDefinition[];
   activatedAbilities: Array<{ effect: unknown }>;
   requiresTargets: Array<{ id: string }>;
-  extraKeywords: number;
+  extraTraits: number;
   hasAdditionalCost: boolean;
 };
 
@@ -628,12 +628,12 @@ function normalizeIsolated(card: NewDeckCard, ability: NewDeckAbility): Normaliz
     cards: [{ ...card, abilities: [ability] }],
   };
   const definition = normalizeDeck(syntheticDeck).cards[0];
-  const baseKeywords = card.keywords?.length ?? 0;
+  const baseTraits = card.traits?.length ?? 0;
   return {
     effects: definition.effects ?? [],
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: (definition.requiresTargets ?? []) as Array<{ id: string }>,
-    extraKeywords: Math.max(0, (definition.keywords?.length ?? 0) - baseKeywords),
+    extraTraits: Math.max(0, (definition.traits?.length ?? 0) - baseTraits),
     hasAdditionalCost: Boolean(definition.additionalCost),
   };
 }

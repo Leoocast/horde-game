@@ -2,7 +2,7 @@ import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -46,7 +46,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const visualHordeGraveyardCount = Math.max(0, game.horde.memory.length - pendingMilledAfterActive + previewMillPendingInLibrary);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
     const attacker = game.player.field.find((card) => card.instanceId === id);
-    return attacker ? total + getPowerToughness(game, attacker).power : total;
+    return attacker ? total + getPowerEndurance(game, attacker).power : total;
   }, 0);
   const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
   const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;

@@ -18,14 +18,8 @@ export type NewDeckCard = {
   modifiers?: CardModifier[];
   endurance?: number | null;
   traits?: Trait[];
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  cardTypes?: CardKind[];
   subtypes?: string[];
   power?: number | null;
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  toughness?: number | null;
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  keywords?: Trait[];
   triggerMessage?: string;
   entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number }>;

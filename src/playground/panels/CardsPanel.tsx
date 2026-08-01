@@ -1,7 +1,7 @@
 import { Play } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCardImage } from "../../utils/cardImages";
-import { CATALOG_DECKS, describeCardTypes, searchCatalog, type CatalogCard } from "../cardCatalog";
+import { CATALOG_DECKS, describeCardKinds, searchCatalog, type CatalogCard } from "../cardCatalog";
 import type { ScenarioZoneKey } from "../scenario";
 import type { TimelineStep } from "../timeline";
 import { SearchInput } from "./fields";
@@ -13,7 +13,7 @@ type Props = {
 };
 
 function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; label: string }> {
-  const isPermanent = (card.definition.cardTypes ?? []).some((type) =>
+  const isPermanent = (card.definition.kinds ?? []).some((type) =>
     ["ECHO", "SOURCE", "SUPPORT"].includes(type),
   );
   if (card.side === "horde") {
@@ -93,7 +93,7 @@ export function CardsPanel({ onDispatch }: Props) {
               <CardThumb definitionId={selected.definition.id} name={selected.definition.name} large />
               <div>
                 <div className="playground-group-title">{selected.definition.name}</div>
-                <div className="playground-result-meta">{describeCardTypes(selected.definition)}</div>
+                <div className="playground-result-meta">{describeCardKinds(selected.definition)}</div>
                 <div className="playground-result-id">
                   {selected.deckLabel} · {selected.definition.energyCost || "no cost"}
                 </div>
@@ -200,7 +200,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   {card.isToken && <em>token</em>}
                 </span>
                 <span className="playground-result-meta">
-                  {card.definition.energyCost || "—"} · {describeCardTypes(card.definition)}
+                  {card.definition.energyCost || "—"} · {describeCardKinds(card.definition)}
                 </span>
                 <span className="playground-result-id">{card.definition.id}</span>
               </span>

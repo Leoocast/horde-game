@@ -50,10 +50,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const fractionalLifeCost = formatEffectText(
     "Coste adicional: Paga la mitad de tu Vida.",
   );
-  const inlineKeywords = formatEffectText(
+  const inlineTraits = formatEffectText(
     "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
-  const numberedKeyword = formatEffectText("Letal\nVeneno 1");
+  const numberedTrait = formatEffectText("Letal\nVeneno 1");
   const repeatedEnergy = formatEffectText("Gana {E}{E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
@@ -101,17 +101,17 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tu Vida\.<\/strong>/,
   );
   assert.match(
-    inlineKeywords,
+    inlineTraits,
     /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Drenar<\/strong>\. <strong class="effect-keyword">Alerta<\/strong>\./,
   );
   assert.match(
-    numberedKeyword,
+    numberedTrait,
     /class="effect-keyword">Veneno <span class="effect-keyword-value">1<\/span><\/strong>/,
   );
   assert.equal((repeatedEnergy.match(/class="energy-icon"/g) ?? []).length, 2);
   assert.doesNotMatch(repeatedEnergy, /Gana\s+\d/u);
   assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong>:/u);
-  assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.equal((inlineTraits.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
   assert.match(acolyteCost, /Gana <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);

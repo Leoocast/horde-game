@@ -3,24 +3,24 @@ import { test } from "node:test";
 
 import { getHordeDeck, getPlayerDeck, hordeDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
-import { localizedKeywordLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
+import { localizedTraitLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
-import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
+import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
 import { finishHordeTurn, revealHordeCardFromTop, runHordeMain } from "../src/engine/HordeController";
-import { canAttack, hasKeyword } from "../src/engine/Keywords";
+import { canAttack, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
-import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
+import { getPowerEndurance, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
-import { sortKeywordsForDisplay } from "../src/utils/selectors";
+import { sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
 import { playerBuffSfxForAnimation } from "../src/store/playerAudioPolicy";
@@ -100,10 +100,10 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
       ["drain_essence", 2],
     ],
   );
-  assert.deepEqual(card("crypt_guardian").keywords, ["SKYGUARD"]);
+  assert.deepEqual(card("crypt_guardian").traits, ["SKYGUARD"]);
   assert.deepEqual(
     ["blood_page", "crimson_bat", "court_duelist", "blood_sentinel", "eternal_feast_countess"].map(
-      (definitionId) => [definitionId, card(definitionId).power, card(definitionId).toughness],
+      (definitionId) => [definitionId, card(definitionId).power, card(definitionId).endurance],
     ),
     [
       ["blood_page", 1, 3],
@@ -113,8 +113,8 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
       ["eternal_feast_countess", 5, 5],
     ],
   );
-  assert.deepEqual(card("blood_sentinel").keywords, ["ALERT"]);
-  assert.deepEqual(card("eternal_feast_countess").keywords, ["FLYING", "ALERT"]);
+  assert.deepEqual(card("blood_sentinel").traits, ["ALERT"]);
+  assert.deepEqual(card("eternal_feast_countess").traits, ["FLYING", "ALERT"]);
 });
 
 test("Developer Mode uses the selected player deck's own Energy cards", () => {
@@ -181,13 +181,13 @@ test("Chaos removes other permanents but keeps creatures, energy, instants, and 
     side: "player",
     deckSize: 7,
     cards: [
-      { id: "creature", name: "ECHO", cardTypes: ["ECHO"], keywords: ["SKYGUARD"] },
-      { id: "energy", name: "Energy", cardTypes: ["SOURCE"] },
-      { id: "instant", name: "SPELL", cardTypes: ["SPELL"] },
-      { id: "sorcery", name: "SPELL", cardTypes: ["SPELL"] },
-      { id: "enchantment", name: "SUPPORT", cardTypes: ["SUPPORT"] },
-      { id: "artifact", name: "SUPPORT", cardTypes: ["SUPPORT"] },
-      { id: "planeswalker", name: "Planeswalker", cardTypes: ["Planeswalker"] },
+      { id: "creature", name: "ECHO", kinds: ["ECHO"], traits: ["SKYGUARD"] },
+      { id: "energy", name: "Energy", kinds: ["SOURCE"] },
+      { id: "instant", name: "SPELL", kinds: ["SPELL"] },
+      { id: "sorcery", name: "SPELL", kinds: ["SPELL"] },
+      { id: "enchantment", name: "SUPPORT", kinds: ["SUPPORT"] },
+      { id: "artifact", name: "SUPPORT", kinds: ["SUPPORT"] },
+      { id: "planeswalker", name: "Planeswalker", kinds: ["Planeswalker"] },
     ],
   };
 
@@ -204,9 +204,9 @@ test("Chaos starts with one Source and no Stored Energy", () => {
     side: "player",
     deckSize: 16,
     cards: [
-      { id: "chaos_forest", name: "Chaos Forest", quantity: 8, cardTypes: ["SOURCE"] },
-      { id: "chaos_reacher", name: "Chaos Reacher", quantity: 4, cardTypes: ["ECHO"], keywords: ["SKYGUARD"], power: 2, toughness: 2 },
-      { id: "chaos_touch", name: "Chaos Touch", quantity: 4, cardTypes: ["ECHO"], keywords: ["LETHAL"], power: 1, toughness: 1 },
+      { id: "chaos_forest", name: "Chaos Forest", quantity: 8, kinds: ["SOURCE"] },
+      { id: "chaos_reacher", name: "Chaos Reacher", quantity: 4, kinds: ["ECHO"], traits: ["SKYGUARD"], power: 2, endurance: 2 },
+      { id: "chaos_touch", name: "Chaos Touch", quantity: 4, kinds: ["ECHO"], traits: ["LETHAL"], power: 1, endurance: 1 },
     ],
   };
   const chaosHordeDeck = {
@@ -215,8 +215,8 @@ test("Chaos starts with one Source and no Stored Energy", () => {
     side: "horde",
     deckSize: 3,
     cards: [
-      { id: "chaos_zombie", name: "Chaos Zombie", quantity: 2, isToken: true, cardTypes: ["ECHO"], keywords: ["DAUNTING"], power: 2, toughness: 2 },
-      { id: "chaos_harvest", name: "Chaos Harvest", cardTypes: ["SUPPORT"], effects: [{ type: "STATIC_GRANT_KEYWORD", keyword: "DAUNTING" }] },
+      { id: "chaos_zombie", name: "Chaos Zombie", quantity: 2, isToken: true, kinds: ["ECHO"], traits: ["DAUNTING"], power: 2, endurance: 2 },
+      { id: "chaos_harvest", name: "Chaos Harvest", kinds: ["SUPPORT"], effects: [{ type: "STATIC_GRANT_KEYWORD", keyword: "DAUNTING" }] },
     ],
   };
 
@@ -225,7 +225,7 @@ test("Chaos starts with one Source and no Stored Energy", () => {
   assert.equal(game.gameMode, "chaos");
   assert.equal(game.player.life, 35);
   assert.equal(game.setupTurnsRemaining, 0);
-  assert.equal(game.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, 1);
+  assert.equal(game.player.field.filter((card) => card.kinds.includes("SOURCE")).length, 1);
   assert.equal(game.player.energyPool.stored, 0);
   assert.equal(game.player.hand.length, 7);
   assert.equal(game.player.archive.length, 8);
@@ -242,18 +242,18 @@ test("standard games start the player at 50 life", () => {
   assert.equal(game.player.life, 50);
 });
 
-test("Chaos mutations are deterministic, replace printed keywords, and are shared by every copy", () => {
+test("Chaos mutations are deterministic, replace printed traits, and are shared by every copy", () => {
   const first = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
   const second = createInitialGame(playerDeck, hordeDeck, "shared-chaos", 0, "normal", "chaos");
 
   assert.deepEqual(first.chaosMutations, second.chaosMutations);
   for (const side of ["player", "horde"]) {
     const cards = [...first[side].archive, ...(side === "player" ? first.player.hand : []), ...first[side].field];
-    for (const card of cards.filter((item) => item.cardTypes.includes("ECHO"))) {
-      assert.deepEqual(card.keywords, first.chaosMutations[side][card.definitionId]);
-      assert.deepEqual(card.chaosKeywords, card.keywords);
-      assert.equal(new Set(card.keywords).size, card.keywords.length);
-      assert.ok(card.keywords.length >= 1);
+    for (const card of cards.filter((item) => item.kinds.includes("ECHO"))) {
+      assert.deepEqual(card.traits, first.chaosMutations[side][card.definitionId]);
+      assert.deepEqual(card.chaosTraits, card.traits);
+      assert.equal(new Set(card.traits).size, card.traits.length);
+      assert.ok(card.traits.length >= 1);
     }
   }
 });
@@ -265,18 +265,18 @@ test("Chaos never includes the Horde's implicit Haste in its mutation pool", () 
     side: "horde",
     deckSize: 2,
     cards: [
-      { id: "hasty", name: "Hasty", cardTypes: ["ECHO"], keywords: ["IMPETUS"] },
-      { id: "menacing", name: "Menacing", cardTypes: ["ECHO"], keywords: ["DAUNTING"] },
+      { id: "hasty", name: "Hasty", kinds: ["ECHO"], traits: ["IMPETUS"] },
+      { id: "menacing", name: "Menacing", kinds: ["ECHO"], traits: ["DAUNTING"] },
     ],
   };
 
-  assert.deepEqual(chaosKeywordPool(deck), ["DAUNTING"]);
+  assert.deepEqual(chaosTraitPool(deck), ["DAUNTING"]);
 });
 
 test("First strike mutations deal combat damage before a normal blocker can answer", () => {
   const game = createTestGame("first-strike-combat");
-  const attacker = addCard(game, customCard("first_striker", "horde", { keywords: ["REFLEX"], power: 2, toughness: 2 }));
-  const blocker = addCard(game, customCard("normal_blocker", "player", { power: 2, toughness: 2 }));
+  const attacker = addCard(game, customCard("first_striker", "horde", { traits: ["REFLEX"], power: 2, endurance: 2 }));
+  const blocker = addCard(game, customCard("normal_blocker", "player", { power: 2, endurance: 2 }));
   game.combat.hordeAttackers = [attacker.instanceId];
   game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
 
@@ -288,10 +288,10 @@ test("First strike mutations deal combat damage before a normal blocker can answ
 });
 
 test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first strike", () => {
-  const resolveDuel = (toughness) => {
-    const game = createTestGame(`chainwhirler-first-strike-${toughness}`);
+  const resolveDuel = (endurance) => {
+    const game = createTestGame(`chainwhirler-first-strike-${endurance}`);
     const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
-    const blocker = addCard(game, customCard(`blocker_4_${toughness}`, "player", { power: 4, toughness }));
+    const blocker = addCard(game, customCard(`blocker_4_${endurance}`, "player", { power: 4, endurance }));
     game.combat.hordeAttackers = [chainwhirler.instanceId];
     game.combat.blockers = { [chainwhirler.instanceId]: [blocker.instanceId] };
     return { result: resolveHordeCombat(game), chainwhirler, blocker };
@@ -307,15 +307,15 @@ test("Goblin Chainwhirler survives a 4/3 blocker but dies to a 4/4 after first s
 });
 
 test("Hostfall traits render with localized names", () => {
-  assert.equal(localizedKeywordLabel("REFLEX", "en"), "REFLEX");
-  assert.equal(localizedKeywordLabel("REFLEX", "es"), "REFLEJOS");
-  assert.equal(localizedKeywordLabel("SKYGUARD", "en"), "SKYGUARD");
-  assert.equal(localizedKeywordLabel("POISON_1", "es"), "VENENO 1");
+  assert.equal(localizedTraitLabel("REFLEX", "en"), "REFLEX");
+  assert.equal(localizedTraitLabel("REFLEX", "es"), "REFLEJOS");
+  assert.equal(localizedTraitLabel("SKYGUARD", "en"), "SKYGUARD");
+  assert.equal(localizedTraitLabel("POISON_1", "es"), "VENENO 1");
 });
 
 test("Hostfall card kinds, modifiers and authored rules render through the public vocabulary", () => {
-  assert.equal(localizedTypeLine({ cardTypes: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo · Chronicle — Vampire Noble");
-  assert.equal(localizedTypeLine({ cardTypes: ["SPELL"], modifiers: ["QUICK"], subtypes: [] }, "es"), "Hechizo · Rápido");
+  assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo · Chronicle — Vampire Noble");
+  assert.equal(localizedTypeLine({ kinds: ["SPELL"], modifiers: ["QUICK"], subtypes: [] }, "es"), "Hechizo · Rápido");
   assert.equal(
     canonicalizeRulesText("When this creature enters, Horde creatures gain Menace until end of turn.", "en"),
     "When this Echo is Invoked, Host Echoes gain Daunting until the end of the turn.",
@@ -324,7 +324,7 @@ test("Hostfall card kinds, modifiers and authored rules render through the publi
 
 test("keyword display order keeps Menace first and remains stable", () => {
   assert.deepEqual(
-    sortKeywordsForDisplay(["ALERT", "POISON_1", "DAUNTING", "LETHAL", "FLYING"]),
+    sortTraitsForDisplay(["ALERT", "POISON_1", "DAUNTING", "LETHAL", "FLYING"]),
     ["DAUNTING", "FLYING", "LETHAL", "ALERT", "POISON_1"],
   );
 });
@@ -349,7 +349,7 @@ test("standard games keep nine energy cards in the player deck", () => {
   const cards = [...game.player.hand, ...game.player.archive, ...game.player.field];
 
   assert.equal(cards.length, 33);
-  assert.equal(cards.filter((card) => card.cardTypes.includes("SOURCE")).length, 9);
+  assert.equal(cards.filter((card) => card.kinds.includes("SOURCE")).length, 9);
 });
 
 test("unused Source Energy stays pending until the Horde turn ends", () => {
@@ -539,7 +539,7 @@ test("energy cannot be recycled during setup and no more than four can be in pla
   const fifthEnergy = addCard(cappedGame, cardFromDeck("forest", "player", "hand"), "player", "hand");
   const blockedAtCap = playLand(cappedGame, fifthEnergy.instanceId);
 
-  assert.equal(blockedAtCap.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, 4);
+  assert.equal(blockedAtCap.player.field.filter((card) => card.kinds.includes("SOURCE")).length, 4);
   assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === fifthEnergy.instanceId), true);
 });
 
@@ -552,7 +552,7 @@ test("automatic payment spends Source Energy before Stored Energy", () => {
     game,
     customCard("three_energy_spell", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 3,
     }),
     "player",
@@ -576,7 +576,7 @@ test("Crimson Energy is a universal source that pays generic costs before stored
     game,
     customCard("crimson_two_energy_spell", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 2,
     }),
     "player",
@@ -585,7 +585,7 @@ test("Crimson Energy is a universal source that pays generic costs before stored
 
   const result = castCard(game, spell.instanceId);
 
-  assert.equal(firstEnergy.cardTypes.includes("SOURCE"), true);
+  assert.equal(firstEnergy.kinds.includes("SOURCE"), true);
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.field.find((card) => card.instanceId === firstEnergy.instanceId)?.exhausted, true);
   assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.exhausted, true);
@@ -601,7 +601,7 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
       {
         id: "normalized_life_spell",
         name: "Normalized Life Spell",
-        cardTypes: ["SPELL"],
+        kinds: ["SPELL"],
         abilities: [
           {
             id: "normalized_life_spell_cast",
@@ -622,7 +622,7 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
     game,
     customCard("life_spell_at_zero", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 1,
       additionalCost: { life: 3 },
     }),
@@ -653,10 +653,10 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   assert.equal(result.lastActionResult?.ok, true);
   assert.equal(result.player.life, 5);
   assert.equal(result.player.lifePaidThisTurn, 6);
-  assert.deepEqual(getPowerToughness(result, permanent), { power: 5, toughness: 5 });
-  assert.equal(hasKeyword(result, permanent, "FLYING"), true);
-  assert.equal(hasKeyword(result, permanent, "DRAIN"), true);
-  assert.equal(hasKeyword(result, permanent, "ALERT"), true);
+  assert.deepEqual(getPowerEndurance(result, permanent), { power: 5, endurance: 5 });
+  assert.equal(hasTrait(result, permanent, "FLYING"), true);
+  assert.equal(hasTrait(result, permanent, "DRAIN"), true);
+  assert.equal(hasTrait(result, permanent, "ALERT"), true);
   assert.equal(result.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
 
   const lethal = createTestGame("countess-half-life-cost-at-one");
@@ -675,7 +675,7 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   assert.equal(rejected.player.life, 1);
   assert.equal(rejected.player.lifePaidThisTurn, 0);
   assert.equal(rejected.player.hand.some((card) => card.instanceId === blockedCountess.instanceId), true);
-  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
+  assert.equal(rejected.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("Countess has Lifesteal while attacking but not while blocking", () => {
@@ -684,7 +684,7 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
   const attackingCountess = addCard(attack, cardFromDeck("eternal_feast_countess", "player"));
   attack.combat.playerAttackers = [attackingCountess.instanceId];
 
-  assert.equal(hasKeyword(attack, attackingCountess, "DRAIN"), true);
+  assert.equal(hasTrait(attack, attackingCountess, "DRAIN"), true);
   assert.equal(resolvePlayerCombat(attack).player.life, 15);
 
   const defense = createTestGame("countess-turn-lifesteal-defense");
@@ -693,13 +693,13 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
   defense.phase = "combat";
   const attacker = addCard(defense, customCard("countess_horde_attacker", "horde", {
     power: 2,
-    toughness: 6,
+    endurance: 6,
   }));
   const blockingCountess = addCard(defense, cardFromDeck("eternal_feast_countess", "player"));
   defense.combat.hordeAttackers = [attacker.instanceId];
   defense.combat.blockers = { [attacker.instanceId]: [blockingCountess.instanceId] };
 
-  assert.equal(hasKeyword(defense, blockingCountess, "DRAIN"), false);
+  assert.equal(hasTrait(defense, blockingCountess, "DRAIN"), false);
   const [impact] = buildHordeAttackEvents(defense);
   assert.equal(impact.playerLifeGain, 0);
   assert.equal(applyHordeAttackEvent(defense, impact).player.life, 10);
@@ -748,7 +748,7 @@ test("Blood Pact cannot be cast when paying five life would reduce the player to
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === pact.instanceId), true);
   assert.equal(result.player.archive.length, 2);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
+  assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
   assert.equal(result.winner, undefined);
 });
 
@@ -756,7 +756,7 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   const game = createTestGame("crimson-impulse-resolution");
   game.player.life = 10;
   addForests(game, 1);
-  const ally = addCard(game, customCard("crimson_impulse_ally", "player", { power: 2, toughness: 3 }));
+  const ally = addCard(game, customCard("crimson_impulse_ally", "player", { power: 2, endurance: 3 }));
   const page = addCard(game, cardFromDeck("blood_page", "player"));
   const enemy = addCard(game, customCard("crimson_impulse_enemy", "horde"));
   const impulse = addCard(game, cardFromDeck("crimson_impulse", "player", "hand"), "player", "hand");
@@ -776,10 +776,10 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   assert.equal(cast.player.life, 8);
   assert.equal(cast.player.lifePaidThisTurn, 2);
   assert.deepEqual(
-    getPowerToughness(cast, cast.player.field.find((card) => card.instanceId === ally.instanceId)),
-    { power: 4, toughness: 5 },
+    getPowerEndurance(cast, cast.player.field.find((card) => card.instanceId === ally.instanceId)),
+    { power: 4, endurance: 5 },
   );
-  assert.equal(hasKeyword(cast, cast.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), true);
+  assert.equal(hasTrait(cast, cast.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), true);
   assert.equal(
     cast.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
     2,
@@ -788,10 +788,10 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
 
   const cleaned = advancePhase(cast, "end");
   assert.deepEqual(
-    getPowerToughness(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId)),
-    { power: 2, toughness: 3 },
+    getPowerEndurance(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId)),
+    { power: 2, endurance: 3 },
   );
-  assert.equal(hasKeyword(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
 });
 
 test("Crimson Impulse rejects an enemy target before spending Energy or life", () => {
@@ -810,7 +810,7 @@ test("Crimson Impulse rejects an enemy target before spending Energy or life", (
   assert.equal(result.player.life, 10);
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === impulse.instanceId), true);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
+  assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
   assert.equal(result.horde.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
 });
 
@@ -819,8 +819,8 @@ test("Drain Essence can damage either side and always recovers two life", () => 
   game.player.life = 10;
   addForests(game, 2);
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  const enemy = addCard(game, customCard("drain_essence_enemy", "horde", { toughness: 3 }));
-  const land = game.player.field.find((card) => card.cardTypes.includes("SOURCE"));
+  const enemy = addCard(game, customCard("drain_essence_enemy", "horde", { endurance: 3 }));
+  const land = game.player.field.find((card) => card.kinds.includes("SOURCE"));
   const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const requirement = drain.requiresTargets[0];
 
@@ -844,7 +844,7 @@ test("Drain Essence can damage either side and always recovers two life", () => 
   const enemyGame = createTestGame("drain-essence-enemy-kill");
   enemyGame.player.life = 10;
   addForests(enemyGame, 2);
-  const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "horde", { toughness: 3 }));
+  const lethalEnemy = addCard(enemyGame, customCard("drain_essence_lethal_enemy", "horde", { endurance: 3 }));
   const secondDrain = addCard(enemyGame, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
   const enemyDrain = castCard(enemyGame, secondDrain.instanceId, {
     targets: { targetCreature: lethalEnemy.instanceId },
@@ -883,13 +883,13 @@ test("Drain Essence can kill an allied creature but rejects noncreature targets 
   assert.equal(rejected.lastActionResult?.ok, false);
   assert.equal(rejected.player.life, 10);
   assert.equal(rejected.player.hand.some((card) => card.instanceId === invalidDrain.instanceId), true);
-  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
+  assert.equal(rejected.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("TARGET_ECHO excludes Supports even without authored card-type filters", () => {
   const game = createTestGame("target-echo-contract");
   const echo = addCard(game, customCard("target_echo", "player"));
-  addCard(game, customCard("target_support", "player", { cardTypes: ["SUPPORT"] }));
+  addCard(game, customCard("target_support", "player", { kinds: ["SUPPORT"] }));
 
   assert.deepEqual(
     targetCandidates(game, "player", { id: "target", type: "TARGET_ECHO", controller: "ANY" })
@@ -901,7 +901,7 @@ test("TARGET_ECHO excludes Supports even without authored card-type filters", ()
 test("random opponent Echo damage never targets a Support", () => {
   const game = createTestGame("random-echo-damage-contract");
   const source = addCard(game, customCard("random_echo_damage_source", "horde"));
-  addCard(game, customCard("random_echo_damage_support", "player", { cardTypes: ["SUPPORT"] }));
+  addCard(game, customCard("random_echo_damage_support", "player", { kinds: ["SUPPORT"] }));
   const effect = { type: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO", amount: 2 };
 
   resolveEffect(game, effect, { source, side: "horde" });
@@ -917,7 +917,7 @@ test("COUNT_ECHOS ignores Supports even without authored filters", () => {
   const game = createTestGame("count-echos-contract");
   const source = addCard(game, customCard("count_echos_source", "horde"));
   addCard(game, customCard("count_echos_ally", "horde"));
-  addCard(game, customCard("count_echos_support", "horde", { cardTypes: ["SUPPORT"] }));
+  addCard(game, customCard("count_echos_support", "horde", { kinds: ["SUPPORT"] }));
   addCard(game, customCard("count_echos_target", "player"));
 
   resolveEffect(game, {
@@ -934,7 +934,7 @@ test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
   const game = createTestGame("count-invoked-echos-contract");
   const source = addCard(game, customCard("count_invoked_source", "horde"));
   const echo = addCard(game, customCard("count_invoked_echo", "horde"));
-  const support = addCard(game, customCard("count_invoked_support", "horde", { cardTypes: ["SUPPORT"] }));
+  const support = addCard(game, customCard("count_invoked_support", "horde", { kinds: ["SUPPORT"] }));
   addCard(game, customCard("count_invoked_target", "player"));
   recordFieldEntry(game, echo);
   recordFieldEntry(game, support);
@@ -955,13 +955,13 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   addForests(game, 2);
   const firstAlly = addCard(game, customCard("predatory_thirst_attacker_one", "player", {
     power: 2,
-    toughness: 3,
+    endurance: 3,
   }));
   const secondAlly = addCard(game, customCard("predatory_thirst_attacker_two", "player", {
     power: 1,
-    toughness: 2,
+    endurance: 2,
   }));
-  const alliedSupport = addCard(game, customCard("predatory_thirst_support", "player", { cardTypes: ["SUPPORT"] }));
+  const alliedSupport = addCard(game, customCard("predatory_thirst_support", "player", { kinds: ["SUPPORT"] }));
   const enemy = addCard(game, customCard("predatory_thirst_enemy", "horde"));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
 
@@ -971,12 +971,12 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   const secondBuffed = cast.player.field.find((card) => card.instanceId === secondAlly.instanceId);
 
   assert.equal(cast.lastActionResult?.ok, true);
-  assert.deepEqual(getPowerToughness(cast, firstBuffed), { power: 2, toughness: 3 });
-  assert.deepEqual(getPowerToughness(cast, secondBuffed), { power: 1, toughness: 2 });
-  assert.equal(hasKeyword(cast, firstBuffed, "DRAIN"), true);
-  assert.equal(hasKeyword(cast, secondBuffed, "DRAIN"), true);
-  assert.equal(hasKeyword(cast, cast.player.field.find((card) => card.instanceId === alliedSupport.instanceId), "DRAIN"), false);
-  assert.equal(hasKeyword(cast, cast.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"), false);
+  assert.deepEqual(getPowerEndurance(cast, firstBuffed), { power: 2, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(cast, secondBuffed), { power: 1, endurance: 2 });
+  assert.equal(hasTrait(cast, firstBuffed, "DRAIN"), true);
+  assert.equal(hasTrait(cast, secondBuffed, "DRAIN"), true);
+  assert.equal(hasTrait(cast, cast.player.field.find((card) => card.instanceId === alliedSupport.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cast, cast.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"), false);
 
   cast.phase = "combat";
   cast.combat.playerAttackers = [firstAlly.instanceId, secondAlly.instanceId];
@@ -984,8 +984,8 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   assert.equal(combat.player.life, 13);
 
   const cleaned = advancePhase(combat, "end");
-  assert.equal(hasKeyword(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
-  assert.equal(hasKeyword(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
 });
 
 test("Predatory Thirst grants defensive Lifesteal without requiring a target", () => {
@@ -994,11 +994,11 @@ test("Predatory Thirst grants defensive Lifesteal without requiring a target", (
   addForests(game, 2);
   const ally = addCard(game, customCard("predatory_thirst_blocker", "player", {
     power: 2,
-    toughness: 4,
+    endurance: 4,
   }));
   const attacker = addCard(game, customCard("predatory_thirst_horde_attacker", "horde", {
     power: 2,
-    toughness: 4,
+    endurance: 4,
   }));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
   game.activeSide = "horde";
@@ -1024,14 +1024,14 @@ test("Final Banquet destroys only a Horde creature and loses its last known effe
   const ally = addCard(game, customCard("final_banquet_ally", "player"));
   const target = addCard(game, customCard("final_banquet_target", "horde", {
     power: 2,
-    toughness: 5,
+    endurance: 5,
   }));
   target.counters["+1/+1"] = 1;
   target.temporaryPower = 2;
   const nonCreature = addCard(game, customCard("final_banquet_enchantment", "horde", {
-    cardTypes: ["SUPPORT"],
+    kinds: ["SUPPORT"],
     power: 0,
-    toughness: 0,
+    endurance: 0,
   }));
   const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
   const requirement = banquet.requiresTargets[0];
@@ -1071,7 +1071,7 @@ test("Final Banquet rejects allied targets before paying Energy", () => {
   assert.equal(result.lastActionResult?.ok, false);
   assert.equal(result.player.life, 20);
   assert.equal(result.player.hand.some((card) => card.instanceId === banquet.instanceId), true);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
+  assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("Final Banquet can be cast during Horde combat as an Instant", () => {
@@ -1080,7 +1080,7 @@ test("Final Banquet can be cast during Horde combat as an Instant", () => {
   addForests(game, 3);
   const attacker = addCard(game, customCard("final_banquet_attacker", "horde", {
     power: 2,
-    toughness: 4,
+    endurance: 4,
   }));
   const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
   game.activeSide = "horde";
@@ -1103,7 +1103,7 @@ test("Final Banquet can cause a lethal life loss after destroying its target", (
   addForests(game, 3);
   const target = addCard(game, customCard("final_banquet_lethal_target", "horde", {
     power: 4,
-    toughness: 4,
+    endurance: 4,
   }));
   const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
 
@@ -1141,7 +1141,7 @@ test("life payment is atomic with Energy, emits LIFE_PAID, accumulates, and rese
     unaffordable,
     customCard("energy_locked_life_spell", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 1,
       additionalCost: { life: 3 },
     }),
@@ -1173,7 +1173,7 @@ test("life payment is atomic with Energy, emits LIFE_PAID, accumulates, and rese
     game,
     customCard("pay_three_life_spell", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 1,
       additionalCost: { life: 3 },
     }),
@@ -1206,7 +1206,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
         {
           id: "pay_life_activation",
           cost: { exhaust: true, energy: 1, life: 3 },
-          effect: { type: "PUMP_UNTIL_END_OF_TURN", target: "SELF", power: 1, toughness: 1 },
+          effect: { type: "PUMP_UNTIL_END_OF_TURN", target: "SELF", power: 1, endurance: 1 },
         },
       ],
     }),
@@ -1292,25 +1292,25 @@ test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next pl
   assert.equal(buffed.player.lifePaidThisTurn, 3);
   assert.equal(activeDuelist?.exhausted, false);
   assert.equal(activeDuelist?.activatedThisTurn, true);
-  assert.deepEqual(getPowerToughness(buffed, activeDuelist), { power: 6, toughness: 4 });
+  assert.deepEqual(getPowerEndurance(buffed, activeDuelist), { power: 6, endurance: 4 });
 
   const repeated = activateAbility(buffed, duelist.instanceId, "court_duelist_blood_rush");
   assert.equal(repeated.lastActionResult?.ok, false);
   assert.equal(repeated.player.life, 7);
   assert.equal(repeated.player.lifePaidThisTurn, 3);
   assert.deepEqual(
-    getPowerToughness(repeated, repeated.player.field.find((card) => card.instanceId === duelist.instanceId)),
-    { power: 6, toughness: 4 },
+    getPowerEndurance(repeated, repeated.player.field.find((card) => card.instanceId === duelist.instanceId)),
+    { power: 6, endurance: 4 },
   );
 
   const hordeTurn = endPlayerTurn(repeated);
   assert.deepEqual(
-    getPowerToughness(hordeTurn, hordeTurn.player.field.find((card) => card.instanceId === duelist.instanceId)),
-    { power: 6, toughness: 4 },
+    getPowerEndurance(hordeTurn, hordeTurn.player.field.find((card) => card.instanceId === duelist.instanceId)),
+    { power: 6, endurance: 4 },
   );
   const attacker = addCard(hordeTurn, customCard("court_duelist_defended_attacker", "horde", {
     power: 1,
-    toughness: 6,
+    endurance: 6,
   }));
   hordeTurn.phase = "combat";
   hordeTurn.combat.hordeAttackers = [attacker.instanceId];
@@ -1323,7 +1323,7 @@ test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next pl
   startPlayerTurnReady(nextTurn);
   const readyDuelist = nextTurn.player.field.find((card) => card.instanceId === duelist.instanceId);
   assert.equal(readyDuelist?.activatedThisTurn, false);
-  assert.deepEqual(getPowerToughness(nextTurn, readyDuelist), { power: 3, toughness: 3 });
+  assert.deepEqual(getPowerEndurance(nextTurn, readyDuelist), { power: 3, endurance: 3 });
 
   const usedAgain = activateAbility(nextTurn, duelist.instanceId, "court_duelist_blood_rush");
   assert.equal(usedAgain.lastActionResult?.ok, true);
@@ -1344,7 +1344,7 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   for (const page of [firstPage, secondPage]) {
     const current = firstPayment.player.field.find((card) => card.instanceId === page.instanceId);
     assert.equal(current?.temporaryPower, 2);
-    assert.deepEqual(getPowerToughness(firstPayment, current), { power: 3, toughness: 3 });
+    assert.deepEqual(getPowerEndurance(firstPayment, current), { power: 3, endurance: 3 });
   }
 
   const latePage = addCard(firstPayment, cardFromDeck("blood_page", "player"));
@@ -1376,7 +1376,7 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
     hordeTurn,
     customCard("defensive_life_payment", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       modifiers: ["QUICK"],
       additionalCost: { life: 2 },
     }),
@@ -1420,11 +1420,11 @@ test("Blood Page can take an early Horde hit and use the buff against a later at
   const page = addCard(game, cardFromDeck("blood_page", "player"));
   const firstAttacker = addCard(game, customCard("blood_page_unblocked_attacker", "horde", {
     power: 1,
-    toughness: 4,
+    endurance: 4,
   }));
   const laterAttacker = addCard(game, customCard("blood_page_blocked_attacker", "horde", {
     power: 2,
-    toughness: 3,
+    endurance: 3,
   }));
   game.activeSide = "horde";
   game.phase = "combat";
@@ -1441,7 +1441,7 @@ test("Blood Page can take an early Horde hit and use the buff against a later at
   assert.equal(afterHit.player.life, 9);
   assert.equal(afterHit.player.lifeLostThisTurn, 1);
   assert.equal(buffedPage?.temporaryPower, 2);
-  assert.deepEqual(getPowerToughness(afterHit, buffedPage), { power: 3, toughness: 3 });
+  assert.deepEqual(getPowerEndurance(afterHit, buffedPage), { power: 3, endurance: 3 });
 
   const refreshedBlock = refreshHordeAttackEvent(afterHit, planned[1]);
   assert.ok(refreshedBlock);
@@ -1496,7 +1496,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
     game,
     customCard("unaffordable_spell", "player", {
       zone: "hand",
-      cardTypes: ["SPELL"],
+      kinds: ["SPELL"],
       energyCost: 3,
     }),
     "player",
@@ -1515,25 +1515,25 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
 test("Giant Growth applies +3/+3 and cleanup removes the temporary buff", () => {
   const game = createTestGame();
   addForests(game, 1);
-  const creature = addCard(game, customCard("test_bear", "player", { power: 2, toughness: 2 }));
+  const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
   const spell = addCard(game, cardFromDeck("giant_growth", "player", "hand"), "player", "hand");
 
   const cast = castCard(game, spell.instanceId, { targets: { targetCreature: creature.instanceId } });
   const buffed = cast.player.field.find((card) => card.instanceId === creature.instanceId);
 
-  assert.deepEqual(getPowerToughness(cast, buffed), { power: 5, toughness: 5 });
+  assert.deepEqual(getPowerEndurance(cast, buffed), { power: 5, endurance: 5 });
   assert.equal(cast.player.memory.some((card) => card.instanceId === spell.instanceId), true);
 
   const cleaned = advancePhase(cast, "end");
   const restored = cleaned.player.field.find((card) => card.instanceId === creature.instanceId);
-  assert.deepEqual(getPowerToughness(cleaned, restored), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
 });
 
 test("Broken Wings only offers legal permanent types and destroys Graf Harvest", () => {
   const game = createTestGame();
   addForests(game, 3);
   const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "horde"));
-  const flyer = addCard(game, customCard("test_flyer", "horde", { keywords: ["FLYING"] }));
+  const flyer = addCard(game, customCard("test_flyer", "horde", { traits: ["FLYING"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "horde"));
   const spell = addCard(game, cardFromDeck("broken_wings", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
@@ -1551,8 +1551,8 @@ test("Broken Wings only offers legal permanent types and destroys Graf Harvest",
 test("Cosmic Hunger deals source power and preserves deathtouch for death cleanup", () => {
   const game = createTestGame();
   addForests(game, 2);
-  const source = addCard(game, customCard("deathtouch_source", "player", { keywords: ["LETHAL"], power: 1, toughness: 1 }));
-  const target = addCard(game, customCard("large_target", "horde", { power: 0, toughness: 8 }));
+  const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
+  const target = addCard(game, customCard("large_target", "horde", { power: 0, endurance: 8 }));
   const spell = addCard(game, cardFromDeck("cosmic_hunger", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
@@ -1569,8 +1569,8 @@ test("Cosmic Hunger deals source power and preserves deathtouch for death cleanu
 test("Ruthless Predation buffs first, then both creatures deal simultaneous damage", () => {
   const game = createTestGame();
   addForests(game, 2);
-  const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, toughness: 2 }));
-  const enemy = addCard(game, customCard("enemy_fighter", "horde", { power: 3, toughness: 3 }));
+  const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
+  const enemy = addCard(game, customCard("enemy_fighter", "horde", { power: 3, endurance: 3 }));
   const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
@@ -1579,7 +1579,7 @@ test("Ruthless Predation buffs first, then both creatures deal simultaneous dama
   const survivingFriendly = result.player.field.find((card) => card.instanceId === friendly.instanceId);
   const damagedEnemy = result.horde.field.find((card) => card.instanceId === enemy.instanceId);
 
-  assert.deepEqual(getPowerToughness(result, survivingFriendly), { power: 3, toughness: 4 });
+  assert.deepEqual(getPowerEndurance(result, survivingFriendly), { power: 3, endurance: 4 });
   assert.equal(survivingFriendly.damageMarked, 3);
   assert.equal(damagedEnemy.damageMarked, 3);
   destroyMarkedCreatures(result);
@@ -1588,15 +1588,15 @@ test("Ruthless Predation buffs first, then both creatures deal simultaneous dama
 
   const cleaned = advancePhase(result, "end");
   const restoredFriendly = cleaned.player.field.find((card) => card.instanceId === friendly.instanceId);
-  assert.deepEqual(getPowerToughness(cleaned, restoredFriendly), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 2, endurance: 2 });
   assert.equal(restoredFriendly.damageMarked, 0);
 });
 
 test("Ruthless Predation can stage its buff before the deferred fight impact", () => {
   const game = createTestGame();
   addForests(game, 2);
-  const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, toughness: 2 }));
-  const enemy = addCard(game, customCard("staged_enemy_fighter", "horde", { power: 1, toughness: 5 }));
+  const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
+  const enemy = addCard(game, customCard("staged_enemy_fighter", "horde", { power: 1, endurance: 5 }));
   const spell = addCard(game, cardFromDeck("ruthless_predation", "player", "hand"), "player", "hand");
   const targets = {
     yourCreature: friendly.instanceId,
@@ -1610,7 +1610,7 @@ test("Ruthless Predation can stage its buff before the deferred fight impact", (
   const buffedFriendly = staged.player.field.find((card) => card.instanceId === friendly.instanceId);
   const untouchedEnemy = staged.horde.field.find((card) => card.instanceId === enemy.instanceId);
 
-  assert.deepEqual(getPowerToughness(staged, buffedFriendly), { power: 3, toughness: 4 });
+  assert.deepEqual(getPowerEndurance(staged, buffedFriendly), { power: 3, endurance: 4 });
   assert.equal(buffedFriendly.damageMarked, 0);
   assert.equal(untouchedEnemy.damageMarked, 0);
   assert.equal(staged.player.memory.some((card) => card.instanceId === spell.instanceId), true);
@@ -1641,7 +1641,7 @@ test("Sunshower Druid can target itself, adds one counter, and gains one life", 
 
   assert.equal(permanent.counters["+1/+1"], 1);
   assert.equal(result.player.life, 31);
-  assert.deepEqual(getPowerToughness(result, permanent), { power: 1, toughness: 3 });
+  assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
 });
 
 test("Graf Harvest grants Menace only while it remains on the battlefield", () => {
@@ -1650,11 +1650,11 @@ test("Graf Harvest grants Menace only while it remains on the battlefield", () =
   const zombie = addCard(game, cardFromDeck("zombie_token", "horde"));
   const nonZombie = addCard(game, customCard("horde_non_zombie", "horde"));
 
-  assert.equal(hasKeyword(game, zombie, "DAUNTING"), true);
-  assert.equal(hasKeyword(game, nonZombie, "DAUNTING"), false);
+  assert.equal(hasTrait(game, zombie, "DAUNTING"), true);
+  assert.equal(hasTrait(game, nonZombie, "DAUNTING"), false);
 
   destroyPermanent(game, grafHarvest);
-  assert.equal(hasKeyword(game, zombie, "DAUNTING"), false);
+  assert.equal(hasTrait(game, zombie, "DAUNTING"), false);
 });
 
 test("Toxic adds poison on player combat and every three poison mills one card", () => {
@@ -1728,7 +1728,7 @@ test("Lifesteal resolves on a blocking impact, including simultaneous lethal com
   game.player.life = 10;
   const attacker = addCard(game, customCard("lifesteal_horde_attacker", "horde", {
     power: 2,
-    toughness: 2,
+    endurance: 2,
   }));
   const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
   game.activeSide = "horde";
@@ -1750,9 +1750,9 @@ test("Lifesteal gains nothing when first strike kills the blocker before it deal
   const game = createTestGame("lifesteal-blocked-by-first-strike");
   game.player.life = 10;
   const attacker = addCard(game, customCard("first_strike_horde_attacker", "horde", {
-    keywords: ["REFLEX"],
+    traits: ["REFLEX"],
     power: 2,
-    toughness: 2,
+    endurance: 2,
   }));
   const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
   game.activeSide = "horde";
@@ -1774,7 +1774,7 @@ test("Crypt Guardian reacts only when that Guardian survives combat damage, befo
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_attacker", "horde", {
     power: 1,
-    toughness: 2,
+    endurance: 2,
   }));
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
   const idleGuardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
@@ -1811,7 +1811,7 @@ test("Crypt Guardian does not react when the damage event kills it", () => {
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_lethal_attacker", "horde", {
     power: 4,
-    toughness: 4,
+    endurance: 4,
   }));
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
   game.activeSide = "horde";
@@ -1891,21 +1891,21 @@ test("Goblin static lords and War Drums apply only to the intended Horde creatur
   const hobgoblin = addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde"));
   const warDrums = addCard(game, cardFromDeck("goblin_war_drums", "horde"));
   const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const nonGoblin = addCard(game, customCard("not_a_goblin", "horde", { power: 2, toughness: 2 }));
+  const nonGoblin = addCard(game, customCard("not_a_goblin", "horde", { power: 2, endurance: 2 }));
 
-  assert.deepEqual(getPowerToughness(game, hobgoblin), { power: 2, toughness: 3 });
-  assert.deepEqual(getPowerToughness(game, goblin), { power: 2, toughness: 2 });
-  assert.deepEqual(getPowerToughness(game, nonGoblin), { power: 2, toughness: 2 });
-  assert.equal(hasKeyword(game, goblin, "DAUNTING"), true);
-  assert.equal(hasKeyword(game, nonGoblin, "DAUNTING"), true);
+  assert.deepEqual(getPowerEndurance(game, hobgoblin), { power: 2, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(game, nonGoblin), { power: 2, endurance: 2 });
+  assert.equal(hasTrait(game, goblin, "DAUNTING"), true);
+  assert.equal(hasTrait(game, nonGoblin, "DAUNTING"), true);
 
   destroyPermanent(game, warDrums);
-  assert.equal(hasKeyword(game, goblin, "DAUNTING"), false);
+  assert.equal(hasTrait(game, goblin, "DAUNTING"), false);
 });
 
 test("Hobgoblin Bandit Lord burns for Goblins that entered this Horde turn", () => {
   const game = createTestGame("hobgoblin-entered-goblins");
-  const target = addCard(game, customCard("hobgoblin_burn_target", "player", { toughness: 8 }));
+  const target = addCard(game, customCard("hobgoblin_burn_target", "player", { endurance: 8 }));
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
   addCard(game, cardFromDeck("hobgoblin_bandit_lord", "horde", "archive"), "horde", "archive");
@@ -1952,7 +1952,7 @@ test("Noosegraf Mob observes real Chronicler plays and Host reveals exactly once
   addCard(game, cardFromDeck("noosegraf_mob", "horde"));
   const spell = addCard(game, customCard("noosegraf_test_spell", "player", {
     zone: "hand",
-    cardTypes: ["SPELL"],
+    kinds: ["SPELL"],
   }), "player", "hand");
 
   const afterSpell = castCard(game, spell.instanceId);
@@ -1986,7 +1986,7 @@ test("Crow discards two Host Archive cards when Invoked and two more when it die
 
 test("destroying a Support does not emit Echo death events", () => {
   const game = createTestGame("support-destroyed-not-died");
-  const support = addCard(game, customCard("destroyed_support", "horde", { cardTypes: ["SUPPORT"] }));
+  const support = addCard(game, customCard("destroyed_support", "horde", { kinds: ["SUPPORT"] }));
 
   destroyPermanent(game, support);
 
@@ -2000,12 +2000,12 @@ test("Memory threshold effects turn on exactly at seven Host cards", () => {
     addCard(game, customCard(`memory_card_${index}`, "horde", { zone: "memory" }), "horde", "memory");
   }
 
-  assert.deepEqual(getPowerToughness(game, thraben), { power: 3, toughness: 2 });
-  assert.equal(hasKeyword(game, thraben, "DAUNTING"), false);
+  assert.deepEqual(getPowerEndurance(game, thraben), { power: 3, endurance: 2 });
+  assert.equal(hasTrait(game, thraben, "DAUNTING"), false);
 
   addCard(game, customCard("memory_card_6", "horde", { zone: "memory" }), "horde", "memory");
-  assert.deepEqual(getPowerToughness(game, thraben), { power: 4, toughness: 3 });
-  assert.equal(hasKeyword(game, thraben, "DAUNTING"), true);
+  assert.deepEqual(getPowerEndurance(game, thraben), { power: 4, endurance: 3 });
+  assert.equal(hasTrait(game, thraben, "DAUNTING"), true);
 });
 
 test("Siege-Gang Commander and Pashalik Mons omit their sacrifice modes", () => {
@@ -2053,8 +2053,8 @@ test("Goblin Surprise pumps an existing army or starts another normal reveal rou
 
 test("Volley Veteran damages a chosen opposing creature equal to the Horde's Goblin count", () => {
   const game = createTestGame("volley-veteran-entry");
-  const fragile = addCard(game, customCard("volley_target", "player", { toughness: 2 }));
-  const sturdy = addCard(game, customCard("volley_survivor", "player", { toughness: 4 }));
+  const fragile = addCard(game, customCard("volley_target", "player", { endurance: 2 }));
+  const sturdy = addCard(game, customCard("volley_survivor", "player", { endurance: 4 }));
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
   const veteran = addCard(game, cardFromDeck("volley_veteran", "horde"));
 
@@ -2124,7 +2124,7 @@ test("Goblin Rabblemaster counts every other attacking Goblin after attack token
 
   assert.ok(currentRabblemaster);
   assert.equal(result.combat.hordeAttackers.length, 5);
-  assert.deepEqual(getPowerToughness(result, currentRabblemaster), { power: 6, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(result, currentRabblemaster), { power: 6, endurance: 2 });
 });
 
 test("Battle Cry Goblin gives Horde Goblins +1/+0 until end of turn on entry", () => {
@@ -2137,9 +2137,9 @@ test("Battle Cry Goblin gives Horde Goblins +1/+0 until end of turn on entry", (
   const token = result.horde.field.find((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(battleCry?.temporaryPower, 1);
-  assert.equal(battleCry?.temporaryToughness, 0);
+  assert.equal(battleCry?.temporaryEndurance, 0);
   assert.equal(token?.temporaryPower, 1);
-  assert.equal(token?.temporaryToughness, 0);
+  assert.equal(token?.temporaryEndurance, 0);
   assert.equal(result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
 });
 
@@ -2187,7 +2187,7 @@ test("General Kreat queues a separate player Burn for each other creature enteri
 
 test("only Echo invocations broadcast ECHO_INVOKED", () => {
   const game = createTestGame("echo-invoked-only");
-  const support = addCard(game, customCard("test_support", "horde", { cardTypes: ["SUPPORT"] }));
+  const support = addCard(game, customCard("test_support", "horde", { kinds: ["SUPPORT"] }));
 
   runInvokedTriggers(game, support);
 
@@ -2225,15 +2225,15 @@ test("Krenko grows before creating tokens equal to its new power", () => {
   const tokens = result.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red");
 
   assert.equal(currentKrenko?.counters["+1/+1"], 1);
-  assert.deepEqual(getPowerToughness(result, currentKrenko), { power: 2, toughness: 3 });
+  assert.deepEqual(getPowerEndurance(result, currentKrenko), { power: 2, endurance: 3 });
   assert.equal(tokens.length, 2);
   assert.equal(tokens.every((card) => card.exhausted && result.combat.hordeAttackers.includes(card.instanceId)), true);
 });
 
 test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and opposing creatures", () => {
   const game = createTestGame("chainwhirler-entry");
-  const fragile = addCard(game, customCard("fragile_player_creature", "player", { toughness: 1 }));
-  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { toughness: 2 }));
+  const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
+  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
   const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
 
   runInvokedTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
@@ -2283,7 +2283,7 @@ test("Diregraf Captain queues an oil Burn before the player loses life", () => {
 test("Pashalik Mons burns a random opposing creature separately for each Goblin death", () => {
   const anotherGoblinDies = createTestGame("pashalik-other-dies");
   addCard(anotherGoblinDies, cardFromDeck("pashalik_mons", "horde"));
-  const burnTarget = addCard(anotherGoblinDies, customCard("pashalik_burn_target", "player", { toughness: 5 }));
+  const burnTarget = addCard(anotherGoblinDies, customCard("pashalik_burn_target", "player", { endurance: 5 }));
   const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
   const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("goblin_token_1_1_red", "horde"));
   destroyPermanent(anotherGoblinDies, firstGoblin);
@@ -2304,7 +2304,7 @@ test("Pashalik resolves a combat death before the next Horde combat event", () =
   const game = createTestGame("pashalik-combat-timing");
   addCard(game, cardFromDeck("pashalik_mons", "horde"));
   const goblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
-  const blocker = addCard(game, customCard("pashalik_combat_blocker", "player", { power: 3, toughness: 5 }));
+  const blocker = addCard(game, customCard("pashalik_combat_blocker", "player", { power: 3, endurance: 5 }));
   game.activeSide = "horde";
   game.phase = "combat";
   game.combat.hordeAttackers = [goblin.instanceId];
@@ -2322,8 +2322,8 @@ test("Pashalik resolves a combat death before the next Horde combat event", () =
 
 test("a blocker removed between Horde impacts cannot deal ghost combat damage", () => {
   const game = createTestGame("goblin-no-ghost-blocker");
-  const attacker = addCard(game, customCard("later_attacker", "horde", { power: 2, toughness: 3 }));
-  const blocker = addCard(game, customCard("burned_future_blocker", "player", { power: 5, toughness: 2 }));
+  const attacker = addCard(game, customCard("later_attacker", "horde", { power: 2, endurance: 3 }));
+  const blocker = addCard(game, customCard("burned_future_blocker", "player", { power: 5, endurance: 2 }));
   game.activeSide = "horde";
   game.phase = "combat";
   game.combat.hordeAttackers = [attacker.instanceId];
@@ -2375,7 +2375,7 @@ test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", 
   const game = createTestGame("goblin-death-two-reactors");
   const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
   const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
-  addCard(game, customCard("player_blocker", "player", { power: 2, toughness: 4 }), "player");
+  addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
@@ -2400,7 +2400,7 @@ test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", 
 test("a creature that enters because of a death does not react to that death", () => {
   const game = createTestGame("no-reaction-to-own-summon");
   const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, customCard("player_blocker", "player", { power: 2, toughness: 4 }), "player");
+  addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
   // Rundvelt inspects the top card on a Goblin death; that card is Pashalik, who also reacts to
   // Goblin deaths. Pashalik was not in play when the Goblin died, so it must never react to it.
   addCard(game, cardFromDeck("pashalik_mons", "horde", "archive"), "horde", "archive");
@@ -2455,7 +2455,7 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
   const game = createTestGame("spawned-event-priority");
   const pashalik = addCard(game, cardFromDeck("pashalik_mons", "horde"));
   addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-  addCard(game, customCard("burn_target", "player", { power: 1, toughness: 4 }), "player");
+  addCard(game, customCard("burn_target", "player", { power: 1, endurance: 4 }), "player");
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
@@ -2494,7 +2494,7 @@ test("static auras only announce the creatures that newly fell under them", () =
   const first = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   const before = collectStaticAuras(game, "horde");
-  const buff = before.find((aura) => aura.power === 1 && aura.toughness === 1);
+  const buff = before.find((aura) => aura.power === 1 && aura.endurance === 1);
   assert.ok(buff, "Rundvelt's +1/+1 must be visible as a static aura");
   assert.deepEqual(buff.affectedIds, [first.instanceId]);
   assert.equal(buff.controller, "horde");
@@ -2600,7 +2600,7 @@ test("non-default Host rules drive damage, Poison and Impetus behavior", () => {
   const revealed = afterReveal.horde.field.find((card) => card.definitionId === "custom_host_echo");
   assert.ok(revealed);
   assert.equal(revealed.stabilizing, true);
-  assert.equal(hasKeyword(afterReveal, revealed, "IMPETUS"), false);
+  assert.equal(hasTrait(afterReveal, revealed, "IMPETUS"), false);
   assert.equal(canAttack(afterReveal, revealed), false);
 
   const afterReady = finishHordeTurn(afterReveal);
@@ -2627,30 +2627,30 @@ test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
   const game = createTestGame("surge-zombie-power");
   // The surge bonus is deck data, not an engine rule: it comes from the zombie deck's profile.
   game.hostRules = buildHostRules(hordeDeck.rulesProfile);
-  const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
-  const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, toughness: 2 }));
-  const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
+  const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, endurance: 2 }));
+  const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, endurance: 2 }));
+  const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, endurance: 2 }));
 
   game.hordeTurnNumber = 6;
-  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 2, endurance: 2 });
 
   game.hordeTurnNumber = 10;
-  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 3, toughness: 2 });
-  assert.deepEqual(getPowerToughness(game, hordeNonZombie), { power: 2, toughness: 2 });
-  assert.deepEqual(getPowerToughness(game, playerZombie), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 3, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(game, hordeNonZombie), { power: 2, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(game, playerZombie), { power: 2, endurance: 2 });
 
   game.hordeTurnNumber = 12;
-  assert.deepEqual(getPowerToughness(game, hordeZombie), { power: 3, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(game, hordeZombie), { power: 3, endurance: 2 });
 });
 
 test("the surge stat bonus is per-deck: the goblin horde gets none", () => {
   const game = createTestGame("surge-goblin-power");
   game.hostRules = buildHostRules(getHordeDeck("goblin_assault_horde").rulesProfile);
-  const goblin = addCard(game, customCard("surge_goblin", "horde", { subtypes: ["Goblin"], power: 2, toughness: 2 }));
+  const goblin = addCard(game, customCard("surge_goblin", "horde", { subtypes: ["Goblin"], power: 2, endurance: 2 }));
 
   game.hordeTurnNumber = 10;
   assert.equal(hordeInSurge(game), true);
-  assert.deepEqual(getPowerToughness(game, goblin), { power: 2, toughness: 2 });
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
 });
 
 test("revealing one Horde card plays that card and nothing else", () => {

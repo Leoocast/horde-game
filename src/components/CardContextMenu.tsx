@@ -9,7 +9,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText } from "../utils/cardTextSymbols";
 import { gameEffectDescription } from "../utils/cardText";
-import { cardKeywords, cardStats } from "../utils/selectors";
+import { cardTraits, cardStats } from "../utils/selectors";
 import { CardDetailsModal } from "./CardPreview";
 
 const MENU_WIDTH = 220;
@@ -29,10 +29,10 @@ export function CardContextMenu() {
   const card = menu ? findCard(game, menu.cardId) : undefined;
   const detailsCard = detailsCardId ? findCard(game, detailsCardId) : undefined;
   const details = useCardDetails(detailsCard?.definitionId ?? "");
-  const keywords = detailsCard ? cardKeywords(game, detailsCard) : undefined;
+  const traits = detailsCard ? cardTraits(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
   const detailsText = detailsCard
-    ? cleanCardDescriptionText(undefined, undefined, keywords, gameEffectDescription(detailsCard, language))
+    ? cleanCardDescriptionText(undefined, undefined, traits, gameEffectDescription(detailsCard, language))
     : "";
 
   const position = useMemo(() => {
@@ -71,7 +71,7 @@ export function CardContextMenu() {
       <CardDetailsModal
         card={detailsCard}
         imageUrl={details.imageUrl}
-        keywords={keywords}
+        traits={traits}
         stats={stats}
         text={detailsText}
         fontSize={detailsFontSize}
@@ -131,7 +131,7 @@ export function CardContextMenu() {
         <CardDetailsModal
           card={detailsCard}
           imageUrl={details.imageUrl}
-          keywords={keywords}
+          traits={traits}
           stats={stats}
           text={detailsText}
           fontSize={detailsFontSize}

@@ -1,4 +1,4 @@
-import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Keyword, Side } from "../engine/GameTypes";
+import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Trait, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { adaptHostfallDeck } from "./hostfallDeckAdapter";
 
@@ -28,11 +28,11 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     quantity: card.quantity,
     isToken: Boolean(card.isToken),
     energyCost: normalizeEnergyCost(card.energyCost),
-    cardTypes: card.cardTypes,
+    kinds: card.kinds,
     modifiers: card.modifiers,
     subtypes: card.subtypes,
     power: card.power,
-    toughness: card.toughness,
+    endurance: card.endurance,
     triggerMessage: card.triggerMessage,
     entersExhausted: card.entersExhausted,
     entersWithCounters: card.entersWithCounters,
@@ -40,7 +40,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     attachTo: card.attachTo,
     variableCost: card.variableCost,
     requiresDistribution: card.requiresDistribution,
-    keywords: normalizeKeywords(card),
+    traits: normalizeTraits(card),
     additionalCost: normalizeSpellCost(abilities),
     activatedAbilities: normalizeActivatedAbilities(abilities),
     effects: normalizeEffects(abilities),
@@ -53,8 +53,8 @@ function normalizeSpellCost(abilities: NewDeckAbility[]): ActionCost | undefined
   return cost && Object.keys(cost).length > 0 ? { ...cost } as ActionCost : undefined;
 }
 
-function normalizeKeywords(card: NewDeckCard): Keyword[] {
-  return [...(card.keywords ?? [])];
+function normalizeTraits(card: NewDeckCard): Trait[] {
+  return [...(card.traits ?? [])];
 }
 
 function normalizeEnergyCost(value: NewDeckCard["energyCost"]): number {
@@ -103,7 +103,7 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
           condition: effect.condition,
           target: effect.target ?? "SELF",
           power: effect.power ?? 0,
-          toughness: effect.toughness ?? 0,
+          endurance: effect.endurance ?? 0,
         });
         continue;
       }
@@ -112,7 +112,7 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
         controller: scope?.controller ?? "SELF",
         filter: scope?.filters,
         power: effect.power ?? 0,
-        toughness: effect.toughness ?? 0,
+        endurance: effect.endurance ?? 0,
       });
       continue;
     }
@@ -143,7 +143,7 @@ function normalizeTargets(abilities: NewDeckAbility[]) {
     const req = target as Record<string, unknown>;
     return {
       id: String(req.id ?? "target"),
-      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("ECHO") ? "TARGET_ECHO" : "TARGET_PERMANENT"),
+      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).kinds) && ((req.filters as Record<string, unknown>).kinds as unknown[]).includes("ECHO") ? "TARGET_ECHO" : "TARGET_PERMANENT"),
       controller: req.controller as "SELF" | "OPPONENT" | "ANY" | undefined,
       filters: req.filters,
     };
@@ -174,7 +174,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
-        filter: { cardTypes: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
+        filter: { kinds: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
         amount: 1,
         deferUntil: "HOST_ATTACK_SEQUENCE_END",
         animation: "BURN_VOLLEY_TO_PLAYER",
@@ -186,7 +186,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
         type: "PUMP_SELF_PER_ATTACKER_MATCHING",
         filter: { subtypes: ["Goblin"], excludeSelf: true },
         power: 1,
-        toughness: 0,
+        endurance: 0,
       };
     case "general_kreat_goblins_attack_token":
       return {
@@ -226,8 +226,8 @@ function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | 
       continue;
     }
     if (condition.type === "EVENT_OBJECT_MATCHES") {
-      const filters = condition.filters as { cardTypes?: import("../engine/hostfallVocabulary").CardKind[]; subtypes?: string[] } | undefined;
-      if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("ECHO")) {
+      const filters = condition.filters as { kinds?: import("../engine/hostfallVocabulary").CardKind[]; subtypes?: string[] } | undefined;
+      if (condition.controller === "SELF" && condition.excludeSource && filters?.kinds?.includes("ECHO")) {
         normalized.push({ type: "ANOTHER_ALLIED_ECHO_INVOKED", filters });
       } else {
         normalized.push({
@@ -258,7 +258,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
         controller: scope.controller ?? "SELF",
         filter: scope.filters,
         power: effect.power ?? 0,
-        toughness: effect.toughness ?? 0,
+        endurance: effect.endurance ?? 0,
         animation: effect.animation,
       };
     }
@@ -266,7 +266,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
       type: effect.duration === "END_OF_TURN" ? "PUMP_UNTIL_END_OF_TURN" : "PUMP",
       ...normalizeEffectTarget(effect.target),
       power: effect.power ?? 0,
-      toughness: effect.toughness ?? 0,
+      endurance: effect.endurance ?? 0,
     };
   }
   if (effect.type === "ADD_COUNTERS") {

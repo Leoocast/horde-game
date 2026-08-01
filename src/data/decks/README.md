@@ -141,8 +141,9 @@ Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo 
 
 Mono Green, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 
-`hostfallDeckAdapter` traduce temporalmente el schema `1.0.0` al contrato legacy del engine;
-`normalizeDeck` convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
+`hostfallDeckAdapter` conserva temporalmente sólo la normalización de bandos y casing de zonas;
+`kinds`, `traits`, `endurance`, eventos, Acciones y reglas pasan sin degradación. `normalizeDeck`
+convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
 registro real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad
 sin `engineSupport` debe sobrevivir completa a la normalización o el lint falla. El lint también
 rechaza cualquier campo authored legacy que reaparezca dentro de un deck `1.0.0`.

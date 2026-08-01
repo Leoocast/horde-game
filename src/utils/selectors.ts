@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
-import { getKeywords } from "../engine/Keywords";
-import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
+import { getTraits } from "../engine/Traits";
+import { getPowerEndurance, hordeInSurge } from "../engine/StaticEffects";
 
 export function cardStats(game: GameState, card: CardInstance): string {
   return cardStatState(game, card).text;
@@ -15,28 +15,28 @@ export function cardStatState(
   game: GameState,
   card: CardInstance,
   visualDamageMarked = 0,
-  heldBonus?: { power: number; toughness: number },
-): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
-  if (!card.cardTypes.includes("ECHO")) return { text: "", damaged: false, buffed: false };
-  const total = getPowerToughness(game, card);
+  heldBonus?: { power: number; endurance: number },
+): { text: string; power?: number; endurance?: number; damaged: boolean; buffed: boolean } {
+  if (!card.kinds.includes("ECHO")) return { text: "", damaged: false, buffed: false };
+  const total = getPowerEndurance(game, card);
   const power = total.power - (heldBonus?.power ?? 0);
-  const toughness = total.toughness - (heldBonus?.toughness ?? 0);
+  const endurance = total.endurance - (heldBonus?.endurance ?? 0);
   const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
-  const visibleToughness = Math.max(0, toughness - damageMarked);
-  const buffed = power > card.basePower || toughness > card.baseToughness;
+  const visibleEndurance = Math.max(0, endurance - damageMarked);
+  const buffed = power > card.basePower || endurance > card.baseEndurance;
   return {
-    text: damageMarked > 0 ? `${power}/${visibleToughness}` : `${power}/${toughness}`,
+    text: damageMarked > 0 ? `${power}/${visibleEndurance}` : `${power}/${endurance}`,
     power,
-    toughness: damageMarked > 0 ? visibleToughness : toughness,
+    endurance: damageMarked > 0 ? visibleEndurance : endurance,
     damaged: damageMarked > 0,
     buffed,
   };
 }
 
-export function cardKeywords(game: GameState, card: CardInstance): string {
-  return sortKeywordsForDisplay(getKeywords(game, card))
+export function cardTraits(game: GameState, card: CardInstance): string {
+  return sortTraitsForDisplay(getTraits(game, card))
     .filter((keyword) => (game.gameMode === "chaos" || keyword !== "OVERFLOW") && (keyword !== "IMPETUS" || card.controller !== "horde"))
-    .map(formatKeyword)
+    .map(formatTrait)
     .join(", ");
 }
 
@@ -61,8 +61,8 @@ function keywordDisplayKey(keyword: string): string {
   return normalized.startsWith("POISON_") ? "POISON" : normalized;
 }
 
-export function sortKeywordsForDisplay(keywords: string[]): string[] {
-  return [...keywords].sort((left, right) => {
+export function sortTraitsForDisplay(traits: string[]): string[] {
+  return [...traits].sort((left, right) => {
     const leftKey = keywordDisplayKey(left);
     const rightKey = keywordDisplayKey(right);
     const leftPriority = KEYWORD_DISPLAY_ORDER.indexOf(leftKey as (typeof KEYWORD_DISPLAY_ORDER)[number]);
@@ -75,7 +75,7 @@ export function sortKeywordsForDisplay(keywords: string[]): string[] {
   });
 }
 
-function formatKeyword(keyword: string): string {
+function formatTrait(keyword: string): string {
   const text = String(keyword).trim();
   const poison = text.match(/^POISON_(\d+)$/u);
   if (poison) return `POISON {${poison[1]}}`;

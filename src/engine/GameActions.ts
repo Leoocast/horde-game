@@ -12,7 +12,7 @@ export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
   if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Sources can only be played during your Main phase.");
   const card = next.player.hand.find((item) => item.instanceId === handId);
-  if (!card || !card.cardTypes.includes("SOURCE")) return fail(next, "Choose a Source to play.");
+  if (!card || !card.kinds.includes("SOURCE")) return fail(next, "Choose a Source to play.");
   if (!canPlayerPutAnotherLand(next)) return fail(next, `The Chronicler cannot control more than ${MAX_PLAYER_LANDS} Sources.`);
   if (next.player.energyActionUsedThisTurn) return fail(next, "The Chronicler already used their Energy Action this turn.");
   moveHandToBattlefield(next, card);
@@ -23,7 +23,7 @@ export function playLand(game: GameState, handId: string): GameState {
 export function recycleEnergy(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
   const card = next.player.hand.find((item) => item.instanceId === handId);
-  if (!card || !card.cardTypes.includes("SOURCE")) return fail(next, "Choose a Source to recycle.");
+  if (!card || !card.kinds.includes("SOURCE")) return fail(next, "Choose a Source to recycle.");
   if (next.setupTurnsRemaining > 0) return fail(next, "A Source cannot be recycled during setup.");
   if (!canPlayerRecycleEnergy(next)) return fail(next, "A Source can only be recycled once during your Main phase.");
 
@@ -40,7 +40,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card) return fail(next, "That card is no longer in hand.", { silent: true });
   if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be played right now.`);
-  if (card.cardTypes.includes("SOURCE")) return playLand(next, handId);
+  if (card.kinds.includes("SOURCE")) return playLand(next, handId);
   const targetFailure = castTargetFailureReason(next, card, options.targets);
   if (targetFailure) return fail(next, targetFailure);
   const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
@@ -50,7 +50,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   payLifeCost(next, card.additionalCost, card.instanceId, card.name);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
-  if (card.cardTypes.includes("SPELL")) {
+  if (card.kinds.includes("SPELL")) {
     const immediateEffects = options.deferFightResolution
       ? card.effects.filter((effect) => !hasEffectPresentation([effect], "fight"))
       : card.effects;
@@ -60,7 +60,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   } else {
     card.zone = "field";
     card.exhausted = card.entersExhausted;
-    card.stabilizing = card.cardTypes.includes("ECHO");
+    card.stabilizing = card.kinds.includes("ECHO");
     if (card.attachTo?.targetRef) card.attachedTo = String(options.targets?.[card.attachTo.targetRef] ?? "");
     applyVariableCounters(card);
     next.player.field.push(card);
@@ -131,15 +131,15 @@ export function activatedAbilityFailureReason(game: GameState, card: CardInstanc
   if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Actions can only be used during your Main phase.";
   if (card.controller !== "player" || card.zone !== "field") return "That Action is not available.";
   if (card.activatedThisTurn) return `${card.name} has already used an Action this turn.`;
-  if (ability.requiresStabilized && card.cardTypes.includes("ECHO") && card.stabilizing) {
+  if (ability.requiresStabilized && card.kinds.includes("ECHO") && card.stabilizing) {
     return `${card.name} cannot use this Action while Stabilizing.`;
   }
-  if (card.cardTypes.includes("ECHO") && ability.effect.type === "GAIN_ENERGY" && storedEnergySpace(game) === 0) {
+  if (card.kinds.includes("ECHO") && ability.effect.type === "GAIN_ENERGY" && storedEnergySpace(game) === 0) {
     return "Stored Energy is already full.";
   }
   if (ability.cost?.exhaust) {
     if (card.exhausted) return `${card.name} is already Exhausted.`;
-    if (card.stabilizing && card.cardTypes.includes("ECHO")) return `${card.name} is Stabilizing.`;
+    if (card.stabilizing && card.kinds.includes("ECHO")) return `${card.name} is Stabilizing.`;
   }
   const cost = activatedAbilityEnergyCost(ability.cost);
   if (!canPayEnergy(game.player.energyPool, cost)) return `Not enough Energy to use ${card.name}.`;

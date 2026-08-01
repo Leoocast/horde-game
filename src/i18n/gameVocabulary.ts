@@ -182,9 +182,9 @@ export const TRAIT_VOCABULARY = {
 } as const satisfies Record<string, LocalizedRuleTerm>;
 
 export type CanonicalTraitId = keyof typeof TRAIT_VOCABULARY;
-export type CanonicalCardTypeId = "ECHO" | "SOURCE" | "SPELL" | "SUPPORT" | "TOKEN";
+export type CanonicalCardKindId = "ECHO" | "SOURCE" | "SPELL" | "SUPPORT" | "TOKEN";
 
-const INTERNAL_CARD_TYPE_ALIASES: Readonly<Record<string, CanonicalCardTypeId | undefined>> = {
+const INTERNAL_CARD_TYPE_ALIASES: Readonly<Record<string, CanonicalCardKindId | undefined>> = {
   CREATURE: "ECHO",
   ECHO: "ECHO",
   LAND: "SOURCE",
@@ -234,9 +234,9 @@ export function phaseVocabularyLabel(phase: Phase, language: VocabularyLanguage)
   return vocabularyText(PHASE_VOCABULARY[phase], language);
 }
 
-export function canonicalCardTypeIds(cardTypes: readonly string[], isToken = false): CanonicalCardTypeId[] {
-  const result: CanonicalCardTypeId[] = [];
-  for (const cardType of cardTypes) {
+export function canonicalCardKindIds(kinds: readonly string[], isToken = false): CanonicalCardKindId[] {
+  const result: CanonicalCardKindId[] = [];
+  for (const cardType of kinds) {
     const canonical = INTERNAL_CARD_TYPE_ALIASES[cardType.trim().toUpperCase()];
     if (canonical && !result.includes(canonical)) result.push(canonical);
   }
@@ -244,18 +244,18 @@ export function canonicalCardTypeIds(cardTypes: readonly string[], isToken = fal
   return result;
 }
 
-export function canonicalCardTypeLine(
-  cardTypes: readonly string[],
+export function canonicalCardKindLine(
+  kinds: readonly string[],
   subtypes: readonly string[],
   language: VocabularyLanguage,
   isToken = false,
   modifiers: readonly string[] = [],
 ): string {
-  const canonicalTypes = canonicalCardTypeIds(cardTypes, isToken);
+  const canonicalTypes = canonicalCardKindIds(kinds, isToken);
   const visibleTypes = canonicalTypes.length > 0
     ? canonicalTypes.map((id) => vocabularyText(CARD_TYPE_VOCABULARY[id], language))
     : [vocabularyText(CARD_TYPE_VOCABULARY.CARD, language)];
-  if (modifiers.includes("QUICK") || cardTypes.some((type) => type.trim().toUpperCase() === "INSTANT")) {
+  if (modifiers.includes("QUICK") || kinds.some((type) => type.trim().toUpperCase() === "INSTANT")) {
     visibleTypes.push(vocabularyText(CARD_TYPE_VOCABULARY.QUICK, language));
   }
   if (modifiers.includes("CHRONICLE")) {

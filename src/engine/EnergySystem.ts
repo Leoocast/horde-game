@@ -16,7 +16,7 @@ export function queueUnusedNormalEnergy(game: GameState): number {
   const availableSpace = storedEnergySpace(game);
   if (availableSpace === 0) return 0;
   const unusedSources = game.player.field.filter(
-    (card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
+    (card) => card.kinds.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
   ).length;
   const queued = Math.min(availableSpace, unusedSources);
   game.player.pendingStoredEnergy += queued;
@@ -113,7 +113,7 @@ function getAutomaticEnergySources(game: GameState): Array<{ card: CardInstance;
   return game.player.field
     // Echoes and other non-Source permanents are tactical resources. They must be activated
     // explicitly so casting a Spell never removes a potential attacker or defender.
-    .filter((card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn)
+    .filter((card) => card.kinds.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn)
     .map((card) => ({ card, produced: getAutomaticEnergy(card) }))
     .filter((source): source is { card: CardInstance; produced: number } => source.produced !== undefined);
 }

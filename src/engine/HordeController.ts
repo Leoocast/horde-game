@@ -126,7 +126,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     game.horde.pendingCard = card;
     return card;
   }
-  if (card.cardTypes.includes("SPELL")) {
+  if (card.kinds.includes("SPELL")) {
     resolveEffects(game, card.effects, { source: card, side: "horde" });
     card.zone = "memory";
     game.horde.memory.push(card);
@@ -135,7 +135,7 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
   }
   card.zone = "field";
   card.exhausted = false;
-  card.stabilizing = card.cardTypes.includes("ECHO") && !game.hostRules.hostEchosHaveImpetus;
+  card.stabilizing = card.kinds.includes("ECHO") && !game.hostRules.hostEchosHaveImpetus;
   for (const counter of card.effects.filter((effect) => effect.type === "ENTERS_WITH_COUNTERS")) {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }

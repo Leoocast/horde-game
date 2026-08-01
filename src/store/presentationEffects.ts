@@ -1,5 +1,5 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { localizedTraitLabel, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { canonicalizeLogText } from "../i18n/rulesText";
 import { translate, type TranslationKey } from "../i18n/translations";
 import { useAudioStore } from "./useAudioStore";
@@ -30,7 +30,7 @@ export function uiCardName(card: CardInstance): string {
 
 export function uiTraitLabel(keyword: string): string {
   const language = useLanguageStore.getState().language;
-  return naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language));
+  return naturalCaseTraitLabel(localizedTraitLabel(keyword, language));
 }
 
 export function showActionToast(message?: string): void {
@@ -47,7 +47,7 @@ export function monsterSfx(card: CardInstance) {
   if (
     HEAVY_SUMMON_DEFINITION_IDS.has(card.definitionId) ||
     card.basePower > 4 ||
-    card.baseToughness > 4
+    card.baseEndurance > 4
   ) {
     return "playMonsterHeavy" as const;
   }
@@ -74,8 +74,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       card.instanceId,
       {
         power: card.temporaryPower,
-        toughness: card.temporaryToughness,
-        keywords: new Set(card.temporaryKeywords),
+        endurance: card.temporaryEndurance,
+        traits: new Set(card.temporaryTraits),
       },
     ]),
   );
@@ -85,8 +85,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       if (!before) return false;
       return (
         card.temporaryPower > before.power ||
-        card.temporaryToughness > before.toughness ||
-        card.temporaryKeywords.some((keyword) => !before.keywords.has(keyword))
+        card.temporaryEndurance > before.endurance ||
+        card.temporaryTraits.some((keyword) => !before.traits.has(keyword))
       );
     })
     .map((card) => card.instanceId);

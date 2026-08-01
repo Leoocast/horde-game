@@ -1,6 +1,7 @@
 import type { CardKind, CardModifier, Trait } from "./hostfallVocabulary";
 import type { ZoneName } from "./hostfallZones";
 
+export type { Trait } from "./hostfallVocabulary";
 export type { ZoneName } from "./hostfallZones";
 
 export type Side = "player" | "horde";
@@ -9,9 +10,6 @@ export type DifficultyMode = "easy" | "normal" | "hard";
 // exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
-/** @deprecated Field names still say keyword until L4.6; values are Hostfall Traits from L4.1. */
-export type Keyword = Trait;
-
 export type EnergyPool = {
   /** Energy already produced this turn but not yet spent. */
   available: number;
@@ -56,9 +54,9 @@ export type TargetRequirement = {
 };
 
 export type CardFilter = {
-  cardTypes?: CardKind[];
+  kinds?: CardKind[];
   subtypes?: string[];
-  keywords?: Trait[];
+  traits?: Trait[];
   excludeSelf?: boolean;
   isToken?: boolean;
 };
@@ -74,12 +72,12 @@ export type CardDefinition = {
   quantity?: number;
   isToken?: boolean;
   energyCost?: number;
-  cardTypes?: CardKind[];
+  kinds?: CardKind[];
   modifiers?: CardModifier[];
   subtypes?: string[];
   power?: number | null;
-  toughness?: number | null;
-  keywords?: Trait[];
+  endurance?: number | null;
+  traits?: Trait[];
   /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
    * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
   triggerMessage?: string;
@@ -152,13 +150,13 @@ export type CardInstance = {
   zone: ZoneName;
   isToken: boolean;
   energyCost: number;
-  cardTypes: CardKind[];
+  kinds: CardKind[];
   modifiers: CardModifier[];
   subtypes: string[];
   basePower: number;
-  baseToughness: number;
-  keywords: Keyword[];
-  chaosKeywords: Keyword[];
+  baseEndurance: number;
+  traits: Trait[];
+  chaosTraits: Trait[];
   triggerMessage?: string;
   effects: EffectDefinition[];
   additionalCost?: ActionCost;
@@ -177,11 +175,11 @@ export type CardInstance = {
   lethalDamage: boolean;
   counters: Record<string, number>;
   temporaryPower: number;
-  temporaryToughness: number;
+  temporaryEndurance: number;
   /** Stats that survive end-step cleanup and expire when the next player turn begins. */
   untilNextPlayerTurnPower?: number;
-  untilNextPlayerTurnToughness?: number;
-  temporaryKeywords: Keyword[];
+  untilNextPlayerTurnEndurance?: number;
+  temporaryTraits: Trait[];
   xValuePaid?: number;
   attachTo?: { targetRef: string };
   attachedTo?: string;
@@ -244,7 +242,7 @@ export type EventItem = {
 export type FieldEntryRecord = {
   instanceId: string;
   controller: Side;
-  cardTypes: CardKind[];
+  kinds: CardKind[];
   subtypes: string[];
 };
 
@@ -253,7 +251,7 @@ export type GameState = {
   difficulty: DifficultyMode;
   gameMode: GameMode;
   hostRules: HostRulesProfile;
-  chaosMutations: Record<Side, Record<string, Keyword[]>>;
+  chaosMutations: Record<Side, Record<string, Trait[]>>;
   currentRandomState: number;
   hordeDeckOrderHash?: string;
   activeSide: Side;

@@ -9,7 +9,7 @@ import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbo
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { KeywordPills } from "./CardPreview";
+import { TraitPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -276,7 +276,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         )}
         <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
           {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
-          {deckKeywords(card) && <KeywordPills keywords={deckKeywords(card)} compact />}
+          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact />}
         </div>
         {hasText && (
           <div className="deck-detail-rules">
@@ -318,7 +318,7 @@ function DeckInspectorDetailsModal({
   const details = useDeckCardDetails(card, deck.images);
   const displayName = localizedCardName(card, language);
   const text = deckCardDescription(card, language);
-  const keywords = deckKeywords(card);
+  const traits = deckTraits(card);
   const cardStats = stats(card);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -407,10 +407,10 @@ function DeckInspectorDetailsModal({
               <small>{localizedTypeLine(card, language)}</small>
             </header>
 
-            {(keywords || cardStats) && (
+            {(traits || cardStats) && (
               <div className="deck-collection-modal-badges">
                 {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
-                {keywords && <KeywordPills keywords={keywords} />}
+                {traits && <TraitPills traits={traits} />}
               </div>
             )}
 
@@ -450,16 +450,16 @@ function uniqueCards(cards: NewDeckCard[]): CardCopy[] {
 }
 
 function stats(card: NewDeckCard): string | undefined {
-  if (typeof card.power !== "number" || typeof card.toughness !== "number") return undefined;
-  return `${card.power}/${card.toughness}`;
+  if (typeof card.power !== "number" || typeof card.endurance !== "number") return undefined;
+  return `${card.power}/${card.endurance}`;
 }
 
-function deckKeywords(card: NewDeckCard): string {
-  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword).filter((keyword) => keyword !== "OVERFLOW"));
-  return [...keywords].filter(Boolean).join(", ");
+function deckTraits(card: NewDeckCard): string {
+  const traits = new Set((card.traits ?? []).map(formatDeckTrait).filter((keyword) => keyword !== "OVERFLOW"));
+  return [...traits].filter(Boolean).join(", ");
 }
 
-function formatDeckKeyword(keyword: string): string {
+function formatDeckTrait(keyword: string): string {
   const text = String(keyword).trim();
   const poison = text.match(/^POISON_(\d+)$/u);
   if (poison) return `POISON {${poison[1]}}`;
@@ -478,9 +478,9 @@ function describeCardFromJson(card: NewDeckCard): string {
 
 function deckCardDescription(card: NewDeckCard, language: AppLanguage): string {
   const authored = card.gameText?.[language] ?? card.gameText?.en;
-  if (authored) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), canonicalizeRulesText(authored, language));
+  if (authored) return cleanCardDescriptionText(undefined, undefined, deckTraits(card), canonicalizeRulesText(authored, language));
   const generated = describeCardFromJson(card);
-  if (generated) return cleanCardDescriptionText(undefined, undefined, deckKeywords(card), generated);
+  if (generated) return cleanCardDescriptionText(undefined, undefined, deckTraits(card), generated);
   return language === "es" ? "Sin efecto adicional." : "No additional effect.";
 }
 

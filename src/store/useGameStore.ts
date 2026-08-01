@@ -25,8 +25,8 @@ import {
   type HordeAttackEvent,
 } from "../engine/CombatResolver";
 import { finishHordeTurn, revealHordeCardFromTop, runHordeMain as runHordeMainPhase } from "../engine/HordeController";
-import { canAttack, hasKeyword } from "../engine/Keywords";
-import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
+import { canAttack, hasTrait } from "../engine/Traits";
+import { getPowerEndurance, hordeInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
 import { type StaticAura } from "../engine/StaticAuras";
 import { drainEventQueue } from "../engine/EventQueue";
@@ -100,7 +100,7 @@ export type GameStore = {
   /** Horde static auras whose announcement beat has not played yet. */
   pendingStaticAuras: StaticAura[];
   /** Stat bonus withheld from each card until its aura's beat plays. Presentation only. */
-  heldStaticAuraBonuses: Record<string, { power: number; toughness: number }>;
+  heldStaticAuraBonuses: Record<string, { power: number; endurance: number }>;
   playerAttackAnimation?: PlayerAttackAnimation;
   resolvingHordeCombat: boolean;
   summoningAnimationCount: number;
@@ -947,7 +947,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return {};
       }
       const card = state.game.player.hand.find((item) => item.instanceId === id);
-      if (!card?.cardTypes.includes("SOURCE")) return {};
+      if (!card?.kinds.includes("SOURCE")) return {};
       if (!canPlayerRecycleEnergy(state.game)) {
         showActionToast(
           state.game.setupTurnsRemaining > 0
@@ -1331,10 +1331,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = structuredClone(game) as GameState;
       const selected = new Set(next.combat.playerAttackers);
       for (const card of next.player.field) {
-        if (!card.cardTypes.includes("ECHO") || selected.has(card.instanceId)) continue;
+        if (!card.kinds.includes("ECHO") || selected.has(card.instanceId)) continue;
         if (!canAttack(next, card)) continue;
         selected.add(card.instanceId);
-        if (!hasKeyword(next, card, "ALERT")) card.exhausted = true;
+        if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
@@ -1346,7 +1346,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = structuredClone(game) as GameState;
       const attackers = new Set(next.combat.playerAttackers);
       for (const card of next.player.field) {
-        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "ALERT")) card.exhausted = false;
+        if (attackers.has(card.instanceId) && !hasTrait(next, card, "ALERT")) card.exhausted = false;
       }
       next.combat.playerAttackers = [];
       next.log.unshift("Player cancels attackers.");
@@ -2086,7 +2086,7 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
   attackers.forEach((attackerId, attackerIndex) => {
     const attacker = game.player.field.find((card) => card.instanceId === attackerId);
     if (!attacker) return;
-    totalDamage += getPowerToughness(game, attacker).power;
+    totalDamage += getPowerEndurance(game, attacker).power;
     const nextMill = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
     const newMill = nextMill - previousMill;
     previousMill = nextMill;
@@ -2102,9 +2102,9 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
 function findMarkedCreatureIds(game: GameState): string[] {
   return [...game.player.field, ...game.horde.field]
     .filter((card) => {
-      if (!card.cardTypes.includes("ECHO")) return false;
-      const { toughness } = getPowerToughness(game, card);
-      return card.damageMarked >= toughness || card.lethalDamage;
+      if (!card.kinds.includes("ECHO")) return false;
+      const { endurance } = getPowerEndurance(game, card);
+      return card.damageMarked >= endurance || card.lethalDamage;
     })
     .map((card) => card.instanceId);
 }
@@ -2237,8 +2237,8 @@ function buildCastCardPatch(
   const { game } = state;
   const card = game.player.hand.find((item) => item.instanceId === id);
   const usesBloodPactAnimation = Boolean(card && effectsUseAnimation(card.effects, "BLOOD_PACT"));
-  const sfx = card && card.cardTypes.includes("ECHO") ? monsterSfx(card) : undefined;
-  const readySourceIds = new Set(game.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
+  const sfx = card && card.kinds.includes("ECHO") ? monsterSfx(card) : undefined;
+  const readySourceIds = new Set(game.player.field.filter((item) => item.kinds.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
   const reactionSources = card ? findCardPlayedReactionSources(game, card) : [];
   const next = castCard(game, id, {
     ...options,
@@ -2275,11 +2275,11 @@ function buildCastCardPatch(
     ? startBuffBeat(triggeredBuffCardIds, triggeredBuffVariant)
     : undefined;
   const autoPaidLandIds = castSucceeded
-    ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
+    ? next.player.field.filter((item) => item.kinds.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
   const manualTriggeredCard = hasManualInvokedTargetTrigger(card) && castSucceeded ? card : undefined;
-  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("SPELL") && !card.cardTypes.includes("SPELL"));
+  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.kinds.includes("SPELL") && !card.kinds.includes("SPELL"));
   if (startsSummoningAnimation) scheduleSummoningAnimationSafetyClear();
   const continueAfterPlayerTriggers = () => {
     if (reactionSources.length > 0) {
@@ -2353,7 +2353,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       deferFightResolution?: boolean;
     } = {},
   ) => {
-    const readySourceIds = new Set(latest.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
+    const readySourceIds = new Set(latest.player.field.filter((item) => item.kinds.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
     const reactionSources = findCardPlayedReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
@@ -2386,7 +2386,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         )
       : undefined;
     const autoPaidLandIds = castSucceeded
-      ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
+      ? next.player.field.filter((item) => item.kinds.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
     const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
     const lifeBuffBeat = gainedLife ? startLifeBuffBeat() : undefined;
@@ -2484,7 +2484,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         id: animationId,
         card,
         targetId,
-        amount: Math.max(0, getPowerToughness(game, target).power),
+        amount: Math.max(0, getPowerEndurance(game, target).power),
         origin: sourceRect
           ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
           : undefined,

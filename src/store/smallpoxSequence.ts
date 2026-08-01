@@ -97,13 +97,13 @@ function startSmallpoxSelectionStep(kind: SmallpoxSelectionState["kind"]): void 
 export function advanceSmallpoxSequence(from: "after-discard" | "after-sacrifice-creature" | "after-sacrifice-land"): void {
   const game = useGameStore.getState().game;
   if (from === "after-discard") {
-    const hasCreature = game.player.field.some((card) => card.cardTypes.includes("ECHO"));
+    const hasCreature = game.player.field.some((card) => card.kinds.includes("ECHO"));
     if (hasCreature) startSmallpoxSelectionStep("sacrifice-creature");
     else advanceSmallpoxSequence("after-sacrifice-creature");
     return;
   }
   if (from === "after-sacrifice-creature") {
-    const hasLand = game.player.field.some((card) => card.cardTypes.includes("SOURCE"));
+    const hasLand = game.player.field.some((card) => card.kinds.includes("SOURCE"));
     if (hasLand) startSmallpoxSelectionStep("sacrifice-land");
     else advanceSmallpoxSequence("after-sacrifice-land");
     return;

@@ -34,13 +34,13 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   // The only permanents on a blank board are its energy sources: a board you cannot cast from is
   // not a useful place to start testing a card.
   assert.equal(game.player.field.length, MAX_PLAYER_LANDS);
-  assert.ok(game.player.field.every((card) => card.cardTypes.includes("SOURCE") && !card.exhausted));
+  assert.ok(game.player.field.every((card) => card.kinds.includes("SOURCE") && !card.exhausted));
 });
 
 test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
   const game = buildScenarioGame(scenario({ player: { life: 50, energy: 99, storedEnergy: 99 } }));
 
-  assert.equal(game.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, MAX_PLAYER_LANDS);
+  assert.equal(game.player.field.filter((card) => card.kinds.includes("SOURCE")).length, MAX_PLAYER_LANDS);
   assert.equal(game.player.energyPool.stored, STORED_ENERGY_CAP);
   assert.deepEqual(game.player.energyPool, { available: 0, stored: STORED_ENERGY_CAP });
 });
@@ -53,7 +53,7 @@ test("lands listed in a zone count against the energy field instead of stacking 
     }),
   );
 
-  const lands = game.player.field.filter((card) => card.cardTypes.includes("SOURCE"));
+  const lands = game.player.field.filter((card) => card.kinds.includes("SOURCE"));
   assert.equal(lands.length, MAX_PLAYER_LANDS);
   // The two the scenario asked for keep the state it asked for; the field only tops up the rest.
   assert.equal(lands.filter((card) => card.exhausted).length, 2);
@@ -203,7 +203,7 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   assert.equal(rebuilt.player.energyPool.stored, 1);
 
   // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
-  assert.equal(rebuilt.player.field.filter((card) => card.cardTypes.includes("SOURCE")).length, 2);
+  assert.equal(rebuilt.player.field.filter((card) => card.kinds.includes("SOURCE")).length, 2);
 });
 
 test("saved boards preserve separate token waves around another summon", () => {

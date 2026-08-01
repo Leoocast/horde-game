@@ -45,7 +45,7 @@ test("energy sources are lands on the battlefield and stop at the land cap", () 
 
   const lands = game.player.field;
   assert.equal(lands.length, MAX_PLAYER_LANDS);
-  assert.ok(lands.every((card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn));
+  assert.ok(lands.every((card) => card.kinds.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn));
 
   // The cap is the game's, not the playground's: it must refuse with a reason, not silently pile on.
   const overflow = addEnergySource(game);

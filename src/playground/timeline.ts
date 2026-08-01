@@ -182,11 +182,11 @@ function playCard(step: Extract<TimelineStep, { kind: "play" }>): StepOutcome {
   }
   // A spell with targets goes through the real targeting overlay — never a synthetic resolution.
   // Replay stops here until the targets are picked on the board.
-  if (!card.cardTypes.includes("SOURCE") && card.requiresTargets.length > 0) {
+  if (!card.kinds.includes("SOURCE") && card.requiresTargets.length > 0) {
     store.startSpellTargeting(step.handId, window.innerWidth * 0.5, window.innerHeight * 0.5);
     return { ok: true, message: `Targeting started for ${card.name}. Pick targets on the board.` };
   }
-  if (card.cardTypes.includes("SOURCE")) store.playLand(step.handId);
+  if (card.kinds.includes("SOURCE")) store.playLand(step.handId);
   else store.castCard(step.handId);
   return readEngineOutcome(`${card.name} played.`);
 }
