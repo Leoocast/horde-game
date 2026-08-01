@@ -25,6 +25,15 @@ Deck lint standalone (reporte por deck: ready / vanilla / WIP):
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\lint-decks.mjs
 ```
 
+Auditoría de independencia en modo informativo:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-independence.mjs
+```
+
+Usar `--strict` como gate de publicación y `--json` para obtener la salida estructurada. El
+inventario y la interpretación del baseline viven en `docs/independence_inventory.md`.
+
 Build de produccion:
 
 ```bash

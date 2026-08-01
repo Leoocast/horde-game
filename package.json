@@ -4,6 +4,7 @@
   "version": "0.16.0",
   "type": "module",
   "scripts": {
+    "audit:independence": "node scripts/audit-independence.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "test": "node --test scripts/run-engine-tests.mjs",

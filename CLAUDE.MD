@@ -134,6 +134,11 @@ La fuente canonica para retirar de la superficie del producto el vocabulario y c
 de Magic vive en `docs/game_vocabulary.md`. Tambien define la ontologia narrativa de las cartas:
 fragmentos de memoria que reconstruyen un Capitulo. Leerla antes de agregar o cambiar nombres,
 tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas o tooltips.
+El proceso fase por fase para limpiar contenido, assets y vocabulario interno del engine se registra
+en `docs/independence_cleanup_plan.md`. Leer su estado antes de comenzar cualquier fase y no
+adelantar trabajo sin aprobación explícita del usuario.
+El baseline reproducible de L0 vive en `docs/independence_inventory.md` y se actualiza con
+`scripts/audit-independence.mjs`; el modo normal reporta y `--strict` funciona como gate final.
 La Parte 1 de ese vocabulario esta cerrada como diseno en v1.0; `Echo / Eco` es el tipo de carta
 que reemplaza a `Unit / Unidad`, y `Chronicle Echo / Eco de Cronica` distingue figuras centrales
 del relato sin agregar una regla de unicidad.
