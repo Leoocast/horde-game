@@ -60,7 +60,7 @@ src/data/decks/
   horde/<deck_id>/
 ```
 
-El schema Hostfall vigente es `0.3.0`. Durante L3 todavía existen decks `0.2.0` pendientes de
+El schema Hostfall vigente es `1.0.0`. Durante L3 todavía existen decks `0.2.0` pendientes de
 migración; no copiar su formato para cartas nuevas. Un Eco vanilla mínimo:
 
 ```json

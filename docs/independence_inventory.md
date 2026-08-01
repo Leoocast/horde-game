@@ -138,9 +138,13 @@ El auditor contó 425 apariciones de campos legacy en los cuatro decks activos:
 Estos campos deben migrarse mediante un adaptador temporal. L0 no determina todavía el formato
 exacto del schema nuevo ni cambia comportamiento.
 
-Avance L3.1 (2026-07-31): Mono Green ya usa schema Hostfall `0.3.0`. El auditor bajó de 425 a 327
+Avance L3.1 (2026-07-31): Mono Green ya usa schema Hostfall `1.0.0`. El auditor bajó de 425 a 327
 apariciones y los tres decks todavía en `0.2.0` contienen la totalidad restante. El adaptador
-temporal y el lint del schema están cubiertos por pruebas; Vampiros es el siguiente deck pendiente.
+temporal y el lint del schema están cubiertos por pruebas.
+
+Avance L3.2 (2026-07-31): Vampiros también usa schema Hostfall `1.0.0`. El auditor bajó a 234
+apariciones, concentradas exclusivamente en Zombies y Trasgos; ambos permanecen en `0.2.0` hasta
+sus respectivos bloques. Mono Green y Vampiros conservan huellas de generación válidas.
 
 ## L4 — Modelo interno legacy
 
@@ -215,7 +219,7 @@ comentarios y aliases una vez que el engine ya no dependa de ellos.
 | Referencias explícitas y herramientas antiguas | L1 |
 | Pipeline y prueba de frescura de PNG | L2 |
 | 34 PNG legacy sin arte fuente separado | L6 |
-| 327 campos legacy restantes en authored data (baseline: 425) | L3 |
+| 234 campos legacy restantes en authored data (baseline: 425) | L3 |
 | 859 coincidencias en engine/store/playground | L4 |
 | 47 identidades derivadas | L5 |
 | 60 assets derivados y ausencia de procedencia | L6 |

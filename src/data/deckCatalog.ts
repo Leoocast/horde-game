@@ -18,19 +18,19 @@ export type NewDeckCard = {
   modifiers?: Array<"QUICK" | "CHRONICLE">;
   endurance?: number | null;
   traits?: string[];
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   manaCost?: string;
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   manaValue?: number;
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   colors?: Color[];
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   cardTypes?: string[];
   subtypes?: string[];
   power?: number | null;
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   toughness?: number | null;
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   keywords?: string[];
   triggerMessage?: string;
   entersTapped?: boolean;
@@ -56,7 +56,7 @@ export type NewDeckAbility = {
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
   requiresStabilized?: boolean;
-  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 1.0.0. */
   requiresNoSummoningSickness?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;

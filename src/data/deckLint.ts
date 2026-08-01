@@ -111,6 +111,7 @@ const LEGACY_HOSTFALL_AUTHORING_VALUES = new Set([
   "PLAYER",
   "REACH",
   "SKULK",
+  "SOURCE_IS_UNTAPPED",
   "SORCERY",
   "Sorcery",
   "TRAMPLE",

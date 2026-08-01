@@ -234,18 +234,18 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
+    ALERT: "Alerta",
+    DRAIN: "Drenar",
     FLYING: "Volar",
-    LIFESTEAL: "Drenar",
-    REACH: "Guardia aérea",
-    VIGILANCE: "Alerta",
+    LETHAL: "Letal",
+    SKYGUARD: "Guardia aérea",
   };
 
   for (const runtimeCard of runtimeDeck.cards) {
     const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
+    const keywordText = (runtimeCard.traits ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
     const expected = runtimeCard.id === "eternal_feast_countess"
       ? [
           ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(0, 1),
@@ -262,9 +262,9 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
         retiredStudioVocabulary,
         `${source.label} exposes retired vocabulary for ${runtimeCard.id}`,
       );
-      assert.equal(studioCard.costo, runtimeCard.manaValue, `${source.label} has a stale cost for ${runtimeCard.id}`);
+      assert.equal(studioCard.costo, runtimeCard.energyCost.amount, `${source.label} has a stale cost for ${runtimeCard.id}`);
       assert.equal(studioCard.atk, runtimeCard.power, `${source.label} has stale power for ${runtimeCard.id}`);
-      assert.equal(studioCard.def, runtimeCard.toughness, `${source.label} has stale toughness for ${runtimeCard.id}`);
+      assert.equal(studioCard.def, runtimeCard.endurance, `${source.label} has stale endurance for ${runtimeCard.id}`);
       if (source.includesQuantity) {
         assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
       }

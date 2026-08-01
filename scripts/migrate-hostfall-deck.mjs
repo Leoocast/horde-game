@@ -70,6 +70,10 @@ function migrateNested(value) {
       migrated.traits = hostfallTraits(nestedValue);
       continue;
     }
+    if (key === "keyword" && typeof nestedValue === "string") {
+      migrated.keyword = hostfallTraits([nestedValue])[0] ?? nestedValue;
+      continue;
+    }
     if (key === "toughness") {
       migrated.endurance = migrateNested(nestedValue);
       continue;
@@ -80,6 +84,10 @@ function migrateNested(value) {
     }
     if (key === "requiresNoSummoningSickness") {
       migrated.requiresStabilized = migrateNested(nestedValue);
+      continue;
+    }
+    if (key === "type" && nestedValue === "SOURCE_IS_UNTAPPED") {
+      migrated.type = "SOURCE_IS_READY";
       continue;
     }
     if (key === "zone" && typeof nestedValue === "string") {
@@ -134,6 +142,7 @@ function migrateCard(card) {
   if (card.isToken) kinds.push("TOKEN");
   const modifiers = [];
   if ((card.cardTypes ?? []).includes("Instant")) modifiers.push("QUICK");
+  if ((card.cardTypes ?? []).includes("Legendary")) modifiers.push("CHRONICLE");
 
   const migrated = {};
   for (const [key, value] of Object.entries(card)) {
@@ -165,7 +174,7 @@ function migrateDeck(deck) {
   const migrated = {};
   for (const [key, value] of Object.entries(deck)) {
     if (key === "schemaVersion") {
-      migrated.schemaVersion = "0.3.0";
+      migrated.schemaVersion = "1.0.0";
       continue;
     }
     if (key === "side") {
@@ -188,4 +197,4 @@ const file = path.resolve(input);
 const deck = JSON.parse(fs.readFileSync(file, "utf8"));
 const migrated = migrateDeck(deck);
 fs.writeFileSync(file, `${JSON.stringify(migrated, null, 2)}\n`);
-console.log(`Migrado ${path.relative(process.cwd(), file)} a schema Hostfall 0.3.0.`);
+console.log(`Migrado ${path.relative(process.cwd(), file)} a schema Hostfall 1.0.0.`);

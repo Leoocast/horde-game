@@ -1,6 +1,6 @@
 import type { NewDeckCard, NewDeckList } from "./deckCatalog";
 
-export const HOSTFALL_DECK_SCHEMA_VERSION = "0.3.0";
+export const HOSTFALL_DECK_SCHEMA_VERSION = "1.0.0";
 
 const LEGACY_KIND_BY_HOSTFALL_KIND: Record<string, string[]> = {
   ECHO: ["Creature"],
@@ -88,6 +88,7 @@ function topLevelLegacyCardTypes(kinds: string[], modifiers: string[]): string[]
     if (kind === "SUPPORT") return ["Enchantment"];
     return LEGACY_KIND_BY_HOSTFALL_KIND[kind] ?? [];
   });
+  if (modifiers.includes("CHRONICLE")) cardTypes.unshift("Legendary");
   return [...new Set(cardTypes)];
 }
 
@@ -136,6 +137,10 @@ function adaptNestedAuthoring(value: unknown): unknown {
       adapted.keywords = nestedLegacyTraits(nestedValue);
       continue;
     }
+    if (key === "keyword" && typeof nestedValue === "string") {
+      adapted.keyword = toLegacyTrait(nestedValue);
+      continue;
+    }
     if (key === "endurance") {
       adapted.toughness = adaptNestedAuthoring(nestedValue);
       continue;
@@ -146,6 +151,10 @@ function adaptNestedAuthoring(value: unknown): unknown {
     }
     if (key === "requiresStabilized") {
       adapted.requiresNoSummoningSickness = adaptNestedAuthoring(nestedValue);
+      continue;
+    }
+    if (key === "type" && nestedValue === "SOURCE_IS_READY") {
+      adapted.type = "SOURCE_IS_UNTAPPED";
       continue;
     }
     if (key === "zone" && typeof nestedValue === "string") {

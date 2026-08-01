@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "monogreen": {
-      "inputHash": "253528c3e49a233f4a7250d8c25e0ecdb6ba6523e88820e4380b17daeb775a4c",
+      "inputHash": "df52590d4183c589b7242ac48a37bb3d37869720144ff1cc478c0758fefa678d",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -110,7 +110,7 @@
         },
         {
           "path": "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-          "sha256": "c3c6fb40fcfacbbc13fa3a3cfffdb06187c91df82ed5cdccfe58a35b1311ac51"
+          "sha256": "82e9a3a8de862ffad4eee614f87f03097fb552e6b49a433325847d9a71fdac3f"
         }
       ],
       "cards": [
@@ -131,7 +131,7 @@
         {
           "id": "druid_of_the_cowl",
           "path": "public/cards/mono_green_ramp/druid_of_the_cowl.png",
-          "sha256": "0d21f942b76b49111265a6a5f3b127fd29d6d2330ccc720062b3bf9a52d8a4ad",
+          "sha256": "e874c0fd8c44c96a3aa3d3c58f3b9b297933dd855bc22946cad3349172da77cd",
           "width": 976,
           "height": 1360
         },
@@ -201,14 +201,14 @@
         {
           "id": "forest",
           "path": "public/cards/mono_green_ramp/forest.png",
-          "sha256": "4309e763c151621f0cd242f5305fdaec6023292bafcc5c69d993af57daf89d7b",
+          "sha256": "bef7548a0bb332281baa5df0119a483ef75f4c32adf1a0d2aca50c021b922f0a",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "vampires": {
-      "inputHash": "d0fa9e19faeb3a76b00f6fadc4367fe9d0025f23be9a4ceed1a91cab44000ffb",
+      "inputHash": "c155ea64d59cf73c2311c465c84ad3d37c4f78c90d95a6663506abf1a0ac2cdc",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -328,7 +328,7 @@
         },
         {
           "path": "src/data/decks/player/vampire_preview/vampire_preview.json",
-          "sha256": "1a0a3b3b1a5a57f087f930088abb956b7efa795b0c80f7193645b4cf38c382fc"
+          "sha256": "3f4392709b18539ef8de79bc990f1730e76a1c75952822df4be9767b140745d2"
         }
       ],
       "cards": [

@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L3 en progreso; Mono Green listo para prueba del usuario**
+Estado: **L3 en progreso; Vampiros listo para prueba del usuario**
 Última actualización: 2026-07-31  
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -26,7 +26,7 @@ demostrarse.
 | L0 — Punto seguro e inventario | Completada | Autorizada |
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
-| L3 — Schema Hostfall para decks | En progreso: 1/4 decks | Autorizada por partes |
+| L3 — Schema Hostfall para decks | En progreso: 2/4 decks | Autorizada por partes |
 | L4 — Limpieza interna del engine | No iniciada | No autorizada todavía |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
@@ -244,14 +244,27 @@ cambio hasta que una fase de diseño autorice modificar reglas.
 
 ### Avance L3.1 — Mono Green
 
-- `mono_green_ramp.json` usa schema `0.3.0` y ya no contiene campos authored legacy.
+- `mono_green_ramp.json` usa schema `1.0.0` y ya no contiene campos authored legacy.
 - El coste usa una sola cantidad de Energía, sin colores; el adaptador genera el coste genérico que
   todavía paga el engine conservando la cantidad de Fuentes requerida.
 - `hostfallDeckAdapter.ts` traduce tipos, Rasgos, Aguante, zonas, Agotar, eventos y generación de
   Energía. Los decks `0.2.0` pasan por el mismo borde sin modificaciones.
-- El lint rechaza campos legacy dentro de cualquier deck `0.3.0`.
+- El lint rechaza campos legacy dentro de cualquier deck `1.0.0`.
 - Las pruebas cubren los aliases, producción de Energía y la expansión de `SUPPORT` a las dos
   categorías que todavía distingue el engine. No se migró ningún otro deck.
+
+### Avance L3.2 — Vampiros
+
+- El usuario validó Mono Green mediante una partida completa antes de autorizar este bloque.
+- El contrato canónico Hostfall se fijó en `1.0.0` para código, documentación y decks migrados.
+- `vampire_preview.json` usa `CHRONICLER`, `energyCost`, `kinds`, `modifiers`, `endurance`,
+  `traits`, `FIELD`, `QUICK`, `exhaust`, `requiresStabilized`, `SOURCE_IS_READY` y `GAIN_ENERGY`.
+- La Condesa conserva su identidad de `Chronicle Echo` mediante `CHRONICLE`; los Rasgos declarados
+  dentro de efectos también pasan por el adaptador, como `DRAIN` hacia el alias temporal del engine.
+- El auditor bajó el inventario authored legacy de 327 a 234 apariciones. Las restantes pertenecen
+  exclusivamente a Zombies y Trasgos, que continúan en `0.2.0` hasta sus respectivos bloques.
+- Mono Green y Vampiros fueron reexportados para renovar su huella de frescura bajo `1.0.0`; los
+  únicos PNG todavía no verificables son los 34 de Horda diferidos a L6.
 
 ### Criterio de aceptación
 
@@ -459,7 +472,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L1 | Retiro de herramientas deprecated y referencias explícitas. | 27 archivos eliminados; los seis checks de L1 quedaron en cero; quedan 6 bloqueos, 2 advertencias y 6 checks limpios. | TypeScript OK; deck lint OK; 194/194 tests; build OK; auditor L1 limpio; `git diff --check` OK. |
 
 | 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
-| 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en `0.3.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG OK. Pendiente prueba del usuario antes de migrar Vampiros. |
+| 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
+| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; auditor con sólo los 34 PNG de Horda esperados como advertencia de frescura. Pendiente prueba del usuario antes de migrar Zombies. |
 
 ## Plantilla para cerrar una fase
 

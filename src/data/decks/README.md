@@ -21,13 +21,13 @@ src/data/decks/
 
 ## Deck JSON
 
-The deck file describes gameplay data. New and migrated decks use Hostfall schema `0.3.0`.
+The deck file describes gameplay data. New and migrated decks use Hostfall schema `1.0.0`.
 During L3, decks that have not been migrated yet remain temporarily on `0.2.0` and pass through
 `hostfallDeckAdapter.ts` unchanged.
 
 Required top-level fields:
 
-- `schemaVersion`: `"0.3.0"` for Hostfall-authored decks.
+- `schemaVersion`: `"1.0.0"` for Hostfall-authored decks.
 - `id`: stable deck id.
 - `name`: display name.
 - `side`: `"CHRONICLER"` or `"HOST"`.
@@ -134,17 +134,21 @@ deck, presentation config, renderer, fonts, source art and every exported PNG. S
 
 ## Runtime actual
 
-Los tres decks registrados usan este esquema en partida, no sólo en el inspector:
+Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo en el inspector:
 
 - `mono_green_ramp`
+- `vampire_chronicle_preview`
 - `horde_zombies`
 - `goblin_assault_horde`
 
-`hostfallDeckAdapter` traduce temporalmente el schema `0.3.0` al contrato legacy del engine;
+Mono Green y Vampiros ya están authored en `1.0.0`; Zombies y Trasgos permanecen temporalmente en
+`0.2.0` y el adaptador los deja intactos hasta su migración.
+
+`hostfallDeckAdapter` traduce temporalmente el schema `1.0.0` al contrato legacy del engine;
 `normalizeDeck` convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
 registro real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad
 sin `engineSupport` debe sobrevivir completa a la normalización o el lint falla. El lint también
-rechaza cualquier campo authored legacy que reaparezca dentro de un deck `0.3.0`.
+rechaza cualquier campo authored legacy que reaparezca dentro de un deck `1.0.0`.
 
 Marcadores admitidos:
 
