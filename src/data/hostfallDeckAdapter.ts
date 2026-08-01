@@ -29,6 +29,7 @@ const LEGACY_ZONE_BY_HOSTFALL_ZONE: Record<string, string> = {
 };
 
 const LEGACY_EVENT_BY_HOSTFALL_EVENT: Record<string, string> = {
+  BEGIN_BATTLE: "BEGIN_COMBAT",
   BEGIN_READY: "BEGIN_UPKEEP",
   CARD_PLAYED: "CARD_CAST",
   ECHO_DIED: "CREATURE_DIED",
@@ -39,6 +40,10 @@ const LEGACY_VALUE_BY_HOSTFALL_VALUE: Record<string, string> = {
   ANOTHER_ALLIED_ECHO_DIED: "ANOTHER_CREATURE_YOU_CONTROL_DIED",
   BANISH_CARD_FROM_MEMORY: "EXILE_CARD_FROM_GRAVEYARD",
   CHRONICLER_CHOOSES: "PLAYER_CHOOSES",
+  COUNT_ECHOS: "COUNT_PERMANENTS",
+  COUNT_ECHOS_INVOKED_THIS_TURN: "COUNT_PERMANENTS_ENTERED_THIS_TURN",
+  DEAL_DAMAGE_TO_OPPONENT_ECHO: "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
+  DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
   DISCARD_OWN_ARCHIVE_TO_MEMORY: "MILL_SELF",
   EXHAUST_HOST_ECHOS_FOR_ENERGY: "TAP_HORDE_CREATURES_FOR_MANA",
   HOST_DIRECTIVE_ONLY: "HORDE_DIRECTIVE_ONLY",
@@ -48,6 +53,7 @@ const LEGACY_VALUE_BY_HOSTFALL_VALUE: Record<string, string> = {
   MEMORY_COUNT_AT_LEAST: "GRAVEYARD_COUNT_AT_LEAST",
   MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO: "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
   PLAYED_CARD_IS_NON_TOKEN: "CAST_CARD_IS_NON_TOKEN",
+  REVEAL_HOST_ROUND: "REVEAL_HORDE_ROUND",
   RETURN_SELF_FROM_MEMORY_TO_FIELD: "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
 };
 
@@ -56,8 +62,8 @@ export function isHostfallDeck(rawDeck: NewDeckList): boolean {
 }
 
 /**
- * Temporary L3 bridge. Deck JSON can speak Hostfall while the L4 engine still consumes its
- * previous CardDefinition vocabulary. Legacy 0.2 decks pass through untouched until migrated.
+ * Temporary L3/L4 bridge. Every active deck speaks Hostfall while the L4 engine still consumes
+ * its previous CardDefinition vocabulary.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
   if (!isHostfallDeck(rawDeck)) return rawDeck;
@@ -230,6 +236,10 @@ function adaptNestedAuthoring(value: unknown): unknown {
     }
     if (key === "event" && typeof nestedValue === "string") {
       adapted.event = LEGACY_EVENT_BY_HOSTFALL_EVENT[nestedValue] ?? nestedValue;
+      continue;
+    }
+    if (key === "eventObject" && nestedValue === "echo") {
+      adapted.eventObject = "permanent";
       continue;
     }
     if (key === "duration" && nestedValue === "WHILE_SOURCE_ON_FIELD") {

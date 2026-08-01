@@ -35,10 +35,14 @@ const ZONE_BY_LEGACY_ZONE = Object.freeze({
 
 const HOSTFALL_VALUE_BY_LEGACY_VALUE = Object.freeze({
   ANOTHER_CREATURE_YOU_CONTROL_DIED: "ANOTHER_ALLIED_ECHO_DIED",
+  BEGIN_COMBAT: "BEGIN_BATTLE",
   BEGIN_UPKEEP: "BEGIN_READY",
   CARD_CAST: "CARD_PLAYED",
   CAST_CARD_IS_NON_TOKEN: "PLAYED_CARD_IS_NON_TOKEN",
   CREATURE_DIED: "ECHO_DIED",
+  PERMANENT_DIED: "ECHO_DIED",
+  DEAL_DAMAGE_TO_OPPONENT_CREATURE: "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+  DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO",
   EXILE_CARD_FROM_GRAVEYARD: "BANISH_CARD_FROM_MEMORY",
   GRAVEYARD_COUNT_AT_LEAST: "MEMORY_COUNT_AT_LEAST",
   GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE: "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
@@ -47,8 +51,11 @@ const HOSTFALL_VALUE_BY_LEGACY_VALUE = Object.freeze({
   LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY: "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY",
   LOWEST_MANA_VALUE_THEN_RANDOM: "LOWEST_ENERGY_COST_THEN_RANDOM",
   MILL_SELF: "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+  COUNT_PERMANENTS: "COUNT_ECHOS",
+  COUNT_PERMANENTS_ENTERED_THIS_TURN: "COUNT_ECHOS_INVOKED_THIS_TURN",
   PLAYER_CHOOSES: "CHRONICLER_CHOOSES",
   RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD: "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+  REVEAL_HORDE_ROUND: "REVEAL_HOST_ROUND",
   TAP_HORDE_CREATURES_FOR_MANA: "EXHAUST_HOST_ECHOS_FOR_ENERGY",
 });
 
@@ -175,6 +182,10 @@ function migrateNested(value) {
       migrated.event = "INVOKED";
       continue;
     }
+    if (key === "eventObject" && nestedValue === "permanent") {
+      migrated.eventObject = "echo";
+      continue;
+    }
     if (key === "duration" && nestedValue === "WHILE_SOURCE_ON_BATTLEFIELD") {
       migrated.duration = "WHILE_SOURCE_ON_FIELD";
       continue;
@@ -219,7 +230,9 @@ function migrateCard(card) {
   if (card.isToken) kinds.push("TOKEN");
   const modifiers = [];
   if ((card.cardTypes ?? []).includes("Instant")) modifiers.push("QUICK");
-  if ((card.cardTypes ?? []).includes("Legendary")) modifiers.push("CHRONICLE");
+  if ((card.cardTypes ?? []).includes("Legendary") || (card.supertypes ?? []).includes("Legendary")) {
+    modifiers.push("CHRONICLE");
+  }
 
   const migrated = {};
   for (const [key, value] of Object.entries(card)) {
@@ -227,7 +240,7 @@ function migrateCard(card) {
       migrated.energyCost = { amount: Math.max(0, Number(card.manaValue ?? 0)) };
       continue;
     }
-    if (["manaValue", "colors", "colorIdentity", "cardTypes", "keywords", "isToken"].includes(key)) continue;
+    if (["manaValue", "colors", "colorIdentity", "cardTypes", "keywords", "isToken", "supertypes"].includes(key)) continue;
     if (key === "toughness") {
       migrated.endurance = value;
       continue;
@@ -259,6 +272,10 @@ function migrateDeck(deck) {
     }
     if (key === "side") {
       migrated.side = String(value).toUpperCase() === "HORDE" ? "HOST" : "CHRONICLER";
+      continue;
+    }
+    if ((key === "format" || key === "archetype") && value === "horde") {
+      migrated[key] = "host";
       continue;
     }
     if (key === "colors") continue;

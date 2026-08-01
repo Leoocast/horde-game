@@ -162,3 +162,48 @@ test("Zombies are authored in Hostfall schema and adapt to the current engine", 
   assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "CREATURE_DIED");
   assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_CREATURE_YOU_CONTROL_DIED");
 });
+
+test("Goblins are authored in Hostfall schema and adapt to the current engine", () => {
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "goblin_assault_horde");
+  assert.ok(entry);
+  assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
+  assert.equal(entry.raw.side, "HOST");
+  assert.equal(entry.raw.cards.reduce((total, card) => total + card.quantity, 0), 50);
+  assertNoLegacyAuthoring(entry.raw);
+  assert.doesNotMatch(
+    JSON.stringify(entry.raw),
+    /"(?:BEGIN_COMBAT|COUNT_PERMANENTS(?:_ENTERED_THIS_TURN)?|DEAL_DAMAGE_TO_OPPONENT_CREATURE|DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT|FIRST_STRIKE|HORDE|Legendary|MENACE|PERMANENT_DIED|REVEAL_HORDE_ROUND)"/u,
+  );
+
+  const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  assert.deepEqual(rawById.goblin_token_1_1_red.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.goblin_war_drums.kinds, ["SUPPORT"]);
+  assert.equal(rawById.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(rawById.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.deepEqual(rawById.goblin_chainwhirler.traits, ["REFLEX"]);
+  assert.deepEqual(rawById.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(rawById.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
+
+  const adapted = adaptHostfallDeck(entry.raw);
+  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
+  assert.equal(adapted.side, "HORDE");
+  assert.equal(adapted.rulesProfile.damagePerMill, 3);
+  assert.equal(adapted.rulesProfile.poisonPerMill, 3);
+  assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
+  assert.deepEqual(byId.goblin_token_1_1_red.cardTypes, ["Creature"]);
+  assert.equal(byId.goblin_token_1_1_red.isToken, true);
+  assert.deepEqual(byId.goblin_war_drums.cardTypes, ["Enchantment"]);
+  assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "MENACE");
+  assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_COMBAT");
+  assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HORDE_ROUND");
+  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_CREATURE");
+  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_PERMANENTS_ENTERED_THIS_TURN");
+  assert.deepEqual(byId.goblin_chainwhirler.keywords, ["FIRST_STRIKE"]);
+  assert.deepEqual(byId.general_kreat_the_boltbringer.cardTypes, ["Legendary", "Creature"]);
+  assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "CREATURE_DIED");
+  assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "permanent");
+});

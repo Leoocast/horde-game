@@ -280,6 +280,23 @@ cambio hasta que una fase de diseño autorice modificar reglas.
 - El auditor bajó el inventario authored legacy de 234 a 128 apariciones, todas pertenecientes a
   Trasgos. Los 34 PNG de Zombies y Trasgos siguen bajo la excepción de arte aceptada para L6.
 
+### Avance L3.4 — Trasgos
+
+- El usuario validó Zombies mediante una partida completa antes de autorizar este bloque.
+- `goblin_assault_horde.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`,
+  `SPELL`, `QUICK`, `CHRONICLE`, `REFLEX`, `DAUNTING`, `FIELD` y `ECHO_DIED`.
+- Los aliases exclusivos de Trasgos hablan Hostfall en authoring: `BEGIN_BATTLE`,
+  `REVEAL_HOST_ROUND`, `DEAL_DAMAGE_TO_OPPONENT_ECHO`, `COUNT_ECHOS` y
+  `COUNT_ECHOS_INVOKED_THIS_TURN`. El adaptador restaura temporalmente los identificadores que
+  todavía consume L4.
+- General Kreat, Krenko y Pashalik declaran `CHRONICLE` sin conservar `supertypes: Legendary`.
+- El Card Studio de Trasgos consume los campos canónicos de coste, Aguante, Rasgos, tipos y
+  modificadores; no se regeneraron ni alteraron sus PNG.
+- Los cuatro decks activos usan ya el schema Hostfall. La auditoría reporta cero apariciones en
+  `legacy-authored-schema`; permanecen los 34 PNG de Horda diferidos a L6.
+- L3.4 queda técnicamente lista y pendiente de una partida de validación del usuario. No se inicia
+  L4 hasta recibir esa confirmación.
+
 ### Criterio de aceptación
 
 - Todos los decks usan el schema Hostfall.
@@ -488,7 +505,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
 | 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
 | 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
-| 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos. Pendiente prueba del usuario antes de migrar Trasgos. |
+| 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos; partida completa del usuario OK. |
+| 2026-07-31 | L3.4 | Migración exclusiva de Trasgos y cierre técnico del authoring legacy. | Los cuatro decks usan `1.0.0`; el inventario `legacy-authored-schema` llegó a cero. | TypeScript OK; deck lint OK; Card Studio OK; 199/199 tests; build OK; auditor OK para L3; `git diff --check` OK. Pendiente partida del usuario para cerrar L3. |
 
 ## Plantilla para cerrar una fase
 

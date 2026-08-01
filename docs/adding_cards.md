@@ -60,8 +60,7 @@ src/data/decks/
   horde/<deck_id>/
 ```
 
-El schema Hostfall vigente es `1.0.0`. Durante L3, `goblin_assault_horde` permanece temporalmente
-en `0.2.0`; no copiar su formato para cartas nuevas. Un Eco vanilla mínimo:
+El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un Eco vanilla mínimo:
 
 ```json
 {
@@ -69,8 +68,8 @@ en `0.2.0`; no copiar su formato para cartas nuevas. Un Eco vanilla mínimo:
   "name": "Example Guardian",
   "displayNameEs": "Guardián de ejemplo",
   "gameText": {
-    "en": "Whenever another allied Elf enters, this creature gets +1/+0 until end of turn.",
-    "es": "Siempre que otro Elfo aliado entre, esta criatura obtiene +1/+0 hasta el final del turno."
+    "en": "Whenever another allied Elf is Invoked, this Echo gains +1/+0 until the end of the turn.",
+    "es": "Siempre que otro Elfo aliado sea invocado, este Eco gana +1/+0 hasta el final del turno."
   },
   "quantity": 2,
   "energyCost": { "amount": 3 },

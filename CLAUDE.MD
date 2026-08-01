@@ -104,7 +104,7 @@ src/
         vampire_preview/  Crónica de Vampiros en schema Hostfall 1.0.0
       horde/
         zombies/          deck Hostfall 1.0.0 activo por defecto de la Hueste
-        goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
+        goblins/          segundo deck Hostfall 1.0.0 de la Hueste, seleccionable y menos maduro en reglas
     decks.ts              DECK_REGISTRY: registro unico de deck, imagenes y metadata visual
     deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
     normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
@@ -709,18 +709,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L3 migra los decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` ya usa `CHRONICLER`,
+- L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
   `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia los aliases
-  que todavía consume el engine; Mono Green, Vampiros y Zombies ya están migrados, mientras
-  Trasgos permanece en `0.2.0` hasta su turno.
+  que todavía consume el engine; Mono Green, Vampiros, Zombies y Trasgos ya están migrados.
   El deck lint rechaza campos legacy dentro de cualquier deck `1.0.0` y una regresión comprueba la
-  equivalencia de ambos decks migrados. No extender el adaptador fuera de L3/L4 ni leer el JSON authored
+  equivalencia de los cuatro decks migrados. No extender el adaptador fuera de L3/L4 ni leer el JSON authored
   directamente desde UI.
-- Migracion anterior de authoring (julio 2026): `horde-zombies.json` ya comparte el formato
-  estructurado `0.2.0` de los decks legacy; `DECK_REGISTRY` es el único punto de registro y existe
-  deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`). No confundirlo con el schema
-  Hostfall `1.0.0`, que durante L3 ya usan Mono Green, Vampiros y Zombies.
+- `DECK_REGISTRY` es el único punto de registro y el deck lint
+  (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`) rechaza cualquier reintroducción del schema
+  authored legacy.
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
 - Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
 - Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
@@ -1038,8 +1036,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
   sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
   cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
-  La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
-  `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
+  La Hueste no paga Energía: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
+  `energyCost` como metadata de balance. Rasgos y explicaciones de Zombies y
   Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
   generica. Cuando un enemigo tiene dano marcado, el valor de resistencia visible gana el rojo
   de dano incluso sobre las reglas de color mas especificas de Zombies/Goblins; el ataque permanece

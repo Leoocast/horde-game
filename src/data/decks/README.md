@@ -21,9 +21,7 @@ src/data/decks/
 
 ## Deck JSON
 
-The deck file describes gameplay data. New and migrated decks use Hostfall schema `1.0.0`.
-During L3, decks that have not been migrated yet remain temporarily on `0.2.0` and pass through
-`hostfallDeckAdapter.ts` unchanged.
+The deck file describes gameplay data. Every active deck uses Hostfall schema `1.0.0`.
 
 Required top-level fields:
 
@@ -141,8 +139,7 @@ Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo 
 - `horde_zombies`
 - `goblin_assault_horde`
 
-Mono Green, Vampiros y Zombies ya están authored en `1.0.0`; Trasgos permanece temporalmente en
-`0.2.0` y el adaptador lo deja intacto hasta su migración.
+Mono Green, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 
 `hostfallDeckAdapter` traduce temporalmente el schema `1.0.0` al contrato legacy del engine;
 `normalizeDeck` convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
