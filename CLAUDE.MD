@@ -63,16 +63,16 @@ src/
     GameActions.ts        jugar tierra, castear, activar habilidades
     PhaseManager.ts       fases del player, poison tick
     CombatResolver.ts     ataque player, defensa horda, dano, death checks
-    HordeController.ts    revelado/turno de la Horda
+    HostController.ts     revelado/turno de la Host
     EffectResolver.ts     efectos genericos
     Targeting.ts          candidatos de target
-    Keywords.ts           keywords dinamicas/static grants
-    ManaSystem.ts         mana y autopago con tierras
+    Traits.ts             Rasgos dinamicos/static grants
+    EnergySystem.ts       Energía numérica, reserva y autopago con Sources
     StaticEffects.ts      stats y filtros
 
   store/
     useGameStore.ts       puente UI/engine: acciones, targeting, secuencia de combate del player
-    hordeBeats.ts         sistema de beats de la Horda (handlers, aura estatica, epoch de secuencia)
+    hostBeats.ts          sistema de beats de la Host (handlers, aura estatica, epoch de secuencia)
     smallpoxSequence.ts   secuencia interactiva bespoke de Smallpox
     presentationEffects.ts helpers compartidos: uiText/uiCardName, toasts, SFX policy, buff/flash beats, discard/mill diffs
     useAudioStore.ts      SFX y musica
@@ -89,10 +89,10 @@ src/
     SpellTargetingOverlay.tsx
     CounterTargetingOverlay.tsx
     CombatArrows.tsx
-    HordeAttackAnimator.tsx
+    HostAttackAnimator.tsx
     PlayerAttackAnimator.tsx
     SpellFightAnimator.tsx
-    HordeMillAnimator.tsx
+    HostMillAnimator.tsx
     PlayerDiscardAnimator.tsx
     CardPreview.tsx       side preview + CardDetailsModal compartido
     DeckInspector.tsx
@@ -100,10 +100,11 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck del player en esquema 0.2.0 (JSON + manifest de imagenes)
+        mono_green_ramp/  deck del player en schema Hostfall 1.0.0 (JSON + manifest de imagenes)
+        vampire_preview/  Crónica de Vampiros en schema Hostfall 1.0.0
       horde/
-        zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
-        goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
+        zombies/          deck Hostfall 1.0.0 activo por defecto de la Hueste
+        goblins/          segundo deck Hostfall 1.0.0 de la Hueste, seleccionable y menos maduro en reglas
     decks.ts              DECK_REGISTRY: registro unico de deck, imagenes y metadata visual
     deckCatalog.ts        tipos del esquema de deck + derivacion de inspectableDecks desde DECK_REGISTRY
     normalizeDeck.ts      normaliza el esquema authoring al vocabulario del engine (total: lo que no entiende lo atrapa el lint)
@@ -111,7 +112,7 @@ src/
 
   engine/
     effectVocabulary.ts   vocabulario del engine para el lint; los effect types derivan del registro de EffectResolver
-    HordeRules.ts         DEFAULT_HORDE_RULES + buildHordeRules: reglas por deck de horda (reveal, surge, mill, haste, swarm)
+    HostRules.ts          DEFAULT_HOST_RULES + buildHostRules: reglas por deck de Hueste (reveal, surge, descarte, Ímpetu, swarm)
 
 scripts/
   run-engine-tests.mjs    corre los tests via vite ssrLoadModule + node:test; agregar un archivo
@@ -119,7 +120,7 @@ scripts/
   lint-decks.mjs          corre el deck lint standalone con reporte por deck (ready/vanilla/WIP)
 
 tests/
-  engine.test.js          tests deterministas del engine (seed, mana, combate, etc.)
+  engine.test.js          tests deterministas del engine (seed, Energía, combate, etc.)
   deckLint.test.js        el lint como test: un hueco silencioso en un deck JSON rompe la suite
   battlefieldLayout.test.js  layout del campo: slots sostenidos y agrupado congelado
   engineTestUtils.js      helpers para armar game state de prueba
@@ -134,6 +135,11 @@ La fuente canonica para retirar de la superficie del producto el vocabulario y c
 de Magic vive en `docs/game_vocabulary.md`. Tambien define la ontologia narrativa de las cartas:
 fragmentos de memoria que reconstruyen un Capitulo. Leerla antes de agregar o cambiar nombres,
 tipos de carta, zonas, fases, keywords/Rasgos, texto de reglas o tooltips.
+El proceso fase por fase para limpiar contenido, assets y vocabulario interno del engine se registra
+en `docs/independence_cleanup_plan.md`. Leer su estado antes de comenzar cualquier fase y no
+adelantar trabajo sin aprobación explícita del usuario.
+El baseline reproducible de L0 vive en `docs/independence_inventory.md` y se actualiza con
+`scripts/audit-independence.mjs`; el modo normal reporta y `--strict` funciona como gate final.
 La Parte 1 de ese vocabulario esta cerrada como diseno en v1.0; `Echo / Eco` es el tipo de carta
 que reemplaza a `Unit / Unidad`, y `Chronicle Echo / Eco de Cronica` distingue figuras centrales
 del relato sin agregar una regla de unicidad.
@@ -164,38 +170,38 @@ que se decida retomarlo explícitamente.
 
 Tiene:
 - life
-- library
+- archive
 - hand
-- battlefield
-- graveyard
-- exile
-- manaPool
+- field
+- memory
+- oblivion
+- energyPool (`available` y `stored`)
 
 Puede:
-- jugar tierras
-- castear criaturas, instants y sorceries segun fase
+- jugar Sources
+- jugar Ecos y Spells según fase
 - atacar a la Horda
 - bloquear ataques de Horda
-- usar habilidades activadas genericas con costes de tap, mana, sacrificio propio o vida
-- pagar vida como coste sin poder bajar de 1; el pago es atomico con el mana, emite `LIFE_LOST`
+- usar Acciones activadas genéricas con costes de agotar, Energía, sacrificio propio o vida
+- pagar vida como coste sin poder bajar de 1; el pago es atómico con la Energía, emite `LIFE_LOST`
   ademas de `LIFE_PAID`, y se acumula por separado en `player.lifeLostThisTurn` y
   `player.lifePaidThisTurn` hasta el siguiente turno
-- una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
-  inactiva mientras su criatura tenga fatiga, sin cobrar costes
+- una Acción activada puede declarar `requiresStabilized`; engine y UI la mantienen inactiva
+  mientras su Eco esté `stabilizing`, sin cobrar costes
 
 ### Horde
 
 Tiene:
-- library
-- battlefield
-- graveyard
-- exile
+- archive
+- field
+- memory
+- oblivion
 - poisonCounters
 
 No tiene:
 - mano
 - vida
-- mana normal
+- Energía disponible
 
 La Horda pierde por mill/estado sin amenazas, y el player pierde si llega a 0 vida.
 
@@ -269,10 +275,10 @@ Graf Harvest:
 ## Card badges
 
 En `Card.tsx`:
-- `Tapped`, `Atk`, `Blk` son badges arriba-izquierda
+- `Exhausted`, `Atk`, `Blk` son badges arriba-izquierda
 - keywords de zombies se muestran debajo en columna
 - `HASTE` no se muestra para zombies porque es regla implicita del modo
-- keywords visibles deben parecer badges de estado como `Tapped`/`Atk`, no pills grandes
+- Rasgos visibles deben parecer badges de estado como `Exhausted`/`Atk`, no pills grandes
 
 ## Targeting y overlays
 
@@ -331,14 +337,15 @@ Keywords:
 ## Decks e imagenes
 
 El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
-`cardImageLookups.json`. Los tres decks vigentes usan el mismo esquema authoring (cards con
+`cardImageLookups.json`. Los cuatro decks vigentes usan el schema Hostfall `1.0.0` (cards con
 `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
-- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
-- horde: `goblin_assault_horde` — seleccionable; sus habilidades de lords sin handler estan marcadas `engineSupport: "pending"`
+- player: `vampire_chronicle_preview`
+- horde: `horde_zombies` (`DEFAULT_HOST_DECK_ID`)
+- horde: `goblin_assault_horde` — seleccionable
 
-Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
+Reglas de Hueste por deck: el engine construye `game.hostRules` con `buildHostRules(deck.rulesProfile)` (ver `HostRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, descarta una carta del Archivo por cada 3 de dano o 3 de Veneno, Ímpetu implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una Hueste = editar su `rulesProfile`, no el engine.
 
 `src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una llamada
 `register(label, raw, images, presentation)`. De ahi derivan el deck del engine, el inspector
@@ -358,7 +365,7 @@ Sin marcador = la habilidad debe validar completa contra el vocabulario del engi
 
 ### Llanowar Elves / Druid of the Cowl / Tithe Acolyte
 
-Efecto generico de tap:
+Efecto genérico de agotar:
 - texto interno legacy: `{{T}}: Add {G}.`
 - texto impreso Hostfall: `Agota: Gana {E}.`
 - se activa con UI de efecto
@@ -366,9 +373,9 @@ Efecto generico de tap:
   1. carta se agranda/levanta
   2. boton de efecto aparece
   3. al confirmar hace pulse dorado + `activate_effect.wav`
-  4. luego se tapa con animacion + sonido land
+  4. luego se agota con animación + sonido de Source
   5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
-     hasta el siguiente socket amarillo vacio; el mana almacenado se compromete al impacto. El
+     hasta el siguiente socket amarillo vacío; la Energía almacenada se compromete al impacto. El
      ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
   6. Tithe Acolyte reutiliza ese flujo dorado sin reemplazar su pago de vida: la mordida y el viaje
      corren en la misma activacion, pero la Energia almacenada tampoco se acredita hasta que la
@@ -378,7 +385,7 @@ Reglas:
 - solo en turno del player
 - solo main phase
 - solo una vez por turno
-- si tiene summoning sickness no puede activar tap
+- si está `stabilizing` no puede activar una Acción con coste `exhaust`
 
 ### Sunshower Druid
 
@@ -481,7 +488,7 @@ la fila de criaturas debe reacomodarse antes de recibir la carta.
 
 No implementar Forestcycling; no aporta en este modo.
 
-## Horde specifics
+## Host specifics
 
 ### Graf Harvest
 
@@ -505,7 +512,7 @@ No resolver triggers invisiblemente si hay animaciones importantes.
 
 ### Zombie discard/mill
 
-Horde mill animation:
+Host Archive discard animation:
 - cuando se millea carta de Horda, animar carta desde zona de Horde Deck hacia la derecha/descartar
 - debe suceder en tiempo real durante secuencias de ataque, no todo al final
 - si un atacante millea varias cartas, esperar lo justo para que se vean antes del siguiente atacante
@@ -521,7 +528,7 @@ Player discard:
 
 Durante Battle:
 - cartas atacantes pueden seleccionarse por click o drag
-- al seleccionarse se tapan y aparece flecha naranja hacia el cuadro de Horde deck
+- al seleccionarse se agotan y aparece flecha naranja hacia el cuadro de Horde deck
 - boton principal cambia a Confirm
 - hay boton All y Cancel
 - attackers se resuelven en orden izquierda a derecha
@@ -533,7 +540,7 @@ Durante Battle:
 ### Defensa contra Horda
 
 Durante Defend:
-- la Horda resuelve atacantes estrictamente en orden de invocacion (`horde.battlefield`); el
+- la Horda resuelve atacantes estrictamente en orden de invocacion (`host.field`); el
   agrupado visual por copias/stacks nunca puede reordenar el combate
 - criaturas no-token iguales de la Horda solo comparten stack si entraron durante el mismo turno
   de Horda; una copia posterior conserva su nueva posicion aunque haya una copia antigua en campo
@@ -703,15 +710,97 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`).
+- Todos los decks vigentes son esqueletos mecánicos cuyo balance queda congelado. La identidad final
+  se hará más adelante y en orden narrativo: escribir una Crónica por deck, derivar nombres y roles,
+  hacerlos corresponder con los stats/efectos actuales y sólo después producir arte. L6 queda como
+  deuda deliberada; Zombies y Goblins mantienen pausada la exportación de PNG. L7 final depende de
+  ese trabajo y no puede declararse cerrada ni esconder sus blockers mientras falten reemplazos.
+  El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Chronicler
+  y significado narrativo, nombres, conservación exacta de mecánicas, arte/procedencia y corte final
+  de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no repite la migración del engine.
+- El usuario descartó el rediseño mecánico previsto originalmente para L5. Mono Green, Zombies y
+  Goblins conservan exactamente costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias;
+  sólo se cambiarán posteriormente nombres, ids y rutas. No presentar ese trabajo como cumplimiento
+  del criterio original de independencia por rediseño. L6 queda para arte/procedencia y L7 para el
+  retiro final de identidades y archivos antiguos. Ninguna autoriza rebalanceo.
+- El ajuste final de L4 está cerrado y validado por el usuario. `EnergySystem.ts` consume
+  Stored Energy antes de Energía disponible/Sources; el autopago agota sólo las Sources necesarias
+  y deja las restantes elegibles para convertirse en reserva al terminar el turno. Las regresiones
+  cubren pago manual, pago automático, Crimson Energy y fallo atómico; 220/220 tests pasan. No se
+  comenzó L5. El smoke de pago mixto y recuperación de reserva pasó el 2026-08-01; L4 queda completa.
+- L4.6c está cerrada y validada por el usuario. Escenarios y
+  replays usan schema v3 Hostfall (`host`, zonas canónicas, `exhausted`/`stabilizing` y timeline
+  `hostTurn`); las funciones de guardar/cargar/importar/exportar se conservan. No hay migración:
+  JSON v1/v2 se rechazan, localStorage usa namespaces nuevos y elimina sus entradas antiguas, y se
+  borró el único board externo versionado (`dev/snapshots/player-base.json`). TypeScript, deck lint,
+  Card Studio, 220/220 tests, auditoría, build y `git diff --check` pasan;
+  `legacy-l46-playground-contract` está en cero. El smoke manual de guardar, exportar, importar y
+  cargar pasó el 2026-08-01.
+- L4.6b está cerrada y validada por el usuario. `Side`, `Phase`,
+  `GameState.host`, turnos, combate, engine, store y UI usan identidad `host`; los módulos centrales
+  se llaman `HostController.ts` y `hostBeats.ts`. El adaptador deja pasar `HOST` sin downgrade.
+  TypeScript, deck lint, Card Studio, 218/218 tests, auditoría y build pasan;
+  `legacy-l46-host-identity` está en cero. El borde externo se retiró después en L4.6c.
+- L4.6a está cerrada y validada por el usuario. Definiciones, instancias,
+  filtros, historial y consumidores usan exclusivamente `kinds`, `traits` y `endurance`, incluidas
+  sus variantes temporales y derivadas. `Traits.ts` reemplaza `Keywords.ts`; el adaptador ya no
+  degrada la estructura de carta. TypeScript, deck lint, Card Studio, 216/216 tests, auditoría y
+  build pasan; `legacy-l46-card-structure` está en cero. La identidad Host se migró después en
+  L4.6b; la prioridad de Energía sigue fuera de ambos bloques.
+- L4.5 está cerrada y validada por el usuario. El runtime usa `INVOKED`/
+  `ECHO_INVOKED`, `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED`, `BEGIN_BATTLE` y Acciones/condiciones
+  Hostfall sin downgrade en el adaptador. `game.hostRules` se construye con `buildHostRules` y usa
+  divisores de descarte del Archivo, Ímpetu y `endurance` canónicos. El lint valida el contrato
+  authored completo; 216/216 tests, TypeScript, deck lint, Card Studio, auditoría y build pasan, y
+  `legacy-l45-actions-events-host-rules` está en cero.
+- L4.4 está cerrada y validada por el usuario. `CardInstance` usa `exhausted`,
+  `entersExhausted` y `stabilizing`; los costes usan `exhaust`, las restricciones
+  `requiresStabilized` y la condición canónica es `SOURCE_IS_READY`. El adaptador dejó de traducir
+  esos estados. En aquel bloque, los escenarios v2 todavía mantenían `tapped`/
+  `summoningSickness` sólo en el borde; L4.6c los retiró y subió el contrato a v3. TypeScript, deck
+  lint, Card Studio, 202/202 tests, auditoría y build pasaban; `legacy-l44-card-states` debe
+  permanecer en cero. L4.5 fue implementada después.
+- L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplazó el modelo de
+  seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
+  cantidades numéricas. En L4.3 el autopago agotaba Sources antes de gastar Stored Energy; el
+  ajuste final de L4 invirtió después esa prioridad. Los Ecos de
+  generación siguen requiriendo activación explícita y el límite de reserva continúa en 3. Store,
+  HUD, animación de flujo, Playground y escenarios ya consumen este modelo; en L4.3
+  `SCENARIO_VERSION` permaneció en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
+  L4.6c lo subió posteriormente a 3 por el cambio integral del contrato del Playground.
+  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática de aquel bloque pasó
+  202/202 tests. La decisión diferida del usuario quedó resuelta con Stored Energy antes que
+  Sources, para que la Energía normal sobrante pueda convertirse en reserva.
+- L4.2 está cerrada y validada por el usuario. `GameState`, `CardInstance` y sus
+  consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
+  igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas
+  desconocidas y `legacy-l42-zones` debe permanecer en cero. Las claves externas anteriores del
+  Playground se conservaron temporalmente hasta L4.6c; ese bloque las retiró, subió el schema a v3
+  y descartó deliberadamente los boards/replays viejos sin migrarlos.
+- L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
+  tienen vocabulario cerrado, y `modifiers` conserva QUICK/CHRONICLE. L4.6a retiró posteriormente
+  los nombres de contenedor temporales de aquella migración. Filtros, targeting, historial, combate,
+  Rasgos temporales/estáticos, Chaos y UI/store usan los mismos valores canónicos.
+  `legacy-l41-card-model` debe permanecer en cero.
+- L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
+  `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
+  `GAIN_ENERGY`. Tras L4.6b, `src/data/hostfallDeckAdapter.ts` conserva únicamente la conversión de
+  casing de zonas; ya no traduce bandos, estructura de carta, costes, estados, eventos, Acciones ni
+  reglas de la Hueste. Mono Green,
+  Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
+  canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
+  leer el JSON authored directamente desde UI.
+- `DECK_REGISTRY` es el único punto de registro y el deck lint
+  (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`) rechaza cualquier reintroducción del schema
+  authored legacy.
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
-- Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
-- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
+- Reglas de Hueste como data: `game.hostRules` viene del `rulesProfile` del deck JSON mediante `buildHostRules`. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
+- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "toda Reacción manual de Invocación es obligatoria" via `findManualInvokedTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
-- `useGameStore.ts` quedo fragmentado: beats de Horda en `hordeBeats.ts` (con `resetHordeSequence`/`hordeSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Horda seleccionable via `getHordeDeck` en `decks.ts`. Mogg Mob se simplifico a criatura vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Horda ya la satisface.
+- `useGameStore.ts` quedo fragmentado: beats de Host en `hostBeats.ts` (con `resetHostSequence`/`hostSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Host seleccionable via `getHostDeck` en `decks.ts`. Mogg Mob se simplifico a Eco vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Host ya la satisface.
 - Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
   el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
@@ -736,13 +825,13 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `BURN_PLAYER_LIFE_LOSS`: una bola Burn negra, aceitosa y con brillo violeta usa temporalmente
   los mismos sonidos de lanzamiento e impacto que el fuego normal.
 - General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
-  tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
+  `exhausted` y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
 - `LIFESTEAL` es una keyword real de combate del player: recupera vida igual al dano de combate
   que la criatura hace al Host o a una criatura mientras bloquea. La recuperacion del ataque se
   aplica por atacante en el punto de impacto de `PlayerAttackAnimator`; la defensa lleva
-  `playerLifeGain` en cada `HordeAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
+  `playerLifeGain` en cada `HostAttackEvent` y aterriza en el mismo frame que su dano. Una criatura
   muerta por FIRST_STRIKE antes de responder no recupera vida; una que muere en dano simultaneo
   si. El HUD usa `startLifeBuffBeat` y `buff.wav`, sin pulso de habilidad activada. Murcielago
   Carmesi usa esta regla generica en ataque y defensa. Condesa del Banquete Eterno la recibe
@@ -762,15 +851,15 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
 - Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno solamente
   si el Paje esta enderezado cuando ocurre la perdida. La condicion generica
-  `SOURCE_IS_UNTAPPED` evita que una fuente agotada entre siquiera a la cola de reacciones. Por
+  `SOURCE_IS_READY` evita que una Source agotada entre siquiera a la cola de reacciones. Por
   decision del usuario, esta restriccion es una regla interna y no se agrega al texto impreso. Toda ruta
   de perdida —dano de combate, Burn, efectos `LOSE_LIFE` y pagos— pasa por `losePlayerLife`, que
   emite `LIFE_LOST` y acumula `player.lifeLostThisTurn`; el contador se reinicia al comenzar tanto
   el turno del player como el de la Horda. Los pagos ademas conservan su evento especifico
   `LIFE_PAID`. Los impactos animados posteriores se recalculan contra el board actual, de modo que
   dejar pasar un atacante puede buffear al Paje antes de que haga dano como bloqueador de otro.
-- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola linea antes de robar 2. El pago es atomico con el
-  mana, no se permite si dejaria al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
+- Pacto de Sangre muestra `Coste adicional: Paga 5 vidas.` en una sola línea antes de robar 2. El pago es atómico con la
+  Energía, no se permite si dejaría al player en cero y emite `LIFE_LOST` y `LIFE_PAID`; por eso puede
   consumir la primera perdida de cualquier turno y activar al Paje de Sangre. En el store el Paje
   queda diferido hasta terminar su presentacion dedicada `BLOOD_PACT`: la carta real sale desde su
   posicion en la mano hacia un punto entre el centro y el lateral derecho, el mordisco golpea el
@@ -807,7 +896,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Impulso Carmesi es Instant `{1}` con `Coste adicional: Paga 2 vidas.` en una sola linea: solo puede elegir una criatura
   aliada y le da +2/+2 y `FLYING` hasta fin de turno, de modo que tambien puede convertirla en
   bloqueador de voladores durante el combate de la Horda. `castCard` valida cada objetivo contra
-  `targetCandidatesWithSelectedTargets` antes de gastar mana o vida, asi que llamadas directas al
+  `targetCandidatesWithSelectedTargets` antes de gastar Energía o vida, así que llamadas directas al
   engine tampoco pueden saltarse el controlador/filtros declarados en JSON. En el flujo dirigido,
   un `LIFE_LOST` del spell queda diferido para que el Paje pulse y luego reciba su buff, incluso
   durante el turno de la Horda, igual que con habilidades activadas.
@@ -835,10 +924,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   nube de humo sin overlays rectangulares; la criatura usa el fade de muerte normal del campo y
   solo al terminar se comprometen la destruccion y la perdida de vida. Los triggers de muerte y la
   reaccion del Paje conservan el orden real de la cola antes de presentar cada beat.
-- Las entradas de la Horda cuentan como animacion pendiente real: `runHordeMain`, el Play
+- Las entradas de la Horda cuentan como animacion pendiente real: `runHostMain`, el Play
   individual del Playground y los beats que crean permanentes incrementan
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
-  reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
+  reacciones y combate esperan a cero. `animatedHostIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
 - Los cinco generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
@@ -854,15 +943,26 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
   usa `quita ... e Invoca ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
   `tests/deckCardText.test.js`.
+- Los estudios ya no mantienen copias editables de reglas. Para cada deck jugable,
+  `scripts/card-studio-data.mjs` deriva nombre, texto, coste, stats y cantidad del JSON runtime y
+  los combina con `studio.config.json`, que contiene solamente arte, línea de tipo, lore y
+  decisiones visuales. Cada índice consume `deck-data.generated.js`; el archivo es generado y no
+  se edita. Los mirrors anteriores y los arreglos embebidos fueron eliminados. Cazadores es la
+  única excepción porque sigue siendo preview sin deck runtime: su configuración contiene las
+  definiciones completas.
+  `export_cards.cjs` sincroniza la proyección, exige arte local separado, exporta a
+  `public/cards/` y actualiza `dev/tools/Decks/generation-manifest.json`. Ese manifest prueba frescura
+  con hashes del deck, configuración, renderer, fuentes, arte y PNG. Los estudios no dependen de
+  CDN. El flujo y los comandos están en `dev/tools/Decks/README.md`.
 - El estudio de Zombies y `horde-zombies.json` comparten vocabulario visible Hostfall para sus 17
   definiciones: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo`, `Hueste`, `Archivo`, `Memoria`,
   `Cronista`, `Imponente`, `Letal` y `Furtivo`. Crear fichas se redacta con `Invoca`; enviar cartas
   del Archivo a la Memoria se escribe completo y no recibe keyword. `Apoyo` conserva el glifo del
   tipo Support. Habilidades todavia inactivas, como regresar los Stitchwing desde la Memoria, y las
   activaciones pendientes de Graf Harvest permanecen en los datos internos pero no se imprimen.
-  Este pase no cambia nombres, arte, cantidades, balance, ids, tipos o keywords del motor ni
-  regenera PNGs. La regresion compara cantidad, coste, stats, tipos y texto del estudio contra el
-  deck runtime, y rechaza vocabulario visible retirado.
+  La regresión compara cantidad, coste, stats, tipos y texto del estudio contra el deck runtime, y
+  rechaza vocabulario visible retirado. Sus 17 PNG todavía no fueron regenerados: no existe arte
+  fuente separado y el exportador bloquea sus rutas circulares antes de sobrescribirlos.
   Smallpox imprime `sacrifica una Fuente`: la Fuente es la carta permanente elegida, mientras que
   Energía es el recurso que genera. Su prompt runtime también pide `Elige una Fuente para
   Sacrificar`. El índice usa el mismo header mínimo de los decks migrados y su glifo de Eco mide
@@ -877,10 +977,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Hueste todavía no tiene una política para usarla. La obligación de atacar del Agitador continúa
   omitida porque la regla global de la Hueste ya la cumple. El header es mínimo, el glifo de Eco
   mide 56px y la regresión compara cantidad, coste, stats, tipo y reglas contra el deck runtime.
-  Este pase tampoco cambia nombres, arte, cantidades, balance, ids o aliases del motor ni regenera
-  los PNG de `public/cards/goblins/`.
+  Sus 17 PNG tampoco fueron regenerados: no existe arte fuente separado y el exportador bloquea
+  sus rutas circulares antes de sobrescribirlos. El usuario aceptó conservar esta excepción hasta
+  que el arte definitivo los sustituya en L6. Por eso el PNG vigente de General Kreat no imprime
+  su modificador `CHRONICLE`; no es un fallo del runtime ni bloqueó L4.1. La identidad de Chronicler
+  de Trasgos se revisará cuando cambie el arte: el candidato actual del usuario es Goblin
+  Chainwhirler en lugar de General Kreat. No cambiar esa asignación durante la limpieza del engine.
+  No se cambiaron nombres, arte, balance, ids ni aliases del motor.
 - Cazadores sigue siendo un estudio preview de 13 definiciones y 40 cartas, sin deck runtime ni
-  mecánicas registradas. Su JSON embebido y `hunters.json` deben ser idénticos. La presentación usa
+  mecánicas registradas. `hunters/studio.config.json` es su única fuente editable y genera la
+  proyección que consume el índice. La presentación usa
   `Fuente`, `Eco`, `Eco · Ficha`, `Eco de Crónica`, `Apoyo`, `Hechizo` y `Hechizo · Rápido`;
   `Trampa` es subtipo de Eco, no tipo adicional, y conserva su glifo propio. Lyra es el Eco de
   Crónica. `Marcado`, `Aturdido` y `Atado` están definidos en `docs/game_vocabulary.md` solamente
@@ -917,7 +1023,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Pacto e Impulso permanecen en dos copias, Sed en una y Banquete Final cuesta 3. La regresion del
   estudio compara coste, stats, cantidad y texto contra el deck runtime. `export_cards.cjs`, tanto desde `.cmd` como desde
   `.command`, escribe cada PNG en `exported-png/` y tambien lo sincroniza directamente con la
-  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente.
+  carpeta correspondiente bajo `public/cards/`; ya no se copian los exports manualmente. Los 14
+  PNG de Vampiros fueron regenerados con el vocabulario vigente y tienen huella válida en el
+  manifest de generación.
   El Duelista usa `PUMP_UNTIL_NEXT_PLAYER_TURN`: su +3/+1 sobrevive la limpieza del turno del
   player, aplica al bloquear durante el combate de la Horda y se elimina al comenzar el siguiente
   turno del player. Banquete Final es Instant y Pacto de Sangre cuesta 1 mas el pago de 5 vidas.
@@ -929,7 +1037,10 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   fueron eliminados: las cartas vigentes se producen con los generadores bajo `dev/tools/Decks/`
   y el juego consume exclusivamente sus imagenes completas.
 
-  El estudio Mono Green y sus dos espejos JSON imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
+  Los 13 PNG de Mono Green fueron regenerados con el vocabulario vigente y tienen huella válida
+  en el manifest de generación.
+
+  El estudio Mono Green y su JSON runtime único imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
   `Hechizo`, `Hechizo · Rápido`, `Guardia aérea`, `Letal` y `Veneno 1`) sin cambiar los ids,
   tipos o keywords internos del motor. `Eco` usa el mismo glifo grande de resonancia de Vampires;
   la detección de carta full-art del estudio reconoce `Fuente` en lugar de `Tierra`. `TRAMPLE`
@@ -1002,8 +1113,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   dibuja directamente sobre la energia con contorno oscuro, sin disco ni fondo central. El orbe
   sobresale ligeramente hacia arriba y a la izquierda de la carta y no recibe una corona adicional
   cuando la carta esta disponible. Las animaciones respetan `prefers-reduced-motion`.
-  La Horda no paga mana: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
-  `manaCost`/`manaValue` como metadata de la carta original. Keywords y explicaciones de Zombies y
+  La Hueste no paga Energía: sus cartas nunca muestran `CardCostBadge`, aunque el JSON conserve
+  `energyCost` como metadata de balance. Rasgos y explicaciones de Zombies y
   Goblins usan tambien la paleta de su `index`, no la paleta aliada ni una variante enemiga
   generica. Cuando un enemigo tiene dano marcado, el valor de resistencia visible gana el rojo
   de dano incluso sobre las reglas de color mas especificas de Zombies/Goblins; el ataque permanece
@@ -1053,7 +1164,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - La disponibilidad de combate en battlefield reutiliza esa misma corona con fade: naranja para
   criaturas que pueden atacar y cian/azul para blockers o atacantes de Horda validos durante
   defensa, incluido drag. Estos estados reemplazan sus rombos de combate y suprimen el chrome verde
-  generico de `Card.actionable`. Las criaturas con activacion de mana disponible usan una tercera
+  genérico de `Card.actionable`. Las criaturas con generación de Energía disponible usan una tercera
   corona dorada con el mismo fade y tampoco muestran rombo; las tierras quedan excluidas de ese
   chrome aunque internamente tambien tengan una habilidad de agotar. Las tres coronas son exteriores: su
   borde interior termina justo donde empieza la silueta de la carta, sin comerse el arte ni parecer
@@ -1096,7 +1207,7 @@ Si es target:
 
 Si es combate:
 - revisar `CombatResolver.ts`
-- revisar animadores y `buildHordeAttackEvents` en `useGameStore.ts`
+- revisar animadores y `buildHostAttackEvents` en `useGameStore.ts`
 
 Si es VFX o Three.js:
 - revisar `docs/vfx_and_threejs.md`

@@ -3,8 +3,9 @@ import type { CardInstance } from "../engine/GameTypes";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
-import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
+import { canPayWithAutomaticEnergy, totalEnergyCost } from "../engine/EnergySystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
+import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
@@ -42,7 +43,7 @@ export function Hand({ game }: { game: GameState }) {
   const t = useTranslation();
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
-  const selectedHordeCreatureId = useGameStore((state) => state.selectedHordeCreatureId);
+  const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   // Primitive/stable selectors: avoids re-rendering the whole hand on every mousemove
   // while a CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay arrow
   // is tracking the pointer (those only mutate x/y on the underlying object).
@@ -54,10 +55,10 @@ export function Hand({ game }: { game: GameState }) {
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
   const pendingSpellHandId = useGameStore((state) => state.pendingSpellHandId);
-  const manaFlowAnimating = useGameStore((state) => Boolean(state.manaFlowAnimation));
-  const hordeMillAnimating = useGameStore((state) => state.hordeMillAnimationQueue.length > 0);
+  const energyFlowAnimating = useGameStore((state) => Boolean(state.energyFlowAnimation));
+  const hostMillAnimating = useGameStore((state) => state.hostMillAnimationQueue.length > 0);
   const playerDiscardAnimating = useGameStore((state) => state.playerDiscardAnimationQueue.length > 0);
-  const hordeAttackAnimating = useGameStore((state) => Boolean(state.hordeAttackAnimation) || state.resolvingHordeCombat);
+  const hostAttackAnimating = useGameStore((state) => Boolean(state.hostAttackAnimation) || state.resolvingHostCombat);
   const playerAttackAnimating = useGameStore((state) => Boolean(state.playerAttackAnimation));
   const lifePaymentAnimating = useGameStore((state) => Boolean(state.lifePaymentAnimation));
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
@@ -202,7 +203,7 @@ export function Hand({ game }: { game: GameState }) {
   function isInEnergyRecycleZone(card: CardInstance, pointerX: number, pointerY: number): boolean {
     const dragStart = dragStartPointers.current.get(card.instanceId);
     return (
-      card.cardTypes.includes("Land") &&
+      card.kinds.includes("SOURCE") &&
       isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
       pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
       pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
@@ -211,11 +212,11 @@ export function Hand({ game }: { game: GameState }) {
   }
 
   function playCard(card: CardInstance) {
-    if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
+    if (!card.kinds.includes("SOURCE") && card.requiresTargets.length > 0) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
       return;
     }
-    playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHordeCreatureId);
+    playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHostCreatureId);
   }
 
   function finishDrag(card: CardInstance, playable: boolean, info: PanInfo) {
@@ -257,14 +258,14 @@ export function Hand({ game }: { game: GameState }) {
       spellTargetingActive ||
       spellFightAnimation ||
       pendingSpellHandId ||
-      hordeMillAnimating ||
+      hostMillAnimating ||
       playerDiscardAnimating ||
-      hordeAttackAnimating ||
+      hostAttackAnimating ||
       playerAttackAnimating ||
       lifePaymentAnimating ||
       bloodPactAnimating ||
       energyRecycleAnimation ||
-      manaFlowAnimating ||
+      energyFlowAnimating ||
       unresolvedTriggerCount > 0 ||
       (smallpoxSelectionActive && !smallpoxDiscardMode),
   );
@@ -362,7 +363,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hordeAttackAnimating && !playerAttackAnimating}
+                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -475,24 +476,24 @@ export function Hand({ game }: { game: GameState }) {
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
-  if (card.cardTypes.includes("Land")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
+  if (card.kinds.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayLifeCost(game, card.additionalCost)) return false;
-  if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
+  if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
 function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
-  return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("Land") && canPlayerRecycleEnergy(game);
+  return pendingTriggeredEffectCount === 0 && card.kinds.includes("SOURCE") && canPlayerRecycleEnergy(game);
 }
 
 function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount: number, t: ReturnType<typeof useTranslation>): string {
   if (game.winner) return t("error.gameOver");
   if (pendingTriggeredEffectCount > 0) return t("error.resolveBeforePlay");
   if (!canPlayCardAtCurrentTiming(game, card)) {
-    if (card.cardTypes.includes("Instant")) return t("error.instantTiming");
+    if (isQuickSpell(card)) return t("error.instantTiming");
     return t("error.mainTiming");
   }
-  if (card.cardTypes.includes("Land")) {
+  if (card.kinds.includes("SOURCE")) {
     if (!canPlayerPutAnotherLand(game)) return t("error.landLimit", { count: MAX_PLAYER_LANDS });
     if (game.player.energyActionUsedThisTurn) return t("error.energyUsed");
     return t("error.landUnavailable");
@@ -501,7 +502,7 @@ function getUnplayableReason(game: GameState, card: CardInstance, pendingTrigger
     return t("error.notEnoughLife", { amount: lifeCostAmount(card.additionalCost, game.player.life), card: card.displayName });
   }
   if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return t("error.noTargets", { card: card.displayName });
-  return t("error.notEnoughMana", { card: card.displayName });
+  return t("error.notEnoughEnergy", { card: card.displayName });
 }
 
 type EnergyRecycleHint = {
@@ -544,9 +545,9 @@ function readEnergyRecycleTarget(): { x: number; y: number } {
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {
-  if (card.cardTypes.includes("Instant")) {
+  if (isQuickSpell(card)) {
     if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
-    return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
+    return game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
   }
   return game.activeSide === "player" && game.phase === "main";
 }
@@ -558,7 +559,7 @@ function playFromHand(
   friendly?: string,
   enemy?: string,
 ): void {
-  if (card.cardTypes.includes("Land")) {
+  if (card.kinds.includes("SOURCE")) {
     playLand(card.instanceId);
     return;
   }

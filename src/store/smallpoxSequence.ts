@@ -1,42 +1,42 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { destroyPermanent, losePlayerLife, millHorde } from "../engine/EffectResolver";
+import { destroyPermanent, discardHostArchiveToMemory, losePlayerLife } from "../engine/EffectResolver";
 import { weakestCreature } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type SmallpoxSelectionState } from "./useGameStore";
-import { hordeSequenceEpoch, scheduleQueuedHordeTriggers, startHordeCombatSequence } from "./hordeBeats";
-import { appendHordeMillAnimations, uiCardName, uiText } from "./presentationEffects";
+import { hostSequenceEpoch, scheduleQueuedHostTriggers, startHostCombatSequence } from "./hostBeats";
+import { appendHostMillAnimations, uiCardName, uiText } from "./presentationEffects";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
 
-// Smallpox: revealed by the Horde but parked unresolved by HordeController (see `pendingCard`)
-// because it needs a bespoke, multi-step, player-interactive resolution — first the Horde afflicts
+// Smallpox: revealed by the Host but parked unresolved by HostController (see `pendingCard`)
+// because it needs a bespoke, multi-step, player-interactive resolution — first the Host afflicts
 // itself (mill 1, sacrifice its weakest creature), then it turns on the player (lose 1 life, choose
 // a card to discard, choose a creature to sacrifice, choose a land to sacrifice). Everything here is
-// sequential and blocks the board via `hordeAutoTriggerCount`, same as other Horde reactions.
+// sequential and blocks the board via `hostAutoTriggerCount`, same as other Host reactions.
 export function runSmallpoxSequence(card: CardInstance): void {
-  const resetEpoch = hordeSequenceEpoch();
+  const resetEpoch = hostSequenceEpoch();
   useGameStore.setState((state) => {
     const next = structuredClone(state.game) as GameState;
-    next.horde.pendingCard = undefined;
-    return { game: next, smallpoxCard: card, hordeAutoTriggerCount: state.hordeAutoTriggerCount + 1 };
+    next.host.pendingCard = undefined;
+    return { game: next, smallpoxCard: card, hostAutoTriggerCount: state.hostAutoTriggerCount + 1 };
   });
   useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.afflictsHorde", { card: uiCardName(card) }), tone: "horde" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.afflictsHost", { card: uiCardName(card) }), tone: "host" });
   window.setTimeout(() => {
-    if (resetEpoch !== hordeSequenceEpoch()) return;
+    if (resetEpoch !== hostSequenceEpoch()) return;
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = structuredClone(previous) as GameState;
-      millHorde(next, 1);
-      return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next) };
+      discardHostArchiveToMemory(next, 1);
+      return { game: next, hostMillAnimationQueue: appendHostMillAnimations(state, previous, next) };
     });
     window.setTimeout(() => {
-      if (resetEpoch !== hordeSequenceEpoch()) return;
+      if (resetEpoch !== hostSequenceEpoch()) return;
       let sacrificedId: string | undefined;
       useGameStore.setState((state) => {
         const next = structuredClone(state.game) as GameState;
-        sacrificedId = weakestCreature(next, "horde")?.instanceId;
+        sacrificedId = weakestCreature(next, "host")?.instanceId;
         return { game: next };
       });
       if (!sacrificedId) {
@@ -46,14 +46,14 @@ export function runSmallpoxSequence(card: CardInstance): void {
       useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
       useAudioStore.getState().playSfx("attack");
       window.setTimeout(() => {
-        if (resetEpoch !== hordeSequenceEpoch()) return;
+        if (resetEpoch !== hostSequenceEpoch()) return;
         useGameStore.setState((state) => {
           const next = structuredClone(state.game) as GameState;
-          const target = next.horde.battlefield.find((item) => item.instanceId === sacrificedId);
+          const target = next.host.field.find((item) => item.instanceId === sacrificedId);
           if (target) destroyPermanent(next, target);
           return { game: next, specialDeadCardIds: [] };
         });
-        scheduleQueuedHordeTriggers(() => {
+        scheduleQueuedHostTriggers(() => {
           window.setTimeout(() => beginSmallpoxPlayerRound(resetEpoch), 320);
         });
       }, 260);
@@ -62,13 +62,13 @@ export function runSmallpoxSequence(card: CardInstance): void {
 }
 
 function beginSmallpoxPlayerRound(resetEpoch: number): void {
-  if (resetEpoch !== hordeSequenceEpoch()) return;
+  if (resetEpoch !== hostSequenceEpoch()) return;
   const card = useGameStore.getState().smallpoxCard;
   useAudioStore.getState().playSfx("activateEffect");
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hordeEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "horde" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "host" });
   window.setTimeout(() => {
-    if (resetEpoch !== hordeSequenceEpoch()) return;
+    if (resetEpoch !== hostSequenceEpoch()) return;
     useGameStore.setState((state) => {
       const next = structuredClone(state.game) as GameState;
       losePlayerLife(next, 1, card?.instanceId);
@@ -76,7 +76,7 @@ function beginSmallpoxPlayerRound(resetEpoch: number): void {
       return { game: next, lifeDamageAnimationId: Date.now() };
     });
     const continueAfterLifeLoss = () => window.setTimeout(() => {
-      if (resetEpoch !== hordeSequenceEpoch()) return;
+      if (resetEpoch !== hostSequenceEpoch()) return;
       if (useGameStore.getState().game.player.hand.length > 0) startSmallpoxSelectionStep("discard");
       else advanceSmallpoxSequence("after-discard");
     }, 480);
@@ -97,13 +97,13 @@ function startSmallpoxSelectionStep(kind: SmallpoxSelectionState["kind"]): void 
 export function advanceSmallpoxSequence(from: "after-discard" | "after-sacrifice-creature" | "after-sacrifice-land"): void {
   const game = useGameStore.getState().game;
   if (from === "after-discard") {
-    const hasCreature = game.player.battlefield.some((card) => card.cardTypes.includes("Creature"));
+    const hasCreature = game.player.field.some((card) => card.kinds.includes("ECHO"));
     if (hasCreature) startSmallpoxSelectionStep("sacrifice-creature");
     else advanceSmallpoxSequence("after-sacrifice-creature");
     return;
   }
   if (from === "after-sacrifice-creature") {
-    const hasLand = game.player.battlefield.some((card) => card.cardTypes.includes("Land"));
+    const hasLand = game.player.field.some((card) => card.kinds.includes("SOURCE"));
     if (hasLand) startSmallpoxSelectionStep("sacrifice-land");
     else advanceSmallpoxSequence("after-sacrifice-land");
     return;
@@ -117,17 +117,17 @@ function finishSmallpoxSequence(): void {
     const next = structuredClone(previous) as GameState;
     const card = state.smallpoxCard;
     if (card) {
-      card.zone = "graveyard";
-      next.horde.graveyard.push(card);
-      next.log.unshift(`${card.name} goes to the Horde graveyard.`);
+      card.zone = "memory";
+      next.host.memory.push(card);
+      next.log.unshift(`${card.name} goes to the Host Memory.`);
       useAudioStore.getState().playSfx("draw");
     }
     return {
       game: next,
       smallpoxCard: undefined,
-      hordeAutoTriggerCount: Math.max(0, state.hordeAutoTriggerCount - 1),
-      hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+      hostAutoTriggerCount: Math.max(0, state.hostAutoTriggerCount - 1),
+      hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
     };
   });
-  startHordeCombatSequence();
+  startHostCombatSequence();
 }

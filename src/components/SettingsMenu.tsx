@@ -114,7 +114,7 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
                   <section className="old-panel-soft p-4">
                     <div className="game-settings-section-title">{t("settings.developerOptions")}</div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("horde")}><Skull size={14} /> {t("settings.lose")}</button>
+                      <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("host")}><Skull size={14} /> {t("settings.lose")}</button>
                       <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> {t("settings.win")}</button>
                     </div>
                   </section>

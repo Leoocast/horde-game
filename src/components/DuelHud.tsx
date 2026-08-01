@@ -2,7 +2,7 @@ import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
-import { getPowerToughness } from "../engine/StaticEffects";
+import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -15,11 +15,11 @@ import { GraveyardViewerModal } from "./GraveyardViewerModal";
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const hordeMillQueue = useGameStore((state) => state.hordeMillAnimationQueue);
-  const hordeMillPreviewCards = useGameStore((state) => state.hordeMillPreviewCards);
+  const hostMillQueue = useGameStore((state) => state.hostMillAnimationQueue);
+  const hostMillPreviewCards = useGameStore((state) => state.hostMillPreviewCards);
   const smallpoxCard = useGameStore((state) => state.smallpoxCard);
   const deathRevealCard = useGameStore((state) => state.deathRevealCard);
-  const hordeSpellCard = useGameStore((state) => state.hordeSpellCard);
+  const hostSpellCard = useGameStore((state) => state.hostSpellCard);
   // Primitive selectors: smallpoxSelection.x/y update on every mousemove while the
   // SmallpoxSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
   const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
@@ -35,20 +35,22 @@ export function DuelHud({ game }: { game: GameState }) {
   const poisonConsumeAnimation = useGameStore((state) => state.poisonConsumeAnimation);
   const completePoisonConsumeAnimation = useGameStore((state) => state.completePoisonConsumeAnimation);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
-  const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
+  const [hostTakingDamage, setHostTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
-  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
-  const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
-  const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
-  const previewMillPendingInLibrary = hordeMillPreviewCards.filter((card) => hordeLibraryIds.has(card.instanceId)).length;
+  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
+  const normalMillQueueLength = hostMillQueue.filter((item) => !item.preview).length;
+  const hostLibraryIds = new Set(game.host.archive.map((card) => card.instanceId));
+  const previewMillPendingInLibrary = hostMillPreviewCards.filter((card) => hostLibraryIds.has(card.instanceId)).length;
   const pendingMilledAfterActive = Math.max(0, normalMillQueueLength - 1);
-  const visualHordeLibraryCount = game.horde.library.length + pendingMilledAfterActive - previewMillPendingInLibrary;
-  const visualHordeGraveyardCount = Math.max(0, game.horde.graveyard.length - pendingMilledAfterActive + previewMillPendingInLibrary);
+  const visualHostLibraryCount = game.host.archive.length + pendingMilledAfterActive - previewMillPendingInLibrary;
+  const visualHostGraveyardCount = Math.max(0, game.host.memory.length - pendingMilledAfterActive + previewMillPendingInLibrary);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
-    const attacker = game.player.battlefield.find((card) => card.instanceId === id);
-    return attacker ? total + getPowerToughness(game, attacker).power : total;
+    const attacker = game.player.field.find((card) => card.instanceId === id);
+    return attacker ? total + getPowerEndurance(game, attacker).power : total;
   }, 0);
-  const pendingMill = Math.floor(pendingDamage / 3);
+  const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
+  const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
+  const pendingArchiveDiscards = Math.floor(pendingDamage / archiveDiscardThreshold);
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
@@ -60,9 +62,9 @@ export function DuelHud({ game }: { game: GameState }) {
     const eventKey = `${playerAttackAnimation.attackerId}:${playerAttackAnimation.eventId}`;
     if (lastPlayerAttackEvent.current === eventKey) return;
     lastPlayerAttackEvent.current = eventKey;
-    setHordeTakingDamage(false);
-    const frame = window.requestAnimationFrame(() => setHordeTakingDamage(true));
-    const timeout = window.setTimeout(() => setHordeTakingDamage(false), 430);
+    setHostTakingDamage(false);
+    const frame = window.requestAnimationFrame(() => setHostTakingDamage(true));
+    const timeout = window.setTimeout(() => setHostTakingDamage(false), 430);
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
@@ -70,13 +72,13 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hordeSpellCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
           <motion.div
             key={`death-reveal-${deathRevealCard.instanceId}`}
-            className="horde-death-reveal-host flex flex-col items-center gap-2"
+            className="host-death-reveal-host flex flex-col items-center gap-2"
             // The entrance is CSS, not framer-motion. This card mounts in the same frame the
             // store commits a combat impact and the whole battlefield re-renders, and a
             // main-thread JS animation loses that race every time. A CSS keyframe on
@@ -84,7 +86,7 @@ export function DuelHud({ game }: { game: GameState }) {
             // stays here, because AnimatePresence has to own unmount. Smallpox dodges this by
             // mounting with initial={false} and having no entrance at all.
             initial={false}
-            // Exits into the Horde graveyard button, which sits up and to the right of this host.
+            // Exits into the Host graveyard button, which sits up and to the right of this host.
             exit={{
               opacity: [1, 1, 0],
               x: [0, -6, 168],
@@ -96,11 +98,11 @@ export function DuelHud({ game }: { game: GameState }) {
           >
             {/* Dedicated layer for the entrance keyframe: the host owns the exit transform and
                 the card below owns the activation pulse, so nothing shares an animation slot. */}
-            <div className="horde-death-reveal-enter">
+            <div className="host-death-reveal-enter">
               <div
                 data-card-id={deathRevealCard.instanceId}
                 className={[
-                  "horde-special-card horde-special-card-dying",
+                  "host-special-card host-special-card-dying",
                   activatingEffectCardId === deathRevealCard.instanceId ? "effect-card-activating" : "",
                 ].join(" ")}
               >
@@ -110,7 +112,7 @@ export function DuelHud({ game }: { game: GameState }) {
                   selectionDisabled
                   suppressContextMenu
                   suppressCardId
-                  suppressSummoningSickness
+                  suppressStabilizing
                   showFullImage={shouldShowFullCardImage(deathRevealCard.definitionId)}
                   preferNativeImageRendering={shouldShowFullCardImage(deathRevealCard.definitionId)}
                 />
@@ -118,10 +120,10 @@ export function DuelHud({ game }: { game: GameState }) {
             </div>
           </motion.div>
         )}
-        {hordeSpellCard && (
+        {hostSpellCard && (
           <motion.div
-            key={`spell-reveal-${hordeSpellCard.instanceId}`}
-            className="horde-special-card-host flex flex-col items-center gap-2"
+            key={`spell-reveal-${hostSpellCard.instanceId}`}
+            className="host-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
               opacity: [1, 1, 0],
@@ -132,23 +134,23 @@ export function DuelHud({ game }: { game: GameState }) {
               transition: { duration: 0.3, times: [0, 0.22, 1], ease: ["easeOut", "easeIn"] },
             }}
           >
-            <div className="horde-death-reveal-enter">
+            <div className="host-death-reveal-enter">
               <div
-                data-card-id={hordeSpellCard.instanceId}
+                data-card-id={hostSpellCard.instanceId}
                 className={[
-                  "horde-special-card horde-special-card-resolving",
-                  activatingEffectCardId === hordeSpellCard.instanceId ? "effect-card-activating" : "",
+                  "host-special-card host-special-card-resolving",
+                  activatingEffectCardId === hostSpellCard.instanceId ? "effect-card-activating" : "",
                 ].join(" ")}
               >
                 <Card
                   game={game}
-                  card={hordeSpellCard}
+                  card={hostSpellCard}
                   selectionDisabled
                   suppressContextMenu
                   suppressCardId
-                  suppressSummoningSickness
-                  showFullImage={shouldShowFullCardImage(hordeSpellCard.definitionId)}
-                  preferNativeImageRendering={shouldShowFullCardImage(hordeSpellCard.definitionId)}
+                  suppressStabilizing
+                  showFullImage={shouldShowFullCardImage(hostSpellCard.definitionId)}
+                  preferNativeImageRendering={shouldShowFullCardImage(hostSpellCard.definitionId)}
                 />
               </div>
             </div>
@@ -157,7 +159,7 @@ export function DuelHud({ game }: { game: GameState }) {
         {smallpoxCard && (
           <motion.div
             key={smallpoxCard.instanceId}
-            className="horde-special-card-host flex flex-col items-center gap-2"
+            className="host-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
               opacity: [1, 1, 0],
@@ -171,9 +173,9 @@ export function DuelHud({ game }: { game: GameState }) {
             <div
               data-card-id={smallpoxCard.instanceId}
               className={[
-                "horde-special-card",
-                smallpoxSelectionActive ? "horde-special-card-targeting" : "",
-                !smallpoxSelectionActive ? "horde-special-card-resolving" : "",
+                "host-special-card",
+                smallpoxSelectionActive ? "host-special-card-targeting" : "",
+                !smallpoxSelectionActive ? "host-special-card-resolving" : "",
                 activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
@@ -183,7 +185,7 @@ export function DuelHud({ game }: { game: GameState }) {
                 selectionDisabled
                 suppressContextMenu
                 suppressCardId
-                suppressSummoningSickness
+                suppressStabilizing
                 showFullImage={shouldShowFullCardImage(smallpoxCard.definitionId)}
                 preferNativeImageRendering={shouldShowFullCardImage(smallpoxCard.definitionId)}
               />
@@ -219,27 +221,27 @@ export function DuelHud({ game }: { game: GameState }) {
           </motion.div>
         )}
         </AnimatePresence>
-        <div className="horde-deck-counter-cluster">
+        <div className="host-deck-counter-cluster">
           <div
-            data-player-attack-target="horde-deck"
-            data-horde-life-panel="true"
+            data-player-attack-target="host-deck"
+            data-host-life-panel="true"
             className={[
-              "old-panel combatant-vitals combatant-vitals-horde horde-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
+              "old-panel combatant-vitals combatant-vitals-host host-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
               attackCountVisible ? "is-attack-locked" : "",
-              hordeTakingDamage ? "horde-counter-hit" : "",
+              hostTakingDamage ? "host-counter-hit" : "",
               latestLifestealAttack ? "is-lifesteal-bitten" : "",
             ].join(" ")}
           >
             {latestLifestealAttack && (
-              <span key={latestLifestealAttack.id} className="horde-lifesteal-blood-wave" aria-hidden="true" />
+              <span key={latestLifestealAttack.id} className="host-lifesteal-blood-wave" aria-hidden="true" />
             )}
             {poisonAttackAnimation && (
               <span
                 key={poisonAttackAnimation.id}
-                className="horde-poison-impact"
+                className="host-poison-impact"
                 aria-hidden="true"
                 onAnimationEnd={(event) => {
-                  if (event.animationName === "horde-poison-impact-lifetime") {
+                  if (event.animationName === "host-poison-impact-lifetime") {
                     completePoisonAttackAnimation(poisonAttackAnimation.id);
                   }
                 }}
@@ -250,10 +252,10 @@ export function DuelHud({ game }: { game: GameState }) {
             {poisonConsumeAnimation && (
               <span
                 key={poisonConsumeAnimation.id}
-                className="horde-poison-consume"
+                className="host-poison-consume"
                 aria-hidden="true"
                 onAnimationEnd={(event) => {
-                  if (event.animationName === "horde-poison-consume-lifetime") {
+                  if (event.animationName === "host-poison-consume-lifetime") {
                     completePoisonConsumeAnimation(poisonConsumeAnimation.id);
                   }
                 }}
@@ -264,72 +266,72 @@ export function DuelHud({ game }: { game: GameState }) {
                 )}
               </span>
             )}
-            <div data-horde-mill-origin="true" data-horde-life-emblem="true" className="horde-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+            <div data-host-mill-origin="true" data-host-life-emblem="true" className="host-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
-            <div className="horde-deck-counter-copy">
-              <div className="old-title horde-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hordeDeck")}</div>
-              <div className="horde-deck-counter-values flex items-end gap-2 leading-none">
-                <div className="horde-deck-count text-3xl font-black">{visualHordeLibraryCount}</div>
+            <div className="host-deck-counter-copy">
+              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostDeck")}</div>
+              <div className="host-deck-counter-values flex items-end gap-2 leading-none">
+                <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
                   {attackCountVisible && (
                     <motion.span
-                      key={pendingMill}
-                      className="horde-deck-pending-mill"
+                      key={pendingArchiveDiscards}
+                      className="host-deck-pending-mill"
                       initial={{ opacity: 0, x: -8, scale: 0.8 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -6, scale: 0.86 }}
                       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      - {pendingMill}
+                      - {pendingArchiveDiscards}
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
             </div>
-            {game.horde.poisonCounters > 0 && (
-              <GameTooltip content={t("game.poisonCounters", { count: game.horde.poisonCounters })} side="bottom" className="horde-poison-tooltip">
+            {game.host.poisonCounters > 0 && (
+              <GameTooltip content={t("game.poisonCounters", { count: game.host.poisonCounters, threshold: poisonDiscardThreshold })} side="bottom" className="host-poison-tooltip">
                 <div
-                  key={poisonAttackAnimation?.id ?? poisonConsumeAnimation?.id ?? `poison-${game.horde.poisonCounters}`}
+                  key={poisonAttackAnimation?.id ?? poisonConsumeAnimation?.id ?? `poison-${game.host.poisonCounters}`}
                   className={[
-                    "horde-poison-status",
+                    "host-poison-status",
                     poisonAttackAnimation ? "is-poison-gaining" : "",
                     poisonConsumeAnimation ? "is-poison-consuming" : "",
                   ].join(" ")}
-                  aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters })}
+                  aria-label={t("game.hostPoisonCounters", { count: game.host.poisonCounters, threshold: poisonDiscardThreshold })}
                 >
                   <Droplet size={15} fill="currentColor" strokeWidth={2.2} />
-                  <span>{game.horde.poisonCounters}</span>
+                  <span>{game.host.poisonCounters}</span>
                 </div>
               </GameTooltip>
             )}
           </div>
-          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="horde-deck-graveyard-host">
+          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="host-deck-graveyard-host">
             <button
-              data-horde-mill-target="true"
+              data-host-mill-target="true"
               data-audio-click="valid"
-              className="horde-deck-graveyard flex items-center justify-center border font-black transition"
+              className="host-deck-graveyard flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={t("game.viewHordeGraveyard", { count: visualHordeGraveyardCount })}
+              aria-label={t("game.viewHostGraveyard", { count: visualHostGraveyardCount })}
             >
               <Archive size={15} strokeWidth={2.4} />
-              <span className="horde-deck-graveyard-count">{visualHordeGraveyardCount}</span>
+              <span className="host-deck-graveyard-count">{visualHostGraveyardCount}</span>
             </button>
           </GameTooltip>
           <AnimatePresence initial={false} mode="popLayout">
             {attackCountVisible && (
               <motion.div
                 key={game.combat.playerAttackers.join("|")}
-                className="horde-attack-count-host"
+                className="host-attack-count-host"
                 initial={{ opacity: 0, x: -24, scaleX: 0.62 }}
                 animate={{ opacity: 1, x: 0, scaleX: 1 }}
                 exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingMill })} side="bottom">
-                  <div className="horde-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingMill })}>
+                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingArchiveDiscards })} side="bottom">
+                  <div className="host-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingArchiveDiscards })}>
                     <Swords size={17} strokeWidth={2.3} />
-                    <span className="horde-attack-formula">{pendingDamage} / 3 = - {pendingMill}</span>
+                    <span className="host-attack-formula">{pendingDamage} / {archiveDiscardThreshold} = - {pendingArchiveDiscards}</span>
                   </div>
                 </GameTooltip>
               </motion.div>
@@ -337,14 +339,14 @@ export function DuelHud({ game }: { game: GameState }) {
           </AnimatePresence>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.hordeGraveyard")} cards={game.horde.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.hostGraveyard")} cards={game.host.memory} onClose={() => setGraveyardOpen(false)} />}
     </div>
   );
 }
 
 export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
   const t = useTranslation();
-  const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+  const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
   const lifeDamageAnimationId = useGameStore((state) => state.lifeDamageAnimationId);
   const lifeBuffAnimationId = useGameStore((state) => state.lifeBuffAnimationId);
   const lifePaymentAnimation = useGameStore((state) => state.lifePaymentAnimation);
@@ -402,9 +404,9 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   }, [bloodPactAnimation?.id, bloodPactAnimation?.lifeAfter, bloodPactAnimation?.lifeBefore, bloodPactAnimation?.phase]);
 
   useEffect(() => {
-    if (!hordeAttackAnimation || hordeAttackAnimation.eventId === lastEventId.current || hordeAttackAnimation.playerDamage <= 0) return;
-    lastEventId.current = hordeAttackAnimation.eventId;
-    setVisualLife((life) => Math.max(0, life - hordeAttackAnimation.playerDamage));
+    if (!hostAttackAnimation || hostAttackAnimation.eventId === lastEventId.current || hostAttackAnimation.playerDamage <= 0) return;
+    lastEventId.current = hostAttackAnimation.eventId;
+    setVisualLife((life) => Math.max(0, life - hostAttackAnimation.playerDamage));
     setTakingDamage(false);
     const frame = window.requestAnimationFrame(() => setTakingDamage(true));
     const timeout = window.setTimeout(() => setTakingDamage(false), 430);
@@ -412,7 +414,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
     };
-  }, [hordeAttackAnimation]);
+  }, [hostAttackAnimation]);
 
   useEffect(() => {
     if (!lifeDamageAnimationId || lifeDamageAnimationId === lastLifeDamageAnimationId.current) return;
@@ -512,17 +514,17 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
             <button
               data-player-discard-target="true"
               data-audio-click="valid"
-              className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
+              className="host-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={t("game.viewPlayerGraveyard", { count: game.player.graveyard.length })}
+              aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
             >
               <Archive size={15} strokeWidth={2.4} />
-              <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
+              <span className="host-deck-graveyard-count">{game.player.memory.length}</span>
             </button>
           </GameTooltip>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.memory} onClose={() => setGraveyardOpen(false)} />}
     </>
   );
 }

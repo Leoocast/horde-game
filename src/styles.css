@@ -448,7 +448,7 @@
     box-shadow: inset 0 1px 0 rgb(235 224 180 / 0.045), 0 18px 38px rgb(0 0 0 / 0.24);
   }
 
-  .expedition-combatant-horde {
+  .expedition-combatant-host {
     border-color: rgb(141 97 73 / 0.24);
     background: linear-gradient(225deg, rgb(31 20 16 / 0.7), rgb(7 14 12 / 0.88));
   }
@@ -515,7 +515,7 @@
     transform: rotate(-2deg);
   }
 
-  .expedition-combatant-horde .expedition-deck-art {
+  .expedition-combatant-host .expedition-deck-art {
     border-color: rgb(159 91 70 / 0.42);
     transform: rotate(2deg);
   }
@@ -1083,7 +1083,7 @@
       repeating-linear-gradient(90deg, transparent 0 23px, rgb(240 168 213 / 0.04) 24px);
   }
 
-  .encounter-transition.is-chaos .encounter-transition-name-horde,
+  .encounter-transition.is-chaos .encounter-transition-name-host,
   .encounter-transition.is-chaos .encounter-transition-versus {
     color: #d9a3c7;
   }
@@ -1142,7 +1142,7 @@
     justify-self: end;
   }
 
-  .encounter-transition-name-horde {
+  .encounter-transition-name-host {
     justify-self: start;
     color: #bfa897;
     text-align: left;
@@ -3465,7 +3465,7 @@
     --toast-accent-soft: rgb(155 71 57 / 0.18);
   }
 
-  .toast-tone-horde {
+  .toast-tone-host {
     --toast-accent: #8f897e;
     --toast-accent-soft: rgb(113 104 91 / 0.17);
   }
@@ -3653,14 +3653,14 @@
     --phase-accent-soft: rgb(79 137 157 / 0.26);
   }
 
-  .phase-banner-horde {
+  .phase-banner-host {
     --phase-accent: #9d6753;
     --phase-accent-bright: #d5a184;
     --phase-accent-soft: rgb(143 64 45 / 0.28);
   }
 
   .phase-banner.is-chaos.phase-banner-battle,
-  .phase-banner.is-chaos.phase-banner-horde {
+  .phase-banner.is-chaos.phase-banner-host {
     --phase-accent: #bd629c;
     --phase-accent-bright: #efb5d9;
     --phase-accent-soft: rgb(185 68 143 / 0.3);
@@ -4398,7 +4398,7 @@
     box-shadow: 0 0 8px rgb(90 190 255 / 0.94);
   }
 
-  .card-actionable-gem-outside.card-defense-gem-horde-target {
+  .card-actionable-gem-outside.card-defense-gem-host-target {
     left: 0;
   }
 
@@ -6024,7 +6024,7 @@
     pointer-events: auto;
   }
 
-  .horde-special-card {
+  .host-special-card {
     width: 16rem;
     aspect-ratio: 488 / 680;
     z-index: 51;
@@ -6033,12 +6033,12 @@
     transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), filter 220ms ease;
   }
 
-  .horde-special-card-targeting {
+  .host-special-card-targeting {
     transform: scale(1.08);
     filter: drop-shadow(0 14px 20px rgb(0 0 0 / 0.62)) drop-shadow(0 0 12px rgb(198 111 69 / 0.2));
   }
 
-  .horde-special-card-resolving {
+  .host-special-card-resolving {
     transform: scale(0.88);
     filter: drop-shadow(0 8px 11px rgb(0 0 0 / 0.48)) saturate(0.88);
   }
@@ -6050,29 +6050,29 @@
      which is where the hitch was. `box-shadow` gives the depth against the card's own rounded
      rect for a fraction of the work, and the ember glow below carries the "dying" read.
      Transform and transition are cleared too: the entrance layer above owns every transform, and
-     inheriting `.horde-special-card`'s own pair drove nested transforms on the same mount. */
-  .horde-special-card-dying {
+     inheriting `.host-special-card`'s own pair drove nested transforms on the same mount. */
+  .host-special-card-dying {
     position: relative;
     width: 13rem;
     transform: none;
     transition: none;
-    /* Explicit: `.horde-special-card` sets its own drop-shadow, which would come straight back. */
+    /* Explicit: `.host-special-card` sets its own drop-shadow, which would come straight back. */
     filter: none;
     border-radius: 0.375rem;
     box-shadow: 0 10px 16px rgb(0 0 0 / 0.62);
   }
 
-  .horde-special-card-dying::after {
+  .host-special-card-dying::after {
     content: "";
     position: absolute;
     inset: -8%;
     border-radius: 0.7rem;
     background: radial-gradient(ellipse at 50% 92%, rgb(180 58 26 / 0.4), transparent 66%);
     pointer-events: none;
-    animation: horde-death-reveal-glow 1.5s ease-in-out infinite alternate;
+    animation: host-death-reveal-glow 1.5s ease-in-out infinite alternate;
   }
 
-  @keyframes horde-death-reveal-glow {
+  @keyframes host-death-reveal-glow {
     from { opacity: 0.45; }
     to { opacity: 1; }
   }
@@ -6190,16 +6190,16 @@
     filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.32)) brightness(1.08);
   }
 
-  .horde-attacker-readied {
+  .host-attacker-readied {
     filter: drop-shadow(0 16px 20px rgb(0 0 0 / 0.42)) brightness(1.08);
   }
 
-  .horde-attacker-readied::before {
+  .host-attacker-readied::before {
     opacity: 1;
-    animation: horde-attack-marker-pulse 1.2s ease-in-out infinite;
+    animation: host-attack-marker-pulse 1.2s ease-in-out infinite;
   }
 
-  .horde-attacker-readied::after {
+  .host-attacker-readied::after {
     opacity: 1;
   }
 
@@ -6315,7 +6315,7 @@
     left: 8px;
   }
 
-  .battlefield-side-horde .battlefield-row-overflow .card-keyword-stack {
+  .battlefield-side-host .battlefield-row-overflow .card-keyword-stack {
     top: clamp(34px, 18cqw, 40px);
     left: 12px;
   }
@@ -6418,7 +6418,7 @@
      reads as the card triggering a second time. Movement only.
      The release frame is timed to the projectile's 120ms launch delay, so the card snaps forward
      on the frame the fireball appears rather than after it has already crossed half the board.
-     The Horde row sits above the player's, so the throw drives DOWN, toward the target. */
+     The Host row sits above the player's, so the throw drives DOWN, toward the target. */
   .burn-source-casting {
     transform-origin: center 80%;
     animation: burn-source-cast 640ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
@@ -9481,7 +9481,7 @@
   }
 }
 
-@keyframes horde-attack-marker-pulse {
+@keyframes host-attack-marker-pulse {
   0%,
   100% {
     opacity: 0.72;
@@ -9969,7 +9969,7 @@
   text-shadow: 0 0 9px rgb(213 74 42 / 0.46);
 }
 .game-turn-divider { background: linear-gradient(transparent, rgb(198 178 112 / 0.58), transparent); }
-.game-turn-hud.is-horde-turn .game-turn-owner { color: #e2836d; }
+.game-turn-hud.is-host-turn .game-turn-owner { color: #e2836d; }
 
 .game-screen .old-panel,
 .game-screen .old-panel-soft,
@@ -10052,14 +10052,14 @@
   opacity: 0.75;
 }
 
-.combatant-vitals-horde {
+.combatant-vitals-host {
   background: linear-gradient(110deg, rgb(10 23 20 / 0.94), rgb(39 18 14 / 0.96)) !important;
 }
 
-.combatant-vitals-horde::before { background: linear-gradient(transparent, #81432e 22%, #bd6b48 50%, #81432e 78%, transparent); }
+.combatant-vitals-host::before { background: linear-gradient(transparent, #81432e 22%, #bd6b48 50%, #81432e 78%, transparent); }
 .combatant-vitals-player { background: linear-gradient(110deg, rgb(9 17 19 / 0.96), rgb(18 33 37 / 0.96)) !important; }
 
-.horde-deck-counter-cluster {
+.host-deck-counter-cluster {
   position: fixed;
   top: 0;
   left: 50%;
@@ -10068,7 +10068,7 @@
   transform: translateX(-50%);
 }
 
-.horde-special-card-host {
+.host-special-card-host {
   position: fixed;
   top: 8px;
   left: calc(50% + 164px);
@@ -10076,10 +10076,10 @@
   width: 190px;
 }
 
-/* Right of the Horde panel is for spells and reveals still resolving (Smallpox). Left is the
+/* Right of the Host panel is for spells and reveals still resolving (Smallpox). Left is the
    graveyard side — that is where the deck's graveyard button lives, so cards presented while a
    dies-trigger resolves belong here and exit into it. */
-.horde-death-reveal-host {
+.host-death-reveal-host {
   position: fixed;
   top: 8px;
   right: calc(50% + 164px);
@@ -10089,20 +10089,20 @@
 
 /* Compositor-driven entrance. This mounts on the same frame the store commits a combat impact
    and the battlefield re-renders, so anything running on the main thread stutters here. */
-.horde-death-reveal-enter {
+.host-death-reveal-enter {
   display: flex;
   width: 100%;
   justify-content: center;
   will-change: transform, opacity;
-  animation: horde-death-reveal-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: host-death-reveal-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes horde-death-reveal-in {
+@keyframes host-death-reveal-in {
   from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.9); }
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
-.horde-deck-counter {
+.host-deck-counter {
   position: relative;
   width: 304px;
   min-height: 82px;
@@ -10122,7 +10122,7 @@
     0 0 26px rgb(171 111 66 / 0.13) !important;
 }
 
-.horde-deck-counter::before {
+.host-deck-counter::before {
   top: auto;
   right: 18px;
   bottom: -5px;
@@ -10132,7 +10132,7 @@
   background: linear-gradient(90deg, transparent, rgb(205 178 104 / 0.68), transparent);
 }
 
-.horde-deck-counter::after {
+.host-deck-counter::after {
   position: absolute;
   right: -5px;
   bottom: -5px;
@@ -10144,35 +10144,35 @@
   transform: rotate(45deg);
 }
 
-.horde-deck-counter.is-attack-locked {
+.host-deck-counter.is-attack-locked {
   border-color: rgb(204 92 67 / 0.72) !important;
-  animation: horde-counter-attack-locked 1.35s ease-in-out infinite;
+  animation: host-counter-attack-locked 1.35s ease-in-out infinite;
 }
 
-.horde-deck-counter.is-attack-locked::before {
+.host-deck-counter.is-attack-locked::before {
   background: linear-gradient(90deg, transparent, rgb(224 89 59 / 0.76), transparent);
 }
 
-.horde-deck-counter.horde-counter-hit {
-  animation: horde-counter-hit 430ms ease-out both;
+.host-deck-counter.host-counter-hit {
+  animation: host-counter-hit 430ms ease-out both;
 }
 
-.horde-deck-counter.is-lifesteal-bitten {
+.host-deck-counter.is-lifesteal-bitten {
   border-color: #c8001a !important;
   box-shadow:
     inset 0 0 25px rgb(90 0 10 / 0.76),
     0 0 34px rgb(158 0 21 / 0.62) !important;
-  animation: horde-lifesteal-bite-impact 440ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: host-lifesteal-bite-impact 440ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-.horde-deck-counter.is-lifesteal-bitten > .horde-deck-emblem,
-.horde-deck-counter.is-lifesteal-bitten > .horde-deck-counter-copy,
-.horde-deck-counter.is-lifesteal-bitten > .horde-poison-status {
+.host-deck-counter.is-lifesteal-bitten > .host-deck-emblem,
+.host-deck-counter.is-lifesteal-bitten > .host-deck-counter-copy,
+.host-deck-counter.is-lifesteal-bitten > .host-poison-status {
   position: relative;
   z-index: 1;
 }
 
-.horde-deck-counter.is-lifesteal-bitten > .horde-deck-emblem {
+.host-deck-counter.is-lifesteal-bitten > .host-deck-emblem {
   border-color: #d81630 !important;
   background: linear-gradient(145deg, #5c0a18, #27040b) !important;
   color: #fff !important;
@@ -10181,7 +10181,7 @@
     0 0 28px #9e0015;
 }
 
-.horde-lifesteal-blood-wave {
+.host-lifesteal-blood-wave {
   position: absolute;
   z-index: 0;
   inset: 0;
@@ -10189,20 +10189,20 @@
     radial-gradient(circle at 16% 50%, #d50020 0%, #7a0010 46%, #300007 82%, transparent 100%);
   clip-path: circle(0% at 16% 50%);
   pointer-events: none;
-  animation: horde-lifesteal-blood-wave 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: host-lifesteal-blood-wave 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.horde-poison-impact {
+.host-poison-impact {
   position: absolute;
   z-index: 8;
   inset: -30px;
   overflow: visible;
   pointer-events: none;
-  animation: horde-poison-impact-lifetime 780ms ease-out both;
+  animation: host-poison-impact-lifetime 780ms ease-out both;
   mix-blend-mode: screen;
 }
 
-.horde-poison-impact::before {
+.host-poison-impact::before {
   position: absolute;
   top: 50%;
   left: 74px;
@@ -10220,10 +10220,10 @@
   content: "";
   filter: blur(0.4px) saturate(1.3);
   transform: translate(-50%, -50%);
-  animation: horde-poison-splash-core 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: host-poison-splash-core 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.horde-poison-impact::after {
+.host-poison-impact::after {
   position: absolute;
   top: 18px;
   left: 24px;
@@ -10235,10 +10235,10 @@
     radial-gradient(ellipse at 62% 44%, rgb(195 255 106 / 0.3), transparent 55%);
   content: "";
   filter: blur(8px);
-  animation: horde-poison-fume-rise 780ms ease-out both;
+  animation: host-poison-fume-rise 780ms ease-out both;
 }
 
-.horde-poison-impact > i {
+.host-poison-impact > i {
   --poison-x: 0px;
   --poison-y: -36px;
   --poison-scale: 0.72;
@@ -10252,31 +10252,31 @@
   background: linear-gradient(145deg, #e5ff84, #6ddd24 48%, #20770f);
   box-shadow: 0 0 9px rgb(127 245 45 / 0.85);
   opacity: 0;
-  animation: horde-poison-droplet 620ms cubic-bezier(0.14, 0.76, 0.2, 1) both;
+  animation: host-poison-droplet 620ms cubic-bezier(0.14, 0.76, 0.2, 1) both;
 }
 
-.horde-poison-impact > i:nth-child(1) { --poison-x: -48px; --poison-y: -31px; --poison-scale: 0.48; }
-.horde-poison-impact > i:nth-child(2) { --poison-x: -34px; --poison-y: -54px; --poison-scale: 0.7; animation-delay: 18ms; }
-.horde-poison-impact > i:nth-child(3) { --poison-x: -11px; --poison-y: -63px; --poison-scale: 0.42; animation-delay: 8ms; }
-.horde-poison-impact > i:nth-child(4) { --poison-x: 19px; --poison-y: -58px; --poison-scale: 0.58; animation-delay: 25ms; }
-.horde-poison-impact > i:nth-child(5) { --poison-x: 47px; --poison-y: -39px; --poison-scale: 0.68; animation-delay: 10ms; }
-.horde-poison-impact > i:nth-child(6) { --poison-x: 58px; --poison-y: -10px; --poison-scale: 0.4; animation-delay: 34ms; }
-.horde-poison-impact > i:nth-child(7) { --poison-x: 42px; --poison-y: 26px; --poison-scale: 0.6; animation-delay: 22ms; }
-.horde-poison-impact > i:nth-child(8) { --poison-x: 8px; --poison-y: 34px; --poison-scale: 0.46; animation-delay: 40ms; }
-.horde-poison-impact > i:nth-child(9) { --poison-x: -28px; --poison-y: 27px; --poison-scale: 0.64; animation-delay: 14ms; }
-.horde-poison-impact > i:nth-child(10) { --poison-x: -55px; --poison-y: 5px; --poison-scale: 0.38; animation-delay: 30ms; }
+.host-poison-impact > i:nth-child(1) { --poison-x: -48px; --poison-y: -31px; --poison-scale: 0.48; }
+.host-poison-impact > i:nth-child(2) { --poison-x: -34px; --poison-y: -54px; --poison-scale: 0.7; animation-delay: 18ms; }
+.host-poison-impact > i:nth-child(3) { --poison-x: -11px; --poison-y: -63px; --poison-scale: 0.42; animation-delay: 8ms; }
+.host-poison-impact > i:nth-child(4) { --poison-x: 19px; --poison-y: -58px; --poison-scale: 0.58; animation-delay: 25ms; }
+.host-poison-impact > i:nth-child(5) { --poison-x: 47px; --poison-y: -39px; --poison-scale: 0.68; animation-delay: 10ms; }
+.host-poison-impact > i:nth-child(6) { --poison-x: 58px; --poison-y: -10px; --poison-scale: 0.4; animation-delay: 34ms; }
+.host-poison-impact > i:nth-child(7) { --poison-x: 42px; --poison-y: 26px; --poison-scale: 0.6; animation-delay: 22ms; }
+.host-poison-impact > i:nth-child(8) { --poison-x: 8px; --poison-y: 34px; --poison-scale: 0.46; animation-delay: 40ms; }
+.host-poison-impact > i:nth-child(9) { --poison-x: -28px; --poison-y: 27px; --poison-scale: 0.64; animation-delay: 14ms; }
+.host-poison-impact > i:nth-child(10) { --poison-x: -55px; --poison-y: 5px; --poison-scale: 0.38; animation-delay: 30ms; }
 
-.horde-poison-consume {
+.host-poison-consume {
   position: absolute;
   z-index: 8;
   inset: -22px;
   overflow: visible;
   pointer-events: none;
-  animation: horde-poison-consume-lifetime 860ms ease-out both;
+  animation: host-poison-consume-lifetime 860ms ease-out both;
   mix-blend-mode: screen;
 }
 
-.horde-poison-consume::before {
+.host-poison-consume::before {
   position: absolute;
   top: calc(50% - 4px);
   left: 66px;
@@ -10290,10 +10290,10 @@
   filter: blur(2px);
   transform: scaleX(0);
   transform-origin: right center;
-  animation: horde-poison-consume-stream 690ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: host-poison-consume-stream 690ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.horde-poison-consume::after {
+.host-poison-consume::after {
   position: absolute;
   top: 50%;
   left: 66px;
@@ -10305,10 +10305,10 @@
   box-shadow: 0 0 28px rgb(107 231 43 / 0.76);
   content: "";
   transform: translate(-50%, -50%) scale(0);
-  animation: horde-poison-consume-burst 780ms 70ms ease-out both;
+  animation: host-poison-consume-burst 780ms 70ms ease-out both;
 }
 
-.horde-poison-consume > i {
+.host-poison-consume > i {
   --consume-arc: -24px;
   position: absolute;
   top: 50%;
@@ -10320,46 +10320,46 @@
   background: linear-gradient(145deg, #edff9d, #78e629 48%, #235f12);
   box-shadow: 0 0 11px rgb(132 246 53 / 0.9);
   opacity: 0;
-  animation: horde-poison-consume-drop 660ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: host-poison-consume-drop 660ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.horde-poison-consume > i:nth-child(2n) {
+.host-poison-consume > i:nth-child(2n) {
   --consume-arc: 25px;
   width: 7px;
   height: 11px;
   animation-delay: 34ms;
 }
 
-.horde-poison-consume > i:nth-child(3n) {
+.host-poison-consume > i:nth-child(3n) {
   --consume-arc: -38px;
   animation-delay: 68ms;
 }
 
-.horde-poison-consume > i:nth-child(4n) {
+.host-poison-consume > i:nth-child(4n) {
   --consume-arc: 39px;
   width: 8px;
   height: 13px;
   animation-delay: 82ms;
 }
 
-.horde-deck-counter-copy {
+.host-deck-counter-copy {
   min-width: 105px;
   flex: 1 1 auto;
   text-align: left;
 }
 
-.horde-deck-counter-title {
+.host-deck-counter-title {
   color: #c9b980 !important;
   font-size: 10px !important;
   letter-spacing: 0.2em !important;
 }
 
-.horde-deck-counter-values {
+.host-deck-counter-values {
   margin-top: 3px;
   justify-content: flex-start;
 }
 
-.horde-deck-count {
+.host-deck-count {
   color: #fff0b2;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
   font-size: 38px !important;
@@ -10368,7 +10368,7 @@
   text-shadow: 0 0 18px rgb(218 153 88 / 0.28), 0 2px 6px rgb(0 0 0 / 0.7);
 }
 
-.horde-deck-pending-mill {
+.host-deck-pending-mill {
   margin-bottom: 0;
   color: #e2a36f;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
@@ -10380,7 +10380,7 @@
   white-space: nowrap;
 }
 
-.horde-deck-graveyard {
+.host-deck-graveyard {
   position: relative;
   display: flex !important;
   width: 62px;
@@ -10397,7 +10397,7 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 7px 10px 22px rgb(0 0 0 / 0.32);
 }
 
-.horde-deck-graveyard-host {
+.host-deck-graveyard-host {
   position: absolute;
   top: 14px;
   right: 100%;
@@ -10405,7 +10405,7 @@
   display: block;
 }
 
-.horde-deck-graveyard-count {
+.host-deck-graveyard-count {
   color: #e1d19d;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
   font-size: 18px;
@@ -10413,15 +10413,15 @@
   line-height: 1;
 }
 
-.horde-deck-graveyard:hover,
-.horde-deck-graveyard:focus-visible {
+.host-deck-graveyard:hover,
+.host-deck-graveyard:focus-visible {
   border-color: rgb(221 198 124 / 0.78) !important;
   color: #ffe3a0 !important;
   outline: none;
   filter: brightness(1.1);
 }
 
-.horde-deck-emblem {
+.host-deck-emblem {
   width: 48px !important;
   height: 48px !important;
   border-color: rgb(190 126 78 / 0.72) !important;
@@ -10432,16 +10432,16 @@
   transform: rotate(45deg);
 }
 
-.horde-deck-emblem > svg {
+.host-deck-emblem > svg {
   transform: rotate(-45deg);
 }
 
-.horde-poison-tooltip {
+.host-poison-tooltip {
   flex: 0 0 auto;
   margin-left: auto;
 }
 
-.horde-poison-status {
+.host-poison-status {
   display: flex;
   min-width: 35px;
   height: 38px;
@@ -10454,22 +10454,22 @@
   text-shadow: 0 0 12px rgb(104 212 48 / 0.42);
 }
 
-.horde-poison-status.is-poison-gaining {
-  animation: horde-poison-counter-gain 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.host-poison-status.is-poison-gaining {
+  animation: host-poison-counter-gain 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.horde-poison-status.is-poison-consuming {
-  animation: horde-poison-counter-consume 820ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.host-poison-status.is-poison-consuming {
+  animation: host-poison-counter-consume 820ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.horde-poison-status span {
+.host-poison-status span {
   color: #e7ffc1;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 18px;
   line-height: 1;
 }
 
-.horde-attack-count-host {
+.host-attack-count-host {
   position: absolute;
   top: 14px;
   left: 100%;
@@ -10479,13 +10479,13 @@
   transform-origin: left center;
 }
 
-.horde-attack-count-host > .game-tooltip-host {
+.host-attack-count-host > .game-tooltip-host {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.horde-attack-count {
+.host-attack-count {
   display: flex;
   width: 100%;
   height: 100%;
@@ -10501,12 +10501,12 @@
   padding: 7px 12px;
 }
 
-.horde-attack-count > svg {
+.host-attack-count > svg {
   flex: 0 0 auto;
   filter: drop-shadow(0 0 8px rgb(231 112 44 / 0.28));
 }
 
-.horde-attack-formula {
+.host-attack-formula {
   color: #ffe0a5;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
   font-size: 15px;
@@ -10624,7 +10624,7 @@
   color: #e6f8b8 !important;
 }
 
-@keyframes horde-counter-attack-locked {
+@keyframes host-counter-attack-locked {
   0%, 100% {
     filter: drop-shadow(0 0 7px rgb(210 62 40 / 0.2));
   }
@@ -10633,7 +10633,7 @@
   }
 }
 
-@keyframes horde-counter-hit {
+@keyframes host-counter-hit {
   0% {
     filter: brightness(1);
     transform: translateX(0);
@@ -10655,7 +10655,7 @@
   }
 }
 
-@keyframes horde-lifesteal-bite-impact {
+@keyframes host-lifesteal-bite-impact {
   0%, 100% {
     filter: brightness(1);
     transform: translateX(0);
@@ -10676,7 +10676,7 @@
   }
 }
 
-@keyframes horde-lifesteal-blood-wave {
+@keyframes host-lifesteal-blood-wave {
   0% {
     clip-path: circle(0% at 16% 50%);
     opacity: 0;
@@ -10692,13 +10692,13 @@
   }
 }
 
-@keyframes horde-poison-impact-lifetime {
+@keyframes host-poison-impact-lifetime {
   0% { opacity: 0; }
   8%, 72% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-@keyframes horde-poison-splash-core {
+@keyframes host-poison-splash-core {
   0% {
     opacity: 0;
     filter: blur(4px) saturate(1.1);
@@ -10720,13 +10720,13 @@
   }
 }
 
-@keyframes horde-poison-fume-rise {
+@keyframes host-poison-fume-rise {
   0% { opacity: 0; transform: translateY(16px) scale(0.5); }
   28% { opacity: 0.8; transform: translateY(0) scale(0.9); }
   100% { opacity: 0; transform: translateY(-30px) scale(1.35, 1.05); }
 }
 
-@keyframes horde-poison-droplet {
+@keyframes host-poison-droplet {
   0% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.12) rotate(-18deg);
@@ -10745,7 +10745,7 @@
   }
 }
 
-@keyframes horde-poison-counter-gain {
+@keyframes host-poison-counter-gain {
   0% { filter: brightness(1); transform: scale(1); }
   24% {
     filter: brightness(1.8) saturate(1.45) drop-shadow(0 0 9px rgb(126 235 57 / 0.86));
@@ -10755,13 +10755,13 @@
   100% { filter: brightness(1); transform: scale(1) rotate(0); }
 }
 
-@keyframes horde-poison-consume-lifetime {
+@keyframes host-poison-consume-lifetime {
   0%, 8% { opacity: 0; }
   16%, 78% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-@keyframes horde-poison-consume-stream {
+@keyframes host-poison-consume-stream {
   0%, 8% {
     opacity: 0;
     transform: scaleX(0);
@@ -10776,7 +10776,7 @@
   }
 }
 
-@keyframes horde-poison-consume-burst {
+@keyframes host-poison-consume-burst {
   0%, 58% {
     opacity: 0;
     filter: blur(4px);
@@ -10794,7 +10794,7 @@
   }
 }
 
-@keyframes horde-poison-consume-drop {
+@keyframes host-poison-consume-drop {
   0%, 8% {
     opacity: 0;
     transform: translate3d(0, 0, 0) scale(0.45) rotate(-10deg);
@@ -10814,7 +10814,7 @@
   }
 }
 
-@keyframes horde-poison-counter-consume {
+@keyframes host-poison-counter-consume {
   0%, 12% {
     filter: brightness(1);
     opacity: 1;
@@ -10896,7 +10896,7 @@
   transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.game-phase-button[data-tone="horde"],
+.game-phase-button[data-tone="host"],
 .game-phase-button[data-tone="default"] {
   border-color: rgb(236 165 78 / 0.82) !important;
   background: linear-gradient(110deg, #9b4b1d, #54220f 66%, #743515) !important;
@@ -10907,7 +10907,7 @@
     0 0 30px rgb(224 91 26 / 0.34) !important;
 }
 
-.game-phase-orb.is-chaos .game-phase-button[data-tone="horde"],
+.game-phase-orb.is-chaos .game-phase-button[data-tone="host"],
 .game-phase-orb.is-chaos .game-phase-button[data-tone="default"] {
   border-color: rgb(222 126 190 / 0.86) !important;
   background: linear-gradient(110deg, #8d3d75, #461b3b 66%, #6c2b59) !important;
@@ -11177,7 +11177,7 @@
   color: rgb(201 193 164 / 0.34);
 }
 
-.game-screen .battlefield-board-grid .battlefield-side-horde .battlefield-row-surface {
+.game-screen .battlefield-board-grid .battlefield-side-host .battlefield-row-surface {
   background: radial-gradient(ellipse at 50% 48%, rgb(116 49 32 / 0.04), transparent 57%);
 }
 
@@ -11743,7 +11743,7 @@
 }
 
 /* All zombies share one alignment; only their vertical position is nudged upward. */
-.battlefield-side-horde .battlefield-row-overflow .card-keyword-stack-zombie {
+.battlefield-side-host .battlefield-row-overflow .card-keyword-stack-zombie {
   top: clamp(31px, 16.5cqw, 37px);
   left: 12px;
 }
@@ -11870,7 +11870,7 @@
   pointer-events: none;
 }
 
-.card-defense-badge-horde {
+.card-defense-badge-host {
   top: -22px;
   left: 7px;
   border-radius: 7px 7px 7px 0;
@@ -14437,7 +14437,7 @@
   animation-delay: 0ms;
 }
 
-/* One-shot warning shown before the first Horde turn that resolves in Surge. */
+/* One-shot warning shown before the first Host turn that resolves in Surge. */
 .surge-transition {
   --result-accent: #a93f2d;
   --result-accent-bright: #f0a06f;
@@ -14747,7 +14747,7 @@
   background: rgb(3 10 10 / 0.64);
 }
 
-/* Keyword explanations outside the card retain their compact UI plaque. */
+/* Trait explanations outside the card retain their compact UI plaque. */
 .keyword-pill {
   min-height: 1.55rem;
   height: auto;
@@ -14934,7 +14934,7 @@
   left: 7px;
 }
 
-.battlefield-side-horde .battlefield-row-overflow .card-keyword-stack {
+.battlefield-side-host .battlefield-row-overflow .card-keyword-stack {
   top: 37px;
   left: 10px;
 }
@@ -15182,7 +15182,7 @@
   background: linear-gradient(135deg, rgb(19 25 22 / 0.8), rgb(13 8 12 / 0.88));
 }
 
-.chaos-setup .expedition-combatant-horde {
+.chaos-setup .expedition-combatant-host {
   border-color: rgb(153 86 116 / 0.3);
   background: linear-gradient(225deg, rgb(37 15 27 / 0.78), rgb(11 11 12 / 0.9));
 }
@@ -15984,7 +15984,7 @@
 }
 
 .playground-readout.is-busy > strong { color: #e6c46c; }
-.playground-readout.is-horde > strong { color: #d99a8c; }
+.playground-readout.is-host > strong { color: #d99a8c; }
 
 /* Only rendered once someone has won: a permanent "—" row would just be noise. */
 .playground-live-winner {
@@ -16411,19 +16411,19 @@
   min-width: 0;
 }
 
-.playground-horde-toolbar {
+.playground-host-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 7px;
 }
 
-.playground-horde-search {
+.playground-host-search {
   position: relative;
   min-width: 0;
 }
 
-.playground-horde-search-results {
+.playground-host-search-results {
   position: absolute;
   left: 0;
   right: 0;
@@ -16446,7 +16446,7 @@
   color: #b08a48;
 }
 
-.playground-horde-queue {
+.playground-host-queue {
   display: flex;
   max-height: 310px;
   flex-direction: column;
@@ -16455,28 +16455,28 @@
   padding-right: 2px;
 }
 
-.playground-horde-queue .playground-library-entry {
+.playground-host-queue .playground-library-entry {
   padding-left: 3px;
 }
 
-.playground-horde-queue-card {
+.playground-host-queue-card {
   min-height: 54px;
   padding: 5px 6px 5px 3px;
   background: rgba(18, 19, 16, 0.78);
 }
 
-.playground-horde-queue-card .playground-thumb {
+.playground-host-queue-card .playground-thumb {
   height: 42px;
   width: 42px;
   flex-basis: 42px;
 }
 
-.playground-horde-queue .playground-icon-button {
+.playground-host-queue .playground-icon-button {
   height: 24px;
   width: 24px;
 }
 
-.playground-horde-grip {
+.playground-host-grip {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -16484,15 +16484,15 @@
   cursor: grab;
 }
 
-.playground-horde-grip:active {
+.playground-host-grip:active {
   cursor: grabbing;
 }
 
-.playground-horde-queue .playground-library-entry.is-dragging {
+.playground-host-queue .playground-library-entry.is-dragging {
   opacity: 0.35;
 }
 
-.playground-horde-queue .playground-library-entry.is-drop-target {
+.playground-host-queue .playground-library-entry.is-drop-target {
   border-color: rgba(224, 190, 116, 0.82);
   background: rgba(120, 92, 38, 0.32);
 }
@@ -16739,7 +16739,7 @@
   height: 100%;
 }
 
-.playground-dock-body.is-scenario .playground-horde-queue { max-height: 520px; }
+.playground-dock-body.is-scenario .playground-host-queue { max-height: 520px; }
 .playground-dock-body.is-board .playground-library-list,
 .playground-dock-body.is-timeline .playground-library-list,
 .playground-dock-body.is-timeline .playground-steps {
@@ -17427,7 +17427,7 @@ body.playground-active .phase-banner-shell {
 .playground-tools-main .playground-group,
 .playground-tools-main .playground-grid-2,
 .playground-tools-main .playground-seed-row,
-.playground-tools-main .playground-horde-turn,
+.playground-tools-main .playground-host-turn,
 .playground-tools-main .playground-card-browser-toolbar,
 .playground-tools-main .playground-results,
 .playground-tools-main .playground-library-list,

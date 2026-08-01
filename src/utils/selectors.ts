@@ -1,6 +1,6 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
-import { getKeywords } from "../engine/Keywords";
-import { getPowerToughness, hordeInSurge } from "../engine/StaticEffects";
+import { getTraits } from "../engine/Traits";
+import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 
 export function cardStats(game: GameState, card: CardInstance): string {
   return cardStatState(game, card).text;
@@ -15,54 +15,54 @@ export function cardStatState(
   game: GameState,
   card: CardInstance,
   visualDamageMarked = 0,
-  heldBonus?: { power: number; toughness: number },
-): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
-  if (!card.cardTypes.includes("Creature")) return { text: "", damaged: false, buffed: false };
-  const total = getPowerToughness(game, card);
+  heldBonus?: { power: number; endurance: number },
+): { text: string; power?: number; endurance?: number; damaged: boolean; buffed: boolean } {
+  if (!card.kinds.includes("ECHO")) return { text: "", damaged: false, buffed: false };
+  const total = getPowerEndurance(game, card);
   const power = total.power - (heldBonus?.power ?? 0);
-  const toughness = total.toughness - (heldBonus?.toughness ?? 0);
+  const endurance = total.endurance - (heldBonus?.endurance ?? 0);
   const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
-  const visibleToughness = Math.max(0, toughness - damageMarked);
-  const buffed = power > card.basePower || toughness > card.baseToughness;
+  const visibleEndurance = Math.max(0, endurance - damageMarked);
+  const buffed = power > card.basePower || endurance > card.baseEndurance;
   return {
-    text: damageMarked > 0 ? `${power}/${visibleToughness}` : `${power}/${toughness}`,
+    text: damageMarked > 0 ? `${power}/${visibleEndurance}` : `${power}/${endurance}`,
     power,
-    toughness: damageMarked > 0 ? visibleToughness : toughness,
+    endurance: damageMarked > 0 ? visibleEndurance : endurance,
     damaged: damageMarked > 0,
     buffed,
   };
 }
 
-export function cardKeywords(game: GameState, card: CardInstance): string {
-  return sortKeywordsForDisplay(getKeywords(game, card))
-    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller !== "horde"))
-    .map(formatKeyword)
+export function cardTraits(game: GameState, card: CardInstance): string {
+  return sortTraitsForDisplay(getTraits(game, card))
+    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "OVERFLOW") && (keyword !== "IMPETUS" || card.controller !== "host"))
+    .map(formatTrait)
     .join(", ");
 }
 
 const KEYWORD_DISPLAY_ORDER = [
-  "MENACE",
+  "DAUNTING",
   "FLYING",
-  "REACH",
-  "FIRST_STRIKE",
-  "DEATHTOUCH",
-  "LIFESTEAL",
-  "VIGILANCE",
-  "TRAMPLE",
-  "SKULK",
+  "SKYGUARD",
+  "REFLEX",
+  "LETHAL",
+  "DRAIN",
+  "ALERT",
+  "OVERFLOW",
+  "FURTIVE",
   "HEXPROOF",
   "INDESTRUCTIBLE",
-  "HASTE",
-  "TOXIC",
+  "IMPETUS",
+  "POISON",
 ] as const;
 
 function keywordDisplayKey(keyword: string): string {
   const normalized = String(keyword).trim().toUpperCase().replace(/[\s-]+/g, "_");
-  return normalized.startsWith("TOXIC_") ? "TOXIC" : normalized;
+  return normalized.startsWith("POISON_") ? "POISON" : normalized;
 }
 
-export function sortKeywordsForDisplay(keywords: string[]): string[] {
-  return [...keywords].sort((left, right) => {
+export function sortTraitsForDisplay(traits: string[]): string[] {
+  return [...traits].sort((left, right) => {
     const leftKey = keywordDisplayKey(left);
     const rightKey = keywordDisplayKey(right);
     const leftPriority = KEYWORD_DISPLAY_ORDER.indexOf(leftKey as (typeof KEYWORD_DISPLAY_ORDER)[number]);
@@ -75,22 +75,22 @@ export function sortKeywordsForDisplay(keywords: string[]): string[] {
   });
 }
 
-function formatKeyword(keyword: string): string {
+function formatTrait(keyword: string): string {
   const text = String(keyword).trim();
-  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
-  if (toxic) return `TOXIC {${toxic[1]}}`;
+  const poison = text.match(/^POISON_(\d+)$/u);
+  if (poison) return `POISON {${poison[1]}}`;
   return text.toUpperCase();
 }
 
-export function zoneCount(game: GameState, side: Side, zone: "library" | "hand" | "battlefield" | "graveyard" | "exile"): number {
+export function zoneCount(game: GameState, side: Side, zone: "archive" | "hand" | "field" | "memory" | "oblivion"): number {
   if (side === "player") return game.player[zone].length;
   if (zone === "hand") return 0;
-  return game.horde[zone].length;
+  return game.host[zone].length;
 }
 
 export function gameStatus(game: GameState): string {
-  if (game.winner) return `${game.winner === "player" ? "Player" : "Horde"} wins`;
-  if (game.gameMode === "chaos") return hordeInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
+  if (game.winner) return `${game.winner === "player" ? "Player" : "Host"} wins`;
+  if (game.gameMode === "chaos") return hostInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
   if (game.setupTurnsRemaining > 0) return `Setup: ${game.setupTurnsRemaining} player turn(s) remain`;
-  return hordeInSurge(game) ? "Horde Surge active" : "Normal alternation";
+  return hostInSurge(game) ? "Host Surge active" : "Normal alternation";
 }

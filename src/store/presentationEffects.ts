@@ -1,11 +1,11 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { localizedTraitLabel, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { canonicalizeLogText } from "../i18n/rulesText";
 import { translate, type TranslationKey } from "../i18n/translations";
 import { useAudioStore } from "./useAudioStore";
 import { useLanguageStore } from "./useLanguageStore";
 import { useToastStore } from "./useToastStore";
-import { useGameStore, type GameStore, type HordeMillAnimationItem } from "./useGameStore";
+import { useGameStore, type GameStore, type HostMillAnimationItem } from "./useGameStore";
 import type { BuffAnimationVariant } from "./buffAnimation";
 
 // Shared presentation plumbing for the store and its sequence modules: localized text, SFX
@@ -30,7 +30,7 @@ export function uiCardName(card: CardInstance): string {
 
 export function uiTraitLabel(keyword: string): string {
   const language = useLanguageStore.getState().language;
-  return naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language));
+  return naturalCaseTraitLabel(localizedTraitLabel(keyword, language));
 }
 
 export function showActionToast(message?: string): void {
@@ -47,7 +47,7 @@ export function monsterSfx(card: CardInstance) {
   if (
     HEAVY_SUMMON_DEFINITION_IDS.has(card.definitionId) ||
     card.basePower > 4 ||
-    card.baseToughness > 4
+    card.baseEndurance > 4
   ) {
     return "playMonsterHeavy" as const;
   }
@@ -56,13 +56,13 @@ export function monsterSfx(card: CardInstance) {
 }
 
 export function playDrawOneIfPlayerDrew(previous: GameState, next: GameState): void {
-  if (next.player.hand.length > previous.player.hand.length && next.player.library.length < previous.player.library.length) {
+  if (next.player.hand.length > previous.player.hand.length && next.player.archive.length < previous.player.archive.length) {
     useAudioStore.getState().playSfx("drawOne");
   }
 }
 
 export function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+  return [...game.player.field, ...game.host.field].find((card) => card.instanceId === id);
 }
 
 /** Cards whose temporary stats increased or that gained a temporary keyword between two
@@ -70,23 +70,23 @@ export function findBattlefieldCard(game: GameState, id: string): CardInstance |
  *  presentation rule without teaching the store individual effect types. */
 export function findTemporaryBuffedCardIds(previous: GameState, next: GameState): string[] {
   const previousBuffs = new Map(
-    [...previous.player.battlefield, ...previous.horde.battlefield].map((card) => [
+    [...previous.player.field, ...previous.host.field].map((card) => [
       card.instanceId,
       {
         power: card.temporaryPower,
-        toughness: card.temporaryToughness,
-        keywords: new Set(card.temporaryKeywords),
+        endurance: card.temporaryEndurance,
+        traits: new Set(card.temporaryTraits),
       },
     ]),
   );
-  return [...next.player.battlefield, ...next.horde.battlefield]
+  return [...next.player.field, ...next.host.field]
     .filter((card) => {
       const before = previousBuffs.get(card.instanceId);
       if (!before) return false;
       return (
         card.temporaryPower > before.power ||
-        card.temporaryToughness > before.toughness ||
-        card.temporaryKeywords.some((keyword) => !before.keywords.has(keyword))
+        card.temporaryEndurance > before.endurance ||
+        card.temporaryTraits.some((keyword) => !before.traits.has(keyword))
       );
     })
     .map((card) => card.instanceId);
@@ -138,7 +138,7 @@ export function startLifeBuffBeat(): { lifeBuffAnimationId: number } {
   return { lifeBuffAnimationId: Date.now() };
 }
 
-/** Flashes the lands auto-tapped to pay a cast; returns the animation patch value (or
+/** Flashes the Sources auto-Exhausted to pay a cast; returns the animation patch value (or
  *  undefined when nothing was auto-paid). */
 export function flashAutoPaidLands(ids: string[]): { ids: string[]; eventId: number } | undefined {
   if (ids.length === 0) return undefined;
@@ -150,11 +150,11 @@ export function flashAutoPaidLands(ids: string[]): { ids: string[]; eventId: num
   return { ids, eventId: Date.now() };
 }
 
-// Discards are derived from the card diff (hand -> graveyard), never from log text:
+// Discards are derived from the card diff (Hand -> Memory), never from log text:
 // the log is display-only and its wording must stay free to change or localize.
-export function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "horde" }): void {
-  const previousPlayerGraveyardIds = new Set(previous.player.graveyard.map((card) => card.instanceId));
-  const discardedCards = next.player.graveyard.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
+export function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "host" }): void {
+  const previousPlayerGraveyardIds = new Set(previous.player.memory.map((card) => card.instanceId));
+  const discardedCards = next.player.memory.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
   if (discardedCards.length === 0) return;
   const origins = new Map(
     discardedCards.map((card) => {
@@ -175,25 +175,25 @@ export function notifyDiscardEffects(previous: GameState, next: GameState, optio
   for (const card of discardedCards) {
     useAudioStore.getState().playSfx("drawOne");
     useToastStore.getState().pushToast({
-      title: options?.title ?? uiText("toast.hordeEffect"),
+      title: options?.title ?? uiText("toast.hostEffect"),
       message: uiText("toast.chroniclerDiscardsCard", { card: uiCardName(card) }),
-      tone: options?.tone ?? "horde",
+      tone: options?.tone ?? "host",
     });
   }
 }
 
-export function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMillAnimationItem[] {
-  const previousLibraryIds = new Set(previous.horde.library.map((card) => card.instanceId));
-  return next.horde.graveyard
+export function hostMillAnimationsFrom(previous: GameState, next: GameState): HostMillAnimationItem[] {
+  const previousLibraryIds = new Set(previous.host.archive.map((card) => card.instanceId));
+  return next.host.memory
     .filter((card) => previousLibraryIds.has(card.instanceId))
     .map((card) => ({
-      id: `horde-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: `host-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       card,
       preview: false,
     }));
 }
 
-export function appendHordeMillAnimations(state: GameStore, previous: GameState, next: GameState): HordeMillAnimationItem[] {
-  const milled = hordeMillAnimationsFrom(previous, next);
-  return milled.length > 0 ? [...state.hordeMillAnimationQueue, ...milled] : state.hordeMillAnimationQueue;
+export function appendHostMillAnimations(state: GameStore, previous: GameState, next: GameState): HostMillAnimationItem[] {
+  const milled = hostMillAnimationsFrom(previous, next);
+  return milled.length > 0 ? [...state.hostMillAnimationQueue, ...milled] : state.hostMillAnimationQueue;
 }

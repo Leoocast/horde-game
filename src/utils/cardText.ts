@@ -3,7 +3,7 @@ import type { AppLanguage } from "../i18n/translations";
 import { canonicalizeRulesText } from "../i18n/rulesText";
 
 export function typeLine(card: CardInstance): string {
-  return [...card.cardTypes, card.subtypes.length ? `- ${card.subtypes.join(" ")}` : ""].filter(Boolean).join(" ");
+  return [...card.kinds, card.subtypes.length ? `- ${card.subtypes.join(" ")}` : ""].filter(Boolean).join(" ");
 }
 
 export function effectSummary(card: CardInstance): string {

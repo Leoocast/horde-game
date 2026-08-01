@@ -8,7 +8,7 @@ export function playerHandOverflow(game: GameState): number {
 }
 
 export function playerLandCount(game: GameState): number {
-  return game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length;
+  return game.player.field.filter((card) => card.kinds.includes("SOURCE")).length;
 }
 
 export function canPlayerPutAnotherLand(game: GameState): boolean {

@@ -5,7 +5,7 @@ import { DeckInspector } from "./components/DeckInspector";
 import { EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
-import { findInspectableDeck, hordeInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
+import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -33,13 +33,13 @@ export default function App() {
   const [requestInitialName, setRequestInitialName] = useState(() => !hasCompletedOnboarding());
   const [setupTurns, setSetupTurns] = useState(3);
   const [selectedDeckId, setSelectedDeckId] = useState(playerInspectableDecks[0].id);
-  const [selectedHordeDeckId, setSelectedHordeDeckId] = useState(hordeInspectableDecks[0].id);
+  const [selectedHostDeckId, setSelectedHostDeckId] = useState(hostInspectableDecks[0].id);
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
     playerName: string;
-    hordeName: string;
+    hostName: string;
     encounterTone: EncounterTone;
     gameMode: GameMode;
   } | null>(null);
@@ -129,7 +129,7 @@ export default function App() {
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
       playerName={launchTransition.playerName}
-      hordeName={launchTransition.hordeName}
+      hostName={launchTransition.hostName}
       encounterTone={launchTransition.encounterTone}
       gameMode={launchTransition.gameMode}
     />
@@ -201,13 +201,13 @@ export default function App() {
             setInspectorDeckId(selectedDeckId);
             setScreen("deckInspector");
           }}
-          hordeDecks={hordeInspectableDecks}
-          selectedHordeDeckId={selectedHordeDeckId}
-          onSelectHordeDeck={setSelectedHordeDeckId}
-          onViewHordeDeck={(returnScreen = "setup") => {
+          hostDecks={hostInspectableDecks}
+          selectedHostDeckId={selectedHostDeckId}
+          onSelectHostDeck={setSelectedHostDeckId}
+          onViewHostDeck={(returnScreen = "setup") => {
             setPreserveMenuMusic(true);
             setMenuReturnScreen(returnScreen);
-            setInspectorDeckId(selectedHordeDeckId);
+            setInspectorDeckId(selectedHostDeckId);
             setScreen("deckInspector");
           }}
           initialScreen={menuReturnScreen}
@@ -243,15 +243,15 @@ export default function App() {
               options.seed,
               options.setupTurns,
               selectedDeckId,
-              selectedHordeDeckId,
+              selectedHostDeckId,
               options.mode,
               options.gameMode,
             );
-            const transitionHordeDeck = hordeInspectableDecks.find((deck) => deck.id === selectedHordeDeckId);
+            const transitionHostDeck = hostInspectableDecks.find((deck) => deck.id === selectedHostDeckId);
             setLaunchTransition({
               playerName: options.playerName,
-              hordeName: transitionHordeDeck?.deck.name ?? "The Host",
-              encounterTone: transitionHordeDeck?.presentation.encounterTone ?? "undead",
+              hostName: transitionHostDeck?.deck.name ?? "The Host",
+              encounterTone: transitionHostDeck?.presentation.encounterTone ?? "undead",
               gameMode: options.gameMode,
             });
           }}

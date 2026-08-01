@@ -1,13 +1,10 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "1.0.0",
   "id": "mono_green_ramp",
   "name": "Mono-Green Ramp 39",
   "format": "casual",
-  "side": "PLAYER",
+  "side": "CHRONICLER",
   "deckSize": 39,
-  "colors": [
-    "G"
-  ],
   "archetype": "ramp",
   "gamePlan": "Acelera tu Energía con Ecos, desarrolla amenazas con Guardia aérea y usa Hechizos de Batalla o destrucción basada en Ecos para controlar el Campo.",
   "tokens": [],
@@ -21,46 +18,38 @@
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [
         "Elf",
         "Druid"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [],
+      "endurance": 1,
       "abilities": [
         {
           "id": "llanowar_elves_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "sunshower_druid",
@@ -71,40 +60,32 @@
         "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
       },
       "quantity": 3,
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [
         "Frog",
         "Druid"
       ],
       "power": 0,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "sunshower_druid_enter_counter_and_life",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "INVOKED",
+            "source": "SELF"
           },
           "targets": [
             {
               "id": "targetCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -124,57 +105,53 @@
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "druid_of_the_cowl",
       "name": "Druid of the Cowl",
-      "displayNameEs": "Druid of the Cowl",
+      "displayNameEs": "Druida de la capucha",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 2,
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Elf",
         "Druid"
       ],
       "power": 1,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [
         {
           "id": "druid_of_the_cowl_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "ichorspit_basilisk",
@@ -185,37 +162,22 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Phyrexian",
         "Basilisk"
       ],
       "power": 1,
-      "toughness": 3,
-      "keywords": [
-        "DEATHTOUCH"
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": [
-        {
-          "id": "ichorspit_basilisk_toxic_1",
-          "kind": "STATIC",
-          "zone": "BATTLEFIELD",
-          "targets": [],
-          "conditions": [],
-          "effects": [],
-          "customHandler": "toxic_1",
-          "implementationNote": "Cuando esta carta hace daño de Batalla a la Hueste, agrega 1 de Veneno. Veneno 1 no depende de la cantidad de daño."
-        }
+      "traits": [
+        "LETHAL",
+        "POISON_1"
       ]
     },
     {
@@ -227,44 +189,33 @@
         "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
       },
       "quantity": 3,
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Elf",
         "Ranger"
       ],
       "power": 3,
-      "toughness": 3,
-      "keywords": [
-        "TRAMPLE"
-      ],
+      "endurance": 3,
       "abilities": [
         {
           "id": "beast_kin_ranger_other_creature_enters",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD"
+            "event": "INVOKED"
           },
           "targets": [],
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": true,
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -274,11 +225,17 @@
               "type": "MODIFY_STATS",
               "target": "SELF",
               "power": 1,
-              "toughness": 0,
+              "endurance": 0,
               "duration": "END_OF_TURN"
             }
           ]
         }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "OVERFLOW"
       ]
     },
     {
@@ -290,26 +247,21 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "manaCost": "{3}{G}",
-      "manaValue": 4,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Treefolk"
       ],
       "power": 4,
-      "toughness": 4,
-      "keywords": [
-        "REACH"
+      "endurance": 4,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": []
+      "traits": [
+        "SKYGUARD"
+      ]
     },
     {
       "id": "colossadactyl",
@@ -320,27 +272,22 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "manaCost": "{2}{G}{G}",
-      "manaValue": 4,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Dinosaur"
       ],
       "power": 4,
-      "toughness": 5,
-      "keywords": [
-        "REACH",
-        "TRAMPLE"
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": []
+      "traits": [
+        "SKYGUARD",
+        "OVERFLOW"
+      ]
     },
     {
       "id": "timberland_ancient",
@@ -351,27 +298,22 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "manaCost": "{4}{G}{G}",
-      "manaValue": 6,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 6
+      },
       "subtypes": [
         "Treefolk"
       ],
       "power": 6,
-      "toughness": 5,
-      "keywords": [
-        "REACH",
-        "TRAMPLE"
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": []
+      "traits": [
+        "SKYGUARD",
+        "OVERFLOW"
+      ]
     },
     {
       "id": "cosmic_hunger",
@@ -382,60 +324,38 @@
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "quantity": 2,
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "cosmic_hunger_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{1}{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "sourceCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "SELF",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             },
             {
               "id": "damageTarget",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
                 "anyOf": [
                   {
-                    "cardTypes": [
-                      "Creature"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Planeswalker"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Battle"
+                    "kinds": [
+                      "ECHO"
                     ]
                   }
                 ],
@@ -460,7 +380,14 @@
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "ruthless_predation",
@@ -471,48 +398,36 @@
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "quantity": 1,
-      "manaCost": "{1}{G}",
-      "manaValue": 2,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Sorcery"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "ruthless_predation_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "SORCERY",
-          "cost": {
-            "mana": "{1}{G}"
-          },
+          "speed": "MAIN",
           "targets": [
             {
               "id": "yourCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "SELF",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             },
             {
               "id": "opponentCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "OPPONENT",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -523,7 +438,7 @@
               "type": "MODIFY_STATS",
               "target": "yourCreature",
               "power": 1,
-              "toughness": 2,
+              "endurance": 2,
               "duration": "END_OF_TURN"
             },
             {
@@ -558,7 +473,11 @@
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
     },
     {
       "id": "broken_wings",
@@ -569,52 +488,35 @@
         "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "quantity": 2,
-      "manaCost": "{2}{G}",
-      "manaValue": 3,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "broken_wings_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{2}{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "targetPermanent",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
                 "anyOf": [
                   {
-                    "cardTypes": [
-                      "Artifact"
+                    "kinds": [
+                      "SUPPORT"
                     ]
                   },
                   {
-                    "cardTypes": [
-                      "Enchantment"
-                    ]
-                  },
-                  {
-                    "cardTypes": [
-                      "Creature"
+                    "kinds": [
+                      "ECHO"
                     ],
-                    "keywords": [
+                    "traits": [
                       "FLYING"
                     ]
                   }
@@ -630,7 +532,14 @@
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "giant_growth",
@@ -641,38 +550,26 @@
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "quantity": 2,
-      "manaCost": "{G}",
-      "manaValue": 1,
-      "colors": [
-        "G"
-      ],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Instant"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "giant_growth_spell",
           "kind": "SPELL",
           "zone": "HAND",
-          "speed": "INSTANT",
-          "cost": {
-            "mana": "{G}"
-          },
+          "speed": "QUICK",
           "targets": [
             {
               "id": "targetCreature",
-              "zone": "BATTLEFIELD",
+              "zone": "FIELD",
               "controller": "ANY",
               "filters": {
-                "cardTypes": [
-                  "Creature"
+                "kinds": [
+                  "ECHO"
                 ]
               }
             }
@@ -683,12 +580,19 @@
               "type": "MODIFY_STATS",
               "target": "targetCreature",
               "power": 3,
-              "toughness": 3,
+              "endurance": 3,
               "duration": "END_OF_TURN"
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
     },
     {
       "id": "forest",
@@ -699,43 +603,37 @@
         "es": "Agota: Gana 1 Energía."
       },
       "quantity": 15,
-      "manaCost": null,
-      "manaValue": 0,
-      "colors": [],
-      "colorIdentity": [
-        "G"
-      ],
-      "cardTypes": [
-        "Land"
-      ],
+      "energyCost": {
+        "amount": 0
+      },
       "subtypes": [
         "Forest"
       ],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "forest_add_green",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "speed": "INSTANT",
+          "zone": "FIELD",
           "cost": {
-            "tap": true
+            "exhaust": true
           },
           "targets": [],
           "conditions": [],
           "effects": [
             {
-              "type": "ADD_MANA",
+              "type": "GAIN_ENERGY",
               "player": "SELF",
-              "mana": {
-                "G": 1
-              }
+              "amount": 1
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "SOURCE"
+      ],
+      "traits": []
     }
   ],
   "engineSupportNeeded": []

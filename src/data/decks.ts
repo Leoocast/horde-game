@@ -1,7 +1,7 @@
-import goblinHordeRaw from "./decks/horde/goblins/goblin_assault_horde.json";
-import goblinHordeImagesRaw from "./decks/horde/goblins/goblin_assault_horde_images_definition.json";
-import hordeZombiesRaw from "./decks/horde/zombies/horde-zombies.json";
-import hordeZombiesImagesRaw from "./decks/horde/zombies/horde-zombies_images.json";
+import goblinHostRaw from "./decks/horde/goblins/goblin_assault_horde.json";
+import goblinHostImagesRaw from "./decks/horde/goblins/goblin_assault_horde_images_definition.json";
+import hostZombiesRaw from "./decks/horde/zombies/horde-zombies.json";
+import hostZombiesImagesRaw from "./decks/horde/zombies/horde-zombies_images.json";
 import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
 import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
 import vampirePreviewRaw from "./decks/player/vampire_preview/vampire_preview.json";
@@ -37,13 +37,13 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("Zombie Host 50", hordeZombiesRaw as NewDeckList, hordeZombiesImagesRaw as DeckImageManifest, {
+  register("Zombie Host 50", hostZombiesRaw as NewDeckList, hostZombiesImagesRaw as DeckImageManifest, {
     keyCardId: "zombie_token",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("Goblin Host 50", goblinHordeRaw as unknown as NewDeckList, goblinHordeImagesRaw as DeckImageManifest, {
+  register("Goblin Host 50", goblinHostRaw as unknown as NewDeckList, goblinHostImagesRaw as DeckImageManifest, {
     keyCardId: "goblin_token_1_1_red",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
@@ -52,10 +52,10 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
 ];
 
 export const DEFAULT_PLAYER_DECK_ID = "mono_green_ramp";
-export const DEFAULT_HORDE_DECK_ID = "horde_zombies";
+export const DEFAULT_HOST_DECK_ID = "horde_zombies";
 
 export const playerDeck = requireDeck(DEFAULT_PLAYER_DECK_ID);
-export const hordeDeck = requireDeck(DEFAULT_HORDE_DECK_ID);
+export const hostDeck = requireDeck(DEFAULT_HOST_DECK_ID);
 
 export function getPlayerDeck(id: string): DeckList {
   const entry = DECK_REGISTRY.find(
@@ -64,9 +64,9 @@ export function getPlayerDeck(id: string): DeckList {
   return entry?.deck ?? playerDeck;
 }
 
-export function getHordeDeck(id: string): DeckList {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === id && item.deck.side === "horde");
-  return entry?.deck ?? hordeDeck;
+export function getHostDeck(id: string): DeckList {
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === id && item.deck.side === "host");
+  return entry?.deck ?? hostDeck;
 }
 
 export const cardDefinitions: CardDefinition[] = DECK_REGISTRY.flatMap((entry) => [

@@ -5,15 +5,15 @@ import {
   BLANK_SCENARIO,
   addScenarioCard,
   buildScenarioGame,
-  configureExactHordeTurn,
+  configureExactHostTurn,
   snapshotBoard,
   snapshotScenario,
   validateScenario,
 } from "../src/playground/scenario";
 import { advancePhase } from "../src/engine/PhaseManager";
-import { runHordeMain } from "../src/engine/HordeController";
+import { runHostMain } from "../src/engine/HostController";
 import { MAX_PLAYER_LANDS } from "../src/engine/GameRules";
-import { STORED_MANA_CAP } from "../src/engine/ManaSystem";
+import { STORED_ENERGY_CAP } from "../src/engine/EnergySystem";
 
 function scenario(overrides = {}) {
   return { ...BLANK_SCENARIO, ...overrides, zones: { ...BLANK_SCENARIO.zones, ...(overrides.zones ?? {}) } };
@@ -23,7 +23,7 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   const game = buildScenarioGame(scenario());
 
   assert.equal(game.player.hand.length, 0);
-  assert.equal(game.horde.battlefield.length, 0);
+  assert.equal(game.host.field.length, 0);
   assert.equal(game.setupTurnsRemaining, 0);
   assert.equal(game.openingHandAccepted, true);
   assert.equal(game.phase, "main");
@@ -33,71 +33,88 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
 
   // The only permanents on a blank board are its energy sources: a board you cannot cast from is
   // not a useful place to start testing a card.
-  assert.equal(game.player.battlefield.length, MAX_PLAYER_LANDS);
-  assert.ok(game.player.battlefield.every((card) => card.cardTypes.includes("Land") && !card.tapped));
+  assert.equal(game.player.field.length, MAX_PLAYER_LANDS);
+  assert.ok(game.player.field.every((card) => card.kinds.includes("SOURCE") && !card.exhausted));
+});
+
+test("scenario v3 preserves Host identity directly across runtime and snapshots", () => {
+  const definition = scenario({
+    activeSide: "host",
+    phase: "host",
+    hostTurnNumber: 4,
+    host: { poisonCounters: 2 },
+  });
+  const game = buildScenarioGame(definition);
+
+  assert.equal(game.activeSide, "host");
+  assert.equal(game.phase, "host");
+  assert.equal(game.hostTurnNumber, 4);
+  assert.equal(game.host.poisonCounters, 2);
+
+  const saved = snapshotScenario(game, definition);
+  assert.equal(saved.activeSide, "host");
+  assert.equal(saved.phase, "host");
+  assert.equal(saved.hostTurnNumber, 4);
+  assert.equal(saved.host.poisonCounters, 2);
 });
 
 test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
   const game = buildScenarioGame(scenario({ player: { life: 50, energy: 99, storedEnergy: 99 } }));
 
-  assert.equal(game.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, MAX_PLAYER_LANDS);
-  assert.equal(game.player.manaPool.colorless, STORED_MANA_CAP);
-  // One resource: nothing colored is ever configured or produced.
-  assert.deepEqual(
-    { green: game.player.manaPool.green, red: game.player.manaPool.red, blue: game.player.manaPool.blue },
-    { green: 0, red: 0, blue: 0 },
-  );
+  assert.equal(game.player.field.filter((card) => card.kinds.includes("SOURCE")).length, MAX_PLAYER_LANDS);
+  assert.equal(game.player.energyPool.stored, STORED_ENERGY_CAP);
+  assert.deepEqual(game.player.energyPool, { available: 0, stored: STORED_ENERGY_CAP });
 });
 
 test("lands listed in a zone count against the energy field instead of stacking past the cap", () => {
   const game = buildScenarioGame(
     scenario({
       player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
-      zones: { playerBattlefield: [{ definitionId: "forest", amount: 2, tapped: true }] },
+      zones: { playerField: [{ definitionId: "forest", amount: 2, exhausted: true }] },
     }),
   );
 
-  const lands = game.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  const lands = game.player.field.filter((card) => card.kinds.includes("SOURCE"));
   assert.equal(lands.length, MAX_PLAYER_LANDS);
   // The two the scenario asked for keep the state it asked for; the field only tops up the rest.
-  assert.equal(lands.filter((card) => card.tapped).length, 2);
+  assert.equal(lands.filter((card) => card.exhausted).length, 2);
 });
 
 test("zone entries become real card instances in the right zone", () => {
   const game = buildScenarioGame(
     scenario({
       player: { life: 12, energy: 0, storedEnergy: 3 },
-      horde: { poisonCounters: 2 },
+      host: { poisonCounters: 2 },
       zones: {
         playerHand: [{ definitionId: "giant_growth" }],
-        playerBattlefield: [{ definitionId: "forest", amount: 3, tapped: true }],
-        playerGraveyard: [{ definitionId: "llanowar_elves" }],
-        hordeBattlefield: [{ definitionId: "zombie_token", amount: 2 }],
-        hordeLibraryTop: [{ definitionId: "graf_harvest" }],
+        playerField: [{ definitionId: "forest", amount: 3, exhausted: true }],
+        playerMemory: [{ definitionId: "llanowar_elves" }],
+        hostField: [{ definitionId: "zombie_token", amount: 2 }],
+        hostArchiveTop: [{ definitionId: "graf_harvest" }],
       },
     }),
   );
 
   assert.equal(game.player.life, 12);
-  assert.equal(game.player.manaPool.colorless, 3);
-  assert.equal(game.horde.poisonCounters, 2);
+  assert.equal(game.player.energyPool.stored, 3);
+  assert.equal(game.host.poisonCounters, 2);
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["giant_growth"]);
   assert.equal(game.player.hand[0].zone, "hand");
 
-  const lands = game.player.battlefield;
+  const lands = game.player.field;
   assert.equal(lands.length, 3);
-  assert.ok(lands.every((card) => card.definitionId === "forest" && card.zone === "battlefield" && card.tapped));
+  assert.ok(lands.every((card) => card.definitionId === "forest" && card.zone === "field" && card.exhausted));
 
-  assert.deepEqual(game.player.graveyard.map((card) => card.definitionId), ["llanowar_elves"]);
-  assert.equal(game.player.graveyard[0].zone, "graveyard");
+  assert.deepEqual(game.player.memory.map((card) => card.definitionId), ["llanowar_elves"]);
+  assert.equal(game.player.memory[0].zone, "memory");
 
-  assert.equal(game.horde.battlefield.length, 2);
-  assert.ok(game.horde.battlefield.every((card) => card.definitionId === "zombie_token" && card.controller === "horde"));
+  assert.equal(game.host.field.length, 2);
+  assert.ok(game.host.field.every((card) => card.definitionId === "zombie_token" && card.controller === "host"));
   // Scenario cards are assumed to be already in play, so they can act immediately.
-  assert.ok(game.horde.battlefield.every((card) => !card.summoningSickness));
+  assert.ok(game.host.field.every((card) => !card.stabilizing));
 
-  assert.equal(game.horde.library[0].definitionId, "graf_harvest");
+  assert.equal(game.host.archive[0].definitionId, "graf_harvest");
 });
 
 test("instance ids are unique across every zone", () => {
@@ -105,19 +122,19 @@ test("instance ids are unique across every zone", () => {
     scenario({
       zones: {
         playerHand: [{ definitionId: "forest", amount: 2 }],
-        playerBattlefield: [{ definitionId: "forest", amount: 4 }],
-        playerGraveyard: [{ definitionId: "forest", amount: 2 }],
+        playerField: [{ definitionId: "forest", amount: 4 }],
+        playerMemory: [{ definitionId: "forest", amount: 2 }],
       },
     }),
   );
 
   const ids = [
-    ...game.player.library,
+    ...game.player.archive,
     ...game.player.hand,
-    ...game.player.battlefield,
-    ...game.player.graveyard,
-    ...game.horde.library,
-    ...game.horde.battlefield,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.host.archive,
+    ...game.host.field,
   ].map((card) => card.instanceId);
 
   assert.equal(new Set(ids).size, ids.length);
@@ -125,18 +142,18 @@ test("instance ids are unique across every zone", () => {
 
 test("copies beyond the deck's count are minted instead of silently dropped", () => {
   // The Zombie deck holds a single Graf Harvest; a scenario may still want three on the board.
-  const game = buildScenarioGame(scenario({ zones: { hordeBattlefield: [{ definitionId: "graf_harvest", amount: 3 }] } }));
+  const game = buildScenarioGame(scenario({ zones: { hostField: [{ definitionId: "graf_harvest", amount: 3 }] } }));
 
-  assert.equal(game.horde.battlefield.length, 3);
-  assert.equal(new Set(game.horde.battlefield.map((card) => card.instanceId)).size, 3);
+  assert.equal(game.host.field.length, 3);
+  assert.equal(new Set(game.host.field.map((card) => card.instanceId)).size, 3);
 });
 
 test("rebuilding a scenario reproduces the exact same state, RNG included", () => {
   const definition = scenario({
     seed: "repeatable",
     zones: {
-      playerBattlefield: [{ definitionId: "forest", amount: 4 }],
-      hordeBattlefield: [{ definitionId: "zombie_token" }],
+      playerField: [{ definitionId: "forest", amount: 4 }],
+      hostField: [{ definitionId: "zombie_token" }],
     },
   });
 
@@ -146,8 +163,8 @@ test("rebuilding a scenario reproduces the exact same state, RNG included", () =
 
   // And the same actions on top of a rebuild produce the same result: that is what makes
   // "restart scenario" trustworthy, since nothing is reverted — the state is built again.
-  const playedFirst = runHordeMain(advancePhase(first, "main"));
-  const playedSecond = runHordeMain(advancePhase(second, "main"));
+  const playedFirst = runHostMain(advancePhase(first, "main"));
+  const playedSecond = runHostMain(advancePhase(second, "main"));
   assert.deepEqual(playedSecond, playedFirst);
   assert.equal(playedFirst.currentRandomState, playedSecond.currentRandomState);
 });
@@ -164,15 +181,15 @@ test("unknown cards are reported by validateScenario, not half-loaded", () => {
 test("placing cards into a live game keeps instance ids unique across repeated adds", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
   // Forest is in the deck, so the first copies come out of the library; Graf Harvest belongs to the
-  // Horde deck only once, so the later copies have to be minted — both paths in one run.
+  // Host deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {
-    game = addScenarioCard(game, "playerBattlefield", { definitionId: "forest", amount: 2 });
-    game = addScenarioCard(game, "hordeBattlefield", { definitionId: "graf_harvest" });
+    game = addScenarioCard(game, "playerField", { definitionId: "forest", amount: 2 });
+    game = addScenarioCard(game, "hostField", { definitionId: "graf_harvest" });
   }
 
-  assert.equal(game.player.battlefield.length, 6);
-  assert.equal(game.horde.battlefield.length, 3);
-  const ids = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.library, ...game.horde.library].map((card) => card.instanceId);
+  assert.equal(game.player.field.length, 6);
+  assert.equal(game.host.field.length, 3);
+  const ids = [...game.player.field, ...game.host.field, ...game.player.archive, ...game.host.archive].map((card) => card.instanceId);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(game.lastActionResult.ok, true);
 });
@@ -190,34 +207,34 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   // card and saving can never disagree the way a separate draft did.
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
   game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth", amount: 2 });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token", amount: 3 });
-  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game = addScenarioCard(game, "hostField", { definitionId: "zombie_token", amount: 3 });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "llanowar_elves" });
   game.player.life = 31;
-  game.horde.poisonCounters = 4;
+  game.host.poisonCounters = 4;
 
   const rebuilt = buildScenarioGame(snapshotScenario(game, BLANK_SCENARIO));
 
   const zoneIds = (cards) => cards.map((card) => card.definitionId).sort();
   assert.deepEqual(zoneIds(rebuilt.player.hand), zoneIds(game.player.hand));
-  assert.deepEqual(zoneIds(rebuilt.player.battlefield), zoneIds(game.player.battlefield));
-  assert.deepEqual(zoneIds(rebuilt.player.graveyard), zoneIds(game.player.graveyard));
-  assert.deepEqual(zoneIds(rebuilt.horde.battlefield), zoneIds(game.horde.battlefield));
+  assert.deepEqual(zoneIds(rebuilt.player.field), zoneIds(game.player.field));
+  assert.deepEqual(zoneIds(rebuilt.player.memory), zoneIds(game.player.memory));
+  assert.deepEqual(zoneIds(rebuilt.host.field), zoneIds(game.host.field));
   assert.equal(rebuilt.player.life, 31);
-  assert.equal(rebuilt.horde.poisonCounters, 4);
-  assert.equal(rebuilt.player.manaPool.colorless, 1);
+  assert.equal(rebuilt.host.poisonCounters, 4);
+  assert.equal(rebuilt.player.energyPool.stored, 1);
 
   // The lands travel as ordinary battlefield entries, so the top-up field must not add a second set.
-  assert.equal(rebuilt.player.battlefield.filter((card) => card.cardTypes.includes("Land")).length, 2);
+  assert.equal(rebuilt.player.field.filter((card) => card.kinds.includes("SOURCE")).length, 2);
 });
 
 test("saved boards preserve separate token waves around another summon", () => {
   let game = buildScenarioGame(scenario());
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 4 });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "hobgoblin_bandit_lord" });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "goblin_token_1_1_red", amount: 2 });
+  game = addScenarioCard(game, "hostField", { definitionId: "goblin_token_1_1_red", amount: 4 });
+  game = addScenarioCard(game, "hostField", { definitionId: "hobgoblin_bandit_lord" });
+  game = addScenarioCard(game, "hostField", { definitionId: "goblin_token_1_1_red", amount: 2 });
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
-  assert.deepEqual(saved.zones.hordeBattlefield, [
+  assert.deepEqual(saved.zones.hostField, [
     { definitionId: "goblin_token_1_1_red", amount: 4 },
     { definitionId: "hobgoblin_bandit_lord", amount: 1 },
     { definitionId: "goblin_token_1_1_red", amount: 2 },
@@ -225,56 +242,56 @@ test("saved boards preserve separate token waves around another summon", () => {
 
   const rebuilt = buildScenarioGame(saved);
   assert.deepEqual(
-    rebuilt.horde.battlefield.map((card) => card.definitionId),
-    game.horde.battlefield.map((card) => card.definitionId),
+    rebuilt.host.field.map((card) => card.definitionId),
+    game.host.field.map((card) => card.definitionId),
   );
 });
 
 test("saved boards keep only the hand and battlefields", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
   game = addScenarioCard(game, "playerHand", { definitionId: "giant_growth" });
-  game = addScenarioCard(game, "hordeBattlefield", { definitionId: "zombie_token" });
-  game = addScenarioCard(game, "playerGraveyard", { definitionId: "llanowar_elves" });
+  game = addScenarioCard(game, "hostField", { definitionId: "zombie_token" });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "llanowar_elves" });
   game.player.life = 12;
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
   const rebuilt = buildScenarioGame(saved);
 
   assert.equal(rebuilt.player.hand.some((card) => card.definitionId === "giant_growth"), true);
-  assert.equal(rebuilt.horde.battlefield.some((card) => card.definitionId === "zombie_token"), true);
-  assert.equal(rebuilt.player.graveyard.length, 0);
+  assert.equal(rebuilt.host.field.some((card) => card.definitionId === "zombie_token"), true);
+  assert.equal(rebuilt.player.memory.length, 0);
   assert.equal(rebuilt.player.life, BLANK_SCENARIO.player.life);
-  assert.equal(rebuilt.player.manaPool.colorless, 0);
+  assert.equal(rebuilt.player.energyPool.stored, 0);
 });
 
-test("Horde library queues preserve their authored top-to-bottom order", () => {
+test("Host library queues preserve their authored top-to-bottom order", () => {
   const game = buildScenarioGame(scenario({
     zones: {
-      hordeLibraryTop: [
+      hostArchiveTop: [
         { definitionId: "graf_harvest" },
         { definitionId: "zombie_token" },
       ],
     },
   }));
 
-  assert.deepEqual(game.horde.library.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
+  assert.deepEqual(game.host.archive.slice(0, 2).map((card) => card.definitionId), ["graf_harvest", "zombie_token"]);
 });
 
-test("an exact queued Horde turn reveals duplicates and no extra deck card", () => {
+test("an exact queued Host turn reveals duplicates and no extra deck card", () => {
   const queued = buildScenarioGame(scenario({
     zones: {
-      hordeLibraryTop: [
+      hostArchiveTop: [
         { definitionId: "graf_harvest" },
         { definitionId: "graf_harvest" },
       ],
     },
   }));
-  const libraryBefore = queued.horde.library.length;
+  const libraryBefore = queued.host.archive.length;
 
-  const resolved = runHordeMain(configureExactHordeTurn(queued, 2));
+  const resolved = runHostMain(configureExactHostTurn(queued, 2));
 
-  assert.equal(resolved.horde.library.length, libraryBefore - 2);
-  assert.equal(resolved.horde.battlefield.filter((card) => card.definitionId === "graf_harvest").length, 2);
+  assert.equal(resolved.host.archive.length, libraryBefore - 2);
+  assert.equal(resolved.host.field.filter((card) => card.definitionId === "graf_harvest").length, 2);
 });
 
 test("a valid scenario reports no problems", () => {

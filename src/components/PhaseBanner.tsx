@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 
-type BannerTone = "main" | "battle" | "defend" | "horde";
+type BannerTone = "main" | "battle" | "defend" | "host";
 
 type BannerState = {
   key: string;
@@ -21,12 +21,12 @@ const TONE_CLASS: Record<BannerTone, string> = {
   main: "phase-banner-main",
   battle: "phase-banner-battle",
   defend: "phase-banner-defend",
-  horde: "phase-banner-horde",
+  host: "phase-banner-host",
 };
 
 export function PhaseBanner({ game, suspended = false }: { game: GameState; suspended?: boolean }) {
   const t = useTranslation();
-  const phase = useMemo(() => getBannerState(game, t), [game.activeSide, game.phase, game.combat.hordeAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner, t]);
+  const phase = useMemo(() => getBannerState(game, t), [game.activeSide, game.phase, game.combat.hostAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner, t]);
   const [visiblePhase, setVisiblePhase] = useState<BannerState | undefined>();
 
   useEffect(() => {
@@ -67,8 +67,8 @@ function getBannerState(game: GameState, t: ReturnType<typeof useTranslation>): 
     if (game.setupTurnsRemaining === 1) return { key: `setup-last-extra-${game.turnNumber}`, label: t("phase.lastExtraTurn"), tone: "main", Icon: Sparkles };
     return { key: `setup-extra-${game.turnNumber}`, label: t("phase.extraTurn"), tone: "main", Icon: Sparkles };
   }
-  if (game.activeSide === "horde" && game.combat.hordeAttackers.length > 0) {
-    return { key: `horde-defend-${game.turnNumber}-${game.combat.hordeAttackers.length}`, label: t("phase.defendPhase"), tone: "defend", Icon: Shield };
+  if (game.activeSide === "host" && game.combat.hostAttackers.length > 0) {
+    return { key: `host-defend-${game.turnNumber}-${game.combat.hostAttackers.length}`, label: t("phase.defendPhase"), tone: "defend", Icon: Shield };
   }
   if (game.activeSide === "player" && game.phase === "main") {
     return { key: `player-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main", Icon: Sparkles };
@@ -76,11 +76,11 @@ function getBannerState(game: GameState, t: ReturnType<typeof useTranslation>): 
   if (game.activeSide === "player" && game.phase === "combat") {
     return { key: `player-battle-${game.turnNumber}`, label: t("phase.battlePhase"), tone: "battle", Icon: Swords };
   }
-  if (game.activeSide === "horde" && game.phase === "horde") {
-    return { key: `horde-main-${game.turnNumber}`, label: t("phase.hordePhase"), tone: "horde", Icon: Skull };
+  if (game.activeSide === "host" && game.phase === "host") {
+    return { key: `host-main-${game.turnNumber}`, label: t("phase.hostPhase"), tone: "host", Icon: Skull };
   }
   if (game.phase === "end") {
-    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: t("phase.endPhase"), tone: game.activeSide === "horde" ? "horde" : "main", Icon: Moon };
+    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: t("phase.endPhase"), tone: game.activeSide === "host" ? "host" : "main", Icon: Moon };
   }
   return undefined;
 }

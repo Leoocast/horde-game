@@ -9,10 +9,10 @@ const emptyPlayerDeck = {
   cards: [],
 };
 
-const emptyHordeDeck = {
-  id: "test-horde",
-  name: "Test Horde",
-  side: "horde",
+const emptyHostDeck = {
+  id: "test-host",
+  name: "Test Host",
+  side: "host",
   deckSize: 0,
   cards: [],
 };
@@ -20,12 +20,12 @@ const emptyHordeDeck = {
 let nextInstance = 1;
 
 export function createTestGame(seed = "engine-test") {
-  const game = createInitialGame(emptyPlayerDeck, emptyHordeDeck, seed, 0);
+  const game = createInitialGame(emptyPlayerDeck, emptyHostDeck, seed, 0);
   game.player.life = 30;
   return game;
 }
 
-export function cardFromDeck(definitionId, side, zone = "battlefield") {
+export function cardFromDeck(definitionId, side, zone = "field") {
   const definition = findCardDefinition(definitionId);
   if (!definition) throw new Error(`Missing card definition: ${definitionId}`);
   return cardFromDefinition(definition, side, zone);
@@ -35,13 +35,14 @@ export function customCard(
   id,
   side,
   {
-    zone = "battlefield",
-    cardTypes = ["Creature"],
+    zone = "field",
+    kinds = ["ECHO"],
+    modifiers = [],
     subtypes = [],
-    keywords = [],
+    traits = [],
     power = 1,
-    toughness = 1,
-    manaCost = "",
+    endurance = 1,
+    energyCost = 0,
     additionalCost,
     effects = [],
     activatedAbilities = [],
@@ -52,15 +53,14 @@ export function customCard(
     {
       id,
       name: id,
-      manaCost,
+      energyCost,
       additionalCost,
-      manaValue: 0,
-      colors: [],
-      cardTypes,
+      kinds,
+      modifiers,
       subtypes,
-      keywords,
+      traits,
       power,
-      toughness,
+      endurance,
       effects,
       activatedAbilities,
       isToken,
@@ -85,6 +85,6 @@ export function addForests(game, amount) {
 function cardFromDefinition(definition, side, zone) {
   const instance = createCardInstance(definition, side, `test-${definition.id}-${nextInstance++}`);
   instance.zone = zone;
-  instance.summoningSickness = false;
+  instance.stabilizing = false;
   return instance;
 }

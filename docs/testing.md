@@ -25,6 +25,29 @@ Deck lint standalone (reporte por deck: ready / vanilla / WIP):
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\lint-decks.mjs
 ```
 
+Auditoría de independencia en modo informativo:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-independence.mjs
+```
+
+Usar `--strict` como gate de publicación y `--json` para obtener la salida estructurada. El
+inventario y la interpretación del baseline viven en `docs/independence_inventory.md`.
+
+Proyección de datos y frescura de cartas impresas:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\card-studio-data.mjs --check
+```
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\check-card-assets.mjs
+```
+
+El primer comando detecta si un HTML consumiría una proyección vieja. El segundo valida hashes de
+datos, renderer, fuentes, arte y PNG finales; también rechaza que un PNG final sea el arte fuente
+de su propio generador.
+
 Build de produccion:
 
 ```bash
@@ -45,15 +68,15 @@ archivo no corre nunca.
 
 | Archivo | Cubre |
 | --- | --- |
-| `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
-| `tests/hordeBeats.test.js` | Regresiones de presentacion del store: cola visual bajo timers retrasados, orden compartido player/Horda, curaciones y perdida de vida/robo de hechizos. |
-| `tests/deckLint.test.js` | El deck lint como test: una habilidad de un deck JSON que el engine no entiende rompe la suite en vez de quedar muda |
-| `tests/deckCardText.test.js` | Formato puro del texto impreso por los generadores de decks y resolución de sus assets locales: keywords, stats, contadores, creación de fichas, párrafos y rutas del arte de Vampires |
+| `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
+| `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
+| `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y el borde de zona reservado para el bloque restante de L4.6 |
+| `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
 | `tests/cardVoiceInteractions.test.js` | Reglas de voz entre cartas, filtros por subtipo, probabilidades y conteo de ataques confirmados |
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
-| `tests/playgroundStorage.test.js` | Import/export y parseo defensivo de escenarios y flujos |
+| `tests/playgroundStorage.test.js` | Round-trip del schema v3 Hostfall, import/export, parseo defensivo y rechazo sin migración de versiones retiradas |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,

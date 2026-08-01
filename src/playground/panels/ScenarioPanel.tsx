@@ -1,6 +1,6 @@
 import { ArrowDownToLine, GripVertical, Play, Plus, RefreshCw, X } from "lucide-react";
 import { useMemo, useState, type DragEvent } from "react";
-import { hordeInspectableDecks, playerInspectableDecks } from "../../data/deckCatalog";
+import { hostInspectableDecks, playerInspectableDecks } from "../../data/deckCatalog";
 import { useCardImage } from "../../utils/cardImages";
 import { searchCatalog } from "../cardCatalog";
 import type { ScenarioCard, ScenarioDefinition } from "../scenario";
@@ -23,16 +23,16 @@ type Props = {
   onChange: (definition: ScenarioDefinition) => void;
   onChangeQueue: (queue: ScenarioCard[]) => void;
   onUpdate: () => void;
-  onExecuteHordeTurn: () => void;
+  onExecuteHostTurn: () => void;
 };
 
-export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate, onExecuteHordeTurn }: Props) {
+export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate, onExecuteHostTurn }: Props) {
   const [query, setQuery] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number>();
   const [dropIndex, setDropIndex] = useState<number>();
   const results = useMemo(
-    () => searchCatalog(query, draft.hordeDeckId).filter((card) => card.side === "horde").slice(0, RESULT_LIMIT),
-    [draft.hordeDeckId, query],
+    () => searchCatalog(query, draft.hostDeckId).filter((card) => card.side === "host").slice(0, RESULT_LIMIT),
+    [draft.hostDeckId, query],
   );
 
   function addToQueue(definitionId: string) {
@@ -87,28 +87,28 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
           />
           <SelectField
             label="Host deck"
-            value={draft.hordeDeckId}
-            options={hordeInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
-            onChange={(hordeDeckId) => onChange({ ...draft, hordeDeckId })}
+            value={draft.hostDeckId}
+            options={hostInspectableDecks.map((deck) => ({ value: deck.id, label: deck.label }))}
+            onChange={(hostDeckId) => onChange({ ...draft, hostDeckId })}
           />
         </div>
       </section>
 
-      <section className="playground-group playground-horde-turn">
+      <section className="playground-group playground-host-turn">
         <header className="playground-group-head">
           <span className="playground-group-title">Host turn</span>
           <span className="playground-group-badge">{queue.length} queued</span>
         </header>
 
-        <div className="playground-horde-toolbar">
-          <div className="playground-horde-search">
+        <div className="playground-host-toolbar">
+          <div className="playground-host-search">
             <SearchInput
               placeholder="Search Host cards"
               value={query}
               onChange={setQuery}
             />
             {query.trim() && (
-              <ul className="playground-horde-search-results old-scrollbar">
+              <ul className="playground-host-search-results old-scrollbar">
                 {results.map((card) => (
                   <li key={card.key}>
                     <button className="playground-result is-compact" type="button" onClick={() => addToQueue(card.definition.id)}>
@@ -125,23 +125,23 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
               </ul>
             )}
           </div>
-          <button className="playground-button is-primary" type="button" onClick={onExecuteHordeTurn}>
+          <button className="playground-button is-primary" type="button" onClick={onExecuteHostTurn}>
             <Play size={14} /> Execute
           </button>
         </div>
 
         {queue.length > 0 && (
-          <ol className="playground-horde-queue old-scrollbar">
+          <ol className="playground-host-queue old-scrollbar">
             {queue.map((entry, index) => {
               const card = searchCatalog(entry.definitionId).find(
-                (candidate) => candidate.side === "horde" && candidate.definition.id === entry.definitionId,
+                (candidate) => candidate.side === "host" && candidate.definition.id === entry.definitionId,
               );
               return (
                 <li
                   key={`${entry.definitionId}-${index}`}
                   className={[
                     "playground-library-entry",
-                    "playground-horde-queue-card",
+                    "playground-host-queue-card",
                     draggedIndex === index ? "is-dragging" : "",
                     dropIndex === index && draggedIndex !== index ? "is-drop-target" : "",
                   ].join(" ")}
@@ -153,7 +153,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                   onDrop={(event) => dropAt(event, index)}
                 >
                   <span
-                    className="playground-horde-grip"
+                    className="playground-host-grip"
                     draggable
                     title="Drag to reorder"
                     onDragStart={(event) => beginDrag(event, index)}

@@ -799,7 +799,7 @@ export function FinalBanquetAnimator() {
               suppressContextMenu
               suppressHoverOverlay
               suppressCardId
-              suppressSummoningSickness
+              suppressStabilizing
               highRes
               showFullImage={showFullImage}
               showCostBadge={showFullImage}

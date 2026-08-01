@@ -516,7 +516,7 @@ export function BloodPactAnimator() {
               suppressContextMenu
               suppressHoverOverlay
               suppressCardId
-              suppressSummoningSickness
+              suppressStabilizing
               highRes
               showFullImage={showFullImage}
               showCostBadge={showFullImage}

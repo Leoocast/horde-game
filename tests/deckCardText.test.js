@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
+import {
+  STUDIO_DECKS,
+  buildStudioCards,
+  generatedStudioData,
+  loadStudioConfig,
+  syncStudioData,
+} from "../scripts/card-studio-data.mjs";
 
 function loadDeckCardTextFormatter() {
   const source = fs.readFileSync(
@@ -43,10 +50,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const fractionalLifeCost = formatEffectText(
     "Coste adicional: Paga la mitad de tu Vida.",
   );
-  const inlineKeywords = formatEffectText(
+  const inlineTraits = formatEffectText(
     "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
-  const numberedKeyword = formatEffectText("Letal\nVeneno 1");
+  const numberedTrait = formatEffectText("Letal\nVeneno 1");
   const repeatedEnergy = formatEffectText("Gana {E}{E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
@@ -94,17 +101,17 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     /Coste adicional: <strong class="effect-life-cost">Paga la mitad de tu Vida\.<\/strong>/,
   );
   assert.match(
-    inlineKeywords,
+    inlineTraits,
     /class="effect-keyword">Volar<\/strong>\. <strong class="effect-keyword">Drenar<\/strong>\. <strong class="effect-keyword">Alerta<\/strong>\./,
   );
   assert.match(
-    numberedKeyword,
+    numberedTrait,
     /class="effect-keyword">Veneno <span class="effect-keyword-value">1<\/span><\/strong>/,
   );
   assert.equal((repeatedEnergy.match(/class="energy-icon"/g) ?? []).length, 2);
   assert.doesNotMatch(repeatedEnergy, /Gana\s+\d/u);
   assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong>:/u);
-  assert.equal((inlineKeywords.match(/class="effect-paragraph"/g) ?? []).length, 2);
+  assert.equal((inlineTraits.match(/class="effect-paragraph"/g) ?? []).length, 2);
   assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
   assert.match(acolyteCost, /Gana <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
@@ -112,30 +119,44 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 
 test("local Vampire studio art paths resolve to real files", () => {
   const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
+  for (const card of buildStudioCards("vampires")) {
+    assert.doesNotMatch(card.art_crop, /^https?:/iu, `${card.id} still uses remote art`);
+    assert.ok(
+      fs.existsSync(new URL(card.art_crop, indexUrl)),
+      `${card.id} points to missing art: ${card.art_crop}`,
+    );
+  }
+});
 
-  const sources = [
-    JSON.parse(embeddedJson),
-    JSON.parse(
-      fs.readFileSync(
-        new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
-        "utf8",
-      ),
-    ),
-  ];
+test("card studios consume one generated projection instead of embedded or mirrored data", () => {
+  assert.deepEqual(syncStudioData({ check: true }), []);
 
-  for (const cards of sources) {
-    for (const card of cards) {
-      if (/^https?:/i.test(card.art_crop)) continue;
-      assert.ok(
-        fs.existsSync(new URL(card.art_crop, indexUrl)),
-        `${card.id} points to missing art: ${card.art_crop}`,
+  for (const [deckId, definition] of Object.entries(STUDIO_DECKS)) {
+    const indexUrl = new URL(`../${definition.directory}/index.html`, import.meta.url);
+    const generatedUrl = new URL(`../${definition.directory}/deck-data.generated.js`, import.meta.url);
+    const indexHtml = fs.readFileSync(indexUrl, "utf8");
+    assert.match(indexHtml, /<script src="\.\/deck-data\.generated\.js"><\/script>/u);
+    assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
+    assert.equal(fs.readFileSync(generatedUrl, "utf8"), generatedStudioData(deckId));
+
+    const { config } = loadStudioConfig(deckId);
+    if (!config.previewOnly) {
+      assert.ok(config.runtimeDeck, `${deckId} must derive rules from a runtime deck`);
+      assert.equal(
+        config.cards.some((card) => Object.hasOwn(card, "rulesTextEs")),
+        false,
+        `${deckId} duplicates runtime rules in presentation data`,
       );
     }
+  }
+
+  for (const retiredMirror of [
+    "../dev/tools/Decks/monogreen/mono-green.json",
+    "../dev/tools/Decks/vampires/vampires.json",
+    "../dev/tools/Decks/hunters/hunters.json",
+    "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
+  ]) {
+    assert.equal(fs.existsSync(new URL(retiredMirror, import.meta.url)), false, `${retiredMirror} survived`);
   }
 });
 
@@ -202,13 +223,6 @@ test("card generators print the Hostfall copyright footer", () => {
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {
-  const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Vampire index must contain its embedded deck JSON");
-
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL("../src/data/decks/player/vampire_preview/vampire_preview.json", import.meta.url),
@@ -216,31 +230,22 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
     ),
   );
   const studioSources = [
-    { label: "embedded index", cards: JSON.parse(embeddedJson), includesQuantity: true },
-    {
-      label: "vampires.json",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL("../dev/tools/Decks/vampires/vampires.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    },
+    { label: "generated studio projection", cards: buildStudioCards("vampires"), includesQuantity: true },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
+    ALERT: "Alerta",
+    DRAIN: "Drenar",
     FLYING: "Volar",
-    LIFESTEAL: "Drenar",
-    REACH: "Guardia aérea",
-    VIGILANCE: "Alerta",
+    LETHAL: "Letal",
+    SKYGUARD: "Guardia aérea",
   };
 
   for (const runtimeCard of runtimeDeck.cards) {
     const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
+    const keywordText = (runtimeCard.traits ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
     const expected = runtimeCard.id === "eternal_feast_countess"
       ? [
           ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(0, 1),
@@ -257,9 +262,9 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
         retiredStudioVocabulary,
         `${source.label} exposes retired vocabulary for ${runtimeCard.id}`,
       );
-      assert.equal(studioCard.costo, runtimeCard.manaValue, `${source.label} has a stale cost for ${runtimeCard.id}`);
+      assert.equal(studioCard.costo, runtimeCard.energyCost.amount, `${source.label} has a stale cost for ${runtimeCard.id}`);
       assert.equal(studioCard.atk, runtimeCard.power, `${source.label} has stale power for ${runtimeCard.id}`);
-      assert.equal(studioCard.def, runtimeCard.toughness, `${source.label} has stale toughness for ${runtimeCard.id}`);
+      assert.equal(studioCard.def, runtimeCard.endurance, `${source.label} has stale endurance for ${runtimeCard.id}`);
       if (source.includesQuantity) {
         assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
       }
@@ -282,11 +287,6 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
 });
 
 test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(/const deckData = (\[[\s\S]*?\]);/)?.[1];
-  assert.ok(embeddedJson, "Mono Green index must contain its embedded deck JSON");
-
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -297,33 +297,12 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
     ),
   );
   const studioSources = [
-    { label: "embedded index", cards: JSON.parse(embeddedJson) },
-    {
-      label: "mono-green.json",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL("../dev/tools/Decks/monogreen/mono-green.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    },
-    {
-      label: "card generator mirror",
-      cards: JSON.parse(
-        fs.readFileSync(
-          new URL(
-            "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
-            import.meta.url,
-          ),
-          "utf8",
-        ),
-      ),
-    },
+    { label: "generated studio projection", cards: buildStudioCards("monogreen") },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
-    REACH: "Guardia aérea",
+    LETHAL: "Letal",
+    SKYGUARD: "Guardia aérea",
   };
 
   for (const source of studioSources) {
@@ -338,11 +317,11 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
     const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? [])
-      .filter((keyword) => keyword !== "TRAMPLE")
+    const keywordText = (runtimeCard.traits ?? [])
+      .filter((trait) => trait !== "OVERFLOW" && !/^POISON_\d+$/u.test(trait))
       .map((keyword) => keywordLabels[keyword] ?? keyword);
-    const poisonText = (runtimeCard.abilities ?? [])
-      .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/i)?.[1])
+    const poisonText = (runtimeCard.traits ?? [])
+      .map((trait) => String(trait).match(/^POISON_(\d+)$/i)?.[1])
       .filter(Boolean)
       .map((amount) => `Veneno ${amount}`);
     const expectedRules = [...keywordText, ...poisonText, ...rulesText].filter(Boolean).join("\n");
@@ -357,7 +336,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
       );
       assert.equal(
         studioCard.costo,
-        runtimeCard.manaValue,
+        runtimeCard.energyCost.amount,
         `${source.label} has a stale cost for ${runtimeCard.id}`,
       );
       assert.equal(
@@ -367,17 +346,17 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
       );
       assert.equal(
         studioCard.def,
-        runtimeCard.toughness,
-        `${source.label} has stale toughness for ${runtimeCard.id}`,
+        runtimeCard.endurance,
+        `${source.label} has stale endurance for ${runtimeCard.id}`,
       );
 
-      if (runtimeCard.cardTypes.includes("Creature")) {
+      if (runtimeCard.kinds.includes("ECHO")) {
         assert.match(studioCard.tipo, /^Eco\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Instant")) {
+      } else if (runtimeCard.kinds.includes("SPELL") && runtimeCard.modifiers?.includes("QUICK")) {
         assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+      } else if (runtimeCard.kinds.includes("SPELL")) {
         assert.equal(studioCard.tipo, "Hechizo", `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Land")) {
+      } else if (runtimeCard.kinds.includes("SOURCE")) {
         assert.match(studioCard.tipo, /^Fuente\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
       }
 
@@ -391,14 +370,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
 });
 
 test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/zombies/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Zombie index must contain its embedded deck JSON");
-
-  const studioCards = JSON.parse(embeddedJson);
+  const studioCards = buildStudioCards("zombies");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL("../src/data/decks/horde/zombies/horde-zombies.json", import.meta.url),
@@ -407,10 +379,10 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
   );
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Encantamientos?|Horda|Amenaza|cementerio|jugador|entra|obtiene|Zombies?)\b|Toque mortal|Escurridizo|se lance|\bcrea(?:r)?\b)/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
+    DAUNTING: "Imponente",
     FLYING: "Volar",
-    MENACE: "Imponente",
-    SKULK: "Furtivo",
+    FURTIVE: "Furtivo",
+    LETHAL: "Letal",
   };
 
   assert.equal(studioCards.length, 17, "Zombie studio must keep its 17 card definitions");
@@ -433,7 +405,7 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
     const rulesText = /^Sin efecto (?:activo )?adicional\.$/u.test(runtimeCard.gameText?.es ?? "")
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? [])
+    const keywordText = (runtimeCard.traits ?? [])
       .map((keyword) => keywordLabels[keyword] ?? keyword);
     const expectedRules = [...keywordText, ...rulesText].filter(Boolean).join("\n");
     const studioCard = studioCards.find((card) => card.id === runtimeCard.id);
@@ -449,10 +421,10 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
       runtimeCard.quantity,
       `Zombie studio has a stale quantity for ${runtimeCard.id}`,
     );
-    if (!runtimeCard.isToken) {
+    if (!runtimeCard.kinds.includes("TOKEN")) {
       assert.equal(
         studioCard.costo,
-        runtimeCard.manaValue,
+        runtimeCard.energyCost.amount,
         `Zombie studio has a stale cost for ${runtimeCard.id}`,
       );
     }
@@ -463,29 +435,29 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
     );
     assert.equal(
       studioCard.def ?? null,
-      runtimeCard.toughness ?? null,
-      `Zombie studio has stale toughness for ${runtimeCard.id}`,
+      runtimeCard.endurance ?? null,
+      `Zombie studio has stale endurance for ${runtimeCard.id}`,
     );
 
-    if (runtimeCard.isToken) {
+    if (runtimeCard.kinds.includes("TOKEN")) {
       assert.match(
         studioCard.tipo,
         /^Eco · Ficha\b/u,
         `Zombie studio has a stale token type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Creature")) {
+    } else if (runtimeCard.kinds.includes("ECHO")) {
       assert.match(
         studioCard.tipo,
         /^Eco\b/u,
         `Zombie studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+    } else if (runtimeCard.kinds.includes("SPELL")) {
       assert.equal(
         studioCard.tipo,
         "Hechizo",
         `Zombie studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Enchantment")) {
+    } else if (runtimeCard.kinds.includes("SUPPORT")) {
       assert.equal(
         studioCard.tipo,
         "Apoyo",
@@ -502,14 +474,7 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
 });
 
 test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => {
-  const indexUrl = new URL("../dev/tools/Decks/goblins/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Goblin index must contain its embedded deck JSON");
-
-  const studioCards = JSON.parse(embeddedJson);
+  const studioCards = buildStudioCards("goblins");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -521,7 +486,7 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
   );
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Instantáneos?|Encantamientos?|Horda|Amenaza|jugador|entra|obtiene|Goblins?)\b|Daña primero|bola de fuego|\bcrea(?:r)?\b)/iu;
   const keywordLabels = {
-    FIRST_STRIKE: "Reflejos",
+    REFLEX: "Reflejos",
   };
 
   assert.equal(studioCards.length, 17, "Goblin studio must keep its 17 card definitions");
@@ -545,7 +510,7 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
     const rulesText = /^Sin efecto (?:activo )?adicional\.$/u.test(runtimeCard.gameText?.es ?? "")
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? [])
+    const keywordText = (runtimeCard.traits ?? [])
       .map((keyword) => keywordLabels[keyword] ?? keyword);
     const expectedRules = [...keywordText, ...rulesText].filter(Boolean).join("\n");
     const studioCard = studioCards.find((card) => card.id === runtimeCard.id);
@@ -563,7 +528,7 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
     );
     assert.equal(
       studioCard.costo,
-      runtimeCard.manaValue,
+      runtimeCard.energyCost.amount,
       `Goblin studio has a stale cost for ${runtimeCard.id}`,
     );
     assert.equal(
@@ -573,29 +538,29 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
     );
     assert.equal(
       studioCard.def ?? null,
-      runtimeCard.toughness ?? null,
-      `Goblin studio has stale toughness for ${runtimeCard.id}`,
+      runtimeCard.endurance ?? null,
+      `Goblin studio has stale endurance for ${runtimeCard.id}`,
     );
 
-    if (runtimeCard.isToken) {
+    if (runtimeCard.kinds.includes("TOKEN")) {
       assert.match(
         studioCard.tipo,
         /^Eco · Ficha\b/u,
         `Goblin studio has a stale token type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Creature")) {
+    } else if (runtimeCard.kinds.includes("ECHO")) {
       assert.match(
         studioCard.tipo,
         /^Eco\b/u,
         `Goblin studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Instant")) {
+    } else if (runtimeCard.kinds.includes("SPELL") && runtimeCard.modifiers?.includes("QUICK")) {
       assert.equal(
         studioCard.tipo,
         "Hechizo · Rápido",
         `Goblin studio has a stale type for ${runtimeCard.id}`,
       );
-    } else if (runtimeCard.cardTypes.includes("Enchantment")) {
+    } else if (runtimeCard.kinds.includes("SUPPORT")) {
       assert.equal(
         studioCard.tipo,
         "Apoyo",
@@ -613,19 +578,7 @@ test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => 
 
 test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   const indexUrl = new URL("../dev/tools/Decks/hunters/index.html", import.meta.url);
-  const indexHtml = fs.readFileSync(indexUrl, "utf8");
-  const embeddedJson = indexHtml.match(
-    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1];
-  assert.ok(embeddedJson, "Hunter index must contain its embedded deck JSON");
-
-  const embeddedCards = JSON.parse(embeddedJson);
-  const mirrorCards = JSON.parse(
-    fs.readFileSync(
-      new URL("../dev/tools/Decks/hunters/hunters.json", import.meta.url),
-      "utf8",
-    ),
-  );
+  const previewCards = buildStudioCards("hunters");
   const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|Agrega|vidas)\b|\{\{T\}\})/iu;
   const expectedTypes = {
     territorio_de_caza: "Fuente — Territorio",
@@ -643,15 +596,14 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
     trampa_improvisada: "Eco · Ficha — Trampa",
   };
 
-  assert.equal(embeddedCards.length, 13, "Hunter preview must keep its 13 definitions");
+  assert.equal(previewCards.length, 13, "Hunter preview must keep its 13 definitions");
   assert.equal(
-    embeddedCards.reduce((total, card) => total + card.cantidad, 0),
+    previewCards.reduce((total, card) => total + card.cantidad, 0),
     40,
     "Hunter preview must keep its 40-card authored composition",
   );
-  assert.deepEqual(embeddedCards, mirrorCards, "Hunter embedded data and hunters.json diverged");
 
-  for (const card of embeddedCards) {
+  for (const card of previewCards) {
     assert.equal(card.tipo, expectedTypes[card.id], `Hunter preview has a stale type for ${card.id}`);
     assert.doesNotMatch(
       `${card.tipo}\n${card.desc}`,
@@ -676,25 +628,12 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
 });
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
-  const loadEmbeddedDeck = (relativePath, pattern) => {
-    const html = fs.readFileSync(new URL(relativePath, import.meta.url), "utf8");
-    const json = html.match(pattern)?.[1];
-    assert.ok(json, `${relativePath} must contain embedded deck data`);
-    return JSON.parse(json);
-  };
-  const scriptDeckPattern = /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/;
   const studioDecks = [
-    [
-      "Mono Green",
-      loadEmbeddedDeck(
-        "../dev/tools/Decks/monogreen/index.html",
-        /const deckData = (\[[\s\S]*?\]);/,
-      ),
-    ],
-    ["Vampires", loadEmbeddedDeck("../dev/tools/Decks/vampires/index.html", scriptDeckPattern)],
-    ["Zombies", loadEmbeddedDeck("../dev/tools/Decks/zombies/index.html", scriptDeckPattern)],
-    ["Goblins", loadEmbeddedDeck("../dev/tools/Decks/goblins/index.html", scriptDeckPattern)],
-    ["Hunters", loadEmbeddedDeck("../dev/tools/Decks/hunters/index.html", scriptDeckPattern)],
+    ["Mono Green", buildStudioCards("monogreen")],
+    ["Vampires", buildStudioCards("vampires")],
+    ["Zombies", buildStudioCards("zombies")],
+    ["Goblins", buildStudioCards("goblins")],
+    ["Hunters", buildStudioCards("hunters")],
   ];
   const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
 

@@ -1,6 +1,6 @@
 import { DECK_REGISTRY } from "../data/decks";
 import type { CardDefinition, Side } from "../engine/GameTypes";
-import { canonicalCardTypeLine } from "../i18n/gameVocabulary";
+import { canonicalCardKindLine } from "../i18n/gameVocabulary";
 
 export type CatalogCard = {
   /** Unique across the whole catalog; safe as a React list key. */
@@ -16,7 +16,7 @@ export type CatalogCard = {
  *  shows up here the moment it is registered — the Playground never keeps its own card list.
  *
  * Deduplicated per deck by definition id: a deck may legitimately list the same id in both `cards`
- * and `tokens` (the Goblin horde runs Goblin tokens as real library cards), and `findCardDefinition`
+ * and `tokens` (the Goblin Host runs Goblin tokens as real Archive cards), and `findCardDefinition`
  * resolves such an id to a single definition anyway. `key` is unique and stable for React lists. */
 export const CATALOG_CARDS: CatalogCard[] = DECK_REGISTRY.flatMap((entry) => {
   const seen = new Set<string>();
@@ -55,9 +55,9 @@ export function searchCatalog(query: string, deckId?: string): CatalogCard[] {
 }
 
 /** One-line type summary rendered through the public Hostfall vocabulary. */
-export function describeCardTypes(definition: CardDefinition): string {
-  const line = canonicalCardTypeLine(definition.cardTypes ?? [], definition.subtypes ?? [], "en", definition.isToken);
+export function describeCardKinds(definition: CardDefinition): string {
+  const line = canonicalCardKindLine(definition.kinds ?? [], definition.subtypes ?? [], "en", definition.isToken);
   const power = definition.power ?? null;
-  const toughness = definition.toughness ?? null;
-  return power === null && toughness === null ? line : `${line} ${power ?? 0}/${toughness ?? 0}`;
+  const endurance = definition.endurance ?? null;
+  return power === null && endurance === null ? line : `${line} ${power ?? 0}/${endurance ?? 0}`;
 }

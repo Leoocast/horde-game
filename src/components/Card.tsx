@@ -1,10 +1,10 @@
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { localizedCardName, localizedKeywordLabel, naturalCaseKeywordLabel } from "../i18n/cardLocalization";
+import { localizedCardName, localizedTraitLabel, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
 import { cardThemeForDefinition, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
-import { cardKeywords, cardStatState } from "../utils/selectors";
+import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { Heart, Shield, Sword, Swords } from "lucide-react";
@@ -24,10 +24,9 @@ type Props = {
   effectAvailable?: boolean;
   linkLabel?: string;
   hideStats?: boolean;
-  suppressSummoningSickness?: boolean;
+  suppressStabilizing?: boolean;
   suppressCardId?: boolean;
   onSelect?: () => void;
-  onMana?: () => void;
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
@@ -49,44 +48,43 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onMana, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const heldStaticAuraBonus = useGameStore((state) => state.heldStaticAuraBonuses[card.instanceId]);
   const stats = cardStatState(game, card, visualDamageMarked, heldStaticAuraBonus);
-  const visibleKeywords =
-    (card.zone === "battlefield" || card.zone === "hand") && card.cardTypes.includes("Creature")
-      ? cardKeywords(game, card)
+  const visibleTraits =
+    (card.zone === "field" || card.zone === "hand") && card.kinds.includes("ECHO")
+      ? cardTraits(game, card)
           .split(",")
           .map((keyword) => keyword.trim())
-          .filter((keyword) => keyword !== "HASTE")
+          .filter((keyword) => keyword !== "IMPETUS")
           .filter(Boolean)
       : [];
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const deckTheme = cardThemeForDefinition(card.definitionId);
   const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
-  // Horde creatures tap as a rule of the mode, not as a choice the player made, so they never get
-  // the grey "spent" treatment or the Tapped badge. They DO lean, and they lean the moment they
+  // Host creatures Exhaust as a rule of the mode, not as a choice the player made, so they never
+  // get the grey "spent" treatment or the Exhausted badge. They DO lean as soon as they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
-  const usesHordeTappedStyle = card.controller === "horde" && card.cardTypes.includes("Creature");
+  const usesHostExhaustedStyle = card.controller === "host" && card.kinds.includes("ECHO");
   const keywordToneClass = cardTheme
     ? `card-keyword-badge-${cardTheme}`
-    : card.controller === "horde"
+    : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
   const { imageUrl } = useCardDetails(card.definitionId);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
-  const summoningSick = !suppressSummoningSickness && card.zone === "battlefield" && card.cardTypes.includes("Creature") && card.summoningSickness;
+  const stabilizing = !suppressStabilizing && card.zone === "field" && card.kinds.includes("ECHO") && card.stabilizing;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
-  void onMana;
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
     : "";
-  const showSelectedVisual = Boolean(selected && card.zone !== "battlefield");
+  const showSelectedVisual = Boolean(selected && card.zone !== "field");
   const selectedGlow = showSelectedVisual
     ? "inset 0 0 0 1px rgba(245,241,226,0.72), 0 0 7px rgba(232,226,205,0.5), 0 0 16px rgba(164,151,126,0.28)"
     : "";
@@ -119,8 +117,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       role={selectionDisabled ? undefined : "button"}
       aria-label={[
         localizedName,
-        card.tapped && !usesHordeTappedStyle ? t("card.tapped") : "",
-        summoningSick ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
+        card.exhausted && !usesHostExhaustedStyle ? t("card.exhausted") : "",
+        stabilizing ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
       ].filter(Boolean).join(", ")}
       aria-disabled={selectionDisabled ? "true" : undefined}
       onMouseEnter={() => {
@@ -151,8 +149,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
           : "overflow-hidden rounded-md border bg-stone-900 shadow-lg shadow-black/30",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
-        card.tapped || (attacking && usesHordeTappedStyle) ? "card-tapped" : "",
-        (card.tapped || attacking) && usesHordeTappedStyle ? "card-tapped-zombie" : "",
+        card.exhausted || (attacking && usesHostExhaustedStyle) ? "card-tapped" : "",
+        (card.exhausted || attacking) && usesHostExhaustedStyle ? "card-tapped-zombie" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
@@ -164,7 +162,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
-        summoningSick ? "summoning-sick-card" : "",
+        stabilizing ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
@@ -204,21 +202,21 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
-      {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
+      {stabilizing && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
-          {attacking && !(card.controller === "horde" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
+          {card.exhausted && !usesHostExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}
+          {attacking && !(card.controller === "host" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>
           ) : null}
         </div>
       </div>
-      {visibleKeywords.length > 0 && (
+      {visibleTraits.length > 0 && (
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
-          {visibleKeywords.map((keyword) => (
-            <span key={keyword} className={["card-keyword-badge", keyword === "DEATHTOUCH" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", keywordToneClass].join(" ")}>
-              {renderBattlefieldKeywordLabel(naturalCaseKeywordLabel(localizedKeywordLabel(keyword, language)))}
+          {visibleTraits.map((keyword) => (
+            <span key={keyword} className={["card-keyword-badge", keyword === "LETHAL" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", keywordToneClass].join(" ")}>
+              {renderBattlefieldTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}
             </span>
           ))}
         </div>
@@ -238,10 +236,10 @@ export function CardDefenseBadge({
   variant,
 }: {
   count: string;
-  variant: "horde" | "player";
+  variant: "host" | "player";
 }) {
   const t = useTranslation();
-  const label = variant === "horde"
+  const label = variant === "host"
     ? t("card.blockersAssigned", { count })
     : t("card.blockingOrder", { count });
 
@@ -260,12 +258,11 @@ export type CardStatDisplay = ReturnType<typeof cardStatState>;
 export function CardCostBadge({
   card,
 }: {
-  card: { manaCost?: string; manaValue?: number };
+  card: { energyCost?: number; variableCost?: { hasX?: boolean } };
 }) {
-  const manaCost = card.manaCost?.trim();
-  if (!manaCost) return null;
-  const label = manaCost.includes("{X}") ? "X" : card.manaValue;
-  if (label === undefined) return null;
+  const printedCost = Math.max(0, Number(card.energyCost) || 0);
+  const label = card.variableCost?.hasX ? "X" : printedCost;
+  if (label === 0) return null;
 
   return (
     <div className="card-cost-badge" aria-hidden="true">
@@ -289,7 +286,7 @@ export function CardStatsBadge({
 
   return (
     <div
-      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.toughness} de Aguante` : `${stats.power} Power, ${stats.toughness} Endurance`}
+      aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante` : `${stats.power} Power, ${stats.endurance} Endurance`}
       className={[
         "card-stat-badge",
         stats.damaged ? "is-damaged" : "",
@@ -302,12 +299,12 @@ export function CardStatsBadge({
         <b>{stats.power}</b>
       </span>
       <i aria-hidden="true" />
-      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.toughness}</b></span>
+      <span className="card-stat-segment card-stat-life"><Heart aria-hidden="true" /><b>{stats.endurance}</b></span>
     </div>
   );
 }
 
-function renderBattlefieldKeywordLabel(keyword: string) {
+function renderBattlefieldTraitLabel(keyword: string) {
   const poison = keyword.match(/^(POISON|VENENO)\s+\{?(\d+)\}?$/i);
   if (!poison) return keyword;
   return (

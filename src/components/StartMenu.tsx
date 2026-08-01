@@ -21,10 +21,10 @@ type Props = {
   onSelectDeck: (deckId: string) => void;
   onOpenDeck: (deckId: string) => void;
   onViewDeck: (returnScreen?: "setup" | "chaos") => void;
-  hordeDecks: InspectableDeck[];
-  selectedHordeDeckId: string;
-  onSelectHordeDeck: (deckId: string) => void;
-  onViewHordeDeck: (returnScreen?: "setup" | "chaos") => void;
+  hostDecks: InspectableDeck[];
+  selectedHostDeckId: string;
+  onSelectHostDeck: (deckId: string) => void;
+  onViewHostDeck: (returnScreen?: "setup" | "chaos") => void;
   initialScreen?: MenuScreen;
   preserveMusicOnMount?: boolean;
   requestInitialName?: boolean;
@@ -46,7 +46,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hordeDecks, selectedHordeDeckId, onSelectHordeDeck, onViewHordeDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -69,7 +69,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
-  const selectedHordeDeck = hordeDecks.find((deck) => deck.id === selectedHordeDeckId) ?? hordeDecks[0];
+  const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
 
   useEffect(() => {
@@ -352,7 +352,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           <DecksView collection="chronicles" decks={decks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "chronicles"} />
         )}
         {menuScreen === "hosts" && (
-          <DecksView collection="hosts" decks={hordeDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
+          <DecksView collection="hosts" decks={hostDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
         )}
         </div>
       ) : (
@@ -362,11 +362,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           selectedPlayerDeckId={selectedDeckId}
           onSelectPlayerDeck={onSelectDeck}
           onInspectPlayerDeck={() => onViewDeck(menuScreen === "chaos" ? "chaos" : "setup")}
-          hordeDeck={selectedHordeDeck}
-          hordeDecks={hordeDecks}
-          selectedHordeDeckId={selectedHordeDeckId}
-          onSelectHordeDeck={onSelectHordeDeck}
-          onInspectHordeDeck={() => onViewHordeDeck(menuScreen === "chaos" ? "chaos" : "setup")}
+          hostDeck={selectedHostDeck}
+          hostDecks={hostDecks}
+          selectedHostDeckId={selectedHostDeckId}
+          onSelectHostDeck={onSelectHostDeck}
+          onInspectHostDeck={() => onViewHostDeck(menuScreen === "chaos" ? "chaos" : "setup")}
           chaos={menuScreen === "chaos"}
           mode={mode}
           onModeChange={changeDifficulty}
@@ -504,11 +504,11 @@ type ExpeditionSetupProps = {
   selectedPlayerDeckId: string;
   onSelectPlayerDeck: (deckId: string) => void;
   onInspectPlayerDeck: () => void;
-  hordeDeck?: InspectableDeck;
-  hordeDecks: InspectableDeck[];
-  selectedHordeDeckId: string;
-  onSelectHordeDeck: (deckId: string) => void;
-  onInspectHordeDeck: () => void;
+  hostDeck?: InspectableDeck;
+  hostDecks: InspectableDeck[];
+  selectedHostDeckId: string;
+  onSelectHostDeck: (deckId: string) => void;
+  onInspectHostDeck: () => void;
   mode: DifficultyMode;
   onModeChange: (mode: DifficultyMode) => void;
   selectedMode: (typeof modes)[number];
@@ -556,13 +556,13 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
 
           <SetupCombatant
-            eyebrow={t("setup.hordeSide")}
-            side="horde"
-            deck={props.hordeDeck}
-            decks={props.hordeDecks}
-            selectedDeckId={props.selectedHordeDeckId}
-            onSelectDeck={props.onSelectHordeDeck}
-            onInspect={props.onInspectHordeDeck}
+            eyebrow={t("setup.hostSide")}
+            side="host"
+            deck={props.hostDeck}
+            decks={props.hostDecks}
+            selectedDeckId={props.selectedHostDeckId}
+            onSelectDeck={props.onSelectHostDeck}
+            onInspect={props.onInspectHostDeck}
           />
         </div>
 
@@ -572,7 +572,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
             <div className="expedition-section-heading">
               <div><p>{t("setup.chooseFate")}</p><h2 id="difficulty-heading">{t("setup.difficulty")}</h2></div>
-              <HordeAwakening turns={props.selectedMode.setupTurns} />
+              <HostAwakening turns={props.selectedMode.setupTurns} />
             </div>
             <div className="expedition-mode-grid">
               {modes.map((item) => (
@@ -623,7 +623,7 @@ function ChaosRules() {
   const rules = [
     { value: "2", label: t("chaos.cardsDrawn"), detail: t("chaos.eachTurn") },
     { value: "0", label: t("chaos.preparation"), detail: t("chaos.noWait") },
-    { value: "VIII", label: t("chaos.surge"), detail: t("chaos.hordeTurn") },
+    { value: "VIII", label: t("chaos.surge"), detail: t("chaos.hostTurn") },
     { value: "?", label: t("chaos.mutations"), detail: t("chaos.everyCreatureChanges") },
   ];
   return (
@@ -652,7 +652,7 @@ function ChaosSigils() {
   );
 }
 
-function HordeAwakening({ turns }: { turns: number }) {
+function HostAwakening({ turns }: { turns: number }) {
   const t = useTranslation();
   const previousTurns = useRef(turns);
   const [direction, setDirection] = useState<"idle" | "easier" | "harder">("idle");
@@ -677,7 +677,7 @@ function HordeAwakening({ turns }: { turns: number }) {
 
 function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect }: {
   eyebrow: string;
-  side: "player" | "horde";
+  side: "player" | "host";
   deck?: InspectableDeck;
   decks: InspectableDeck[];
   selectedDeckId: string;
@@ -690,7 +690,7 @@ function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDe
   const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
   const keyCardName = localizedCardName(keyCard, language);
   return (
-    <article className={`expedition-combatant ${side === "horde" ? "expedition-combatant-horde" : "expedition-combatant-player"}`}>
+    <article className={`expedition-combatant ${side === "host" ? "expedition-combatant-host" : "expedition-combatant-player"}`}>
       <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button></div>
       <div className="expedition-deck-feature">
         <div className="expedition-deck-art">

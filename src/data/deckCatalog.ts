@@ -1,6 +1,7 @@
-import type { Color } from "../engine/GameTypes";
+import type { CardKind, CardModifier, Trait } from "../engine/hostfallVocabulary";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
+import { adaptHostfallDeck } from "./hostfallDeckAdapter";
 
 export type NewDeckCard = {
   id: string;
@@ -12,19 +13,17 @@ export type NewDeckCard = {
   };
   quantity?: number;
   isToken?: boolean;
-  manaCost?: string;
-  manaValue?: number;
-  colors?: Color[];
-  cardTypes?: string[];
+  energyCost?: number | { amount: number };
+  kinds?: CardKind[];
+  modifiers?: CardModifier[];
+  endurance?: number | null;
+  traits?: Trait[];
   subtypes?: string[];
   power?: number | null;
-  toughness?: number | null;
-  keywords?: string[];
   triggerMessage?: string;
-  entersTapped?: boolean;
+  entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number }>;
   flags?: Record<string, boolean>;
-  asEnters?: Array<{ type: string; storeAs: string; defaultForThisDeck?: Color }>;
   attachTo?: { targetRef: string };
   variableCost?: { hasX?: boolean; xChosenOnCast?: boolean };
   requiresDistribution?: { counterType: string; totalAmount: number; eachTargetMinimum?: number };
@@ -34,7 +33,7 @@ export type NewDeckCard = {
 
 /** Marks an ability the engine does not run generically.
  *  - "pending": not implemented yet; the normalizer skips it and deck lint reports it as WIP.
- *  - "ignored": deliberately not implemented for this game mode (e.g. haste grants for the Horde).
+ *  - "ignored": deliberately not implemented for this game mode (e.g. haste grants for the Host).
  *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Smallpox). */
 export type AbilityEngineSupport = "pending" | "ignored" | "custom";
 
@@ -43,7 +42,7 @@ export type NewDeckAbility = {
   kind?: string;
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
-  requiresNoSummoningSickness?: boolean;
+  requiresStabilized?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;
   effects?: Array<Record<string, unknown>>;
@@ -95,7 +94,7 @@ export type DeckPresentation = {
   descriptionKey: TranslationKey;
   /** Preview Chronicles remain inspectable in the collection without entering Expedition setup. */
   playable?: boolean;
-  /** Horde-only palette for the pre-match versus transition. */
+  /** Host-only palette for the pre-match versus transition. */
   encounterTone?: EncounterTone;
 };
 
@@ -111,7 +110,7 @@ function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
   return {
     id: entry.deck.id,
     label: entry.label,
-    deck: entry.raw,
+    deck: adaptHostfallDeck(entry.raw),
     images: entry.images,
     presentation: entry.presentation,
   };
@@ -119,11 +118,11 @@ function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
 
 export const playerInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "player").map(toInspectable);
 
-export const hordeInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "horde").map(toInspectable);
+export const hostInspectableDecks: InspectableDeck[] = DECK_REGISTRY.filter((entry) => entry.deck.side === "host").map(toInspectable);
 
 export const inspectableDecks: InspectableDeck[] = [
   ...playerInspectableDecks,
-  ...hordeInspectableDecks,
+  ...hostInspectableDecks,
 ];
 
 export function findInspectableDeck(id: string): InspectableDeck {

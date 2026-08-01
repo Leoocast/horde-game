@@ -39,7 +39,7 @@ function clearCardSelection() {
   const game = useGameStore.getState();
   game.selectHand(undefined);
   game.selectPlayerCreature(undefined);
-  game.selectHordeCreature(undefined);
+  game.selectHostCreature(undefined);
   game.selectActiveEffectCard(undefined);
   game.setFocusedCardId(undefined);
 }

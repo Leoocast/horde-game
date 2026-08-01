@@ -6,7 +6,7 @@ import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
 const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
-const HORDE_ATTACK_ARROW_CLEAR_MS = 470;
+const HOST_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 const STACKED_ARROW_LEFT_INSET_PX = 24;
 
@@ -28,7 +28,7 @@ export function CombatArrows({ game }: { game: GameState }) {
   const exitTimers = useRef<Map<string, number>>(new Map());
   const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
   const [hiddenPlayerAttackArrowIds, setHiddenPlayerAttackArrowIds] = useState<Set<string>>(() => new Set());
-  const hordeAttackAnimation = useGameStore((state) => state.hordeAttackAnimation);
+  const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const blockDrag = useGameStore((state) => state.blockDrag);
   const playerAttackDrag = useGameStore((state) => state.playerAttackDrag);
@@ -62,29 +62,29 @@ export function CombatArrows({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   useEffect(() => {
-    if (!hordeAttackAnimation) return;
+    if (!hostAttackAnimation) return;
     const arrowIds = new Set<string>();
-    if (hordeAttackAnimation.blockerDies && hordeAttackAnimation.blockerId) {
-      arrowIds.add(`${hordeAttackAnimation.attackerId}-${hordeAttackAnimation.blockerId}`);
+    if (hostAttackAnimation.blockerDies && hostAttackAnimation.blockerId) {
+      arrowIds.add(`${hostAttackAnimation.attackerId}-${hostAttackAnimation.blockerId}`);
     }
-    if (hordeAttackAnimation.attackerDies) {
-      for (const blockerId of game.combat.blockers[hordeAttackAnimation.attackerId] ?? []) {
-        arrowIds.add(`${hordeAttackAnimation.attackerId}-${blockerId}`);
+    if (hostAttackAnimation.attackerDies) {
+      for (const blockerId of game.combat.blockers[hostAttackAnimation.attackerId] ?? []) {
+        arrowIds.add(`${hostAttackAnimation.attackerId}-${blockerId}`);
       }
     }
     if (arrowIds.size === 0) return;
     hideArrowIds(arrowIds, setHiddenArrowIds);
-  }, [game.combat.blockers, hordeAttackAnimation]);
+  }, [game.combat.blockers, hostAttackAnimation]);
 
   useEffect(() => {
-    if (!hordeAttackAnimation?.blockerId) return;
-    const arrowId = `${hordeAttackAnimation.attackerId}-${hordeAttackAnimation.blockerId}`;
-    if (hordeAttackAnimation.attackerDies || hordeAttackAnimation.blockerDies) return;
+    if (!hostAttackAnimation?.blockerId) return;
+    const arrowId = `${hostAttackAnimation.attackerId}-${hostAttackAnimation.blockerId}`;
+    if (hostAttackAnimation.attackerDies || hostAttackAnimation.blockerDies) return;
     const timeout = window.setTimeout(() => {
       hideArrowIds(new Set([arrowId]), setHiddenArrowIds);
-    }, HORDE_ATTACK_ARROW_CLEAR_MS);
+    }, HOST_ATTACK_ARROW_CLEAR_MS);
     return () => window.clearTimeout(timeout);
-  }, [hordeAttackAnimation]);
+  }, [hostAttackAnimation]);
 
   useEffect(() => {
     let frame = 0;
@@ -180,7 +180,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", restartTracking);
       window.removeEventListener("scroll", restartTracking, true);
     };
-  }, [game.combat.blockers, game.combat.hordeAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
+  }, [game.combat.blockers, game.combat.hostAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">
@@ -252,7 +252,7 @@ export function CombatArrows({ game }: { game: GameState }) {
 }
 
 function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
-  const target = document.querySelector<HTMLElement>("[data-player-attack-target='horde-deck']") ?? document.querySelector<HTMLElement>("[data-battlefield-drop-target='player-attack']");
+  const target = document.querySelector<HTMLElement>("[data-player-attack-target='host-deck']") ?? document.querySelector<HTMLElement>("[data-battlefield-drop-target='player-attack']");
   const rect = target?.getBoundingClientRect();
   if (!rect) return undefined;
   return { x: rect.left + rect.width * 0.5, y: rect.bottom };
@@ -260,7 +260,7 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
 
 function isCardBehindInStack(card: HTMLElement): boolean {
   const stack = card.closest<HTMLElement>('[data-stacked="true"]');
-  const slot = card.closest<HTMLElement>(".battlefield-layout-slot");
+  const slot = card.closest<HTMLElement>(".field-layout-slot");
   if (!stack || !slot) return false;
 
   const stackedSlots = Array.from(stack.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains("battlefield-layout-slot"));

@@ -1,9 +1,8 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "1.0.0",
   "id": "horde_zombies",
   "name": "Zombie Host",
-  "source": "Horde Magic - Limited Edition 2.1",
-  "side": "horde",
+  "side": "HOST",
   "deckSize": 50,
   "rulesProfile": {
     "revealCount": 3,
@@ -15,14 +14,14 @@
     "surgeExtraReveals": 2,
     "surgeBonus": {
       "power": 1,
-      "toughness": 0,
+      "endurance": 0,
       "subtypes": [
         "Zombie"
       ]
     },
-    "damagePerMill": 3,
-    "poisonPerMill": 3,
-    "hordeCreaturesHaveHaste": true,
+    "damagePerArchiveDiscard": 3,
+    "poisonPerArchiveDiscard": 3,
+    "hostEchosHaveImpetus": true,
     "swarmTokenSubtypes": [
       "Zombie"
     ]
@@ -37,21 +36,20 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 21,
-      "isToken": true,
-      "manaValue": 2,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
       "subtypes": [
         "Zombie"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
-      "abilities": []
+      "endurance": 2,
+      "abilities": [],
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "energyCost": {
+        "amount": 2
+      },
+      "traits": []
     },
     {
       "id": "zombie_giant_token",
@@ -62,22 +60,21 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 4,
-      "isToken": true,
-      "manaValue": 5,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
       "subtypes": [
         "Zombie",
         "Giant"
       ],
       "power": 5,
-      "toughness": 5,
-      "keywords": [],
-      "abilities": []
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "energyCost": {
+        "amount": 5
+      },
+      "traits": []
     },
     {
       "id": "graf_harvest",
@@ -88,56 +85,49 @@
         "es": "Los Zombis aliados ganan Imponente."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{B}",
-      "manaValue": 1,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Enchantment"
-      ],
+      "energyCost": {
+        "amount": 1
+      },
       "subtypes": [],
       "power": null,
-      "toughness": null,
-      "keywords": [],
+      "endurance": null,
       "abilities": [
         {
           "id": "graf_harvest_grants_menace",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "effects": [
             {
               "type": "GRANT_KEYWORD",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
               "scope": {
-                "controller": "HORDE",
+                "controller": "HOST",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Zombie"
                   ]
                 }
               },
-              "keyword": "MENACE"
+              "keyword": "DAUNTING"
             }
           ]
         },
         {
           "id": "graf_harvest_upkeep",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "BEGIN_UPKEEP"
+            "event": "BEGIN_READY"
           },
           "conditions": [
             {
               "type": "NOT",
               "value": {
-                "type": "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
-                "controller": "HORDE"
+                "type": "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
+                "controller": "HOST"
               }
             }
           ],
@@ -147,50 +137,54 @@
             }
           ],
           "engineSupport": "pending",
-          "implementationNote": "The engine has no BEGIN_UPKEEP event yet; this trigger has never been active."
+          "implementationNote": "The engine has no BEGIN_READY event yet; this trigger has never been active."
         },
         {
           "id": "graf_harvest_activated",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "activationMode": "HORDE_DIRECTIVE_ONLY",
+          "zone": "FIELD",
+          "activationMode": "HOST_DIRECTIVE_ONLY",
           "cost": {
-            "type": "TAP_HORDE_CREATURES_FOR_MANA",
-            "requiredMana": 4,
+            "type": "EXHAUST_HOST_ECHOS_FOR_ENERGY",
+            "requiredEnergy": 4,
             "sourceFilter": {
-              "controller": "HORDE",
-              "cardTypes": [
-                "Creature"
+              "controller": "HOST",
+              "kinds": [
+                "ECHO"
               ],
               "isToken": false
             },
-            "selectionRule": "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY"
+            "selectionRule": "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY"
           },
           "effects": [
             {
               "type": "CREATE_TOKEN",
-              "controller": "HORDE",
+              "controller": "HOST",
               "tokenId": "zombie_token",
               "amount": 1
             }
           ],
           "engineSupport": "pending",
           "additionalCost": {
-            "type": "EXILE_CARD_FROM_GRAVEYARD",
-            "controller": "HORDE",
+            "type": "BANISH_CARD_FROM_MEMORY",
+            "controller": "HOST",
             "filter": {
-              "cardTypes": [
-                "Creature"
+              "kinds": [
+                "ECHO"
               ]
             },
-            "selectionRule": "LOWEST_MANA_VALUE_THEN_RANDOM"
+            "selectionRule": "LOWEST_ENERGY_COST_THEN_RANDOM"
           }
         }
       ],
-      "hordeDirective": {
+      "hostDirective": {
         "type": "REPEAT_ACTIVATION_WHILE_POSSIBLE",
-        "description": "If Graf Harvest is on battlefield and Horde controls non-token creatures with combined mana value at least 4, activate Graf Harvest. Repeat while enough non-token creatures and valid graveyard targets exist."
-      }
+        "description": "If Graf Harvest is on the Field and the Host controls non-token Echoes with combined Energy cost at least 4, activate Graf Harvest. Repeat while enough non-token Echoes and valid Memory targets exist."
+      },
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
     },
     {
       "id": "noosegraf_mob",
@@ -201,21 +195,14 @@
         "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
       },
       "quantity": 1,
-      "isToken": false,
-      "manaCost": "{4}{B}{B}",
-      "manaValue": 6,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 6
+      },
       "subtypes": [
         "Zombie"
       ],
       "power": 0,
-      "toughness": 0,
-      "keywords": [],
+      "endurance": 0,
       "entersWithCounters": [
         {
           "counterType": "+1/+1",
@@ -226,13 +213,13 @@
         {
           "id": "noosegraf_mob_on_card_cast",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "CARD_CAST"
+            "event": "CARD_PLAYED"
           },
           "conditions": [
             {
-              "type": "CAST_CARD_IS_NON_TOKEN"
+              "type": "PLAYED_CARD_IS_NON_TOKEN"
             }
           ],
           "effects": [
@@ -245,16 +232,20 @@
             },
             {
               "type": "CREATE_TOKEN",
-              "controller": "HORDE",
+              "controller": "HOST",
               "tokenId": "zombie_token",
               "amount": 1
             }
           ]
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "triggerRestriction": "Only triggers from non-token spells."
-      }
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "rottenheart_ghoul",
@@ -265,26 +256,19 @@
         "es": "Cuando muera, el Cronista descarta una carta."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{3}{B}",
-      "manaValue": 4,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Zombie"
       ],
       "power": 2,
-      "toughness": 4,
-      "keywords": [],
+      "endurance": 4,
       "abilities": [
         {
           "id": "rottenheart_ghoul_dies",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "THIS_DIES"
           },
@@ -297,10 +281,14 @@
           ]
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "originalStyle": "target player discards",
-        "hordeVersion": "each opponent discards"
-      }
+        "hostVersion": "each opponent discards"
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "miasmic_mummy",
@@ -311,29 +299,22 @@
         "es": "Al ser invocada, el Cronista descarta una carta."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{1}{B}",
-      "manaValue": 2,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Zombie",
         "Jackal"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "miasmic_mummy_etb",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "conditions": [],
@@ -345,10 +326,14 @@
           ]
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "originalStyle": "each player discards",
-        "hordeVersion": "each opponent discards"
-      }
+        "hostVersion": "each opponent discards"
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "smallpox",
@@ -359,17 +344,10 @@
         "es": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{B}{B}",
-      "manaValue": 2,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Sorcery"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [],
-      "keywords": [],
       "abilities": [
         {
           "id": "smallpox_spell",
@@ -386,25 +364,29 @@
             },
             {
               "type": "EACH_OPPONENT_SACRIFICES",
-              "permanentType": "Creature",
+              "permanentKind": "ECHO",
               "amount": 1,
-              "selection": "PLAYER_CHOOSES"
+              "selection": "CHRONICLER_CHOOSES"
             },
             {
               "type": "EACH_OPPONENT_SACRIFICES",
-              "permanentType": "Land",
+              "permanentKind": "SOURCE",
               "amount": 1,
-              "selection": "PLAYER_CHOOSES"
+              "selection": "CHRONICLER_CHOOSES"
             }
           ],
           "engineSupport": "custom",
-          "implementationNote": "Resolved by the bespoke interactive sequence in HordeController/useGameStore (horde.pendingCard bridge), not by the generic resolver."
+          "implementationNote": "Resolved by the bespoke Host sequence in HostController/useGameStore (the internal host.pendingCard bridge), not by the generic resolver."
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "originalStyle": "each player",
-        "hordeVersion": "each opponent"
-      }
+        "hostVersion": "each opponent"
+      },
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
     },
     {
       "id": "blighted_bat",
@@ -415,41 +397,38 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{2}{B}",
-      "manaValue": 3,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Zombie",
         "Bat"
       ],
       "power": 2,
-      "toughness": 1,
-      "keywords": [
-        "FLYING"
-      ],
+      "endurance": 1,
       "abilities": [
         {
           "id": "blighted_bat_activated",
           "kind": "ACTIVATED",
-          "zone": "BATTLEFIELD",
-          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "zone": "FIELD",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
           "effects": [
             {
               "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
               "target": "SELF",
-              "keyword": "HASTE"
+              "keyword": "IMPETUS"
             }
           ],
           "engineSupport": "ignored"
         }
       ],
-      "implementationNote": "Horde creatures already have haste, so this activated ability can be ignored."
+      "implementationNote": "Host Echoes already have Impetus, so this activated ability can be ignored.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
     },
     {
       "id": "stitchwing_skaab",
@@ -460,44 +439,41 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "isToken": false,
-      "manaCost": "{3}{U}",
-      "manaValue": 4,
-      "colors": [
-        "U"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Zombie",
         "Horror"
       ],
       "power": 3,
-      "toughness": 1,
-      "keywords": [
-        "FLYING"
-      ],
+      "endurance": 1,
       "abilities": [
         {
           "id": "stitchwing_skaab_activated",
           "kind": "ACTIVATED",
-          "zone": "GRAVEYARD",
-          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "zone": "MEMORY",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
           "cost": {
-            "mana": "{1}{U}",
+            "energy": 2,
             "discard": 2
           },
           "effects": [
             {
-              "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
-              "tapped": true
+              "type": "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+              "exhausted": true
             }
           ],
           "engineSupport": "ignored"
         }
       ],
-      "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
+      "implementationNote": "Because the Host has no Hand, discard-cost recursion is ignored unless custom Host recursion rules are added.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
     },
     {
       "id": "advanced_stitchwing",
@@ -508,44 +484,41 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "isToken": false,
-      "manaCost": "{3}{U}{U}",
-      "manaValue": 5,
-      "colors": [
-        "U"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 5
+      },
       "subtypes": [
         "Zombie",
         "Horror"
       ],
       "power": 3,
-      "toughness": 4,
-      "keywords": [
-        "FLYING"
-      ],
+      "endurance": 4,
       "abilities": [
         {
           "id": "advanced_stitchwing_activated",
           "kind": "ACTIVATED",
-          "zone": "GRAVEYARD",
-          "activationMode": "IGNORED_FOR_HORDE_MVP",
+          "zone": "MEMORY",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
           "cost": {
-            "mana": "{2}{U}",
+            "energy": 3,
             "discard": 2
           },
           "effects": [
             {
-              "type": "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
-              "tapped": true
+              "type": "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+              "exhausted": true
             }
           ],
           "engineSupport": "ignored"
         }
       ],
-      "implementationNote": "Because the Horde has no hand, discard-cost recursion is ignored in MVP unless custom Horde recursion rules are added."
+      "implementationNote": "Because the Host has no Hand, discard-cost recursion is ignored unless custom Host recursion rules are added.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
     },
     {
       "id": "crow_of_dark_tidings",
@@ -556,39 +529,30 @@
         "es": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{2}{B}",
-      "manaValue": 3,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Zombie",
         "Bird"
       ],
       "power": 2,
-      "toughness": 1,
-      "keywords": [
-        "FLYING"
-      ],
+      "endurance": 1,
       "triggerMessage": "Crow of Dark Tidings triggers. Host discards 2 cards from its Archive to its Memory.",
       "abilities": [
         {
           "id": "crow_of_dark_tidings_etb",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "ENTERS_BATTLEFIELD",
+            "event": "INVOKED",
             "source": "SELF"
           },
           "conditions": [],
           "effects": [
             {
-              "type": "MILL_SELF",
-              "controller": "HORDE",
+              "type": "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+              "controller": "HOST",
               "amount": 2
             }
           ]
@@ -596,19 +560,25 @@
         {
           "id": "crow_of_dark_tidings_dies",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
             "event": "THIS_DIES"
           },
           "conditions": [],
           "effects": [
             {
-              "type": "MILL_SELF",
-              "controller": "HORDE",
+              "type": "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+              "controller": "HOST",
               "amount": 2
             }
           ]
         }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
       ]
     },
     {
@@ -620,25 +590,22 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 1,
-      "isToken": false,
-      "manaCost": "{2}{B}",
-      "manaValue": 3,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Zombie",
         "Minotaur"
       ],
       "power": 3,
-      "toughness": 2,
-      "keywords": [
-        "MENACE"
+      "endurance": 2,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
       ],
-      "abilities": []
+      "traits": [
+        "DAUNTING"
+      ]
     },
     {
       "id": "thraben_foulbloods",
@@ -649,65 +616,62 @@
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
       },
       "quantity": 1,
-      "isToken": false,
-      "manaCost": "{2}{B}",
-      "manaValue": 3,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Zombie",
         "Dog"
       ],
       "power": 3,
-      "toughness": 2,
-      "keywords": [],
+      "endurance": 2,
       "abilities": [
         {
           "id": "thraben_foulbloods_threshold_buff",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "effects": [
             {
               "type": "MODIFY_STATS",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
               "target": "SELF",
               "condition": {
-                "type": "GRAVEYARD_COUNT_AT_LEAST",
-                "controller": "HORDE",
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
                 "amount": 7
               },
               "power": 1,
-              "toughness": 1
+              "endurance": 1
             }
           ]
         },
         {
           "id": "thraben_foulbloods_threshold_menace",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "effects": [
             {
               "type": "GRANT_KEYWORD",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
               "target": "SELF",
               "condition": {
-                "type": "GRAVEYARD_COUNT_AT_LEAST",
-                "controller": "HORDE",
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
                 "amount": 7
               },
-              "keyword": "MENACE"
+              "keyword": "DAUNTING"
             }
           ]
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "keyword": "Threshold",
-        "condition": "Seven or more cards in Horde graveyard."
-      }
+        "condition": "Seven or more cards in the Host Memory."
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "hound_of_the_farbogs",
@@ -718,46 +682,43 @@
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{4}{B}",
-      "manaValue": 5,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 5
+      },
       "subtypes": [
         "Zombie",
         "Dog"
       ],
       "power": 5,
-      "toughness": 3,
-      "keywords": [],
+      "endurance": 3,
       "abilities": [
         {
           "id": "hound_of_the_farbogs_threshold_menace",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "effects": [
             {
               "type": "GRANT_KEYWORD",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
               "target": "SELF",
               "condition": {
-                "type": "GRAVEYARD_COUNT_AT_LEAST",
-                "controller": "HORDE",
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
                 "amount": 7
               },
-              "keyword": "MENACE"
+              "keyword": "DAUNTING"
             }
           ]
         }
       ],
-      "hordeErrata": {
+      "hostErrata": {
         "keyword": "Threshold",
-        "condition": "Seven or more cards in Horde graveyard."
-      }
+        "condition": "Seven or more cards in the Host Memory."
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "rancid_rats",
@@ -768,27 +729,24 @@
         "es": "Sin efecto adicional."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{1}{B}",
-      "manaValue": 2,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 2
+      },
       "subtypes": [
         "Zombie",
         "Rat"
       ],
       "power": 1,
-      "toughness": 1,
-      "keywords": [
-        "DEATHTOUCH",
-        "SKULK"
-      ],
+      "endurance": 1,
       "abilities": [],
-      "implementationNote": "Skulk: cannot be blocked by creatures with greater power."
+      "implementationNote": "Furtive: cannot be defended by Echoes with greater Power.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL",
+        "FURTIVE"
+      ]
     },
     {
       "id": "gavony_unhallowed",
@@ -799,33 +757,26 @@
         "es": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{3}{B}",
-      "manaValue": 4,
-      "colors": [
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 4
+      },
       "subtypes": [
         "Zombie"
       ],
       "power": 2,
-      "toughness": 4,
-      "keywords": [],
+      "endurance": 4,
       "abilities": [
         {
           "id": "gavony_unhallowed_on_creature_died",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "CREATURE_DIED"
+            "event": "ECHO_DIED"
           },
           "conditions": [
             {
-              "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
-              "controller": "HORDE"
+              "type": "ANOTHER_ALLIED_ECHO_DIED",
+              "controller": "HOST"
             }
           ],
           "effects": [
@@ -837,7 +788,11 @@
             }
           ]
         }
-      ]
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
     },
     {
       "id": "diregraf_captain",
@@ -848,39 +803,29 @@
         "es": "Los demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida."
       },
       "quantity": 2,
-      "isToken": false,
-      "manaCost": "{1}{U}{B}",
-      "manaValue": 3,
-      "colors": [
-        "U",
-        "B"
-      ],
-      "cardTypes": [
-        "Creature"
-      ],
+      "energyCost": {
+        "amount": 3
+      },
       "subtypes": [
         "Zombie",
         "Soldier"
       ],
       "power": 2,
-      "toughness": 2,
-      "keywords": [
-        "DEATHTOUCH"
-      ],
+      "endurance": 2,
       "abilities": [
         {
           "id": "diregraf_captain_static_buff",
           "kind": "STATIC",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "effects": [
             {
               "type": "MODIFY_STATS",
-              "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
               "scope": {
-                "controller": "HORDE",
+                "controller": "HOST",
                 "filters": {
-                  "cardTypes": [
-                    "Creature"
+                  "kinds": [
+                    "ECHO"
                   ],
                   "subtypes": [
                     "Zombie"
@@ -889,21 +834,21 @@
                 }
               },
               "power": 1,
-              "toughness": 1
+              "endurance": 1
             }
           ]
         },
         {
           "id": "diregraf_captain_on_creature_died",
           "kind": "TRIGGERED",
-          "zone": "BATTLEFIELD",
+          "zone": "FIELD",
           "trigger": {
-            "event": "CREATURE_DIED"
+            "event": "ECHO_DIED"
           },
           "conditions": [
             {
-              "type": "ANOTHER_CREATURE_YOU_CONTROL_DIED",
-              "controller": "HORDE",
+              "type": "ANOTHER_ALLIED_ECHO_DIED",
+              "controller": "HOST",
               "filter": {
                 "subtypes": [
                   "Zombie"
@@ -919,6 +864,12 @@
             }
           ]
         }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL"
       ]
     }
   ]

@@ -4,7 +4,7 @@
     const body = document.body;
     const container = document.getElementById("cards-container");
     const status = document.getElementById("studio-status");
-    const embeddedData = document.getElementById("deck-data");
+    const generatedData = window.HostfallDeckData;
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
     const cardText = window.HostfallCardText;
@@ -45,9 +45,7 @@
     }
 
     function formatEffectText(value) {
-        const tapIconHtml = theme === "vampires"
-            ? '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>'
-            : '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>';
+        const tapIconHtml = '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>';
         return cardText.formatEffectText(value, {
             tapIconHtml,
             energyIconHtml:
@@ -89,7 +87,7 @@
                     || normalized.includes("energy")
                 )
             ) {
-                return '<i class="fa-solid fa-gem tcg-source-icon" aria-hidden="true"></i>';
+                return '<svg class="fa-inline-icon tcg-source-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64"><path fill="currentColor" d="M32 4 58 24 32 60 6 24 32 4Zm0 8L15 25l17 24 17-24-17-13Z"></path></svg>';
             }
             if (normalized.includes("criatura")) {
                 return `
@@ -314,13 +312,12 @@
         if (status) status.innerHTML = `<strong>${cards.length} cartas</strong> · deck completo`;
     }
 
-    function readEmbeddedCards() {
-        if (!embeddedData) return [];
+    function readGeneratedCards() {
         try {
-            return normalizeCards(JSON.parse(embeddedData.textContent));
+            return normalizeCards(generatedData);
         } catch (error) {
             console.error(error);
-            if (status) status.textContent = `No se pudo leer el ejemplo incluido: ${error.message}`;
+            if (status) status.textContent = `No se pudieron leer los datos generados: ${error.message}`;
             return [];
         }
     }
@@ -335,5 +332,5 @@
         });
     });
 
-    renderCards(readEmbeddedCards());
+    renderCards(readGeneratedCards());
 })();
