@@ -2,7 +2,7 @@ import type { GameState, Phase } from "./GameTypes";
 import { checkWinLoss } from "./CombatResolver";
 import { millHorde } from "./EffectResolver";
 import { queueUnusedNormalEnergy } from "./EnergySystem";
-import { cleanupEndStep, clearPlayerSummoningSickness, performPlayerDraw, startPlayerTurnReady, untapSide } from "./TurnManager";
+import { cleanupEndStep, completePlayerStabilization, performPlayerDraw, readySide, startPlayerTurnReady } from "./TurnManager";
 
 const phaseOrder: Phase[] = ["untap", "draw", "main", "combat", "end"];
 
@@ -12,8 +12,8 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
   const nextPhase = target ?? phaseOrder[Math.min(phaseOrder.indexOf(next.phase) + 1, phaseOrder.length - 1)] ?? "untap";
   next.phase = nextPhase;
   if (nextPhase === "untap") {
-    untapSide(next, "player");
-    next.log.unshift("Player untaps.");
+    readySide(next, "player");
+    next.log.unshift("Player readies their Field.");
   }
   if (nextPhase === "draw") performPlayerDraw(next);
   if (nextPhase === "end") cleanupEndStep(next);
@@ -27,7 +27,7 @@ export function endPlayerTurn(game: GameState): GameState {
   cleanupEndStep(next);
   resolveHordePoison(next);
   if (next.winner) return next;
-  clearPlayerSummoningSickness(next);
+  completePlayerStabilization(next);
   next.player.lifePaidThisTurn = 0;
   next.player.lifeLostThisTurn = 0;
   if (next.setupTurnsRemaining > 1) {

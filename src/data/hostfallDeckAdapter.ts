@@ -39,8 +39,8 @@ export function isHostfallDeck(rawDeck: NewDeckList): boolean {
 
 /**
  * Temporary L4 bridge. Card kinds, modifiers, Traits and the core Energy cost/pool contract already
- * stay in Hostfall vocabulary; this adapter still translates the domains scheduled for L4.4-L4.6
- * (states, events and Host rules). Authored zone casing stays canonical. The
+ * stay in Hostfall vocabulary; this adapter still translates the domains scheduled for L4.5-L4.6
+ * (events and Host rules). Authored zone casing stays canonical. The
  * cardTypes/keywords container aliases remain until consumer cleanup.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
@@ -115,18 +115,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
       adapted.toughness = adaptNestedAuthoring(nestedValue);
       continue;
     }
-    if (key === "exhaust") {
-      adapted.tap = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "requiresStabilized") {
-      adapted.requiresNoSummoningSickness = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "exhausted") {
-      adapted.tapped = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
     if (key === "permanentKind" && typeof nestedValue === "string") {
       adapted.permanentType = nestedValue;
       continue;
@@ -157,10 +145,6 @@ function adaptNestedAuthoring(value: unknown): unknown {
     }
     if (key === "hostVersion") {
       adapted.hordeVersion = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "type" && nestedValue === "SOURCE_IS_READY") {
-      adapted.type = "SOURCE_IS_UNTAPPED";
       continue;
     }
     if (key === "zone" && typeof nestedValue === "string") {

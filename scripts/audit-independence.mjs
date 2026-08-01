@@ -243,6 +243,19 @@ const l43Text = textFiles(["src", "tests"])
     "tests/deckLint.test.js",
     "tests/vocabulary.test.js",
   ].includes(relative(file)));
+const l44Text = textFiles(["src", "tests"])
+  .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => ![
+    "src/data/deckLint.ts",
+    "src/data/hostfallDeckAdapter.ts",
+    "src/i18n/rulesText.ts",
+    "src/playground/panels/CardsPanel.tsx",
+    "src/playground/scenario.ts",
+    "tests/deckCardText.test.js",
+    "tests/deckLint.test.js",
+    "tests/playgroundScenario.test.js",
+    "tests/vocabulary.test.js",
+  ].includes(relative(file)));
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -299,6 +312,24 @@ const l43LegacyPatterns = [
   {
     label: "legacy Energy effect identifier",
     pattern: /["']ADD_MANA(?:_DYNAMIC)?["']/u,
+  },
+];
+const l44LegacyPatterns = [
+  {
+    label: "legacy card-state member access",
+    pattern: /\.(?:tapped|entersTapped|summoningSickness|requiresNoSummoningSickness)\b/u,
+  },
+  {
+    label: "legacy card-state property declaration",
+    pattern: /(?:^|[,{};]\s*)(?:tapped|entersTapped|summoningSickness|requiresNoSummoningSickness)\s*[?:]/mu,
+  },
+  {
+    label: "legacy Exhaust cost or readiness condition",
+    pattern: /(?:\.cost\??\.tap\b|\bcost\s*:\s*\{[^}]*\btap\s*:|["']SOURCE_IS_UNTAPPED["'])/u,
+  },
+  {
+    label: "retired state helper or accidental transitional identifier",
+    pattern: /\b(?:untapSide|clearPlayerSummoningSickness|requiresNoStabilizing)\b/u,
   },
 ];
 
@@ -409,6 +440,14 @@ const checks = [
     "Legacy Energy state or cost model in active consumers",
     "Runtime, UI, Playground and migrated tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
     scanTextPatterns(l43Text, l43LegacyPatterns),
+  ),
+  finding(
+    "legacy-l44-card-states",
+    "blocker",
+    "L4.4",
+    "Legacy card-state model in active runtime consumers",
+    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; scenario-v2 compatibility remains isolated at its boundary.",
+    scanTextPatterns(l44Text, l44LegacyPatterns),
   ),
   finding(
     "legacy-internal-vocabulary",

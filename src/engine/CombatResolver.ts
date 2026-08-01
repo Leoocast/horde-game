@@ -24,12 +24,12 @@ export function togglePlayerAttacker(game: GameState, id: string): GameState {
   const selected = next.combat.playerAttackers.includes(id);
   if (selected) {
     next.combat.playerAttackers = next.combat.playerAttackers.filter((item) => item !== id);
-    if (!hasKeyword(next, card, "ALERT")) card.tapped = false;
+    if (!hasKeyword(next, card, "ALERT")) card.exhausted = false;
     return log(next, `${card.name} stops attacking.`);
   }
   if (!canAttack(next, card)) return log(next, "That creature cannot attack.");
   next.combat.playerAttackers = [...next.combat.playerAttackers, id];
-  if (!hasKeyword(next, card, "ALERT")) card.tapped = true;
+  if (!hasKeyword(next, card, "ALERT")) card.exhausted = true;
   return log(next, `${card.name} ${selected ? "stops attacking" : "attacks the Horde"}.`);
 }
 
@@ -106,7 +106,7 @@ export function declareHordeAttackers(game: GameState, options: { deferTriggered
     next.horde.field.filter((card) => canAttack(next, card)),
   );
   next.combat.hordeAttackers = attackers.map((card) => card.instanceId);
-  for (const attacker of attackers) attacker.tapped = true;
+  for (const attacker of attackers) attacker.exhausted = true;
   const attackerPowers = Object.fromEntries(attackers.map((card) => [card.instanceId, getPowerToughness(next, card).power]));
   enqueue(next, {
     type: "ATTACK_DECLARED",

@@ -49,14 +49,14 @@ function parsePoisonTrait(trait: Keyword): number {
 }
 
 export function canAttack(game: GameState, card: CardInstance): boolean {
-  if (!isCreature(card) || card.tapped) return false;
+  if (!isCreature(card) || card.exhausted) return false;
   if (card.controller === "horde") return true;
   if (game.horde.archive.length === 0) return false;
-  return !card.summoningSickness || hasKeyword(game, card, "IMPETUS");
+  return !card.stabilizing || hasKeyword(game, card, "IMPETUS");
 }
 
 export function canBlock(_game: GameState, card: CardInstance): boolean {
-  return isCreature(card) && !card.tapped;
+  return isCreature(card) && !card.exhausted;
 }
 
 export function canBlockAttacker(game: GameState, blocker: CardInstance, attacker: CardInstance): boolean {

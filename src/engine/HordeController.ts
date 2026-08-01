@@ -4,7 +4,7 @@ import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
 import { recordFieldEntry } from "./GameState";
 import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
-import { cleanupEndStep, startPlayerTurnReady, untapSide } from "./TurnManager";
+import { cleanupEndStep, readySide, startPlayerTurnReady } from "./TurnManager";
 import { releasePendingStoredEnergy } from "./EnergySystem";
 
 type HordeMainOptions = {
@@ -20,8 +20,8 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
   next.activeSide = "horde";
   next.phase = "horde";
   next.setupCompletePendingHorde = false;
-  untapSide(next, "horde");
-  next.log.unshift("Horde untaps.");
+  readySide(next, "horde");
+  next.log.unshift("Horde readies its Field.");
   revealNormal(next, options);
   if (next.hordeTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
     next.log.unshift(`Horde Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
@@ -55,7 +55,7 @@ export function runFullHordeTurn(game: GameState): GameState {
 
 /**
  * Reveals and plays exactly ONE card off the top of the Host Archive, through the same path the
- * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No untap, no reveal count,
+ * Horde's turn uses — reveal, ETB, triggers, Smallpox parking and all. No ready step, reveal count,
  * no surge, no combat: this is a single card entering play, not a turn.
  *
  * Only the Playground needs it. A match never plays one Horde card in isolation, but a lab does:
@@ -77,7 +77,7 @@ export function revealHordeCardFromTop(game: GameState, options: HordeMainOption
 export function finishHordeTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   cleanupEndStep(next);
-  untapSide(next, "horde");
+  readySide(next, "horde");
   const releasedEnergy = releasePendingStoredEnergy(next);
   startPlayerTurnReady(next);
   if (releasedEnergy > 0) next.log.unshift(`Player gains ${releasedEnergy} Stored Energy.`);
@@ -134,8 +134,8 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     return card;
   }
   card.zone = "field";
-  card.tapped = false;
-  card.summoningSickness = false;
+  card.exhausted = false;
+  card.stabilizing = false;
   for (const counter of card.effects.filter((effect) => effect.type === "ENTERS_WITH_COUNTERS")) {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }

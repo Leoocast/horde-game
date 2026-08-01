@@ -186,8 +186,8 @@ Puede:
 - pagar vida como coste sin poder bajar de 1; el pago es atómico con la Energía, emite `LIFE_LOST`
   ademas de `LIFE_PAID`, y se acumula por separado en `player.lifeLostThisTurn` y
   `player.lifePaidThisTurn` hasta el siguiente turno
-- una habilidad activada puede declarar `requiresNoSummoningSickness`; engine y UI la mantienen
-  inactiva mientras su criatura tenga fatiga, sin cobrar costes
+- una Acción activada puede declarar `requiresStabilized`; engine y UI la mantienen inactiva
+  mientras su Eco esté `stabilizing`, sin cobrar costes
 
 ### Horde
 
@@ -275,10 +275,10 @@ Graf Harvest:
 ## Card badges
 
 En `Card.tsx`:
-- `Tapped`, `Atk`, `Blk` son badges arriba-izquierda
+- `Exhausted`, `Atk`, `Blk` son badges arriba-izquierda
 - keywords de zombies se muestran debajo en columna
 - `HASTE` no se muestra para zombies porque es regla implicita del modo
-- keywords visibles deben parecer badges de estado como `Tapped`/`Atk`, no pills grandes
+- Rasgos visibles deben parecer badges de estado como `Exhausted`/`Atk`, no pills grandes
 
 ## Targeting y overlays
 
@@ -365,7 +365,7 @@ Sin marcador = la habilidad debe validar completa contra el vocabulario del engi
 
 ### Llanowar Elves / Druid of the Cowl / Tithe Acolyte
 
-Efecto generico de tap:
+Efecto genérico de agotar:
 - texto interno legacy: `{{T}}: Add {G}.`
 - texto impreso Hostfall: `Agota: Gana {E}.`
 - se activa con UI de efecto
@@ -373,7 +373,7 @@ Efecto generico de tap:
   1. carta se agranda/levanta
   2. boton de efecto aparece
   3. al confirmar hace pulse dorado + `activate_effect.wav`
-  4. luego se tapa con animacion + sonido land
+  4. luego se agota con animación + sonido de Source
   5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
      hasta el siguiente socket amarillo vacío; la Energía almacenada se compromete al impacto. El
      ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
@@ -385,7 +385,7 @@ Reglas:
 - solo en turno del player
 - solo main phase
 - solo una vez por turno
-- si tiene summoning sickness no puede activar tap
+- si está `stabilizing` no puede activar una Acción con coste `exhaust`
 
 ### Sunshower Druid
 
@@ -528,7 +528,7 @@ Player discard:
 
 Durante Battle:
 - cartas atacantes pueden seleccionarse por click o drag
-- al seleccionarse se tapan y aparece flecha naranja hacia el cuadro de Horde deck
+- al seleccionarse se agotan y aparece flecha naranja hacia el cuadro de Horde deck
 - boton principal cambia a Confirm
 - hay boton All y Cancel
 - attackers se resuelven en orden izquierda a derecha
@@ -710,14 +710,22 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.3 está implementada y pendiente de validación manual. `EnergySystem.ts` reemplaza el modelo de
+- L4.4 está implementada y pendiente de validación manual. `CardInstance` usa `exhausted`,
+  `entersExhausted` y `stabilizing`; los costes usan `exhaust`, las restricciones
+  `requiresStabilized` y la condición canónica es `SOURCE_IS_READY`. El adaptador dejó de traducir
+  esos estados. Los escenarios v2 mantienen `tapped`/`summoningSickness` sólo en su borde externo
+  hasta la limpieza conjunta de L4.6. TypeScript, deck lint, Card Studio, 202/202 tests, auditoría
+  y build pasan; `legacy-l44-card-states` debe permanecer en cero. No iniciar L4.5 hasta la prueba
+  del usuario.
+- L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplaza el modelo de
   seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
   cantidades numéricas. El autopago agota Sources antes de gastar Stored Energy, los Ecos de
   generación siguen requiriendo activación explícita y el límite de reserva continúa en 3. Store,
   HUD, animación de flujo, Playground y escenarios ya consumen este modelo; `SCENARIO_VERSION`
   permanece en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
-  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática pasa 202/202 tests. No
-  iniciar L4.4 hasta la prueba del usuario.
+  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática pasa 202/202 tests. Antes
+  de cerrar L4 hay que revisar la decisión diferida del usuario: gastar Stored Energy antes que
+  Sources, para que la Energía normal sobrante sea la que pueda convertirse en reserva.
 - L4.2 está cerrada y validada por el usuario. `GameState`, `CardInstance` y sus
   consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
   igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas
@@ -731,8 +739,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   valores. `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia estados,
-  eventos y reglas Host legacy; ya no traduce valores de tipos, Rasgos, zonas ni costes. Mono Green,
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia eventos y
+  reglas Host legacy; ya no traduce valores de tipos, Rasgos, zonas, costes ni estados. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.
@@ -771,7 +779,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `BURN_PLAYER_LIFE_LOSS`: una bola Burn negra, aceitosa y con brillo violeta usa temporalmente
   los mismos sonidos de lanzamiento e impacto que el fuego normal.
 - General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
-  tapped y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
+  `exhausted` y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
 - `LIFESTEAL` es una keyword real de combate del player: recupera vida igual al dano de combate
@@ -797,7 +805,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   resuelve sus 2 vidas y anima el HUD con `startLifeBuffBeat`.
 - Paje de la Sed obtiene +2/+0 la primera vez que el player pierde vida en cada turno solamente
   si el Paje esta enderezado cuando ocurre la perdida. La condicion generica
-  `SOURCE_IS_UNTAPPED` evita que una fuente agotada entre siquiera a la cola de reacciones. Por
+  `SOURCE_IS_READY` evita que una Source agotada entre siquiera a la cola de reacciones. Por
   decision del usuario, esta restriccion es una regla interna y no se agrega al texto impreso. Toda ruta
   de perdida —dano de combate, Burn, efectos `LOSE_LIFE` y pagos— pasa por `losePlayerLife`, que
   emite `LIFE_LOST` y acumula `player.lifeLostThisTurn`; el contador se reinicia al comenzar tanto

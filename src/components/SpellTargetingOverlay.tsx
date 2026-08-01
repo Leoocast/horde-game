@@ -236,7 +236,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
             suppressContextMenu
             suppressHoverOverlay
             suppressCardId
-            suppressSummoningSickness
+            suppressStabilizing
             highRes
             showFullImage={showFullSourceImage}
             showCostBadge={showFullSourceImage}

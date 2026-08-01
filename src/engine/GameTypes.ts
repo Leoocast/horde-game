@@ -25,7 +25,7 @@ export type EffectDefinition = {
 };
 
 export type ActionCost = {
-  tap?: boolean;
+  exhaust?: boolean;
   sacrificeSelf?: boolean;
   energy?: number;
   life?: number | {
@@ -39,7 +39,7 @@ export type ActionCost = {
 export type ActivatedAbility = {
   id: string;
   cost?: ActionCost;
-  requiresNoSummoningSickness?: boolean;
+  requiresStabilized?: boolean;
   requiresTargets?: TargetRequirement[];
   effect: EffectDefinition;
 };
@@ -83,7 +83,7 @@ export type CardDefinition = {
   /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
    * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
   triggerMessage?: string;
-  entersTapped?: boolean;
+  entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number; amountFormula?: EffectDefinition }>;
   additionalCost?: ActionCost;
   activatedAbilities?: ActivatedAbility[];
@@ -164,9 +164,9 @@ export type CardInstance = {
   additionalCost?: ActionCost;
   activatedAbilities: ActivatedAbility[];
   requiresTargets: TargetRequirement[];
-  tapped: boolean;
-  entersTapped: boolean;
-  summoningSickness: boolean;
+  exhausted: boolean;
+  entersExhausted: boolean;
+  stabilizing: boolean;
   /** Controller turn in which this permanent most recently entered the Field.
    *  Used by pure Field layout to keep later Host copies in a new visual stack. */
   fieldEntryTurn?: number;

@@ -85,6 +85,6 @@ export function addForests(game, amount) {
 function cardFromDefinition(definition, side, zone) {
   const instance = createCardInstance(definition, side, `test-${definition.id}-${nextInstance++}`);
   instance.zone = zone;
-  instance.summoningSickness = false;
+  instance.stabilizing = false;
   return instance;
 }

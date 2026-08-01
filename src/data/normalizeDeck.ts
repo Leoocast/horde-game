@@ -34,7 +34,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     power: card.power,
     toughness: card.toughness,
     triggerMessage: card.triggerMessage,
-    entersTapped: card.entersTapped,
+    entersExhausted: card.entersExhausted,
     entersWithCounters: card.entersWithCounters,
     flags: card.flags,
     attachTo: card.attachTo,
@@ -70,7 +70,7 @@ function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbil
       return {
         id: ability.id ?? "activated_ability",
         cost: ability.cost as ActionCost | undefined,
-        requiresNoSummoningSickness: ability.requiresNoSummoningSickness,
+        requiresStabilized: ability.requiresStabilized,
         requiresTargets: [],
         effect: firstEffect ?? { type: "UNSUPPORTED" },
       };
@@ -196,7 +196,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
           type: "CREATE_TOKEN",
           tokenId: "goblin_token_1_1_red",
           amount: 1,
-          tapped: true,
+          exhausted: true,
           attacking: true,
         },
       };

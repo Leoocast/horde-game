@@ -173,8 +173,8 @@ function placeOnBattlefield(game: GameState, entries: readonly { definitionId: s
       if (archiveIndex < 0) break;
       const [card] = game.player.archive.splice(archiveIndex, 1);
       card.zone = "field";
-      card.tapped = false;
-      card.summoningSickness = false;
+      card.exhausted = false;
+      card.stabilizing = false;
       game.player.field.push(card);
     }
   }
@@ -245,9 +245,9 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     additionalCost: definition.additionalCost,
     activatedAbilities: definition.activatedAbilities ?? [],
     requiresTargets: definition.requiresTargets ?? [],
-    tapped: false,
-    entersTapped: Boolean(definition.entersTapped),
-    summoningSickness: (definition.cardTypes ?? []).includes("ECHO"),
+    exhausted: false,
+    entersExhausted: Boolean(definition.entersExhausted),
+    stabilizing: (definition.cardTypes ?? []).includes("ECHO"),
     attacksMade: 0,
     activatedThisTurn: false,
     damageMarked: 0,

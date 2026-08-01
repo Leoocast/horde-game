@@ -111,7 +111,7 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
 
   const energyAction = byId.llanowar_elves.abilities[0];
   assert.equal(energyAction.zone, "field");
-  assert.deepEqual(energyAction.cost, { tap: true });
+  assert.deepEqual(energyAction.cost, { exhaust: true });
   assert.deepEqual(energyAction.effects[0], { type: "GAIN_ENERGY", player: "SELF", amount: 1 });
 
   const brokenWingsFilter = byId.broken_wings.abilities[0].targets[0].filters;
@@ -144,14 +144,14 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
   assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
   assert.deepEqual(byId.eternal_feast_countess.keywords, ["FLYING", "ALERT"]);
   assert.equal(byId.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
-  assert.equal(byId.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_UNTAPPED");
+  assert.equal(byId.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
   assert.deepEqual(byId.crimson_impulse.cardTypes, ["SPELL"]);
   assert.deepEqual(byId.crimson_impulse.modifiers, ["QUICK"]);
   assert.deepEqual(byId.blood_pact.cardTypes, ["SPELL"]);
   assert.deepEqual(byId.crimson_energy.cardTypes, ["SOURCE"]);
-  assert.equal(byId.court_duelist.requiresNoSummoningSickness, undefined);
-  assert.equal(byId.court_duelist.abilities[0].requiresNoSummoningSickness, true);
-  assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { tap: true, life: 5 });
+  assert.equal(byId.court_duelist.requiresStabilized, undefined);
+  assert.equal(byId.court_duelist.abilities[0].requiresStabilized, true);
+  assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { exhaust: true, life: 5 });
   assert.deepEqual(byId.tithe_acolyte.abilities[0].effects[0], {
     type: "GAIN_ENERGY",
     player: "SELF",

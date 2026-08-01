@@ -110,7 +110,7 @@ export function DuelHud({ game }: { game: GameState }) {
                   selectionDisabled
                   suppressContextMenu
                   suppressCardId
-                  suppressSummoningSickness
+                  suppressStabilizing
                   showFullImage={shouldShowFullCardImage(deathRevealCard.definitionId)}
                   preferNativeImageRendering={shouldShowFullCardImage(deathRevealCard.definitionId)}
                 />
@@ -146,7 +146,7 @@ export function DuelHud({ game }: { game: GameState }) {
                   selectionDisabled
                   suppressContextMenu
                   suppressCardId
-                  suppressSummoningSickness
+                  suppressStabilizing
                   showFullImage={shouldShowFullCardImage(hordeSpellCard.definitionId)}
                   preferNativeImageRendering={shouldShowFullCardImage(hordeSpellCard.definitionId)}
                 />
@@ -183,7 +183,7 @@ export function DuelHud({ game }: { game: GameState }) {
                 selectionDisabled
                 suppressContextMenu
                 suppressCardId
-                suppressSummoningSickness
+                suppressStabilizing
                 showFullImage={shouldShowFullCardImage(smallpoxCard.definitionId)}
                 preferNativeImageRendering={shouldShowFullCardImage(smallpoxCard.definitionId)}
               />

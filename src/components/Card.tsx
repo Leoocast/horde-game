@@ -24,7 +24,7 @@ type Props = {
   effectAvailable?: boolean;
   linkLabel?: string;
   hideStats?: boolean;
-  suppressSummoningSickness?: boolean;
+  suppressStabilizing?: boolean;
   suppressCardId?: boolean;
   onSelect?: () => void;
   onLeave?: () => void;
@@ -48,7 +48,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressSummoningSickness, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -66,10 +66,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const isZombie = card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
   const deckTheme = cardThemeForDefinition(card.definitionId);
   const cardTheme = deckTheme === "ramp" ? undefined : deckTheme;
-  // Horde creatures tap as a rule of the mode, not as a choice the player made, so they never get
-  // the grey "spent" treatment or the Tapped badge. They DO lean, and they lean the moment they
+  // Horde creatures Exhaust as a rule of the mode, not as a choice the player made, so they never
+  // get the grey "spent" treatment or the Exhausted badge. They DO lean as soon as they
   // are declared as attackers — a turn that only arrives once combat is over reads as a glitch.
-  const usesHordeTappedStyle = card.controller === "horde" && card.cardTypes.includes("ECHO");
+  const usesHordeExhaustedStyle = card.controller === "horde" && card.cardTypes.includes("ECHO");
   const keywordToneClass = cardTheme
     ? `card-keyword-badge-${cardTheme}`
     : card.controller === "horde"
@@ -79,7 +79,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const displayImageUrl = highRes ? highResImageUrl : imageUrl;
-  const summoningSick = !suppressSummoningSickness && card.zone === "field" && card.cardTypes.includes("ECHO") && card.summoningSickness;
+  const stabilizing = !suppressStabilizing && card.zone === "field" && card.cardTypes.includes("ECHO") && card.stabilizing;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
@@ -117,8 +117,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       role={selectionDisabled ? undefined : "button"}
       aria-label={[
         localizedName,
-        card.tapped && !usesHordeTappedStyle ? t("card.tapped") : "",
-        summoningSick ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
+        card.exhausted && !usesHordeExhaustedStyle ? t("card.exhausted") : "",
+        stabilizing ? vocabularyText(STATE_VOCABULARY.STABILIZING, language) : "",
       ].filter(Boolean).join(", ")}
       aria-disabled={selectionDisabled ? "true" : undefined}
       onMouseEnter={() => {
@@ -149,8 +149,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           ? "overflow-visible rounded-none border-0 bg-transparent shadow-none"
           : "overflow-hidden rounded-md border bg-stone-900 shadow-lg shadow-black/30",
         showSelectedVisual && !accentColor && !actionable ? "border-[#e8e2cd]" : "border-transparent",
-        card.tapped || (attacking && usesHordeTappedStyle) ? "card-tapped" : "",
-        (card.tapped || attacking) && usesHordeTappedStyle ? "card-tapped-zombie" : "",
+        card.exhausted || (attacking && usesHordeExhaustedStyle) ? "card-tapped" : "",
+        (card.exhausted || attacking) && usesHordeExhaustedStyle ? "card-tapped-zombie" : "",
         attacking ? "border-[#ff7a3d]" : "",
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
@@ -162,7 +162,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
-        summoningSick ? "summoning-sick-card" : "",
+        stabilizing ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
@@ -202,10 +202,10 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
-      {summoningSick && <div className="summoning-sickness-overlay" aria-hidden="true" />}
+      {stabilizing && <div className="summoning-sickness-overlay" aria-hidden="true" />}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
-          {card.tapped && !usesHordeTappedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.tapped")}</span>}
+          {card.exhausted && !usesHordeExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}
           {attacking && !(card.controller === "horde" && linkLabel) && <span className="card-state-tag card-state-tag-attack">{t("card.attacking")}</span>}
           {blocking && linkLabel ? null : blocking ? (
             <span className="card-state-tag card-state-tag-block">{t("card.blocking")}</span>

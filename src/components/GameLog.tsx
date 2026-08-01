@@ -280,7 +280,7 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
     } else if (/^(Player ends turn|Setup complete)/i.test(text)) {
       entrySide = "player";
       side = "player";
-    } else if (/^Horde untaps/i.test(text)) {
+    } else if (/^Horde readies/i.test(text)) {
       entrySide = "horde";
       side = "horde";
     }

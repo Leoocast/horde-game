@@ -2,11 +2,11 @@ import type { GameState } from "./GameTypes";
 import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
 
-export function untapSide(game: GameState, side: "player" | "horde"): void {
+export function readySide(game: GameState, side: "player" | "horde"): void {
   for (const card of game[side].field) {
-    card.tapped = false;
+    card.exhausted = false;
     card.activatedThisTurn = false;
-    if (side === "player") card.summoningSickness = false;
+    if (side === "player") card.stabilizing = false;
   }
 }
 
@@ -23,9 +23,9 @@ export function cleanupEndStep(game: GameState): void {
   game.combat = { playerAttackers: [], hordeAttackers: [], blockers: {}, pendingDamageVolleys: [] };
 }
 
-export function clearPlayerSummoningSickness(game: GameState): void {
+export function completePlayerStabilization(game: GameState): void {
   for (const card of game.player.field) {
-    if (card.cardTypes.includes("ECHO")) card.summoningSickness = false;
+    if (card.cardTypes.includes("ECHO")) card.stabilizing = false;
   }
 }
 
@@ -49,10 +49,10 @@ export function startPlayerTurn(game: GameState): void {
 
 export function startPlayerTurnReady(game: GameState): void {
   startPlayerTurn(game);
-  untapSide(game, "player");
+  readySide(game, "player");
   performPlayerDraw(game);
   game.phase = "main";
-  game.log.unshift("Player starts the turn, untaps, and draws.");
+  game.log.unshift("Player starts the turn, readies their Field, and draws.");
 }
 
 export function performPlayerDraw(game: GameState): void {

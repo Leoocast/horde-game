@@ -15,7 +15,7 @@ export function ActionsPanel({ onDispatch }: Props) {
 
   const sources = playerLandCount(game);
   const available = game.player.field.filter(
-    (card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn,
+    (card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
   ).length;
   const stored = game.player.energyPool.stored;
 

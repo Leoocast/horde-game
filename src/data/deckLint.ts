@@ -326,8 +326,8 @@ function lintLiveAbility(deckId: string, card: NewDeckCard, ability: NewDeckAbil
   if (kind === "ACTIVATED" && (ability.effects ?? []).length > 1) {
     report(`Activated abilities support a single effect today; ${ability.effects?.length} declared (the rest would be dropped).`);
   }
-  if (ability.requiresNoSummoningSickness !== undefined && typeof ability.requiresNoSummoningSickness !== "boolean") {
-    report(`requiresNoSummoningSickness must be boolean.`);
+  if (ability.requiresStabilized !== undefined && typeof ability.requiresStabilized !== "boolean") {
+    report(`requiresStabilized must be boolean.`);
   }
   if (ability.cost?.life !== undefined) {
     const life = ability.cost.life;

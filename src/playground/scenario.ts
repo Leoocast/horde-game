@@ -23,15 +23,17 @@ export type ScenarioCard = {
   definitionId: string;
   /** Copies to place. Defaults to 1. */
   amount?: number;
+  /** External scenario-v2 compatibility; translated to CardInstance.exhausted at the boundary. */
   tapped?: boolean;
   /** Scenario cards are assumed to have been in play already; defaults to false. */
+  /** External scenario-v2 compatibility; translated to CardInstance.stabilizing at the boundary. */
   summoningSickness?: boolean;
   damageMarked?: number;
   counters?: Record<string, number>;
 };
 
 /**
- * The game has one resource: untapped Sources provide available Energy, and the Energy Pool holds
+ * The game has one resource: ready Sources provide available Energy, and the Energy Pool holds
  * Stored Energy (capped at `STORED_ENERGY_CAP`). Scenarios configure those two visible quantities.
  */
 export type ScenarioDefinition = {
@@ -48,7 +50,7 @@ export type ScenarioDefinition = {
   activeSide: Side;
   player: {
     life: number;
-    /** Untapped energy sources (lands) on the battlefield, capped at `MAX_PLAYER_LANDS`. */
+    /** Ready Energy Sources on the Field, capped at `MAX_PLAYER_LANDS`. */
     energy: number;
     /** Stored energy in the pool, capped at `STORED_ENERGY_CAP`. */
     storedEnergy: number;
@@ -166,7 +168,7 @@ export function snapshotBoard(game: GameState, base: ScenarioDefinition): Scenar
 function groupCards(cards: CardInstance[]): ScenarioCard[] {
   const groups: Array<{ key: string; entry: ScenarioCard }> = [];
   for (const card of cards) {
-    const key = `${card.definitionId}:${card.tapped ? "t" : ""}:${card.damageMarked ?? 0}`;
+    const key = `${card.definitionId}:${card.exhausted ? "e" : ""}:${card.damageMarked ?? 0}`;
     const previous = groups[groups.length - 1];
     if (previous?.key === key) {
       previous.entry.amount = (previous.entry.amount ?? 1) + 1;
@@ -177,7 +179,7 @@ function groupCards(cards: CardInstance[]): ScenarioCard[] {
       entry: {
         definitionId: card.definitionId,
         amount: 1,
-        ...(card.tapped ? { tapped: true } : {}),
+        ...(card.exhausted ? { tapped: true } : {}),
         ...(card.damageMarked ? { damageMarked: card.damageMarked } : {}),
       },
     });
@@ -252,7 +254,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * The card this deck uses as an energy source. Energy is "an untapped land", so the playground
+ * The card this deck uses as an Energy Source. Available Energy is represented by a ready Source, so the Playground
  * never hardcodes Forest: it takes whatever land the player deck actually runs.
  */
 export function playerEnergyDefinitionId(game: GameState): string | undefined {
@@ -264,7 +266,7 @@ export function playerEnergyDefinitionId(game: GameState): string | undefined {
   return undefined;
 }
 
-/** Puts untapped energy sources on the player's battlefield, never past `MAX_PLAYER_LANDS`.
+/** Puts ready Energy Sources on the player's Field, never past `MAX_PLAYER_LANDS`.
  *  Returns how many actually landed so callers can report a real number. */
 export function placeEnergySources(game: GameState, requested: number): number {
   const definitionId = playerEnergyDefinitionId(game);
@@ -306,8 +308,8 @@ function returnPlayerCardsToLibrary(game: GameState): void {
   const returned = [...game.player.hand, ...game.player.field];
   for (const card of returned) {
     card.zone = "archive";
-    card.tapped = false;
-    card.summoningSickness = card.cardTypes.includes("ECHO");
+    card.exhausted = false;
+    card.stabilizing = card.cardTypes.includes("ECHO");
   }
   game.player.hand = [];
   game.player.field = [];
@@ -444,8 +446,8 @@ export function configureExactHordeTurn(game: GameState, count: number): GameSta
 
 function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, entry: ScenarioCard): void {
   const side = ZONE_SIDES[zone];
-  card.tapped = false;
-  card.summoningSickness = false;
+  card.exhausted = false;
+  card.stabilizing = false;
   card.damageMarked = 0;
   card.activatedThisTurn = false;
 
@@ -471,8 +473,8 @@ function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, e
   }
 
   card.zone = "field";
-  card.tapped = entry.tapped ?? false;
-  card.summoningSickness = entry.summoningSickness ?? false;
+  card.exhausted = entry.tapped ?? false;
+  card.stabilizing = entry.summoningSickness ?? false;
   card.damageMarked = entry.damageMarked ?? 0;
   if (entry.counters) card.counters = { ...card.counters, ...entry.counters };
   game[side].field.push(card);

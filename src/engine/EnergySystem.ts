@@ -16,7 +16,7 @@ export function queueUnusedNormalEnergy(game: GameState): number {
   const availableSpace = storedEnergySpace(game);
   if (availableSpace === 0) return 0;
   const unusedSources = game.player.field.filter(
-    (card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn,
+    (card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
   ).length;
   const queued = Math.min(availableSpace, unusedSources);
   game.player.pendingStoredEnergy += queued;
@@ -83,7 +83,7 @@ export function payEnergyAutomatically(game: GameState, cost: number): boolean {
   if (simulatedAvailable + startingStored < normalizedCost) return false;
 
   for (const { card, produced } of selected) {
-    card.tapped = true;
+    card.exhausted = true;
     card.activatedThisTurn = true;
     game.player.energyPool = addAvailableEnergy(game.player.energyPool, produced);
     game.log.unshift(`Player auto-exhausts ${card.name} for ${produced} Energy.`);
@@ -104,8 +104,8 @@ export function canPayWithAutomaticEnergy(game: GameState, cost: number): boolea
 }
 
 function getAutomaticEnergy(card: CardInstance): number | undefined {
-  const ability = card.activatedAbilities.find((item) => item.cost?.tap && item.effect.type === "GAIN_ENERGY");
-  if (!ability?.cost?.tap) return undefined;
+  const ability = card.activatedAbilities.find((item) => item.cost?.exhaust && item.effect.type === "GAIN_ENERGY");
+  if (!ability?.cost?.exhaust) return undefined;
   return Math.max(0, Number(ability.effect.amount ?? 1));
 }
 
@@ -113,7 +113,7 @@ function getAutomaticEnergySources(game: GameState): Array<{ card: CardInstance;
   return game.player.field
     // Echoes and other non-Source permanents are tactical resources. They must be activated
     // explicitly so casting a Spell never removes a potential attacker or defender.
-    .filter((card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn)
+    .filter((card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn)
     .map((card) => ({ card, produced: getAutomaticEnergy(card) }))
     .filter((source): source is { card: CardInstance; produced: number } => source.produced !== undefined);
 }

@@ -84,7 +84,7 @@ export function CardContextMenu() {
   const firstAbility = card.activatedAbilities.find((ability) => !isEnergyAbility(ability));
   const hasActivatedEffect = Boolean(firstAbility);
   const canActivate = Boolean(firstAbility && !activatedAbilityFailureReason(game, card, firstAbility));
-  const activateLabel = firstAbility?.cost?.tap ? t("card.tapForEffect") : t("card.activateEffect");
+  const activateLabel = firstAbility?.cost?.exhaust ? t("card.exhaustForEffect") : t("card.activateEffect");
 
   function openDetails() {
     setDetailsCardId(card?.instanceId);

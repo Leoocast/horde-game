@@ -277,8 +277,8 @@ export function GraveyardDetailsModal({
 function graveyardDisplayCard(card: CardInstance): CardInstance {
   return {
     ...card,
-    tapped: false,
-    summoningSickness: false,
+    exhausted: false,
+    stabilizing: false,
     activatedThisTurn: false,
     damageMarked: 0,
     lethalDamage: false,

@@ -27,7 +27,7 @@ export type NewDeckCard = {
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
   keywords?: Trait[];
   triggerMessage?: string;
-  entersTapped?: boolean;
+  entersExhausted?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number }>;
   flags?: Record<string, boolean>;
   attachTo?: { targetRef: string };
@@ -49,8 +49,6 @@ export type NewDeckAbility = {
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
   requiresStabilized?: boolean;
-  /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  requiresNoSummoningSickness?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;
   effects?: Array<Record<string, unknown>>;

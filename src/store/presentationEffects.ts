@@ -138,7 +138,7 @@ export function startLifeBuffBeat(): { lifeBuffAnimationId: number } {
   return { lifeBuffAnimationId: Date.now() };
 }
 
-/** Flashes the lands auto-tapped to pay a cast; returns the animation patch value (or
+/** Flashes the Sources auto-Exhausted to pay a cast; returns the animation patch value (or
  *  undefined when nothing was auto-paid). */
 export function flashAutoPaidLands(ids: string[]): { ids: string[]; eventId: number } | undefined {
   if (ids.length === 0) return undefined;

@@ -355,7 +355,7 @@ test("standard games keep nine energy cards in the player deck", () => {
 test("unused Source Energy stays pending until the Horde turn ends", () => {
   const game = createTestGame();
   const lands = addForests(game, 5);
-  lands[0].tapped = true;
+  lands[0].exhausted = true;
 
   assert.equal(queueUnusedNormalEnergy(game), 3);
   assert.equal(game.player.pendingStoredEnergy, 3);
@@ -370,7 +370,7 @@ test("spent Sources do not become Stored Energy", () => {
   const game = createTestGame();
   const lands = addForests(game, 3);
   for (const land of lands) {
-    land.tapped = true;
+    land.exhausted = true;
     land.activatedThisTurn = true;
   }
 
@@ -391,7 +391,7 @@ test("unused Energy from an earlier setup turn does not refill Stored Energy", (
 
   for (const land of lands) {
     const currentLand = finalSetupTurn.player.field.find((card) => card.instanceId === land.instanceId);
-    currentLand.tapped = true;
+    currentLand.exhausted = true;
     currentLand.activatedThisTurn = true;
   }
   const hordeTurn = endPlayerTurn(finalSetupTurn);
@@ -413,8 +413,8 @@ test("Llanowar and Druid fill Stored Energy immediately, then pending Source Ene
   const nextPlayerTurn = finishHordeTurn(hordeTurn);
 
   assert.equal(afterAbilities.player.energyPool.stored, 2);
-  assert.equal(afterAbilities.player.field.find((card) => card.instanceId === llanowar.instanceId)?.tapped, true);
-  assert.equal(afterAbilities.player.field.find((card) => card.instanceId === druid.instanceId)?.tapped, true);
+  assert.equal(afterAbilities.player.field.find((card) => card.instanceId === llanowar.instanceId)?.exhausted, true);
+  assert.equal(afterAbilities.player.field.find((card) => card.instanceId === druid.instanceId)?.exhausted, true);
   assert.equal(hordeTurn.player.energyPool.stored, 2);
   assert.equal(hordeTurn.player.pendingStoredEnergy, 1);
   assert.equal(nextPlayerTurn.player.pendingStoredEnergy, 0);
@@ -446,7 +446,7 @@ test("manually generated Source Energy is visible in the pool and is spent befor
 
   assert.equal(result.lastActionResult?.ok, true);
   assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
-  assert.equal(result.player.field.find((card) => card.instanceId === forest.instanceId)?.tapped, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === forest.instanceId)?.exhausted, true);
 });
 
 test("the player draws one card normally after setup", () => {
@@ -562,8 +562,8 @@ test("automatic payment spends Source Energy before Stored Energy", () => {
   const result = castCard(game, spell.instanceId);
 
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
-  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.tapped, true);
-  assert.equal(result.player.field.find((card) => card.instanceId === energyEcho.instanceId)?.tapped, false);
+  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.exhausted, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === energyEcho.instanceId)?.exhausted, false);
   assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
 });
 
@@ -587,8 +587,8 @@ test("Crimson Energy is a universal source that pays generic costs before stored
 
   assert.equal(firstEnergy.cardTypes.includes("SOURCE"), true);
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
-  assert.equal(result.player.field.find((card) => card.instanceId === firstEnergy.instanceId)?.tapped, true);
-  assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.tapped, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === firstEnergy.instanceId)?.exhausted, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.exhausted, true);
   assert.equal(result.player.energyPool.stored, 1);
 });
 
@@ -637,7 +637,7 @@ test("spell life costs normalize from deck abilities and can never reduce the pl
   assert.equal(result.player.life, 3);
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === spell.instanceId), true);
-  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.tapped, false);
+  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.exhausted, false);
 });
 
 test("Countess pays half the player's life rounded up as an additional cost", () => {
@@ -675,7 +675,7 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   assert.equal(rejected.player.life, 1);
   assert.equal(rejected.player.lifePaidThisTurn, 0);
   assert.equal(rejected.player.hand.some((card) => card.instanceId === blockedCountess.instanceId), true);
-  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.tapped), true);
+  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("Countess has Lifesteal while attacking but not while blocking", () => {
@@ -748,7 +748,7 @@ test("Blood Pact cannot be cast when paying five life would reduce the player to
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === pact.instanceId), true);
   assert.equal(result.player.archive.length, 2);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.tapped), true);
+  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
   assert.equal(result.winner, undefined);
 });
 
@@ -810,7 +810,7 @@ test("Crimson Impulse rejects an enemy target before spending Energy or life", (
   assert.equal(result.player.life, 10);
   assert.equal(result.player.lifePaidThisTurn, 0);
   assert.equal(result.player.hand.some((card) => card.instanceId === impulse.instanceId), true);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.tapped), true);
+  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
   assert.equal(result.horde.field.find((card) => card.instanceId === enemy.instanceId)?.temporaryPower, 0);
 });
 
@@ -883,7 +883,7 @@ test("Drain Essence can kill an allied creature but rejects noncreature targets 
   assert.equal(rejected.lastActionResult?.ok, false);
   assert.equal(rejected.player.life, 10);
   assert.equal(rejected.player.hand.some((card) => card.instanceId === invalidDrain.instanceId), true);
-  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.tapped), true);
+  assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("Predatory Thirst grants temporary Lifesteal to every allied creature", () => {
@@ -1006,7 +1006,7 @@ test("Final Banquet rejects allied targets before paying Energy", () => {
   assert.equal(result.lastActionResult?.ok, false);
   assert.equal(result.player.life, 20);
   assert.equal(result.player.hand.some((card) => card.instanceId === banquet.instanceId), true);
-  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.tapped), true);
+  assert.equal(result.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
 test("Final Banquet can be cast during Horde combat as an Instant", () => {
@@ -1140,7 +1140,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
       activatedAbilities: [
         {
           id: "pay_life_activation",
-          cost: { tap: true, energy: 1, life: 3 },
+          cost: { exhaust: true, energy: 1, life: 3 },
           effect: { type: "PUMP_UNTIL_END_OF_TURN", target: "SELF", power: 1, toughness: 1 },
         },
       ],
@@ -1153,7 +1153,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(blocked.player.life, 3);
   assert.equal(blocked.player.lifePaidThisTurn, 0);
   assert.equal(blocked.player.energyPool.stored, 1);
-  assert.equal(blocked.player.field.find((card) => card.instanceId === acolyte.instanceId)?.tapped, false);
+  assert.equal(blocked.player.field.find((card) => card.instanceId === acolyte.instanceId)?.exhausted, false);
   assert.equal(blocked.player.field.find((card) => card.instanceId === acolyte.instanceId)?.activatedThisTurn, false);
 
   game.player.life = 4;
@@ -1164,7 +1164,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(paid.player.life, 1);
   assert.equal(paid.player.lifePaidThisTurn, 3);
   assert.equal(paid.player.energyPool.stored, 0);
-  assert.equal(activated?.tapped, true);
+  assert.equal(activated?.exhausted, true);
   assert.equal(activated?.activatedThisTurn, true);
   assert.equal(activated?.temporaryPower, 1);
 });
@@ -1181,7 +1181,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(result.player.life, 5);
   assert.equal(result.player.lifePaidThisTurn, 5);
   assert.equal(result.player.energyPool.stored, 1);
-  assert.equal(activated?.tapped, true);
+  assert.equal(activated?.exhausted, true);
   assert.equal(activated?.activatedThisTurn, true);
 
   const fullReserve = createTestGame();
@@ -1196,7 +1196,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(blocked.player.life, 10);
   assert.equal(blocked.player.lifePaidThisTurn, 0);
   assert.equal(blocked.player.energyPool.stored, 3);
-  assert.equal(unchanged?.tapped, false);
+  assert.equal(unchanged?.exhausted, false);
   assert.equal(unchanged?.activatedThisTurn, false);
 });
 
@@ -1204,7 +1204,7 @@ test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next pl
   const freshGame = createTestGame();
   freshGame.player.life = 10;
   const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
-  freshDuelist.summoningSickness = true;
+  freshDuelist.stabilizing = true;
 
   const blockedBySickness = activateAbility(freshGame, freshDuelist.instanceId, "court_duelist_blood_rush");
   const unchangedFreshDuelist = blockedBySickness.player.field.find((card) => card.instanceId === freshDuelist.instanceId);
@@ -1225,7 +1225,7 @@ test("Court Duelist keeps +3/+1 through Horde combat and loses it at the next pl
   assert.equal(buffed.lastActionResult?.ok, true);
   assert.equal(buffed.player.life, 7);
   assert.equal(buffed.player.lifePaidThisTurn, 3);
-  assert.equal(activeDuelist?.tapped, false);
+  assert.equal(activeDuelist?.exhausted, false);
   assert.equal(activeDuelist?.activatedThisTurn, true);
   assert.deepEqual(getPowerToughness(buffed, activeDuelist), { power: 6, toughness: 4 });
 
@@ -1334,7 +1334,7 @@ test("Blood Page does not trigger from the first life loss while exhausted", () 
   const exhaustedPage = addCard(game, cardFromDeck("blood_page", "player"));
   const readyPage = addCard(game, cardFromDeck("blood_page", "player"));
   const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
-  exhaustedPage.tapped = true;
+  exhaustedPage.exhausted = true;
 
   const result = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
 
@@ -1443,7 +1443,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
 
   assert.equal(result.player.hand.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.memory.length, 0);
-  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.tapped, false);
+  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.exhausted, false);
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
@@ -1933,7 +1933,7 @@ test("Goblin Rabblemaster creates its combat token before Horde attackers are de
 
   assert.equal(tokens.length, 1);
   assert.deepEqual(new Set(result.combat.hordeAttackers), new Set([rabblemaster.instanceId, tokens[0].instanceId]));
-  assert.equal(tokens[0].tapped, true);
+  assert.equal(tokens[0].exhausted, true);
 });
 
 test("Goblin token waves attack in chronological visual order", () => {
@@ -2077,7 +2077,7 @@ test("Krenko grows before creating tokens equal to its new power", () => {
   assert.equal(currentKrenko?.counters["+1/+1"], 1);
   assert.deepEqual(getPowerToughness(result, currentKrenko), { power: 2, toughness: 3 });
   assert.equal(tokens.length, 2);
-  assert.equal(tokens.every((card) => card.tapped && result.combat.hordeAttackers.includes(card.instanceId)), true);
+  assert.equal(tokens.every((card) => card.exhausted && result.combat.hordeAttackers.includes(card.instanceId)), true);
 });
 
 test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and opposing creatures", () => {

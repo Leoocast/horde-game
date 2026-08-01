@@ -52,7 +52,7 @@ export function addEnergySource(game: GameState, amount = 1): PlaygroundActionRe
   return succeed(next, `Playground adds ${placed} energy source(s).`);
 }
 
-/** Untaps every energy source and hands the Energy action back — a fresh turn's worth of energy
+/** Readies every Energy Source and hands the Energy action back — a fresh turn's worth of Energy
  *  without advancing the turn. */
 export function refillEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
@@ -60,8 +60,8 @@ export function refillEnergy(game: GameState): PlaygroundActionResult {
   if (lands.length === 0) return fail(game, "There are no energy sources to refill. Add one first.");
   let restored = 0;
   for (const land of lands) {
-    if (land.tapped || land.activatedThisTurn) restored += 1;
-    land.tapped = false;
+    if (land.exhausted || land.activatedThisTurn) restored += 1;
+    land.exhausted = false;
     land.activatedThisTurn = false;
   }
   next.player.energyActionUsedThisTurn = false;
@@ -75,13 +75,13 @@ export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionRe
   return succeed(next, `Playground stores ${added} energy.`);
 }
 
-/** Spends everything: taps every energy source and empties the pool. The counterpart to refill,
+/** Spends everything: Exhausts every Energy Source and empties the pool. The counterpart to refill,
  *  for testing what a card does with nothing left. */
 export function drainEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
   for (const card of next.player.field) {
     if (!card.cardTypes.includes("SOURCE")) continue;
-    card.tapped = true;
+    card.exhausted = true;
     card.activatedThisTurn = true;
   }
   next.player.energyPool = emptyEnergyPool();

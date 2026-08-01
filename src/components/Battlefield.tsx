@@ -221,7 +221,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const creatures = displayedCards.filter((card) => card.cardTypes.includes("ECHO"));
   const lands = displayedCards.filter((card) => card.cardTypes.includes("SOURCE"));
   const others = displayedCards.filter((card) => !card.cardTypes.includes("ECHO") && !card.cardTypes.includes("SOURCE"));
-  const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
+  const availableLandCount = lands.filter((card) => !card.exhausted && !card.activatedThisTurn).length;
   const storedEnergyCount = game.player.energyPool.stored;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
   const energyTransitionSequence = useRef(0);
@@ -605,7 +605,7 @@ export function Battlefield({ game, side, cards }: Props) {
   function LandDock() {
     const landCount = lands.length;
     const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
-    const smallpoxLandTarget = lands.find((card) => !card.tapped && !card.activatedThisTurn) ?? lands[0];
+    const smallpoxLandTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
     const canSelectEnergyCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
     const availableEnergySlots = Array.from({ length: MAX_PLAYER_LANDS });
     const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
@@ -964,7 +964,7 @@ export function Battlefield({ game, side, cards }: Props) {
         className={[
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
-          card.tapped || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
+          card.exhausted || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
           card.cardTypes.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}

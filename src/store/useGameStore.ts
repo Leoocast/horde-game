@@ -1334,7 +1334,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (!card.cardTypes.includes("ECHO") || selected.has(card.instanceId)) continue;
         if (!canAttack(next, card)) continue;
         selected.add(card.instanceId);
-        if (!hasKeyword(next, card, "ALERT")) card.tapped = true;
+        if (!hasKeyword(next, card, "ALERT")) card.exhausted = true;
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
@@ -1346,7 +1346,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = structuredClone(game) as GameState;
       const attackers = new Set(next.combat.playerAttackers);
       for (const card of next.player.field) {
-        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "ALERT")) card.tapped = false;
+        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "ALERT")) card.exhausted = false;
       }
       next.combat.playerAttackers = [];
       next.log.unshift("Player cancels attackers.");
@@ -2238,7 +2238,7 @@ function buildCastCardPatch(
   const card = game.player.hand.find((item) => item.instanceId === id);
   const usesBloodPactAnimation = Boolean(card && effectsUseAnimation(card.effects, "BLOOD_PACT"));
   const sfx = card && card.cardTypes.includes("ECHO") ? monsterSfx(card) : undefined;
-  const untappedLandIds = new Set(game.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.tapped).map((item) => item.instanceId));
+  const readySourceIds = new Set(game.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
   const reactionSources = card ? findCardCastReactionSources(game, card) : [];
   const next = castCard(game, id, {
     ...options,
@@ -2275,7 +2275,7 @@ function buildCastCardPatch(
     ? startBuffBeat(triggeredBuffCardIds, triggeredBuffVariant)
     : undefined;
   const autoPaidLandIds = castSucceeded
-    ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+    ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
   const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
@@ -2353,7 +2353,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       deferFightResolution?: boolean;
     } = {},
   ) => {
-    const untappedLandIds = new Set(latest.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.tapped).map((item) => item.instanceId));
+    const readySourceIds = new Set(latest.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
@@ -2386,7 +2386,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         )
       : undefined;
     const autoPaidLandIds = castSucceeded
-      ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+      ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.exhausted && readySourceIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
     const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
     const lifeBuffBeat = gainedLife ? startLifeBuffBeat() : undefined;

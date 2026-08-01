@@ -685,7 +685,7 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
   assert.equal(afterActivation.energyFlowAnimation?.phase, "travel");
   assert.equal(afterActivation.game.player.energyPool.stored, 0);
   assert.equal(
-    afterActivation.game.player.field.find((card) => card.instanceId === acolyte.instanceId)?.tapped,
+    afterActivation.game.player.field.find((card) => card.instanceId === acolyte.instanceId)?.exhausted,
     true,
   );
 
@@ -1066,7 +1066,7 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
     assert.equal(duringTravel.energyFlowAnimation?.phase, "travel");
     assert.equal(duringTravel.game.player.energyPool.stored, 0);
     assert.equal(
-      duringTravel.game.player.field.find((card) => card.instanceId === llanowar.instanceId)?.tapped,
+      duringTravel.game.player.field.find((card) => card.instanceId === llanowar.instanceId)?.exhausted,
       true,
     );
 

@@ -59,8 +59,8 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     next.player.memory.push(card);
   } else {
     card.zone = "field";
-    card.tapped = card.entersTapped;
-    card.summoningSickness = card.cardTypes.includes("ECHO");
+    card.exhausted = card.entersExhausted;
+    card.stabilizing = card.cardTypes.includes("ECHO");
     if (card.attachTo?.targetRef) card.attachedTo = String(options.targets?.[card.attachTo.targetRef] ?? "");
     applyVariableCounters(card);
     next.player.field.push(card);
@@ -119,7 +119,7 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   const cost = activatedAbilityEnergyCost(ability.cost);
   next.player.energyPool = payEnergy(next.player.energyPool, cost);
   payLifeCost(next, ability.cost, card.instanceId, card.name);
-  if (ability.cost?.tap) card.tapped = true;
+  if (ability.cost?.exhaust) card.exhausted = true;
   card.activatedThisTurn = true;
   if (ability.cost?.sacrificeSelf) destroyPermanent(next, card);
   resolveEffect(next, ability.effect, { source: card, side: "player", targets: options.targets });
@@ -131,15 +131,15 @@ export function activatedAbilityFailureReason(game: GameState, card: CardInstanc
   if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Actions can only be used during your Main phase.";
   if (card.controller !== "player" || card.zone !== "field") return "That Action is not available.";
   if (card.activatedThisTurn) return `${card.name} has already used an Action this turn.`;
-  if (ability.requiresNoSummoningSickness && card.cardTypes.includes("ECHO") && card.summoningSickness) {
+  if (ability.requiresStabilized && card.cardTypes.includes("ECHO") && card.stabilizing) {
     return `${card.name} cannot use this Action while Stabilizing.`;
   }
   if (card.cardTypes.includes("ECHO") && ability.effect.type === "GAIN_ENERGY" && storedEnergySpace(game) === 0) {
     return "Stored Energy is already full.";
   }
-  if (ability.cost?.tap) {
-    if (card.tapped) return `${card.name} is already Exhausted.`;
-    if (card.summoningSickness && card.cardTypes.includes("ECHO")) return `${card.name} is Stabilizing.`;
+  if (ability.cost?.exhaust) {
+    if (card.exhausted) return `${card.name} is already Exhausted.`;
+    if (card.stabilizing && card.cardTypes.includes("ECHO")) return `${card.name} is Stabilizing.`;
   }
   const cost = activatedAbilityEnergyCost(ability.cost);
   if (!canPayEnergy(game.player.energyPool, cost)) return `Not enough Energy to use ${card.name}.`;
@@ -172,7 +172,7 @@ function moveHandToBattlefield(game: GameState, card: { instanceId: string; zone
   game.player.hand = game.player.hand.filter((item) => item.instanceId !== card.instanceId);
   const permanent = card as never as import("./GameTypes").CardInstance;
   permanent.zone = "field";
-  permanent.tapped = permanent.entersTapped;
+  permanent.exhausted = permanent.entersExhausted;
   game.player.field.push(permanent);
   recordFieldEntry(game, permanent);
 }

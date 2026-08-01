@@ -45,7 +45,7 @@ test("energy sources are lands on the battlefield and stop at the land cap", () 
 
   const lands = game.player.field;
   assert.equal(lands.length, MAX_PLAYER_LANDS);
-  assert.ok(lands.every((card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn));
+  assert.ok(lands.every((card) => card.cardTypes.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn));
 
   // The cap is the game's, not the playground's: it must refuse with a reason, not silently pile on.
   const overflow = addEnergySource(game);
@@ -54,21 +54,21 @@ test("energy sources are lands on the battlefield and stop at the land cap", () 
   assert.equal(overflow.game.lastActionResult.ok, false);
 });
 
-test("drain taps every source and empties the pool; refill gives it all back", () => {
+test("drain Exhausts every Source and empties the pool; refill readies them", () => {
   const start = buildScenarioGame(scenario({ player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 2 } }));
   assert.equal(start.player.energyPool.stored, 2);
 
   const drained = drainEnergy(start);
   assert.equal(drained.ok, true);
-  assert.ok(drained.game.player.field.every((card) => card.tapped));
+  assert.ok(drained.game.player.field.every((card) => card.exhausted));
   assert.equal(drained.game.player.energyPool.stored, 0);
 
   const refilled = refillEnergy(drained.game);
   assert.equal(refilled.ok, true);
-  assert.ok(refilled.game.player.field.every((card) => !card.tapped && !card.activatedThisTurn));
+  assert.ok(refilled.game.player.field.every((card) => !card.exhausted && !card.activatedThisTurn));
   assert.equal(refilled.game.player.energyActionUsedThisTurn, false);
 
-  // Refilling untapped lands is not an error, but with no lands at all there is nothing to refill.
+  // Refilling ready Sources is not an error, but with no Sources at all there is nothing to refill.
   const bare = refillEnergy(buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } })));
   assert.equal(bare.ok, false);
   assert.match(bare.reason, /no energy sources/i);

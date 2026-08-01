@@ -652,7 +652,7 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   const side = card.controller;
   game[side].field = game[side].field.filter((item) => item.instanceId !== card.instanceId);
   card.zone = "memory";
-  card.tapped = false;
+  card.exhausted = false;
   card.damageMarked = 0;
   game[side].memory.push(card);
   game.log.unshift(`${card.name} dies.`);
@@ -682,8 +682,8 @@ function inspectTopGoblin(game: GameState): void {
   }
 
   card.zone = "field";
-  card.tapped = false;
-  card.summoningSickness = false;
+  card.exhausted = false;
+  card.stabilizing = false;
   game.horde.field.push(card);
   recordFieldEntry(game, card);
   game.log.unshift(`${card.name} is Invoked from the Host Archive.`);
@@ -716,8 +716,8 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
       game.gameMode === "chaos" ? game.chaosMutations[controller][found.id] : undefined,
     );
     token.zone = "field";
-    token.summoningSickness = controller === "player";
-    token.tapped = Boolean(effect.tapped);
+    token.stabilizing = controller === "player";
+    token.exhausted = Boolean(effect.exhausted);
     game[controller].field.push(token);
     recordFieldEntry(game, token);
     runEnterBattlefieldTriggers(game, token, undefined, {
@@ -725,7 +725,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
       causeSourceId: context.source?.instanceId,
     });
     if (effect.attacking && controller === "horde" && game.phase === "combat") {
-      token.tapped = true;
+      token.exhausted = true;
       game.combat.hordeAttackers.push(token.instanceId);
     }
     game.log.unshift(`${controller === "player" ? "Player" : "Horde"} creates ${token.name}.`);
@@ -810,8 +810,8 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   if (condition.type === "FIRST_LIFE_LOSS_THIS_TURN") {
     return event.type === "LIFE_LOST" && event.payload?.firstLossThisTurn === true;
   }
-  if (condition.type === "SOURCE_IS_UNTAPPED") {
-    return !source.tapped;
+  if (condition.type === "SOURCE_IS_READY") {
+    return !source.exhausted;
   }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);

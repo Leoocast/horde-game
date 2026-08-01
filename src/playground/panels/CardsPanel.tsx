@@ -70,7 +70,7 @@ export function CardsPanel({ onDispatch }: Props) {
   const [selected, setSelected] = useState<CatalogCard | undefined>();
   const [zone, setZone] = useState<ScenarioZoneKey | undefined>();
   const [amount, setAmount] = useState(1);
-  const [tapped, setTapped] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
 
   const results = useMemo(() => searchCatalog(query, deckId || undefined), [query, deckId]);
   const visible = results.slice(0, RESULT_LIMIT);
@@ -140,7 +140,7 @@ export function CardsPanel({ onDispatch }: Props) {
               </label>
               {isPermanent && (
                 <label className="playground-checkbox">
-                  <input type="checkbox" checked={tapped} onChange={(event) => setTapped(event.target.checked)} />
+                  <input type="checkbox" checked={exhausted} onChange={(event) => setExhausted(event.target.checked)} />
                   <span>Exhausted</span>
                 </label>
               )}
@@ -153,7 +153,7 @@ export function CardsPanel({ onDispatch }: Props) {
                   onDispatch({
                     kind: "place",
                     zone: activeZone,
-                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && tapped ? { tapped: true } : {}) },
+                    entry: { definitionId: selected.definition.id, amount, ...(isPermanent && exhausted ? { tapped: true } : {}) },
                   })
                 }
               >

@@ -34,7 +34,7 @@ test("a blank scenario starts with full energy, empty zones and no setup turns",
   // The only permanents on a blank board are its energy sources: a board you cannot cast from is
   // not a useful place to start testing a card.
   assert.equal(game.player.field.length, MAX_PLAYER_LANDS);
-  assert.ok(game.player.field.every((card) => card.cardTypes.includes("SOURCE") && !card.tapped));
+  assert.ok(game.player.field.every((card) => card.cardTypes.includes("SOURCE") && !card.exhausted));
 });
 
 test("energy is configured as sources and stored energy, both clamped to the engine's caps", () => {
@@ -56,7 +56,7 @@ test("lands listed in a zone count against the energy field instead of stacking 
   const lands = game.player.field.filter((card) => card.cardTypes.includes("SOURCE"));
   assert.equal(lands.length, MAX_PLAYER_LANDS);
   // The two the scenario asked for keep the state it asked for; the field only tops up the rest.
-  assert.equal(lands.filter((card) => card.tapped).length, 2);
+  assert.equal(lands.filter((card) => card.exhausted).length, 2);
 });
 
 test("zone entries become real card instances in the right zone", () => {
@@ -83,7 +83,7 @@ test("zone entries become real card instances in the right zone", () => {
 
   const lands = game.player.field;
   assert.equal(lands.length, 3);
-  assert.ok(lands.every((card) => card.definitionId === "forest" && card.zone === "field" && card.tapped));
+  assert.ok(lands.every((card) => card.definitionId === "forest" && card.zone === "field" && card.exhausted));
 
   assert.deepEqual(game.player.memory.map((card) => card.definitionId), ["llanowar_elves"]);
   assert.equal(game.player.memory[0].zone, "memory");
@@ -91,7 +91,7 @@ test("zone entries become real card instances in the right zone", () => {
   assert.equal(game.horde.field.length, 2);
   assert.ok(game.horde.field.every((card) => card.definitionId === "zombie_token" && card.controller === "horde"));
   // Scenario cards are assumed to be already in play, so they can act immediately.
-  assert.ok(game.horde.field.every((card) => !card.summoningSickness));
+  assert.ok(game.horde.field.every((card) => !card.stabilizing));
 
   assert.equal(game.horde.archive[0].definitionId, "graf_harvest");
 });
