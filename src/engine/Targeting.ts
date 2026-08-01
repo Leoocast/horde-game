@@ -18,7 +18,7 @@ export function targetCandidatesWithSelectedTargets(game: GameState, sourceSide:
   const wanted = req.controller === "SELF" ? sourceSide : req.controller === "OPPONENT" ? opponent(sourceSide) : undefined;
   return allBattlefield(game).filter((card) => {
     if (wanted && card.controller !== wanted) return false;
-    if (req.type.includes("CREATURE") && !card.cardTypes.includes("ECHO")) return false;
+    if (req.type.includes("ECHO") && !card.cardTypes.includes("ECHO")) return false;
     if (req.type.includes("LAND") && !card.cardTypes.includes("SOURCE")) return false;
     const filters = req.filters as (CardFilter & { anyOf?: CardFilter[]; excludeTargetIds?: string[] }) | undefined;
     if (filters?.cardTypes?.length && !filters.cardTypes.every((type) => card.cardTypes.includes(type))) return false;

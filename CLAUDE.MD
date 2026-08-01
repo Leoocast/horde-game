@@ -112,7 +112,7 @@ src/
 
   engine/
     effectVocabulary.ts   vocabulario del engine para el lint; los effect types derivan del registro de EffectResolver
-    HordeRules.ts         DEFAULT_HORDE_RULES + buildHordeRules: reglas por deck de horda (reveal, surge, mill, haste, swarm)
+    HostRules.ts          DEFAULT_HOST_RULES + buildHostRules: reglas por deck de Hueste (reveal, surge, descarte, Ímpetu, swarm)
 
 scripts/
   run-engine-tests.mjs    corre los tests via vite ssrLoadModule + node:test; agregar un archivo
@@ -345,7 +345,7 @@ El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
 - horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`)
 - horde: `goblin_assault_horde` — seleccionable
 
-Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
+Reglas de Hueste por deck: el engine construye `game.hostRules` con `buildHostRules(deck.rulesProfile)` (ver `HostRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, descarta una carta del Archivo por cada 3 de dano o 3 de Veneno, Ímpetu implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una Hueste = editar su `rulesProfile`, no el engine.
 
 `src/data/decks.ts` tiene `DECK_REGISTRY`: agregar un deck = una llamada
 `register(label, raw, images, presentation)`. De ahi derivan el deck del engine, el inspector
@@ -710,13 +710,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.4 está implementada y pendiente de validación manual. `CardInstance` usa `exhausted`,
+- L4.5 está implementada y pendiente de validación manual. El runtime usa `INVOKED`/
+  `ECHO_INVOKED`, `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED`, `BEGIN_BATTLE` y Acciones/condiciones
+  Hostfall sin downgrade en el adaptador. `game.hostRules` se construye con `buildHostRules` y usa
+  divisores de descarte del Archivo, Ímpetu y `endurance` canónicos. El lint valida el contrato
+  authored completo; 216/216 tests, TypeScript, deck lint, Card Studio, auditoría y build pasan, y
+  `legacy-l45-actions-events-host-rules` está en cero. L4.6 no ha comenzado.
+- L4.4 está cerrada y validada por el usuario. `CardInstance` usa `exhausted`,
   `entersExhausted` y `stabilizing`; los costes usan `exhaust`, las restricciones
   `requiresStabilized` y la condición canónica es `SOURCE_IS_READY`. El adaptador dejó de traducir
   esos estados. Los escenarios v2 mantienen `tapped`/`summoningSickness` sólo en su borde externo
   hasta la limpieza conjunta de L4.6. TypeScript, deck lint, Card Studio, 202/202 tests, auditoría
-  y build pasan; `legacy-l44-card-states` debe permanecer en cero. No iniciar L4.5 hasta la prueba
-  del usuario.
+  y build pasan; `legacy-l44-card-states` debe permanecer en cero. L4.5 fue implementada después.
 - L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplaza el modelo de
   seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
   cantidades numéricas. El autopago agota Sources antes de gastar Stored Energy, los Ecos de
@@ -739,8 +744,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   valores. `legacy-l41-card-model` debe permanecer en cero.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia eventos y
-  reglas Host legacy; ya no traduce valores de tipos, Rasgos, zonas, costes ni estados. Mono Green,
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` conserva únicamente el puente estructural y de
+  bandos previsto para L4.6; ya no traduce valores de tipos, Rasgos, zonas, costes, estados,
+  eventos, Acciones ni reglas de la Hueste. Mono Green,
   Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
   canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
   leer el JSON authored directamente desde UI.
@@ -748,8 +754,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`) rechaza cualquier reintroducción del schema
   authored legacy.
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
-- Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
-- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
+- Reglas de Hueste como data: `game.hostRules` viene del `rulesProfile` del deck JSON mediante `buildHostRules`. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
+- Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "toda Reacción manual de Invocación es obligatoria" via `findManualInvokedTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
 - Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.

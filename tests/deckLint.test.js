@@ -67,11 +67,29 @@ test("Hostfall schema rejects unknown version, side and canonical vocabulary", (
       kinds: ["ECH0"],
       modifiers: ["QUCIK"],
       traits: ["ALRET", "POISON_ONE"],
+      eventObject: "permanent", // audit-allow legacy-l45-rejection-fixture
+      retiredTarget: { type: "ALL_CREATURES" }, // audit-allow legacy-l45-rejection-fixture
+      internalRuntimeType: { type: "HOST_GROUP_BUFF" },
+      internalRuntimeEvent: { event: "ECHO_INVOKED" },
+      nonStringType: { type: 42 },
+      nonStringEvent: { event: null },
+      activationMode: "HOST_DIRECTIVE",
+      selectionRule: "CHEAPEST",
+      selection: "PLAYER_CHOOSES", // audit-allow legacy-l45-rejection-fixture
+      targetPolicy: "FIRST",
+      speed: "INSTANT",
+      controller: "HORDE",
       abilities: [{
         id: "bad-grant",
         kind: "STATIC",
         zone: "BATTLEGROUND",
         effects: [{ type: "STATIC_GRANT_KEYWORD", keyword: "LETHL" }],
+      }, {
+        id: "bad-controller-context",
+        kind: "SPELL",
+        zone: "ARCHIVE",
+        targets: [{ id: "target", zone: "FIELD", controller: "HOST" }],
+        effects: [{ type: "CREATE_TOKEN", controller: "ANY" }],
       }],
     }],
   };
@@ -83,6 +101,47 @@ test("Hostfall schema rejects unknown version, side and canonical vocabulary", (
   assert.match(messages, /Unknown Hostfall trait "POISON_ONE"/u);
   assert.match(messages, /Unknown Hostfall trait "LETHL"/u);
   assert.match(messages, /Unknown Hostfall zone "BATTLEGROUND"/u);
+  assert.match(messages, /expected "echo"/u);
+  assert.match(messages, /legacy value "ALL_CREATURES"/u); // audit-allow legacy-l45-rejection-fixture
+  assert.match(messages, /Unknown Hostfall authored type "HOST_GROUP_BUFF"/u);
+  assert.match(messages, /Unknown Hostfall authored event "ECHO_INVOKED"/u);
+  assert.match(messages, /Unknown Hostfall authored type "42"/u);
+  assert.match(messages, /Unknown Hostfall authored event "null"/u);
+  assert.match(messages, /Unknown Hostfall activationMode "HOST_DIRECTIVE"/u);
+  assert.match(messages, /Unknown Hostfall selectionRule "CHEAPEST"/u);
+  assert.match(messages, /Unknown Hostfall selection "PLAYER_CHOOSES"/u); // audit-allow legacy-l45-rejection-fixture
+  assert.match(messages, /Unknown Hostfall targetPolicy "FIRST"/u);
+  assert.match(messages, /Unknown Hostfall speed "INSTANT"/u);
+  assert.match(messages, /Unknown Hostfall controller "HORDE"/u);
+  assert.match(messages, /Unknown Hostfall controller "HOST" at "card\.abilities\[1\]\.targets\[0\]\.controller"/u);
+  assert.match(messages, /Unknown Hostfall controller "ANY" at "card\.abilities\[1\]\.effects\[0\]\.controller"/u);
+});
+
+test("Host rules reject unknown keys, unsafe divisors and malformed profiles", () => {
+  const invalidRules = {
+    schemaVersion: HOSTFALL_DECK_SCHEMA_VERSION,
+    id: "invalid-host-rules",
+    name: "Invalid Host rules",
+    side: "HOST",
+    rulesProfile: {
+      revealCount: 0,
+      damagePerArchiveDiscard: 0,
+      poisonPerArchiveDiscard: 1.5,
+      hostEchosHaveImpetus: "yes",
+      swarmTokenSubtypes: [],
+      surgeBonus: [],
+      misspelledRule: 3,
+    },
+    cards: [{ id: "token", name: "Token", energyCost: { amount: 0 }, kinds: ["ECHO", "TOKEN"] }],
+  };
+  const messages = lintHostfallDeckSchema(invalidRules).map((issue) => issue.message).join("\n");
+  assert.match(messages, /Unknown Host rule "misspelledRule"/u);
+  assert.match(messages, /revealCount must be a positive integer/u);
+  assert.match(messages, /damagePerArchiveDiscard must be a positive integer/u);
+  assert.match(messages, /poisonPerArchiveDiscard must be a positive integer/u);
+  assert.match(messages, /hostEchosHaveImpetus must be boolean/u);
+  assert.match(messages, /swarmTokenSubtypes must be a non-empty array of non-empty strings/u);
+  assert.match(messages, /surgeBonus must be an object/u);
 });
 
 test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", () => {
@@ -188,10 +247,10 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.side, "HORDE");
-  assert.equal(adapted.rulesProfile.damagePerMill, 3);
-  assert.equal(adapted.rulesProfile.poisonPerMill, 3);
-  assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
-  assert.equal(adapted.rulesProfile.surgeBonus.toughness, 0);
+  assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
+  assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
+  assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
+  assert.equal(adapted.rulesProfile.surgeBonus.endurance, 0);
   assert.deepEqual(byId.zombie_token.cardTypes, ["ECHO", "TOKEN"]);
   assert.equal(byId.zombie_token.isToken, true);
   assert.equal(byId.zombie_token.energyCost, 2);
@@ -199,11 +258,11 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
   assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["ECHO"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_UPKEEP");
+  assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(byId.rancid_rats.keywords, ["LETHAL", "FURTIVE"]);
-  assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "MILL_SELF");
-  assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "CREATURE_DIED");
-  assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_CREATURE_YOU_CONTROL_DIED");
+  assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "ECHO_DIED");
+  assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
 });
 
 test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
@@ -234,20 +293,20 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.side, "HORDE");
-  assert.equal(adapted.rulesProfile.damagePerMill, 3);
-  assert.equal(adapted.rulesProfile.poisonPerMill, 3);
-  assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
+  assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
+  assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
+  assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
   assert.deepEqual(byId.goblin_token_1_1_red.cardTypes, ["ECHO", "TOKEN"]);
   assert.equal(byId.goblin_token_1_1_red.isToken, true);
   assert.deepEqual(byId.goblin_war_drums.cardTypes, ["SUPPORT"]);
   assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_COMBAT");
-  assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HORDE_ROUND");
-  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_CREATURE");
-  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_PERMANENTS_ENTERED_THIS_TURN");
+  assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
   assert.deepEqual(byId.goblin_chainwhirler.keywords, ["REFLEX"]);
   assert.deepEqual(byId.general_kreat_the_boltbringer.cardTypes, ["ECHO"]);
   assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
-  assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "CREATURE_DIED");
-  assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "permanent");
+  assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
 });

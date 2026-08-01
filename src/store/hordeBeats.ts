@@ -5,7 +5,7 @@ import {
   effectNeedsManualTarget,
   pendingTriggerSources,
   resolveTriggeredEvent,
-  runEnterBattlefieldTriggers,
+  runInvokedTriggers,
 } from "../engine/EffectResolver";
 import { enqueue } from "../engine/EventQueue";
 import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticAuras, type StaticAuraSnapshot } from "../engine/StaticAuras";
@@ -81,24 +81,24 @@ export function resetHordeSequence(): void {
   hordeStaticAuraSnapshot = {};
 }
 
-export function hasEnterBattlefieldTrigger(card: CardInstance): boolean {
-  return card.effects.some((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD" && !effectNeedsManualTarget(effect.effect));
+export function hasInvokedTrigger(card: CardInstance): boolean {
+  return card.effects.some((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "INVOKED" && !effectNeedsManualTarget(effect.effect));
 }
 
-function hordeEnterTriggerMessage(card: CardInstance): string {
-  const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "ENTERS_BATTLEFIELD");
+function hostInvokedTriggerMessage(card: CardInstance): string {
+  const trigger = card.effects.find((effect) => effect.type === "TRIGGERED_ABILITY" && effect.trigger === "INVOKED");
   const effect = trigger?.effect as EffectDefinition | undefined;
   const cardName = uiCardName(card);
   const announcement = effect ? EFFECT_ANNOUNCEMENTS[String(effect.type)] : undefined;
   const count = Number(effect?.amount ?? 1);
   if (announcement === "createsTokens") return uiText("toast.cardCreatesTokens", { card: cardName, count });
-  if (announcement === "mills") return uiText("toast.cardMills", { card: cardName, count });
+  if (announcement === "discardsArchive") return uiText("toast.cardMills", { card: cardName, count });
   if (announcement === "discards") return uiText("toast.cardDiscards", { card: cardName, count });
   if (announcement === "lifeLoss") return uiText("toast.cardLifeLoss", { card: cardName, count });
   return uiText("toast.cardTrigger", { card: cardName });
 }
 
-export function scheduleHordeEnterTriggers(
+export function scheduleHostInvokedTriggers(
   cards: CardInstance[],
   onComplete?: () => void,
   options: { activationAlreadyShownSourceIds?: string[] } = {},
@@ -110,6 +110,24 @@ export function scheduleHordeEnterTriggers(
     if (!card) {
       useGameStore.setState({ hordeAutoTriggerCount: 0 });
       onComplete?.();
+      return;
+    }
+    // Every Echo arrival broadcasts ECHO_INVOKED, even when it has no self INVOKED ability.
+    // Resolve that silent broadcast before moving to the next visible arrival beat so observers
+    // such as General Kreat react in the same order as they do in the synchronous engine path.
+    if (!hasInvokedTrigger(card)) {
+      useGameStore.setState((state) => {
+        const previous = state.game;
+        const next = structuredClone(previous) as GameState;
+        const source = next.horde.field.find((item) => item.instanceId === card.instanceId);
+        if (source) runInvokedTriggers(next, source);
+        notifyDiscardEffects(previous, next);
+        return {
+          game: next,
+          hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next),
+        };
+      });
+      scheduleQueuedHordeTriggers(() => runNext(index + 1));
       return;
     }
     const activationAlreadyShown = options.activationAlreadyShownSourceIds?.includes(card.instanceId) ?? false;
@@ -128,7 +146,7 @@ export function scheduleHordeEnterTriggers(
       }
       useToastStore.getState().pushToast({
         title: uiText("toast.hordeEffect"),
-        message: hordeEnterTriggerMessage(card),
+        message: hostInvokedTriggerMessage(card),
         tone: "horde",
       });
     }, triggerStartMs);
@@ -139,7 +157,7 @@ export function scheduleHordeEnterTriggers(
         const next = structuredClone(previous) as GameState;
         const source = next.horde.field.find((item) => item.instanceId === card.instanceId);
         if (source) {
-          runEnterBattlefieldTriggers(next, source);
+          runInvokedTriggers(next, source);
         }
         notifyDiscardEffects(previous, next);
         return {
@@ -161,9 +179,9 @@ export function scheduleHordeEnterTriggers(
   runNext(0);
 }
 
-/** Resolves the presentation attached to a batch of newly revealed Horde cards. Static auras go
- * first; a card whose aura already supplied the activation pulse keeps its ETB as a separate beat
- * but does not glow or play the activation sound a second time. */
+/** Resolves the presentation attached to every newly revealed Horde card. Static auras go first;
+ * arrivals without a self trigger still broadcast ECHO_INVOKED silently, while a card whose aura
+ * already supplied the activation pulse keeps its ETB as a separate beat without glowing twice. */
 export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
   const waitingSequenceId = hordeAutoTriggerSequenceId;
   if (useGameStore.getState().summoningAnimationCount > 0) {
@@ -178,7 +196,7 @@ export function scheduleHordeArrivalEffects(cards: CardInstance[], onComplete?: 
   const hasAuraBeats = useGameStore.getState().pendingStaticAuras.length > 0;
   flushStaticAuraBeats();
   const runEnterTriggers = () =>
-    scheduleHordeEnterTriggers(cards, onComplete, { activationAlreadyShownSourceIds: auraSourceIds });
+    scheduleHostInvokedTriggers(cards, onComplete, { activationAlreadyShownSourceIds: auraSourceIds });
   if (hasAuraBeats) {
     scheduleQueuedHordeTriggers(runEnterTriggers);
     return;
@@ -643,7 +661,7 @@ const staticAuraBeatHandler: HordeBeatHandler = {
 
 const hordeGroupBuffBeatHandler: HordeBeatHandler = {
   id: "horde-group-buff",
-  claims: (event) => event.type === "HORDE_GROUP_BUFF",
+  claims: (event) => event.type === "HOST_GROUP_BUFF",
   run: ({ event, sequenceId, resolve, done }) => {
     const game = useGameStore.getState().game;
     const fieldSource = event.sourceId
@@ -797,7 +815,7 @@ function isDeferredCombatVolleyEffect(effect?: EffectDefinition): boolean {
   if (!effect) return false;
   if (
     effect.type === "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING" &&
-    effect.deferUntil === "HORDE_ATTACK_SEQUENCE_END"
+    effect.deferUntil === "HOST_ATTACK_SEQUENCE_END"
   ) {
     return true;
   }

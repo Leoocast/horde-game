@@ -1,5 +1,5 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { destroyPermanent, losePlayerLife, millHorde } from "../engine/EffectResolver";
+import { destroyPermanent, discardHostArchiveToMemory, losePlayerLife } from "../engine/EffectResolver";
 import { weakestCreature } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -28,7 +28,7 @@ export function runSmallpoxSequence(card: CardInstance): void {
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = structuredClone(previous) as GameState;
-      millHorde(next, 1);
+      discardHostArchiveToMemory(next, 1);
       return { game: next, hordeMillAnimationQueue: appendHordeMillAnimations(state, previous, next) };
     });
     window.setTimeout(() => {

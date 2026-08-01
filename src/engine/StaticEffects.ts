@@ -1,7 +1,7 @@
 import type { CardFilter, CardInstance, GameState, Side } from "./GameTypes";
 
 export function hordeSurgeTurn(game: GameState): number {
-  return game.gameMode === "chaos" ? game.hordeRules.surgeTurnChaos : game.hordeRules.surgeTurn;
+  return game.gameMode === "chaos" ? game.hostRules.surgeTurnChaos : game.hostRules.surgeTurn;
 }
 
 export function matchesFilter(card: CardInstance, filter?: CardFilter, source?: CardInstance): boolean {
@@ -30,7 +30,7 @@ export function staticConditionMet(game: GameState, condition: unknown, source: 
     const side = resolveAffectedController(source.controller, data.player);
     return side !== undefined && game.activeSide === side;
   }
-  if (data.type === "GRAVEYARD_COUNT_AT_LEAST") {
+  if (data.type === "MEMORY_COUNT_AT_LEAST") {
     const side = resolveAffectedController(source.controller, data.controller) ?? source.controller;
     return game[side].memory.length >= Number(data.amount ?? 0);
   }
@@ -53,7 +53,7 @@ export function getPowerToughness(
     card.temporaryToughness +
     (card.untilNextPlayerTurnToughness ?? 0);
 
-  const surgeBonus = game.hordeRules.surgeBonus;
+  const surgeBonus = game.hostRules.surgeBonus;
   if (
     surgeBonus &&
     hordeInSurge(game) &&
@@ -62,7 +62,7 @@ export function getPowerToughness(
     card.subtypes.some((subtype) => surgeBonus.subtypes.some((bonusSubtype) => bonusSubtype.toLowerCase() === subtype.toLowerCase()))
   ) {
     power += surgeBonus.power;
-    toughness += surgeBonus.toughness;
+    toughness += surgeBonus.endurance;
   }
 
   for (const source of [...game.player.field, ...game.horde.field]) {

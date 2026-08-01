@@ -1,7 +1,7 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { findManualEnterTargetTrigger } from "../engine/EffectResolver";
+import { findManualInvokedTargetTrigger } from "../engine/EffectResolver";
 import { getPowerToughness } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -28,7 +28,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const source = counterTargeting ? findBattlefieldCard(game, counterTargeting.sourceId) : undefined;
   // A manual enters-the-battlefield trigger must resolve — right-click may deselect but never
   // cancel it. Read from the card's own data, never from a card name.
-  const preserveRequiredEffect = Boolean(findManualEnterTargetTrigger(source));
+  const preserveRequiredEffect = Boolean(findManualInvokedTargetTrigger(source));
   const target = counterTargeting?.targetId ? findBattlefieldCard(game, counterTargeting.targetId) : undefined;
   const end = lockedEnd ?? (counterTargeting ? { x: counterTargeting.x, y: counterTargeting.y } : undefined);
 

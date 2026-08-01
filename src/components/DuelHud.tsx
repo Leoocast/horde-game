@@ -48,7 +48,9 @@ export function DuelHud({ game }: { game: GameState }) {
     const attacker = game.player.field.find((card) => card.instanceId === id);
     return attacker ? total + getPowerToughness(game, attacker).power : total;
   }, 0);
-  const pendingMill = Math.floor(pendingDamage / 3);
+  const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
+  const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
+  const pendingArchiveDiscards = Math.floor(pendingDamage / archiveDiscardThreshold);
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
@@ -274,21 +276,21 @@ export function DuelHud({ game }: { game: GameState }) {
                 <AnimatePresence initial={false} mode="popLayout">
                   {attackCountVisible && (
                     <motion.span
-                      key={pendingMill}
+                      key={pendingArchiveDiscards}
                       className="horde-deck-pending-mill"
                       initial={{ opacity: 0, x: -8, scale: 0.8 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -6, scale: 0.86 }}
                       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      - {pendingMill}
+                      - {pendingArchiveDiscards}
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
             </div>
             {game.horde.poisonCounters > 0 && (
-              <GameTooltip content={t("game.poisonCounters", { count: game.horde.poisonCounters })} side="bottom" className="horde-poison-tooltip">
+              <GameTooltip content={t("game.poisonCounters", { count: game.horde.poisonCounters, threshold: poisonDiscardThreshold })} side="bottom" className="horde-poison-tooltip">
                 <div
                   key={poisonAttackAnimation?.id ?? poisonConsumeAnimation?.id ?? `poison-${game.horde.poisonCounters}`}
                   className={[
@@ -296,7 +298,7 @@ export function DuelHud({ game }: { game: GameState }) {
                     poisonAttackAnimation ? "is-poison-gaining" : "",
                     poisonConsumeAnimation ? "is-poison-consuming" : "",
                   ].join(" ")}
-                  aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters })}
+                  aria-label={t("game.hordePoisonCounters", { count: game.horde.poisonCounters, threshold: poisonDiscardThreshold })}
                 >
                   <Droplet size={15} fill="currentColor" strokeWidth={2.2} />
                   <span>{game.horde.poisonCounters}</span>
@@ -326,10 +328,10 @@ export function DuelHud({ game }: { game: GameState }) {
                 exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingMill })} side="bottom">
-                  <div className="horde-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingMill })}>
+                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingArchiveDiscards })} side="bottom">
+                  <div className="horde-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingArchiveDiscards })}>
                     <Swords size={17} strokeWidth={2.3} />
-                    <span className="horde-attack-formula">{pendingDamage} / 3 = - {pendingMill}</span>
+                    <span className="horde-attack-formula">{pendingDamage} / {archiveDiscardThreshold} = - {pendingArchiveDiscards}</span>
                   </div>
                 </GameTooltip>
               </motion.div>

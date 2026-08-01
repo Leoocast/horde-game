@@ -1,5 +1,5 @@
 import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Keyword, Side } from "./GameTypes";
-import { buildHordeRules } from "./HordeRules";
+import { buildHostRules } from "./HostRules";
 import { emptyEnergyPool } from "./EnergySystem";
 import { hashSeed, shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
@@ -48,7 +48,7 @@ export function createInitialGame(
     seed,
     difficulty,
     gameMode,
-    hordeRules: buildHordeRules(activeHordeDeck.rulesProfile),
+    hostRules: buildHostRules(activeHordeDeck.rulesProfile),
     chaosMutations,
     currentRandomState: randomState,
     hordeDeckOrderHash: hordeArchive.map((card) => card.definitionId).join("|"),

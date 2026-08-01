@@ -4,53 +4,21 @@ import { isHostfallAuthoredZone, toRuntimeZone } from "../engine/hostfallZones";
 
 export { HOSTFALL_DECK_SCHEMA_VERSION } from "../engine/hostfallVocabulary";
 
-const LEGACY_EVENT_BY_HOSTFALL_EVENT: Record<string, string> = {
-  BEGIN_BATTLE: "BEGIN_COMBAT",
-  BEGIN_READY: "BEGIN_UPKEEP",
-  CARD_PLAYED: "CARD_CAST",
-  ECHO_DIED: "CREATURE_DIED",
-  INVOKED: "ENTERS_BATTLEFIELD",
-};
-
-const LEGACY_VALUE_BY_HOSTFALL_VALUE: Record<string, string> = {
-  ANOTHER_ALLIED_ECHO_DIED: "ANOTHER_CREATURE_YOU_CONTROL_DIED",
-  BANISH_CARD_FROM_MEMORY: "EXILE_CARD_FROM_GRAVEYARD",
-  CHRONICLER_CHOOSES: "PLAYER_CHOOSES",
-  COUNT_ECHOS: "COUNT_PERMANENTS",
-  COUNT_ECHOS_INVOKED_THIS_TURN: "COUNT_PERMANENTS_ENTERED_THIS_TURN",
-  DEAL_DAMAGE_TO_OPPONENT_ECHO: "DEAL_DAMAGE_TO_OPPONENT_CREATURE",
-  DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT",
-  DISCARD_OWN_ARCHIVE_TO_MEMORY: "MILL_SELF",
-  EXHAUST_HOST_ECHOS_FOR_ENERGY: "TAP_HORDE_CREATURES_FOR_MANA",
-  HOST_DIRECTIVE_ONLY: "HORDE_DIRECTIVE_ONLY",
-  IGNORED_FOR_HOST_MVP: "IGNORED_FOR_HORDE_MVP",
-  LOWEST_ENERGY_COST_THEN_RANDOM: "LOWEST_MANA_VALUE_THEN_RANDOM",
-  LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY: "LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY",
-  MEMORY_COUNT_AT_LEAST: "GRAVEYARD_COUNT_AT_LEAST",
-  MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO: "GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE",
-  PLAYED_CARD_IS_NON_TOKEN: "CAST_CARD_IS_NON_TOKEN",
-  REVEAL_HOST_ROUND: "REVEAL_HORDE_ROUND",
-  RETURN_SELF_FROM_MEMORY_TO_FIELD: "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
-};
-
 export function isHostfallDeck(rawDeck: NewDeckList): boolean {
   return rawDeck.schemaVersion === HOSTFALL_DECK_SCHEMA_VERSION;
 }
 
 /**
  * Temporary L4 bridge. Card kinds, modifiers, Traits and the core Energy cost/pool contract already
- * stay in Hostfall vocabulary; this adapter still translates the domains scheduled for L4.5-L4.6
- * (events and Host rules). Authored zone casing stays canonical. The
- * cardTypes/keywords container aliases remain until consumer cleanup.
+ * stay in Hostfall vocabulary. Events, Actions and Host rules now do too; this adapter only keeps
+ * the structural/side aliases scheduled for L4.6. Authored zone casing stays canonical.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
   if (!isHostfallDeck(rawDeck)) return rawDeck;
   return {
     ...rawDeck,
     side: rawDeck.side === "HOST" ? "HORDE" : "PLAYER",
-    rulesProfile: rawDeck.rulesProfile
-      ? adaptNestedAuthoring(rawDeck.rulesProfile) as Record<string, unknown>
-      : undefined,
+    rulesProfile: rawDeck.rulesProfile,
     cards: rawDeck.cards.map(adaptHostfallCard),
     tokens: rawDeck.tokens?.map(adaptHostfallCard),
   };
@@ -87,7 +55,7 @@ function normalizeEnergyAmount(value: unknown): number {
 }
 
 function adaptNestedAuthoring(value: unknown): unknown {
-  if (typeof value === "string") return LEGACY_VALUE_BY_HOSTFALL_VALUE[value] ?? value;
+  if (typeof value === "string") return value;
   if (Array.isArray(value)) {
     return value.flatMap((item) => {
       if (!item || typeof item !== "object") return [adaptNestedAuthoring(item)];
@@ -123,44 +91,8 @@ function adaptNestedAuthoring(value: unknown): unknown {
       adapted.controller = "HORDE";
       continue;
     }
-    if (key === "damagePerArchiveDiscard") {
-      adapted.damagePerMill = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "poisonPerArchiveDiscard") {
-      adapted.poisonPerMill = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "hostEchosHaveImpetus") {
-      adapted.hordeCreaturesHaveHaste = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "hostDirective") {
-      adapted.hordeDirective = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "hostErrata") {
-      adapted.hordeErrata = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
-    if (key === "hostVersion") {
-      adapted.hordeVersion = adaptNestedAuthoring(nestedValue);
-      continue;
-    }
     if (key === "zone" && typeof nestedValue === "string") {
       adapted.zone = isHostfallAuthoredZone(nestedValue) ? toRuntimeZone(nestedValue) : nestedValue;
-      continue;
-    }
-    if (key === "event" && typeof nestedValue === "string") {
-      adapted.event = LEGACY_EVENT_BY_HOSTFALL_EVENT[nestedValue] ?? nestedValue;
-      continue;
-    }
-    if (key === "eventObject" && nestedValue === "echo") {
-      adapted.eventObject = "permanent";
-      continue;
-    }
-    if (key === "speed" && typeof nestedValue === "string") {
-      adapted.speed = nestedValue === "QUICK" ? "INSTANT" : nestedValue === "MAIN" ? "SORCERY" : nestedValue;
       continue;
     }
     adapted[key] = adaptNestedAuthoring(nestedValue);

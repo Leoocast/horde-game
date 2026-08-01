@@ -75,7 +75,8 @@
           "kind": "TRIGGERED",
           "zone": "FIELD",
           "trigger": {
-            "event": "INVOKED"
+            "event": "INVOKED",
+            "source": "SELF"
           },
           "targets": [
             {
@@ -209,7 +210,7 @@
           "conditions": [
             {
               "type": "EVENT_OBJECT_MATCHES",
-              "eventObject": "permanent",
+              "eventObject": "echo",
               "controller": "SELF",
               "excludeSource": true,
               "filters": {

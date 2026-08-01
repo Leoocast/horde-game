@@ -86,7 +86,7 @@ export function executeStep(step: TimelineStep): StepOutcome {
       store.runHordeMain();
       return readEngineOutcome("Host turn running.");
     case "hordeTurnExact": {
-      const originalRules = structuredClone(store.game.hordeRules);
+      const originalRules = structuredClone(store.game.hostRules);
       const withQueue = step.entries ? stageHordeQueue(store.game, step.entries) : store.game;
       if (withQueue.lastActionResult?.ok === false) {
         useGameStore.setState({ game: withQueue });
@@ -95,7 +95,7 @@ export function executeStep(step: TimelineStep): StepOutcome {
       const staged = configureExactHordeTurn(withQueue, queuedCardCount(step));
       useGameStore.setState({ game: staged });
       store.runHordeMain();
-      useGameStore.setState(({ game }) => ({ game: { ...game, hordeRules: originalRules } }));
+      useGameStore.setState(({ game }) => ({ game: { ...game, hostRules: originalRules } }));
       return readEngineOutcome("Queued Host turn running.");
     }
     case "resolveNextEvent":

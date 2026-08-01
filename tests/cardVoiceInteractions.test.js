@@ -9,7 +9,7 @@ test("Countess entry interactions use card types instead of card names", () => {
   const beforeCountess = createTestGame("countess-voice-entry");
   const countess = cardFromDeck("eternal_feast_countess", "player");
   const enterCue = resolveCardVoiceCue({
-    type: "ENTERS_BATTLEFIELD",
+    type: "INVOKED",
     card: countess,
     previousGame: beforeCountess,
   });
@@ -21,7 +21,7 @@ test("Countess entry interactions use card types instead of card names", () => {
   assert.equal(sentinel.subtypes.includes("Human"), true);
   assert.equal(
     resolveCardVoiceCue({
-      type: "ENTERS_BATTLEFIELD",
+      type: "INVOKED",
       card: sentinel,
       previousGame: countessInPlay,
     })?.sfx,
@@ -31,7 +31,7 @@ test("Countess entry interactions use card types instead of card names", () => {
   const nonHuman = cardFromDeck("crypt_guardian", "player");
   assert.equal(
     resolveCardVoiceCue({
-      type: "ENTERS_BATTLEFIELD",
+      type: "INVOKED",
       card: nonHuman,
       previousGame: countessInPlay,
     }),

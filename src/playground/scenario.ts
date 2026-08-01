@@ -431,8 +431,8 @@ export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameS
 /** Temporarily overrides only reveal-shaping rules for a hand-authored Playground Horde turn. */
 export function configureExactHordeTurn(game: GameState, count: number): GameState {
   const next = structuredClone(game) as GameState;
-  next.hordeRules = {
-    ...next.hordeRules,
+  next.hostRules = {
+    ...next.hostRules,
     revealCount: Math.max(0, count),
     stopOnNonToken: false,
     miniSurgeTurn: Number.MAX_SAFE_INTEGER,

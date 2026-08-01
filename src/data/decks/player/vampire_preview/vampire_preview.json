@@ -614,7 +614,7 @@
             {
               "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
               "target": {
-                "type": "ALL_CREATURES",
+                "type": "ALL_ECHOS",
                 "controller": "SELF"
               },
               "keyword": "DRAIN"

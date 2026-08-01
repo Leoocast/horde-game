@@ -17,7 +17,7 @@ export function getPoisonAmount(game: GameState, card: CardInstance): number {
 export function getKeywords(game: GameState, card: CardInstance): Keyword[] {
   const keywords = new Set<Keyword>([...card.keywords, ...card.temporaryKeywords]);
 
-  if (card.controller === "horde" && isCreature(card) && game.hordeRules.hordeCreaturesHaveHaste) {
+  if (card.controller === "horde" && isCreature(card) && game.hostRules.hostEchosHaveImpetus) {
     keywords.add("IMPETUS");
   }
 
@@ -50,8 +50,7 @@ function parsePoisonTrait(trait: Keyword): number {
 
 export function canAttack(game: GameState, card: CardInstance): boolean {
   if (!isCreature(card) || card.exhausted) return false;
-  if (card.controller === "horde") return true;
-  if (game.horde.archive.length === 0) return false;
+  if (card.controller === "player" && game.horde.archive.length === 0) return false;
   return !card.stabilizing || hasKeyword(game, card, "IMPETUS");
 }
 

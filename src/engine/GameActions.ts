@@ -2,7 +2,7 @@ import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOp
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
-import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runInvokedTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
 import { canPayEnergy, payEnergy, payEnergyAutomatically, storedEnergySpace, totalEnergyCost } from "./EnergySystem";
 import { targetCandidatesWithSelectedTargets } from "./Targeting";
@@ -65,9 +65,9 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
     applyVariableCounters(card);
     next.player.field.push(card);
     recordFieldEntry(next, card);
-    runEnterBattlefieldTriggers(next, card, options.targets);
+    runInvokedTriggers(next, card, options.targets);
   }
-  enqueue(next, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
+  enqueue(next, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   // Always resolve the player's own reactive triggers now (so e.g. Beast-Kin's self-buff lands
   // in the same frame the new creature enters, never flickering through a same-stats stack).
   // When a Horde reaction is pending, defer only the Horde's triggers to glow after the cast.

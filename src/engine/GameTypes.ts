@@ -108,31 +108,31 @@ export type DeckList = {
   gameplayLandCount?: number;
   cards: CardDefinition[];
   tokens?: CardDefinition[];
-  /** Raw per-deck horde rules from the deck JSON; parsed by buildHordeRules at game start. */
+  /** Raw per-deck Host rules from the deck JSON; parsed by buildHostRules at game start. */
   rulesProfile?: Record<string, unknown>;
 };
 
-/** Per-deck Horde behavior. Defaults (HordeRules.ts) reproduce the classic Zombie-mode rules;
- *  a horde deck overrides them from its JSON `rulesProfile` — never from code. */
-export type HordeRulesProfile = {
-  /** Cards revealed on a normal Horde turn. */
+/** Per-deck Host behavior. Defaults (HostRules.ts) reproduce the current Zombie-mode rules;
+ *  a Host deck overrides them from its JSON `rulesProfile` — never from code. */
+export type HostRulesProfile = {
+  /** Cards revealed on a normal Host turn. */
   revealCount: number;
   /** Stop the normal reveal early when a non-token card is revealed. */
   stopOnNonToken: boolean;
   /** One-time extra reveals on this Horde turn (0 disables). */
   miniSurgeTurn: number;
   miniSurgeExtraReveals: number;
-  /** Permanent surge from this Horde turn on. */
+  /** Permanent surge from this Host turn on. */
   surgeTurn: number;
   surgeTurnChaos: number;
   surgeExtraReveals: number;
   /** Optional stat bonus while in surge, e.g. the Zombie deck's +1/+0 to Zombies. */
-  surgeBonus?: { power: number; toughness: number; subtypes: string[] };
-  /** Combat damage the player must deal to mill one Horde card. */
-  damagePerMill: number;
-  /** Poison counters consumed to mill one Horde card at end of turn. */
-  poisonPerMill: number;
-  hordeCreaturesHaveHaste: boolean;
+  surgeBonus?: { power: number; endurance: number; subtypes: string[] };
+  /** Combat damage the Chronicler must deal to discard one Host Archive card. */
+  damagePerArchiveDiscard: number;
+  /** Poison counters consumed to discard one Host Archive card at end of turn. */
+  poisonPerArchiveDiscard: number;
+  hostEchosHaveImpetus: boolean;
   /** Token subtypes grouped/ordered by arrival wave (board layout and attack order). */
   swarmTokenSubtypes: string[];
 };
@@ -252,7 +252,7 @@ export type GameState = {
   seed: string;
   difficulty: DifficultyMode;
   gameMode: GameMode;
-  hordeRules: HordeRulesProfile;
+  hostRules: HostRulesProfile;
   chaosMutations: Record<Side, Record<string, Keyword[]>>;
   currentRandomState: number;
   hordeDeckOrderHash?: string;

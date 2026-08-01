@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L4 en curso — L4.3 cerrada; L4.4 implementada, pendiente de validación manual**
+Estado: **L4 en curso — L4.1-L4.4 cerradas; L4.5 implementada y pendiente de validación manual**
 Última actualización: 2026-08-01
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -27,7 +27,7 @@ demostrarse.
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | En curso: L4.1-L4.3 cerradas; L4.4 pendiente de validación manual | Autorizada por subfases |
+| L4 — Limpieza interna del engine | En curso: L4.1-L4.4 cerradas; L4.5 pendiente de validación manual | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
@@ -311,14 +311,15 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 
 ### Punto de entrada para el siguiente chat
 
-- L0-L3 y L4.1-L4.3 están cerradas y validadas.
-- L4.4 migró el estado runtime a `exhausted`, `stabilizing`, `exhaust` y `requiresStabilized`, pero
-  está pendiente del smoke test manual del usuario. No iniciar L4.5 antes de esa validación.
+- L0-L3 y L4.1-L4.4 están cerradas y validadas.
+- L4.5 está implementada: Acciones, eventos y reglas de la Host usan ya el contrato Hostfall.
+  Falta solamente la validación manual dirigida; L4.6 permanece fuera de alcance hasta recibirla.
 - Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
   `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
-  `legacy-l44-card-states` están en cero.
-- `hostfallDeckAdapter.ts` sigue siendo el borde temporal para eventos y reglas Host de L4.5-L4.6.
-  No retirarlo completo antes de migrar esos consumidores por dominio.
+  `legacy-l44-card-states` y `legacy-l45-actions-events-host-rules` están en cero.
+- `hostfallDeckAdapter.ts` ya deja pasar sin traducción eventos, Acciones y `rulesProfile`. Conserva
+  únicamente aliases estructurales y de bando para L4.6 (`kinds`/`cardTypes`, `traits`/`keywords`,
+  `endurance`/`toughness`, zonas y `HOST`/`CHRONICLER`).
 - Preservar comportamiento, ids y reglas. Verificar cada subfase con TypeScript, deck lint, suite,
   build, auditoría y una partida dirigida del usuario antes de avanzar.
 
@@ -445,7 +446,8 @@ adaptador con una fase de eliminación conocida.
   `SOURCE_IS_READY` reemplaza `SOURCE_IS_UNTAPPED`, y los helpers de transición preparan el Field
   mediante `readySide`/`completePlayerStabilization`.
 - El adaptador ya no traduce `exhaust`, `exhausted`, `requiresStabilized` ni `SOURCE_IS_READY`.
-  Quedan en él únicamente aliases de eventos, Acciones y reglas Host previstos para L4.5-L4.6.
+  Al cerrar L4.4 quedaban aliases de eventos, Acciones y reglas Host; L4.5 ya los retiró y dejó
+  únicamente el borde estructural/de bando previsto para L4.6.
 - Los escenarios v2 conservan `tapped` y `summoningSickness` solamente como claves externas de
   compatibilidad y las traducen al entrar/salir. No se cambió `SCENARIO_VERSION`; L4.6 decidirá y
   ejecutará en conjunto el retiro o versionado de esas claves y de las zonas externas.
@@ -453,7 +455,30 @@ adaptador con una fase de eliminación conocida.
   bajó de 380 a 321 apariciones; las restantes pertenecen a eventos, identidad Host y bordes de
   compatibilidad/presentación previstos para L4.5-L4.6.
 - Verificación automática: TypeScript, deck lint, Card Studio, 202/202 tests, auditoría y build en
-  verde. Falta únicamente el smoke test manual antes de cerrar L4.4 e iniciar L4.5.
+  verde. El usuario confirmó el smoke test manual completo el 2026-08-01; L4.4 queda cerrada.
+
+### Avance L4.5 — Acciones, eventos y reglas de la Hueste
+
+- `HostRules.ts`, `HostRulesProfile`, `DEFAULT_HOST_RULES`, `buildHostRules` y `game.hostRules`
+  reemplazan el contrato interno anterior. Daño, Veneno, Ímpetu y el bono de Oleada consumen
+  `damagePerArchiveDiscard`, `poisonPerArchiveDiscard`, `hostEchosHaveImpetus` y `endurance`.
+- Los eventos distinguen la invocación propia (`INVOKED`) de la observación agregada
+  (`ECHO_INVOKED`), y usan `CARD_PLAYED`, `THIS_DIES`, `ECHO_DIED` y `BEGIN_BATTLE`. Un Apoyo no
+  emite eventos reservados a Ecos al entrar o ser destruido.
+- Acciones, condiciones, cantidades y targets usan el vocabulario Hostfall, entre ellos
+  `DISCARD_OWN_ARCHIVE_TO_MEMORY`, `MEMORY_COUNT_AT_LEAST`, `COUNT_ECHOS`, `TARGET_ECHO` y
+  `ALL_ECHOS`. El adaptador ya no los degrada al modelo anterior.
+- El deck lint valida también perfiles de reglas, eventos, selectores, el contexto de `controller`
+  y metadata de habilidades `pending`/`ignored`/`custom`, incluidos discriminantes no-string; las
+  fixtures negativas legacy tienen una excepción explícita por línea y siguen protegiendo el
+  rechazo sin quedar fuera de la auditoría.
+- Las pruebas semánticas cubren Sunshower, Noosegraf por sus rutas reales, Crow, el umbral exacto
+  de Memoria, targets/conteos de Eco, destrucción de Apoyos, llegadas diferidas observadas por
+  General Kreat, Mini Surge, Surge y perfiles Host con valores no predeterminados. El HUD toma los
+  divisores de `hostRules`, sin asumir el valor 3.
+- Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker
+  `legacy-l45-actions-events-host-rules` en cero, build y `git diff --check` en verde. Falta la
+  validación manual dirigida del usuario; L4.5 todavía no se marca cerrada y L4.6 no comenzó.
 
 ## Fase L5 — Independencia de los mazos
 
@@ -609,7 +634,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L4.1 | Migración interna de tipos de carta, modificadores y Rasgos. | El runtime consume valores Hostfall sin traducción de tipos/Rasgos; el blocker `legacy-l41-card-model` quedó en cero. Los PNG pausados de Zombies/Trasgos siguen fuera de alcance. | TypeScript OK; deck lint OK; Card Studio OK; 200/200 tests; build OK; auditor OK para L4.1; `git diff --check` OK; prueba dirigida del usuario OK. |
 | 2026-08-01 | L4.2 | Migración interna de zonas. | Estado, engine y consumidores usan exclusivamente Archive, Field, Memory y Oblivion; `legacy-l42-zones` quedó en cero. | TypeScript OK; deck lint OK; Card Studio OK; 201/201 tests; build OK; auditor OK para L4.2; `git diff --check` OK; prueba dirigida del usuario OK. |
 | 2026-08-01 | L4.3 | Migración interna de Energía y costes. | Pool numérico único, costes `energyCost` numéricos y autopago Sources→Stored Energy; `legacy-l43-energy-model` quedó en cero. El cambio a Stored→Sources queda diferido al cierre de L4. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.3; prueba dirigida del usuario OK. |
-| 2026-08-01 | L4.4 | Migración interna de estados de cartas. | Runtime y consumidores usan `exhausted`, `entersExhausted`, `stabilizing`, `exhaust`, `requiresStabilized` y `SOURCE_IS_READY`; `legacy-l44-card-states` quedó en cero. El schema externo de escenarios v2 conserva temporalmente sus aliases. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.4; prueba dirigida del usuario pendiente. |
+| 2026-08-01 | L4.4 | Migración interna de estados de cartas. | Runtime y consumidores usan `exhausted`, `entersExhausted`, `stabilizing`, `exhaust`, `requiresStabilized` y `SOURCE_IS_READY`; `legacy-l44-card-states` quedó en cero. El schema externo de escenarios v2 conserva temporalmente sus aliases. | TypeScript OK; deck lint OK; Card Studio OK; 202/202 tests; build OK; auditor OK para L4.4; prueba dirigida del usuario OK. |
+| 2026-08-01 | L4.5 | Migración interna de Acciones, eventos y reglas de la Hueste. | Runtime y datos normalizados usan el vocabulario Hostfall; `game.hostRules` reemplaza el contrato anterior y el adaptador conserva sólo aliases estructurales/de bando para L4.6. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blocker L4.5 en cero; prueba dirigida del usuario pendiente. |
 
 ## Plantilla para cerrar una fase
 

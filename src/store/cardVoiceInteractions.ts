@@ -13,7 +13,7 @@ export type CardVoiceCueMatch = {
 
 export type CardVoiceEvent =
   | {
-      type: "ENTERS_BATTLEFIELD";
+      type: "INVOKED";
       card: CardInstance;
       previousGame: GameState;
     }
@@ -45,14 +45,14 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
   {
     id: "countess-enters",
     sourceDefinitionId: "eternal_feast_countess",
-    event: "ENTERS_BATTLEFIELD",
+    event: "INVOKED",
     subject: "SOURCE",
     cues: [{ sfx: "countessEnter" }],
   },
   {
     id: "countess-sees-human",
     sourceDefinitionId: "eternal_feast_countess",
-    event: "ENTERS_BATTLEFIELD",
+    event: "INVOKED",
     subject: "ALLY",
     eventFilter: { cardTypes: ["ECHO"], subtypes: ["Human"] },
     cues: [{ sfx: "countessHumans" }],
@@ -129,7 +129,7 @@ function interactionSource(rule: CardVoiceRule, event: CardVoiceEvent): CardInst
   if (rule.subject === "SOURCE") {
     return event.card.definitionId === rule.sourceDefinitionId ? event.card : undefined;
   }
-  if (event.type !== "ENTERS_BATTLEFIELD") return undefined;
+  if (event.type !== "INVOKED") return undefined;
   return event.previousGame[event.card.controller].field.find(
     (candidate) =>
       candidate.definitionId === rule.sourceDefinitionId &&

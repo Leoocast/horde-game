@@ -1,6 +1,6 @@
 import type { GameState, Phase } from "./GameTypes";
 import { checkWinLoss } from "./CombatResolver";
-import { millHorde } from "./EffectResolver";
+import { discardHostArchiveToMemory } from "./EffectResolver";
 import { queueUnusedNormalEnergy } from "./EnergySystem";
 import { cleanupEndStep, completePlayerStabilization, performPlayerDraw, readySide, startPlayerTurnReady } from "./TurnManager";
 
@@ -52,11 +52,11 @@ export function endPlayerTurn(game: GameState): GameState {
 }
 
 function resolveHordePoison(game: GameState): void {
-  const poisonPerMill = game.hordeRules.poisonPerMill;
-  const poisonMills = Math.floor(game.horde.poisonCounters / poisonPerMill);
-  if (poisonMills <= 0) return;
-  game.horde.poisonCounters -= poisonMills * poisonPerMill;
-  game.log.unshift(`Horde poison triggers. Horde mills ${poisonMills} card(s).`);
-  millHorde(game, poisonMills);
+  const poisonPerArchiveDiscard = game.hostRules.poisonPerArchiveDiscard;
+  const archiveDiscards = Math.floor(game.horde.poisonCounters / poisonPerArchiveDiscard);
+  if (archiveDiscards <= 0) return;
+  game.horde.poisonCounters -= archiveDiscards * poisonPerArchiveDiscard;
+  game.log.unshift(`Host Poison consumes ${archiveDiscards * poisonPerArchiveDiscard} counter(s).`);
+  discardHostArchiveToMemory(game, archiveDiscards);
   checkWinLoss(game);
 }

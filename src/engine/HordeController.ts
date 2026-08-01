@@ -1,6 +1,6 @@
 import type { CardInstance, GameState } from "./GameTypes";
 import { drainEventQueue, enqueue } from "./EventQueue";
-import { resolveEffects, runEnterBattlefieldTriggers } from "./EffectResolver";
+import { resolveEffects, runInvokedTriggers } from "./EffectResolver";
 import { recordFieldEntry } from "./GameState";
 import { prepareHordeAttackers } from "./CombatResolver";
 import { hordeInSurge, hordeSurgeTurn } from "./StaticEffects";
@@ -8,12 +8,12 @@ import { cleanupEndStep, readySide, startPlayerTurnReady } from "./TurnManager";
 import { releasePendingStoredEnergy } from "./EnergySystem";
 
 type HordeMainOptions = {
-  deferEnterBattlefieldTriggers?: boolean;
+  deferInvokedTriggers?: boolean;
 };
 
 export function runHordeMain(game: GameState, options: HordeMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
-  const rules = next.hordeRules;
+  const rules = next.hostRules;
   const wasInSurge = hordeInSurge(next);
   next.fieldEntriesThisTurn = [];
   next.hordeTurnNumber += 1;
@@ -36,15 +36,15 @@ export function runHordeMain(game: GameState, options: HordeMainOptions = {}): G
     revealAndPlay(next, rules.surgeExtraReveals, options);
   }
   resolveRequestedRevealRounds(next, options);
-  if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
+  if (!options.deferInvokedTriggers) drainEventQueue(next);
   return next;
 }
 
 function surgeBonusText(game: GameState, verb: string): string {
-  const bonus = game.hordeRules.surgeBonus;
+  const bonus = game.hostRules.surgeBonus;
   if (!bonus) return "";
   const sign = (value: number) => `${value >= 0 ? "+" : ""}${value}`;
-  return ` Horde ${bonus.subtypes.join("/")}s${verb}${sign(bonus.power)}/${sign(bonus.toughness)}.`;
+  return ` Horde ${bonus.subtypes.join("/")}s${verb}${sign(bonus.power)}/${sign(bonus.endurance)}.`;
 }
 
 export function runFullHordeTurn(game: GameState): GameState {
@@ -69,7 +69,7 @@ export function revealHordeCardFromTop(game: GameState, options: HordeMainOption
   }
   revealAndPlayOne(next, options);
   resolveRequestedRevealRounds(next, options);
-  if (!options.deferEnterBattlefieldTriggers) drainEventQueue(next);
+  if (!options.deferInvokedTriggers) drainEventQueue(next);
   next.lastActionResult = { ok: true };
   return next;
 }
@@ -87,10 +87,10 @@ export function finishHordeTurn(game: GameState): GameState {
 
 function revealNormal(game: GameState, options: HordeMainOptions): void {
   let played = 0;
-  while (played < game.hordeRules.revealCount && game.horde.archive.length > 0) {
+  while (played < game.hostRules.revealCount && game.horde.archive.length > 0) {
     const card = revealAndPlayOne(game, options);
     played += 1;
-    if (game.hordeRules.stopOnNonToken && card && !card.isToken) {
+    if (game.hostRules.stopOnNonToken && card && !card.isToken) {
       game.log.unshift(`Horde reveals ${card.name} and stops revealing.`);
       break;
     }
@@ -130,18 +130,18 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     resolveEffects(game, card.effects, { source: card, side: "horde" });
     card.zone = "memory";
     game.horde.memory.push(card);
-    enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
+    enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
     return card;
   }
   card.zone = "field";
   card.exhausted = false;
-  card.stabilizing = false;
+  card.stabilizing = card.cardTypes.includes("ECHO") && !game.hostRules.hostEchosHaveImpetus;
   for (const counter of card.effects.filter((effect) => effect.type === "ENTERS_WITH_COUNTERS")) {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
   game.horde.field.push(card);
   recordFieldEntry(game, card);
-  if (!options.deferEnterBattlefieldTriggers) runEnterBattlefieldTriggers(game, card);
-  enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
+  if (!options.deferInvokedTriggers) runInvokedTriggers(game, card);
+  enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
   return card;
 }

@@ -234,7 +234,7 @@ test("the shared reaction runner hands surviving damage to the player and animat
     assert.equal(typeof afterRecovery.lifeBuffAnimationId, "number");
     assert.deepEqual(
       afterRecovery.game.eventQueue.map((event) => event.type),
-      ["THIS_DIES", "CREATURE_DIED"],
+      ["THIS_DIES", "ECHO_DIED"],
     );
     assert.equal(sharedRunnerCompleted, false);
 
@@ -1412,6 +1412,67 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
     assert.equal(afterGuardian.game.player.field.some((card) => card.instanceId === guardian.instanceId), true);
   } finally {
     resetPlayerTriggerSequence();
+    resetHordeSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHordeSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hordeBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHordeSequence();
+    const game = createTestGame("deferred-vanilla-echo-invoked");
+    addCard(game, cardFromDeck("general_kreat_the_boltbringer", "horde"));
+    addCard(game, customCard("deferred_vanilla_echo", "horde", {
+      zone: "archive",
+      power: 0,
+    }), "horde", "archive");
+    useGameStore.setState({
+      game,
+      hordeAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+      pendingStaticAuras: [],
+      heldStaticAuraBonuses: {},
+    });
+
+    useGameStore.getState().resolveHordeCardFromTop();
+    assert.equal(useGameStore.getState().summoningAnimationCount, 1);
+    useGameStore.setState({ summoningAnimationCount: 0 });
+    timers.releaseExpiredAt(60);
+
+    const awaitingGeneral = useGameStore.getState();
+    assert.equal(awaitingGeneral.hordeAutoTriggerCount, 1);
+    assert.equal(awaitingGeneral.game.eventQueue[0]?.type, "ECHO_INVOKED");
+  } finally {
     resetHordeSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;

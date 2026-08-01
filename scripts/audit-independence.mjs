@@ -138,6 +138,26 @@ function scanTextPatterns(files, patterns) {
   return { count, samples: [...new Set(samples)].sort() };
 }
 
+function scanTextPatternsIgnoringTaggedLines(files, patterns, allowTag, allowedRelativeFiles) {
+  let count = 0;
+  const samples = [];
+  const allowedFiles = new Set(allowedRelativeFiles);
+  for (const file of files) {
+    const mayUseTag = allowedFiles.has(relative(file));
+    const content = fs.readFileSync(file, "utf8")
+      .split(/\r?\n/u)
+      .filter((line) => !(mayUseTag && line.includes(allowTag)))
+      .join("\n");
+    for (const { label, pattern } of patterns) {
+      const matches = countPattern(content, pattern);
+      if (matches === 0) continue;
+      count += matches;
+      samples.push(`${relative(file)} :: ${label} (${matches})`);
+    }
+  }
+  return { count, samples: [...new Set(samples)].sort() };
+}
+
 function scanMatchedTerms(files, terms) {
   const matches = [];
   for (const term of terms) {
@@ -256,6 +276,9 @@ const l44Text = textFiles(["src", "tests"])
     "tests/playgroundScenario.test.js",
     "tests/vocabulary.test.js",
   ].includes(relative(file)));
+const l45Text = textFiles(["src", "tests"])
+  .filter((file) => [".js", ".json", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
+  .filter((file) => relative(file) !== "src/data/deckLint.ts");
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -330,6 +353,32 @@ const l44LegacyPatterns = [
   {
     label: "retired state helper or accidental transitional identifier",
     pattern: /\b(?:untapSide|clearPlayerSummoningSickness|requiresNoStabilizing)\b/u,
+  },
+];
+const l45LegacyPatterns = [
+  {
+    label: "legacy gameplay event discriminant",
+    pattern: /["'](?:BEGIN_COMBAT|BEGIN_UPKEEP|CARD_CAST|CREATURE_DIED|CREATURE_ENTERS_BATTLEFIELD|ENTERS_BATTLEFIELD)["']/u,
+  },
+  {
+    label: "legacy Action, condition or amount discriminant",
+    pattern: /["'](?:ANOTHER_CREATURE_YOU_CONTROL_DIED|ANOTHER_CREATURE_YOU_CONTROL_ENTERED|ANOTHER_PERMANENT_YOU_CONTROL_ENTERED|CAST_CARD_IS_NON_TOKEN|CONTROL_ANOTHER_PERMANENT_MATCHING|COUNTERS_PUT_ON_PERMANENT|COUNT_PERMANENTS(?:_ENTERED_THIS_TURN)?|DEAL_DAMAGE_TO_OPPONENT_CREATURE|DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES|DEAL_DAMAGE_TO_RANDOM_OPPONENT_PERMANENT|EXILE_CARD_FROM_GRAVEYARD|GRAVEYARD_COUNT_AT_LEAST|GRAVEYARD_HAS_TOKEN_CREATURE_AND_NON_TOKEN_CREATURE|HORDE_DIRECTIVE_ONLY|HORDE_GROUP_BUFF|HORDE_INSPECT_TOP_GOBLIN|IGNORED_FOR_HORDE_MVP|LOWEST_EXCESS_MANA_THEN_LOWEST_TAP_PRIORITY|LOWEST_MANA_VALUE_THEN_RANDOM|MILL_HORDE|MILL_SELF|PERMANENT_DIED|PLAYER_CHOOSES|REVEAL_HORDE_ROUND|RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD|TAP_HORDE_CREATURES_FOR_MANA|TARGET_CREATURE|ALL_CREATURES|HORDE_ATTACK_SEQUENCE_END)["']/u,
+  },
+  {
+    label: "legacy Host rules contract",
+    pattern: /\b(?:HordeRulesProfile|DEFAULT_HORDE_RULES|buildHordeRules|hordeRules|damagePerMill|poisonPerMill|hordeCreaturesHaveHaste|hordeDirective|hordeErrata|hordeVersion)\b/u,
+  },
+  {
+    label: "retired event or Archive-discard helper",
+    pattern: /\b(?:runEnterBattlefieldTriggers|findManualEnterTargetTrigger|hasEnterBattlefieldTrigger|deferEnterBattlefieldTriggers|scheduleHordeEnterTriggers|playBattlefieldEntryVoiceInteraction|findCardCastReactionSources|scheduleCardCastReaction|cardCastReactionMessage|millHorde|CARD_CAST_REACTION_RESOLVE_MS)\b/u,
+  },
+  {
+    label: "legacy event object noun",
+    pattern: /["']?eventObject["']?\s*:\s*["']permanent["']/u,
+  },
+  {
+    label: "legacy speed downgrade in the Hostfall adapter",
+    pattern: /nestedValue\s*===\s*["']QUICK["'][^\n]+["']INSTANT["']|nestedValue\s*===\s*["']MAIN["'][^\n]+["']SORCERY["']/u,
   },
 ];
 
@@ -448,6 +497,19 @@ const checks = [
     "Legacy card-state model in active runtime consumers",
     "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; scenario-v2 compatibility remains isolated at its boundary.",
     scanTextPatterns(l44Text, l44LegacyPatterns),
+  ),
+  finding(
+    "legacy-l45-actions-events-host-rules",
+    "blocker",
+    "L4.5",
+    "Legacy Actions, events or Host rules in active runtime consumers",
+    "Runtime, normalized data and migrated tests must consume Hostfall event/effect discriminants and the canonical Host rules profile without adapter translations.",
+    scanTextPatternsIgnoringTaggedLines(
+      l45Text,
+      l45LegacyPatterns,
+      "audit-allow legacy-l45-rejection-fixture",
+      ["tests/deckLint.test.js"],
+    ),
   ),
   finding(
     "legacy-internal-vocabulary",

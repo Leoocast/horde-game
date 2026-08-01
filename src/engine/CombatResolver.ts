@@ -1,7 +1,7 @@
 import type { GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
 import { blockRestrictionReason, canAttack, canBlockAttacker, getPoisonAmount, hasKeyword } from "./Keywords";
-import { destroyPermanent, enqueueSurvivedDamageEvent, losePlayerLife, millHorde } from "./EffectResolver";
+import { destroyPermanent, discardHostArchiveToMemory, enqueueSurvivedDamageEvent, losePlayerLife } from "./EffectResolver";
 import { getPowerToughness } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
@@ -77,13 +77,13 @@ export function resolvePlayerCombat(
     if (!options.skipDrain) applyCombatDrain(next, attacker, power);
     if (!options.skipPoison && power > 0) poisonCounters += getPoisonAmount(next, attacker);
   }
-  const cardsToMill = Math.floor(hordeDamage / next.hordeRules.damagePerMill);
+  const archiveDiscards = Math.floor(hordeDamage / next.hostRules.damagePerArchiveDiscard);
   if (hordeDamage > 0) log(next, `Player deals ${hordeDamage} damage to Horde.`);
   if (poisonCounters > 0) {
     next.horde.poisonCounters += poisonCounters;
     log(next, `Horde gets ${poisonCounters} poison counter(s).`);
   }
-  if (cardsToMill > 0) millHorde(next, cardsToMill);
+  if (archiveDiscards > 0) discardHostArchiveToMemory(next, archiveDiscards);
   next.combat.playerAttackers = [];
   drainEventQueue(next);
   checkWinLoss(next);
@@ -94,7 +94,7 @@ export function beginHordeCombat(game: GameState, options: { deferTriggeredEvent
   const next = structuredClone(game) as GameState;
   next.activeSide = "horde";
   next.phase = "combat";
-  enqueue(next, { type: "BEGIN_COMBAT", payload: { controller: "horde" } });
+  enqueue(next, { type: "BEGIN_BATTLE", payload: { controller: "horde" } });
   if (!options.deferTriggeredEvents) drainEventQueue(next);
   return next;
 }
@@ -464,7 +464,7 @@ function sortCardsByFieldOrder(field: CardInstance[], cards: CardInstance[]): Ca
 function sortFieldCardsByVisualOrder(game: GameState, field: CardInstance[], cards: CardInstance[]): CardInstance[] {
   const entryIndex = new Map(field.map((card, index) => [card.instanceId, index]));
   // Horde swarm tokens are re-summoned throughout the encounter and reuse the same
-  // definitionIds. The board groups swarm tokens (per-deck subtypes in hordeRules) by
+  // definitionIds. The board groups swarm tokens (per-deck subtypes in hostRules) by
   // arrival wave so a later wave stays where it entered instead of jumping back into
   // the first stack. For attack ordering, that visual wave order equals entry order.
   const familyIndex = new Map<string, number>();
@@ -489,6 +489,6 @@ function sortFieldCardsByVisualOrder(game: GameState, field: CardInstance[], car
 function isEntryWaveToken(game: GameState, card: CardInstance): boolean {
   if (!card.isToken) return false;
   return card.subtypes.some((subtype) =>
-    game.hordeRules.swarmTokenSubtypes.some((swarmSubtype) => swarmSubtype.toLowerCase() === subtype.toLowerCase()),
+    game.hostRules.swarmTokenSubtypes.some((swarmSubtype) => swarmSubtype.toLowerCase() === subtype.toLowerCase()),
   );
 }

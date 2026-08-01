@@ -6,7 +6,7 @@ export function readySide(game: GameState, side: "player" | "horde"): void {
   for (const card of game[side].field) {
     card.exhausted = false;
     card.activatedThisTurn = false;
-    if (side === "player") card.stabilizing = false;
+    if (card.cardTypes.includes("ECHO")) card.stabilizing = false;
   }
 }
 

@@ -143,7 +143,7 @@ function normalizeTargets(abilities: NewDeckAbility[]) {
     const req = target as Record<string, unknown>;
     return {
       id: String(req.id ?? "target"),
-      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("ECHO") ? "TARGET_CREATURE" : "TARGET_PERMANENT"),
+      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("ECHO") ? "TARGET_ECHO" : "TARGET_PERMANENT"),
       controller: req.controller as "SELF" | "OPPONENT" | "ANY" | undefined,
       filters: req.filters,
     };
@@ -170,13 +170,13 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
 function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
   switch (ability.customHandler) {
     case "rundvelt_hordemaster_inspect_top_if_goblin":
-      return { type: "HORDE_INSPECT_TOP_GOBLIN" };
+      return { type: "HOST_INSPECT_TOP_GOBLIN" };
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
         filter: { cardTypes: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
         amount: 1,
-        deferUntil: "HORDE_ATTACK_SEQUENCE_END",
+        deferUntil: "HOST_ATTACK_SEQUENCE_END",
         animation: "BURN_VOLLEY_TO_PLAYER",
       };
     case "goblin_rabblemaster_begin_combat_token":
@@ -203,15 +203,14 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
     case "general_kreat_damage_each_opponent":
       return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
     case "goblin_chainwhirler_enter_damage_all":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES", amount: 1, animation: "BURN_VOLLEY" };
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 1, animation: "BURN_VOLLEY" };
     default:
       return undefined;
   }
 }
 
 function normalizeTriggerEvent(event: string, triggerSource: string): string | undefined {
-  if (event === "ENTERS_BATTLEFIELD") return triggerSource === "SELF" ? "ENTERS_BATTLEFIELD" : "CREATURE_ENTERS_BATTLEFIELD";
-  if (event === "PERMANENT_DIED") return "CREATURE_DIED";
+  if (event === "INVOKED") return triggerSource === "SELF" ? "INVOKED" : "ECHO_INVOKED";
   return event || undefined;
 }
 
@@ -229,7 +228,7 @@ function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | 
     if (condition.type === "EVENT_OBJECT_MATCHES") {
       const filters = condition.filters as { cardTypes?: import("../engine/hostfallVocabulary").CardKind[]; subtypes?: string[] } | undefined;
       if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("ECHO")) {
-        normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
+        normalized.push({ type: "ANOTHER_ALLIED_ECHO_INVOKED", filters });
       } else {
         normalized.push({
           type: "EVENT_OBJECT_MATCHES",
@@ -241,7 +240,7 @@ function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | 
       continue;
     }
     // Every other condition type is already written in the engine's own vocabulary
-    // (CAST_CARD_IS_NON_TOKEN, ANOTHER_CREATURE_YOU_CONTROL_DIED, ...) and passes through
+    // (PLAYED_CARD_IS_NON_TOKEN, ANOTHER_ALLIED_ECHO_DIED, ...) and passes through
     // untouched; deck lint verifies the type is one triggerConditionMet actually knows.
     normalized.push({ ...condition } as EffectDefinition);
   }

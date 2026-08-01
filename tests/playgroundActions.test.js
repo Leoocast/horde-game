@@ -166,8 +166,8 @@ test("events resolve one at a time or all at once, and an empty queue says so", 
   assert.equal(resolveAllEvents(game).ok, false);
 
   game.eventQueue = [
-    { id: "e1", type: "CARD_CAST", payload: { witnessIds: [] } },
-    { id: "e2", type: "CARD_CAST", payload: { witnessIds: [] } },
+    { id: "e1", type: "CARD_PLAYED", payload: { witnessIds: [] } },
+    { id: "e2", type: "CARD_PLAYED", payload: { witnessIds: [] } },
   ];
   const stepped = resolveNextEvent(game);
   assert.equal(stepped.ok, true);

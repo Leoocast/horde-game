@@ -5,16 +5,16 @@ import { getHordeDeck, getPlayerDeck, hordeDeck, playerDeck } from "../src/data/
 import { normalizeDeck } from "../src/data/normalizeDeck";
 import { localizedKeywordLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
-import { buildHordeRules } from "../src/engine/HordeRules";
+import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosKeywordPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHordeAttackEvent, buildHordeAttackEvents, isHordeAttackEventCurrent, prepareHordeAttackers, refreshHordeAttackEvent, resolveHordeCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
-import { destroyMarkedCreatures, destroyPermanent, findManualEnterTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runEnterBattlefieldTriggers } from "../src/engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
-import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand } from "../src/engine/GameState";
+import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
 import { finishHordeTurn, revealHordeCardFromTop, runHordeMain } from "../src/engine/HordeController";
-import { hasKeyword } from "../src/engine/Keywords";
+import { canAttack, hasKeyword } from "../src/engine/Keywords";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerToughness, hordeInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
@@ -886,6 +886,69 @@ test("Drain Essence can kill an allied creature but rejects noncreature targets 
   assert.equal(rejected.player.field.filter((card) => card.cardTypes.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
+test("TARGET_ECHO excludes Supports even without authored card-type filters", () => {
+  const game = createTestGame("target-echo-contract");
+  const echo = addCard(game, customCard("target_echo", "player"));
+  addCard(game, customCard("target_support", "player", { cardTypes: ["SUPPORT"] }));
+
+  assert.deepEqual(
+    targetCandidates(game, "player", { id: "target", type: "TARGET_ECHO", controller: "ANY" })
+      .map((card) => card.instanceId),
+    [echo.instanceId],
+  );
+});
+
+test("random opponent Echo damage never targets a Support", () => {
+  const game = createTestGame("random-echo-damage-contract");
+  const source = addCard(game, customCard("random_echo_damage_source", "horde"));
+  addCard(game, customCard("random_echo_damage_support", "player", { cardTypes: ["SUPPORT"] }));
+  const effect = { type: "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO", amount: 2 };
+
+  resolveEffect(game, effect, { source, side: "horde" });
+  assert.equal(game.eventQueue.some((event) => event.type === "BURN_DAMAGE"), false);
+
+  const echo = addCard(game, customCard("random_echo_damage_target", "player"));
+  resolveEffect(game, effect, { source, side: "horde" });
+  const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
+  assert.equal(burn?.payload?.targetId, echo.instanceId);
+});
+
+test("COUNT_ECHOS ignores Supports even without authored filters", () => {
+  const game = createTestGame("count-echos-contract");
+  const source = addCard(game, customCard("count_echos_source", "horde"));
+  addCard(game, customCard("count_echos_ally", "horde"));
+  addCard(game, customCard("count_echos_support", "horde", { cardTypes: ["SUPPORT"] }));
+  addCard(game, customCard("count_echos_target", "player"));
+
+  resolveEffect(game, {
+    type: "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+    amount: { type: "COUNT_ECHOS", controller: "SELF" },
+    animation: "BURN",
+  }, { source, side: "horde" });
+
+  const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
+  assert.equal(burn?.payload?.amount, 2);
+});
+
+test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
+  const game = createTestGame("count-invoked-echos-contract");
+  const source = addCard(game, customCard("count_invoked_source", "horde"));
+  const echo = addCard(game, customCard("count_invoked_echo", "horde"));
+  const support = addCard(game, customCard("count_invoked_support", "horde", { cardTypes: ["SUPPORT"] }));
+  addCard(game, customCard("count_invoked_target", "player"));
+  recordFieldEntry(game, echo);
+  recordFieldEntry(game, support);
+
+  resolveEffect(game, {
+    type: "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+    amount: { type: "COUNT_ECHOS_INVOKED_THIS_TURN", controller: "SELF" },
+    animation: "BURN",
+  }, { source, side: "horde" });
+
+  const burn = game.eventQueue.find((event) => event.type === "BURN_DAMAGE");
+  assert.equal(burn?.payload?.amount, 1);
+});
+
 test("Predatory Thirst grants temporary Lifesteal to every allied creature", () => {
   const game = createTestGame("predatory-thirst-attack");
   game.player.life = 10;
@@ -898,6 +961,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
     power: 1,
     toughness: 2,
   }));
+  const alliedSupport = addCard(game, customCard("predatory_thirst_support", "player", { cardTypes: ["SUPPORT"] }));
   const enemy = addCard(game, customCard("predatory_thirst_enemy", "horde"));
   const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
 
@@ -911,6 +975,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   assert.deepEqual(getPowerToughness(cast, secondBuffed), { power: 1, toughness: 2 });
   assert.equal(hasKeyword(cast, firstBuffed, "DRAIN"), true);
   assert.equal(hasKeyword(cast, secondBuffed, "DRAIN"), true);
+  assert.equal(hasKeyword(cast, cast.player.field.find((card) => card.instanceId === alliedSupport.instanceId), "DRAIN"), false);
   assert.equal(hasKeyword(cast, cast.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"), false);
 
   cast.phase = "combat";
@@ -1566,7 +1631,7 @@ test("Sunshower Druid can target itself, adds one counter, and gains one life", 
 
   const result = castCard(game, druid.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === druid.instanceId);
-  const manualTrigger = findManualEnterTargetTrigger(permanent);
+  const manualTrigger = findManualInvokedTargetTrigger(permanent);
   assert.ok(manualTrigger, "Sunshower Druid should expose its manual enter trigger");
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
@@ -1723,7 +1788,7 @@ test("Crypt Guardian reacts only when that Guardian survives combat damage, befo
 
   assert.deepEqual(
     afterImpact.eventQueue.map((event) => event.type),
-    ["SURVIVED_DAMAGE", "THIS_DIES", "CREATURE_DIED"],
+    ["SURVIVED_DAMAGE", "THIS_DIES", "ECHO_DIED"],
   );
   assert.deepEqual(
     pendingTriggerSources(afterImpact, afterImpact.eventQueue[0]).map((source) => source.instanceId),
@@ -1856,15 +1921,91 @@ test("Hobgoblin Bandit Lord burns for Goblins that entered this Horde turn", () 
 test("Beetleback Chief and Siege-Gang Commander create their Goblin tokens on entry", () => {
   const beetlebackGame = createTestGame("beetleback-entry");
   const beetleback = addCard(beetlebackGame, cardFromDeck("beetleback_chief", "horde"));
-  runEnterBattlefieldTriggers(beetlebackGame, beetleback);
+  runInvokedTriggers(beetlebackGame, beetleback);
   drainEventQueue(beetlebackGame);
   assert.equal(beetlebackGame.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 2);
 
   const siegeGangGame = createTestGame("siege-gang-entry");
   const siegeGang = addCard(siegeGangGame, cardFromDeck("siege_gang_commander", "horde"));
-  runEnterBattlefieldTriggers(siegeGangGame, siegeGang);
+  runInvokedTriggers(siegeGangGame, siegeGang);
   drainEventQueue(siegeGangGame);
   assert.equal(siegeGangGame.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 3);
+});
+
+test("Noosegraf Mob reacts once to each non-token card played and ignores tokens", () => {
+  const game = createTestGame("noosegraf-card-played");
+  const mob = addCard(game, cardFromDeck("noosegraf_mob", "horde"));
+
+  for (const sourceId of ["player-non-token", "host-non-token"]) {
+    enqueue(game, { type: "CARD_PLAYED", sourceId, payload: { nonToken: true } });
+    drainEventQueue(game);
+  }
+  enqueue(game, { type: "CARD_PLAYED", sourceId: "played-token", payload: { nonToken: false } });
+  drainEventQueue(game);
+
+  assert.equal(mob.counters["+1/+1"], 3);
+  assert.equal(game.horde.field.filter((card) => card.definitionId === "zombie_token").length, 2);
+});
+
+test("Noosegraf Mob observes real Chronicler plays and Host reveals exactly once", () => {
+  const game = createTestGame("noosegraf-real-play-paths");
+  addCard(game, cardFromDeck("noosegraf_mob", "horde"));
+  const spell = addCard(game, customCard("noosegraf_test_spell", "player", {
+    zone: "hand",
+    cardTypes: ["SPELL"],
+  }), "player", "hand");
+
+  const afterSpell = castCard(game, spell.instanceId);
+  assert.equal(afterSpell.horde.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 4);
+  assert.equal(afterSpell.horde.field.filter((card) => card.definitionId === "zombie_token").length, 1);
+
+  addCard(afterSpell, customCard("noosegraf_host_reveal", "horde", { zone: "archive" }), "horde", "archive");
+  const afterReveal = revealHordeCardFromTop(afterSpell);
+  assert.equal(afterReveal.horde.field.find((card) => card.definitionId === "noosegraf_mob")?.counters["+1/+1"], 3);
+  assert.equal(afterReveal.horde.field.filter((card) => card.definitionId === "zombie_token").length, 2);
+});
+
+test("Crow discards two Host Archive cards when Invoked and two more when it dies", () => {
+  const game = createTestGame("crow-archive-discard");
+  const crow = addCard(game, cardFromDeck("crow_of_dark_tidings", "horde"));
+  for (let index = 0; index < 4; index += 1) {
+    addCard(game, customCard(`crow_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+  }
+
+  runInvokedTriggers(game, crow);
+  assert.equal(game.horde.archive.length, 2);
+  drainEventQueue(game);
+
+  destroyPermanent(game, crow);
+  assert.deepEqual(game.eventQueue.map((event) => event.type), ["THIS_DIES", "ECHO_DIED"]);
+  drainEventQueue(game);
+
+  assert.equal(game.horde.archive.length, 0);
+  assert.equal(game.horde.memory.filter((card) => card.definitionId.startsWith("crow_archive_")).length, 4);
+});
+
+test("destroying a Support does not emit Echo death events", () => {
+  const game = createTestGame("support-destroyed-not-died");
+  const support = addCard(game, customCard("destroyed_support", "horde", { cardTypes: ["SUPPORT"] }));
+
+  destroyPermanent(game, support);
+
+  assert.deepEqual(game.eventQueue, []);
+});
+
+test("Memory threshold effects turn on exactly at seven Host cards", () => {
+  const game = createTestGame("memory-threshold");
+  const thraben = addCard(game, cardFromDeck("thraben_foulbloods", "horde"));
+  for (let index = 0; index < 6; index += 1) {
+    addCard(game, customCard(`memory_card_${index}`, "horde", { zone: "memory" }), "horde", "memory");
+  }
+
+  assert.deepEqual(getPowerToughness(game, thraben), { power: 3, toughness: 2 });
+  assert.equal(hasKeyword(game, thraben, "DAUNTING"), false);
+
+  addCard(game, customCard("memory_card_6", "horde", { zone: "memory" }), "horde", "memory");
+  assert.deepEqual(getPowerToughness(game, thraben), { power: 4, toughness: 3 });
+  assert.equal(hasKeyword(game, thraben, "DAUNTING"), true);
 });
 
 test("Siege-Gang Commander and Pashalik Mons omit their sacrifice modes", () => {
@@ -1889,10 +2030,10 @@ test("Goblin Surprise pumps an existing army or starts another normal reveal rou
   const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("goblin_token_1_1_red", "horde"));
   addCard(animatedPumpGame, cardFromDeck("goblin_surprise", "horde", "archive"), "horde", "archive");
 
-  const pendingPump = runHordeMain(animatedPumpGame, { deferEnterBattlefieldTriggers: true });
+  const pendingPump = runHordeMain(animatedPumpGame, { deferInvokedTriggers: true });
   assert.equal(pendingPump.horde.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 0);
   assert.deepEqual(
-    pendingPump.eventQueue.find((event) => event.type === "HORDE_GROUP_BUFF")?.payload?.affectedIds,
+    pendingPump.eventQueue.find((event) => event.type === "HOST_GROUP_BUFF")?.payload?.affectedIds,
     [animatedGoblin.instanceId],
   );
   drainEventQueue(pendingPump);
@@ -1917,7 +2058,7 @@ test("Volley Veteran damages a chosen opposing creature equal to the Horde's Gob
   addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
   const veteran = addCard(game, cardFromDeck("volley_veteran", "horde"));
 
-  runEnterBattlefieldTriggers(game, veteran);
+  runInvokedTriggers(game, veteran);
   drainEventQueue(game);
 
   assert.equal(game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
@@ -2021,9 +2162,9 @@ test("General Kreat queues a separate player Burn for each other creature enteri
 
   const resolveCreatureEntry = (definitionId) => {
     const creature = addCard(game, customCard(definitionId, "horde", { subtypes: ["Goblin"] }));
-    runEnterBattlefieldTriggers(game, creature);
+    runInvokedTriggers(game, creature);
     const enterEvent = game.eventQueue.shift();
-    assert.equal(enterEvent?.type, "CREATURE_ENTERS_BATTLEFIELD");
+    assert.equal(enterEvent?.type, "ECHO_INVOKED");
     resolveTriggeredEvent(game, enterEvent);
     return game.eventQueue.shift();
   };
@@ -2042,6 +2183,15 @@ test("General Kreat queues a separate player Burn for each other creature enteri
   resolveTriggeredEvent(game, secondBurn);
   assert.equal(game.player.life, 28);
   drainEventQueue(game);
+});
+
+test("only Echo invocations broadcast ECHO_INVOKED", () => {
+  const game = createTestGame("echo-invoked-only");
+  const support = addCard(game, customCard("test_support", "horde", { cardTypes: ["SUPPORT"] }));
+
+  runInvokedTriggers(game, support);
+
+  assert.equal(game.eventQueue.some((event) => event.type === "ECHO_INVOKED"), false);
 });
 
 test("Raid Bombardment defers one damage per small Goblin attacker until combat ends", () => {
@@ -2086,7 +2236,7 @@ test("Goblin Chainwhirler queues one simultaneous Burn volley to the player and 
   const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { toughness: 2 }));
   const chainwhirler = addCard(game, cardFromDeck("goblin_chainwhirler", "horde"));
 
-  runEnterBattlefieldTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
+  runInvokedTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
   const enterEvent = game.eventQueue.shift();
   assert.ok(enterEvent);
   resolveTriggeredEvent(game, enterEvent);
@@ -2112,7 +2262,7 @@ test("Diregraf Captain queues an oil Burn before the player loses life", () => {
   const zombie = addCard(game, cardFromDeck("zombie_token", "horde"));
 
   destroyPermanent(game, zombie);
-  const deathIndex = game.eventQueue.findIndex((event) => event.type === "CREATURE_DIED");
+  const deathIndex = game.eventQueue.findIndex((event) => event.type === "ECHO_DIED");
   assert.notEqual(deathIndex, -1);
   const [deathEvent] = game.eventQueue.splice(deathIndex, 1);
   resolveTriggeredEvent(game, deathEvent, undefined, captain.instanceId);
@@ -2164,7 +2314,7 @@ test("Pashalik resolves a combat death before the next Horde combat event", () =
   const afterImpact = applyHordeAttackEvent(game, combatEvent);
 
   assert.equal(afterImpact.horde.field.some((card) => card.instanceId === goblin.instanceId), false);
-  assert.equal(afterImpact.eventQueue.some((event) => event.type === "CREATURE_DIED"), true);
+  assert.equal(afterImpact.eventQueue.some((event) => event.type === "ECHO_DIED"), true);
 
   drainEventQueue(afterImpact);
   assert.equal(afterImpact.player.field.find((card) => card.instanceId === blocker.instanceId)?.damageMarked, 2);
@@ -2230,7 +2380,7 @@ test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", 
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   destroyPermanent(game, victim);
-  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   const reactors = pendingTriggerSources(game, death).map((source) => source.instanceId);
   assert.deepEqual(new Set(reactors), new Set([rundvelt.instanceId, pashalik.instanceId]));
 
@@ -2257,7 +2407,7 @@ test("a creature that enters because of a death does not react to that death", (
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   destroyPermanent(game, victim);
-  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
 
   // Mirrors the animated beat loop, which re-derives the reactors after every beat. A plain
   // drain collects its sources up front and would hide this.
@@ -2281,7 +2431,7 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   destroyPermanent(game, victim);
-  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
 
   const chief = game.horde.field.find((card) => card.definitionId === "beetleback_chief");
@@ -2289,7 +2439,7 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
   // would arriving through the normal Horde reveal.
   assert.equal(game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);
-  const entered = game.eventQueue.find((event) => event.type === "ENTERS_BATTLEFIELD" && event.sourceId === chief.instanceId);
+  const entered = game.eventQueue.find((event) => event.type === "INVOKED" && event.sourceId === chief.instanceId);
   assert.ok(entered, "the Chief's enter trigger must be queued for its own beat");
   assert.deepEqual(
     pendingTriggerSources(game, entered).map((source) => source.instanceId),
@@ -2310,7 +2460,7 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   destroyPermanent(game, victim);
-  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   const queuedBefore = new Set(game.eventQueue.map((event) => event.id));
 
   // Pashalik's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
@@ -2331,7 +2481,7 @@ test("a resolved trigger source is never resolved a second time by a bulk drain"
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
 
   destroyPermanent(game, victim);
-  const death = game.eventQueue.find((event) => event.type === "CREATURE_DIED");
+  const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
   drainEventQueue(game);
 
@@ -2399,6 +2549,67 @@ test("Horde turn six has a one-card Mini Surge", () => {
   assert.equal(followingResult.horde.archive.length, 1);
 });
 
+test("Host rule defaults are isolated and reject unsafe runtime overrides", () => {
+  const first = buildHostRules();
+  first.swarmTokenSubtypes.push("Goblin");
+  const second = buildHostRules();
+  const defensive = buildHostRules({
+    revealCount: 0,
+    damagePerArchiveDiscard: 0,
+    poisonPerArchiveDiscard: -1,
+    swarmTokenSubtypes: [],
+    surgeBonus: [],
+  });
+
+  assert.deepEqual(second.swarmTokenSubtypes, ["Zombie"]);
+  assert.equal(defensive.revealCount, 3);
+  assert.equal(defensive.damagePerArchiveDiscard, 3);
+  assert.equal(defensive.poisonPerArchiveDiscard, 3);
+  assert.deepEqual(defensive.swarmTokenSubtypes, ["Zombie"]);
+  assert.equal(defensive.surgeBonus, undefined);
+});
+
+test("non-default Host rules drive damage, Poison and Impetus behavior", () => {
+  const combatGame = createTestGame("custom-host-damage-threshold");
+  combatGame.hostRules = buildHostRules({ damagePerArchiveDiscard: 2 });
+  const attacker = addCard(combatGame, customCard("custom_rule_attacker", "player", { power: 3 }));
+  for (let index = 0; index < 3; index += 1) {
+    addCard(combatGame, customCard(`custom_damage_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+  }
+  combatGame.combat.playerAttackers = [attacker.instanceId];
+  const afterCombat = resolvePlayerCombat(combatGame);
+  assert.equal(afterCombat.horde.archive.length, 2);
+  assert.equal(afterCombat.horde.memory.length, 1);
+
+  const poisonGame = createTestGame("custom-host-poison-threshold");
+  poisonGame.hostRules = buildHostRules({ poisonPerArchiveDiscard: 4 });
+  poisonGame.horde.poisonCounters = 7;
+  for (let index = 0; index < 3; index += 1) {
+    addCard(poisonGame, customCard(`custom_poison_archive_${index}`, "horde", { zone: "archive" }), "horde", "archive");
+  }
+  const afterPoison = endPlayerTurn(poisonGame);
+  assert.equal(afterPoison.horde.archive.length, 2);
+  assert.equal(afterPoison.horde.memory.length, 1);
+  assert.equal(afterPoison.horde.poisonCounters, 3);
+
+  const impetusGame = createTestGame("custom-host-impetus");
+  impetusGame.hostRules = buildHostRules({ hostEchosHaveImpetus: false });
+  addCard(impetusGame, customCard("custom_host_echo", "horde", { zone: "archive" }), "horde", "archive");
+  addCard(impetusGame, customCard("custom_host_archive_guard", "horde", { zone: "archive" }), "horde", "archive");
+  const afterReveal = revealHordeCardFromTop(impetusGame);
+  const revealed = afterReveal.horde.field.find((card) => card.definitionId === "custom_host_echo");
+  assert.ok(revealed);
+  assert.equal(revealed.stabilizing, true);
+  assert.equal(hasKeyword(afterReveal, revealed, "IMPETUS"), false);
+  assert.equal(canAttack(afterReveal, revealed), false);
+
+  const afterReady = finishHordeTurn(afterReveal);
+  const readied = afterReady.horde.field.find((card) => card.instanceId === revealed.instanceId);
+  assert.ok(readied);
+  assert.equal(readied.stabilizing, false);
+  assert.equal(canAttack(afterReady, readied), true);
+});
+
 test("Surge depends only on reaching the tenth Horde turn", () => {
   const game = createTestGame("surge-clock");
   game.hordeTurnNumber = 9;
@@ -2415,7 +2626,7 @@ test("Surge depends only on reaching the tenth Horde turn", () => {
 test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
   const game = createTestGame("surge-zombie-power");
   // The surge bonus is deck data, not an engine rule: it comes from the zombie deck's profile.
-  game.hordeRules = buildHordeRules(hordeDeck.rulesProfile);
+  game.hostRules = buildHostRules(hordeDeck.rulesProfile);
   const hordeZombie = addCard(game, customCard("surge_zombie", "horde", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
   const hordeNonZombie = addCard(game, customCard("surge_bat", "horde", { subtypes: ["Bat"], power: 2, toughness: 2 }));
   const playerZombie = addCard(game, customCard("player_zombie", "player", { subtypes: ["Zombie"], power: 2, toughness: 2 }));
@@ -2434,7 +2645,7 @@ test("Horde Zombies gain +1/+0 continuously from Surge onward", () => {
 
 test("the surge stat bonus is per-deck: the goblin horde gets none", () => {
   const game = createTestGame("surge-goblin-power");
-  game.hordeRules = buildHordeRules(getHordeDeck("goblin_assault_horde").rulesProfile);
+  game.hostRules = buildHostRules(getHordeDeck("goblin_assault_horde").rulesProfile);
   const goblin = addCard(game, customCard("surge_goblin", "horde", { subtypes: ["Goblin"], power: 2, toughness: 2 }));
 
   game.hordeTurnNumber = 10;

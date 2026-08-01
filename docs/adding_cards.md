@@ -99,8 +99,8 @@ Reglas:
   tienen adaptaciones PvE o habilidades deliberadamente inactivas.
 
 Si se está creando un deck de Horda, su personalidad global vive en `rulesProfile`: cantidad de
-revelados, parada en no-token, Mini Surge, Surge, mill por daño o poison, Haste implícito,
-`surgeBonus` y subtipos agrupados por oleada. Esas reglas se construyen con `buildHordeRules`; no
+revelados, parada en no-token, Mini Surge, Surge, descarte del Archivo por daño o Veneno, Ímpetu implícito,
+`surgeBonus` y subtipos agrupados por oleada. Esas reglas se construyen con `buildHostRules`; no
 hardcodearlas por id del deck.
 
 ## 2. Declarar habilidades
