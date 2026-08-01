@@ -715,7 +715,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   que todavía consume el engine; Mono Green, Vampiros, Zombies y Trasgos ya están migrados.
   El deck lint rechaza campos legacy dentro de cualquier deck `1.0.0` y una regresión comprueba la
   equivalencia de los cuatro decks migrados. No extender el adaptador fuera de L3/L4 ni leer el JSON authored
-  directamente desde UI.
+  directamente desde UI. El usuario validó partidas de los cuatro decks; L3 está cerrada y la
+  siguiente fase es L4.1, Tipos de carta y Rasgos dentro del engine.
 - `DECK_REGISTRY` es el único punto de registro y el deck lint
   (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`) rechaza cualquier reintroducción del schema
   authored legacy.
