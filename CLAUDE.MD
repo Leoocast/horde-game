@@ -710,13 +710,19 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- L4.6c está implementada y pendiente de una validación manual corta del Playground. Escenarios y
+- El ajuste final de L4 está implementado y pendiente de un smoke manual. `EnergySystem.ts` consume
+  Stored Energy antes de Energía disponible/Sources; el autopago agota sólo las Sources necesarias
+  y deja las restantes elegibles para convertirse en reserva al terminar el turno. Las regresiones
+  cubren pago manual, pago automático, Crimson Energy y fallo atómico; 220/220 tests pasan. No se
+  comenzó L5.
+- L4.6c está cerrada y validada por el usuario. Escenarios y
   replays usan schema v3 Hostfall (`host`, zonas canónicas, `exhausted`/`stabilizing` y timeline
   `hostTurn`); las funciones de guardar/cargar/importar/exportar se conservan. No hay migración:
   JSON v1/v2 se rechazan, localStorage usa namespaces nuevos y elimina sus entradas antiguas, y se
   borró el único board externo versionado (`dev/snapshots/player-base.json`). TypeScript, deck lint,
   Card Studio, 220/220 tests, auditoría, build y `git diff --check` pasan;
-  `legacy-l46-playground-contract` está en cero.
+  `legacy-l46-playground-contract` está en cero. El smoke manual de guardar, exportar, importar y
+  cargar pasó el 2026-08-01.
 - L4.6b está cerrada y validada por el usuario. `Side`, `Phase`,
   `GameState.host`, turnos, combate, engine, store y UI usan identidad `host`; los módulos centrales
   se llaman `HostController.ts` y `hostBeats.ts`. El adaptador deja pasar `HOST` sin downgrade.
@@ -741,16 +747,17 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningSickness` sólo en el borde; L4.6c los retiró y subió el contrato a v3. TypeScript, deck
   lint, Card Studio, 202/202 tests, auditoría y build pasaban; `legacy-l44-card-states` debe
   permanecer en cero. L4.5 fue implementada después.
-- L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplaza el modelo de
+- L4.3 está cerrada y validada por el usuario. `EnergySystem.ts` reemplazó el modelo de
   seis colores por `EnergyPool { available, stored }`; `energyCost` y los costes de Acciones son
-  cantidades numéricas. El autopago agota Sources antes de gastar Stored Energy, los Ecos de
+  cantidades numéricas. En L4.3 el autopago agotaba Sources antes de gastar Stored Energy; el
+  ajuste final de L4 invirtió después esa prioridad. Los Ecos de
   generación siguen requiriendo activación explícita y el límite de reserva continúa en 3. Store,
   HUD, animación de flujo, Playground y escenarios ya consumen este modelo; en L4.3
   `SCENARIO_VERSION` permaneció en 2 porque su contrato externo ya era `energy`/`storedEnergy`.
   L4.6c lo subió posteriormente a 3 por el cambio integral del contrato del Playground.
-  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática pasa 202/202 tests. Antes
-  de cerrar L4 hay que revisar la decisión diferida del usuario: gastar Stored Energy antes que
-  Sources, para que la Energía normal sobrante sea la que pueda convertirse en reserva.
+  `legacy-l43-energy-model` debe permanecer en cero; la matriz automática de aquel bloque pasó
+  202/202 tests. La decisión diferida del usuario quedó resuelta con Stored Energy antes que
+  Sources, para que la Energía normal sobrante pueda convertirse en reserva.
 - L4.2 está cerrada y validada por el usuario. `GameState`, `CardInstance` y sus
   consumidores usan exclusivamente `archive`, `field`, `memory` y `oblivion`; `hand` permanece
   igual. `hostfallZones.ts` cierra el vocabulario authored/runtime, el deck lint rechaza zonas

@@ -312,7 +312,9 @@ Retirar el vocabulario heredado del modelo técnico sin cambiar las reglas por a
 ### Punto de entrada para el siguiente chat
 
 - L0-L3 y L4.1-L4.6b están cerradas y validadas.
-- L4.6c está implementada y pendiente únicamente del smoke test manual del Playground.
+- L4.6c está cerrada y validada por el usuario.
+- El ajuste final de L4, prioridad de pago Stored Energy → Sources, está implementado y pendiente
+  únicamente de una prueba manual corta.
 - Los cuatro decks activos usan schema Hostfall `1.0.0`; `legacy-authored-schema`,
   `legacy-l41-card-model`, `legacy-l42-zones`, `legacy-l43-energy-model` y
   `legacy-l44-card-states`, `legacy-l45-actions-events-host-rules` y
@@ -426,7 +428,7 @@ adaptador con una fase de eliminación conocida.
 - `energyCost` llega como cantidad numérica desde el adaptador y permanece numérico en
   `CardDefinition`/`CardInstance`; X se suma mediante `totalEnergyCost`. Los costes de Acciones usan
   `energy` y conservan su atomicidad con pagos de vida.
-- El autopago agota Sources antes de consumir Stored Energy. Los Ecos que generan Energía siguen
+- En L4.3 el autopago agotaba Sources antes de consumir Stored Energy. Los Ecos que generan Energía siguen
   requiriendo activación explícita, la reserva conserva su límite de 3 y la transición visual sólo
   acredita la Energía al impactar el HUD.
 - Store, UI, Playground, escenarios y pruebas consumen el mismo modelo. El contrato externo de
@@ -436,10 +438,10 @@ adaptador con una fase de eliminación conocida.
   nombres visuales/de borde previstos para L4.4-L4.6.
 - Verificación automática: TypeScript, deck lint, Card Studio, 202/202 tests, auditoría y build en
   verde. El usuario confirmó los tres smoke tests el 2026-08-01; L4.3 queda cerrada.
-- Decisión funcional diferida al cierre de L4: el usuario prefiere que el autopago consuma primero
+- Decisión funcional resuelta al cierre de L4: el autopago consume primero
   Stored Energy y después Sources, de modo que la Energía normal sobrante sea la que pueda pasar a
-  reserva. L4.3 conserva temporalmente el orden Sources→Stored para no mezclar esa decisión con la
-  migración estructural.
+  reserva. L4.3 conservó temporalmente el orden Sources→Stored para no mezclar esa decisión con la
+  migración estructural; el ajuste final lo invirtió después de cerrar L4.6c.
 
 ### Avance L4.4 — Estados de cartas
 
@@ -495,7 +497,8 @@ adaptador con una fase de eliminación conocida.
   cruzar al runtime. El deck lint y Card Studio tampoco contienen fallbacks a la estructura vieja.
 - La auditoría incorpora el blocker `legacy-l46-card-structure`, actualmente en cero. Los aliases
   de bando, casing de zonas y escenarios v2 quedan deliberadamente para los siguientes bloques de
-  L4.6; tampoco se alteró todavía la prioridad Sources→Stored Energy.
+  L4.6; tampoco se alteró en aquel bloque la prioridad Sources→Stored Energy, que se cambió al
+  cierre final de L4.
 - Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker L4.5 y
   blocker L4.6a en cero, y build en verde. El usuario confirmó la validación visual dirigida el
   2026-08-01; L4.6a queda cerrada.
@@ -531,8 +534,21 @@ adaptador con una fase de eliminación conocida.
   No había replays externos guardados. Los ids físicos de decks y las preferencias generales de la
   aplicación no se modificaron porque no son datos generados por el Playground.
 - La suite prueba round-trip del contrato v3 y rechazo de versiones retiradas. TypeScript, deck
-  lint, Card Studio, 220/220 tests, build, `git diff --check` y los blockers L4.6a-c pasan; falta el
-  smoke test manual del Playground antes de cerrar L4.6c.
+  lint, Card Studio, 220/220 tests, build, `git diff --check` y los blockers L4.6a-c pasan. El
+  usuario confirmó el smoke test manual de guardado, exportación, importación y carga el 2026-08-01;
+  L4.6c queda cerrada.
+
+### Ajuste final L4 — Prioridad de Stored Energy
+
+- `payEnergy` y el autopago consumen primero Stored Energy, después Energía disponible y finalmente
+  sólo las Sources necesarias. Los Ecos que generan Energía siguen siendo activaciones manuales.
+- Un coste mixto ya no agota Sources que la reserva cubre. Las Sources que permanecen listas pueden
+  pasar a Stored Energy al terminar el turno, respetando el límite de 3.
+- Las regresiones se cambiaron antes que el engine y fallaron en los tres caminos antiguos:
+  Energía generada manualmente, Sources automáticas normales y Crimson Energy. Tras el cambio,
+  esos casos, el pago insuficiente atómico y las 220/220 pruebas pasan.
+- L5 permanece expresamente fuera de alcance. Falta verificar visualmente un único pago mixto antes
+  de cerrar L4.
 
 ## Fase L5 — Independencia de los mazos
 

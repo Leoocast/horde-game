@@ -433,7 +433,7 @@ test("Stored Energy can pay a creature cost", () => {
   assert.equal(result.player.energyPool.stored, 0);
 });
 
-test("manually generated Source Energy is visible in the pool and is spent before Stored Energy", () => {
+test("Stored Energy is spent before manually generated Source Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
   const forest = addCard(game, cardFromDeck("forest", "player"));
@@ -445,7 +445,7 @@ test("manually generated Source Energy is visible in the pool and is spent befor
   const result = castCard(generated, llanowar.instanceId);
 
   assert.equal(result.lastActionResult?.ok, true);
-  assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
+  assert.deepEqual(result.player.energyPool, { available: 1, stored: 0 });
   assert.equal(result.player.field.find((card) => card.instanceId === forest.instanceId)?.exhausted, true);
 });
 
@@ -543,10 +543,10 @@ test("energy cannot be recycled during setup and no more than four can be in pla
   assert.equal(blockedAtCap.player.hand.some((card) => card.instanceId === fifthEnergy.instanceId), true);
 });
 
-test("automatic payment spends Source Energy before Stored Energy", () => {
+test("automatic payment spends Stored Energy first and preserves unused Sources for reserve", () => {
   const game = createTestGame();
-  game.player.energyPool.stored = 3;
-  const [land] = addForests(game, 1);
+  game.player.energyPool.stored = 2;
+  const lands = addForests(game, 3);
   const energyEcho = addCard(game, cardFromDeck("llanowar_elves", "player"));
   const spell = addCard(
     game,
@@ -562,12 +562,19 @@ test("automatic payment spends Source Energy before Stored Energy", () => {
   const result = castCard(game, spell.instanceId);
 
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
-  assert.equal(result.player.field.find((card) => card.instanceId === land.instanceId)?.exhausted, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === lands[0].instanceId)?.exhausted, true);
+  assert.equal(result.player.field.find((card) => card.instanceId === lands[1].instanceId)?.exhausted, false);
+  assert.equal(result.player.field.find((card) => card.instanceId === lands[2].instanceId)?.exhausted, false);
   assert.equal(result.player.field.find((card) => card.instanceId === energyEcho.instanceId)?.exhausted, false);
-  assert.deepEqual(result.player.energyPool, { available: 0, stored: 1 });
+  assert.deepEqual(result.player.energyPool, { available: 0, stored: 0 });
+
+  const hostTurn = endPlayerTurn(result);
+  const nextPlayerTurn = finishHostTurn(hostTurn);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 2);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 2);
 });
 
-test("Crimson Energy is a universal source that pays generic costs before stored energy", () => {
+test("Crimson Energy pays only the generic cost left after Stored Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
   const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
@@ -588,8 +595,8 @@ test("Crimson Energy is a universal source that pays generic costs before stored
   assert.equal(firstEnergy.kinds.includes("SOURCE"), true);
   assert.equal(result.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   assert.equal(result.player.field.find((card) => card.instanceId === firstEnergy.instanceId)?.exhausted, true);
-  assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.exhausted, true);
-  assert.equal(result.player.energyPool.stored, 1);
+  assert.equal(result.player.field.find((card) => card.instanceId === secondEnergy.instanceId)?.exhausted, false);
+  assert.equal(result.player.energyPool.stored, 0);
 });
 
 test("spell life costs normalize from deck abilities and can never reduce the player to zero", () => {
@@ -1491,6 +1498,7 @@ test("player triggers can stay queued and resolve one source at a time for prese
 
 test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () => {
   const game = createTestGame();
+  game.player.energyPool.stored = 1;
   const [land] = addForests(game, 1);
   const spell = addCard(
     game,

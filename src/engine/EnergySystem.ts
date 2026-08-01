@@ -47,12 +47,12 @@ export function canPayEnergy(pool: EnergyPool, cost: number): boolean {
   return pool.available + pool.stored >= Math.max(0, cost);
 }
 
-/** Available Energy is always spent before Stored Energy. */
+/** Stored Energy is the player's reserve, so it is spent before newly available Energy. */
 export function payEnergy(pool: EnergyPool, cost: number): EnergyPool {
   let remaining = Math.max(0, cost);
-  const availablePaid = Math.min(pool.available, remaining);
-  remaining -= availablePaid;
   const storedPaid = Math.min(pool.stored, remaining);
+  remaining -= storedPaid;
+  const availablePaid = Math.min(pool.available, remaining);
   return {
     available: pool.available - availablePaid,
     stored: pool.stored - storedPaid,
@@ -61,26 +61,21 @@ export function payEnergy(pool: EnergyPool, cost: number): EnergyPool {
 
 export function payEnergyAutomatically(game: GameState, cost: number): boolean {
   const normalizedCost = Math.max(0, cost);
-  const startingStored = game.player.energyPool.stored;
-  const availableOnly = { available: game.player.energyPool.available, stored: 0 };
-  if (canPayEnergy(availableOnly, normalizedCost)) {
-    game.player.energyPool = {
-      ...payEnergy(availableOnly, normalizedCost),
-      stored: startingStored,
-    };
+  if (canPayEnergy(game.player.energyPool, normalizedCost)) {
+    game.player.energyPool = payEnergy(game.player.energyPool, normalizedCost);
     return true;
   }
 
   const availableSources = getAutomaticEnergySources(game);
   const selected: typeof availableSources = [];
-  let simulatedAvailable = availableOnly.available;
+  let simulatedEnergy = game.player.energyPool.available + game.player.energyPool.stored;
   for (const source of availableSources) {
     selected.push(source);
-    simulatedAvailable += source.produced;
-    if (simulatedAvailable >= normalizedCost) break;
+    simulatedEnergy += source.produced;
+    if (simulatedEnergy >= normalizedCost) break;
   }
 
-  if (simulatedAvailable + startingStored < normalizedCost) return false;
+  if (simulatedEnergy < normalizedCost) return false;
 
   for (const { card, produced } of selected) {
     card.exhausted = true;
