@@ -2174,6 +2174,26 @@ test("Rundvelt Hordemaster resolves exactly once when it dies", () => {
 
   assert.equal(game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
   assert.equal(game.horde.library.length, 1);
+  assert.equal(game.horde.exile.length, 0);
+});
+
+test("Rundvelt moves a non-Goblin inspection to the bottom of the Archive", () => {
+  const game = createTestGame("rundvelt-non-goblin-bottom");
+  addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
+  const support = addCard(game, cardFromDeck("goblin_war_drums", "horde", "library"), "horde", "library");
+  const futureGoblin = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+  const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
+
+  destroyPermanent(game, victim);
+  drainEventQueue(game);
+
+  assert.deepEqual(
+    game.horde.library.map((card) => card.instanceId),
+    [futureGoblin.instanceId, support.instanceId],
+  );
+  assert.equal(support.zone, "library");
+  assert.equal(game.horde.exile.length, 0);
+  assert.equal(game.horde.battlefield.some((card) => card.instanceId === support.instanceId), false);
 });
 
 test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", () => {
@@ -2195,7 +2215,7 @@ test("one Goblin death gives Rundvelt and Pashalik a separate resolution each", 
     pendingTriggerSources(game, death).map((source) => source.instanceId),
     [rundvelt.instanceId],
   );
-  assert.equal(game.horde.library.length, 1, "Rundvelt must not exile before its own beat");
+  assert.equal(game.horde.library.length, 1, "Rundvelt must not inspect before its own beat");
 
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
   assert.equal(pendingTriggerSources(game, death).length, 0);
@@ -2206,7 +2226,7 @@ test("a creature that enters because of a death does not react to that death", (
   const game = createTestGame("no-reaction-to-own-summon");
   const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
   addCard(game, customCard("player_blocker", "player", { power: 2, toughness: 4 }), "player");
-  // Rundvelt exiles the top card on a Goblin death; that card is Pashalik, who also reacts to
+  // Rundvelt inspects the top card on a Goblin death; that card is Pashalik, who also reacts to
   // Goblin deaths. Pashalik was not in play when the Goblin died, so it must never react to it.
   addCard(game, cardFromDeck("pashalik_mons", "horde", "library"), "horde", "library");
   const victim = addCard(game, cardFromDeck("goblin_token_1_1_red", "horde"));
@@ -2218,7 +2238,7 @@ test("a creature that enters because of a death does not react to that death", (
   // drain collects its sources up front and would hide this.
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
   const pashalik = game.horde.battlefield.find((card) => card.definitionId === "pashalik_mons");
-  assert.ok(pashalik, "Rundvelt must have put Pashalik onto the battlefield");
+  assert.ok(pashalik, "Rundvelt must have Invoked Pashalik onto the battlefield");
   assert.deepEqual(
     pendingTriggerSources(game, death).map((source) => source.definitionId),
     [],
@@ -2240,7 +2260,7 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   resolveTriggeredEvent(game, death, undefined, rundvelt.instanceId);
 
   const chief = game.horde.battlefield.find((card) => card.definitionId === "beetleback_chief");
-  assert.ok(chief, "Rundvelt must have put Beetleback Chief onto the battlefield");
+  assert.ok(chief, "Rundvelt must have Invoked Beetleback Chief onto the battlefield");
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
   // would arriving through the normal Horde reveal.
   assert.equal(game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 0);

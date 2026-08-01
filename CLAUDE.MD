@@ -837,7 +837,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `summoningAnimationCount`; `Battlefield` lo decrementa al terminar cada entrada. Auras, ETBs,
   reacciones y combate esperan a cero. `animatedHordeIds` se inicializa con el board montado para
   que el primer Execute no vuelva a animar permanentes viejos.
-- Los cuatro generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
+- Los cinco generadores bajo `dev/tools/Decks/` comparten las reglas de texto de
   `deck-card-text.js`, incluso Mono Green aunque conserve su layout propio. Keywords, modificadores
   de stats, frases de contadores y `crea/crear/invoca/invocar ... N/N` se imprimen siempre en negrita con el color
   de la faccion; umbrales `fuerza N o menos` y cantidades `N de dano` se resaltan en rojo. Cada
@@ -865,6 +865,25 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Sacrificar`. El índice usa el mismo header mínimo de los decks migrados y su glifo de Eco mide
   56px, el doble del icono legacy. Todos los generadores activos imprimen `© HOSTFALL 2026` en el
   footer en lugar de `Hostfall TCG`.
+- El estudio de Goblins y `goblin_assault_horde.json` mantienen alineadas sus 17 definiciones con
+  vocabulario visible Hostfall: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo · Rápido`, `Hueste`,
+  `Archivo`, `Cronista`, `Imponente` y `Reflejos`. Las fichas usan `Invoca`; Rundvelt mira la
+  primera carta del Archivo, Invoca un Eco Trasgo y manda cualquier otro tipo al fondo. No usa el
+  Olvido. Maestro Chatarrero imprime solamente su
+  aura: la activación para destruir artefactos permanece modelada, pero no se muestra porque la
+  Hueste todavía no tiene una política para usarla. La obligación de atacar del Agitador continúa
+  omitida porque la regla global de la Hueste ya la cumple. El header es mínimo, el glifo de Eco
+  mide 56px y la regresión compara cantidad, coste, stats, tipo y reglas contra el deck runtime.
+  Este pase tampoco cambia nombres, arte, cantidades, balance, ids o aliases del motor ni regenera
+  los PNG de `public/cards/goblins/`.
+- Cazadores sigue siendo un estudio preview de 13 definiciones y 40 cartas, sin deck runtime ni
+  mecánicas registradas. Su JSON embebido y `hunters.json` deben ser idénticos. La presentación usa
+  `Fuente`, `Eco`, `Eco · Ficha`, `Eco de Crónica`, `Apoyo`, `Hechizo` y `Hechizo · Rápido`;
+  `Trampa` es subtipo de Eco, no tipo adicional, y conserva su glifo propio. Lyra es el Eco de
+  Crónica. `Marcado`, `Aturdido` y `Atado` están definidos en `docs/game_vocabulary.md` solamente
+  como Estados preview y no deben anunciarse como implementados. El header es mínimo, los Ecos
+  Cazador usan el glifo de 56px y los estados nombrados se resaltan aparte de los Rasgos. Este pase
+  no exporta ni regenera PNGs bajo `public/cards/hunters/`.
 - El generador de Vampires toma sus WebP de arte recortado desde
   `public/cards/vampires/art/`. Los PNG completos exportados que consume el juego permanecen en
   `public/cards/vampires/` y el manifest `vampire_preview_images.json` debe seguir apuntando a esos
@@ -918,8 +937,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Sus productores de Energía usan un rayo dorado dentro del mismo orbe material de Agotar y
   `Veneno N` presenta N en un badge holgado. El texto usa `gana` para modificadores temporales y `pon un contador ... sobre` para
   contadores permanentes; `obtiene` queda fuera del vocabulario de reglas nuevo.
-  Los índices de Mono Green, Vampires y Zombies usan un header mínimo común con título y línea
-  temática, sin controles, estado ni mensajes de exportación; Vampires abre sus cartas al 35%.
+  Los índices de Mono Green, Vampires, Zombies, Goblins y Hunters usan un header mínimo común con
+  título y línea temática, sin controles, estado ni mensajes de exportación; Vampires abre sus
+  cartas al 35%.
 
   El rombo de disponible pertenece a
   `.hand-card`, pero su render

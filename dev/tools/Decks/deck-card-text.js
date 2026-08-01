@@ -3,8 +3,10 @@
 
     const KEYWORD_PATTERN =
         /\b(?:Daña primero|Daño primero|Doble golpe|Robo de vida|Toque mortal|Escurridizo|Vigilancia|Amenaza|Volar|Vuelo|Alcance|Arrollar|Prisa|Antimaleficio|Indestructible|Tóxico(?:\s+\d+)?|Guardia aérea|Alerta|Imponente|Letal|Reflejos|Furtivo|Drenar|Veneno(?:\s+\d+)?|Desborde|Ímpetu)\b/giu;
+    const STATE_PATTERN =
+        /\b(?:Marcado|Marcada|Marcados|Marcadas|Aturdido|Aturdida|Aturdidos|Aturdidas|Atado|Atada|Atados|Atadas)\b/gu;
     const TOKEN_CREATION_PATTERN =
-        /\b(?:crea|crear|invoca|invocar)\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
+        /\b(?:crea|crear|invoca|invocar)\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|tantos|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
     const COUNTER_PATTERN =
         /\b(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)?contador(?:es)?(?:\s+(?:de\s+[\p{L}\p{M}-]+|[+-]\d+\/[+-]\d+))?/giu;
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;
@@ -63,6 +65,7 @@
         protect(TOKEN_CREATION_PATTERN, (match) => strong("effect-token", match));
         protect(COUNTER_PATTERN, (match) => strong("effect-counter", match));
         protect(KEYWORD_PATTERN, keywordStrong);
+        protect(STATE_PATTERN, (match) => strong("effect-state", match));
         protect(ACTION_PATTERN, (match) => strong("effect-action", match));
         protect(LIFE_PAYMENT_PATTERN, (match) => strong("effect-life-cost", match));
         protect(DANGER_PATTERN, (match) => strong("effect-danger", match));

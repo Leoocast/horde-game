@@ -65,8 +65,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     game.horde.pendingRevealRounds = (game.horde.pendingRevealRounds ?? 0) + 1;
     game.log.unshift("Horde effect calls for another normal reveal round.");
   },
-  HORDE_EXILE_TOP_GOBLIN_TO_BATTLEFIELD: (game) => {
-    exileTopGoblinToBattlefield(game);
+  HORDE_INSPECT_TOP_GOBLIN: (game) => {
+    inspectTopGoblin(game);
   },
   ADD_MANA: (game, effect, context) => {
     const mana = effect.mana as Record<string, number> | undefined;
@@ -567,7 +567,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
 
 // `deferSelfTriggers` queues the card's own enters-the-battlefield ability instead of resolving
 // it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
-// Without it, Beetleback Chief exiled onto the battlefield by Rundvelt simply spat out its tokens
+// Without it, Beetleback Chief Invoked from the Archive by Rundvelt simply spat out its tokens
 // with no activation of its own, while the same card arriving through the normal Horde reveal
 // (which defers via HordeController) announced itself properly.
 export function runEnterBattlefieldTriggers(
@@ -669,24 +669,25 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   });
 }
 
-function exileTopGoblinToBattlefield(game: GameState): void {
+function inspectTopGoblin(game: GameState): void {
   const card = game.horde.library.shift();
   if (!card) {
-    game.log.unshift("Rundvelt Hordemaster finds no card to exile.");
+    game.log.unshift("Rundvelt Hordemaster finds no card to inspect.");
     return;
   }
-  card.zone = "exile";
-  game.horde.exile.push(card);
-  game.log.unshift(`Horde exiles ${card.name} with Rundvelt Hordemaster.`);
-  if (!card.cardTypes.includes("Creature") || !card.subtypes.includes("Goblin")) return;
+  game.log.unshift(`Rundvelt Hordemaster inspects ${card.name}.`);
+  if (!card.cardTypes.includes("Creature") || !card.subtypes.includes("Goblin")) {
+    game.horde.library.push(card);
+    game.log.unshift(`${card.name} moves to the bottom of the Host Archive.`);
+    return;
+  }
 
-  game.horde.exile = game.horde.exile.filter((item) => item.instanceId !== card.instanceId);
   card.zone = "battlefield";
   card.tapped = false;
   card.summoningSickness = false;
   game.horde.battlefield.push(card);
   recordBattlefieldEntry(game, card);
-  game.log.unshift(`${card.name} enters the battlefield from exile.`);
+  game.log.unshift(`${card.name} is Invoked from the Host Archive.`);
   runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
 

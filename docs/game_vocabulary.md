@@ -312,6 +312,21 @@ compartir nombre, color semantico ni orden de apilado por accidente.
 sobrevivir como alias interno del engine, pero no debe aparecer en cartas, tooltips, logs, errores
 ni texto accesible. Ímpetu evita este Estado.
 
+### Estados preview de Cazadores
+
+Estos conceptos aparecen únicamente en el estudio visual de Cazadores. Todavía no son mecánicas
+del motor ni deben presentarse como disponibles en una partida:
+
+| English | Español | Regla propuesta para el preview |
+| --- | --- | --- |
+| Marked | Marcado | Etiqueta persistente sobre un Eco enemigo hasta que deje el Campo. No produce un efecto por sí sola; otras cartas la consultan. |
+| Stunned | Aturdido | No puede atacar ni defender durante la próxima Batalla de su bando. El Estado termina al final de esa Batalla. |
+| Bound | Atado | Permanece en su Campo original, pero no puede atacar ni defender mientras esté Atado a Lyra. Puede luchar por efectos. Cada Lyra puede tener un solo Eco Atado; si Ata otro o deja el Campo, libera el anterior. |
+
+`Trampa` es un subtipo preview de `Eco`, no un quinto tipo de carta. Por eso usa Fuerza y Aguante,
+puede defender y se imprime como `Eco — Trampa` o `Eco · Ficha — Trampa`. Su prohibición de
+atacar se escribe como regla completa; `Defensor` no se incorpora como Rasgo.
+
 ## Texto de cartas
 
 Reglas de estilo:

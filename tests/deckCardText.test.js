@@ -30,6 +30,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2.",
   );
   const invokedToken = formatEffectText("Invoca un Eco Ficha Zombi 2/2.");
+  const variableTokenWave = formatEffectText(
+    "Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
+  );
+  const previewStates = formatEffectText("Un Eco Marcado y Aturdido permanece Atado.");
   const raidBombardment = formatEffectText(
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
   );
@@ -74,6 +78,11 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     invokedToken,
     /class="effect-token">Invoca un Eco Ficha Zombi 2\/2<\/strong>/,
   );
+  assert.match(
+    variableTokenWave,
+    /class="effect-token">Invoca tantos Ecos Ficha Trasgo 1\/1 atacando<\/strong>/,
+  );
+  assert.equal((previewStates.match(/class="effect-state"/g) ?? []).length, 3);
 
   assert.match(raidBombardment, /class="effect-danger">fuerza 2 o menos<\/strong>/);
   assert.match(raidBombardment, /class="effect-danger">1 de daño<\/strong>/);
@@ -143,12 +152,22 @@ test("migrated deck studios use the same minimal header presentation", () => {
     new URL("../dev/tools/Decks/zombies/index.html", import.meta.url),
     "utf8",
   );
-  const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360)/iu;
+  const goblinIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/goblins/index.html", import.meta.url),
+    "utf8",
+  );
+  const hunterIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/hunters/index.html", import.meta.url),
+    "utf8",
+  );
+  const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360|Preview visual|antes de exportar)/iu;
 
   for (const [label, indexHtml] of [
     ["Mono Green", monoGreenIndex],
     ["Vampires", vampireIndex],
     ["Zombies", zombieIndex],
+    ["Goblins", goblinIndex],
+    ["Hunters", hunterIndex],
   ]) {
     assert.match(indexHtml, /<header class="studio-header">/u, `${label} is missing the shared header`);
     assert.match(indexHtml, /class="studio-title"/u, `${label} is missing its title`);
@@ -482,6 +501,180 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
   }
 });
 
+test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => {
+  const indexUrl = new URL("../dev/tools/Decks/goblins/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(
+    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(embeddedJson, "Goblin index must contain its embedded deck JSON");
+
+  const studioCards = JSON.parse(embeddedJson);
+  const runtimeDeck = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../src/data/decks/horde/goblins/goblin_assault_horde.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Instantáneos?|Encantamientos?|Horda|Amenaza|jugador|entra|obtiene|Goblins?)\b|Daña primero|bola de fuego|\bcrea(?:r)?\b)/iu;
+  const keywordLabels = {
+    FIRST_STRIKE: "Reflejos",
+  };
+
+  assert.equal(studioCards.length, 17, "Goblin studio must keep its 17 card definitions");
+  assert.equal(
+    studioCards.length,
+    runtimeDeck.cards.length,
+    "Goblin studio and runtime deck have different card counts",
+  );
+
+  const studioCss = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    studioCss,
+    /body\[data-theme="goblins"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
+    "Goblin Echo glyph must use the same doubled size as the other migrated decks",
+  );
+
+  for (const runtimeCard of runtimeDeck.cards) {
+    const rulesText = /^Sin efecto (?:activo )?adicional\.$/u.test(runtimeCard.gameText?.es ?? "")
+      ? []
+      : [runtimeCard.gameText?.es];
+    const keywordText = (runtimeCard.keywords ?? [])
+      .map((keyword) => keywordLabels[keyword] ?? keyword);
+    const expectedRules = [...keywordText, ...rulesText].filter(Boolean).join("\n");
+    const studioCard = studioCards.find((card) => card.id === runtimeCard.id);
+
+    assert.ok(studioCard, `Goblin studio is missing ${runtimeCard.id}`);
+    assert.doesNotMatch(
+      `${studioCard.tipo}\n${studioCard.desc}`,
+      retiredStudioVocabulary,
+      `Goblin studio exposes retired vocabulary for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.cantidad,
+      runtimeCard.quantity,
+      `Goblin studio has a stale quantity for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.costo,
+      runtimeCard.manaValue,
+      `Goblin studio has a stale cost for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.atk ?? null,
+      runtimeCard.power ?? null,
+      `Goblin studio has stale power for ${runtimeCard.id}`,
+    );
+    assert.equal(
+      studioCard.def ?? null,
+      runtimeCard.toughness ?? null,
+      `Goblin studio has stale toughness for ${runtimeCard.id}`,
+    );
+
+    if (runtimeCard.isToken) {
+      assert.match(
+        studioCard.tipo,
+        /^Eco · Ficha\b/u,
+        `Goblin studio has a stale token type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Creature")) {
+      assert.match(
+        studioCard.tipo,
+        /^Eco\b/u,
+        `Goblin studio has a stale type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Instant")) {
+      assert.equal(
+        studioCard.tipo,
+        "Hechizo · Rápido",
+        `Goblin studio has a stale type for ${runtimeCard.id}`,
+      );
+    } else if (runtimeCard.cardTypes.includes("Enchantment")) {
+      assert.equal(
+        studioCard.tipo,
+        "Apoyo",
+        `Goblin studio has a stale type for ${runtimeCard.id}`,
+      );
+    }
+
+    assert.equal(
+      normalizeGoblinEffect(studioCard.desc),
+      normalizeGoblinEffect(expectedRules),
+      `Goblin studio has stale rules for ${runtimeCard.id}`,
+    );
+  }
+});
+
+test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
+  const indexUrl = new URL("../dev/tools/Decks/hunters/index.html", import.meta.url);
+  const indexHtml = fs.readFileSync(indexUrl, "utf8");
+  const embeddedJson = indexHtml.match(
+    /<script id="deck-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(embeddedJson, "Hunter index must contain its embedded deck JSON");
+
+  const embeddedCards = JSON.parse(embeddedJson);
+  const mirrorCards = JSON.parse(
+    fs.readFileSync(
+      new URL("../dev/tools/Decks/hunters/hunters.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|Agrega|vidas)\b|\{\{T\}\})/iu;
+  const expectedTypes = {
+    territorio_de_caza: "Fuente — Territorio",
+    trampa_de_mandibulas: "Eco — Trampa",
+    red_de_garfios: "Eco — Trampa",
+    rastreadora_de_huellas: "Eco — Cazador Rastreador",
+    trampero_de_acero: "Eco — Cazador Trampero",
+    lancero_de_la_marca: "Eco — Cazador Guerrero",
+    lyra_ojo_de_la_caceria: "Eco de Crónica — Cazador",
+    flecha_sedante: "Hechizo · Rápido",
+    contra_tu_manada: "Hechizo · Rápido",
+    rodear_a_la_presa: "Hechizo",
+    trofeo_de_la_caceria: "Apoyo — Trofeo",
+    la_gran_batida: "Hechizo",
+    trampa_improvisada: "Eco · Ficha — Trampa",
+  };
+
+  assert.equal(embeddedCards.length, 13, "Hunter preview must keep its 13 definitions");
+  assert.equal(
+    embeddedCards.reduce((total, card) => total + card.cantidad, 0),
+    40,
+    "Hunter preview must keep its 40-card authored composition",
+  );
+  assert.deepEqual(embeddedCards, mirrorCards, "Hunter embedded data and hunters.json diverged");
+
+  for (const card of embeddedCards) {
+    assert.equal(card.tipo, expectedTypes[card.id], `Hunter preview has a stale type for ${card.id}`);
+    assert.doesNotMatch(
+      `${card.tipo}\n${card.desc}`,
+      retiredStudioVocabulary,
+      `Hunter preview exposes retired vocabulary for ${card.id}`,
+    );
+    assert.ok(
+      fs.existsSync(new URL(card.art_crop, indexUrl)),
+      `${card.id} points to missing Hunter art: ${card.art_crop}`,
+    );
+  }
+
+  const hunterCss = fs.readFileSync(
+    new URL("../dev/tools/Decks/hunters/hunters.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    hunterCss,
+    /body\[data-theme="hunters"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
+    "Hunter Echo glyph must use the shared doubled size",
+  );
+});
+
 test("Vampire gameplay cards use their full-image faction presentation", () => {
   for (const definitionId of [
     "crimson_energy",
@@ -514,6 +707,15 @@ function normalizeMonoGreenEffect(text) {
 }
 
 function normalizeZombieEffect(text) {
+  const normalized = String(text ?? "").trim();
+  if (/^Sin efecto (?:activo )?adicional\.$/iu.test(normalized)) return "";
+  return normalized
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es");
+}
+
+function normalizeGoblinEffect(text) {
   const normalized = String(text ?? "").trim();
   if (/^Sin efecto (?:activo )?adicional\.$/iu.test(normalized)) return "";
   return normalized

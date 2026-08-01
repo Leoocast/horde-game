@@ -11,23 +11,8 @@
     data-set-code="HFG"
 >
     <header class="studio-header">
-        <p class="studio-kicker">Forja de la Horda</p>
         <h1 class="studio-title">Deck Goblins</h1>
-        <p class="studio-subtitle">
-            Hierro robado, remaches torcidos y brasas. Las cartas conservan el formato
-            de exportación HD del player: 976×1360.
-        </p>
-
-        <div class="studio-toolbar">
-            <button class="zoom-button" type="button" data-scale="35">35%</button>
-            <button class="zoom-button is-active" type="button" data-scale="45">45%</button>
-            <button class="zoom-button" type="button" data-scale="60">60%</button>
-            <button class="zoom-button" type="button" data-scale="100">100%</button>
-        </div>
-
-        <p class="studio-status" id="studio-status">
-            Generando deck completo…
-        </p>
+        <p class="studio-subtitle">Hierro robado, remaches torcidos y brasas de una Hueste imparable.</p>
     </header>
 
     <main class="cards-grid scale-45" id="cards-container"></main>
@@ -38,7 +23,7 @@
             "id": "goblin_token_1_1_red",
             "art_crop": "https://cards.scryfall.io/art_crop/front/5/9/59a207c7-0605-4c8d-a0fa-588bf8d8ada8.jpg?1783913155",
             "nombre": "Ficha de Trasgo",
-            "tipo": "Criatura ficha — Trasgo",
+            "tipo": "Eco · Ficha — Trasgo",
             "costo": 0,
             "atk": 1,
             "def": 1,
@@ -51,11 +36,11 @@
             "id": "hobgoblin_bandit_lord",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Hobgoblin%20Bandit%20Lord",
             "nombre": "Señor de los bandidos hobgoblin",
-            "tipo": "Criatura — Trasgo Bribón",
+            "tipo": "Eco — Trasgo Bribón",
             "costo": 3,
             "atk": 2,
             "def": 3,
-            "desc": "Los demás Trasgos de la Horda obtienen +1/+1. Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga; su daño es igual a la cantidad de Trasgos que entraron este turno.",
+            "desc": "Los demás Trasgos de la Hueste ganan +1/+1.\nCuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos invocados este turno.",
             "lore": "",
             "cantidad": 2
           },
@@ -63,11 +48,11 @@
             "id": "rundvelt_hordemaster",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Rundvelt%20Hordemaster",
             "nombre": "Señor de la horda de Rundvelt",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 2,
             "atk": 1,
             "def": 1,
-            "desc": "Los demás Trasgos de la Horda obtienen +1/+1. Siempre que muera un Trasgo de la Horda, exilia la primera carta de la Horda; si es una criatura Trasgo, ponla en el campo.",
+            "desc": "Los demás Trasgos aliados ganan +1/+1.\nCada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo.",
             "lore": "",
             "cantidad": 2
           },
@@ -75,11 +60,11 @@
             "id": "battle_cry_goblin",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Battle%20Cry%20Goblin",
             "nombre": "Goblin del grito de guerra",
-            "tipo": "Criatura — Trasgo",
+            "tipo": "Eco — Trasgo",
             "costo": 2,
             "atk": 2,
             "def": 2,
-            "desc": "Cuando esta criatura entra, los Trasgos de la Horda obtienen +1/+0 hasta el final del turno.",
+            "desc": "Cuando este Eco es invocado, los Trasgos de la Hueste ganan +1/+0 hasta el final del turno.",
             "lore": "",
             "cantidad": 2
           },
@@ -87,11 +72,11 @@
             "id": "goblin_war_drums",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Goblin%20War%20Drums",
             "nombre": "Goblin War Drums",
-            "tipo": "Encantamiento",
+            "tipo": "Apoyo",
             "costo": 3,
             "atk": null,
             "def": null,
-            "desc": "Las criaturas de la Horda tienen Amenaza.",
+            "desc": "Los Ecos de la Hueste ganan Imponente.",
             "lore": "",
             "cantidad": 1
           },
@@ -99,11 +84,11 @@
             "id": "raid_bombardment",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Raid%20Bombardment",
             "nombre": "Bombardeo de incursión",
-            "tipo": "Encantamiento",
+            "tipo": "Apoyo",
             "costo": 3,
             "atk": null,
             "def": null,
-            "desc": "Después de resolver el ataque de la Horda, cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a una salva de bolas de fuego contra el jugador.",
+            "desc": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
             "lore": "",
             "cantidad": 1
           },
@@ -111,11 +96,11 @@
             "id": "beetleback_chief",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Beetleback%20Chief",
             "nombre": "Jefe lomo de escarabajo",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 4,
             "atk": 2,
             "def": 2,
-            "desc": "Cuando esta criatura entra, crea dos Trasgos 1/1.",
+            "desc": "Cuando este Eco es invocado, Invoca dos Ecos Ficha Trasgo 1/1.",
             "lore": "",
             "cantidad": 2
           },
@@ -123,11 +108,11 @@
             "id": "siege_gang_commander",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Siege-Gang%20Commander",
             "nombre": "Comandante de sitiadores",
-            "tipo": "Criatura — Trasgo",
+            "tipo": "Eco — Trasgo",
             "costo": 5,
             "atk": 2,
             "def": 2,
-            "desc": "Cuando esta criatura entra, crea tres Trasgos 1/1.",
+            "desc": "Cuando este Eco es invocado, Invoca tres Ecos Ficha Trasgo 1/1.",
             "lore": "",
             "cantidad": 2
           },
@@ -135,11 +120,11 @@
             "id": "goblin_rabblemaster",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Goblin%20Rabblemaster",
             "nombre": "Agitador trasgo",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 3,
             "atk": 2,
             "def": 2,
-            "desc": "Al comienzo del combate de la Horda, crea un Trasgo 1/1. Cuando esta criatura ataca, obtiene +1/+0 por cada otro Trasgo atacante.",
+            "desc": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1.\nCuando este Eco ataca, gana +1/+0 por cada otro Trasgo atacante.",
             "lore": "",
             "cantidad": 1
           },
@@ -147,11 +132,11 @@
             "id": "goblin_surprise",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Goblin%20Surprise",
             "nombre": "Sorpresa trasga",
-            "tipo": "Instantáneo",
+            "tipo": "Hechizo · Rápido",
             "costo": 3,
             "atk": null,
             "def": null,
-            "desc": "La Horda elige uno: sus criaturas obtienen +2/+0 hasta el final del turno, o realiza otra ronda de revelado.",
+            "desc": "La Hueste elige uno: sus Ecos ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado.",
             "lore": "El silencio fue la única advertencia.",
             "cantidad": 3
           },
@@ -159,7 +144,7 @@
             "id": "mogg_mob",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Mogg%20Mob",
             "nombre": "Pandilla mogg",
-            "tipo": "Criatura — Trasgo",
+            "tipo": "Eco — Trasgo",
             "costo": 3,
             "atk": 3,
             "def": 3,
@@ -171,11 +156,11 @@
             "id": "volley_veteran",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Volley%20Veteran",
             "nombre": "Veterano de salvas",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 4,
             "atk": 4,
             "def": 2,
-            "desc": "Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga. Su daño es igual a la cantidad de Trasgos de la Horda.",
+            "desc": "Cuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos de la Hueste.",
             "lore": "",
             "cantidad": 1
           },
@@ -183,11 +168,11 @@
             "id": "goblin_chainwhirler",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Goblin%20Chainwhirler",
             "nombre": "Goblin Chainwhirler",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 3,
             "atk": 3,
             "def": 3,
-            "desc": "Daña primero. Cuando esta criatura entra, hace 1 de daño al jugador y a cada criatura del jugador.",
+            "desc": "Reflejos\nCuando este Eco es invocado, inflige 1 de daño al Cronista y a cada Eco que controla.",
             "lore": "",
             "cantidad": 2
           },
@@ -195,11 +180,11 @@
             "id": "goblin_trashmaster",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Goblin%20Trashmaster",
             "nombre": "Maestro chatarrero trasgo",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 4,
             "atk": 3,
             "def": 3,
-            "desc": "Los demás Trasgos de la Horda obtienen +1/+1. La Horda puede sacrificar un Trasgo para destruir un artefacto.",
+            "desc": "Los demás Trasgos de la Hueste ganan +1/+1.",
             "lore": "",
             "cantidad": 2
           },
@@ -207,11 +192,11 @@
             "id": "general_kreat_the_boltbringer",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=General%20Kreat%2C%20the%20Boltbringer",
             "nombre": "General Kreat, la Crearrayos",
-            "tipo": "Criatura — Trasgo Soldado",
+            "tipo": "Eco — Trasgo Soldado",
             "costo": 3,
             "atk": 2,
             "def": 2,
-            "desc": "Cuando los Trasgos de la Horda atacan, crea un Trasgo 1/1 atacando. Siempre que otra criatura de la Horda entre, el jugador pierde 1 vida.",
+            "desc": "Cuando los Trasgos de la Hueste atacan, Invoca un Eco Ficha Trasgo 1/1 atacando.\nCada vez que otro Eco de la Hueste es invocado, el Cronista pierde 1 de Vida.",
             "lore": "",
             "cantidad": 1
           },
@@ -219,11 +204,11 @@
             "id": "krenko_tin_street_kingpin",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Krenko%2C%20Tin%20Street%20Kingpin",
             "nombre": "Krenko, líder de la Calle Hojalata",
-            "tipo": "Criatura — Trasgo",
+            "tipo": "Eco — Trasgo",
             "costo": 3,
             "atk": 1,
             "def": 2,
-            "desc": "Cuando esta criatura ataca, pon un contador +1/+1 sobre ella y luego crea esa cantidad de Trasgos 1/1 atacando, igual a su nueva fuerza.",
+            "desc": "Cuando este Eco ataca, pon un contador +1/+1 sobre él.\nLuego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
             "lore": "",
             "cantidad": 1
           },
@@ -231,11 +216,11 @@
             "id": "pashalik_mons",
             "art_crop": "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=Pashalik%20Mons",
             "nombre": "Pashalik Mons",
-            "tipo": "Criatura — Trasgo Guerrero",
+            "tipo": "Eco — Trasgo Guerrero",
             "costo": 3,
             "atk": 2,
             "def": 2,
-            "desc": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador.",
+            "desc": "Cada vez que un Trasgo de la Hueste muere, inflige 1 de daño a un Eco aleatorio del Cronista.",
             "lore": "",
             "cantidad": 2
           }

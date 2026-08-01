@@ -64,6 +64,14 @@
             || theme === "vampires"
             || theme === "hunters"
         ) {
+            if (theme === "hunters" && normalized.includes("trampa")) {
+                return `
+                    <svg class="fa-inline-icon tcg-trap-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                        <path fill="currentColor" d="M7 18h10l7 11 8-14 8 14 7-11h10L45 40H19L7 18Zm12 27h26v6H19v-6Z"></path>
+                        <path fill="currentColor" d="M12 10h8l4 8-6 4-6-12Zm32 0h8l-6 12-6-4 4-8Z"></path>
+                    </svg>
+                `;
+            }
             if (normalized.includes("eco") || normalized.includes("echo")) {
                 return `
                     <svg class="fa-inline-icon tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
@@ -82,14 +90,6 @@
                 )
             ) {
                 return '<i class="fa-solid fa-gem tcg-source-icon" aria-hidden="true"></i>';
-            }
-            if (theme === "hunters" && normalized.includes("trampa")) {
-                return `
-                    <svg class="fa-inline-icon tcg-trap-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
-                        <path fill="currentColor" d="M7 18h10l7 11 8-14 8 14 7-11h10L45 40H19L7 18Zm12 27h26v6H19v-6Z"></path>
-                        <path fill="currentColor" d="M12 10h8l4 8-6 4-6-12Zm32 0h8l-6 12-6-4 4-8Z"></path>
-                    </svg>
-                `;
             }
             if (normalized.includes("criatura")) {
                 return `

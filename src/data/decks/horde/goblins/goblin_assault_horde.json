@@ -107,8 +107,8 @@
       "name": "Hobgoblin Bandit Lord",
       "displayNameEs": "Señor de los bandidos hobgoblin",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. When this creature enters, it launches a fireball at the best opposing creature; its damage equals the number of Goblins that entered this turn.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga; su daño es igual a la cantidad de Trasgos que entraron este turno."
+        "en": "Other Host Goblins gain +1/+1. When this Echo is Invoked, it deals damage to the best enemy Echo equal to the number of Goblins Invoked this turn.",
+        "es": "Los demás Trasgos de la Hueste ganan +1/+1. Cuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos invocados este turno."
       },
       "quantity": 2,
       "manaCost": "{1}{R}{R}",
@@ -203,8 +203,8 @@
       "name": "Rundvelt Hordemaster",
       "displayNameEs": "Señor de la horda de Rundvelt",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. Whenever a Horde Goblin dies, exile the top Horde card; if it is a Goblin creature, put it onto the battlefield.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. Siempre que muera un Trasgo de la Horda, exilia la primera carta de la Horda; si es una criatura Trasgo, ponla en el campo."
+        "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
       },
       "quantity": 2,
       "manaCost": "{1}{R}",
@@ -225,7 +225,7 @@
       "power": 1,
       "toughness": 1,
       "keywords": [],
-      "triggerMessage": "Rundvelt Hordemaster triggers. Horde exiles the top card of its library.",
+      "triggerMessage": "Rundvelt Hordemaster looks at the top card of the Archive.",
       "abilities": [
         {
           "id": "rundvelt_hordemaster_other_goblins_buff",
@@ -255,7 +255,7 @@
           ]
         },
         {
-          "id": "rundvelt_hordemaster_goblin_died_exile",
+          "id": "rundvelt_hordemaster_goblin_died_inspect",
           "kind": "TRIGGERED",
           "zone": "BATTLEFIELD",
           "trigger": {
@@ -279,8 +279,8 @@
             }
           ],
           "effects": [],
-          "customHandler": "rundvelt_hordemaster_exile_top_if_goblin",
-          "implementationNote": "Exile the top card of the source controller's library. If it is a Goblin creature card, that player may cast it until the end of their next turn."
+          "customHandler": "rundvelt_hordemaster_inspect_top_if_goblin",
+          "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is a Goblin Echo; otherwise put it on the bottom of the Archive."
         }
       ],
       "needsVerification": false,
@@ -296,8 +296,8 @@
       "name": "Battle Cry Goblin",
       "displayNameEs": "Goblin del grito de guerra",
       "gameText": {
-        "en": "When this creature enters, Horde Goblins get +1/+0 until end of turn.",
-        "es": "Cuando esta criatura entra, los Trasgos de la Horda obtienen +1/+0 hasta el final del turno."
+        "en": "When this Echo is Invoked, Host Goblins gain +1/+0 until the end of the turn.",
+        "es": "Cuando este Eco es invocado, los Trasgos de la Hueste ganan +1/+0 hasta el final del turno."
       },
       "quantity": 2,
       "manaCost": "{1}{R}",
@@ -364,8 +364,8 @@
       "name": "Goblin War Drums",
       "displayNameEs": null,
       "gameText": {
-        "en": "Horde creatures have Menace.",
-        "es": "Las criaturas de la Horda tienen Amenaza."
+        "en": "Host Echoes gain Daunting.",
+        "es": "Los Ecos de la Hueste ganan Imponente."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -420,8 +420,8 @@
       "name": "Raid Bombardment",
       "displayNameEs": "Bombardeo de incursión",
       "gameText": {
-        "en": "After the Horde attack resolves, each attacking Goblin with power 2 or less adds 1 damage to a fireball volley against the player.",
-        "es": "Después de resolver el ataque de la Horda, cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a una salva de bolas de fuego contra el jugador."
+        "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
+        "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -467,8 +467,8 @@
       "name": "Beetleback Chief",
       "displayNameEs": "Jefe lomo de escarabajo",
       "gameText": {
-        "en": "When this creature enters, create two 1/1 Goblins.",
-        "es": "Cuando esta criatura entra, crea dos Trasgos 1/1."
+        "en": "When this Echo is Invoked, Invoke two 1/1 Goblin Echo Tokens.",
+        "es": "Cuando este Eco es invocado, Invoca dos Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
@@ -523,8 +523,8 @@
       "name": "Siege-Gang Commander",
       "displayNameEs": "Comandante de sitiadores",
       "gameText": {
-        "en": "When this creature enters, create three 1/1 Goblins.",
-        "es": "Cuando esta criatura entra, crea tres Trasgos 1/1."
+        "en": "When this Echo is Invoked, Invoke three 1/1 Goblin Echo Tokens.",
+        "es": "Cuando este Eco es invocado, Invoca tres Ecos Ficha Trasgo 1/1."
       },
       "quantity": 2,
       "manaCost": "{3}{R}{R}",
@@ -578,8 +578,8 @@
       "name": "Goblin Rabblemaster",
       "displayNameEs": "Agitador trasgo",
       "gameText": {
-        "en": "At the start of Horde combat, create a 1/1 Goblin. When this creature attacks, it gets +1/+0 for each other attacking Goblin.",
-        "es": "Al comienzo del combate de la Horda, crea un Trasgo 1/1. Cuando esta criatura ataca, obtiene +1/+0 por cada otro Trasgo atacante."
+        "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this Echo attacks, it gains +1/+0 for each other attacking Goblin.",
+        "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando este Eco ataca, gana +1/+0 por cada otro Trasgo atacante."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -658,8 +658,8 @@
       "name": "Goblin Surprise",
       "displayNameEs": "Sorpresa trasga",
       "gameText": {
-        "en": "The Horde chooses one: its creatures get +2/+0 until end of turn, or it performs another reveal round.",
-        "es": "La Horda elige uno: sus criaturas obtienen +2/+0 hasta el final del turno, o realiza otra ronda de revelado."
+        "en": "The Host chooses one: its Echoes gain +2/+0 until the end of the turn; or it starts another Reveal round.",
+        "es": "La Hueste elige uno: sus Ecos ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
       },
       "quantity": 3,
       "manaCost": "{2}{R}",
@@ -774,8 +774,8 @@
       "name": "Volley Veteran",
       "displayNameEs": "Veterano de salvas",
       "gameText": {
-        "en": "When this creature enters, it launches a fireball at the best opposing creature. Its damage equals the number of Horde Goblins.",
-        "es": "Cuando esta criatura entra, lanza una bola de fuego a la mejor criatura enemiga. Su daño es igual a la cantidad de Trasgos de la Horda."
+        "en": "When this Echo is Invoked, it deals damage to the best enemy Echo equal to the number of Host Goblins.",
+        "es": "Cuando este Eco es invocado, inflige al mejor Eco enemigo tanto daño como la cantidad de Trasgos de la Hueste."
       },
       "quantity": 1,
       "manaCost": "{3}{R}",
@@ -843,8 +843,8 @@
       "name": "Goblin Chainwhirler",
       "displayNameEs": null,
       "gameText": {
-        "en": "When this creature enters, it deals 1 damage to the player and every player creature.",
-        "es": "Cuando esta criatura entra, hace 1 de daño al jugador y a cada criatura del jugador."
+        "en": "When this Echo is Invoked, it deals 1 damage to the Chronicler and each Echo they control.",
+        "es": "Cuando este Eco es invocado, inflige 1 de daño al Cronista y a cada Eco que controla."
       },
       "quantity": 2,
       "manaCost": "{R}{R}{R}",
@@ -896,8 +896,8 @@
       "name": "Goblin Trashmaster",
       "displayNameEs": "Maestro chatarrero trasgo",
       "gameText": {
-        "en": "Other Horde Goblins get +1/+1. The Horde may sacrifice a Goblin to destroy an artifact.",
-        "es": "Los demás Trasgos de la Horda obtienen +1/+1. La Horda puede sacrificar un Trasgo para destruir un artefacto."
+        "en": "Other Host Goblins gain +1/+1.",
+        "es": "Los demás Trasgos de la Hueste ganan +1/+1."
       },
       "quantity": 2,
       "manaCost": "{2}{R}{R}",
@@ -998,8 +998,8 @@
       "name": "General Kreat, the Boltbringer",
       "displayNameEs": "General Kreat, la Crearrayos",
       "gameText": {
-        "en": "When Horde Goblins attack, create one 1/1 Goblin attacking. Whenever another Horde creature enters, the player loses 1 life.",
-        "es": "Cuando los Trasgos de la Horda atacan, crea un Trasgo 1/1 atacando. Siempre que otra criatura de la Horda entre, el jugador pierde 1 vida."
+        "en": "When Host Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another Host Echo is Invoked, the Chronicler loses 1 Life.",
+        "es": "Cuando los Trasgos de la Hueste atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro Eco de la Hueste es invocado, el Cronista pierde 1 de Vida."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -1076,8 +1076,8 @@
       "name": "Krenko, Tin Street Kingpin",
       "displayNameEs": "Krenko, líder de la Calle Hojalata",
       "gameText": {
-        "en": "When this creature attacks, put a +1/+1 counter on it, then create that many 1/1 Goblins attacking, equal to its new power.",
-        "es": "Cuando esta criatura ataca, pon un contador +1/+1 sobre ella y luego crea esa cantidad de Trasgos 1/1 atacando, igual a su nueva fuerza."
+        "en": "When this Echo attacks, put a +1/+1 counter on it. Then Invoke that many 1/1 Goblin Echo Tokens attacking, equal to its Power.",
+        "es": "Cuando este Eco ataca, pon un contador +1/+1 sobre él. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
       },
       "quantity": 1,
       "manaCost": "{2}{R}",
@@ -1151,8 +1151,8 @@
       "name": "Pashalik Mons",
       "displayNameEs": "Pashalik Mons",
       "gameText": {
-        "en": "Whenever a Horde Goblin dies, launch a 1-damage fireball at a random player creature.",
-        "es": "Siempre que muera un Trasgo de la Horda, lanza una bola de fuego de 1 de daño a una criatura aleatoria del jugador."
+        "en": "Whenever a Host Goblin dies, deal 1 damage to a random Echo controlled by the Chronicler.",
+        "es": "Cada vez que un Trasgo de la Hueste muere, inflige 1 de daño a un Eco aleatorio del Cronista."
       },
       "quantity": 2,
       "manaCost": "{2}{R}",
@@ -1230,12 +1230,5 @@
       }
     }
   ],
-  "engineSupportNeeded": [
-    {
-      "id": "temporary_cast_permission_from_exile",
-      "usedBy": [
-        "rundvelt_hordemaster_goblin_died_exile"
-      ]
-    }
-  ]
+  "engineSupportNeeded": []
 }

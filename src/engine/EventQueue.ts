@@ -9,7 +9,7 @@ export function enqueue(game: GameState, event: Omit<EventItem, "id">): void {
       ...(event.payload ?? {}),
       // Only permanents already in play when the event happened may react to it. Without this,
       // a creature that reaches the battlefield BECAUSE of this event reacts to it: Rundvelt
-      // exiling Pashalik onto the battlefield made Pashalik burn for the death that summoned it.
+      // Invoking Pashalik from the Archive made Pashalik burn for the death that summoned it.
       // The event's own source is always allowed — a dying card has already left the battlefield
       // by the time its death event is queued.
       witnessIds: [...game.player.battlefield, ...game.horde.battlefield].map((card) => card.instanceId),
