@@ -3,6 +3,7 @@ import { createToken, drawCards, recordBattlefieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
 import { hasKeyword } from "./Keywords";
+import { isTrait } from "./hostfallVocabulary";
 import { addMana, addStoredMana } from "./ManaSystem";
 import { randomInt } from "./RNG";
 import { getPowerToughness, matchesFilter } from "./StaticEffects";
@@ -70,7 +71,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   ADD_MANA: (game, effect, context) => {
     const mana = effect.mana as Record<string, number> | undefined;
-    if (context.side === "player" && context.source?.cardTypes.includes("Creature")) {
+    if (context.side === "player" && context.source?.cardTypes.includes("ECHO")) {
       const manaAmounts = Object.values(mana ?? { G: Number(effect.amount ?? 1) });
       const amount = manaAmounts.reduce<number>((total, value) => total + Number(value), 0);
       const added = addStoredMana(game, amount);
@@ -111,8 +112,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   DEAL_DAMAGE_TO_OPPONENT_AND_CREATURES: (game, effect, context) => {
     const opponent = context.side === "player" ? "horde" : "player";
     const amount = Number(effect.amount ?? 1);
-    const targetIds = game[opponent].battlefield
-      .filter((card) => card.cardTypes.includes("Creature"))
+    const targetIds = game[opponent].field
+      .filter((card) => card.cardTypes.includes("ECHO"))
       .map((card) => card.instanceId);
     if (effect.animation === "BURN_VOLLEY") {
       enqueue(game, {
@@ -143,7 +144,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         enqueueBurnDamage(game, context.source, target, amount, "BURN");
         return;
       }
-      dealDamageToCreature(game, target, amount, Boolean(context.source && hasKeyword(game, context.source, "DEATHTOUCH")));
+      dealDamageToCreature(game, target, amount, Boolean(context.source && hasKeyword(game, context.source, "LETHAL")));
       game.log.unshift(`${context.source?.name ?? "Horde"} deals ${amount} damage to ${target.name}.`);
       destroyMarkedCreatures(game);
     }
@@ -154,7 +155,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const maxPower = Number(filter?.maxPower ?? Number.POSITIVE_INFINITY);
     const powers = (context.event?.payload?.attackerPowers as Record<string, number> | undefined) ?? {};
     const matchingIds = attackerIds.filter((id) => {
-      const attacker = game[context.side].battlefield.find((card) => card.instanceId === id);
+      const attacker = game[context.side].field.find((card) => card.instanceId === id);
       return Boolean(
         attacker &&
         matchesFilter(attacker, filter, context.source) &&
@@ -179,7 +180,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const source = context.source;
     const filter = effect.filter as CardFilter | undefined;
     const amount = game.combat.hordeAttackers
-      .map((id) => game.horde.battlefield.find((card) => card.instanceId === id))
+      .map((id) => game.horde.field.find((card) => card.instanceId === id))
       .filter((card): card is CardInstance => Boolean(card))
       .filter((card) => matchesFilter(card, filter, source))
       .length;
@@ -190,7 +191,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const controller = effect.controller === "OPPONENT"
       ? context.side === "player" ? "horde" : "player"
       : context.side;
-    const targets = game[controller].battlefield.filter((target) =>
+    const targets = game[controller].field.filter((target) =>
       matchesFilter(target, effect.filter as CardFilter | undefined, context.source)
     );
     if (context.side === "horde" && effect.animation === "BUFF" && targets.length > 0) {
@@ -265,14 +266,16 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   GRANT_KEYWORD_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
-    for (const target of targets) target.temporaryKeywords.push(String(effect.keyword));
+    if (isTrait(effect.keyword)) {
+      for (const target of targets) target.temporaryKeywords.push(effect.keyword);
+    }
   },
   DEAL_DAMAGE_FROM_SOURCE_POWER: (game, effect, context) => {
     const source = findPermanent(game, String(context.targets?.[String(effect.sourceRef)] ?? ""));
     const target = findPermanent(game, String(context.targets?.[String(effect.targetRef)] ?? ""));
     if (source && target) {
       const amount = getPowerToughness(game, source).power;
-      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
+      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "LETHAL"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
       destroyMarkedCreatures(game);
     }
@@ -282,7 +285,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const target = findPermanent(game, String(context.targets?.[String(effect.target)] ?? ""));
     if (source && target) {
       const amount = resolveDamageAmount(game, effect.amount, context);
-      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "DEATHTOUCH"));
+      dealDamageToCreature(game, target, amount, hasKeyword(game, source, "LETHAL"));
       game.log.unshift(`${source.name} deals ${amount} damage to ${target.name}.`);
     }
   },
@@ -299,8 +302,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     if (source && target) {
       const sourcePower = getPowerToughness(game, source).power;
       const targetPower = getPowerToughness(game, target).power;
-      dealDamageToCreature(game, target, sourcePower, hasKeyword(game, source, "DEATHTOUCH"));
-      dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "DEATHTOUCH"));
+      dealDamageToCreature(game, target, sourcePower, hasKeyword(game, source, "LETHAL"));
+      dealDamageToCreature(game, source, targetPower, hasKeyword(game, target, "LETHAL"));
       game.log.unshift(`${source.name} and ${target.name} fight.`);
     }
   },
@@ -497,7 +500,7 @@ function resolveHordeGroupBuffEvent(game: GameState, event: EventItem): void {
   );
   const power = Number(event.payload?.power ?? 0);
   const toughness = Number(event.payload?.toughness ?? 0);
-  for (const target of game.horde.battlefield) {
+  for (const target of game.horde.field) {
     if (!affectedIds.has(target.instanceId)) continue;
     target.temporaryPower += power;
     target.temporaryToughness += toughness;
@@ -531,7 +534,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
   // Self-scoped: only the permanent named by the event reacts, never every other card carrying
   // the same ability. Both sources are still on the battlefield when these events resolve.
   if (event.type === "ENTERS_BATTLEFIELD" || event.type === "SURVIVED_DAMAGE") {
-    const source = [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === event.sourceId);
+    const source = [...game.player.field, ...game.horde.field].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(
       (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
@@ -540,7 +543,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
       : [];
   }
   if (event.type === "THIS_DIES") {
-    const source = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
+    const source = [...game.player.memory, ...game.horde.memory].find((card) => card.instanceId === event.sourceId);
     if (!source || (event.triggerController && source.controller !== event.triggerController)) return [];
     return source.effects.some(
       (wrapper) => wrapper.type === "TRIGGERED_ABILITY" && wrapper.trigger === event.type && !effectNeedsManualTarget(wrapper.effect),
@@ -548,8 +551,8 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
       ? [source]
       : [];
   }
-  const sources = [...game.player.battlefield, ...game.horde.battlefield];
-  const deadSource = [...game.player.graveyard, ...game.horde.graveyard].find((card) => card.instanceId === event.sourceId);
+  const sources = [...game.player.field, ...game.horde.field];
+  const deadSource = [...game.player.memory, ...game.horde.memory].find((card) => card.instanceId === event.sourceId);
   if (event.type === "CREATURE_DIED" && deadSource) sources.push(deadSource);
   return sources.filter(
     (source) =>
@@ -608,10 +611,10 @@ export function runEnterBattlefieldTriggers(
   });
 }
 
-export function dealDamageToCreature(game: GameState, target: CardInstance, amount: number, deathtouch = false): void {
+export function dealDamageToCreature(game: GameState, target: CardInstance, amount: number, lethal = false): void {
   const damage = Math.max(0, amount);
   target.damageMarked += damage;
-  if (deathtouch && damage > 0) target.deathtouchDamage = true;
+  if (lethal && damage > 0) target.lethalDamage = true;
   enqueueSurvivedDamageEvent(game, target, damage);
 }
 
@@ -621,10 +624,10 @@ export function enqueueSurvivedDamageEvent(
   amount: number,
   payload: Record<string, unknown> = {},
 ): void {
-  if (amount <= 0 || !target.cardTypes.includes("Creature")) return;
-  if (!game[target.controller].battlefield.some((card) => card.instanceId === target.instanceId)) return;
+  if (amount <= 0 || !target.cardTypes.includes("ECHO")) return;
+  if (!game[target.controller].field.some((card) => card.instanceId === target.instanceId)) return;
   const { toughness } = getPowerToughness(game, target);
-  if (target.damageMarked >= toughness || target.deathtouchDamage) return;
+  if (target.damageMarked >= toughness || target.lethalDamage) return;
   enqueue(game, {
     type: "SURVIVED_DAMAGE",
     sourceId: target.instanceId,
@@ -640,9 +643,9 @@ export function enqueueSurvivedDamageEvent(
 
 export function destroyMarkedCreatures(game: GameState): void {
   for (const side of ["player", "horde"] as const) {
-    for (const card of [...game[side].battlefield]) {
+    for (const card of [...game[side].field]) {
       const { toughness } = getPowerToughness(game, card);
-      if (card.cardTypes.includes("Creature") && (card.damageMarked >= toughness || card.deathtouchDamage)) {
+      if (card.cardTypes.includes("ECHO") && (card.damageMarked >= toughness || card.lethalDamage)) {
         destroyPermanent(game, card);
       }
     }
@@ -651,11 +654,11 @@ export function destroyMarkedCreatures(game: GameState): void {
 
 export function destroyPermanent(game: GameState, card: CardInstance): void {
   const side = card.controller;
-  game[side].battlefield = game[side].battlefield.filter((item) => item.instanceId !== card.instanceId);
-  card.zone = "graveyard";
+  game[side].field = game[side].field.filter((item) => item.instanceId !== card.instanceId);
+  card.zone = "memory";
   card.tapped = false;
   card.damageMarked = 0;
-  game[side].graveyard.push(card);
+  game[side].memory.push(card);
   game.log.unshift(`${card.name} dies.`);
   enqueue(game, {
     type: "THIS_DIES",
@@ -670,22 +673,22 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
 }
 
 function inspectTopGoblin(game: GameState): void {
-  const card = game.horde.library.shift();
+  const card = game.horde.archive.shift();
   if (!card) {
     game.log.unshift("Rundvelt Hordemaster finds no card to inspect.");
     return;
   }
   game.log.unshift(`Rundvelt Hordemaster inspects ${card.name}.`);
-  if (!card.cardTypes.includes("Creature") || !card.subtypes.includes("Goblin")) {
-    game.horde.library.push(card);
+  if (!card.cardTypes.includes("ECHO") || !card.subtypes.includes("Goblin")) {
+    game.horde.archive.push(card);
     game.log.unshift(`${card.name} moves to the bottom of the Host Archive.`);
     return;
   }
 
-  card.zone = "battlefield";
+  card.zone = "field";
   card.tapped = false;
   card.summoningSickness = false;
-  game.horde.battlefield.push(card);
+  game.horde.field.push(card);
   recordBattlefieldEntry(game, card);
   game.log.unshift(`${card.name} is Invoked from the Host Archive.`);
   runEnterBattlefieldTriggers(game, card, undefined, { deferSelfTriggers: true });
@@ -694,10 +697,10 @@ function inspectTopGoblin(game: GameState): void {
 export function millHorde(game: GameState, amount: number): void {
   let milled = 0;
   for (let i = 0; i < amount; i += 1) {
-    const card = game.horde.library.shift();
+    const card = game.horde.archive.shift();
     if (!card) break;
-    card.zone = "graveyard";
-    game.horde.graveyard.push(card);
+    card.zone = "memory";
+    game.horde.memory.push(card);
     milled += 1;
   }
   if (milled > 0) game.log.unshift(`Horde mills ${milled} card(s).`);
@@ -713,13 +716,13 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
     const token = createToken(
       found,
       controller,
-      `${game.turnNumber}-${game[controller].battlefield.length}-${i}`,
+      `${game.turnNumber}-${game[controller].field.length}-${i}`,
       game.gameMode === "chaos" ? game.chaosMutations[controller][found.id] : undefined,
     );
-    token.zone = "battlefield";
+    token.zone = "field";
     token.summoningSickness = controller === "player";
     token.tapped = Boolean(effect.tapped);
-    game[controller].battlefield.push(token);
+    game[controller].field.push(token);
     recordBattlefieldEntry(game, token);
     runEnterBattlefieldTriggers(game, token, undefined, {
       deferSelfTriggers: true,
@@ -753,7 +756,7 @@ function resolveTargetCards(game: GameState, effect: EffectDefinition, context: 
   }
   if (target?.type === "ALL_CREATURES") {
     const controller = target.controller === "SELF" ? context.side : context.side === "player" ? "horde" : "player";
-    return game[controller].battlefield.filter((card) => card.cardTypes.includes("Creature"));
+    return game[controller].field.filter((card) => card.cardTypes.includes("ECHO"));
   }
   return [];
 }
@@ -781,8 +784,8 @@ function discardPlayer(game: GameState, amount: number): void {
     if (game.player.hand.length === 0) break;
     const randomIndex = randomInt(game, game.player.hand.length);
     const [card] = game.player.hand.splice(randomIndex, 1);
-    card.zone = "graveyard";
-    game.player.graveyard.push(card);
+    card.zone = "memory";
+    game.player.memory.push(card);
     game.log.unshift(`Player discards ${card.name}.`);
   }
 }
@@ -791,8 +794,8 @@ export function discardChosenCard(game: GameState, instanceId: string): void {
   const index = game.player.hand.findIndex((card) => card.instanceId === instanceId);
   if (index < 0) return;
   const [card] = game.player.hand.splice(index, 1);
-  card.zone = "graveyard";
-  game.player.graveyard.push(card);
+  card.zone = "memory";
+  game.player.memory.push(card);
   game.log.unshift(`Player discards ${card.name}.`);
 }
 
@@ -839,7 +842,7 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
     return controllerMatches && sourceMatches && eventObjectMatchesFilters(event, condition.filters as Record<string, unknown> | undefined);
   }
   if (condition.type === "CONTROL_ANOTHER_PERMANENT_MATCHING") {
-    return game[source.controller].battlefield.some((card) => card.instanceId !== source.instanceId && card.subtypes.includes("Elf"));
+    return game[source.controller].field.some((card) => card.instanceId !== source.instanceId && card.subtypes.includes("Elf"));
   }
   return true;
 }
@@ -865,7 +868,7 @@ function effectConditionMet(
   if (condition.type === "DECLARED_ATTACKER_MATCHES") {
     const filters = condition.filters as CardFilter | undefined;
     return declaredAttackerIds(context.event).some((id) => {
-      const card = game[context.side].battlefield.find((item) => item.instanceId === id);
+      const card = game[context.side].field.find((item) => item.instanceId === id);
       return Boolean(card && matchesFilter(card, filters, context.source));
     });
   }
@@ -894,7 +897,7 @@ function queueRandomOpponentPermanentDamage(
     ? effect.target as Record<string, unknown>
     : undefined;
   const filters = targetDefinition?.filters as CardFilter | undefined;
-  const candidates = game[opponent].battlefield.filter((card) => matchesFilter(card, filters, context.source));
+  const candidates = game[opponent].field.filter((card) => matchesFilter(card, filters, context.source));
   if (candidates.length === 0) {
     game.log.unshift(`${context.source?.name ?? "Effect"} has no valid Burn target.`);
     return;
@@ -930,7 +933,7 @@ function resolveBurnDamageEvent(game: GameState, event: EventItem): void {
   const amount = Math.max(0, Number(event.payload?.amount ?? 0));
   dealDamageToCreature(game, target, amount, false);
   target.flags.burnSmoke = true;
-  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+  const source = [...game.player.field, ...game.horde.field, ...game.player.memory, ...game.horde.memory]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Burn"} deals ${amount} damage to ${target.name}.`);
   destroyMarkedCreatures(game);
@@ -947,7 +950,7 @@ function resolveBurnVolleyDamageEvent(game: GameState, event: EventItem): void {
     dealDamageToCreature(game, target, amount, false);
     target.flags.burnSmoke = true;
   }
-  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+  const source = [...game.player.field, ...game.horde.field, ...game.player.memory, ...game.horde.memory]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Burn volley"} deals ${amount} damage to each opposing target.`);
   destroyMarkedCreatures(game);
@@ -958,7 +961,7 @@ function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void
   const sourceSide = event.payload?.sourceSide === "player" ? "player" : "horde";
   if (sourceSide !== "horde" || event.payload?.targetPlayer !== true || amount <= 0) return;
   losePlayerLife(game, amount, event.sourceId);
-  const source = [...game.player.battlefield, ...game.horde.battlefield, ...game.player.graveyard, ...game.horde.graveyard]
+  const source = [...game.player.field, ...game.horde.field, ...game.player.memory, ...game.horde.memory]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Horde effect"} causes Player to lose ${amount} life.`);
 }
@@ -981,7 +984,7 @@ function resolveNumericAmount(game: GameState, amount: unknown, context: Resolve
     const controller = data.controller === "OPPONENT"
       ? context.side === "player" ? "horde" : "player"
       : context.side;
-    return game[controller].battlefield.filter((card) =>
+    return game[controller].field.filter((card) =>
       matchesFilter(card, data.filters as CardFilter | undefined, context.source)
     ).length;
   }
@@ -1036,7 +1039,7 @@ function effectOptionAttackPower(
       return score + resolveNumericAmount(game, effect.amount ?? 1, context) * Number(definition?.power ?? 0);
     }
     if (effect.type === "PUMP_GROUP_UNTIL_END_OF_TURN") {
-      const affected = game[context.side].battlefield.filter((card) =>
+      const affected = game[context.side].field.filter((card) =>
         matchesFilter(card, effect.filter as CardFilter | undefined, context.source)
       ).length;
       return score + affected * Number(effect.power ?? 0);

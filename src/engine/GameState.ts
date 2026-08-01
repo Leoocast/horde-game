@@ -122,11 +122,11 @@ export function mulliganOpeningHand(game: GameState): GameState {
 
   const nextHandSize = next.player.hand.length - 1;
   const returnedCards = next.player.hand;
-  for (const card of returnedCards) card.zone = "library";
-  const shuffled = shuffleWithState([...returnedCards, ...next.player.library], next.currentRandomState);
+  for (const card of returnedCards) card.zone = "archive";
+  const shuffled = shuffleWithState([...returnedCards, ...next.player.archive], next.currentRandomState);
   next.currentRandomState = shuffled.randomState;
   next.player.hand = [];
-  next.player.library = shuffled.items;
+  next.player.archive = shuffled.items;
   drawCards(next, "player", nextHandSize);
   next.mulligansTaken += 1;
   next.log.unshift(`Player takes mulligan ${next.mulligansTaken} and draws ${nextHandSize} card(s).`);
@@ -134,7 +134,7 @@ export function mulliganOpeningHand(game: GameState): GameState {
 }
 
 function forceCardsToFront(library: CardInstance[], definitionIds: readonly string[]): { forced: CardInstance[]; remaining: CardInstance[] } {
-  const remaining = [...library];
+  const remaining = [...archive];
   const forced: CardInstance[] = [];
   for (const definitionId of definitionIds) {
     const index = remaining.findIndex((card) => card.definitionId === definitionId);
@@ -169,20 +169,20 @@ function applyDeveloperHordeOpeningLibrary(seed: string, library: CardInstance[]
 function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {
   for (const entry of entries) {
     for (let index = 0; index < entry.amount; index += 1) {
-      const libraryIndex = game.player.library.findIndex((card) => card.definitionId === entry.definitionId);
+      const libraryIndex = game.player.archive.findIndex((card) => card.definitionId === entry.definitionId);
       if (libraryIndex < 0) break;
-      const [card] = game.player.library.splice(libraryIndex, 1);
-      card.zone = "battlefield";
+      const [card] = game.player.archive.splice(libraryIndex, 1);
+      card.zone = "field";
       card.tapped = false;
       card.summoningSickness = false;
-      game.player.battlefield.push(card);
+      game.player.field.push(card);
     }
   }
 }
 
 function applyDeveloperStartingBattlefield(game: GameState): void {
   if (game.seed.trim().toLowerCase() !== DEVELOPER_SEED) return;
-  const landId = game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId;
+  const landId = game.player.archive.find((card) => card.cardTypes.includes("SOURCE"))?.definitionId;
   if (!landId) return;
   placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
 }
@@ -190,7 +190,7 @@ function applyDeveloperStartingBattlefield(game: GameState): void {
 function limitPlayerDeckLands(cards: CardInstance[], maximum: number): CardInstance[] {
   let landsKept = 0;
   return cards.filter((card) => {
-    if (!card.cardTypes.includes("Land")) return true;
+    if (!card.cardTypes.includes("SOURCE")) return true;
     landsKept += 1;
     return landsKept <= maximum;
   });
@@ -200,7 +200,7 @@ function applyChaosStartingEnergy(game: GameState): void {
   if (game.gameMode !== "chaos") return;
   const normalizedSeed = game.seed.trim().toLowerCase();
   if (normalizedSeed === DEVELOPER_SEED) return;
-  placeOnBattlefield(game, [{ definitionId: game.player.library.find((card) => card.cardTypes.includes("Land"))?.definitionId ?? "", amount: 1 }]);
+  placeOnBattlefield(game, [{ definitionId: game.player.archive.find((card) => card.cardTypes.includes("SOURCE"))?.definitionId ?? "", amount: 1 }]);
 }
 
 export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Keyword[]> = {}): CardInstance[] {
@@ -231,12 +231,13 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     gameText: definition.gameText,
     owner: side,
     controller: side,
-    zone: "library",
+    zone: "archive",
     isToken: Boolean(definition.isToken),
     manaCost: definition.manaCost ?? "",
     manaValue: definition.manaValue ?? 0,
     colors: definition.colors ?? [],
     cardTypes: definition.cardTypes ?? [],
+    modifiers: definition.modifiers ?? [],
     subtypes: definition.subtypes ?? [],
     basePower: definition.power ?? 0,
     baseToughness: definition.toughness ?? 0,
@@ -249,11 +250,11 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
     requiresTargets: definition.requiresTargets ?? [],
     tapped: false,
     entersTapped: Boolean(definition.entersTapped),
-    summoningSickness: (definition.cardTypes ?? []).includes("Creature"),
+    summoningSickness: (definition.cardTypes ?? []).includes("ECHO"),
     attacksMade: 0,
     activatedThisTurn: false,
     damageMarked: 0,
-    deathtouchDamage: false,
+    lethalDamage: false,
     counters,
     temporaryPower: 0,
     temporaryToughness: 0,
@@ -269,7 +270,7 @@ export function createCardInstance(definition: CardDefinition, side: Side, insta
 
 export function drawCards(game: GameState, side: "player", amount: number): void {
   for (let i = 0; i < amount; i += 1) {
-    const card = game[side].library.shift();
+    const card = game[side].archive.shift();
     if (!card) break;
     card.zone = "hand";
     game[side].hand.push(card);

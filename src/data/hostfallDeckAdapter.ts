@@ -1,32 +1,8 @@
 import type { NewDeckCard, NewDeckList } from "./deckCatalog";
+import { HOSTFALL_DECK_SCHEMA_VERSION } from "../engine/hostfallVocabulary";
+import { isHostfallAuthoredZone, toRuntimeZone } from "../engine/hostfallZones";
 
-export const HOSTFALL_DECK_SCHEMA_VERSION = "1.0.0";
-
-const LEGACY_KIND_BY_HOSTFALL_KIND: Record<string, string[]> = {
-  ECHO: ["Creature"],
-  SOURCE: ["Land"],
-  SUPPORT: ["Artifact", "Enchantment"],
-};
-
-const LEGACY_TRAIT_BY_HOSTFALL_TRAIT: Record<string, string> = {
-  ALERT: "VIGILANCE",
-  DAUNTING: "MENACE",
-  DRAIN: "LIFESTEAL",
-  FURTIVE: "SKULK",
-  IMPETUS: "HASTE",
-  LETHAL: "DEATHTOUCH",
-  OVERFLOW: "TRAMPLE",
-  REFLEX: "FIRST_STRIKE",
-  SKYGUARD: "REACH",
-};
-
-const LEGACY_ZONE_BY_HOSTFALL_ZONE: Record<string, string> = {
-  ARCHIVE: "LIBRARY",
-  FIELD: "BATTLEFIELD",
-  HAND: "HAND",
-  MEMORY: "GRAVEYARD",
-  OBLIVION: "EXILE",
-};
+export { HOSTFALL_DECK_SCHEMA_VERSION } from "../engine/hostfallVocabulary";
 
 const LEGACY_EVENT_BY_HOSTFALL_EVENT: Record<string, string> = {
   BEGIN_BATTLE: "BEGIN_COMBAT",
@@ -62,8 +38,10 @@ export function isHostfallDeck(rawDeck: NewDeckList): boolean {
 }
 
 /**
- * Temporary L3/L4 bridge. Every active deck speaks Hostfall while the L4 engine still consumes
- * its previous CardDefinition vocabulary.
+ * Temporary L4 bridge. L4.1 keeps card-kind, modifier and Trait values in Hostfall vocabulary;
+ * this adapter still translates the domains scheduled for L4.3-L4.6 (Energy, states, events and
+ * Host rules). Authored zone casing is normalized without translating back to legacy names. The
+ * cardTypes/keywords container aliases remain until consumer cleanup.
  */
 export function adaptHostfallDeck(rawDeck: NewDeckList): NewDeckList {
   if (!isHostfallDeck(rawDeck)) return rawDeck;
@@ -90,17 +68,17 @@ export function adaptHostfallCard(card: NewDeckCard): NewDeckCard {
   const adapted = adaptNestedAuthoring(legacyCompatibleCard) as NewDeckCard;
   const amount = normalizeEnergyAmount(energyCost);
   const hostfallKinds = kinds ?? [];
-  const legacyCardTypes = topLevelLegacyCardTypes(hostfallKinds, modifiers ?? []);
 
   return {
     ...adapted,
     manaCost: amount > 0 ? `{${amount}}` : "",
     manaValue: amount,
     colors: [],
-    cardTypes: legacyCardTypes,
+    cardTypes: hostfallKinds,
+    modifiers: modifiers ?? [],
     isToken: Boolean(card.isToken || hostfallKinds.includes("TOKEN")),
     toughness: endurance,
-    keywords: (traits ?? []).map(toLegacyTrait),
+    keywords: traits ?? [],
   };
 }
 
@@ -110,47 +88,12 @@ function normalizeEnergyAmount(value: unknown): number {
   return Math.max(0, Number((value as Record<string, unknown>).amount ?? 0));
 }
 
-function topLevelLegacyCardTypes(kinds: string[], modifiers: string[]): string[] {
-  const cardTypes = kinds.flatMap((kind) => {
-    if (kind === "SPELL") return [modifiers.includes("QUICK") ? "Instant" : "Sorcery"];
-    if (kind === "SUPPORT") return ["Enchantment"];
-    return LEGACY_KIND_BY_HOSTFALL_KIND[kind] ?? [];
-  });
-  if (modifiers.includes("CHRONICLE")) cardTypes.unshift("Legendary");
-  return [...new Set(cardTypes)];
-}
-
-function nestedLegacyKinds(kinds: unknown): unknown {
-  if (!Array.isArray(kinds)) return kinds;
-  return [...new Set(kinds.flatMap((kind) => LEGACY_KIND_BY_HOSTFALL_KIND[String(kind)] ?? []))];
-}
-
-function toLegacyTrait(trait: string): string {
-  const poison = trait.match(/^POISON_(\d+)$/u);
-  if (poison) return `TOXIC_${poison[1]}`;
-  return LEGACY_TRAIT_BY_HOSTFALL_TRAIT[trait] ?? trait;
-}
-
-function nestedLegacyTraits(traits: unknown): unknown {
-  if (!Array.isArray(traits)) return traits;
-  return traits.map((trait) => toLegacyTrait(String(trait)));
-}
-
 function adaptNestedAuthoring(value: unknown): unknown {
   if (typeof value === "string") return LEGACY_VALUE_BY_HOSTFALL_VALUE[value] ?? value;
   if (Array.isArray(value)) {
     return value.flatMap((item) => {
       if (!item || typeof item !== "object") return [adaptNestedAuthoring(item)];
-      const record = item as Record<string, unknown>;
-      const kinds = Array.isArray(record.kinds) ? record.kinds.map(String) : [];
-      if (!kinds.includes("SUPPORT")) return [adaptNestedAuthoring(item)];
-      const { kinds: _kinds, ...rest } = record;
-      const otherTypes = nestedLegacyKinds(kinds.filter((kind) => kind !== "SUPPORT")) as string[];
-      const adaptedRest = adaptNestedAuthoring(rest) as Record<string, unknown>;
-      return ["Artifact", "Enchantment"].map((supportType) => ({
-        ...adaptedRest,
-        cardTypes: [...otherTypes, supportType],
-      }));
+      return [adaptNestedAuthoring(item)];
     });
   }
   if (!value || typeof value !== "object") return value;
@@ -159,15 +102,15 @@ function adaptNestedAuthoring(value: unknown): unknown {
   const adapted: Record<string, unknown> = {};
   for (const [key, nestedValue] of Object.entries(source)) {
     if (key === "kinds") {
-      adapted.cardTypes = nestedLegacyKinds(nestedValue);
+      adapted.cardTypes = adaptNestedAuthoring(nestedValue);
       continue;
     }
     if (key === "traits") {
-      adapted.keywords = nestedLegacyTraits(nestedValue);
+      adapted.keywords = adaptNestedAuthoring(nestedValue);
       continue;
     }
     if (key === "keyword" && typeof nestedValue === "string") {
-      adapted.keyword = toLegacyTrait(nestedValue);
+      adapted.keyword = nestedValue;
       continue;
     }
     if (key === "endurance") {
@@ -191,7 +134,7 @@ function adaptNestedAuthoring(value: unknown): unknown {
       continue;
     }
     if (key === "permanentKind" && typeof nestedValue === "string") {
-      adapted.permanentType = LEGACY_KIND_BY_HOSTFALL_KIND[nestedValue]?.[0] ?? nestedValue;
+      adapted.permanentType = nestedValue;
       continue;
     }
     if (key === "controller" && nestedValue === "HOST") {
@@ -231,7 +174,7 @@ function adaptNestedAuthoring(value: unknown): unknown {
       continue;
     }
     if (key === "zone" && typeof nestedValue === "string") {
-      adapted.zone = LEGACY_ZONE_BY_HOSTFALL_ZONE[nestedValue] ?? nestedValue;
+      adapted.zone = isHostfallAuthoredZone(nestedValue) ? toRuntimeZone(nestedValue) : nestedValue;
       continue;
     }
     if (key === "event" && typeof nestedValue === "string") {

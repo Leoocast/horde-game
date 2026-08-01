@@ -18,8 +18,8 @@ export function storedManaSpace(game: GameState): number {
 export function queueUnusedNormalMana(game: GameState): number {
   const availableSpace = storedManaSpace(game);
   if (availableSpace === 0) return 0;
-  const unusedLands = game.player.battlefield.filter(
-    (card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn,
+  const unusedLands = game.player.field.filter(
+    (card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn,
   ).length;
   const queued = Math.min(availableSpace, unusedLands);
   game.player.pendingStoredMana += queued;
@@ -147,11 +147,11 @@ function getAutomaticMana(_game: GameState, card: CardInstance): { color: Color 
 }
 
 function getAutomaticLandManaSources(game: GameState): Array<{ card: CardInstance; produced: { color: Color | string; amount: number } }> {
-  return game.player.battlefield
+  return game.player.field
     // Creatures and other nonland permanents are tactical resources. They must be
     // activated explicitly so casting a spell never removes a potential attacker
     // or blocker without the player's consent.
-    .filter((card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn)
+    .filter((card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn)
     .map((card) => ({ card, produced: getAutomaticMana(game, card) }))
     .filter((source): source is { card: CardInstance; produced: { color: Color | string; amount: number } } => Boolean(source.produced));
 }

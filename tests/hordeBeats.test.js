@@ -146,8 +146,8 @@ test("a throttled Chainwhirler volley consumes its event before the beat finishe
 
     const afterStall = useGameStore.getState();
     assert.equal(afterStall.game.eventQueue.some((event) => event.type === "BURN_VOLLEY_DAMAGE"), false);
-    assert.equal(afterStall.game.player.battlefield.some((card) => card.instanceId === fragile.instanceId), false);
-    assert.equal(afterStall.game.player.battlefield.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+    assert.equal(afterStall.game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
+    assert.equal(afterStall.game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
 
     // The board-settle handoff is scheduled relative to the resumed clock.
     timers.releaseExpiredAt(11_000);
@@ -424,15 +424,15 @@ test("three poison counters animate their consumption before the Horde card is m
     game.horde.poisonCounters = 3;
     const milledCard = addCard(
       game,
-      cardFromDeck("zombie_token", "horde", "library"),
+      cardFromDeck("zombie_token", "horde", "archive"),
       "horde",
-      "library",
+      "archive",
     );
     addCard(
       game,
-      cardFromDeck("zombie_token", "horde", "library"),
+      cardFromDeck("zombie_token", "horde", "archive"),
       "horde",
-      "library",
+      "archive",
     );
 
     useGameStore.setState({
@@ -445,8 +445,8 @@ test("three poison counters animate their consumption before the Horde card is m
     const beforeConsume = useGameStore.getState();
     assert.equal(beforeConsume.game.activeSide, "player");
     assert.equal(beforeConsume.game.horde.poisonCounters, 3);
-    assert.equal(beforeConsume.game.horde.library.some((card) => card.instanceId === milledCard.instanceId), true);
-    assert.equal(beforeConsume.game.horde.graveyard.length, 0);
+    assert.equal(beforeConsume.game.horde.archive.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(beforeConsume.game.horde.memory.length, 0);
     assert.equal(beforeConsume.hordeMillAnimationQueue.length, 0);
     assert.equal(beforeConsume.poisonConsumeAnimation?.amount, 3);
     assert.equal(beforeConsume.poisonConsumeAnimation?.millCount, 1);
@@ -456,7 +456,7 @@ test("three poison counters animate their consumption before the Horde card is m
     assert.equal(afterConsume.poisonConsumeAnimation, undefined);
     assert.equal(afterConsume.game.activeSide, "horde");
     assert.equal(afterConsume.game.horde.poisonCounters, 0);
-    assert.equal(afterConsume.game.horde.graveyard.some((card) => card.instanceId === milledCard.instanceId), true);
+    assert.equal(afterConsume.game.horde.memory.some((card) => card.instanceId === milledCard.instanceId), true);
     assert.equal(afterConsume.hordeMillAnimationQueue.length, 1);
     assert.equal(afterConsume.hordeMillAnimationQueue[0].card.instanceId, milledCard.instanceId);
   } finally {
@@ -500,8 +500,8 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     addForests(game, 1);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
     const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
-    addCard(game, customCard("blood_pact_store_draw_one", "player", { zone: "library" }), "player", "library");
-    addCard(game, customCard("blood_pact_store_draw_two", "player", { zone: "library" }), "player", "library");
+    addCard(game, customCard("blood_pact_store_draw_one", "player", { zone: "archive" }), "player", "archive");
+    addCard(game, customCard("blood_pact_store_draw_two", "player", { zone: "archive" }), "player", "archive");
     useGameStore.setState({
       game,
       lifeDamageAnimationId: undefined,
@@ -518,7 +518,7 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     assert.equal(result.lifePaymentAnimation, undefined);
     assert.equal(result.game.player.hand.length, 2);
     assert.equal(
-      result.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      result.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       0,
     );
     assert.equal(result.bloodPactAnimation?.card.instanceId, pact.instanceId);
@@ -550,7 +550,7 @@ test("Blood Pact presents its life payment, two-card draw, and queued Blood Page
     timers.releaseExpiredAt(460);
     const afterPageTrigger = useGameStore.getState();
     assert.equal(
-      afterPageTrigger.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      afterPageTrigger.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       2,
     );
     assert.equal(afterPageTrigger.buffAnimationCardIds.includes(page.instanceId), true);
@@ -628,11 +628,11 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
     assert.equal(afterCast.lifeDamageAnimationId, undefined);
     assert.equal(afterCast.lifePaymentAnimation?.amount, 2);
     assert.equal(
-      afterCast.game.player.battlefield.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
+      afterCast.game.player.field.find((card) => card.instanceId === ally.instanceId)?.temporaryPower,
       2,
     );
     assert.equal(
-      afterCast.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      afterCast.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       0,
     );
     useGameStore.getState().completeLifePaymentAnimation(afterCast.lifePaymentAnimation.id);
@@ -643,7 +643,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
 
     timers.releaseExpiredAt(460);
     assert.equal(
-      useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
+      useGameStore.getState().game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower,
       2,
     );
   } finally {
@@ -685,7 +685,7 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
   assert.equal(afterActivation.manaFlowAnimation?.phase, "travel");
   assert.equal(afterActivation.game.player.manaPool.colorless, 0);
   assert.equal(
-    afterActivation.game.player.battlefield.find((card) => card.instanceId === acolyte.instanceId)?.tapped,
+    afterActivation.game.player.field.find((card) => card.instanceId === acolyte.instanceId)?.tapped,
     true,
   );
 
@@ -761,12 +761,12 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
     useGameStore.getState().castCard(thirst.instanceId);
 
     const result = useGameStore.getState();
-    const firstBuffed = result.game.player.battlefield.find((card) => card.instanceId === firstAlly.instanceId);
-    const secondBuffed = result.game.player.battlefield.find((card) => card.instanceId === secondAlly.instanceId);
-    assert.equal(hasKeyword(result.game, firstBuffed, "LIFESTEAL"), true);
-    assert.equal(hasKeyword(result.game, secondBuffed, "LIFESTEAL"), true);
+    const firstBuffed = result.game.player.field.find((card) => card.instanceId === firstAlly.instanceId);
+    const secondBuffed = result.game.player.field.find((card) => card.instanceId === secondAlly.instanceId);
+    assert.equal(hasKeyword(result.game, firstBuffed, "DRAIN"), true);
+    assert.equal(hasKeyword(result.game, secondBuffed, "DRAIN"), true);
     assert.equal(
-      hasKeyword(result.game, result.game.horde.battlefield.find((card) => card.instanceId === enemy.instanceId), "LIFESTEAL"),
+      hasKeyword(result.game, result.game.horde.field.find((card) => card.instanceId === enemy.instanceId), "DRAIN"),
       false,
     );
     assert.deepEqual(result.buffAnimationCardIds, [firstAlly.instanceId, secondAlly.instanceId]);
@@ -826,7 +826,7 @@ test("Beast-Kin Ranger uses the shared growth animation when another creature en
 
     const result = useGameStore.getState();
     assert.equal(
-      result.game.player.battlefield.find((card) => card.instanceId === ranger.instanceId)?.temporaryPower,
+      result.game.player.field.find((card) => card.instanceId === ranger.instanceId)?.temporaryPower,
       1,
     );
     assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
@@ -901,7 +901,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
 
     useGameStore.getState().confirmSpellTargeting();
     const afterConfirm = useGameStore.getState();
-    const buffedFriendly = afterConfirm.game.player.battlefield.find((card) => card.instanceId === friendly.instanceId);
+    const buffedFriendly = afterConfirm.game.player.field.find((card) => card.instanceId === friendly.instanceId);
     assert.deepEqual(getPowerToughness(afterConfirm.game, buffedFriendly), { power: 3, toughness: 4 });
     assert.equal(buffedFriendly.damageMarked, 0);
     assert.deepEqual(afterConfirm.buffAnimationCardIds, [friendly.instanceId]);
@@ -916,7 +916,7 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     timers.releaseExpiredAt(1040);
     assert.equal(useGameStore.getState().spellFightAnimation?.friendlyId, friendly.instanceId);
     assert.equal(
-      useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
+      useGameStore.getState().game.player.field.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
       0,
     );
 
@@ -925,11 +925,11 @@ test("growth spells animate only after confirm, and Ruthless fights after the bu
     assert.equal(afterImpact.spellFightAnimation, undefined);
     assert.equal(afterImpact.pendingSpellHandId, undefined);
     assert.equal(
-      afterImpact.game.player.battlefield.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
+      afterImpact.game.player.field.find((card) => card.instanceId === friendly.instanceId)?.damageMarked,
       1,
     );
     assert.equal(
-      afterImpact.game.horde.battlefield.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
+      afterImpact.game.horde.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
       3,
     );
   } finally {
@@ -993,7 +993,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     assert.equal(duringCut.brokenWingsAnimation?.targetId, target.instanceId);
     assert.equal(duringCut.pendingSpellHandId, spell.instanceId);
     assert.deepEqual(duringCut.specialDeadCardIds, []);
-    assert.equal(duringCut.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(duringCut.game.horde.field.some((card) => card.instanceId === target.instanceId), true);
     assert.equal(duringCut.game.player.hand.some((card) => card.instanceId === spell.instanceId), true);
     assert.deepEqual(playedSfx, []);
 
@@ -1003,7 +1003,7 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     timers.releaseExpiredAt(420);
     const atImpact = useGameStore.getState();
     assert.deepEqual(atImpact.specialDeadCardIds, [target.instanceId]);
-    assert.equal(atImpact.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(atImpact.game.horde.field.some((card) => card.instanceId === target.instanceId), true);
     assert.deepEqual(playedSfx, ["attack"]);
 
     timers.releaseExpiredAt(680);
@@ -1011,9 +1011,9 @@ test("Broken Wings cuts the target before its normal destruction fade", async ()
     assert.equal(afterFade.brokenWingsAnimation, undefined);
     assert.equal(afterFade.pendingSpellHandId, undefined);
     assert.deepEqual(afterFade.specialDeadCardIds, []);
-    assert.equal(afterFade.game.horde.battlefield.some((card) => card.instanceId === target.instanceId), false);
-    assert.equal(afterFade.game.horde.graveyard.some((card) => card.instanceId === target.instanceId), true);
-    assert.equal(afterFade.game.player.graveyard.some((card) => card.instanceId === spell.instanceId), true);
+    assert.equal(afterFade.game.horde.field.some((card) => card.instanceId === target.instanceId), false);
+    assert.equal(afterFade.game.horde.memory.some((card) => card.instanceId === target.instanceId), true);
+    assert.equal(afterFade.game.player.memory.some((card) => card.instanceId === spell.instanceId), true);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
@@ -1066,7 +1066,7 @@ test("mana creatures tap first and fill stored mana when their flow reaches the 
     assert.equal(duringTravel.manaFlowAnimation?.phase, "travel");
     assert.equal(duringTravel.game.player.manaPool.colorless, 0);
     assert.equal(
-      duringTravel.game.player.battlefield.find((card) => card.instanceId === llanowar.instanceId)?.tapped,
+      duringTravel.game.player.field.find((card) => card.instanceId === llanowar.instanceId)?.tapped,
       true,
     );
 
@@ -1131,7 +1131,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     addForests(game, 3);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
     const rundvelt = addCard(game, cardFromDeck("rundvelt_hordemaster", "horde"));
-    addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "library"), "horde", "library");
+    addCard(game, cardFromDeck("goblin_token_1_1_red", "horde", "archive"), "horde", "archive");
     const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
@@ -1156,7 +1156,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
 
     const beforeDeath = useGameStore.getState();
     assert.equal(beforeDeath.game.player.life, 10);
-    assert.equal(beforeDeath.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(beforeDeath.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
     assert.deepEqual(beforeDeath.specialDeadCardIds, []);
     assert.equal(beforeDeath.pendingSpellHandId, banquet.instanceId);
     assert.equal(beforeDeath.finalBanquetAnimation?.phase, "siphon");
@@ -1167,13 +1167,13 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     const beforeRayImpact = useGameStore.getState();
     assert.equal(beforeRayImpact.finalBanquetAnimation?.phase, "strike");
     assert.equal(beforeRayImpact.game.player.life, 10);
-    assert.equal(beforeRayImpact.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(beforeRayImpact.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
 
     beforeRayImpact.beginFinalBanquetImpact(beforeRayImpact.finalBanquetAnimation.id);
     const atSmokeImpact = useGameStore.getState();
     assert.equal(atSmokeImpact.finalBanquetAnimation?.phase, "impact");
     assert.deepEqual(atSmokeImpact.specialDeadCardIds, [rundvelt.instanceId]);
-    assert.equal(atSmokeImpact.game.horde.battlefield.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(atSmokeImpact.game.horde.field.some((card) => card.instanceId === rundvelt.instanceId), true);
 
     atSmokeImpact.completeFinalBanquetAnimation(atSmokeImpact.finalBanquetAnimation.id);
     timers.releaseExpiredAt(0);
@@ -1182,8 +1182,8 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     assert.equal(afterBanquet.game.player.life, 9);
     assert.equal(afterBanquet.game.player.lifePaidThisTurn, 0);
     assert.equal(afterBanquet.game.player.lifeLostThisTurn, 1);
-    assert.equal(afterBanquet.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
-    assert.equal(afterBanquet.game.horde.graveyard.some((card) => card.instanceId === rundvelt.instanceId), true);
+    assert.equal(afterBanquet.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
+    assert.equal(afterBanquet.game.horde.memory.some((card) => card.instanceId === rundvelt.instanceId), true);
     assert.equal(afterBanquet.lifeDamageAnimationId, undefined);
     assert.equal(afterBanquet.finalBanquetAnimation, undefined);
     assert.equal(afterBanquet.pendingSpellHandId, undefined);
@@ -1194,9 +1194,9 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
 
     timers.releaseExpiredAt(1_080);
     const afterDeathTrigger = useGameStore.getState();
-    assert.equal(afterDeathTrigger.game.horde.battlefield.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
-    assert.equal(afterDeathTrigger.game.horde.library.length, 0);
-    assert.equal(afterDeathTrigger.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
+    assert.equal(afterDeathTrigger.game.horde.field.filter((card) => card.definitionId === "goblin_token_1_1_red").length, 1);
+    assert.equal(afterDeathTrigger.game.horde.archive.length, 0);
+    assert.equal(afterDeathTrigger.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
     // Battlefield is not mounted in this store test, so release the summoned token's entry hold
     // exactly where the real card animation would decrement it.
     useGameStore.setState({ summoningAnimationCount: 0 });
@@ -1206,7 +1206,7 @@ test("Final Banquet siphons first, waits for its smoke strike, then presents dea
     assert.equal(useGameStore.getState().playerAutoTriggerCount, 1);
 
     timers.releaseExpiredAt(2_100);
-    assert.equal(useGameStore.getState().game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
+    assert.equal(useGameStore.getState().game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 2);
 
     timers.releaseExpiredAt(3_240);
     assert.equal(useGameStore.getState().playerAutoTriggerCount, 0);
@@ -1285,7 +1285,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     const beforeExtraction = useGameStore.getState();
     assert.equal(beforeExtraction.game.player.life, 10);
     assert.equal(
-      beforeExtraction.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.damageMarked,
+      beforeExtraction.game.player.field.find((card) => card.instanceId === page.instanceId)?.damageMarked,
       0,
     );
     assert.equal(beforeExtraction.game.player.hand.some((card) => card.instanceId === drain.instanceId), true);
@@ -1300,7 +1300,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     assert.equal(afterImpact.game.player.life, 12);
     assert.equal(typeof afterImpact.lifeBuffAnimationId, "number");
     assert.equal(
-      afterImpact.game.player.battlefield.find((card) => card.instanceId === page.instanceId)?.damageMarked,
+      afterImpact.game.player.field.find((card) => card.instanceId === page.instanceId)?.damageMarked,
       3,
     );
     assert.deepEqual(afterImpact.specialDeadCardIds, [page.instanceId]);
@@ -1310,8 +1310,8 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     useGameStore.getState().completeDrainEssenceAnimation(animationId);
 
     const afterDeath = useGameStore.getState();
-    assert.equal(afterDeath.game.player.battlefield.some((card) => card.instanceId === page.instanceId), false);
-    assert.equal(afterDeath.game.player.graveyard.some((card) => card.instanceId === page.instanceId), true);
+    assert.equal(afterDeath.game.player.field.some((card) => card.instanceId === page.instanceId), false);
+    assert.equal(afterDeath.game.player.memory.some((card) => card.instanceId === page.instanceId), true);
     assert.deepEqual(afterDeath.specialDeadCardIds, []);
     assert.equal(afterDeath.drainEssenceAnimation, undefined);
     assert.equal(afterDeath.pendingSpellHandId, undefined);
@@ -1395,7 +1395,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
     const afterDrain = useGameStore.getState();
     assert.equal(afterDrain.game.player.life, 12);
     assert.equal(
-      afterDrain.game.player.battlefield.find((card) => card.instanceId === guardian.instanceId)?.damageMarked,
+      afterDrain.game.player.field.find((card) => card.instanceId === guardian.instanceId)?.damageMarked,
       3,
     );
     assert.equal(afterDrain.playerAutoTriggerCount, 1);
@@ -1409,7 +1409,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
     const afterGuardian = useGameStore.getState();
     assert.equal(afterGuardian.game.player.life, 14);
     assert.equal(typeof afterGuardian.lifeBuffAnimationId, "number");
-    assert.equal(afterGuardian.game.player.battlefield.some((card) => card.instanceId === guardian.instanceId), true);
+    assert.equal(afterGuardian.game.player.field.some((card) => card.instanceId === guardian.instanceId), true);
   } finally {
     resetPlayerTriggerSequence();
     resetHordeSequence();

@@ -281,7 +281,7 @@ function graveyardDisplayCard(card: CardInstance): CardInstance {
     summoningSickness: false,
     activatedThisTurn: false,
     damageMarked: 0,
-    deathtouchDamage: false,
+    lethalDamage: false,
     counters: {},
     temporaryPower: 0,
     temporaryToughness: 0,

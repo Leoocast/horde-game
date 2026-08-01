@@ -85,7 +85,7 @@ test("player combat persists confirmed attack counts on each creature", () => {
   for (let expected = 1; expected <= 3; expected += 1) {
     game.combat.playerAttackers = [countess.instanceId];
     game = resolvePlayerCombat(game);
-    const current = game.player.battlefield.find((card) => card.instanceId === countess.instanceId);
+    const current = game.player.field.find((card) => card.instanceId === countess.instanceId);
     assert.equal(current?.attacksMade, expected);
   }
 });

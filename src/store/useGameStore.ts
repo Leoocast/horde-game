@@ -17,7 +17,7 @@ import {
   pendingHordeCombatDamageVolley,
   refreshHordeAttackEvent,
   resolvePendingHordeCombatDamageVolleys,
-  resolvePlayerAttackerLifesteal,
+  resolvePlayerAttackerDrain,
   resolvePlayerAttackerPoison,
   resolvePlayerCombat,
   sortPlayerAttackersLeftToRight,
@@ -764,7 +764,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     window.setTimeout(() => {
       set((state) => {
         const resolved = structuredClone(state.game) as GameState;
-        const target = resolved.player.battlefield.find((card) => card.instanceId === targetId);
+        const target = resolved.player.field.find((card) => card.instanceId === targetId);
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
@@ -947,7 +947,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return {};
       }
       const card = state.game.player.hand.find((item) => item.instanceId === id);
-      if (!card?.cardTypes.includes("Land")) return {};
+      if (!card?.cardTypes.includes("SOURCE")) return {};
       if (!canPlayerRecycleEnergy(state.game)) {
         showActionToast(
           state.game.setupTurnsRemaining > 0
@@ -1238,7 +1238,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let startedManaFlowAnimationId: string | undefined;
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
-      const source = state.game.player.battlefield.find((card) => card.instanceId === id);
+      const source = state.game.player.field.find((card) => card.instanceId === id);
       const next = activateEngineAbility(state.game, id, abilityId, {
         ...options,
         deferReactiveTriggers: true,
@@ -1330,11 +1330,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (game.activeSide !== "player" || game.phase !== "combat") return {};
       const next = structuredClone(game) as GameState;
       const selected = new Set(next.combat.playerAttackers);
-      for (const card of next.player.battlefield) {
-        if (!card.cardTypes.includes("Creature") || selected.has(card.instanceId)) continue;
+      for (const card of next.player.field) {
+        if (!card.cardTypes.includes("ECHO") || selected.has(card.instanceId)) continue;
         if (!canAttack(next, card)) continue;
         selected.add(card.instanceId);
-        if (!hasKeyword(next, card, "VIGILANCE")) card.tapped = true;
+        if (!hasKeyword(next, card, "ALERT")) card.tapped = true;
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
@@ -1345,8 +1345,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       const attackers = new Set(next.combat.playerAttackers);
-      for (const card of next.player.battlefield) {
-        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "VIGILANCE")) card.tapped = false;
+      for (const card of next.player.field) {
+        if (attackers.has(card.instanceId) && !hasKeyword(next, card, "ALERT")) card.tapped = false;
       }
       next.combat.playerAttackers = [];
       next.log.unshift("Player cancels attackers.");
@@ -1382,7 +1382,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const attackVoiceCues = new Map(
       resolveCardVoiceCueBatch(
         attackers.flatMap((attackerId) => {
-          const card = game.player.battlefield.find((candidate) => candidate.instanceId === attackerId);
+          const card = game.player.field.find((candidate) => candidate.instanceId === attackerId);
           return card
             ? [{
                 type: "ATTACKS" as const,
@@ -1405,7 +1405,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt);
       window.setTimeout(() => {
         useGameStore.setState((state) => {
-          const afterLifesteal = resolvePlayerAttackerLifesteal(state.game, attackerId);
+          const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
           const lifeGain = afterLifesteal.player.life - state.game.player.life;
           const next = resolvePlayerAttackerPoison(afterLifesteal, attackerId);
           const poisonGain = next.horde.poisonCounters - state.game.horde.poisonCounters;
@@ -1454,7 +1454,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     window.setTimeout(() => {
       const latest = get().game;
-      const resolved = resolvePlayerCombat(latest, { skipLifesteal: true, skipPoison: true });
+      const resolved = resolvePlayerCombat(latest, { skipDrain: true, skipPoison: true });
       const next = advancePhase(resolved, "end");
       set((state) => ({
         game: next,
@@ -1485,9 +1485,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
     }
-    const previousHordeBattlefieldIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
+    const previousHordeBattlefieldIds = new Set(game.horde.field.map((card) => card.instanceId));
     const main = runHordeMainPhase(game, { deferEnterBattlefieldTriggers: true });
-    const enteredCards = main.horde.battlefield.filter((card) => !previousHordeBattlefieldIds.has(card.instanceId));
+    const enteredCards = main.horde.field.filter((card) => !previousHordeBattlefieldIds.has(card.instanceId));
     const triggerCards = enteredCards.filter(hasEnterBattlefieldTrigger);
     if (main.horde.pendingCard) {
       const pendingCard = main.horde.pendingCard;
@@ -1503,7 +1503,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       scheduleHordeArrivalEffects(triggerCards, () => runSmallpoxSequence(pendingCard));
       return;
     }
-    if (main.horde.battlefield.length > game.horde.battlefield.length) useAudioStore.getState().playSfx("draw");
+    if (main.horde.field.length > game.horde.field.length) useAudioStore.getState().playSfx("draw");
     set({
       game: main,
       selectedHordeCreatureId: undefined,
@@ -1526,13 +1526,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolveHordeCardFromTop: () => {
     const state = get();
     const { game } = state;
-    const previousIds = new Set(game.horde.battlefield.map((card) => card.instanceId));
+    const previousIds = new Set(game.horde.field.map((card) => card.instanceId));
     const next = revealHordeCardFromTop(game, { deferEnterBattlefieldTriggers: true });
     if (next.lastActionResult?.ok === false) {
       set({ game: next });
       return;
     }
-    const entered = next.horde.battlefield.filter((card) => !previousIds.has(card.instanceId));
+    const entered = next.horde.field.filter((card) => !previousIds.has(card.instanceId));
     const triggerCards = entered.filter(hasEnterBattlefieldTrigger);
     const pendingCard = next.horde.pendingCard;
 
@@ -1695,7 +1695,7 @@ function runHordeCombatEventSequence(events: HordeAttackEvent[], index: number, 
   }
   useAudioStore.getState().playSfx("attack");
   const blocker = event.blockerId
-    ? currentGame.player.battlefield.find((card) => card.instanceId === event.blockerId)
+    ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
   if (event.blockerDies) useAudioStore.getState().playSfx("defend");
@@ -1772,7 +1772,7 @@ function runPendingHordeCombatVolleyOrFinish(combatSequenceId: number): void {
 
   const sequenceId = hordeSequenceEpoch();
   const source = volley.sourceId
-    ? state.game.horde.battlefield.find((card) => card.instanceId === volley.sourceId)
+    ? state.game.horde.field.find((card) => card.instanceId === volley.sourceId)
     : undefined;
   const projectileCount = Math.max(1, Math.min(COMBAT_VOLLEY_MAX_PROJECTILES, volley.attackerCount));
   const volleyDelay = (projectileCount - 1) * COMBAT_VOLLEY_PROJECTILE_GAP_MS;
@@ -2084,14 +2084,14 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
   let previousMill = 0;
 
   attackers.forEach((attackerId, attackerIndex) => {
-    const attacker = game.player.battlefield.find((card) => card.instanceId === attackerId);
+    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
     if (!attacker) return;
     totalDamage += getPowerToughness(game, attacker).power;
     const nextMill = Math.floor(totalDamage / game.hordeRules.damagePerMill);
     const newMill = nextMill - previousMill;
     previousMill = nextMill;
     for (let index = 0; index < newMill; index += 1) {
-      const card = game.horde.library[previews.length];
+      const card = game.horde.archive[previews.length];
       if (card) previews.push({ attackerIndex, cardIndexInHit: index, card });
     }
   });
@@ -2100,11 +2100,11 @@ function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Arr
 }
 
 function findMarkedCreatureIds(game: GameState): string[] {
-  return [...game.player.battlefield, ...game.horde.battlefield]
+  return [...game.player.field, ...game.horde.field]
     .filter((card) => {
-      if (!card.cardTypes.includes("Creature")) return false;
+      if (!card.cardTypes.includes("ECHO")) return false;
       const { toughness } = getPowerToughness(game, card);
-      return card.damageMarked >= toughness || card.deathtouchDamage;
+      return card.damageMarked >= toughness || card.lethalDamage;
     })
     .map((card) => card.instanceId);
 }
@@ -2129,7 +2129,7 @@ function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation:
 
 function findCardCastReactionSources(game: GameState, card: CardInstance): CardInstance[] {
   const previewEvent: EventItem = { id: "preview-card-cast", type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } };
-  return game.horde.battlefield.filter((source) =>
+  return game.horde.field.filter((source) =>
     source.effects.some(
       (effect) =>
         effect.type === "TRIGGERED_ABILITY" &&
@@ -2213,7 +2213,7 @@ function scheduleCardCastReaction(sources: CardInstance[], manualTriggeredCard: 
       const triggeredBuffCardIds = findTemporaryBuffedCardIds(previous, next);
       if (triggeredBuffCardIds.length > 0) useAudioStore.getState().playSfx("buff");
       const buffBeat = triggeredBuffCardIds.length > 0 ? startBuffBeat(triggeredBuffCardIds) : undefined;
-      const newHordeCreatures = next.horde.battlefield.filter((card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId));
+      const newHordeCreatures = next.horde.field.filter((card) => !previous.horde.field.some((old) => old.instanceId === card.instanceId));
       if (newHordeCreatures.length > 0) useAudioStore.getState().playSfx(monsterSfx(newHordeCreatures[0]));
       notifyDiscardEffects(previous, next);
       return {
@@ -2237,8 +2237,8 @@ function buildCastCardPatch(
   const { game } = state;
   const card = game.player.hand.find((item) => item.instanceId === id);
   const usesBloodPactAnimation = Boolean(card && effectsUseAnimation(card.effects, "BLOOD_PACT"));
-  const sfx = card && card.cardTypes.includes("Creature") ? monsterSfx(card) : undefined;
-  const untappedLandIds = new Set(game.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
+  const sfx = card && card.cardTypes.includes("ECHO") ? monsterSfx(card) : undefined;
+  const untappedLandIds = new Set(game.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.tapped).map((item) => item.instanceId));
   const reactionSources = card ? findCardCastReactionSources(game, card) : [];
   const next = castCard(game, id, {
     ...options,
@@ -2275,11 +2275,11 @@ function buildCastCardPatch(
     ? startBuffBeat(triggeredBuffCardIds, triggeredBuffVariant)
     : undefined;
   const autoPaidLandIds = castSucceeded
-    ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+    ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
   const manualTriggeredCard = hasManualEnterTargetTrigger(card) && castSucceeded ? card : undefined;
-  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("Instant") && !card.cardTypes.includes("Sorcery"));
+  const startsSummoningAnimation = Boolean(castSucceeded && card && !card.cardTypes.includes("SPELL") && !card.cardTypes.includes("SPELL"));
   if (startsSummoningAnimation) scheduleSummoningAnimationSafetyClear();
   const continueAfterPlayerTriggers = () => {
     if (reactionSources.length > 0) {
@@ -2353,7 +2353,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       deferFightResolution?: boolean;
     } = {},
   ) => {
-    const untappedLandIds = new Set(latest.player.battlefield.filter((item) => item.cardTypes.includes("Land") && !item.tapped).map((item) => item.instanceId));
+    const untappedLandIds = new Set(latest.player.field.filter((item) => item.cardTypes.includes("SOURCE") && !item.tapped).map((item) => item.instanceId));
     const reactionSources = findCardCastReactionSources(latest, card);
     const next = castCard(latest, handId, {
       targets,
@@ -2386,7 +2386,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         )
       : undefined;
     const autoPaidLandIds = castSucceeded
-      ? next.player.battlefield.filter((item) => item.cardTypes.includes("Land") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
+      ? next.player.field.filter((item) => item.cardTypes.includes("SOURCE") && item.tapped && untappedLandIds.has(item.instanceId)).map((item) => item.instanceId)
       : [];
     const autoPaidLandAnimation = flashAutoPaidLands(autoPaidLandIds);
     const lifeBuffBeat = gainedLife ? startLifeBuffBeat() : undefined;
@@ -2467,7 +2467,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   }
   if (usesFinalBanquetAnimation) {
     const targetId = String(targets.targetCreature ?? "");
-    const target = game.horde.battlefield.find((candidate) => candidate.instanceId === targetId);
+    const target = game.horde.field.find((candidate) => candidate.instanceId === targetId);
     if (!target) return {};
     const sourceRect = typeof document === "undefined"
       ? undefined
@@ -2620,7 +2620,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         if (impactState.pendingSpellHandId !== handId) return;
         const next = structuredClone(impactState.game) as GameState;
         const source =
-          next.player.graveyard.find((candidate) => candidate.instanceId === handId) ??
+          next.player.memory.find((candidate) => candidate.instanceId === handId) ??
           card;
         const fightEffects = card.effects.filter((effect) => hasEffectPresentation([effect], "fight"));
         resolveEffects(next, fightEffects, {
@@ -2663,8 +2663,8 @@ function playBattlefieldEntryVoiceInteraction(
   nextGame: GameState,
   cardId: string,
 ): void {
-  if (previousGame.player.battlefield.some((card) => card.instanceId === cardId)) return;
-  const enteredCard = nextGame.player.battlefield.find((card) => card.instanceId === cardId);
+  if (previousGame.player.field.some((card) => card.instanceId === cardId)) return;
+  const enteredCard = nextGame.player.field.find((card) => card.instanceId === cardId);
   if (!enteredCard) return;
   playCardVoiceInteraction({
     type: "ENTERS_BATTLEFIELD",

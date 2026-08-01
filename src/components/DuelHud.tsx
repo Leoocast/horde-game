@@ -37,15 +37,15 @@ export function DuelHud({ game }: { game: GameState }) {
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hordeTakingDamage, setHordeTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
-  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.battlefield].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
+  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
   const normalMillQueueLength = hordeMillQueue.filter((item) => !item.preview).length;
-  const hordeLibraryIds = new Set(game.horde.library.map((card) => card.instanceId));
+  const hordeLibraryIds = new Set(game.horde.archive.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hordeMillPreviewCards.filter((card) => hordeLibraryIds.has(card.instanceId)).length;
   const pendingMilledAfterActive = Math.max(0, normalMillQueueLength - 1);
-  const visualHordeLibraryCount = game.horde.library.length + pendingMilledAfterActive - previewMillPendingInLibrary;
-  const visualHordeGraveyardCount = Math.max(0, game.horde.graveyard.length - pendingMilledAfterActive + previewMillPendingInLibrary);
+  const visualHordeLibraryCount = game.horde.archive.length + pendingMilledAfterActive - previewMillPendingInLibrary;
+  const visualHordeGraveyardCount = Math.max(0, game.horde.memory.length - pendingMilledAfterActive + previewMillPendingInLibrary);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
-    const attacker = game.player.battlefield.find((card) => card.instanceId === id);
+    const attacker = game.player.field.find((card) => card.instanceId === id);
     return attacker ? total + getPowerToughness(game, attacker).power : total;
   }, 0);
   const pendingMill = Math.floor(pendingDamage / 3);
@@ -337,7 +337,7 @@ export function DuelHud({ game }: { game: GameState }) {
           </AnimatePresence>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.hordeGraveyard")} cards={game.horde.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.hordeGraveyard")} cards={game.horde.memory} onClose={() => setGraveyardOpen(false)} />}
     </div>
   );
 }
@@ -514,15 +514,15 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               data-audio-click="valid"
               className="horde-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
               onClick={() => setGraveyardOpen(true)}
-              aria-label={t("game.viewPlayerGraveyard", { count: game.player.graveyard.length })}
+              aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
             >
               <Archive size={15} strokeWidth={2.4} />
-              <span className="horde-deck-graveyard-count">{game.player.graveyard.length}</span>
+              <span className="horde-deck-graveyard-count">{game.player.memory.length}</span>
             </button>
           </GameTooltip>
         </div>
       </div>
-      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.graveyard} onClose={() => setGraveyardOpen(false)} />}
+      {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.memory} onClose={() => setGraveyardOpen(false)} />}
     </>
   );
 }

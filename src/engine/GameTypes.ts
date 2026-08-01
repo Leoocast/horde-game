@@ -1,22 +1,17 @@
+import type { CardKind, CardModifier, Trait } from "./hostfallVocabulary";
+import type { ZoneName } from "./hostfallZones";
+
+export type { ZoneName } from "./hostfallZones";
+
 export type Side = "player" | "horde";
 export type DifficultyMode = "easy" | "normal" | "hard";
 // `chaos` is retained only for legacy saves/tests. The experiment is deprecated and no longer
 // exposed by the main menu; do not extend it while it remains parked.
 export type GameMode = "standard" | "chaos";
-export type ZoneName = "library" | "hand" | "battlefield" | "graveyard" | "exile";
 export type Phase = "untap" | "draw" | "main" | "combat" | "end" | "horde";
 export type Color = "G" | "R" | "U" | "W" | "B" | "C";
-export type Keyword =
-  | "FLYING"
-  | "REACH"
-  | "VIGILANCE"
-  | "MENACE"
-  | "DEATHTOUCH"
-  | "TRAMPLE"
-  | "HEXPROOF"
-  | "HASTE"
-  | "SKULK"
-  | string;
+/** @deprecated Field names still say keyword until L4.6; values are Hostfall Traits from L4.1. */
+export type Keyword = Trait;
 
 export type ManaPool = {
   green: number;
@@ -65,9 +60,9 @@ export type TargetRequirement = {
 };
 
 export type CardFilter = {
-  cardTypes?: string[];
+  cardTypes?: CardKind[];
   subtypes?: string[];
-  keywords?: Keyword[];
+  keywords?: Trait[];
   excludeSelf?: boolean;
   isToken?: boolean;
 };
@@ -85,11 +80,12 @@ export type CardDefinition = {
   manaCost?: string;
   manaValue?: number;
   colors?: Color[];
-  cardTypes?: string[];
+  cardTypes?: CardKind[];
+  modifiers?: CardModifier[];
   subtypes?: string[];
   power?: number | null;
   toughness?: number | null;
-  keywords?: Keyword[];
+  keywords?: Trait[];
   /** Player-facing text shown when a Horde trigger of this card resolves. Kept as card data so
    * new Horde cards don't need a branch in useGameStore's trigger-message switch. */
   triggerMessage?: string;
@@ -165,7 +161,8 @@ export type CardInstance = {
   manaCost: string;
   manaValue: number;
   colors: Color[];
-  cardTypes: string[];
+  cardTypes: CardKind[];
+  modifiers: CardModifier[];
   subtypes: string[];
   basePower: number;
   baseToughness: number;
@@ -186,7 +183,7 @@ export type CardInstance = {
   attacksMade?: number;
   activatedThisTurn: boolean;
   damageMarked: number;
-  deathtouchDamage: boolean;
+  lethalDamage: boolean;
   counters: Record<string, number>;
   temporaryPower: number;
   temporaryToughness: number;
@@ -204,11 +201,11 @@ export type CardInstance = {
 
 export type PlayerState = {
   life: number;
-  library: CardInstance[];
+  archive: CardInstance[];
   hand: CardInstance[];
-  battlefield: CardInstance[];
-  graveyard: CardInstance[];
-  exile: CardInstance[];
+  field: CardInstance[];
+  memory: CardInstance[];
+  oblivion: CardInstance[];
   manaPool: ManaPool;
   pendingStoredMana: number;
   energyActionUsedThisTurn: boolean;
@@ -219,10 +216,10 @@ export type PlayerState = {
 };
 
 export type HordeState = {
-  library: CardInstance[];
-  battlefield: CardInstance[];
-  graveyard: CardInstance[];
-  exile: CardInstance[];
+  archive: CardInstance[];
+  field: CardInstance[];
+  memory: CardInstance[];
+  oblivion: CardInstance[];
   poisonCounters: number;
   /** Bridge for cards (e.g. Smallpox) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
@@ -257,7 +254,7 @@ export type EventItem = {
 export type BattlefieldEntryRecord = {
   instanceId: string;
   controller: Side;
-  cardTypes: string[];
+  cardTypes: CardKind[];
   subtypes: string[];
 };
 

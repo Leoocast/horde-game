@@ -35,11 +35,10 @@ function stripKeywordOnlyLines(text: string, keywords: string): string {
       .filter(Boolean),
   );
   const baseKeywords = new Set([
-    "FLYING", "REACH", "VIGILANCE", "MENACE", "DEATHTOUCH", "TRAMPLE", "HASTE", "HEXPROOF", "SKULK", "LIFESTEAL",
-    "VOLAR", "ALCANCE", "VIGILANCIA", "AMENAZA", "TOQUE MORTAL", "ARROLLAR", "PRISA", "ANTIMALEFICIO", "ESCURRIDIZO", "ROBO DE VIDA",
+    "FLYING", "SKYGUARD", "ALERT", "DAUNTING", "LETHAL", "OVERFLOW", "IMPETUS", "HEXPROOF", "FURTIVE", "DRAIN",
     "SKYGUARD", "ALERT", "DAUNTING", "LETHAL", "REFLEX", "FURTIVE", "DRAIN", "OVERFLOW", "IMPETUS", "POISON 1",
     "GUARDIA AÉREA", "ALERTA", "IMPONENTE", "LETAL", "REFLEJOS", "FURTIVO", "DRENAR", "DESBORDE", "ÍMPETU", "VENENO 1",
-    "TOXICO 1", "TÓXICO 1",
+    "VOLAR", "ANTIMALEFICIO",
   ]);
   const blocks = text
     .split(/\n{2,}/)
@@ -62,9 +61,8 @@ function isKeywordOnlyLine(normalizedLine: string, keywordSet: Set<string>, base
   const knownKeywords = new Set([...baseKeywords, ...keywordSet]);
   if (knownKeywords.has(normalizedLine)) return true;
 
-  // Oracle text combines multiple evergreen keywords on one line, for example
-  // "Reach, trample". They already have their own badges, so the whole line is
-  // redundant when every comma/semicolon-separated item is a known keyword.
+  // Imported rule text can combine multiple Traits on one line. They already have their own
+  // badges, so the whole line is redundant when every item is a known Trait.
   const parts = normalizedLine
     .split(/[,;]/)
     .map((part) => part.trim())

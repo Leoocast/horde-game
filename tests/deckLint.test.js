@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lintDecks } from "../src/data/deckLint";
+import { lintDecks, lintHostfallDeckSchema } from "../src/data/deckLint";
 import { DECK_REGISTRY } from "../src/data/decks";
 import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "../src/data/hostfallDeckAdapter";
 
@@ -45,7 +45,47 @@ test("pending abilities are reported as WIP, not as errors", () => {
   }
 });
 
-test("Mono Green is authored in Hostfall schema and adapts to the current engine", () => {
+test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {
+  const invalid = {
+    schemaVersion: "1.0.1",
+    id: "invalid",
+    name: "Invalid",
+    side: "PLAYER",
+    cards: [],
+  };
+  assert.match(lintHostfallDeckSchema(invalid)[0].message, /Unsupported schemaVersion/u);
+
+  const invalidVocabulary = {
+    schemaVersion: HOSTFALL_DECK_SCHEMA_VERSION,
+    id: "invalid-vocabulary",
+    name: "Invalid vocabulary",
+    side: "PLAYER",
+    cards: [{
+      id: "typos",
+      name: "Typos",
+      energyCost: { amount: 1 },
+      kinds: ["ECH0"],
+      modifiers: ["QUCIK"],
+      traits: ["ALRET", "POISON_ONE"],
+      abilities: [{
+        id: "bad-grant",
+        kind: "STATIC",
+        zone: "BATTLEGROUND",
+        effects: [{ type: "STATIC_GRANT_KEYWORD", keyword: "LETHL" }],
+      }],
+    }],
+  };
+  const messages = lintHostfallDeckSchema(invalidVocabulary).map((issue) => issue.message).join("\n");
+  assert.match(messages, /Unknown side "PLAYER"/u);
+  assert.match(messages, /Unknown Hostfall kind "ECH0"/u);
+  assert.match(messages, /Unknown Hostfall modifier "QUCIK"/u);
+  assert.match(messages, /Unknown Hostfall trait "ALRET"/u);
+  assert.match(messages, /Unknown Hostfall trait "POISON_ONE"/u);
+  assert.match(messages, /Unknown Hostfall trait "LETHL"/u);
+  assert.match(messages, /Unknown Hostfall zone "BATTLEGROUND"/u);
+});
+
+test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "mono_green_ramp");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -59,11 +99,13 @@ test("Mono Green is authored in Hostfall schema and adapts to the current engine
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.deepEqual(byId.ichorspit_basilisk.keywords, ["DEATHTOUCH", "TOXIC_1"]);
-  assert.deepEqual(byId.colossadactyl.keywords, ["REACH", "TRAMPLE"]);
-  assert.deepEqual(byId.cosmic_hunger.cardTypes, ["Instant"]);
-  assert.deepEqual(byId.ruthless_predation.cardTypes, ["Sorcery"]);
-  assert.deepEqual(byId.forest.cardTypes, ["Land"]);
+  assert.deepEqual(byId.ichorspit_basilisk.keywords, ["LETHAL", "POISON_1"]);
+  assert.deepEqual(byId.colossadactyl.keywords, ["SKYGUARD", "OVERFLOW"]);
+  assert.deepEqual(byId.cosmic_hunger.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.cosmic_hunger.modifiers, ["QUICK"]);
+  assert.deepEqual(byId.ruthless_predation.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.ruthless_predation.modifiers, []);
+  assert.deepEqual(byId.forest.cardTypes, ["SOURCE"]);
   assert.equal(byId.colossadactyl.manaCost, "{4}");
   assert.equal(byId.colossadactyl.manaValue, 4);
   assert.equal(byId.colossadactyl.toughness, 5);
@@ -74,13 +116,12 @@ test("Mono Green is authored in Hostfall schema and adapts to the current engine
 
   const brokenWingsFilter = byId.broken_wings.abilities[0].targets[0].filters;
   assert.deepEqual(brokenWingsFilter.anyOf, [
-    { cardTypes: ["Artifact"] },
-    { cardTypes: ["Enchantment"] },
-    { cardTypes: ["Creature"], keywords: ["FLYING"] },
+    { cardTypes: ["SUPPORT"] },
+    { cardTypes: ["ECHO"], keywords: ["FLYING"] },
   ]);
 });
 
-test("Vampires are authored in Hostfall schema and adapt to the current engine", () => {
+test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "vampire_chronicle_preview");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -99,13 +140,15 @@ test("Vampires are authored in Hostfall schema and adapt to the current engine",
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.deepEqual(byId.eternal_feast_countess.cardTypes, ["Legendary", "Creature"]);
-  assert.deepEqual(byId.eternal_feast_countess.keywords, ["FLYING", "VIGILANCE"]);
-  assert.equal(byId.eternal_feast_countess.abilities[0].effects[0].keyword, "LIFESTEAL");
+  assert.deepEqual(byId.eternal_feast_countess.cardTypes, ["ECHO"]);
+  assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(byId.eternal_feast_countess.keywords, ["FLYING", "ALERT"]);
+  assert.equal(byId.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(byId.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_UNTAPPED");
-  assert.deepEqual(byId.crimson_impulse.cardTypes, ["Instant"]);
-  assert.deepEqual(byId.blood_pact.cardTypes, ["Sorcery"]);
-  assert.deepEqual(byId.crimson_energy.cardTypes, ["Land"]);
+  assert.deepEqual(byId.crimson_impulse.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.crimson_impulse.modifiers, ["QUICK"]);
+  assert.deepEqual(byId.blood_pact.cardTypes, ["SPELL"]);
+  assert.deepEqual(byId.crimson_energy.cardTypes, ["SOURCE"]);
   assert.equal(byId.court_duelist.requiresNoSummoningSickness, undefined);
   assert.equal(byId.court_duelist.abilities[0].requiresNoSummoningSickness, true);
   assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { tap: true, life: 5 });
@@ -116,7 +159,7 @@ test("Vampires are authored in Hostfall schema and adapt to the current engine",
   });
 });
 
-test("Zombies are authored in Hostfall schema and adapt to the current engine", () => {
+test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "horde_zombies");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -149,21 +192,21 @@ test("Zombies are authored in Hostfall schema and adapt to the current engine", 
   assert.equal(adapted.rulesProfile.poisonPerMill, 3);
   assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
   assert.equal(adapted.rulesProfile.surgeBonus.toughness, 0);
-  assert.deepEqual(byId.zombie_token.cardTypes, ["Creature"]);
+  assert.deepEqual(byId.zombie_token.cardTypes, ["ECHO", "TOKEN"]);
   assert.equal(byId.zombie_token.isToken, true);
   assert.equal(byId.zombie_token.manaValue, 2);
-  assert.deepEqual(byId.graf_harvest.cardTypes, ["Enchantment"]);
+  assert.deepEqual(byId.graf_harvest.cardTypes, ["SUPPORT"]);
   assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HORDE");
-  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["Creature"]);
-  assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "MENACE");
+  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.cardTypes, ["ECHO"]);
+  assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_UPKEEP");
-  assert.deepEqual(byId.rancid_rats.keywords, ["DEATHTOUCH", "SKULK"]);
+  assert.deepEqual(byId.rancid_rats.keywords, ["LETHAL", "FURTIVE"]);
   assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "MILL_SELF");
   assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "CREATURE_DIED");
   assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_CREATURE_YOU_CONTROL_DIED");
 });
 
-test("Goblins are authored in Hostfall schema and adapt to the current engine", () => {
+test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "goblin_assault_horde");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -194,16 +237,17 @@ test("Goblins are authored in Hostfall schema and adapt to the current engine", 
   assert.equal(adapted.rulesProfile.damagePerMill, 3);
   assert.equal(adapted.rulesProfile.poisonPerMill, 3);
   assert.equal(adapted.rulesProfile.hordeCreaturesHaveHaste, true);
-  assert.deepEqual(byId.goblin_token_1_1_red.cardTypes, ["Creature"]);
+  assert.deepEqual(byId.goblin_token_1_1_red.cardTypes, ["ECHO", "TOKEN"]);
   assert.equal(byId.goblin_token_1_1_red.isToken, true);
-  assert.deepEqual(byId.goblin_war_drums.cardTypes, ["Enchantment"]);
-  assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "MENACE");
+  assert.deepEqual(byId.goblin_war_drums.cardTypes, ["SUPPORT"]);
+  assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_COMBAT");
   assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HORDE_ROUND");
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_CREATURE");
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_PERMANENTS_ENTERED_THIS_TURN");
-  assert.deepEqual(byId.goblin_chainwhirler.keywords, ["FIRST_STRIKE"]);
-  assert.deepEqual(byId.general_kreat_the_boltbringer.cardTypes, ["Legendary", "Creature"]);
+  assert.deepEqual(byId.goblin_chainwhirler.keywords, ["REFLEX"]);
+  assert.deepEqual(byId.general_kreat_the_boltbringer.cardTypes, ["ECHO"]);
+  assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
   assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "CREATURE_DIED");
   assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "permanent");
 });

@@ -69,8 +69,8 @@ export const AMOUNT_TYPES = new Set([
   "COUNT_PERMANENTS_ENTERED_THIS_TURN",
 ]);
 
-/** Mirrors the switch in normalizeDeck.normalizeCustomTriggeredEffect, plus the
- *  `toxic_N` static pattern and the `fight_simultaneously` effect-level handler. */
+/** Mirrors the switch in normalizeDeck.normalizeCustomTriggeredEffect, including the
+ *  `fight_simultaneously` effect-level handler. */
 export const CUSTOM_HANDLERS = new Set([
   "rundvelt_hordemaster_inspect_top_if_goblin",
   "raid_bombardment_small_attacker_damage",
@@ -83,5 +83,5 @@ export const CUSTOM_HANDLERS = new Set([
 ]);
 
 export function isKnownCustomHandler(handler: string): boolean {
-  return CUSTOM_HANDLERS.has(handler) || /^toxic_\d+$/i.test(handler);
+  return CUSTOM_HANDLERS.has(handler);
 }

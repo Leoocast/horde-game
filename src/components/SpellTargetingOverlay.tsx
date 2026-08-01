@@ -267,7 +267,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
 }
 
 function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+  return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === id);
 }
 
 function findCardIdAtPoint(x: number, y: number): string | undefined {

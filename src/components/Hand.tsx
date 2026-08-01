@@ -5,6 +5,7 @@ import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
 import { canPayWithAutomaticMana, parseManaCost } from "../engine/ManaSystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
+import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
@@ -202,7 +203,7 @@ export function Hand({ game }: { game: GameState }) {
   function isInEnergyRecycleZone(card: CardInstance, pointerX: number, pointerY: number): boolean {
     const dragStart = dragStartPointers.current.get(card.instanceId);
     return (
-      card.cardTypes.includes("Land") &&
+      card.cardTypes.includes("SOURCE") &&
       isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
       pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
       pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
@@ -211,7 +212,7 @@ export function Hand({ game }: { game: GameState }) {
   }
 
   function playCard(card: CardInstance) {
-    if (!card.cardTypes.includes("Land") && card.requiresTargets.length > 0) {
+    if (!card.cardTypes.includes("SOURCE") && card.requiresTargets.length > 0) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
       return;
     }
@@ -475,24 +476,24 @@ export function Hand({ game }: { game: GameState }) {
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
   if (!canPlayCardAtCurrentTiming(game, card)) return false;
-  if (card.cardTypes.includes("Land")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
+  if (card.cardTypes.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
   if (!canPayLifeCost(game, card.additionalCost)) return false;
   if (!canPayWithAutomaticMana(game, parseManaCost(card.manaCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
 function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
-  return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("Land") && canPlayerRecycleEnergy(game);
+  return pendingTriggeredEffectCount === 0 && card.cardTypes.includes("SOURCE") && canPlayerRecycleEnergy(game);
 }
 
 function getUnplayableReason(game: GameState, card: CardInstance, pendingTriggeredEffectCount: number, t: ReturnType<typeof useTranslation>): string {
   if (game.winner) return t("error.gameOver");
   if (pendingTriggeredEffectCount > 0) return t("error.resolveBeforePlay");
   if (!canPlayCardAtCurrentTiming(game, card)) {
-    if (card.cardTypes.includes("Instant")) return t("error.instantTiming");
+    if (isQuickSpell(card)) return t("error.instantTiming");
     return t("error.mainTiming");
   }
-  if (card.cardTypes.includes("Land")) {
+  if (card.cardTypes.includes("SOURCE")) {
     if (!canPlayerPutAnotherLand(game)) return t("error.landLimit", { count: MAX_PLAYER_LANDS });
     if (game.player.energyActionUsedThisTurn) return t("error.energyUsed");
     return t("error.landUnavailable");
@@ -544,7 +545,7 @@ function readEnergyRecycleTarget(): { x: number; y: number } {
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {
-  if (card.cardTypes.includes("Instant")) {
+  if (isQuickSpell(card)) {
     if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
     return game.activeSide === "horde" && game.phase === "combat" && game.combat.hordeAttackers.length > 0;
   }
@@ -558,7 +559,7 @@ function playFromHand(
   friendly?: string,
   enemy?: string,
 ): void {
-  if (card.cardTypes.includes("Land")) {
+  if (card.cardTypes.includes("SOURCE")) {
     playLand(card.instanceId);
     return;
   }

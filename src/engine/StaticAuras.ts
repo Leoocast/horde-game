@@ -1,4 +1,6 @@
 import type { CardFilter, GameState, Side } from "./GameTypes";
+import type { Trait } from "./hostfallVocabulary";
+import { isTrait } from "./hostfallVocabulary";
 import { matchesFilter, resolveAffectedController } from "./StaticEffects";
 
 // Static abilities apply continuously, so the player only ever sees the numbers already changed
@@ -15,7 +17,7 @@ export type StaticAura = {
   controller: Side;
   power: number;
   toughness: number;
-  keyword?: string;
+  keyword?: Trait;
   affectedIds: string[];
 };
 
@@ -23,7 +25,7 @@ export type StaticAuraSnapshot = Record<string, string[]>;
 
 export function collectStaticAuras(game: GameState, controller?: Side): StaticAura[] {
   const auras: StaticAura[] = [];
-  const battlefield = [...game.player.battlefield, ...game.horde.battlefield];
+  const battlefield = [...game.player.field, ...game.horde.field];
   for (const source of battlefield) {
     if (controller && source.controller !== controller) continue;
     source.effects.forEach((effect, index) => {
@@ -41,7 +43,7 @@ export function collectStaticAuras(game: GameState, controller?: Side): StaticAu
         controller: source.controller,
         power: Number(effect.power ?? 0),
         toughness: Number(effect.toughness ?? 0),
-        keyword: typeof effect.keyword === "string" ? effect.keyword : undefined,
+        keyword: isTrait(effect.keyword) ? effect.keyword : undefined,
         affectedIds: affected.map((card) => card.instanceId),
       });
     });

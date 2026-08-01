@@ -141,8 +141,8 @@ function resolvePlayerTriggerBeat(eventId: string, sourceId: string): {
     presentationLanded = buffLanded || lifeGainLanded;
     hasMore = hasQueuedPlayerTriggers(next);
     const source =
-      previous.player.battlefield.find((card) => card.instanceId === sourceId) ??
-      next.player.battlefield.find((card) => card.instanceId === sourceId);
+      previous.player.field.find((card) => card.instanceId === sourceId) ??
+      next.player.field.find((card) => card.instanceId === sourceId);
     const buffVariant = buffAnimationVariantForCard(source?.definitionId);
     if (presentationLanded) {
       useAudioStore.getState().playSfx(playerBuffSfxForAnimation(buffVariant));

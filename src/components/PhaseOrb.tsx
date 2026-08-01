@@ -172,8 +172,8 @@ function getOrbState(
 function getDefendBlockedReason(game: GameState, t: ReturnType<typeof useTranslation>): string | undefined {
   if (game.activeSide !== "horde" || game.combat.hordeAttackers.length === 0) return undefined;
   for (const attackerId of game.combat.hordeAttackers) {
-    const attacker = game.horde.battlefield.find((card) => card.instanceId === attackerId);
-    if (!attacker || !hasKeyword(game, attacker, "MENACE")) continue;
+    const attacker = game.horde.field.find((card) => card.instanceId === attackerId);
+    if (!attacker || !hasKeyword(game, attacker, "DAUNTING")) continue;
     const blockerCount = game.combat.blockers[attackerId]?.length ?? 0;
     if (blockerCount === 1) return t("orb.menaceBlocked");
   }
@@ -181,7 +181,7 @@ function getDefendBlockedReason(game: GameState, t: ReturnType<typeof useTransla
 }
 
 function hasAvailableAttackers(game: GameState): boolean {
-  return game.player.battlefield.some((card) => card.cardTypes.includes("Creature") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
+  return game.player.field.some((card) => card.cardTypes.includes("ECHO") && !game.combat.playerAttackers.includes(card.instanceId) && canAttack(game, card));
 }
 
 function getPendingActionBlockedReason(

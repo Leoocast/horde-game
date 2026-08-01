@@ -6,6 +6,7 @@ type LocalizableCard = {
   displayName?: string;
   displayNameEs?: string | null;
   cardTypes?: string[];
+  modifiers?: string[];
   subtypes?: string[];
   isToken?: boolean;
 };
@@ -42,7 +43,7 @@ export function localizedTypeLine(card: LocalizableCard, language: AppLanguage):
   const cardTypes = card.cardTypes ?? [];
   const subtypes = card.subtypes ?? [];
   const localizedSubtypes = language === "es" ? subtypes.map((subtype) => SPANISH_SUBTYPES[subtype] ?? subtype) : subtypes;
-  return canonicalCardTypeLine(cardTypes, localizedSubtypes, language, card.isToken);
+  return canonicalCardTypeLine(cardTypes, localizedSubtypes, language, card.isToken, card.modifiers ?? []);
 }
 
 export function localizedKeywordLabel(keyword: string, language: AppLanguage): string {

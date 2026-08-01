@@ -260,7 +260,7 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
 
 function isCardBehindInStack(card: HTMLElement): boolean {
   const stack = card.closest<HTMLElement>('[data-stacked="true"]');
-  const slot = card.closest<HTMLElement>(".battlefield-layout-slot");
+  const slot = card.closest<HTMLElement>(".field-layout-slot");
   if (!stack || !slot) return false;
 
   const stackedSlots = Array.from(stack.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains("battlefield-layout-slot"));

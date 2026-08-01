@@ -137,7 +137,7 @@ export function scheduleHordeEnterTriggers(
       useGameStore.setState((state) => {
         const previous = state.game;
         const next = structuredClone(previous) as GameState;
-        const source = next.horde.battlefield.find((item) => item.instanceId === card.instanceId);
+        const source = next.horde.field.find((item) => item.instanceId === card.instanceId);
         if (source) {
           runEnterBattlefieldTriggers(next, source);
         }
@@ -419,13 +419,13 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
     if (spawned.length > 0) {
       next.eventQueue = [...spawned, ...next.eventQueue.filter((item) => knownEventIds.has(item.id))];
     }
-    const summoned = next.horde.battlefield.filter(
-      (card) => !previous.horde.battlefield.some((old) => old.instanceId === card.instanceId),
+    const summoned = next.horde.field.filter(
+      (card) => !previous.horde.field.some((old) => old.instanceId === card.instanceId),
     );
     if (summoned[0]) useAudioStore.getState().playSfx(monsterSfx(summoned[0]));
     battlefieldChanged =
-      next.horde.battlefield.length !== previous.horde.battlefield.length ||
-      next.player.battlefield.length !== previous.player.battlefield.length;
+      next.horde.field.length !== previous.horde.field.length ||
+      next.player.field.length !== previous.player.field.length;
     notifyDiscardEffects(previous, next);
     return {
       game: next,
@@ -595,7 +595,7 @@ function burnLethalTargetIds(game: GameState, targetIds: string[], amount: numbe
   if (amount <= 0) return [];
   return targetIds.filter((targetId) => {
     const target = findBattlefieldCard(game, targetId);
-    if (!target?.cardTypes.includes("Creature")) return false;
+    if (!target?.cardTypes.includes("ECHO")) return false;
     return target.damageMarked + amount >= getPowerToughness(game, target).toughness;
   });
 }
@@ -647,10 +647,10 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
   run: ({ event, sequenceId, resolve, done }) => {
     const game = useGameStore.getState().game;
     const battlefieldSource = event.sourceId
-      ? game.horde.battlefield.find((card) => card.instanceId === event.sourceId)
+      ? game.horde.field.find((card) => card.instanceId === event.sourceId)
       : undefined;
     const source = battlefieldSource ?? (event.sourceId
-      ? game.horde.graveyard.find((card) => card.instanceId === event.sourceId)
+      ? game.horde.memory.find((card) => card.instanceId === event.sourceId)
       : undefined);
     const affectedIds = Array.isArray(event.payload?.affectedIds) ? event.payload.affectedIds.map(String) : [];
     if (!source || affectedIds.length === 0) {
@@ -716,7 +716,7 @@ const hordeGroupBuffBeatHandler: HordeBeatHandler = {
 const deathRevealBeatHandler: HordeBeatHandler = {
   id: "death-reveal",
   claims: (_event, sources, game) =>
-    Boolean(sources[0] && !game.horde.battlefield.some((card) => card.instanceId === sources[0].instanceId)),
+    Boolean(sources[0] && !game.horde.field.some((card) => card.instanceId === sources[0].instanceId)),
   run: ({ sources, sequenceId, resolve, done }) => {
     const source = sources[0];
     useGameStore.setState({ hordeAutoTriggerCount: 1 });

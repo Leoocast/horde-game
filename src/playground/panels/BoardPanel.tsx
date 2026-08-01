@@ -39,7 +39,7 @@ export function BoardPanel({
   useEffect(() => setName(initialName), [initialName]);
 
   const handCard = game.player.hand.find((card) => card.instanceId === selectedHandId);
-  const permanent = [...game.player.battlefield, ...game.horde.battlefield].find(
+  const permanent = [...game.player.field, ...game.horde.field].find(
     (card) => card.instanceId === (selectedPlayerCreatureId ?? selectedHordeCreatureId),
   );
   const target = permanent ?? handCard;
@@ -147,18 +147,18 @@ export function BoardPanel({
           <button
             className="playground-button"
             type="button"
-            disabled={game.player.battlefield.length === 0}
+            disabled={game.player.field.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "player" })}
           >
-            <Eraser size={14} /> Chronicler Field ({game.player.battlefield.length})
+            <Eraser size={14} /> Chronicler Field ({game.player.field.length})
           </button>
           <button
             className="playground-button"
             type="button"
-            disabled={game.horde.battlefield.length === 0}
+            disabled={game.horde.field.length === 0}
             onClick={() => onDispatch({ kind: "clearBattlefield", side: "horde" })}
           >
-            <Eraser size={14} /> Host Field ({game.horde.battlefield.length})
+            <Eraser size={14} /> Host Field ({game.horde.field.length})
           </button>
         </div>
       </section>

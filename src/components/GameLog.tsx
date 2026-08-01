@@ -259,8 +259,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
 function collectCards(game: GameState): CardInstance[] {
   return [
-    ...game.player.library, ...game.player.hand, ...game.player.battlefield, ...game.player.graveyard, ...game.player.exile,
-    ...game.horde.library, ...game.horde.battlefield, ...game.horde.graveyard, ...game.horde.exile,
+    ...game.player.archive, ...game.player.hand, ...game.player.field, ...game.player.memory, ...game.player.oblivion,
+    ...game.horde.archive, ...game.horde.field, ...game.horde.memory, ...game.horde.oblivion,
     ...(game.horde.pendingCard ? [game.horde.pendingCard] : []),
   ];
 }

@@ -25,7 +25,7 @@ export function createTestGame(seed = "engine-test") {
   return game;
 }
 
-export function cardFromDeck(definitionId, side, zone = "battlefield") {
+export function cardFromDeck(definitionId, side, zone = "field") {
   const definition = findCardDefinition(definitionId);
   if (!definition) throw new Error(`Missing card definition: ${definitionId}`);
   return cardFromDefinition(definition, side, zone);
@@ -35,8 +35,9 @@ export function customCard(
   id,
   side,
   {
-    zone = "battlefield",
-    cardTypes = ["Creature"],
+    zone = "field",
+    cardTypes = ["ECHO"],
+    modifiers = [],
     subtypes = [],
     keywords = [],
     power = 1,
@@ -57,6 +58,7 @@ export function customCard(
       manaValue: 0,
       colors: [],
       cardTypes,
+      modifiers,
       subtypes,
       keywords,
       power,

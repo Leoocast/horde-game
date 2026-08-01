@@ -140,10 +140,10 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-horde">
-            <Battlefield game={game} side="horde" cards={game.horde.battlefield} />
+            <Battlefield game={game} side="horde" cards={game.horde.field} />
           </div>
           <div className="battlefield-side battlefield-side-player">
-            <Battlefield game={game} side="player" cards={game.player.battlefield} />
+            <Battlefield game={game} side="player" cards={game.player.field} />
           </div>
         </section>
       </div>

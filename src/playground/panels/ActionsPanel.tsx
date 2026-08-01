@@ -14,8 +14,8 @@ export function ActionsPanel({ onDispatch }: Props) {
   const game = useGameStore((state) => state.game);
 
   const sources = playerLandCount(game);
-  const available = game.player.battlefield.filter(
-    (card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn,
+  const available = game.player.field.filter(
+    (card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn,
   ).length;
   const stored = game.player.manaPool.colorless;
 

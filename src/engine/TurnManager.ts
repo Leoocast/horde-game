@@ -3,7 +3,7 @@ import { emptyManaPool } from "./ManaSystem";
 import { drawCards } from "./GameState";
 
 export function untapSide(game: GameState, side: "player" | "horde"): void {
-  for (const card of game[side].battlefield) {
+  for (const card of game[side].field) {
     card.tapped = false;
     card.activatedThisTurn = false;
     if (side === "player") card.summoningSickness = false;
@@ -11,9 +11,9 @@ export function untapSide(game: GameState, side: "player" | "horde"): void {
 }
 
 export function cleanupEndStep(game: GameState): void {
-  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+  for (const card of [...game.player.field, ...game.horde.field]) {
     card.damageMarked = 0;
-    card.deathtouchDamage = false;
+    card.lethalDamage = false;
     card.temporaryPower = 0;
     card.temporaryToughness = 0;
     card.temporaryKeywords = [];
@@ -24,13 +24,13 @@ export function cleanupEndStep(game: GameState): void {
 }
 
 export function clearPlayerSummoningSickness(game: GameState): void {
-  for (const card of game.player.battlefield) {
-    if (card.cardTypes.includes("Creature")) card.summoningSickness = false;
+  for (const card of game.player.field) {
+    if (card.cardTypes.includes("ECHO")) card.summoningSickness = false;
   }
 }
 
 export function startPlayerTurn(game: GameState): void {
-  for (const card of [...game.player.battlefield, ...game.horde.battlefield]) {
+  for (const card of [...game.player.field, ...game.horde.field]) {
     card.untilNextPlayerTurnPower = 0;
     card.untilNextPlayerTurnToughness = 0;
   }

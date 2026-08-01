@@ -17,7 +17,7 @@ export function cardStatState(
   visualDamageMarked = 0,
   heldBonus?: { power: number; toughness: number },
 ): { text: string; power?: number; toughness?: number; damaged: boolean; buffed: boolean } {
-  if (!card.cardTypes.includes("Creature")) return { text: "", damaged: false, buffed: false };
+  if (!card.cardTypes.includes("ECHO")) return { text: "", damaged: false, buffed: false };
   const total = getPowerToughness(game, card);
   const power = total.power - (heldBonus?.power ?? 0);
   const toughness = total.toughness - (heldBonus?.toughness ?? 0);
@@ -35,30 +35,30 @@ export function cardStatState(
 
 export function cardKeywords(game: GameState, card: CardInstance): string {
   return sortKeywordsForDisplay(getKeywords(game, card))
-    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "TRAMPLE") && (keyword !== "HASTE" || card.controller !== "horde"))
+    .filter((keyword) => (game.gameMode === "chaos" || keyword !== "OVERFLOW") && (keyword !== "IMPETUS" || card.controller !== "horde"))
     .map(formatKeyword)
     .join(", ");
 }
 
 const KEYWORD_DISPLAY_ORDER = [
-  "MENACE",
+  "DAUNTING",
   "FLYING",
-  "REACH",
-  "FIRST_STRIKE",
-  "DEATHTOUCH",
-  "LIFESTEAL",
-  "VIGILANCE",
-  "TRAMPLE",
-  "SKULK",
+  "SKYGUARD",
+  "REFLEX",
+  "LETHAL",
+  "DRAIN",
+  "ALERT",
+  "OVERFLOW",
+  "FURTIVE",
   "HEXPROOF",
   "INDESTRUCTIBLE",
-  "HASTE",
-  "TOXIC",
+  "IMPETUS",
+  "POISON",
 ] as const;
 
 function keywordDisplayKey(keyword: string): string {
   const normalized = String(keyword).trim().toUpperCase().replace(/[\s-]+/g, "_");
-  return normalized.startsWith("TOXIC_") ? "TOXIC" : normalized;
+  return normalized.startsWith("POISON_") ? "POISON" : normalized;
 }
 
 export function sortKeywordsForDisplay(keywords: string[]): string[] {
@@ -77,12 +77,12 @@ export function sortKeywordsForDisplay(keywords: string[]): string[] {
 
 function formatKeyword(keyword: string): string {
   const text = String(keyword).trim();
-  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
-  if (toxic) return `TOXIC {${toxic[1]}}`;
+  const poison = text.match(/^POISON_(\d+)$/u);
+  if (poison) return `POISON {${poison[1]}}`;
   return text.toUpperCase();
 }
 
-export function zoneCount(game: GameState, side: Side, zone: "library" | "hand" | "battlefield" | "graveyard" | "exile"): number {
+export function zoneCount(game: GameState, side: Side, zone: "archive" | "hand" | "field" | "memory" | "oblivion"): number {
   if (side === "player") return game.player[zone].length;
   if (zone === "hand") return 0;
   return game.horde[zone].length;

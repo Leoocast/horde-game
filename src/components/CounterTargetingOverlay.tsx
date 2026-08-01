@@ -172,7 +172,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
 }
 
 function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+  return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === id);
 }
 
 function getBuffedStats(game: GameState, card: CardInstance): { power: number; toughness: number } {

@@ -150,11 +150,11 @@ function isManaAbility(ability: CardInstance["activatedAbilities"][number]): boo
 function findCard(game: GameState, id: string): CardInstance | undefined {
   return [
     ...game.player.hand,
-    ...game.player.battlefield,
-    ...game.player.graveyard,
-    ...game.player.exile,
-    ...game.horde.battlefield,
-    ...game.horde.graveyard,
-    ...game.horde.exile,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.horde.field,
+    ...game.horde.memory,
+    ...game.horde.oblivion,
   ].find((card) => card.instanceId === id);
 }

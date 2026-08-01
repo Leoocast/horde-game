@@ -455,17 +455,14 @@ function stats(card: NewDeckCard): string | undefined {
 }
 
 function deckKeywords(card: NewDeckCard): string {
-  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword).filter((keyword) => keyword !== "TRAMPLE"));
-  for (const ability of card.abilities ?? []) {
-    if (ability.customHandler === "toxic_1" || ability.id?.toLowerCase().includes("toxic_1")) keywords.add("TOXIC {1}");
-  }
+  const keywords = new Set((card.keywords ?? []).map(formatDeckKeyword).filter((keyword) => keyword !== "OVERFLOW"));
   return [...keywords].filter(Boolean).join(", ");
 }
 
 function formatDeckKeyword(keyword: string): string {
   const text = String(keyword).trim();
-  const toxic = text.match(/^TOXIC[_\s-]?(\d+)$/i) ?? text.match(/^Toxic\s+(\d+)$/i);
-  if (toxic) return `TOXIC {${toxic[1]}}`;
+  const poison = text.match(/^POISON_(\d+)$/u);
+  if (poison) return `POISON {${poison[1]}}`;
   return text.toUpperCase();
 }
 

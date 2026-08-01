@@ -244,13 +244,22 @@ export function canonicalCardTypeIds(cardTypes: readonly string[], isToken = fal
   return result;
 }
 
-export function canonicalCardTypeLine(cardTypes: readonly string[], subtypes: readonly string[], language: VocabularyLanguage, isToken = false): string {
+export function canonicalCardTypeLine(
+  cardTypes: readonly string[],
+  subtypes: readonly string[],
+  language: VocabularyLanguage,
+  isToken = false,
+  modifiers: readonly string[] = [],
+): string {
   const canonicalTypes = canonicalCardTypeIds(cardTypes, isToken);
   const visibleTypes = canonicalTypes.length > 0
     ? canonicalTypes.map((id) => vocabularyText(CARD_TYPE_VOCABULARY[id], language))
     : [vocabularyText(CARD_TYPE_VOCABULARY.CARD, language)];
-  if (cardTypes.some((type) => type.trim().toUpperCase() === "INSTANT")) {
+  if (modifiers.includes("QUICK") || cardTypes.some((type) => type.trim().toUpperCase() === "INSTANT")) {
     visibleTypes.push(vocabularyText(CARD_TYPE_VOCABULARY.QUICK, language));
+  }
+  if (modifiers.includes("CHRONICLE")) {
+    visibleTypes.push(vocabularyText(CARD_TYPE_VOCABULARY.CHRONICLE, language));
   }
   const typePart = visibleTypes.join(" · ");
   return subtypes.length > 0 ? `${typePart} — ${subtypes.join(" ")}` : typePart;

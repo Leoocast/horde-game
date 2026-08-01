@@ -218,9 +218,9 @@ export function Battlefield({ game, side, cards }: Props) {
   const holdCasualties = resolvingHordeCombat || hordeAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
-  const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
-  const lands = displayedCards.filter((card) => card.cardTypes.includes("Land"));
-  const others = displayedCards.filter((card) => !card.cardTypes.includes("Creature") && !card.cardTypes.includes("Land"));
+  const creatures = displayedCards.filter((card) => card.cardTypes.includes("ECHO"));
+  const lands = displayedCards.filter((card) => card.cardTypes.includes("SOURCE"));
+  const others = displayedCards.filter((card) => !card.cardTypes.includes("ECHO") && !card.cardTypes.includes("SOURCE"));
   const availableLandCount = lands.filter((card) => !card.tapped && !card.activatedThisTurn).length;
   const storedManaCount = game.player.manaPool.colorless;
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
@@ -431,7 +431,7 @@ export function Battlefield({ game, side, cards }: Props) {
           ],
           {
             duration: 360,
-            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0)) * 1000,
+            delay: (hordeEntryDelay(card) + (card.cardTypes.includes("ECHO") ? rowShiftSettleDelay : 0)) * 1000,
             easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             fill: "both",
           },
@@ -458,7 +458,7 @@ export function Battlefield({ game, side, cards }: Props) {
     for (const visual of summoningElements) {
       const id = visual.dataset.cardSlotId;
       const summonedCard = id ? cards.find((item) => item.instanceId === id) : undefined;
-      const entranceExtraDelay = summonedCard?.cardTypes.includes("Creature") ? rowShiftSettleDelay : 0;
+      const entranceExtraDelay = summonedCard?.cardTypes.includes("ECHO") ? rowShiftSettleDelay : 0;
       if (id) {
         seenCardIds.current.add(id);
         entranceAnimatingIds.current.add(id);
@@ -809,33 +809,33 @@ export function Battlefield({ game, side, cards }: Props) {
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
     const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
-    const selectedBlocker = selectedPlayerCreatureId ? game.player.battlefield.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
+    const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
-    const isLand = card.cardTypes.includes("Land");
+    const isLand = card.cardTypes.includes("SOURCE");
     const smallpoxTargetable = Boolean(
       smallpoxSelectionActive &&
         !smallpoxSelectionTargetId &&
         side === "player" &&
-        ((smallpoxSelectionKind === "sacrifice-creature" && card.cardTypes.includes("Creature")) ||
-          (smallpoxSelectionKind === "sacrifice-land" && card.cardTypes.includes("Land"))),
+        ((smallpoxSelectionKind === "sacrifice-creature" && card.cardTypes.includes("ECHO")) ||
+          (smallpoxSelectionKind === "sacrifice-land" && card.cardTypes.includes("SOURCE"))),
     );
     const smallpoxTargetLocked = smallpoxSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
-    const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && (selectedPlayerAttacker || canAttack(game, card)));
-    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("Creature") && !selectedPlayerAttacker && canAttack(game, card));
+    const legalAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
+    const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.cardTypes.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
       hordeCombat &&
         side === "player" &&
-        card.cardTypes.includes("Creature") &&
+        card.cardTypes.includes("ECHO") &&
         !blocking &&
         game.combat.hordeAttackers.some((attackerId) => {
-          const attacker = game.horde.battlefield.find((item) => item.instanceId === attackerId);
+          const attacker = game.horde.field.find((item) => item.instanceId === attackerId);
           return attacker ? canBlockAttacker(game, card, attacker) : false;
         }),
     );
     const legalBlockTarget = Boolean(hordeCombat && side === "horde" && selectedBlocker && !selectedBlockerAssigned && game.combat.hordeAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
-    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("Creature") && (legalBlocker || selected || blocking));
+    const selectableBlocker = Boolean(hordeCombat && side === "player" && card.cardTypes.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
       (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
@@ -846,7 +846,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "horde") ||
-      (hordeCombat && side === "player" && card.cardTypes.includes("Creature") && !selectableBlocker);
+      (hordeCombat && side === "player" && card.cardTypes.includes("ECHO") && !selectableBlocker);
     const actionable = !resolvingHordeCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const primaryAbility = card.activatedAbilities[0];
     const effectAvailable = canUseActivatedAbility(card, primaryAbility);
@@ -854,7 +854,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("Creature"));
+    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.cardTypes.includes("ECHO"));
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
@@ -880,7 +880,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable;
     const cardActionable = actionable || cardTargetable;
     const isDraggedDefender = blockDragBlockerId === card.instanceId;
-    const draggedDefender = blockDragActive ? game.player.battlefield.find((item) => item.instanceId === blockDragBlockerId) : undefined;
+    const draggedDefender = blockDragActive ? game.player.field.find((item) => item.instanceId === blockDragBlockerId) : undefined;
     const dragDefenseTargetable = Boolean(
       blockDragActive &&
         draggedDefender &&
@@ -926,7 +926,7 @@ export function Battlefield({ game, side, cards }: Props) {
         spellTargetable ||
         spellTargetLocked,
     );
-    const isFlying = card.cardTypes.includes("Creature") && hasKeyword(game, card, "FLYING");
+    const isFlying = card.cardTypes.includes("ECHO") && hasKeyword(game, card, "FLYING");
     const combatAnimationActive =
       playerAttackAnimationId === card.instanceId ||
       hordeAttackAnimationAttackerId === card.instanceId ||
@@ -965,7 +965,7 @@ export function Battlefield({ game, side, cards }: Props) {
           "battlefield-layout-slot",
           interactionElevated ? "battlefield-layout-slot-elevated" : "",
           card.tapped || (attacking && side === "horde") ? "battlefield-layout-slot-tapped" : "",
-          card.cardTypes.includes("Creature") ? "battlefield-layout-slot-creature-clearance" : "",
+          card.cardTypes.includes("ECHO") ? "battlefield-layout-slot-creature-clearance" : "",
         ].join(" ")}
         style={{ "--copy-stack-index": stackIndex + 1 } as CSSProperties}
       >
@@ -1056,7 +1056,7 @@ export function Battlefield({ game, side, cards }: Props) {
         compact={compact}
         cropTopHalf={isLand}
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
-        showCroppedTitle={!compact && card.cardTypes.includes("Creature") && shouldShowFullCardImage(card.definitionId)}
+        showCroppedTitle={!compact && card.cardTypes.includes("ECHO") && shouldShowFullCardImage(card.definitionId)}
         selected={selected}
         attacking={attacking}
         blocking={blocking}
@@ -1450,13 +1450,13 @@ type PointerEventEvent = globalThis.PointerEvent;
 
 function findDropBlockTarget(x: number, y: number, blockerId: string): { attackerId?: string; reason?: string } {
   const latest = useGameStore.getState().game;
-  const blocker = latest.player.battlefield.find((card) => card.instanceId === blockerId);
+  const blocker = latest.player.field.find((card) => card.instanceId === blockerId);
   if (!blocker) return {};
   for (const element of document.elementsFromPoint(x, y)) {
     const cardElement = element.closest<HTMLElement>("[data-card-id]");
     const candidateId = cardElement?.dataset.cardId;
     if (!candidateId || !latest.combat.hordeAttackers.includes(candidateId)) continue;
-    const attacker = latest.horde.battlefield.find((card) => card.instanceId === candidateId);
+    const attacker = latest.horde.field.find((card) => card.instanceId === candidateId);
     if (!attacker) continue;
     const reason = blockRestrictionReason(latest, blocker, attacker);
     return reason ? { reason } : { attackerId: candidateId };

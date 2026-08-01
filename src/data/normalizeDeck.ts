@@ -31,6 +31,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     manaValue: card.manaValue ?? 0,
     colors: card.colors,
     cardTypes: card.cardTypes,
+    modifiers: card.modifiers,
     subtypes: card.subtypes,
     power: card.power,
     toughness: card.toughness,
@@ -42,7 +43,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
     attachTo: card.attachTo,
     variableCost: card.variableCost,
     requiresDistribution: card.requiresDistribution,
-    keywords: normalizeKeywords(card, abilities),
+    keywords: normalizeKeywords(card),
     additionalCost: normalizeSpellCost(abilities),
     activatedAbilities: normalizeActivatedAbilities(abilities),
     effects: normalizeEffects(abilities),
@@ -55,18 +56,8 @@ function normalizeSpellCost(abilities: NewDeckAbility[]): ActionCost | undefined
   return cost && Object.keys(cost).length > 0 ? { ...cost } as ActionCost : undefined;
 }
 
-function normalizeKeywords(card: NewDeckCard, abilities: NewDeckAbility[]): Keyword[] {
-  return [...(card.keywords ?? []), ...extractStaticKeywordAbilities(abilities)];
-}
-
-function extractStaticKeywordAbilities(abilities: NewDeckAbility[]): Keyword[] {
-  const keywords: Keyword[] = [];
-  for (const ability of abilities) {
-    const customHandler = String(ability.customHandler ?? "");
-    const toxic = customHandler.match(/^toxic_(\d+)$/i);
-    if (ability.kind === "STATIC" && toxic) keywords.push(`TOXIC_${toxic[1]}`);
-  }
-  return keywords;
+function normalizeKeywords(card: NewDeckCard): Keyword[] {
+  return [...(card.keywords ?? [])];
 }
 
 function normalizeActivatedAbilities(abilities: NewDeckAbility[]): ActivatedAbility[] {
@@ -150,7 +141,7 @@ function normalizeTargets(abilities: NewDeckAbility[]) {
     const req = target as Record<string, unknown>;
     return {
       id: String(req.id ?? "target"),
-      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("Creature") ? "TARGET_CREATURE" : "TARGET_PERMANENT"),
+      type: String(req.filters && Array.isArray((req.filters as Record<string, unknown>).cardTypes) && ((req.filters as Record<string, unknown>).cardTypes as unknown[]).includes("ECHO") ? "TARGET_CREATURE" : "TARGET_PERMANENT"),
       controller: req.controller as "SELF" | "OPPONENT" | "ANY" | undefined,
       filters: req.filters,
     };
@@ -181,7 +172,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
     case "raid_bombardment_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
-        filter: { cardTypes: ["Creature"], subtypes: ["Goblin"], maxPower: 2 },
+        filter: { cardTypes: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
         amount: 1,
         deferUntil: "HORDE_ATTACK_SEQUENCE_END",
         animation: "BURN_VOLLEY_TO_PLAYER",
@@ -234,8 +225,8 @@ function normalizeTriggerCondition(ability: NewDeckAbility): EffectDefinition | 
       continue;
     }
     if (condition.type === "EVENT_OBJECT_MATCHES") {
-      const filters = condition.filters as { cardTypes?: string[]; subtypes?: string[] } | undefined;
-      if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("Creature")) {
+      const filters = condition.filters as { cardTypes?: import("../engine/hostfallVocabulary").CardKind[]; subtypes?: string[] } | undefined;
+      if (condition.controller === "SELF" && condition.excludeSource && filters?.cardTypes?.includes("ECHO")) {
         normalized.push({ type: "ANOTHER_PERMANENT_YOU_CONTROL_ENTERED", filters });
       } else {
         normalized.push({

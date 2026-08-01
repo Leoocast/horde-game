@@ -49,7 +49,7 @@ export function runSmallpoxSequence(card: CardInstance): void {
         if (resetEpoch !== hordeSequenceEpoch()) return;
         useGameStore.setState((state) => {
           const next = structuredClone(state.game) as GameState;
-          const target = next.horde.battlefield.find((item) => item.instanceId === sacrificedId);
+          const target = next.horde.field.find((item) => item.instanceId === sacrificedId);
           if (target) destroyPermanent(next, target);
           return { game: next, specialDeadCardIds: [] };
         });
@@ -97,13 +97,13 @@ function startSmallpoxSelectionStep(kind: SmallpoxSelectionState["kind"]): void 
 export function advanceSmallpoxSequence(from: "after-discard" | "after-sacrifice-creature" | "after-sacrifice-land"): void {
   const game = useGameStore.getState().game;
   if (from === "after-discard") {
-    const hasCreature = game.player.battlefield.some((card) => card.cardTypes.includes("Creature"));
+    const hasCreature = game.player.field.some((card) => card.cardTypes.includes("ECHO"));
     if (hasCreature) startSmallpoxSelectionStep("sacrifice-creature");
     else advanceSmallpoxSequence("after-sacrifice-creature");
     return;
   }
   if (from === "after-sacrifice-creature") {
-    const hasLand = game.player.battlefield.some((card) => card.cardTypes.includes("Land"));
+    const hasLand = game.player.field.some((card) => card.cardTypes.includes("SOURCE"));
     if (hasLand) startSmallpoxSelectionStep("sacrifice-land");
     else advanceSmallpoxSequence("after-sacrifice-land");
     return;
@@ -117,8 +117,8 @@ function finishSmallpoxSequence(): void {
     const next = structuredClone(previous) as GameState;
     const card = state.smallpoxCard;
     if (card) {
-      card.zone = "graveyard";
-      next.horde.graveyard.push(card);
+      card.zone = "memory";
+      next.horde.memory.push(card);
       next.log.unshift(`${card.name} goes to the Horde graveyard.`);
       useAudioStore.getState().playSfx("draw");
     }

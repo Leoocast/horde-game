@@ -134,12 +134,12 @@ export function snapshotScenario(game: GameState, base: ScenarioDefinition): Sce
     horde: { poisonCounters: game.horde.poisonCounters },
     zones: {
       playerHand: groupCards(game.player.hand),
-      playerBattlefield: groupCards(game.player.battlefield),
-      playerGraveyard: groupCards(game.player.graveyard),
-      playerExile: groupCards(game.player.exile),
-      hordeBattlefield: groupCards(game.horde.battlefield),
-      hordeGraveyard: groupCards(game.horde.graveyard),
-      hordeExile: groupCards(game.horde.exile),
+      playerBattlefield: groupCards(game.player.field),
+      playerGraveyard: groupCards(game.player.memory),
+      playerExile: groupCards(game.player.oblivion),
+      hordeBattlefield: groupCards(game.horde.field),
+      hordeGraveyard: groupCards(game.horde.memory),
+      hordeExile: groupCards(game.horde.oblivion),
     },
   };
 }
@@ -259,9 +259,9 @@ function clamp(value: number, min: number, max: number): number {
  * never hardcodes Forest: it takes whatever land the player deck actually runs.
  */
 export function playerEnergyDefinitionId(game: GameState): string | undefined {
-  const zones = [game.player.battlefield, game.player.library, game.player.hand, game.player.graveyard];
+  const zones = [game.player.field, game.player.archive, game.player.hand, game.player.memory];
   for (const zone of zones) {
-    const land = zone.find((card) => card.cardTypes.includes("Land"));
+    const land = zone.find((card) => card.cardTypes.includes("SOURCE"));
     if (land) return land.definitionId;
   }
   return undefined;
@@ -306,15 +306,15 @@ function zoneEntries(definition: ScenarioDefinition): Array<[ScenarioZoneKey, Sc
  * order they left it — the library ends up in exactly its post-shuffle order.
  */
 function returnPlayerCardsToLibrary(game: GameState): void {
-  const returned = [...game.player.hand, ...game.player.battlefield];
+  const returned = [...game.player.hand, ...game.player.field];
   for (const card of returned) {
-    card.zone = "library";
+    card.zone = "archive";
     card.tapped = false;
-    card.summoningSickness = card.cardTypes.includes("Creature");
+    card.summoningSickness = card.cardTypes.includes("ECHO");
   }
   game.player.hand = [];
-  game.player.battlefield = [];
-  game.player.library = [...returned, ...game.player.library];
+  game.player.field = [];
+  game.player.archive = [...returned, ...game.player.archive];
 }
 
 function applyZones(game: GameState, scenario: ScenarioDefinition): void {
@@ -330,11 +330,11 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
         for (let copy = 0; copy < (entry.amount ?? 1); copy += 1) {
           const card = takeCard(game, side, entry.definitionId, counter);
           if (!card) continue;
-          card.zone = "library";
+          card.zone = "archive";
           staged.push(card);
         }
       }
-      game[side].library.unshift(...staged);
+      game[side].archive.unshift(...staged);
       continue;
     }
     for (const entry of entries) {
@@ -353,7 +353,7 @@ function applyZones(game: GameState, scenario: ScenarioDefinition): void {
  * way the result is a normal `CardInstance`, never a playground-only shape.
  */
 function takeCard(game: GameState, side: Side, definitionId: string, counter: { next: number }): CardInstance | undefined {
-  const library = game[side].library;
+  const library = game[side].archive;
   const index = library.findIndex((card) => card.definitionId === definitionId);
   if (index >= 0) return library.splice(index, 1)[0];
   const definition = findCardDefinition(definitionId);
@@ -368,8 +368,8 @@ function takeCard(game: GameState, side: Side, definitionId: string, counter: { 
 
 function instanceIdTaken(game: GameState, instanceId: string): boolean {
   const zones = [
-    game.player.library, game.player.hand, game.player.battlefield, game.player.graveyard, game.player.exile,
-    game.horde.library, game.horde.battlefield, game.horde.graveyard, game.horde.exile,
+    game.player.archive, game.player.hand, game.player.field, game.player.memory, game.player.oblivion,
+    game.horde.archive, game.horde.field, game.horde.memory, game.horde.oblivion,
   ];
   return zones.some((zone) => zone.some((card) => card.instanceId === instanceId));
 }
@@ -390,14 +390,14 @@ export function addScenarioCard(game: GameState, zone: ScenarioZoneKey, entry: S
     const card = takeCard(next, side, entry.definitionId, counter);
     if (!card) break;
     if (zone.endsWith("LibraryTop")) {
-      card.zone = "library";
+      card.zone = "archive";
       staged.push(card);
     } else {
       placeCard(next, zone, card, entry);
     }
     placed += 1;
   }
-  if (staged.length > 0) next[side].library.unshift(...staged);
+  if (staged.length > 0) next[side].archive.unshift(...staged);
   if (placed === 0) {
     next.lastActionResult = { ok: false, reason: `Unknown card "${entry.definitionId}".` };
     return next;
@@ -419,11 +419,11 @@ export function stageHordeQueue(game: GameState, entries: ScenarioCard[]): GameS
         next.lastActionResult = { ok: false, reason: `Unknown card "${entry.definitionId}".` };
         return next;
       }
-      card.zone = "library";
+      card.zone = "archive";
       staged.push(card);
     }
   }
-  next.horde.library.unshift(...staged);
+  next.horde.archive.unshift(...staged);
   next.lastActionResult = { ok: true };
   next.log.unshift(`Playground stages ${staged.length} Host card(s).`);
   return next;
@@ -453,8 +453,8 @@ function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, e
   card.activatedThisTurn = false;
 
   if (zone === "playerLibraryTop" || zone === "hordeLibraryTop") {
-    card.zone = "library";
-    game[side].library.unshift(card);
+    card.zone = "archive";
+    game[side].archive.unshift(card);
     return;
   }
   if (zone === "playerHand") {
@@ -463,20 +463,20 @@ function placeCard(game: GameState, zone: ScenarioZoneKey, card: CardInstance, e
     return;
   }
   if (zone === "playerGraveyard" || zone === "hordeGraveyard") {
-    card.zone = "graveyard";
-    game[side].graveyard.push(card);
+    card.zone = "memory";
+    game[side].memory.push(card);
     return;
   }
   if (zone === "playerExile" || zone === "hordeExile") {
-    card.zone = "exile";
-    game[side].exile.push(card);
+    card.zone = "oblivion";
+    game[side].oblivion.push(card);
     return;
   }
 
-  card.zone = "battlefield";
+  card.zone = "field";
   card.tapped = entry.tapped ?? false;
   card.summoningSickness = entry.summoningSickness ?? false;
   card.damageMarked = entry.damageMarked ?? 0;
   if (entry.counters) card.counters = { ...card.counters, ...entry.counters };
-  game[side].battlefield.push(card);
+  game[side].field.push(card);
 }

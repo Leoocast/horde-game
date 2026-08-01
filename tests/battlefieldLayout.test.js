@@ -24,7 +24,7 @@ function makeBoard() {
 /** Mimics `renderCardStacks`: the creature row is the only row that registers an entry order,
  *  and it prunes every card that is not currently in that row on every render. */
 function renderCreatureRow(board, displayedCards) {
-  const creatures = displayedCards.filter((card) => card.cardTypes.includes("Creature"));
+  const creatures = displayedCards.filter((card) => card.cardTypes.includes("ECHO"));
   const activeIds = new Set(creatures.map((card) => card.instanceId));
   for (const instanceId of [...board.cardOrder.current.keys()]) {
     if (!activeIds.has(instanceId)) board.cardOrder.current.delete(instanceId);

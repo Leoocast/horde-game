@@ -48,17 +48,17 @@ export function chaosKeywordPool(deck: DeckList): Keyword[] {
   const pool = [...(deck.cards ?? []), ...(deck.tokens ?? [])]
     .filter(isCreature)
     .flatMap((card) => card.keywords ?? [])
-    .filter((keyword) => String(keyword).trim().toUpperCase() !== "HASTE");
+    .filter((keyword) => String(keyword).trim().toUpperCase() !== "IMPETUS");
   return [...new Set(pool)];
 }
 
 export function isChaosDeckCard(card: CardDefinition): boolean {
   const types = card.cardTypes ?? [];
-  return types.some((type) => type === "Creature" || type === "Land" || type === "Instant" || type === "Sorcery");
+  return types.some((type) => type === "ECHO" || type === "SOURCE" || type === "SPELL");
 }
 
 function isCreature(card: CardDefinition): boolean {
-  return (card.cardTypes ?? []).includes("Creature");
+  return (card.cardTypes ?? []).includes("ECHO");
 }
 
 function uniqueDefinitions(definitions: CardDefinition[]): CardDefinition[] {

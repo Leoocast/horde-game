@@ -54,7 +54,7 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
     sourceDefinitionId: "eternal_feast_countess",
     event: "ENTERS_BATTLEFIELD",
     subject: "ALLY",
-    eventFilter: { cardTypes: ["Creature"], subtypes: ["Human"] },
+    eventFilter: { cardTypes: ["ECHO"], subtypes: ["Human"] },
     cues: [{ sfx: "countessHumans" }],
   },
   {
@@ -130,7 +130,7 @@ function interactionSource(rule: CardVoiceRule, event: CardVoiceEvent): CardInst
     return event.card.definitionId === rule.sourceDefinitionId ? event.card : undefined;
   }
   if (event.type !== "ENTERS_BATTLEFIELD") return undefined;
-  return event.previousGame[event.card.controller].battlefield.find(
+  return event.previousGame[event.card.controller].field.find(
     (candidate) =>
       candidate.definitionId === rule.sourceDefinitionId &&
       candidate.instanceId !== event.card.instanceId,

@@ -14,7 +14,7 @@ type Props = {
 
 function destinationsFor(card: CatalogCard): Array<{ zone: ScenarioZoneKey; label: string }> {
   const isPermanent = (card.definition.cardTypes ?? []).some((type) =>
-    ["Creature", "Land", "Artifact", "Enchantment", "Planeswalker"].includes(type),
+    ["ECHO", "SOURCE", "SUPPORT"].includes(type),
   );
   if (card.side === "horde") {
     return [

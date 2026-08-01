@@ -1,4 +1,5 @@
 import type { Color } from "../engine/GameTypes";
+import type { CardKind, CardModifier, Trait } from "../engine/hostfallVocabulary";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
 import { adaptHostfallDeck } from "./hostfallDeckAdapter";
@@ -14,10 +15,10 @@ export type NewDeckCard = {
   quantity?: number;
   isToken?: boolean;
   energyCost?: number | { amount: number };
-  kinds?: Array<"ECHO" | "SOURCE" | "SPELL" | "SUPPORT" | "TOKEN">;
-  modifiers?: Array<"QUICK" | "CHRONICLE">;
+  kinds?: CardKind[];
+  modifiers?: CardModifier[];
   endurance?: number | null;
-  traits?: string[];
+  traits?: Trait[];
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
   manaCost?: string;
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
@@ -25,13 +26,13 @@ export type NewDeckCard = {
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
   colors?: Color[];
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  cardTypes?: string[];
+  cardTypes?: CardKind[];
   subtypes?: string[];
   power?: number | null;
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
   toughness?: number | null;
   /** @deprecated Temporary compatibility with the pre-L4 engine contract. */
-  keywords?: string[];
+  keywords?: Trait[];
   triggerMessage?: string;
   entersTapped?: boolean;
   entersWithCounters?: Array<{ counterType: string; amount?: number }>;

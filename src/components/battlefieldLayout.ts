@@ -159,7 +159,7 @@ export function holdCombatCasualties(
     }
     // New creatures keep their actual arrival order. In particular, a Goblin summoned by
     // Rundvelt after another Goblin dies must not inherit the casualty's middle slot: combat
-    // still resolves it last because the engine appended it to `horde.battlefield`. Keeping the
+    // still resolves it last because the engine appended it to `horde.field`. Keeping the
     // ghost until the sequence ends makes the visual row agree with that rules order.
   } else if (casualties.current.size > 0) {
     casualties.current.clear();

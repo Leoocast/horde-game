@@ -63,7 +63,7 @@ export function runFullHordeTurn(game: GameState): GameState {
  */
 export function revealHordeCardFromTop(game: GameState, options: HordeMainOptions = {}): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.horde.library.length === 0) {
+  if (next.horde.archive.length === 0) {
     next.lastActionResult = { ok: false, reason: "The Horde library is empty." };
     return next;
   }
@@ -87,7 +87,7 @@ export function finishHordeTurn(game: GameState): GameState {
 
 function revealNormal(game: GameState, options: HordeMainOptions): void {
   let played = 0;
-  while (played < game.hordeRules.revealCount && game.horde.library.length > 0) {
+  while (played < game.hordeRules.revealCount && game.horde.archive.length > 0) {
     const card = revealAndPlayOne(game, options);
     played += 1;
     if (game.hordeRules.stopOnNonToken && card && !card.isToken) {
@@ -99,24 +99,24 @@ function revealNormal(game: GameState, options: HordeMainOptions): void {
 
 function revealAndPlay(game: GameState, amount: number, options: HordeMainOptions): void {
   for (let i = 0; i < amount; i += 1) {
-    if (game.horde.library.length === 0) break;
+    if (game.horde.archive.length === 0) break;
     revealAndPlayOne(game, options);
   }
 }
 
 function resolveRequestedRevealRounds(game: GameState, options: HordeMainOptions): void {
-  while ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.library.length > 0) {
+  while ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.archive.length > 0) {
     game.horde.pendingRevealRounds = Math.max(0, (game.horde.pendingRevealRounds ?? 0) - 1);
     game.log.unshift("Horde begins an extra reveal round.");
     revealNormal(game, options);
   }
-  if ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.library.length === 0) {
+  if ((game.horde.pendingRevealRounds ?? 0) > 0 && game.horde.archive.length === 0) {
     game.horde.pendingRevealRounds = 0;
   }
 }
 
 function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInstance | undefined {
-  const card = game.horde.library.shift();
+  const card = game.horde.archive.shift();
   if (!card) return undefined;
   game.log.unshift(`Horde reveals ${card.name}.`);
   // Bridge: Smallpox needs a bespoke, player-interactive multi-step resolution (Horde sacrifices,
@@ -126,20 +126,20 @@ function revealAndPlayOne(game: GameState, options: HordeMainOptions): CardInsta
     game.horde.pendingCard = card;
     return card;
   }
-  if (card.cardTypes.includes("Instant") || card.cardTypes.includes("Sorcery")) {
+  if (card.cardTypes.includes("SPELL")) {
     resolveEffects(game, card.effects, { source: card, side: "horde" });
-    card.zone = "graveyard";
-    game.horde.graveyard.push(card);
+    card.zone = "memory";
+    game.horde.memory.push(card);
     enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
     return card;
   }
-  card.zone = "battlefield";
+  card.zone = "field";
   card.tapped = false;
   card.summoningSickness = false;
   for (const counter of card.effects.filter((effect) => effect.type === "ENTERS_WITH_COUNTERS")) {
     card.counters[String(counter.counterType ?? "+1/+1")] = Number(counter.amount ?? 1);
   }
-  game.horde.battlefield.push(card);
+  game.horde.field.push(card);
   recordBattlefieldEntry(game, card);
   if (!options.deferEnterBattlefieldTriggers) runEnterBattlefieldTriggers(game, card);
   enqueue(game, { type: "CARD_CAST", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });

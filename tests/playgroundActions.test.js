@@ -25,7 +25,7 @@ function scenario(overrides = {}) {
 
 test("drawing reports a reason instead of failing silently on an empty library", () => {
   const game = buildScenarioGame(scenario());
-  game.player.library = [];
+  game.player.archive = [];
 
   const result = drawPlayerCard(game);
   assert.equal(result.ok, false);
@@ -35,7 +35,7 @@ test("drawing reports a reason instead of failing silently on an empty library",
 
 test("energy sources are lands on the battlefield and stop at the land cap", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
-  assert.equal(game.player.battlefield.length, 0);
+  assert.equal(game.player.field.length, 0);
 
   for (let round = 0; round < MAX_PLAYER_LANDS; round += 1) {
     const result = addEnergySource(game);
@@ -43,9 +43,9 @@ test("energy sources are lands on the battlefield and stop at the land cap", () 
     game = result.game;
   }
 
-  const lands = game.player.battlefield;
+  const lands = game.player.field;
   assert.equal(lands.length, MAX_PLAYER_LANDS);
-  assert.ok(lands.every((card) => card.cardTypes.includes("Land") && !card.tapped && !card.activatedThisTurn));
+  assert.ok(lands.every((card) => card.cardTypes.includes("SOURCE") && !card.tapped && !card.activatedThisTurn));
 
   // The cap is the game's, not the playground's: it must refuse with a reason, not silently pile on.
   const overflow = addEnergySource(game);
@@ -60,12 +60,12 @@ test("drain taps every source and empties the pool; refill gives it all back", (
 
   const drained = drainEnergy(start);
   assert.equal(drained.ok, true);
-  assert.ok(drained.game.player.battlefield.every((card) => card.tapped));
+  assert.ok(drained.game.player.field.every((card) => card.tapped));
   assert.equal(drained.game.player.manaPool.colorless, 0);
 
   const refilled = refillEnergy(drained.game);
   assert.equal(refilled.ok, true);
-  assert.ok(refilled.game.player.battlefield.every((card) => !card.tapped && !card.activatedThisTurn));
+  assert.ok(refilled.game.player.field.every((card) => !card.tapped && !card.activatedThisTurn));
   assert.equal(refilled.game.player.energyActionUsedThisTurn, false);
 
   // Refilling untapped lands is not an error, but with no lands at all there is nothing to refill.
@@ -100,7 +100,7 @@ test("play free grants exactly the printed cost and the card then casts through 
   assert.equal(granted.ok, true);
   const cast = castCard(granted.game, handId);
   assert.equal(cast.lastActionResult.ok, true);
-  assert.equal(cast.player.battlefield.filter((card) => card.definitionId === "llanowar_elves").length, 1);
+  assert.equal(cast.player.field.filter((card) => card.definitionId === "llanowar_elves").length, 1);
   // The grant is exact: casting spent all of it.
   assert.deepEqual(cast.player.manaPool, { green: 0, red: 0, blue: 0, white: 0, black: 0, colorless: 0 });
 });
@@ -116,18 +116,18 @@ test("destroy runs death triggers and to-graveyard does not", () => {
     },
   });
 
-  const token = (game) => game.horde.battlefield.find((card) => card.definitionId === "goblin_token_1_1_red").instanceId;
+  const token = (game) => game.horde.field.find((card) => card.definitionId === "goblin_token_1_1_red").instanceId;
 
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
 
   // Pashalik Mons burns an opposing creature for each Goblin death; a 1/1 Llanowar Elves dies to it.
-  assert.equal(destroyed.game.player.battlefield.length, 0);
-  assert.equal(destroyed.game.player.graveyard.length, 1);
+  assert.equal(destroyed.game.player.field.length, 0);
+  assert.equal(destroyed.game.player.memory.length, 1);
 
   // The raw move puts the same token in the graveyard without any death ever happening.
-  assert.equal(moved.game.horde.graveyard.at(-1).definitionId, "goblin_token_1_1_red");
-  assert.equal(moved.game.player.battlefield.length, 1);
+  assert.equal(moved.game.horde.memory.at(-1).definitionId, "goblin_token_1_1_red");
+  assert.equal(moved.game.player.field.length, 1);
   assert.equal(moved.game.eventQueue.length, 0);
 });
 
@@ -147,10 +147,10 @@ test("wiping a board is silent: nothing dies, so nothing triggers", () => {
 
   const wiped = clearBattlefield(game, "horde");
   assert.equal(wiped.ok, true);
-  assert.equal(wiped.game.horde.battlefield.length, 0);
-  assert.equal(wiped.game.horde.graveyard.length, 2);
-  assert.ok(wiped.game.horde.graveyard.every((card) => card.zone === "graveyard"));
-  assert.equal(wiped.game.player.battlefield.length, 1, "no death trigger ever fired");
+  assert.equal(wiped.game.horde.field.length, 0);
+  assert.equal(wiped.game.horde.memory.length, 2);
+  assert.ok(wiped.game.horde.memory.every((card) => card.zone === "memory"));
+  assert.equal(wiped.game.player.field.length, 1, "no death trigger ever fired");
   assert.equal(wiped.game.eventQueue.length, 0);
 
   const again = clearBattlefield(wiped.game, "horde");
@@ -192,7 +192,7 @@ test("the same action sequence over two rebuilds lands on identical states", () 
     game = addEnergySource(game).game;
     game = addStoredEnergy(game).game;
     game = drawPlayerCard(game).game;
-    const token = game.horde.battlefield[0].instanceId;
+    const token = game.horde.field[0].instanceId;
     game = destroyCard(game, token).game;
     return drainEnergy(game).game;
   };

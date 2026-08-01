@@ -75,7 +75,7 @@ export function CardPreview() {
       return;
     }
     const observedAnchor = anchor;
-    const battlefieldSlot = observedAnchor.closest<HTMLElement>(".battlefield-card-slot, .battlefield-card-slot-compact");
+    const battlefieldSlot = observedAnchor.closest<HTMLElement>(".field-card-slot, .field-card-slot-compact");
 
     let scheduleFrame = 0;
     let settleFrame = 0;
@@ -362,11 +362,11 @@ function KeywordExplanations({
 }
 
 function renderKeywordLabel(keyword: string) {
-  const toxic = keyword.match(/^(TOXIC|TÓXICO)\s+\{(\d+)\}$/i);
-  if (!toxic) return keyword;
+  const poison = keyword.match(/^(POISON|VENENO)\s+\{(\d+)\}$/i);
+  if (!poison) return keyword;
   return (
     <>
-      {toxic[1]} <span className="toxic-keyword-badge">{toxic[2]}</span>
+      {poison[1]} <span className="toxic-keyword-badge">{poison[2]}</span>
     </>
   );
 }
@@ -374,11 +374,11 @@ function renderKeywordLabel(keyword: string) {
 function findCard(game: ReturnType<typeof useGameStore.getState>["game"], id: string): CardInstance | undefined {
   return [
     ...game.player.hand,
-    ...game.player.battlefield,
-    ...game.player.graveyard,
-    ...game.player.exile,
-    ...game.horde.battlefield,
-    ...game.horde.graveyard,
-    ...game.horde.exile,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.horde.field,
+    ...game.horde.memory,
+    ...game.horde.oblivion,
   ].find((card) => card.instanceId === id);
 }

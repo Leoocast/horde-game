@@ -56,13 +56,13 @@ export function monsterSfx(card: CardInstance) {
 }
 
 export function playDrawOneIfPlayerDrew(previous: GameState, next: GameState): void {
-  if (next.player.hand.length > previous.player.hand.length && next.player.library.length < previous.player.library.length) {
+  if (next.player.hand.length > previous.player.hand.length && next.player.archive.length < previous.player.archive.length) {
     useAudioStore.getState().playSfx("drawOne");
   }
 }
 
 export function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === id);
+  return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === id);
 }
 
 /** Cards whose temporary stats increased or that gained a temporary keyword between two
@@ -70,7 +70,7 @@ export function findBattlefieldCard(game: GameState, id: string): CardInstance |
  *  presentation rule without teaching the store individual effect types. */
 export function findTemporaryBuffedCardIds(previous: GameState, next: GameState): string[] {
   const previousBuffs = new Map(
-    [...previous.player.battlefield, ...previous.horde.battlefield].map((card) => [
+    [...previous.player.field, ...previous.horde.field].map((card) => [
       card.instanceId,
       {
         power: card.temporaryPower,
@@ -79,7 +79,7 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       },
     ]),
   );
-  return [...next.player.battlefield, ...next.horde.battlefield]
+  return [...next.player.field, ...next.horde.field]
     .filter((card) => {
       const before = previousBuffs.get(card.instanceId);
       if (!before) return false;
@@ -153,8 +153,8 @@ export function flashAutoPaidLands(ids: string[]): { ids: string[]; eventId: num
 // Discards are derived from the card diff (hand -> graveyard), never from log text:
 // the log is display-only and its wording must stay free to change or localize.
 export function notifyDiscardEffects(previous: GameState, next: GameState, options?: { title: string; tone: "warning" | "horde" }): void {
-  const previousPlayerGraveyardIds = new Set(previous.player.graveyard.map((card) => card.instanceId));
-  const discardedCards = next.player.graveyard.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
+  const previousPlayerGraveyardIds = new Set(previous.player.memory.map((card) => card.instanceId));
+  const discardedCards = next.player.memory.filter((card) => previous.player.hand.some((item) => item.instanceId === card.instanceId) && !previousPlayerGraveyardIds.has(card.instanceId));
   if (discardedCards.length === 0) return;
   const origins = new Map(
     discardedCards.map((card) => {
@@ -183,8 +183,8 @@ export function notifyDiscardEffects(previous: GameState, next: GameState, optio
 }
 
 export function hordeMillAnimationsFrom(previous: GameState, next: GameState): HordeMillAnimationItem[] {
-  const previousLibraryIds = new Set(previous.horde.library.map((card) => card.instanceId));
-  return next.horde.graveyard
+  const previousLibraryIds = new Set(previous.horde.archive.map((card) => card.instanceId));
+  return next.horde.memory
     .filter((card) => previousLibraryIds.has(card.instanceId))
     .map((card) => ({
       id: `horde-mill-${card.instanceId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,

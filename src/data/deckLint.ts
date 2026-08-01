@@ -3,6 +3,8 @@ import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
 import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "./hostfallDeckAdapter";
 import type { EffectDefinition } from "../engine/GameTypes";
+import { isCardKind, isCardModifier, isTrait } from "../engine/hostfallVocabulary";
+import { isHostfallAuthoredZone } from "../engine/hostfallZones";
 import {
   AMOUNT_TYPES,
   AUTHORING_TRIGGER_EVENTS,
@@ -147,8 +149,54 @@ const LEGACY_HOSTFALL_AUTHORING_VALUES = new Set([
   "RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD",
 ]);
 
+export function lintHostfallDeckSchema(deck: NewDeckList): DeckLintIssue[] {
+  const errors: DeckLintIssue[] = [];
+  lintHostfallSchema(deck, errors);
+  return errors;
+}
+
 function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
-  if (deck.schemaVersion !== HOSTFALL_DECK_SCHEMA_VERSION) return;
+  if (deck.schemaVersion !== HOSTFALL_DECK_SCHEMA_VERSION) {
+    errors.push({
+      deckId: deck.id,
+      cardId: "(deck)",
+      abilityId: "schema",
+      message: `Unsupported schemaVersion "${String(deck.schemaVersion)}"; expected "${HOSTFALL_DECK_SCHEMA_VERSION}".`,
+    });
+    return;
+  }
+  if (deck.side !== "HOST" && deck.side !== "CHRONICLER") {
+    errors.push({
+      deckId: deck.id,
+      cardId: "(deck)",
+      abilityId: "schema",
+      message: `Unknown side "${String(deck.side)}"; expected "HOST" or "CHRONICLER".`,
+    });
+  }
+
+  const reportVocabulary = (
+    values: unknown,
+    cardId: string,
+    path: string,
+    label: string,
+    predicate: (value: unknown) => boolean,
+  ): void => {
+    if (!Array.isArray(values)) {
+      errors.push({ deckId: deck.id, cardId, abilityId: "schema", message: `${path} must be an array.` });
+      return;
+    }
+    for (const value of values) {
+      if (!predicate(value)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall ${label} "${String(value)}" at "${path}".`,
+        });
+      }
+    }
+  };
+
   const visit = (value: unknown, cardId: string, path: string): void => {
     if (Array.isArray(value)) {
       value.forEach((item, index) => visit(item, cardId, `${path}[${index}]`));
@@ -168,6 +216,26 @@ function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
     if (!value || typeof value !== "object") return;
     for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
       const nextPath = path ? `${path}.${key}` : key;
+      if (key === "kinds") reportVocabulary(nestedValue, cardId, nextPath, "kind", isCardKind);
+      if (key === "modifiers") reportVocabulary(nestedValue, cardId, nextPath, "modifier", isCardModifier);
+      if (key === "traits") reportVocabulary(nestedValue, cardId, nextPath, "trait", isTrait);
+      if (key === "zone" && !isHostfallAuthoredZone(nestedValue)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall zone "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
+      const parentType = String((value as Record<string, unknown>).type ?? "");
+      if (key === "keyword" && parentType.includes("KEYWORD") && !isTrait(nestedValue)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Unknown Hostfall trait "${String(nestedValue)}" at "${nextPath}".`,
+        });
+      }
       if (LEGACY_HOSTFALL_AUTHORING_KEYS.has(key)) {
         errors.push({
           deckId: deck.id,

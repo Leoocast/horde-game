@@ -27,7 +27,7 @@ function succeed(game: GameState, message: string): PlaygroundActionResult {
 
 export function drawPlayerCard(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  if (next.player.library.length === 0) return fail(game, "The Chronicler Archive is empty.");
+  if (next.player.archive.length === 0) return fail(game, "The Chronicler Archive is empty.");
   drawCards(next, "player", 1);
   return succeed(next, "Playground draws a card.");
 }
@@ -52,7 +52,7 @@ export function addEnergySource(game: GameState, amount = 1): PlaygroundActionRe
  *  without advancing the turn. */
 export function refillEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const lands = next.player.battlefield.filter((card) => card.cardTypes.includes("Land"));
+  const lands = next.player.field.filter((card) => card.cardTypes.includes("SOURCE"));
   if (lands.length === 0) return fail(game, "There are no energy sources to refill. Add one first.");
   let restored = 0;
   for (const land of lands) {
@@ -75,8 +75,8 @@ export function addStoredEnergy(game: GameState, amount = 1): PlaygroundActionRe
  *  for testing what a card does with nothing left. */
 export function drainEnergy(game: GameState): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  for (const card of next.player.battlefield) {
-    if (!card.cardTypes.includes("Land")) continue;
+  for (const card of next.player.field) {
+    if (!card.cardTypes.includes("SOURCE")) continue;
     card.tapped = true;
     card.activatedThisTurn = true;
   }
@@ -121,10 +121,10 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
   const located = locateCard(next, cardId);
   if (!located) return fail(game, "That card is not in play.");
   const { card, side, zone } = located;
-  if (zone === "graveyard") return fail(game, `${card.name} is already in Memory.`);
+  if (zone === "memory") return fail(game, `${card.name} is already in Memory.`);
   removeFromZone(next, side, zone, cardId);
-  card.zone = "graveyard";
-  next[side].graveyard.push(card);
+  card.zone = "memory";
+  next[side].memory.push(card);
   return succeed(next, `Playground moves ${card.name} to Memory.`);
 }
 
@@ -135,11 +135,11 @@ export function sendCardToGraveyard(game: GameState, cardId: string): Playground
  */
 export function clearBattlefield(game: GameState, side: Side): PlaygroundActionResult {
   const next = structuredClone(game) as GameState;
-  const removed = next[side].battlefield;
+  const removed = next[side].field;
   if (removed.length === 0) return fail(game, `The ${side === "horde" ? "Host" : "Chronicler"} Field is already empty.`);
-  for (const card of removed) card.zone = "graveyard";
-  next[side].graveyard.push(...removed);
-  next[side].battlefield = [];
+  for (const card of removed) card.zone = "memory";
+  next[side].memory.push(...removed);
+  next[side].field = [];
   return succeed(next, `Playground clears ${removed.length} permanent(s) from the ${side} board.`);
 }
 
@@ -159,12 +159,12 @@ export function resolveAllEvents(game: GameState): PlaygroundActionResult {
 }
 
 function findBattlefieldCard(game: GameState, cardId: string): CardInstance | undefined {
-  return [...game.player.battlefield, ...game.horde.battlefield].find((card) => card.instanceId === cardId);
+  return [...game.player.field, ...game.horde.field].find((card) => card.instanceId === cardId);
 }
 
 function locateCard(game: GameState, cardId: string): { card: CardInstance; side: Side; zone: ZoneName } | undefined {
   for (const side of ["player", "horde"] as const) {
-    for (const zone of ["battlefield", "hand", "library", "graveyard", "exile"] as const) {
+    for (const zone of ["field", "hand", "archive", "memory", "oblivion"] as const) {
       if (side === "horde" && zone === "hand") continue;
       const card = (game[side] as unknown as Record<string, CardInstance[]>)[zone]?.find((item) => item.instanceId === cardId);
       if (card) return { card, side, zone };

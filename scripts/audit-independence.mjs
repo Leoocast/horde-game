@@ -98,6 +98,7 @@ function relative(file) {
 function walk(relativeRoot) {
   const root = absolute(relativeRoot);
   if (!fs.existsSync(root)) return [];
+  if (fs.statSync(root).isFile()) return [root];
   const files = [];
   const pending = [root];
   while (pending.length > 0) {
@@ -228,6 +229,8 @@ const toolText = textFiles(["dev/tools"]);
 const distText = textFiles(["dist"]);
 const internalText = textFiles(["src/engine", "src/store", "src/playground"]);
 const testText = textFiles(["tests"]);
+const l41Text = [...productionText, ...testText]
+  .filter((file) => relative(file) !== "src/data/deckLint.ts");
 
 const explicitIpPatterns = [
   { label: "Magic", pattern: /\bMagic(?:\s*:\s*The Gathering|\s+The Gathering)?\b/iu },
@@ -243,6 +246,20 @@ const internalLegacyPatterns = [
   { label: "legacy traits", pattern: /\b(?:REACH|VIGILANCE|MENACE|DEATHTOUCH|FIRST_STRIKE|SKULK|LIFESTEAL|TRAMPLE|HASTE|TOXIC(?:_\d+)?)\b/u },
   { label: "legacy states", pattern: /\b(?:tapped|summoningSickness)\b/u },
   { label: "legacy Host identity", pattern: /\bhorde\b/iu },
+];
+const l41LegacyPatterns = [
+  {
+    label: "legacy card-kind value",
+    pattern: /["'](?:Creature|Land|Instant|Sorcery|Enchantment|Artifact|Legendary)["']/u,
+  },
+  {
+    label: "legacy Trait value",
+    pattern: /["'](?:REACH|VIGILANCE|MENACE|DEATHTOUCH|FIRST_STRIKE|SKULK|LIFESTEAL|TRAMPLE|HASTE|TOXIC(?:_\d+)?)["']/u,
+  },
+  {
+    label: "retired L4.1 runtime identifier",
+    pattern: /\b(?:deathtouchDamage|getToxicAmount|resolvePlayerAttackerLifesteal)\b/u,
+  },
 ];
 
 const derivedAssetRoots = [
@@ -328,6 +345,14 @@ const checks = [
     "Legacy fields in active deck authoring",
     "Active deck JSON still uses the pre-Hostfall schema.",
     authoredKeyInventory(),
+  ),
+  finding(
+    "legacy-l41-card-model",
+    "blocker",
+    "L4.1",
+    "Legacy card kinds or Traits in active consumers",
+    "Runtime, UI and migrated tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
+    scanTextPatterns(l41Text, l41LegacyPatterns),
   ),
   finding(
     "legacy-internal-vocabulary",

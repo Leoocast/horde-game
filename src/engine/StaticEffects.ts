@@ -32,7 +32,7 @@ export function staticConditionMet(game: GameState, condition: unknown, source: 
   }
   if (data.type === "GRAVEYARD_COUNT_AT_LEAST") {
     const side = resolveAffectedController(source.controller, data.controller) ?? source.controller;
-    return game[side].graveyard.length >= Number(data.amount ?? 0);
+    return game[side].memory.length >= Number(data.amount ?? 0);
   }
   return true;
 }
@@ -58,14 +58,14 @@ export function getPowerToughness(
     surgeBonus &&
     hordeInSurge(game) &&
     card.controller === "horde" &&
-    card.cardTypes.includes("Creature") &&
+    card.cardTypes.includes("ECHO") &&
     card.subtypes.some((subtype) => surgeBonus.subtypes.some((bonusSubtype) => bonusSubtype.toLowerCase() === subtype.toLowerCase()))
   ) {
     power += surgeBonus.power;
     toughness += surgeBonus.toughness;
   }
 
-  for (const source of [...game.player.battlefield, ...game.horde.battlefield]) {
+  for (const source of [...game.player.field, ...game.horde.field]) {
     if (excludedBuffSourceIds?.has(source.instanceId)) continue;
     for (const effect of source.effects) {
       if (effect.type === "STATIC_BUFF") {

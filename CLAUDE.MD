@@ -337,12 +337,13 @@ Keywords:
 ## Decks e imagenes
 
 El formato viejo fue eliminado junto con `player_deck.json`, `horde_deck.json` y
-`cardImageLookups.json`. Los tres decks vigentes usan el mismo esquema authoring (cards con
+`cardImageLookups.json`. Los cuatro decks vigentes usan el schema Hostfall `1.0.0` (cards con
 `abilities` de kind STATIC/TRIGGERED/ACTIVATED/SPELL) y pasan por `normalizeDeck`:
 
 - player: `mono_green_ramp` (`DEFAULT_PLAYER_DECK_ID`)
-- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`) — migrado al esquema nuevo
-- horde: `goblin_assault_horde` — seleccionable; sus habilidades de lords sin handler estan marcadas `engineSupport: "pending"`
+- player: `vampire_chronicle_preview`
+- horde: `horde_zombies` (`DEFAULT_HORDE_DECK_ID`)
+- horde: `goblin_assault_horde` — seleccionable
 
 Reglas de horda por deck: el engine construye `game.hordeRules` con `buildHordeRules(deck.rulesProfile)` (ver `HordeRules.ts`). Los defaults reproducen el modo zombie clasico (revela 3 y para en no-token, mini surge turno 6 +1, surge turno 10 / chaos 8 +2, mill cada 3 de dano, mill por cada 3 poison, HASTE implicito). El `surgeBonus` (+1/+0 a Zombies en surge) NO es default: viene solo del `rulesProfile` del deck zombie. `swarmTokenSubtypes` define que fichas se agrupan por oleada. Cambiar la personalidad de una horda = editar su `rulesProfile`, no el engine.
 
@@ -709,14 +710,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
+- L4.1 está cerrada y validada por el usuario. `CardKind`, `CardModifier` y `Trait`
+  tienen vocabulario cerrado; `cardTypes`/`keywords` son nombres de contenedor temporales pero ya
+  contienen valores Hostfall, y `modifiers` conserva QUICK/CHRONICLE. Filtros, targeting, historial,
+  combate, Rasgos temporales/estáticos, Chaos y los consumidores mínimos de UI/store usan los mismos
+  valores. `legacy-l41-card-model` debe permanecer en cero. L4.2 puede migrar únicamente zonas.
 - L3 migró los cuatro decks uno por uno al schema Hostfall `1.0.0`. `mono_green_ramp` usa `CHRONICLER`,
   `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
-  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia los aliases
-  que todavía consume el engine; Mono Green, Vampiros, Zombies y Trasgos ya están migrados.
-  El deck lint rechaza campos legacy dentro de cualquier deck `1.0.0` y una regresión comprueba la
-  equivalencia de los cuatro decks migrados. No extender el adaptador fuera de L3/L4 ni leer el JSON authored
-  directamente desde UI. El usuario validó partidas de los cuatro decks; L3 está cerrada y la
-  siguiente fase es L4.1, Tipos de carta y Rasgos dentro del engine.
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia zonas, Energía,
+  estados, eventos y reglas Host legacy; ya no traduce valores de tipos o Rasgos. Mono Green,
+  Vampiros, Zombies y Trasgos ya están migrados. El deck lint rechaza campos legacy y vocabulario
+  canónico desconocido dentro de cualquier deck `1.0.0`. No extender el adaptador fuera de L4 ni
+  leer el JSON authored directamente desde UI.
 - `DECK_REGISTRY` es el único punto de registro y el deck lint
   (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`) rechaza cualquier reintroducción del schema
   authored legacy.
@@ -906,8 +911,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mide 56px y la regresión compara cantidad, coste, stats, tipo y reglas contra el deck runtime.
   Sus 17 PNG tampoco fueron regenerados: no existe arte fuente separado y el exportador bloquea
   sus rutas circulares antes de sobrescribirlos. El usuario aceptó conservar esta excepción hasta
-  que el arte definitivo los sustituya en L6. No se cambiaron nombres, arte, balance, ids ni
-  aliases del motor.
+  que el arte definitivo los sustituya en L6. Por eso el PNG vigente de General Kreat no imprime
+  su modificador `CHRONICLE`; no es un fallo del runtime ni bloqueó L4.1. La identidad de Chronicler
+  de Trasgos se revisará cuando cambie el arte: el candidato actual del usuario es Goblin
+  Chainwhirler en lugar de General Kreat. No cambiar esa asignación durante la limpieza del engine.
+  No se cambiaron nombres, arte, balance, ids ni aliases del motor.
 - Cazadores sigue siendo un estudio preview de 13 definiciones y 40 cartas, sin deck runtime ni
   mecánicas registradas. `hunters/studio.config.json` es su única fuente editable y genera la
   proyección que consume el índice. La presentación usa

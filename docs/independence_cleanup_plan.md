@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L3 completada; siguiente fase L4 — Limpieza interna del engine**
+Estado: **L4 en curso — L4.1 implementada, pendiente de validación manual**
 Última actualización: 2026-07-31  
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -27,7 +27,7 @@ demostrarse.
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | No iniciada | Por autorizar en el chat nuevo |
+| L4 — Limpieza interna del engine | En curso: L4.1 cerrada; L4.2 iniciada | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
 | L6 — Arte y procedencia | No iniciada | No autorizada todavía |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
@@ -368,6 +368,31 @@ rutina. Solo se cambia un término cuando el modelo Hostfall aporta una distinci
 `src/engine` usa el modelo Hostfall y cualquier vocabulario legacy restante está aislado en un
 adaptador con una fase de eliminación conocida.
 
+### Avance L4.1 — Tipos de carta y Rasgos
+
+- `src/engine/hostfallVocabulary.ts` define conjuntos cerrados para `CardKind`, `CardModifier` y
+  `Trait`, incluido `POISON_N`, junto con predicados compartidos para QUICK y validación.
+- El runtime conserva temporalmente los nombres de contenedor `cardTypes`/`keywords`, pero sus
+  valores ya son exclusivamente Hostfall; `modifiers` preserva QUICK y CHRONICLE sin volver a
+  codificarlos como tipos legacy. No existen dos arrays mutables para el mismo concepto.
+- Filtros, targeting, historial de entradas, combate, Rasgos impresos/temporales/estáticos, Chaos y
+  los consumidores mínimos de store/UI usan los mismos valores canónicos.
+- El adaptador dejó de traducir tipos y Rasgos. Mantiene sólo los aliases de los dominios de
+  L4.2-L4.6, además del cambio temporal de nombre de los contenedores que retirará L4.6.
+- El deck lint falla ante versión, side, kind, modifier o Trait desconocidos. La auditoría incorpora
+  el blocker específico `legacy-l41-card-model`, actualmente en cero.
+- El inventario L4 general bajó de 859 a 754 apariciones; las restantes pertenecen a zonas,
+  Energía, estados, eventos, identidad Host y limpieza posterior de consumidores.
+- Verificación automática: TypeScript, deck lint, Card Studio, 200/200 tests, auditoría, build y
+  `git diff --check` en verde.
+- El usuario validó los cuatro decks mediante dos pruebas dirigidas. El PNG vigente de General
+  Kreat no muestra `CHRONICLE`, como era esperable: los 34 PNG de Zombies y Trasgos continúan
+  deliberadamente pausados hasta el cambio de arte. Esta deuda visual no contradice el modificador
+  runtime ni bloquea L4.1.
+- La identidad futura de Chronicler de Trasgos se decidirá en una fase de arte posterior; el
+  candidato actual del usuario es Goblin Chainwhirler en lugar de General Kreat. L4 no cambia esa
+  asignación de contenido.
+
 ## Fase L5 — Independencia de los mazos
 
 ### Objetivo
@@ -519,6 +544,7 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
 | 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos; partida completa del usuario OK. |
 | 2026-07-31 | L3.4 | Migración exclusiva de Trasgos y cierre de L3. | Los cuatro decks usan `1.0.0`; el inventario `legacy-authored-schema` llegó a cero y el usuario validó la partida. | TypeScript OK; deck lint OK; Card Studio OK; 199/199 tests; build OK; auditor OK para L3; `git diff --check` OK; partida completa del usuario OK. |
+| 2026-07-31 | L4.1 | Migración interna de tipos de carta, modificadores y Rasgos. | El runtime consume valores Hostfall sin traducción de tipos/Rasgos; el blocker `legacy-l41-card-model` quedó en cero. Los PNG pausados de Zombies/Trasgos siguen fuera de alcance. | TypeScript OK; deck lint OK; Card Studio OK; 200/200 tests; build OK; auditor OK para L4.1; `git diff --check` OK; prueba dirigida del usuario OK. |
 
 ## Plantilla para cerrar una fase
 
