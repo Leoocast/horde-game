@@ -100,7 +100,7 @@ src/
   data/
     decks/
       player/
-        mono_green_ramp/  deck del player en esquema 0.2.0 (JSON + manifest de imagenes)
+        mono_green_ramp/  deck del player en schema Hostfall 0.3.0 (JSON + manifest de imagenes)
       horde/
         zombies/          deck activo por defecto de la Horda (JSON + manifest de imagenes)
         goblins/          segundo deck de Horda, seleccionable (goblin_assault_horde), menos maduro en reglas
@@ -708,7 +708,17 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- Migracion de esquema (julio 2026): `horde-zombies.json` esta en el esquema nuevo, `DECK_REGISTRY` es el unico punto de registro de decks, y existe deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`).
+- L3 migra los decks uno por uno al schema Hostfall `0.3.0`. `mono_green_ramp` ya usa `CHRONICLER`,
+  `energyCost`, `kinds`, `modifiers`, `endurance`, `traits`, `FIELD`, `INVOKED`, `exhaust` y
+  `GAIN_ENERGY`. `src/data/hostfallDeckAdapter.ts` es el único puente temporal hacia los aliases
+  que todavía consume el engine; Vampiros, Zombies y Trasgos permanecen en `0.2.0` hasta su turno.
+  El deck lint rechaza campos legacy dentro de cualquier deck `0.3.0` y una regresión comprueba la
+  equivalencia de Mono Green. No extender el adaptador fuera de L3/L4 ni leer el JSON authored
+  directamente desde UI.
+- Migracion anterior de authoring (julio 2026): `horde-zombies.json` ya comparte el formato
+  estructurado `0.2.0` de los decks legacy; `DECK_REGISTRY` es el único punto de registro y existe
+  deck lint (`scripts/lint-decks.mjs` + `tests/deckLint.test.js`). No confundirlo con el schema
+  Hostfall `0.3.0`, que durante L3 solo usa Mono Green.
 - `EffectResolver.resolveEffect` es un registro (`EFFECT_HANDLERS`): agregar un efecto = agregar un handler ahi; el vocabulario del lint deriva de las keys automaticamente. La metadata de presentacion (`hasEffectPresentation`, `EFFECT_ANNOUNCEMENTS`) vive junto al registro — el store ya no re-aprende tipos de efectos para elegir animacion/toast.
 - Reglas de horda como data: `game.hordeRules` viene del `rulesProfile` del deck JSON. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
 - Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "todo trigger manual de entrada es obligatorio" via `findManualEnterTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
@@ -953,7 +963,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   Los 13 PNG de Mono Green fueron regenerados con el vocabulario vigente y tienen huella válida
   en el manifest de generación.
 
-  El estudio Mono Green y sus dos espejos JSON imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
+  El estudio Mono Green y su JSON runtime único imprimen el vocabulario Hostfall (`Eco`, `Fuente`,
   `Hechizo`, `Hechizo · Rápido`, `Guardia aérea`, `Letal` y `Veneno 1`) sin cambiar los ids,
   tipos o keywords internos del motor. `Eco` usa el mismo glifo grande de resonancia de Vampires;
   la detección de carta full-art del estudio reconoce `Fuente` en lugar de `Tierra`. `TRAMPLE`

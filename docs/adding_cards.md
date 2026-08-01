@@ -60,7 +60,8 @@ src/data/decks/
   horde/<deck_id>/
 ```
 
-El esquema actual es `0.2.0`. Una criatura vanilla mínima:
+El schema Hostfall vigente es `0.3.0`. Durante L3 todavía existen decks `0.2.0` pendientes de
+migración; no copiar su formato para cartas nuevas. Un Eco vanilla mínimo:
 
 ```json
 {
@@ -72,14 +73,12 @@ El esquema actual es `0.2.0`. Una criatura vanilla mínima:
     "es": "Siempre que otro Elfo aliado entre, esta criatura obtiene +1/+0 hasta el final del turno."
   },
   "quantity": 2,
-  "manaCost": "{2}{G}",
-  "manaValue": 3,
-  "colors": ["G"],
-  "cardTypes": ["Creature"],
+  "energyCost": { "amount": 3 },
+  "kinds": ["ECHO"],
   "subtypes": ["Elf", "Warrior"],
   "power": 3,
-  "toughness": 3,
-  "keywords": ["REACH"],
+  "endurance": 3,
+  "traits": ["SKYGUARD"],
   "abilities": []
 }
 ```
@@ -93,7 +92,7 @@ Reglas:
 - `deckSize` debe coincidir con la suma de `quantity` en `cards`.
 - Los tokens reutilizables deben estar en `tokens`; `tokens` no se expande dentro de la library.
   Algunos decks también pueden llevar esa misma ficha como carta real de `cards`.
-- `cardTypes`, `subtypes`, `keywords`, `power` y `toughness` son datos estructurados. No se deriva
+- `kinds`, `subtypes`, `traits`, `power` y `endurance` son datos estructurados. No se deriva
   gameplay de texto o metadata externos.
 - `displayNameEs` es el nombre local del juego; la imagen se resuelve mediante el manifest local.
 - `gameText` describe lo que la carta hace realmente en Hostfall, en inglés y español. Los
@@ -111,10 +110,10 @@ Cada habilidad usa uno de cuatro `kind`:
 
 | Kind | Uso |
 | --- | --- |
-| `STATIC` | Buffs o keywords continuas mientras la fuente está en el campo. |
+| `STATIC` | Pasivas continuas mientras la Fuente permanece en el Campo. |
 | `TRIGGERED` | Reacción a un evento del engine. |
 | `ACTIVATED` | Efecto que se activa pagando un coste. |
-| `SPELL` | Resolución de un instant o sorcery desde la mano o desde el revelado de la Horda. |
+| `SPELL` | Resolución de un Hechizo desde la Mano o desde el revelado de la Hueste. |
 
 ### Habilidad estática
 
@@ -122,28 +121,28 @@ Cada habilidad usa uno de cuatro `kind`:
 {
   "id": "example_other_elves_buff",
   "kind": "STATIC",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "effects": [
     {
       "type": "MODIFY_STATS",
-      "duration": "WHILE_SOURCE_ON_BATTLEFIELD",
+      "duration": "WHILE_SOURCE_ON_FIELD",
       "scope": {
         "controller": "SELF",
         "filters": {
-          "cardTypes": ["Creature"],
+          "kinds": ["ECHO"],
           "subtypes": ["Elf"],
           "excludeSelf": true
         }
       },
       "power": 1,
-      "toughness": 1
+      "endurance": 1
     }
   ]
 }
 ```
 
 `normalizeDeck` convierte esta forma en `STATIC_BUFF`. `GRANT_KEYWORD` con la misma duración se
-convierte en `STATIC_GRANT_KEYWORD`. Los stats y keywords se calculan continuamente en
+convierte en `STATIC_GRANT_KEYWORD`. Las estadísticas y los Rasgos se calculan continuamente en
 `StaticEffects.ts` y `Keywords.ts`; no se guardan como copias del bonus en cada carta.
 
 Las auras estáticas de la Horda reciben presentación automáticamente: el store captura la nueva
@@ -156,9 +155,9 @@ una animación por nombre de carta.
 {
   "id": "example_self_enters_draw",
   "kind": "TRIGGERED",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "trigger": {
-    "event": "ENTERS_BATTLEFIELD",
+    "event": "INVOKED",
     "source": "SELF"
   },
   "conditions": [],
@@ -191,19 +190,17 @@ Los triggers de Horda se resuelven mediante `EventQueue` y `hordeBeats.ts`:
 {
   "id": "example_add_mana",
   "kind": "ACTIVATED",
-  "zone": "BATTLEFIELD",
+  "zone": "FIELD",
   "cost": {
-    "tap": true
+    "exhaust": true
   },
   "targets": [],
   "conditions": [],
   "effects": [
     {
-      "type": "ADD_MANA",
+      "type": "GAIN_ENERGY",
       "player": "SELF",
-      "mana": {
-        "G": 1
-      }
+      "amount": 1
     }
   ]
 }
@@ -213,15 +210,16 @@ Limitaciones actuales:
 
 - El normalizador sólo admite un efecto por habilidad activada; el lint falla si se declaran más.
 - El flujo genérico de `GameActions.activateAbility` es para el player, durante su main phase.
-- Los costes runtime soportados hoy son los que lee `GameActions.ts`: `tap`, `genericMana`,
-  `coloredMana` (`G`, `R`, `U`, `W`, `B`), `sacrificeSelf` y `life`.
+- El schema Hostfall usa `exhaust`, `sacrificeSelf` y `life`; el adaptador los traduce al contrato
+  runtime actual. No agregar costes de colores. Si una Acción necesita pagar Energía además de
+  Agotar, ampliar primero el modelo tipado y el adaptador.
 - `life` debe ser un entero positivo (el deck lint lo valida), se paga atómicamente con el resto
   del coste y nunca puede reducir al player por debajo de 1. Cada pago pasa por la ruta genérica de
   pérdida, por lo que emite `LIFE_LOST` y `LIFE_PAID`: se acumula en
   `player.lifeLostThisTurn` y `player.lifePaidThisTurn`, respectivamente. Ambos contadores se
   reinician cada vez que comienza un turno, sea del player o de la Horda.
 - Una habilidad que sólo tiene sentido cuando su criatura ya puede atacar puede declarar
-  `requiresNoSummoningSickness: true`. Engine y UI la bloquean mientras la fuente tenga fatiga de
+  `requiresStabilized: true`. Engine y UI la bloquean mientras la fuente esté Estabilizándose,
   invocación, antes de cobrar cualquier coste.
 - La Horda no tiene una política genérica que decida cuándo activar habilidades. Una habilidad
   puede normalizar correctamente y aun así no ser invocada durante una partida de Horda.
@@ -235,17 +233,14 @@ Limitaciones actuales:
   "id": "example_growth_spell",
   "kind": "SPELL",
   "zone": "HAND",
-  "speed": "INSTANT",
-  "cost": {
-    "mana": "{G}"
-  },
+  "speed": "QUICK",
   "targets": [
     {
       "id": "targetCreature",
-      "zone": "BATTLEFIELD",
+      "zone": "FIELD",
       "controller": "SELF",
       "filters": {
-        "cardTypes": ["Creature"]
+        "kinds": ["ECHO"]
       }
     }
   ],
@@ -255,7 +250,7 @@ Limitaciones actuales:
       "type": "MODIFY_STATS",
       "target": "targetCreature",
       "power": 2,
-      "toughness": 2,
+      "endurance": 2,
       "duration": "END_OF_TURN"
     }
   ]

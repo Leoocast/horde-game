@@ -70,7 +70,7 @@ archivo no corre nunca.
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, mana y autopago, combate del player y de la Horda, muertes y triggers encadenados, surge por deck, compatibilidad legacy de Chaos, targeting |
 | `tests/hordeBeats.test.js` | Regresiones de presentacion del store: cola visual bajo timers retrasados, orden compartido player/Horda, curaciones y perdida de vida/robo de hechizos. |
-| `tests/deckLint.test.js` | El deck lint como test: una habilidad de un deck JSON que el engine no entiende rompe la suite en vez de quedar muda |
+| `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege el schema Hostfall `0.3.0`, sus campos canónicos y la equivalencia del adaptador temporal |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: keywords, stats, contadores, creación de fichas, párrafos y rutas de arte |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
 | `tests/cardVoiceInteractions.test.js` | Reglas de voz entre cartas, filtros por subtipo, probabilidades y conteo de ataques confirmados |

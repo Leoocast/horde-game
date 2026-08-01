@@ -21,16 +21,18 @@ src/data/decks/
 
 ## Deck JSON
 
-The deck file describes gameplay data. The current schema is `0.2.0`.
+The deck file describes gameplay data. New and migrated decks use Hostfall schema `0.3.0`.
+During L3, decks that have not been migrated yet remain temporarily on `0.2.0` and pass through
+`hostfallDeckAdapter.ts` unchanged.
 
 Required top-level fields:
 
-- `schemaVersion`: format version, currently `"0.2.0"`.
+- `schemaVersion`: `"0.3.0"` for Hostfall-authored decks.
 - `id`: stable deck id.
 - `name`: display name.
-- `side`: `"PLAYER"` or `"HORDE"`.
+- `side`: `"CHRONICLER"` or `"HOST"`.
 - `deckSize`: total card count.
-- `gameplayLandCount`: optional player-deck override for the number of authored Land copies kept
+- `gameplayLandCount`: optional player-deck override for the number of authored Source copies kept
   when a game is created; decks without it keep the default of nine.
 - `cards`: card definitions.
 - `tokens`: token definitions, if any.
@@ -40,14 +42,13 @@ Card definitions should use stable ids and explicit structured data:
 - `id`
 - `name`
 - `quantity`
-- `manaCost`
-- `manaValue`
-- `colors`
-- `cardTypes`
+- `energyCost.amount`
+- `kinds`
+- `modifiers`, such as `QUICK`
 - `subtypes`
 - `power`
-- `toughness`
-- `keywords`
+- `endurance`
+- `traits`
 - `abilities`
 
 ## Abilities
@@ -65,7 +66,7 @@ Common ability fields:
 
 - `id`: stable ability id.
 - `kind`: ability kind.
-- `zone`: where it works, usually `"BATTLEFIELD"` or `"HAND"`.
+- `zone`: where it works, usually `"FIELD"` or `"HAND"`.
 - `cost`: structured cost data.
 - `trigger`: event data for triggered abilities.
 - `targets`: target requirements.
@@ -80,15 +81,15 @@ Example:
 {
   "id": "llanowar_elves_add_green",
   "kind": "ACTIVATED",
-  "zone": "BATTLEFIELD",
-  "cost": { "tap": true },
+  "zone": "FIELD",
+  "cost": { "exhaust": true },
   "targets": [],
   "conditions": [],
   "effects": [
     {
-      "type": "ADD_MANA",
+      "type": "GAIN_ENERGY",
       "player": "SELF",
-      "mana": { "G": 1 }
+      "amount": 1
     }
   ]
 }
@@ -139,9 +140,11 @@ Los tres decks registrados usan este esquema en partida, no sólo en el inspecto
 - `horde_zombies`
 - `goblin_assault_horde`
 
-`normalizeDeck` convierte `abilities[]` al modelo runtime. `EffectResolver` contiene el registro
-real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad sin
-`engineSupport` debe sobrevivir completa a la normalización o el lint falla.
+`hostfallDeckAdapter` traduce temporalmente el schema `0.3.0` al contrato legacy del engine;
+`normalizeDeck` convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
+registro real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad
+sin `engineSupport` debe sobrevivir completa a la normalización o el lint falla. El lint también
+rechaza cualquier campo authored legacy que reaparezca dentro de un deck `0.3.0`.
 
 Marcadores admitidos:
 

@@ -1,16 +1,18 @@
 import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Keyword, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
+import { adaptHostfallDeck } from "./hostfallDeckAdapter";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {
+  const authoredDeck = adaptHostfallDeck(rawDeck);
   return {
-    id: rawDeck.id,
-    name: rawDeck.name,
-    side: normalizeSide(rawDeck.side),
-    deckSize: rawDeck.deckSize ?? rawDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
-    gameplayLandCount: rawDeck.gameplayLandCount,
-    cards: rawDeck.cards.map(normalizeCard),
-    tokens: rawDeck.tokens?.map(normalizeCard),
-    rulesProfile: rawDeck.rulesProfile,
+    id: authoredDeck.id,
+    name: authoredDeck.name,
+    side: normalizeSide(authoredDeck.side),
+    deckSize: authoredDeck.deckSize ?? authoredDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
+    gameplayLandCount: authoredDeck.gameplayLandCount,
+    cards: authoredDeck.cards.map(normalizeCard),
+    tokens: authoredDeck.tokens?.map(normalizeCard),
+    rulesProfile: authoredDeck.rulesProfile,
   };
 }
 

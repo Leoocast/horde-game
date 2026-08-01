@@ -30,17 +30,42 @@ export const STUDIO_DECKS = Object.freeze({
 });
 
 const TRAIT_LABELS = Object.freeze({
+  ALERT: "Alerta",
+  DAUNTING: "Imponente",
   DEATHTOUCH: "Letal",
+  DRAIN: "Drenar",
   FIRST_STRIKE: "Reflejos",
   FLYING: "Volar",
+  FURTIVE: "Furtivo",
   HASTE: "Ímpetu",
+  IMPETUS: "Ímpetu",
+  LETHAL: "Letal",
   LIFESTEAL: "Drenar",
   MENACE: "Imponente",
+  OVERFLOW: "Desborde",
   REACH: "Guardia aérea",
+  REFLEX: "Reflejos",
+  SKYGUARD: "Guardia aérea",
   SKULK: "Furtivo",
   TRAMPLE: "Desborde",
   VIGILANCE: "Alerta",
 });
+
+function authoredEnergyAmount(card) {
+  if (typeof card.energyCost === "number") return card.energyCost;
+  if (card.energyCost && typeof card.energyCost === "object") {
+    return Number(card.energyCost.amount ?? 0);
+  }
+  return Number(card.manaValue ?? 0);
+}
+
+function authoredTraits(card) {
+  return card.traits ?? card.keywords ?? [];
+}
+
+function authoredEndurance(card) {
+  return card.endurance ?? card.toughness ?? null;
+}
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -90,12 +115,17 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
   const rules = /^Sin efecto (?:activo )?adicional\.$/u.test(rawRules)
     ? []
     : rawRules.split("\n").filter(Boolean);
-  const traits = (runtimeCard.keywords ?? [])
+  const traits = authoredTraits(runtimeCard)
     .filter((trait) => !hiddenTraits.has(trait))
+    .filter((trait) => !/^POISON_\d+$/iu.test(trait))
     .map((trait) => TRAIT_LABELS[trait] ?? trait);
-  const poison = (runtimeCard.abilities ?? [])
-    .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/iu)?.[1])
-    .filter(Boolean)
+  const poison = [
+    ...authoredTraits(runtimeCard)
+      .map((trait) => String(trait).match(/^POISON_(\d+)$/iu)?.[1]),
+    ...(runtimeCard.abilities ?? [])
+      .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/iu)?.[1]),
+  ]
+    .filter((amount, index, amounts) => Boolean(amount) && amounts.indexOf(amount) === index)
     .map((amount) => `Veneno ${amount}`);
   const visibleTraits = [...traits, ...poison];
   const traitLines = presentation.groupTraits && visibleTraits.length > 0
@@ -162,9 +192,9 @@ export function buildStudioCards(deckId) {
       art_crop: presentation.artCrop,
       nombre: runtimeCard.displayNameEs ?? runtimeCard.name,
       tipo: presentation.typeLineEs,
-      costo: runtimeCard.manaValue ?? 0,
+      costo: authoredEnergyAmount(runtimeCard),
       atk: runtimeCard.power ?? null,
-      def: runtimeCard.toughness ?? null,
+      def: authoredEndurance(runtimeCard),
       desc: visibleRules(runtimeCard, presentation, hiddenTraits),
       lore: presentation.flavorTextEs ?? runtimeFlavor,
       cantidad: runtimeCard.quantity,

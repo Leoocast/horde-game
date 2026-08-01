@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "monogreen": {
-      "inputHash": "0b9c365e2e6f0c3629b6d482618ddf33b611428078d49f65ea3a737a672a0537",
+      "inputHash": "253528c3e49a233f4a7250d8c25e0ecdb6ba6523e88820e4380b17daeb775a4c",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -26,7 +26,7 @@
         },
         {
           "path": "dev/tools/Decks/monogreen/studio.config.json",
-          "sha256": "1cd60c6438928ae4099a57c8d64b840335ddd7f0416c9549da2b6bc385fea88c"
+          "sha256": "459f7e10568ef3669c02d9249cf5a3be6d39c4af9ba21bb6731255727572f4df"
         },
         {
           "path": "public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
@@ -106,11 +106,11 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "526c027c97fcf2083f679de04fd6616038a45eee6b9c62dca9f408b338b8d44a"
+          "sha256": "dc7bcaafe6221670b7fc1e0ab2e7a7b5fdc30400ebef2f122021546cf8347f3e"
         },
         {
           "path": "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-          "sha256": "25e0e0f376803c56e6a20f36107ad7bb07f5a690a59805c74fdeee5b24ca1c91"
+          "sha256": "c3c6fb40fcfacbbc13fa3a3cfffdb06187c91df82ed5cdccfe58a35b1311ac51"
         }
       ],
       "cards": [
@@ -201,14 +201,14 @@
         {
           "id": "forest",
           "path": "public/cards/mono_green_ramp/forest.png",
-          "sha256": "bef7548a0bb332281baa5df0119a483ef75f4c32adf1a0d2aca50c021b922f0a",
+          "sha256": "4309e763c151621f0cd242f5305fdaec6023292bafcc5c69d993af57daf89d7b",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "vampires": {
-      "inputHash": "4b0203b70abdf8b8beb23ffe9f8ddebec2ca107f682ab9340ee52c225de22a8a",
+      "inputHash": "d0fa9e19faeb3a76b00f6fadc4367fe9d0025f23be9a4ceed1a91cab44000ffb",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -324,7 +324,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "526c027c97fcf2083f679de04fd6616038a45eee6b9c62dca9f408b338b8d44a"
+          "sha256": "dc7bcaafe6221670b7fc1e0ab2e7a7b5fdc30400ebef2f122021546cf8347f3e"
         },
         {
           "path": "src/data/decks/player/vampire_preview/vampire_preview.json",

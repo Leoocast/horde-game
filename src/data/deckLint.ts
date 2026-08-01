@@ -1,6 +1,7 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
+import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "./hostfallDeckAdapter";
 import type { EffectDefinition } from "../engine/GameTypes";
 import {
   AMOUNT_TYPES,
@@ -44,7 +45,9 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
   for (const entry of DECK_REGISTRY) {
     const deckId = entry.deck.id;
     const report: DeckLintReport = { deckId, label: entry.label, cards: [] };
-    const authoredCards = [...entry.raw.cards, ...(entry.raw.tokens ?? [])];
+    lintHostfallSchema(entry.raw, errors);
+    const compatibleDeck = adaptHostfallDeck(entry.raw);
+    const authoredCards = [...compatibleDeck.cards, ...(compatibleDeck.tokens ?? [])];
     if (!authoredCards.some((card) => card.id === entry.presentation.keyCardId)) {
       errors.push({
         deckId,
@@ -67,6 +70,107 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
     reports.push(report);
   }
   return { errors, reports };
+}
+
+const LEGACY_HOSTFALL_AUTHORING_KEYS = new Set([
+  "cardTypes",
+  "colorIdentity",
+  "coloredMana",
+  "colors",
+  "entersTapped",
+  "genericMana",
+  "keywords",
+  "mana",
+  "manaCost",
+  "manaValue",
+  "requiresNoSummoningSickness",
+  "tap",
+  "toughness",
+]);
+
+const LEGACY_HOSTFALL_AUTHORING_VALUES = new Set([
+  "ADD_MANA",
+  "Artifact",
+  "BATTLEFIELD",
+  "Creature",
+  "DEATHTOUCH",
+  "Energy",
+  "ENTERS_BATTLEFIELD",
+  "Enchantment",
+  "EXILE",
+  "FIRST_STRIKE",
+  "GRAVEYARD",
+  "HASTE",
+  "HORDE",
+  "INSTANT",
+  "Instant",
+  "Land",
+  "LIBRARY",
+  "LIFESTEAL",
+  "MENACE",
+  "PLAYER",
+  "REACH",
+  "SKULK",
+  "SORCERY",
+  "Sorcery",
+  "TRAMPLE",
+  "VIGILANCE",
+  "WHILE_SOURCE_ON_BATTLEFIELD",
+]);
+
+function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
+  if (deck.schemaVersion !== HOSTFALL_DECK_SCHEMA_VERSION) return;
+  const visit = (value: unknown, cardId: string, path: string): void => {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => visit(item, cardId, `${path}[${index}]`));
+      return;
+    }
+    if (typeof value === "string") {
+      if (LEGACY_HOSTFALL_AUTHORING_VALUES.has(value) || /^TOXIC_\d+$/u.test(value) || /^toxic_\d+$/u.test(value)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Hostfall schema cannot use legacy value "${value}" at "${path}".`,
+        });
+      }
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      const nextPath = path ? `${path}.${key}` : key;
+      if (LEGACY_HOSTFALL_AUTHORING_KEYS.has(key)) {
+        errors.push({
+          deckId: deck.id,
+          cardId,
+          abilityId: "schema",
+          message: `Hostfall schema cannot use legacy field "${nextPath}".`,
+        });
+      }
+      visit(nestedValue, cardId, nextPath);
+    }
+  };
+
+  for (const [key, value] of Object.entries(deck)) {
+    if (key === "cards" || key === "tokens") continue;
+    if (LEGACY_HOSTFALL_AUTHORING_KEYS.has(key)) {
+      errors.push({ deckId: deck.id, cardId: "(deck)", abilityId: "schema", message: `Hostfall schema cannot use legacy field "deck.${key}".` });
+    }
+    visit(value, "(deck)", `deck.${key}`);
+  }
+
+  for (const card of [...deck.cards, ...(deck.tokens ?? [])]) {
+    if (!Array.isArray(card.kinds) || card.kinds.length === 0) {
+      errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "Hostfall cards must declare kinds[]." });
+    }
+    const amount = typeof card.energyCost === "number"
+      ? card.energyCost
+      : Number(card.energyCost?.amount);
+    if (!Number.isInteger(amount) || amount < 0) {
+      errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "energyCost.amount must be a non-negative integer." });
+    }
+    visit(card, card.id, "card");
+  }
 }
 
 function lintCard(deckId: string, card: NewDeckCard, errors: DeckLintIssue[]): CardLintRow {

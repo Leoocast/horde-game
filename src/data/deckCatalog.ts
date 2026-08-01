@@ -1,6 +1,7 @@
 import type { Color } from "../engine/GameTypes";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
+import { adaptHostfallDeck } from "./hostfallDeckAdapter";
 
 export type NewDeckCard = {
   id: string;
@@ -12,13 +13,24 @@ export type NewDeckCard = {
   };
   quantity?: number;
   isToken?: boolean;
+  energyCost?: number | { amount: number };
+  kinds?: Array<"ECHO" | "SOURCE" | "SPELL" | "SUPPORT" | "TOKEN">;
+  modifiers?: Array<"QUICK" | "CHRONICLE">;
+  endurance?: number | null;
+  traits?: string[];
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   manaCost?: string;
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   manaValue?: number;
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   colors?: Color[];
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   cardTypes?: string[];
   subtypes?: string[];
   power?: number | null;
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   toughness?: number | null;
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   keywords?: string[];
   triggerMessage?: string;
   entersTapped?: boolean;
@@ -43,6 +55,8 @@ export type NewDeckAbility = {
   kind?: string;
   trigger?: Record<string, unknown>;
   cost?: Record<string, unknown>;
+  requiresStabilized?: boolean;
+  /** @deprecated L3 compatibility for decks that have not migrated to schema 0.3.0. */
   requiresNoSummoningSickness?: boolean;
   targets?: unknown[];
   conditions?: Array<Record<string, unknown>>;
@@ -111,7 +125,7 @@ function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
   return {
     id: entry.deck.id,
     label: entry.label,
-    deck: entry.raw,
+    deck: adaptHostfallDeck(entry.raw),
     images: entry.images,
     presentation: entry.presentation,
   };

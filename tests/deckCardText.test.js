@@ -301,8 +301,8 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
-    DEATHTOUCH: "Letal",
-    REACH: "Guardia aérea",
+    LETHAL: "Letal",
+    SKYGUARD: "Guardia aérea",
   };
 
   for (const source of studioSources) {
@@ -317,11 +317,11 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
     const rulesText = runtimeCard.gameText?.es === "Sin efecto adicional."
       ? []
       : [runtimeCard.gameText?.es];
-    const keywordText = (runtimeCard.keywords ?? [])
-      .filter((keyword) => keyword !== "TRAMPLE")
+    const keywordText = (runtimeCard.traits ?? [])
+      .filter((trait) => trait !== "OVERFLOW" && !/^POISON_\d+$/u.test(trait))
       .map((keyword) => keywordLabels[keyword] ?? keyword);
-    const poisonText = (runtimeCard.abilities ?? [])
-      .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/i)?.[1])
+    const poisonText = (runtimeCard.traits ?? [])
+      .map((trait) => String(trait).match(/^POISON_(\d+)$/i)?.[1])
       .filter(Boolean)
       .map((amount) => `Veneno ${amount}`);
     const expectedRules = [...keywordText, ...poisonText, ...rulesText].filter(Boolean).join("\n");
@@ -336,7 +336,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
       );
       assert.equal(
         studioCard.costo,
-        runtimeCard.manaValue,
+        runtimeCard.energyCost.amount,
         `${source.label} has a stale cost for ${runtimeCard.id}`,
       );
       assert.equal(
@@ -346,17 +346,17 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
       );
       assert.equal(
         studioCard.def,
-        runtimeCard.toughness,
-        `${source.label} has stale toughness for ${runtimeCard.id}`,
+        runtimeCard.endurance,
+        `${source.label} has stale endurance for ${runtimeCard.id}`,
       );
 
-      if (runtimeCard.cardTypes.includes("Creature")) {
+      if (runtimeCard.kinds.includes("ECHO")) {
         assert.match(studioCard.tipo, /^Eco\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Instant")) {
+      } else if (runtimeCard.kinds.includes("SPELL") && runtimeCard.modifiers?.includes("QUICK")) {
         assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Sorcery")) {
+      } else if (runtimeCard.kinds.includes("SPELL")) {
         assert.equal(studioCard.tipo, "Hechizo", `${source.label} has a stale type for ${runtimeCard.id}`);
-      } else if (runtimeCard.cardTypes.includes("Land")) {
+      } else if (runtimeCard.kinds.includes("SOURCE")) {
         assert.match(studioCard.tipo, /^Fuente\b/u, `${source.label} has a stale type for ${runtimeCard.id}`);
       }
 
