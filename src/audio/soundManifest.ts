@@ -56,7 +56,7 @@ export const sfxMetadata: Record<SfxId, { label: string; group: SfxGroupId }> = 
   skipNextBattle: { label: "Skip / next battle", group: "effects" },
   activateEffect: { label: "Activate effect", group: "effects" },
   buff: { label: "Buff", group: "effects" },
-  monoGreenBuff: { label: "Mono Green buff", group: "effects" },
+  monoGreenBuff: { label: "La Última Lluvia buff", group: "effects" },
   countessEnter: { label: "Countess enters", group: "countess" },
   countessHumans: { label: "Countess · Humans", group: "countess" },
   countessLaugh: { label: "Countess · Laugh", group: "countess" },

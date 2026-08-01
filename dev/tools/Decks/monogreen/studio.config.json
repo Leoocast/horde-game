@@ -1,74 +1,71 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-  "hiddenTraits": [
-    "OVERFLOW"
-  ],
   "cards": [
     {
       "id": "llanowar_elves",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/llanowar_elves.jpg",
-      "typeLineEs": "Eco — Elfo Druida"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/llanowar_elves.png",
+      "typeLineEs": "Eco — Recolector"
     },
     {
       "id": "sunshower_druid",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/sunshower_druid.jpg",
-      "typeLineEs": "Eco — Rana Druida"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/sunshower_druid.png",
+      "typeLineEs": "Eco de Crónica — Humana Restauradora"
     },
     {
       "id": "druid_of_the_cowl",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/druid_of_the_cowl.jpg",
-      "typeLineEs": "Eco — Elfo Druida"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/druid_of_the_cowl.png",
+      "typeLineEs": "Eco — Custodio"
     },
     {
       "id": "ichorspit_basilisk",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/ichorspit_basilisk.jpg",
-      "typeLineEs": "Eco — Pirexiano Basilisco"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/ichorspit_basilisk.png",
+      "typeLineEs": "Eco — Basilisco"
     },
     {
       "id": "beast_kin_ranger",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
-      "typeLineEs": "Eco — Elfo Explorador"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/beast_kin_ranger.png",
+      "typeLineEs": "Eco — Líder Lupino"
     },
     {
       "id": "magnigoth_sentry",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/magnigoth_sentry.jpg",
-      "typeLineEs": "Eco — Pueblo-arbóreo"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/magnigoth_sentry.png",
+      "typeLineEs": "Eco — Vigía Arbóreo"
     },
     {
       "id": "colossadactyl",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/colossadactyl.jpg",
-      "typeLineEs": "Eco — Dinosaurio"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/colossadactyl.png",
+      "typeLineEs": "Eco — Bestia Primordial"
     },
     {
       "id": "timberland_ancient",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/timberland_ancient.jpg",
-      "typeLineEs": "Eco — Pueblo-arbóreo"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/timberland_ancient.png",
+      "typeLineEs": "Eco — Guardián Ancestral"
     },
     {
       "id": "cosmic_hunger",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/cosmic_hunger.jpg",
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/cosmic_hunger.png",
       "typeLineEs": "Hechizo · Rápido"
     },
     {
       "id": "ruthless_predation",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/ruthless_predation.jpg",
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/ruthless_predation.png",
       "typeLineEs": "Hechizo"
     },
     {
       "id": "broken_wings",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/broken_wings.jpg",
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/broken_wings.png",
       "typeLineEs": "Hechizo · Rápido"
     },
     {
       "id": "giant_growth",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/giant_growth.jpg",
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/giant_growth.png",
       "typeLineEs": "Hechizo · Rápido"
     },
     {
       "id": "forest",
-      "artCrop": "../../../../public/cards/mono_green_ramp/art/forest.jpg",
-      "typeLineEs": "Fuente — Bosque"
+      "artCrop": "../../../../public/cards/mono_green_ramp/art/forest.png",
+      "typeLineEs": "Fuente — Manantial"
     }
   ]
 }

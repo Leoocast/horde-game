@@ -29,7 +29,7 @@ demostrarse.
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
 | L4 — Limpieza interna del engine | En curso: L4.1-L4.6a cerradas; L4.6b pendiente de validación manual | Autorizada por subfases |
 | L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
-| L6 — Arte y procedencia | No iniciada | No autorizada todavía |
+| L6 — Arte y procedencia | La Última Lluvia integrada 13/13; revisión de derechos pendiente | Autorizada para el corte completo de este deck |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
 
 ## Protocolo de trabajo
@@ -623,10 +623,11 @@ estadísticas + mismo efecto + misma cantidad.
 4. Mantener los stats, costes, efectos, timing y cantidades actuales salvo excepciones de diseño
    aprobadas y registradas de forma explícita.
 5. Crear el arte de acuerdo con esa identidad narrativa y registrar su procedencia.
-6. Regenerar los PNG finales y cambiar nombres técnicos, ids y rutas en un único corte verificado.
+6. Regenerar los PNG finales y cambiar nombres visibles y rutas en un único corte verificado. Los
+   ids sólo se renombran si se aprueba también su migración de persistencia.
 
 Este pipeline se ejecuta para un solo deck a la vez. La preparación narrativa de La Última Lluvia
-está autorizada y documentada; su implementación y su arte todavía requieren autorización expresa.
+fue autorizada, documentada e integrada. Zombies y Trasgos siguen pendientes de su propio corte.
 
 ## Fase L6 — Arte y procedencia
 
@@ -636,19 +637,22 @@ Sustituir recursos derivados y demostrar derechos de uso.
 
 ### Deuda deliberada (2026-08-01)
 
-L6 queda diferida. La base narrativa y los nombres de trabajo de La Última Lluvia ya están
-documentados, pero todavía no se generará su arte ni se hará el corte de producción. Los PNG,
-nombres e identidades runtime actuales permanecen como material provisional unido al esqueleto
-mecánico; Zombies y Goblins continúan con su exportación pausada. Esta deuda no bloquea trabajo
-interno del juego, pero sí bloquea declarar terminada la identidad final y la auditoría de
-publicación.
+L6 completó el corte visual y narrativo de La Última Lluvia. Sus 13 artes originales sustituyeron
+las fuentes JPG anteriores en `public/cards/mono_green_ramp/art/`; nombres, flavor, subtipos y las
+excepciones mecánicas aprobadas viven en el JSON runtime, el Card Studio apunta a los PNG fuente y
+las 13 cartas completas de producción fueron regeneradas. Los ids técnicos se conservaron para no
+introducir una migración de persistencia no solicitada. Zombies y Goblins continúan con su
+exportación pausada.
 
-La incorporación obligatoria de flavor bilingüe y `showFlavorText` al JSON runtime actualizó las
-entradas de los cuatro estudios sin regenerar imágenes. Por eso la comprobación de assets marca
-deliberadamente los 61 PNG actuales como stale/no verificables: 13 de Mono Green, 14 de Vampiros,
-17 de Zombies y 17 de Trasgos. Las proyecciones `deck-data.generated.js` sí están sincronizadas; los
-PNG y sus huellas se renovarán una sola vez junto con el arte, nombres e identidades definitivos de
-L6.
+El lote de concepto tiene registro de herramienta, política de referencias internas, prompts,
+dimensiones y SHA-256 en `docs/asset_provenance_last_rain.json`. La revisión de derechos bajo los
+términos aplicables del propietario queda explícitamente pendiente, de modo que el registro todavía
+no constituye aprobación final de procedencia ni cierra L6.
+
+La incorporación obligatoria de flavor bilingüe y `showFlavorText` al JSON runtime había dejado 61
+PNG stale/no verificables. El corte de La Última Lluvia renovó sus 13 imágenes y su manifest; quedan
+pendientes 14 PNG de Vampiros, 17 de Zombies y 17 de Trasgos. Las proyecciones
+`deck-data.generated.js` están sincronizadas.
 
 ### Registro mínimo por recurso
 
@@ -781,6 +785,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
 | 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
 | 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 62 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
+| 2026-08-01 | L6 — concepto Mono Green | Generación del primer lote visual de La Última Lluvia. | 13 artes originales guardados sin reemplazar fuentes ni PNG actuales; lámina de revisión y registro de prompts/procedencia/hashes creados. | 13/13 archivos presentes, dimensiones compatibles con el crop, SHA-256 verificados contra el registro; aprobación visual y revisión de derechos pendientes. |
+| 2026-08-01 | L5/L6 — corte La Última Lluvia | Integración completa de identidad, arte y excepciones mecánicas aprobadas. | Los 13 nombres, subtipos y flavor se migraron; Iria recupera 3 de Vida; Arven conserva su primer +1/+1 hasta el próximo turno y todo el deck perdió Desborde. Los JPG fuente y PNG completos anteriores fueron sustituidos. Los ids técnicos se conservaron para L7. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Mono Green 13/13; hashes de procedencia 13/13. Auditor normal: 34 identidades de Huestes y 48 PNG ajenos a este corte siguen pendientes; revisión de derechos del lote y validación visual del usuario pendientes. |
 
 ## Plantilla para cerrar una fase
 

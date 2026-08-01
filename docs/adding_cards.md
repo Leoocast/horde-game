@@ -357,7 +357,7 @@ y los triggers de muerte tampoco necesitan ramas por carta.
 ## 6. Target manual al entrar
 
 Existe un camino genérico para triggers obligatorios de entrada que necesitan un target, usado por
-Sunshower Druid:
+Iria, Voz de la Última Lluvia:
 
 - `findManualEnterTargetTrigger` detecta el wrapper;
 - el store bloquea nuevas invocaciones;

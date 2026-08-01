@@ -121,7 +121,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
 
-  // Pashalik Mons burns an opposing creature for each Goblin death; a 1/1 Llanowar Elves dies to it.
+  // Pashalik Mons burns an opposing creature for each Goblin death; a 1/1 Recolector dies to it.
   assert.equal(destroyed.game.player.field.length, 0);
   assert.equal(destroyed.game.player.memory.length, 1);
 

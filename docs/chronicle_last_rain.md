@@ -1,13 +1,16 @@
 # Crónica: La Última Lluvia
 
-Estado: **base narrativa aprobada; implementación y arte pendientes**  
-Deck provisional que reemplaza: `mono_green_ramp` / `Mono-Green Ramp 39`  
+Estado: **integrada en runtime y Card Studio; ids técnicos pendientes de L7**
+Deck actual: `mono_green_ramp` / `La Última Lluvia`
 Última actualización: 2026-08-01
 
 Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual acordados
-para el primer pase de contenido propio del deck. Sirve como brief para el futuro lote de arte y
-para el corte posterior de nombres, ids y rutas. No autoriza por sí solo cambios de código, datos,
-PNG o assets.
+para el primer pase de contenido propio del deck. El usuario autorizó el corte completo el
+2026-08-01: los 13 artes aprobados sustituyen las fuentes anteriores bajo
+`public/cards/mono_green_ramp/art/`, los nombres y flavor viven en el JSON runtime, las excepciones
+mecánicas de Iria y Arven están implementadas y los 13 PNG completos fueron regenerados. La
+procedencia, prompts y hashes del lote viven en `docs/asset_provenance_last_rain.json`. Se conservan
+los ids técnicos actuales para no introducir una migración de persistencia no solicitada.
 
 ## Premisa
 
@@ -71,10 +74,11 @@ coste de decisión.
 
 ## Mapeo carta por carta
 
-Los ids actuales aparecen únicamente para poder localizar el esqueleto mecánico durante el futuro
-corte. No son nombres finales ni deben sobrevivir a L7.
+Los ids actuales aparecen únicamente como claves técnicas heredadas. Los nombres de identidad son
+los nombres visibles finales; en L7 se decidirá si las claves se conservan o se renombran mediante
+una migración explícita de persistencia.
 
-| Id actual | Identidad propuesta | Mecánica conservada o aprobada | Papel narrativo y brief visual |
+| Id técnico | Identidad final | Mecánica conservada o aprobada | Papel narrativo y brief visual |
 | --- | --- | --- | --- |
 | `forest` | **Manantial de Raízhonda** | 15 copias. Fuente que se Agota para ganar 1 Energía. | Red de agua enterrada que Iria reactiva. Un estanque oscuro entre ruinas; raíces bajo el agua empiezan a iluminarse. Es la base literal del despertar. |
 | `llanowar_elves` | **Recolectores del Primer Rocío** | 2 copias. Coste 1, 1/1; se Agota para ganar 1 Energía. | Pequeños habitantes que recogen gotas de hojas, estatuas y piedras. Su fragilidad comunica que trabajan y transportan, no que sean guerreros. |
@@ -114,17 +118,25 @@ Los Hechizos son fragmentos de acontecimientos concretos de la Crónica, no pode
 - Las raíces alcanzan aquello que amenazaba desde arriba.
 - La savia ancestral manifiesta temporalmente la grandeza del primer bosque.
 
-## Pendiente antes de generar arte
+## Decisiones visuales integradas
 
-- Confirmar los nombres finales en español y crear sus equivalentes naturales en inglés.
-- Definir especie, edad, silueta y vestuario definitivo de Iria.
-- Definir si Arven es humanoide, bestial o miembro de un pueblo propio del bosque.
-- Fijar una hoja de formas para Recolectores, Custodios, Vigías, Quebracielos y Orun para que parezcan
-  habitantes del mismo ecosistema sin confundirse entre sí.
-- Reescribir el `flavorText` bilingüe final en el JSON principal después de aprobar las imágenes,
-  para que texto y escena describan el mismo fragmento. Toda carta debe conservarlo aunque
-  `showFlavorText: false` decida no imprimirlo por falta de espacio.
-- Registrar para cada asset la herramienta o autor, fecha, permiso comercial y de modificación,
-  prompt o comprobante aplicable, atribución y hash final conforme a L6.
-- Regenerar cartas, renombrar ids y rutas, invalidar o migrar persistencia y retirar los recursos
-  provisionales únicamente durante el corte autorizado de L6/L7.
+El corte de producción usa estas decisiones:
+
+- Iria es una restauradora humana adulta de piel morena, cabello negro trenzado, manto pesado de
+  musgo y ropa medieval práctica. Su silueta gira alrededor del cuenco de piedra y el gesto de sanar.
+- Arven pertenece a un pueblo lupino original del bosque: adulto, esbelto, de pelaje carbón y equipo
+  de cuero, corteza y tela de musgo. Corre junto a la manada y no la monta ni la domina.
+- Recolectores y Custodios pertenecen a un mismo pueblo pequeño de rasgos anfibios y corteza; los
+  primeros son frágiles y ágiles, mientras el Custodio es mayor, ancho y resistente.
+- Vigías son guardianes arbóreos verticales y disciplinados; Quebracielos es una bestia cuadrúpeda
+  de gran masa; Orun es un fragmento asimétrico del paisaje que vuelve a levantarse.
+- El lote conserva los ids técnicos actuales sólo como nombres de archivo y claves de persistencia.
+  Los nombres visibles en español e inglés ya son los definitivos de esta Crónica.
+
+## Pendiente después del corte
+
+- Validación visual del usuario en partida completa.
+- Confirmar los derechos aplicables del lote antes de declarar L6 cerrada; el registro de origen no
+  sustituye esa revisión.
+- Decidir en L7 si los ids técnicos heredados se renombran mediante un corte con migración o si se
+  conservan como claves internas no visibles.

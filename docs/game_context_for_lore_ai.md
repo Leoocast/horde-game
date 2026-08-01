@@ -38,22 +38,28 @@ Bando controlado por la persona. Tiene:
 - **Mana pool** y tierras que se tapean para maná.
 - Juega una tierra por turno, castea criaturas/instants/sorceries según fase, ataca, bloquea, activa habilidades tap.
 
-Mazo actual del Player: **"Mono-Green Ramp 39"**. El JSON contiene 39 cartas y 15 Forest; al
+Mazo actual del Player: **"La Última Lluvia"**. El JSON contiene 39 cartas y 15 Manantiales de
+Raízhonda; al
 construir una partida estándar, `GameState.ts` limita el deck activo a 9 cartas de energía.
 Arquetipo: acelerar energía con criaturas que la generan, desplegar amenazas verdes grandes con
-reach/trample, y usar trucos de combate, pelea o remoción de artifact/enchantment/flying. No hay
+Guardia aérea, y usar trucos de combate, lucha o remoción de Reliquias, Ritos y criaturas con
+Guardia aérea. No hay
 remoción dura genérica tipo “destroy target creature”.
 
 Curva y piezas clave del mazo actual:
-- Dorks de maná: Llanowar Elves, Druid of the Cowl (tap: agregan {G}).
-- Sunshower Druid: entra y pone un +1/+1 counter en una criatura (puede targetearse a sí misma) y gana 1 vida.
-- Ichorspit Basilisk: Deathtouch + Toxic 1 (mecánica de veneno adaptada, ver abajo).
-- Beast-Kin Ranger: se hace más grande cada vez que entra otra criatura suya ese turno.
-- Magnigoth Sentry / Colossadactyl / Timberland Ancient: bombas grandes con reach/trample, sin texto de reglas extra.
-- Cosmic Hunger (instant): una criatura propia "golpea" no en combate a una criatura/planeswalker/battle enemigo por su poder.
-- Ruthless Predation (sorcery): pelea forzada entre una criatura propia (+1/+2 temporal) y una enemiga.
-- Broken Wings (instant): destruye artifact, enchantment o flying creature.
-- Giant Growth (instant): +3/+3 hasta fin de turno, se puede jugar en varias fases.
+- Generadores de Energía: Recolectores del Primer Rocío y Custodio de la Raíz Dormida
+  (Agota: ganan {E}).
+- Iria, Voz de la Última Lluvia: Eco de Crónica que al entrar pone un contador +1/+1 en un aliado
+  —puede elegirse a sí misma— y hace ganar 3 de Vida.
+- Acechador de Savia Negra: Toque mortal + Tóxico 1 (mecánica de veneno adaptada, ver abajo).
+- Arven, Primero de la Manada: la primera vez que otro aliado es invocado durante tu turno,
+  gana +1/+1 hasta el inicio de tu próximo turno.
+- Vigías del Dosel Antiguo / Quebracielos de la Hondonada / Orun, la Raíz Despierta: amenazas
+  grandes con Guardia aérea y sin Desborde.
+- La Presa Señalada (Rápido): un aliado hace daño igual a su Fuerza a otro Eco.
+- El Juramento del Claro: un aliado gana +1/+2 temporal y después lucha contra un enemigo.
+- Cuando las Raíces Tocaron el Cielo (Rápido): destruye una Reliquia, Rito o Eco con Guardia aérea.
+- Savia del Primer Árbol (Rápido): +3/+3 hasta el final del turno; se puede jugar en varias fases.
 
 ### Horde
 Bando automatizado, sin jugador humano detrás. No tiene:

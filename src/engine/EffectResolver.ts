@@ -8,6 +8,7 @@ import { addAvailableEnergy, addStoredEnergy } from "./EnergySystem";
 import { randomInt } from "./RNG";
 import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { chooseHostTarget, findPermanent } from "./Targeting";
+import { hasUsedOncePerTurn, markOncePerTurnUsed } from "./OncePerTurn";
 
 export type ResolveContext = {
   source?: CardInstance;
@@ -249,6 +250,12 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   PUMP_UNTIL_NEXT_PLAYER_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
+    const oncePerTurnKey = typeof effect.oncePerTurnKey === "string"
+      ? effect.oncePerTurnKey.trim()
+      : "";
+    if (oncePerTurnKey && context.source && hasUsedOncePerTurn(context.source, oncePerTurnKey)) return;
+    if (targets.length === 0) return;
+    if (oncePerTurnKey && context.source) markOncePerTurnUsed(context.source, oncePerTurnKey);
     for (const target of targets) {
       target.untilNextPlayerTurnPower =
         (target.untilNextPlayerTurnPower ?? 0) + Number(effect.power ?? 0);
@@ -826,6 +833,10 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);
+  }
+  if (condition.type === "SOURCE_ONCE_PER_TURN_UNUSED") {
+    const key = typeof condition.key === "string" ? condition.key.trim() : "";
+    return key.length > 0 && !hasUsedOncePerTurn(source, key);
   }
   if (condition.type === "PLAYED_CARD_IS_NON_TOKEN") {
     return event.sourceId !== source.instanceId && event.payload?.nonToken === true;

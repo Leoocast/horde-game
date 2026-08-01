@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "monogreen": {
-      "inputHash": "499484ea1055dc8f80347c612612d44fc7aa9323cd8db7b1d4308185e6677733",
+      "inputHash": "bce9ab5a3c45d4494c79c4b3a2c699b8aac15bdd2fa0b787971ae503648b7516",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -10,15 +10,15 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "d70b5b2eb3596836d64a566f408f52197f5e5d6b5e7aefab4c6d3ef7605d25e7"
+          "sha256": "8d4d481b918b88e2ffed2361fd142b810568efd850fe2387ce973490989535af"
         },
         {
           "path": "dev/tools/Decks/monogreen/deck-data.generated.js",
-          "sha256": "41f363056df03b903bb9c755b0db2778ff07d0f856d3d3b85dd0bc2fe36860ae"
+          "sha256": "656bba3d84ba77feba9fc84c8937570c9c7386d097caa35835d769d4070c43e7"
         },
         {
           "path": "dev/tools/Decks/monogreen/index.html",
-          "sha256": "fecf52428232164fd676e7ae7fed29c6d111517bd9f84a433b381565858c90e7"
+          "sha256": "27a566aa929fcc23cbc65b0bb8d1c65b82fa77e869576b864ac62ecfef72038a"
         },
         {
           "path": "dev/tools/Decks/monogreen/motivo.avif",
@@ -26,59 +26,59 @@
         },
         {
           "path": "dev/tools/Decks/monogreen/studio.config.json",
-          "sha256": "459f7e10568ef3669c02d9249cf5a3be6d39c4af9ba21bb6731255727572f4df"
+          "sha256": "8683bc758b6959bf4c12004b9ee80ad5e0b2bfc1d0f255241225784cdf137e3f"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
-          "sha256": "51e7ee5f8f67bcd836ac6ff090b7405192756db44b89473f342d353658f38f81"
+          "path": "public/cards/mono_green_ramp/art/beast_kin_ranger.png",
+          "sha256": "754e811ef1a8dfbc721fa9f0f1ac3795f5d9353ddb50dba3d06b93bdc38fe90f"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/broken_wings.jpg",
-          "sha256": "55cfacd6de5543a4ba1400dafff732c00d98382e4bfa725ae66a2d404c97cdeb"
+          "path": "public/cards/mono_green_ramp/art/broken_wings.png",
+          "sha256": "3e0e819fe7cfd93a6e1f5086e58e2ccda87f096c1bca6f1f4ae2b6349369b2c2"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/colossadactyl.jpg",
-          "sha256": "ef689a0adf076575013818b735390eeca9264a8bf1b42a6caaa3eab2c48a7483"
+          "path": "public/cards/mono_green_ramp/art/colossadactyl.png",
+          "sha256": "693618e467be2eeba88f8e3ded0fce0f3afc085f3a7b5546d548f7845f0dd2f0"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/cosmic_hunger.jpg",
-          "sha256": "6628993e4e3e663e56b629c2ab80a106e3492923800ce959ce388163ceedaffd"
+          "path": "public/cards/mono_green_ramp/art/cosmic_hunger.png",
+          "sha256": "b4c0cc0b7dbbd255de2ef89d95564390d8dd1659310992423633a876f51f4814"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/druid_of_the_cowl.jpg",
-          "sha256": "166848043ac36ffa6441d7b00e54151ef7711bf000e6479d7f13c3df3b3b7f5d"
+          "path": "public/cards/mono_green_ramp/art/druid_of_the_cowl.png",
+          "sha256": "f95de4f0a676d56f6e5d841b94fef8a66b06b4fcccf475ea03299fbd720da806"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/forest.jpg",
-          "sha256": "2d36dcb61f6128900dc8d4cc2f423a5cece46c42be9144b011417e259a92ce2a"
+          "path": "public/cards/mono_green_ramp/art/forest.png",
+          "sha256": "c165841f537df4148dc1a18d7adbf956444046e8d6e9d06bde83d2e7310a5da4"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/giant_growth.jpg",
-          "sha256": "31f23be3dd33035d52c7c605b64d69b69f93eb35b49fed3303cc3215bf41ef66"
+          "path": "public/cards/mono_green_ramp/art/giant_growth.png",
+          "sha256": "68841d7dc62221441cad4a105a8cbe778c64e2871e4ec8f6fa37740f81a94680"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/ichorspit_basilisk.jpg",
-          "sha256": "bb371566bd59d8ca2f42a937876e11edb0c40455c1cf55ea2f9a67615032b613"
+          "path": "public/cards/mono_green_ramp/art/ichorspit_basilisk.png",
+          "sha256": "05cb72bf7da1f4baec9c93bc0f102eeb15f0674c178dad1cddb8a400f77360f4"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/llanowar_elves.jpg",
-          "sha256": "20810bc6d332e5785e4f091303f2439eccd8fd6ddfd2ca3c27d37d3eca86d289"
+          "path": "public/cards/mono_green_ramp/art/llanowar_elves.png",
+          "sha256": "41863b0d1a9d60e3922290b64c2047cf7f51d9ee67d9d3088d8d22217b9bf9ef"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/magnigoth_sentry.jpg",
-          "sha256": "ad34e76231410a3777273a406c0a79f3995327846db56424306d5d089d40bb31"
+          "path": "public/cards/mono_green_ramp/art/magnigoth_sentry.png",
+          "sha256": "0d8e20b36cf6b281df1e6d499a87364c690dc2c5e4fef10ef2047daee9e0b724"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/ruthless_predation.jpg",
-          "sha256": "c92db124eb650db75772ce855ce741b337bc3de75223c593807d4cd59854661c"
+          "path": "public/cards/mono_green_ramp/art/ruthless_predation.png",
+          "sha256": "d0a5df056c319b480c70272611229f21c4226989af096b7f68ae3f05688803da"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/sunshower_druid.jpg",
-          "sha256": "6f694877422c3e45c87073970c7f72bb503342702399d9b4832e11628fd6c30a"
+          "path": "public/cards/mono_green_ramp/art/sunshower_druid.png",
+          "sha256": "4699357b569150c9370d688e8f3628ebabead65afb710078d77c58370237a149"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/timberland_ancient.jpg",
-          "sha256": "108f52832a9a91dcd6b7d44dcfbf55890250b69d9bec087438c7c77bcedd2742"
+          "path": "public/cards/mono_green_ramp/art/timberland_ancient.png",
+          "sha256": "e6b4165864fb5b5beffe7185b369c2fddfdd60762266f4e68763a70ab15264fc"
         },
         {
           "path": "public/fonts/mono-green/cinzel-decorative-latin.woff2",
@@ -106,102 +106,102 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
+          "sha256": "988f9baf1119d05676aa21e4696932b2f3b80189483a197058472b4651a4a901"
         },
         {
           "path": "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-          "sha256": "82e9a3a8de862ffad4eee614f87f03097fb552e6b49a433325847d9a71fdac3f"
+          "sha256": "417566de828775599698a72b66fbc8742835693698d3d9380ed6f90b02da5b8e"
         }
       ],
       "cards": [
         {
           "id": "llanowar_elves",
           "path": "public/cards/mono_green_ramp/llanowar_elves.png",
-          "sha256": "8f1c7182428f71712bacb5b015fa22f7aa9fa5cef2457602f78a7dc8f0422841",
+          "sha256": "e1825fa6c84071fb5257dc13db411c2e1b034619a2de0205e69a3017541d037a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "sunshower_druid",
           "path": "public/cards/mono_green_ramp/sunshower_druid.png",
-          "sha256": "ca157dbb15717a88fe2aade26dbdfd091548720e10801ae151058e5d7d7f3e8a",
+          "sha256": "0deb775a923cbf872f59a045dbff492f37497a9fa8c8810e8aa9b3cf79f55b6a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "druid_of_the_cowl",
           "path": "public/cards/mono_green_ramp/druid_of_the_cowl.png",
-          "sha256": "e874c0fd8c44c96a3aa3d3c58f3b9b297933dd855bc22946cad3349172da77cd",
+          "sha256": "18842b73d20c2cb44a3fbc0547a9a41f0a3aa6d3f8c572aa9596f16f40d17fb7",
           "width": 976,
           "height": 1360
         },
         {
           "id": "ichorspit_basilisk",
           "path": "public/cards/mono_green_ramp/ichorspit_basilisk.png",
-          "sha256": "d6d6c9c043a46eb9458ced0d37e36878e44aae00986f07cc173277bf80e86126",
+          "sha256": "5fe015a2b9ed17bd9be931ce4fde9a45ac0448e5a3c01f3febb7cce0aac2a5d9",
           "width": 976,
           "height": 1360
         },
         {
           "id": "beast_kin_ranger",
           "path": "public/cards/mono_green_ramp/beast_kin_ranger.png",
-          "sha256": "07fb738847205158a0797628d7b87da3c7c7478cf8f07c55d8ec62e70d19d01e",
+          "sha256": "1f78ace0b028f6b64129060e089970242f5cdee52d517603309a5336538afb09",
           "width": 976,
           "height": 1360
         },
         {
           "id": "magnigoth_sentry",
           "path": "public/cards/mono_green_ramp/magnigoth_sentry.png",
-          "sha256": "756d1370b6ca6eccaed1f7df20359282a1810afbab0ed2541798ff4aa57feae3",
+          "sha256": "9aa2046b456b08248d4255c34e36436a27ec2fc5b917b21f10e1f06f891ee165",
           "width": 976,
           "height": 1360
         },
         {
           "id": "colossadactyl",
           "path": "public/cards/mono_green_ramp/colossadactyl.png",
-          "sha256": "b6f9d70ce68f721eef93c54735313d79ff8e0bf5e0e3714c72b8931fcc4bf5c0",
+          "sha256": "3395b66614ab9a335e2e2d490b9d15ba5b7d51ad467b65880fa58c197c9e49b8",
           "width": 976,
           "height": 1360
         },
         {
           "id": "timberland_ancient",
           "path": "public/cards/mono_green_ramp/timberland_ancient.png",
-          "sha256": "c314ad33fb5c6ae7583f810ec7ff3a8490fb24a4a6e9c1de87d89134ab77d9a1",
+          "sha256": "9c5140e6579494ce17dfd7642bec583ff0ecdaedbd6fac7155abcba59f455593",
           "width": 976,
           "height": 1360
         },
         {
           "id": "cosmic_hunger",
           "path": "public/cards/mono_green_ramp/cosmic_hunger.png",
-          "sha256": "f23c4d1910244ed137abf72ed992bd2432a3ead9b04c773b912eeef2a83c1756",
+          "sha256": "d97188efa0bc444826ca2aa3f9aba076cc7f7f584037b928633d1ca3b52a6e92",
           "width": 976,
           "height": 1360
         },
         {
           "id": "ruthless_predation",
           "path": "public/cards/mono_green_ramp/ruthless_predation.png",
-          "sha256": "ab704b338588fa3c7091931d53c4a73d37f74a389567b1cea0a5d7d3d25b00b0",
+          "sha256": "6a461849600f1d0938e8a403076bcdc4ac04be84d216c1ee4be999486180883e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "broken_wings",
           "path": "public/cards/mono_green_ramp/broken_wings.png",
-          "sha256": "0f1de07f4381d0b1f32a3d8d1bdecd3df04974972b721ec17acb825dfa2aff1e",
+          "sha256": "b3f1f8e3e597e445b08b0c2ab36fad4c15b46937c81e48fe81920e8f9623dc05",
           "width": 976,
           "height": 1360
         },
         {
           "id": "giant_growth",
           "path": "public/cards/mono_green_ramp/giant_growth.png",
-          "sha256": "62d401c7116e0988115f0d93c698dc950280885dfaf90529dd737afe6dde4025",
+          "sha256": "64b9cb3400d018b8fa3c71b3875de4ebfda22fe075288c51289424e2068ecd8e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "forest",
           "path": "public/cards/mono_green_ramp/forest.png",
-          "sha256": "bef7548a0bb332281baa5df0119a483ef75f4c32adf1a0d2aca50c021b922f0a",
+          "sha256": "f8912daca2439b7c174df4cc8377f1e7579bcb9644ecbb2b76bb4cd4ed7a918c",
           "width": 976,
           "height": 1360
         }

@@ -358,13 +358,13 @@ Reglas de estilo:
 13. `Aliado` y `enemigo` pueden funcionar como sustantivos de Eco. No anteponer `Eco` por rutina;
     conservarlo solo cuando declare el tipo, describa una Ficha o distinga entre clases de carta.
 
-## Inventario Magic que debe salir de produccion
+## Inventario Magic retirado o pendiente de retirar
 
-### Cronica Mono Green
+### Crónica La Última Lluvia — retirado de producción
 
-Llanowar Elves, Sunshower Druid, Druid of the Cowl, Ichorspit Basilisk, Beast-Kin Ranger,
-Magnigoth Sentry, Colossadactyl, Timberland Ancient, Cosmic Hunger, Ruthless Predation, Broken
-Wings, Giant Growth y Forest.
+Los nombres de Magic del antiguo deck Mono Green fueron retirados del JSON y del arte el
+2026-08-01. La equivalencia técnica de ids y los nombres vigentes se conserva en
+`docs/chronicle_last_rain.md`.
 
 ### Hueste Zombie
 

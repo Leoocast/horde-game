@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.0.0",
+  "batchId": "last-rain-concept-art-2026-08-01",
+  "chronicle": "La Última Lluvia",
+  "createdAt": "2026-08-01",
+  "generator": {
+    "provider": "OpenAI",
+    "surface": "Codex built-in image_gen tool",
+    "model": "Not exposed by the built-in tool",
+    "mode": "Text-to-image with references generated inside this same batch"
+  },
+  "sourcePolicy": {
+    "externalReferenceImages": false,
+    "existingRepositoryArtUsedAsReference": false,
+    "internalConsistencyReferences": [
+      "sunshower_druid.png",
+      "forest.png",
+      "beast_kin_ranger.png",
+      "magnigoth_sentry.png",
+      "llanowar_elves.png"
+    ]
+  },
+  "rightsReview": {
+    "status": "pending-owner-verification",
+    "commercialUse": "Verify against the project owner's applicable OpenAI terms before distribution.",
+    "modification": "Verify against the same applicable terms before final production use.",
+    "attribution": "Not determined; no attribution statement has been added.",
+    "note": "This record documents origin and integrity but does not by itself close L6."
+  },
+  "commonPrompt": "Original landscape card-art crop in dark-medieval natural fantasy: ancient rain-soaked forest, petrified trees, drowned stone sanctuaries, deep wet greens, charcoal, cold stone, gray rain and restrained amber-green root light. Painterly realism, grounded anatomy, tactile materials, readable focal action at thumbnail size. No card frame, text, logos, trademarks, watermark, neon magic, cheerful fairy aesthetic, existing franchise or named-artist imitation.",
+  "assets": [
+    {
+      "id": "forest",
+      "workingNameEs": "Manantial de Raízhonda",
+      "file": "../public/cards/mono_green_ramp/art/forest.png",
+      "width": 1468,
+      "height": 1071,
+      "sha256": "c165841f537df4148dc1a18d7adbf956444046e8d6e9d06bde83d2e7310a5da4",
+      "prompt": "A black rain-fed pool inside a collapsed circular sanctuary; buried roots glow beneath clear-dark water and one falling drop creates concentric ripples. No characters. The reusable source of water and energy is the focal point."
+    },
+    {
+      "id": "llanowar_elves",
+      "workingNameEs": "Recolectores del Primer Rocío",
+      "file": "../public/cards/mono_green_ramp/art/llanowar_elves.png",
+      "width": 1468,
+      "height": 1071,
+      "sha256": "41863b0d1a9d60e3922290b64c2047cf7f51d9ee67d9d3088d8d22217b9bf9ef",
+      "prompt": "Three small adult amphibian-bark forestfolk collect heavy droplets into rough stone cups and carry them on a wooden yoke. Industrious and vulnerable rather than martial; their tools explain a fragile worker that generates energy."
+    },
+    {
+      "id": "sunshower_druid",
+      "workingNameEs": "Iria, Voz de la Última Lluvia",
+      "file": "../public/cards/mono_green_ramp/art/sunshower_druid.png",
+      "width": 1467,
+      "height": 1072,
+      "sha256": "4699357b569150c9370d688e8f3628ebabead65afb710078d77c58370237a149",
+      "prompt": "Adult human restorer with weathered brown skin, black practical braids, silver rain beads and a heavy moss mantle. In a drowned sanctuary she holds an ancient stone bowl and guides one luminous droplet toward a wounded forest creature, communicating restoration and strengthening another rather than combat."
+    },
+    {
+      "id": "druid_of_the_cowl",
+      "workingNameEs": "Custodio de la Raíz Dormida",
+      "file": "../public/cards/mono_green_ramp/art/druid_of_the_cowl.png",
+      "width": 1468,
+      "height": 1071,
+      "sha256": "f95de4f0a676d56f6e5d841b94fef8a66b06b4fcccf475ea03299fbd720da806",
+      "prompt": "An older broad toadlike forestfolk custodian in a sealed subterranean root chamber. With staff planted, he listens through one palm while operating an ancient stone valve; his triangular stance communicates low power, high endurance and energy stewardship."
+    },
+    {
+      "id": "ichorspit_basilisk",
+      "workingNameEs": "Acechador de Savia Negra",
+      "file": "../public/cards/mono_green_ramp/art/ichorspit_basilisk.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "05cb72bf7da1f4baec9c93bc0f102eeb15f0674c178dad1cddb8a400f77360f4",
+      "prompt": "A low-slung six-limbed basilisk, long and sinewy rather than massive, with barklike scales and black sap limited to needle fangs and a few cracks. It waits above a narrow path, visually explaining weak physical force, resilience, lethal bite and poison."
+    },
+    {
+      "id": "beast_kin_ranger",
+      "workingNameEs": "Arven, Primero de la Manada",
+      "file": "../public/cards/mono_green_ramp/art/beast_kin_ranger.png",
+      "width": 1467,
+      "height": 1072,
+      "sha256": "754e811ef1a8dfbc721fa9f0f1ac3795f5d9353ddb50dba3d06b93bdc38fe90f",
+      "prompt": "An adult lean wolf-like forest person with rain-soaked charcoal fur, muzzle scar and practical leather-bark gear runs on two legs alongside a mixed native pack, signaling them forward with an open hand. Leader beside the pack, never rider or master."
+    },
+    {
+      "id": "magnigoth_sentry",
+      "workingNameEs": "Vigías del Dosel Antiguo",
+      "file": "../public/cards/mono_green_ramp/art/magnigoth_sentry.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "0d8e20b36cf6b281df1e6d499a87364c690dc2c5e4fef10ef2047daee9e0b724",
+      "prompt": "Two disciplined four-meter arboreal sentries hold ruined canopy watch platforms. Long branch-arms and one grown hooked spear reach toward a flying shadow, making their solid anti-air defense readable without wings."
+    },
+    {
+      "id": "colossadactyl",
+      "workingNameEs": "Quebracielos de la Hondonada",
+      "file": "../public/cards/mono_green_ramp/art/colossadactyl.png",
+      "width": 1468,
+      "height": 1071,
+      "sha256": "693618e467be2eeba88f8e3ded0fce0f3afc085f3a7b5546d548f7845f0dd2f0",
+      "prompt": "An enormous original quadrupedal hollow-beast with a low hill-like armored body, pillar legs, wet bark-and-stone plates, upward forelimbs and a long blunt-beaked neck. It rises as a living shield to contest an airborne predator, emphasizing mass and protection without charge or trampling."
+    },
+    {
+      "id": "timberland_ancient",
+      "workingNameEs": "Orun, la Raíz Despierta",
+      "file": "../public/cards/mono_green_ramp/art/timberland_ancient.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "e6b4165864fb5b5beffe7185b369c2fddfdd60762266f4e68763a70ab15264fc",
+      "prompt": "An immense asymmetrical colossus rises from the forest floor: shattered hill as back, sanctuary stairs across a shoulder, waterfalls from joints, roots and cold stone fused with heartwood. One arm reaches through the canopy toward a tiny flying shadow while the other braces against the earth."
+    },
+    {
+      "id": "cosmic_hunger",
+      "workingNameEs": "La Presa Señalada",
+      "file": "../public/cards/mono_green_ramp/art/cosmic_hunger.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "b4c0cc0b7dbbd255de2ef89d95564390d8dd1659310992423633a876f51f4814",
+      "prompt": "Arven silently marks an opening from cover as one lean native predator springs behind an unaware ash-gray Host wraith. The target cannot retaliate; geometry clearly distinguishes unilateral targeted damage from a mutual fight."
+    },
+    {
+      "id": "ruthless_predation",
+      "workingNameEs": "El Juramento del Claro",
+      "file": "../public/cards/mono_green_ramp/art/ruthless_predation.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "d0a5df056c319b480c70272611229f21c4226989af096b7f68ae3f05688803da",
+      "prompt": "A compact forest guardian plants its feet as roots wrap its legs and thick wet bark grows over its torso, then collides head-on with a gaunt ash-gray Host beast. Both are committed and can hurt each other; the bark visibly absorbs the first impact."
+    },
+    {
+      "id": "broken_wings",
+      "workingNameEs": "Cuando las Raíces Tocaron el Cielo",
+      "file": "../public/cards/mono_green_ramp/art/broken_wings.png",
+      "width": 1468,
+      "height": 1071,
+      "sha256": "3e0e819fe7cfd93a6e1f5086e58e2ccda87f096c1bca6f1f4ae2b6349369b2c2",
+      "prompt": "Colossal awakened roots erupt from a flooded sanctuary. One splits an elevated enemy siege platform's support column while another coils around a skeletal winged Host and pulls it down, showing the same event can reach a Support or flying enemy."
+    },
+    {
+      "id": "giant_growth",
+      "workingNameEs": "Savia del Primer Árbol",
+      "file": "../public/cards/mono_green_ramp/art/giant_growth.png",
+      "width": 1469,
+      "height": 1071,
+      "sha256": "68841d7dc62221441cad4a105a8cbe778c64e2871e4ec8f6fa37740f81a94680",
+      "prompt": "One small adult collector braces as ancestral amber-green sap travels from roots through its limbs, adding temporary living-root armor and powerful posture. A huge incomplete ancestral beast made of rain, mist and root light echoes its stance behind it."
+    }
+  ]
+}

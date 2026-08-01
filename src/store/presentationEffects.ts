@@ -75,6 +75,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       {
         power: card.temporaryPower,
         endurance: card.temporaryEndurance,
+        untilNextPlayerTurnPower: card.untilNextPlayerTurnPower ?? 0,
+        untilNextPlayerTurnEndurance: card.untilNextPlayerTurnEndurance ?? 0,
         traits: new Set(card.temporaryTraits),
       },
     ]),
@@ -86,6 +88,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       return (
         card.temporaryPower > before.power ||
         card.temporaryEndurance > before.endurance ||
+        (card.untilNextPlayerTurnPower ?? 0) > before.untilNextPlayerTurnPower ||
+        (card.untilNextPlayerTurnEndurance ?? 0) > before.untilNextPlayerTurnEndurance ||
         card.temporaryTraits.some((keyword) => !before.traits.has(keyword))
       );
     })

@@ -1,11 +1,13 @@
 import type { GameState } from "./GameTypes";
 import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
+import { resetOncePerTurnUsage } from "./OncePerTurn";
 
 export function readySide(game: GameState, side: "player" | "host"): void {
   for (const card of game[side].field) {
     card.exhausted = false;
     card.activatedThisTurn = false;
+    resetOncePerTurnUsage(card);
     if (card.kinds.includes("ECHO")) card.stabilizing = false;
   }
 }

@@ -220,7 +220,7 @@ En `src/engine/GameState.ts`:
 - `DEVELOPER_SEED = "developer"`
 - player inicia con 999 vida
 - player inicia con 4 Forest en battlefield
-- player roba 2 Broken Wings forzadas mas 5 cartas aleatorias
+- player roba 2 Cuando las Raíces Tocaron el Cielo forzadas mas 5 cartas aleatorias
 - la Horda fuerza `goblin_token_1_1_red` y `rundvelt_hordemaster` al frente
 - `graf_harvest` se mantiene fuera de esas dos posiciones protegidas
 
@@ -286,7 +286,7 @@ Hay dos sistemas de target importantes:
 
 ### CounterTargetingOverlay
 
-Usado por efectos tipo Sunshower Druid:
+Usado por efectos tipo Iria, Voz de la Última Lluvia:
 - carta fuente grande a la derecha
 - fade negro
 - targets validos quedan sobre el fade
@@ -297,10 +297,10 @@ Usado por efectos tipo Sunshower Druid:
 ### SpellTargetingOverlay
 
 Usado por spells con targets:
-- Giant Growth
-- Ruthless Predation
-- Cosmic Hunger
-- Broken Wings
+- Savia del Primer Árbol
+- El Juramento del Claro
+- La Presa Señalada
+- Cuando las Raíces Tocaron el Cielo
 
 Flujo:
 - carta de la mano queda invisible dejando hueco
@@ -363,7 +363,7 @@ Sin marcador = la habilidad debe validar completa contra el vocabulario del engi
 
 ## Cartas / efectos ya tratados
 
-### Llanowar Elves / Druid of the Cowl / Tithe Acolyte
+### Recolectores del Primer Rocío / Custodio de la Raíz Dormida / Tithe Acolyte
 
 Efecto genérico de agotar:
 - texto interno legacy: `{{T}}: Add {G}.`
@@ -374,7 +374,7 @@ Efecto genérico de agotar:
   2. boton de efecto aparece
   3. al confirmar hace pulse dorado + `activate_effect.wav`
   4. luego se agota con animación + sonido de Source
-  5. para Llanowar y Druid of the Cowl, una semilla dorada con ribbon ambar y hojas viaja
+  5. para Recolectores y Custodio, una semilla dorada con ribbon ambar y hojas viaja
      hasta el siguiente socket amarillo vacío; la Energía almacenada se compromete al impacto. El
      ribbon muere antes de llegar y la semilla termina sola el recorrido para no leerse como rayo
   6. Tithe Acolyte reutiliza ese flujo dorado sin reemplazar su pago de vida: la mordida y el viaje
@@ -387,23 +387,24 @@ Reglas:
 - solo una vez por turno
 - si está `stabilizing` no puede activar una Acción con coste `exhaust`
 
-### Sunshower Druid
+### Iria, Voz de la Última Lluvia
 
 Trigger manual al entrar:
 - targetea criatura valida del player, puede targetearse a si mismo
-- pone counter/buff y gana vida segun JSON
+- pone un contador +1/+1 y gana 3 de Vida segun JSON
 - usa `CounterTargetingOverlay`
 - debe bloquear invocaciones mientras el trigger no se resuelva
-- sonido `monogreen_buff.mp3` al aplicar buff porque Sunshower pertenece a Mono Green
+- sonido `monogreen_buff.mp3` al aplicar buff porque Iria pertenece a La Última Lluvia
 
-### Beast-Kin Ranger
+### Arven, Primero de la Manada
 
 Trigger cuando entra otra criatura:
-- aumenta stats correctamente
+- solo la primera invocación aliada de cada turno le da +1/+1
+- conserva el aumento hasta el inicio del próximo turno del player
 - solo debe mostrar animacion de buff azul una vez
 - no debe mostrar efecto amarillo de activacion
 
-### Ichorspit Basilisk / Toxic
+### Acechador de Savia Negra / Toxic
 
 Toxic se normaliza como `TOXIC_1` y se muestra como `TOXIC {1}`.
 
@@ -412,7 +413,7 @@ Regla custom de este modo:
 - cada 3 poison counters, al pasar turno, la Horda millea 1
 - el icono de poison solo aparece si la Horda tiene poison counters
 
-### Ruthless Predation
+### El Juramento del Claro
 
 Sorcery, main phase:
 - target 1: criatura aliada
@@ -421,11 +422,11 @@ Sorcery, main phase:
 - usa el mismo sistema de target que spells
 - seleccionar objetivos no reproduce hojas ni ningun preview de crecimiento
 - al confirmar, primero compromete el +1/+2 y reproduce completa la animacion compartida de
-  Giant Growth; despues inicia la animacion de batalla existente y el dano se compromete en su
+  Savia del Primer Árbol; despues inicia la animacion de batalla existente y el dano se compromete en su
   impacto
 - debe aplicar deathtouch si corresponde
 
-### Giant Growth
+### Savia del Primer Árbol
 
 Instant:
 - puede jugarse en main, battle y defend phase
@@ -436,8 +437,8 @@ Instant:
 ### Crecimiento mono-green
 
 Los buffs organicos comparten un beat de presentacion sin meter nombres de carta en el engine.
-`buffAnimationVariantForCard` envia Sunshower Druid, Beast-Kin Ranger, Giant Growth y Ruthless
-Predation a la misma animacion fuerte de Giant Growth. `GrowthBuffAnimator` extiende primero una
+`buffAnimationVariantForCard` envia Iria, Arven, Savia del Primer Árbol y El Juramento del Claro a
+la misma animacion fuerte de Savia del Primer Árbol. `GrowthBuffAnimator` extiende primero una
 base de raices por todo el ancho inferior, las hace atravesar la carta hacia arriba, abrirse hacia
 los lados y brotar hojas ancladas. Una segunda capa de hojas sueltas asciende casi recta, con deriva
 leve pero sin remolino, antes de que todo se desvanezca. No cierra el contorno: debe leerse como crecimiento, no
@@ -452,7 +453,7 @@ e `instanceId`: varias criaturas buffeadas a la vez nunca repiten la misma compo
 de otros decks usan la paleta dorada; Mono Green superpone la variante verde detras de las raices
 y hojas.
 
-### Cosmic Hunger
+### La Presa Señalada
 
 Instant:
 - target aliado y enemigo
@@ -460,7 +461,7 @@ Instant:
 - debe mostrar dano visual antes de desaparecer si muere
 - debe usar sonido de golpe
 
-### Broken Wings
+### Cuando las Raíces Tocaron el Cielo
 
 Instant:
 - destruye artifact/enchantment/flying creature segun targets del JSON
@@ -470,7 +471,7 @@ Instant:
 - al confirmar, dos cortes verdes atraviesan el target sin moverlo; hojas, plumas oscuras y
   astillas caen desde el corte antes del fade normal de destruccion
 
-### Magnigoth Sentry / Colossadactyl / Timberland Ancient
+### Vigías del Dosel Antiguo / Quebracielos de la Hondonada / Orun, la Raíz Despierta
 
 No requieren reglas extra. Al terminar su entrada al campo comparten un impacto visual de criatura
 pesada inspirado por `smoke-blast` + `blunt-impact` del VFX Lab: un anillo toroidal de humo terroso
@@ -497,7 +498,7 @@ Debe:
 - aparecer en zona overlay izquierda dentro de la fila principal de zombies
 - no empujar ni recentrar criaturas
 - dar MENACE a zombies via `STATIC_GRANT_KEYWORD`
-- ser destruible con Broken Wings
+- ser destruible con Cuando las Raíces Tocaron el Cielo
 
 ### Crow of Dark Tidings y triggers de Horda
 
@@ -714,17 +715,19 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   incluidas las Fichas, tienen `flavorText.en`, `flavorText.es` y un `showFlavorText` booleano. El
   Card Studio toma ambos campos exclusivamente del JSON runtime; `showFlavorText: false` sólo evita
   imprimir el flavor cuando el texto de reglas necesita el espacio, pero no elimina el contenido.
-  TypeScript, deck lint, proyección de Card Studio, 221/221 tests y build pasan. No se regeneraron
-  PNG: los 61 actuales quedan marcados como stale/no verificables hasta el pase de arte de L6.
-- La preparación narrativa del deck provisional `mono_green_ramp` está autorizada y documentada en
-  `docs/chronicle_last_rain.md`. Su Crónica de trabajo es **La Última Lluvia**; Iria, Voz de la
+  TypeScript, deck lint, proyección de Card Studio y build pasan. Los 13 PNG de La Última Lluvia se
+  regeneraron en su corte de identidad; permanecen pendientes 14 de Vampiros y 34 de las Huestes.
+- El deck técnico `mono_green_ramp` ya se presenta como **La Última Lluvia** y está documentado en
+  `docs/chronicle_last_rain.md`. Iria, Voz de la
   Última Lluvia es su Eco de Crónica y protagonista. El jugador sigue siendo el Chronicler común a
-  todas las Crónicas. El documento contiene el mapeo de las 13 definiciones y el brief para generar
-  arte más adelante; todavía no autoriza cambios de código, datos, ids, rutas, PNG o assets.
-- El usuario aprobó tres excepciones al esqueleto mecánico congelado para ese futuro corte: Iria
-  recuperará 3 de Vida conservando su contador +1/+1; Arven perderá Desborde y la primera invocación
-  aliada de cada turno le dará +1/+1 hasta el próximo turno, sin Alerta; Desborde se retirará de
-  todo el deck sin Rasgo sustituto. Fuera de esas excepciones se conserva el comportamiento actual.
+  todas las Crónicas. Los 13 artes fuente viven en `public/cards/mono_green_ramp/art/`; los JPG
+  anteriores fueron retirados y las cartas completas de `public/cards/mono_green_ramp/` fueron
+  regeneradas. La lámina vive en `docs/last_rain_contact_sheet.jpg` y el registro de prompts,
+  procedencia y hashes en `docs/asset_provenance_last_rain.json`. Los ids técnicos se conservan.
+- Las tres excepciones aprobadas ya están implementadas: Iria recupera 3 de Vida conservando su
+  contador +1/+1; Arven no tiene Desborde y la primera invocación aliada de cada turno le da +1/+1
+  hasta el próximo turno, sin Alerta; Desborde fue retirado de todo el deck. Fuera de esas
+  excepciones se conserva el comportamiento anterior.
 - Todos los decks vigentes parten de esqueletos mecánicos cuyo balance se conserva por defecto. La
   identidad final se trabaja de uno en uno y en orden narrativo: escribir una Crónica, derivar
   nombres y roles, hacerlos corresponder con los stats/efectos aprobados y sólo después producir
@@ -1093,7 +1096,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   mismo radio para que el glow naranja de drag siga la silueta redondeada y no dibuje un panel
   rectangular detras. Los previews fuente de targeting
   (`CounterTargetingOverlay` y `SpellTargetingOverlay`) tambien deben consultar
-  `shouldShowFullCardImage`; si no, cartas como Sunshower Druid y Giant Growth heredan el recorte
+  `shouldShowFullCardImage`; si no, cartas como Iria y Savia del Primer Árbol heredan el recorte
   generico de `Card`. Cuando usan la imagen completa tambien deben activar
   `preferNativeImageRendering`, igual que la mano, para conservar el mismo sampling CSS. Las cartas
   mono-green recortadas dentro de `Battlefield` tambien activan ese sampling nativo, pero NO
@@ -1166,7 +1169,8 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   de defensa de la Horda o del jugador nunca debe desplazar las keywords: ambas capas conservan
   anclas independientes. No mostrar `HASTE`.
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
-- `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Broken Wings.
+- `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Cuando las
+  Raíces Tocaron el Cielo.
 - La seleccion bespoke de Smallpox conserva el borde de target y la flecha, pero nunca muestra
   `card-actionable-gem`: ni sobre permanentes del battlefield ni sobre cartas de la mano. Durante
   Smallpox o el descarte por limite, la carta seleccionada permanece elevada; el hover de otra
@@ -1192,7 +1196,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   completa con `hand-available-border-pulse` de 2.1s. Ademas llevan una capa de glow independiente,
   equivalente al pulse extra que `Card.actionable` aporta en la mano: anima sombras de `7/16px` a
   `11/25px` cada 1.5s, teñidas segun ataque, defensa o activacion.
-- El boton de activacion de Llanowar Elves y Druid of the Cowl representa `Agotar: generar
+- El boton de activacion de Recolectores del Primer Rocío y Custodio de la Raíz Dormida representa `Agotar: generar
   Energía` con los
   mismos orbes visuales del texto impreso del index: reloj de arena marron/dorado para agotar y rayo
   azul para energia. No debe volver a los chips genericos de `renderCardText`.

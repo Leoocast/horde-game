@@ -176,8 +176,13 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
+  assert.equal(adapted.name, "La Última Lluvia");
   assert.deepEqual(byId.ichorspit_basilisk.traits, ["LETHAL", "POISON_1"]);
-  assert.deepEqual(byId.colossadactyl.traits, ["SKYGUARD", "OVERFLOW"]);
+  assert.deepEqual(byId.sunshower_druid.modifiers, ["CHRONICLE"]);
+  assert.equal(byId.sunshower_druid.abilities[0].effects[1].amount, 3);
+  assert.deepEqual(byId.beast_kin_ranger.traits, []);
+  assert.deepEqual(byId.colossadactyl.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.timberland_ancient.traits, ["SKYGUARD"]);
   assert.deepEqual(byId.cosmic_hunger.kinds, ["SPELL"]);
   assert.deepEqual(byId.cosmic_hunger.modifiers, ["QUICK"]);
   assert.deepEqual(byId.ruthless_predation.kinds, ["SPELL"]);

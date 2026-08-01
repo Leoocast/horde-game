@@ -503,7 +503,7 @@ export function Battlefield({ game, side, cards }: Props) {
       animation.onfinish = () => {
         // Do not leave the final fill frame attached to this stable DOM node: a retained
         // WAAPI transform/filter outranks the CSS activation and targeting animations that
-        // run immediately after an enters-the-battlefield trigger such as Sunshower Druid.
+        // run immediately after an enters-the-battlefield trigger such as Iria.
         animation.cancel();
         if (side === "player") endSummoningAnimation();
         if (id) entranceAnimatingIds.current.delete(id);

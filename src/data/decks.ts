@@ -27,7 +27,7 @@ function register(label: string, raw: NewDeckList, images: DeckImageManifest, pr
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("Mono-Green Ramp 39", monoGreenRampRaw as NewDeckList, monoGreenRampImagesRaw as DeckImageManifest, {
+  register("La Última Lluvia 39", monoGreenRampRaw as NewDeckList, monoGreenRampImagesRaw as DeckImageManifest, {
     keyCardId: "sunshower_druid",
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",

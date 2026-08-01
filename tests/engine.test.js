@@ -1338,6 +1338,38 @@ test("Court Duelist keeps +3/+1 through Host combat and loses it at the next pla
   assert.equal(usedAgain.player.lifePaidThisTurn, 3);
 });
 
+test("Arven grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
+  const game = createTestGame("arven-first-packmate");
+  const arven = addCard(game, cardFromDeck("beast_kin_ranger", "player"));
+
+  const invokeAlly = (definitionId) => {
+    const ally = addCard(game, customCard(definitionId, "player"));
+    recordFieldEntry(game, ally);
+    runInvokedTriggers(game, ally);
+    drainEventQueue(game);
+  };
+
+  invokeAlly("arven_first_ally");
+  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+
+  invokeAlly("arven_second_ally");
+  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+
+  const hostTurn = endPlayerTurn(game);
+  const defendingArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, defendingArven), { power: 4, endurance: 4 });
+
+  startPlayerTurnReady(hostTurn);
+  const readyArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 3, endurance: 3 });
+
+  const nextAlly = addCard(hostTurn, customCard("arven_next_turn_ally", "player"));
+  recordFieldEntry(hostTurn, nextAlly);
+  runInvokedTriggers(hostTurn, nextAlly);
+  drainEventQueue(hostTurn);
+  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 4, endurance: 4 });
+});
+
 test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   const game = createTestGame();
   game.player.life = 20;
@@ -1520,7 +1552,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
-test("Giant Growth applies +3/+3 and cleanup removes the temporary buff", () => {
+test("Savia del Primer Árbol applies +3/+3 and cleanup removes the temporary buff", () => {
   const game = createTestGame();
   addForests(game, 1);
   const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
@@ -1537,7 +1569,7 @@ test("Giant Growth applies +3/+3 and cleanup removes the temporary buff", () => 
   assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
 });
 
-test("Broken Wings only offers legal permanent types and destroys Graf Harvest", () => {
+test("Cuando las Raíces Tocaron el Cielo only offers legal permanent types and destroys Graf Harvest", () => {
   const game = createTestGame();
   addForests(game, 3);
   const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "host"));
@@ -1556,7 +1588,7 @@ test("Broken Wings only offers legal permanent types and destroys Graf Harvest",
   assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
 });
 
-test("Cosmic Hunger deals source power and preserves deathtouch for death cleanup", () => {
+test("La Presa Señalada deals source power and preserves deathtouch for death cleanup", () => {
   const game = createTestGame();
   addForests(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
@@ -1574,7 +1606,7 @@ test("Cosmic Hunger deals source power and preserves deathtouch for death cleanu
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Ruthless Predation buffs first, then both creatures deal simultaneous damage", () => {
+test("El Juramento del Claro buffs first, then both creatures deal simultaneous damage", () => {
   const game = createTestGame();
   addForests(game, 2);
   const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1600,7 +1632,7 @@ test("Ruthless Predation buffs first, then both creatures deal simultaneous dama
   assert.equal(restoredFriendly.damageMarked, 0);
 });
 
-test("Ruthless Predation can stage its buff before the deferred fight impact", () => {
+test("El Juramento del Claro can stage its buff before the deferred fight impact", () => {
   const game = createTestGame();
   addForests(game, 2);
   const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1632,7 +1664,7 @@ test("Ruthless Predation can stage its buff before the deferred fight impact", (
   assert.equal(untouchedEnemy.damageMarked, 3);
 });
 
-test("Sunshower Druid can target itself, adds one counter, and gains one life", () => {
+test("Iria can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addForests(game, 1);
   const druid = addCard(game, cardFromDeck("sunshower_druid", "player", "hand"), "player", "hand");
@@ -1640,7 +1672,7 @@ test("Sunshower Druid can target itself, adds one counter, and gains one life", 
   const result = castCard(game, druid.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === druid.instanceId);
   const manualTrigger = findManualInvokedTargetTrigger(permanent);
-  assert.ok(manualTrigger, "Sunshower Druid should expose its manual enter trigger");
+  assert.ok(manualTrigger, "Iria should expose her manual Invoked trigger");
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
     side: "player",
@@ -1648,7 +1680,7 @@ test("Sunshower Druid can target itself, adds one counter, and gains one life", 
   });
 
   assert.equal(permanent.counters["+1/+1"], 1);
-  assert.equal(result.player.life, 31);
+  assert.equal(result.player.life, 33);
   assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
 });
 

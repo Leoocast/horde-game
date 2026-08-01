@@ -1,25 +1,25 @@
 {
   "schemaVersion": "1.0.0",
   "id": "mono_green_ramp",
-  "name": "Mono-Green Ramp 39",
+  "name": "La Última Lluvia",
   "format": "casual",
   "side": "CHRONICLER",
   "deckSize": 39,
-  "archetype": "ramp",
-  "gamePlan": "Acelera tu Energía con Ecos, desarrolla amenazas con Guardia aérea y usa Hechizos de Batalla o destrucción basada en Ecos para controlar el Campo.",
+  "archetype": "restoration-ramp",
+  "gamePlan": "Restaura el flujo de Energía con Recolectores y Custodios, reúne a los guardianes del bosque y culmina la Crónica con el despertar de Orun.",
   "tokens": [],
   "cards": [
     {
       "id": "llanowar_elves",
-      "name": "Llanowar Elves",
-      "displayNameEs": "Elfos de Llanowar",
+      "name": "First-Dew Gatherers",
+      "displayNameEs": "Recolectores del Primer Rocío",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "Every root in Llanowar is a path, and every leaf a warning.",
-        "es": "Cada raíz de Llanowar es un sendero y cada hoja, una advertencia."
+        "en": "The forest remembered rain one stone cup at a time.",
+        "es": "El bosque recordó la lluvia, un cuenco de piedra a la vez."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -27,8 +27,8 @@
         "amount": 1
       },
       "subtypes": [
-        "Elf",
-        "Druid"
+        "Forestfolk",
+        "Gatherer"
       ],
       "power": 1,
       "endurance": 1,
@@ -58,15 +58,15 @@
     },
     {
       "id": "sunshower_druid",
-      "name": "Sunshower Druid",
-      "displayNameEs": "Druida de la lluvia solar",
+      "name": "Iria, Voice of the Last Rain",
+      "displayNameEs": "Iria, Voz de la Última Lluvia",
       "gameText": {
-        "en": "When Invoked, put a +1/+1 counter on an ally and gain 1 Life.",
-        "es": "Al ser invocado, pon un contador +1/+1 sobre un aliado y gana 1 de Vida."
+        "en": "When Invoked, put a +1/+1 counter on an ally and gain 3 Life.",
+        "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
       },
       "flavorText": {
-        "en": "Where their droplets touch the earth, even wounds take root.",
-        "es": "Donde sus gotas tocan la tierra, hasta las heridas echan raíces."
+        "en": "She did not bring the storm. She carried what it had forgotten.",
+        "es": "No trajo la tormenta. Cargó con aquello que había olvidado."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -74,8 +74,8 @@
         "amount": 1
       },
       "subtypes": [
-        "Frog",
-        "Druid"
+        "Human",
+        "Restorer"
       ],
       "power": 0,
       "endurance": 2,
@@ -111,7 +111,7 @@
             {
               "type": "GAIN_LIFE",
               "player": "SELF",
-              "amount": 1
+              "amount": 3
             }
           ]
         }
@@ -119,19 +119,22 @@
       "kinds": [
         "ECHO"
       ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
       "traits": []
     },
     {
       "id": "druid_of_the_cowl",
-      "name": "Druid of the Cowl",
-      "displayNameEs": "Druida de la capucha",
+      "name": "Keeper of the Sleeping Root",
+      "displayNameEs": "Custodio de la Raíz Dormida",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "Beneath the cowl, they keep secrets the forest entrusts only to the patient.",
-        "es": "Bajo la capucha guarda secretos que el bosque solo confía a los pacientes."
+        "en": "He waited beneath the roots until the water spoke again.",
+        "es": "Esperó bajo las raíces hasta que el agua volvió a hablar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -139,8 +142,8 @@
         "amount": 2
       },
       "subtypes": [
-        "Elf",
-        "Druid"
+        "Forestfolk",
+        "Keeper"
       ],
       "power": 1,
       "endurance": 3,
@@ -170,15 +173,15 @@
     },
     {
       "id": "ichorspit_basilisk",
-      "name": "Ichorspit Basilisk",
-      "displayNameEs": "Basilisco escupeicor",
+      "name": "Black-Sap Stalker",
+      "displayNameEs": "Acechador de Savia Negra",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Its venom does not kill at once; first it turns blood into obedience.",
-        "es": "Su veneno no mata de inmediato; primero transforma la sangre en obediencia."
+        "en": "The sickness remained. Iria merely taught it where to bite.",
+        "es": "La enfermedad permaneció. Iria sólo le enseñó dónde morder."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -186,7 +189,6 @@
         "amount": 3
       },
       "subtypes": [
-        "Phyrexian",
         "Basilisk"
       ],
       "power": 1,
@@ -202,24 +204,24 @@
     },
     {
       "id": "beast_kin_ranger",
-      "name": "Beast-Kin Ranger",
-      "displayNameEs": "Guardabosque bestial",
+      "name": "Arven, First of the Pack",
+      "displayNameEs": "Arven, Primero de la Manada",
       "gameText": {
-        "en": "Whenever another ally is Invoked, this card gains +1/+0 until the end of the turn.",
-        "es": "Cada vez que otro aliado sea invocado, esta carta gana +1/+0 hasta el final del turno."
+        "en": "The first time another ally is Invoked during your turn, Arven gets +1/+1 until your next turn.",
+        "es": "La primera vez que otro aliado sea invocado durante tu turno, Arven gana +1/+1 hasta tu próximo turno."
       },
       "flavorText": {
-        "en": "They do not command the beasts. They run beside them and share their fury.",
-        "es": "No dirige a las bestias. Corre a su lado y comparte su furia."
+        "en": "When the first call answered his own, the whole forest ran beside him.",
+        "es": "Cuando la primera llamada respondió a la suya, todo el bosque corrió a su lado."
       },
-      "showFlavorText": true,
+      "showFlavorText": false,
       "quantity": 3,
       "energyCost": {
         "amount": 3
       },
       "subtypes": [
-        "Elf",
-        "Ranger"
+        "Wolfkin",
+        "Packleader"
       ],
       "power": 3,
       "endurance": 3,
@@ -234,6 +236,10 @@
           "targets": [],
           "conditions": [
             {
+              "type": "ACTIVE_PLAYER_IS",
+              "player": "SELF"
+            },
+            {
               "type": "EVENT_OBJECT_MATCHES",
               "eventObject": "echo",
               "controller": "SELF",
@@ -243,15 +249,19 @@
                   "ECHO"
                 ]
               }
+            },
+            {
+              "type": "SOURCE_ONCE_PER_TURN_UNUSED",
+              "key": "arven_first_packmate"
             }
           ],
           "effects": [
             {
-              "type": "MODIFY_STATS",
+              "type": "PUMP_UNTIL_NEXT_PLAYER_TURN",
               "target": "SELF",
               "power": 1,
-              "endurance": 0,
-              "duration": "END_OF_TURN"
+              "endurance": 1,
+              "oncePerTurnKey": "arven_first_packmate"
             }
           ]
         }
@@ -259,21 +269,19 @@
       "kinds": [
         "ECHO"
       ],
-      "traits": [
-        "OVERFLOW"
-      ]
+      "traits": []
     },
     {
       "id": "magnigoth_sentry",
-      "name": "Magnigoth Sentry",
-      "displayNameEs": "Centinela mágnigoth",
+      "name": "Watchers of the Ancient Canopy",
+      "displayNameEs": "Vigías del Dosel Antiguo",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "It has watched the same pass since before the invaders had names.",
-        "es": "Ha vigilado el mismo paso desde antes de que los invasores tuvieran nombre."
+        "en": "The canopy had been undefended for an age. Then the spears rose.",
+        "es": "El dosel llevaba una era indefenso. Entonces se alzaron las lanzas."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -281,7 +289,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Treefolk"
+        "Arboreal",
+        "Sentinel"
       ],
       "power": 4,
       "endurance": 4,
@@ -295,15 +304,15 @@
     },
     {
       "id": "colossadactyl",
-      "name": "Colossadactyl",
-      "displayNameEs": "Colosadáctilo",
+      "name": "Skybreaker of the Hollow",
+      "displayNameEs": "Quebracielos de la Hondonada",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "When its shadow crosses the valley, even predators seek shelter.",
-        "es": "Cuando su sombra cruza el valle, hasta los depredadores buscan refugio."
+        "en": "It needed no wings. The sky descended whenever it stood.",
+        "es": "No necesitaba alas. El cielo descendía cada vez que se alzaba."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -311,7 +320,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Dinosaur"
+        "Primordial",
+        "Beast"
       ],
       "power": 4,
       "endurance": 5,
@@ -320,21 +330,20 @@
         "ECHO"
       ],
       "traits": [
-        "SKYGUARD",
-        "OVERFLOW"
+        "SKYGUARD"
       ]
     },
     {
       "id": "timberland_ancient",
-      "name": "Timberland Ancient",
-      "displayNameEs": "Anciano forestal",
+      "name": "Orun, the Waking Root",
+      "displayNameEs": "Orun, la Raíz Despierta",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Its rings preserve the memory of forests that no longer exist.",
-        "es": "En sus anillos conserva la memoria de bosques que ya no existen."
+        "en": "Iria awakened no servant. She reminded the forest of its own name.",
+        "es": "Iria no despertó a un sirviente. Le recordó al bosque su propio nombre."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -342,7 +351,8 @@
         "amount": 6
       },
       "subtypes": [
-        "Treefolk"
+        "Ancient",
+        "Guardian"
       ],
       "power": 6,
       "endurance": 5,
@@ -351,21 +361,20 @@
         "ECHO"
       ],
       "traits": [
-        "SKYGUARD",
-        "OVERFLOW"
+        "SKYGUARD"
       ]
     },
     {
       "id": "cosmic_hunger",
-      "name": "Cosmic Hunger",
-      "displayNameEs": "Hambre cósmica",
+      "name": "The Marked Prey",
+      "displayNameEs": "La Presa Señalada",
       "gameText": {
         "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "flavorText": {
-        "en": "For an instant, the predator feels the void that devours the stars.",
-        "es": "Por un instante, el depredador siente el vacío que devora las estrellas."
+        "en": "Arven's hand fell. The forest struck before the prey could turn.",
+        "es": "La mano de Arven descendió. El bosque golpeó antes de que la presa pudiera girarse."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -436,15 +445,15 @@
     },
     {
       "id": "ruthless_predation",
-      "name": "Ruthless Predation",
-      "displayNameEs": "Depredación despiadada",
+      "name": "Oath of the Clearing",
+      "displayNameEs": "El Juramento del Claro",
       "gameText": {
         "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "flavorText": {
-        "en": "In the thicket there is no cruelty, only hunger and survival.",
-        "es": "En la espesura no hay crueldad, solo hambre y supervivencia."
+        "en": "Root and bone yielded together, but the clearing did not.",
+        "es": "Las raíces y los huesos cedieron, pero el claro no."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -531,15 +540,15 @@
     },
     {
       "id": "broken_wings",
-      "name": "Broken Wings",
-      "displayNameEs": "Alas rotas",
+      "name": "When the Roots Touched the Sky",
+      "displayNameEs": "Cuando las Raíces Tocaron el Cielo",
       "gameText": {
         "en": "Destroy a Support or an Echo with Flying.",
         "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "flavorText": {
-        "en": "Everything that rules the sky eventually meets the earth.",
-        "es": "Todo lo que domina el cielo termina por conocer la tierra."
+        "en": "When the earth remembered its reach, nothing remained beyond it.",
+        "es": "Cuando la tierra recordó su alcance, nada quedó fuera de él."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -598,15 +607,15 @@
     },
     {
       "id": "giant_growth",
-      "name": "Giant Growth",
-      "displayNameEs": "Crecimiento gigante",
+      "name": "Sap of the First Tree",
+      "displayNameEs": "Savia del Primer Árbol",
       "gameText": {
         "en": "The target Echo gains +3/+3 until the end of the turn.",
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "flavorText": {
-        "en": "Nature asks no permission to exceed its limits.",
-        "es": "La naturaleza no pide permiso para superar sus límites."
+        "en": "For one heartbeat, the smallest among them carried the strength of the first tree.",
+        "es": "Durante un latido, el más pequeño llevó la fuerza del primer árbol."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -656,15 +665,15 @@
     },
     {
       "id": "forest",
-      "name": "Forest",
-      "displayNameEs": "Bosque",
+      "name": "Deep-Root Spring",
+      "displayNameEs": "Manantial de Raízhonda",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "Beneath its branches, life waits for the moment to reclaim everything.",
-        "es": "Bajo sus ramas, la vida aguarda el momento de reclamarlo todo."
+        "en": "The first drop did not break the silence. It taught the roots to answer.",
+        "es": "La primera gota no rompió el silencio. Enseñó a las raíces a responder."
       },
       "showFlavorText": true,
       "quantity": 15,
@@ -672,7 +681,7 @@
         "amount": 0
       },
       "subtypes": [
-        "Forest"
+        "Spring"
       ],
       "power": null,
       "endurance": null,
