@@ -1,7 +1,7 @@
 import type { CardKind, CardModifier, Trait } from "../engine/hostfallVocabulary";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
-import { adaptHostfallDeck } from "./hostfallDeckAdapter";
+import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export type NewDeckCard = {
   id: string;
@@ -117,7 +117,7 @@ function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
   return {
     id: entry.deck.id,
     label: entry.label,
-    deck: adaptHostfallDeck(entry.raw),
+    deck: normalizeAuthoredDeck(entry.raw),
     images: entry.images,
     presentation: entry.presentation,
   };

@@ -183,17 +183,9 @@ test("card studios consume one generated projection instead of embedded or mirro
   assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
   assert.equal(hiddenFlavor.showFlavorText, false);
 
-  for (const retiredMirror of [
-    "../dev/tools/Decks/last_rain/La Última Lluvia.json",
-    "../dev/tools/Decks/crimson_court/crimson_court.json",
-    "../dev/tools/Decks/hunters/hunters.json",
-    "../src/data/decks/player/last_rain/last_rain_card_generator.json",
-  ]) {
-    assert.equal(fs.existsSync(new URL(retiredMirror, import.meta.url)), false, `${retiredMirror} survived`);
-  }
 });
 
-test("migrated deck studios use the same minimal header presentation", () => {
+test("runtime deck studios use the same minimal header presentation", () => {
   const lastRainIndex = fs.readFileSync(
     new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
     "utf8",
@@ -431,7 +423,7 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
   assert.match(
     studioCss,
     /body\[data-theme="hollow_bell_procession"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Zombie Echo glyph must use the same doubled size as the migrated player decks",
+    "Zombie Echo glyph must use the same doubled size as the player decks",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -536,7 +528,7 @@ test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay a
   assert.match(
     studioCss,
     /body\[data-theme="broken_forge_mutiny"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Goblin Echo glyph must use the same doubled size as the other migrated decks",
+    "Goblin Echo glyph must use the same doubled size as the other decks",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {

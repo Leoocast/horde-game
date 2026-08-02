@@ -272,7 +272,7 @@ const l43Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => ![
     "src/data/deckLint.ts",
-    "src/data/hostfallDeckAdapter.ts",
+    "src/data/authoredDeckNormalizer.ts",
     "src/i18n/rulesText.ts",
     "tests/deckLint.test.js",
     "tests/vocabulary.test.js",
@@ -281,7 +281,7 @@ const l44Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => ![
     "src/data/deckLint.ts",
-    "src/data/hostfallDeckAdapter.ts",
+    "src/data/authoredDeckNormalizer.ts",
     "src/i18n/rulesText.ts",
     "src/playground/panels/CardsPanel.tsx",
     "src/playground/scenario.ts",
@@ -411,7 +411,7 @@ const l45LegacyPatterns = [
     pattern: /["']?eventObject["']?\s*:\s*["']permanent["']/u,
   },
   {
-    label: "legacy speed downgrade in the Hostfall adapter",
+    label: "legacy speed downgrade in authored deck normalization",
     pattern: /nestedValue\s*===\s*["']QUICK["'][^\n]+["']INSTANT["']|nestedValue\s*===\s*["']MAIN["'][^\n]+["']SORCERY["']/u,
   },
 ];

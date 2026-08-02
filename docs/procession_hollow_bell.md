@@ -4,14 +4,12 @@ Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final*
 Deck actual: `hollow_bell_procession` / `La Procesión de la Campana Hueca`
 Última actualización: 2026-08-01
 
-Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual del corte
-propio del antiguo deck Zombie. Los 17 nombres y sus flavor bilingües viven en
+Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual de la
+Procesión. Los 17 nombres y sus flavor bilingües viven en
 `src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json`; el Card Studio sólo proyecta esos datos. Los 17
 artes fuente viven en `public/cards/hollow_bell_procession/art/` y sus cartas completas exportadas en
 `public/cards/hollow_bell_procession/`. La procedencia, prompts resumidos, dimensiones y hashes del lote viven en
 `docs/asset_provenance_hollow_bell.json`.
-
-L7 reemplazó los ids técnicos y rutas heredados sin cambiar estadísticas, cantidades ni reglas.
 
 ## Premisa
 

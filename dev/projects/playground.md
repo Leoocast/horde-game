@@ -301,9 +301,8 @@ siguiente incremento natural hacia el creador de flujos: guardar los targets en 
 localStorage separado para boards (`hostfall-playground-boards:v3`) y replays
 (`hostfall-playground-replays:v3`), mas export/import `.json` con `ScenarioDefinition` v4.
 
-L4.6c hizo un corte limpio: se mantienen todas las funciones, pero los JSON v1/v2 se rechazan y las
-claves v1 de localStorage se eliminan al acceder. No hay migrador porque estos datos son artefactos
-de prueba del Playground, no partidas del usuario.
+Los JSON de versiones anteriores se rechazan y los namespaces retirados de localStorage se limpian
+al acceder. Estos datos son artefactos de prueba del Playground, no partidas del usuario.
 
 Un escenario guardado **lleva su flujo grabado dentro** (`{ definition, steps }`): un flujo sin su
 estado inicial no es reproducible, asi que viajan juntos siempre — al guardar, al exportar y al

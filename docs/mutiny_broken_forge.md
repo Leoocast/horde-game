@@ -4,16 +4,15 @@ Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final*
 Deck actual: `broken_forge_mutiny` / `El Motín de la Forja Rota`
 Última actualización: 2026-08-01
 
-Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual del corte
-propio del antiguo deck Goblin. Los 17 nombres y sus flavor bilingües viven en
+Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual del
+Motín. Los 17 nombres y sus flavor bilingües viven en
 `src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json`; el Card Studio sólo proyecta esos datos.
 Los 17 artes fuente viven en `public/cards/broken_forge_mutiny/art/` y sus cartas completas exportadas en
 `public/cards/broken_forge_mutiny/`. La procedencia, prompts resumidos, dimensiones y hashes del lote viven en
 `docs/asset_provenance_broken_forge.json`.
 
-L7 reemplazó los ids técnicos y rutas heredados sin cambiar estadísticas, cantidades ni reglas. La
-única reasignación de modificador aprobada es narrativa: Varka es el único Eco de Crónica del deck;
-los tres Ecos que antes lo declaraban dejaron de hacerlo.
+Varka es el único Eco de Crónica del deck; los tres Ecos que también llevaban ese modificador
+dejaron de hacerlo sin cambiar estadísticas, cantidades ni reglas.
 
 ## Premisa
 

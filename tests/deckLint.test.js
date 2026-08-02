@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { lintDecks, lintHostfallDeckSchema } from "../src/data/deckLint";
 import { DECK_REGISTRY } from "../src/data/decks";
-import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "../src/data/hostfallDeckAdapter";
+import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "../src/data/authoredDeckNormalizer";
 
 const RETIRED_HOSTFALL_KEYS = new Set([
   "cardTypes",
@@ -174,7 +174,7 @@ test("La Última Lluvia keeps Hostfall card kinds and traits at the runtime brid
     /"(?:ADD_MANA|BATTLEFIELD|ENTERS_BATTLEFIELD|INSTANT|SORCERY|WHILE_SOURCE_ON_BATTLEFIELD|DEATHTOUCH|REACH|TRAMPLE|TOXIC_\d+)"/u,
   );
 
-  const adapted = adaptHostfallDeck(entry.raw);
+  const adapted = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.name, "La Última Lluvia");
   assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
@@ -220,7 +220,7 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
   assert.equal(rawById.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(rawById.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
 
-  const adapted = adaptHostfallDeck(entry.raw);
+  const adapted = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.deepEqual(byId.eternal_feast_countess.kinds, ["ECHO"]);
   assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
@@ -267,7 +267,7 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
   assert.equal(entry.raw.rulesProfile.surgeBonus.endurance, 0);
 
-  const adapted = adaptHostfallDeck(entry.raw);
+  const adapted = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.side, "HOST");
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
@@ -316,7 +316,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(rawById.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(rawById.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
 
-  const adapted = adaptHostfallDeck(entry.raw);
+  const adapted = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.side, "HOST");
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);

@@ -4,13 +4,10 @@ Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final*
 Deck actual: `last_rain` / `La Última Lluvia`
 Última actualización: 2026-08-01
 
-Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual acordados
-para el primer pase de contenido propio del deck. El usuario autorizó el corte completo el
-2026-08-01: los 13 artes aprobados sustituyen las fuentes anteriores bajo
-`public/cards/last_rain/art/`, los nombres y flavor viven en el JSON runtime, las excepciones
-mecánicas de Iria y Arven están implementadas y los 13 PNG completos fueron regenerados. La
-procedencia, prompts y hashes del lote viven en `docs/asset_provenance_last_rain.json`. L7 sustituyó
-los ids y rutas heredados por las claves finales de esta Crónica.
+Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual del deck.
+Los 13 artes fuente viven en `public/cards/last_rain/art/`; los nombres y flavor se authorizan en el
+JSON runtime y las cartas completas se generan desde esos datos. La procedencia, prompts y hashes
+del lote viven en `docs/asset_provenance_last_rain.json`.
 
 ## Premisa
 
@@ -130,7 +127,8 @@ El corte de producción usa estas decisiones:
   de gran masa; Orun es un fragmento asimétrico del paisaje que vuelve a levantarse.
 - Los ids, nombres de archivo y rutas usan la identidad final de la Crónica.
 
-## Estado después de L7
+## Contrato técnico actual
 
 - Identidad visible, ids, rutas y PNG usan nombres Hostfall.
-- Los escenarios y preferencias anteriores al corte no se migran.
+- El JSON runtime es la fuente de verdad de nombres, reglas y flavor.
+- El Card Studio y los manifests sólo agregan presentación y rutas de arte local.

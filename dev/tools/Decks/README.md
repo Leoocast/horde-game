@@ -57,7 +57,6 @@ El arte fuente debe ser local y estar separado del PNG final, normalmente bajo
 raíz de su propia carpeta de salida: eso produciría una carta anidada y destruiría la fuente al
 sobrescribir el archivo.
 
-La Última Lluvia, Vampiros, Zombies y Trasgos cumplen el contrato y pasan la verificación de frescura.
-Zombies y Trasgos recibieron arte fuente separado durante L6; sus estudios ya no apuntan a los PNG
-completos. Cazadores conserva también sus fuentes locales, aunque todavía es un preview sin deck
-runtime ni lote de PNG finales.
+Los cuatro decks jugables cumplen el contrato y pasan la verificación de frescura. Sus estudios no
+apuntan a los PNG completos. Cazadores conserva también sus fuentes locales, aunque todavía es un
+preview sin deck runtime ni lote de PNG finales.

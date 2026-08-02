@@ -1,9 +1,9 @@
 import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Trait, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
-import { adaptHostfallDeck } from "./hostfallDeckAdapter";
+import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {
-  const authoredDeck = adaptHostfallDeck(rawDeck);
+  const authoredDeck = normalizeAuthoredDeck(rawDeck);
   return {
     id: authoredDeck.id,
     name: authoredDeck.name,

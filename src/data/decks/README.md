@@ -144,7 +144,7 @@ Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo 
 
 La Última Lluvia, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 
-`hostfallDeckAdapter` conserva temporalmente sólo la normalización de casing de zonas;
+`authoredDeckNormalizer` convierte el casing de las zonas authored a su representación runtime;
 `kinds`, `traits`, `endurance`, eventos, Acciones y reglas pasan sin degradación. `normalizeDeck`
 convierte después `abilities[]` al modelo runtime. `EffectResolver` contiene el
 registro real de handlers y `deckLint` valida cada habilidad contra ese vocabulario. Una habilidad

@@ -1,7 +1,7 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
-import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "./hostfallDeckAdapter";
+import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 import type { EffectDefinition } from "../engine/GameTypes";
 import { isCardKind, isCardModifier, isTrait } from "../engine/hostfallVocabulary";
 import { isHostfallAuthoredZone } from "../engine/hostfallZones";
@@ -48,7 +48,7 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
     const deckId = entry.deck.id;
     const report: DeckLintReport = { deckId, label: entry.label, cards: [] };
     lintHostfallSchema(entry.raw, errors);
-    const compatibleDeck = adaptHostfallDeck(entry.raw);
+    const compatibleDeck = normalizeAuthoredDeck(entry.raw);
     const authoredCards = [...compatibleDeck.cards, ...(compatibleDeck.tokens ?? [])];
     if (!authoredCards.some((card) => card.id === entry.presentation.keyCardId)) {
       errors.push({
