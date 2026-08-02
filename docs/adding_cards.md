@@ -65,6 +65,7 @@ El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un 
 ```json
 {
   "id": "example_guardian",
+  "collectorId": "HFA1062",
   "name": "Example Guardian",
   "displayNameEs": "Guardián de ejemplo",
   "gameText": {
@@ -87,6 +88,9 @@ Reglas:
 - `id` debe ser estable y en `snake_case`. Los lookups runtime son globales a `DECK_REGISTRY`, así
   que no reutilizar el mismo id para cartas distintas de decks diferentes. La excepción existente
   es una misma definición de token repetida de forma idéntica en `cards` y `tokens`.
+- `collectorId` es el identificador impreso y también debe ser globalmente único. El Acto I usa
+  `HFA1xxx`: `HF` = Hostfall, `A1` = Acto I y los últimos tres dígitos son la secuencia continua.
+  Una misma definición repetida en `cards` y `tokens` conserva el mismo `collectorId`.
 - `quantity` controla cuántas copias entran al deck.
 - `deckSize` debe coincidir con la suma de `quantity` en `cards`.
 - Los tokens reutilizables deben estar en `tokens`; `tokens` no se expande dentro de la library.

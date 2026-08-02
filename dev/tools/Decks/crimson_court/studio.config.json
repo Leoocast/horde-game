@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/player/crimson_court/crimson_court.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "crimson_energy",

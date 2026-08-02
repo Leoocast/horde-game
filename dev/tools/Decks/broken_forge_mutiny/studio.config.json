@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "ember_scrap_runner",

@@ -17,6 +17,7 @@
   "cards": [
     {
       "id": "crimson_energy",
+      "collectorId": "HFA1048",
       "name": "Crimson Energy",
       "displayNameEs": "Energía Carmesí",
       "gameText": {
@@ -60,6 +61,7 @@
     },
     {
       "id": "blood_page",
+      "collectorId": "HFA1049",
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
@@ -116,6 +118,7 @@
     },
     {
       "id": "crimson_bat",
+      "collectorId": "HFA1050",
       "name": "Crimson Bat",
       "displayNameEs": "Murciélago Carmesí",
       "gameText": {
@@ -148,6 +151,7 @@
     },
     {
       "id": "tithe_acolyte",
+      "collectorId": "HFA1051",
       "name": "Tithe Acolyte",
       "displayNameEs": "Acólito del Diezmo",
       "gameText": {
@@ -196,6 +200,7 @@
     },
     {
       "id": "court_duelist",
+      "collectorId": "HFA1052",
       "name": "Court Duelist",
       "displayNameEs": "Duelista de la Corte",
       "gameText": {
@@ -245,6 +250,7 @@
     },
     {
       "id": "crypt_guardian",
+      "collectorId": "HFA1053",
       "name": "Crypt Guardian",
       "displayNameEs": "Guardián de la Cripta",
       "gameText": {
@@ -295,6 +301,7 @@
     },
     {
       "id": "black_vein_executioner",
+      "collectorId": "HFA1054",
       "name": "Black Vein Executioner",
       "displayNameEs": "Verdugo de la Vena Negra",
       "gameText": {
@@ -326,6 +333,7 @@
     },
     {
       "id": "blood_sentinel",
+      "collectorId": "HFA1055",
       "name": "Blood Sentinel",
       "displayNameEs": "Centinela de Sangre",
       "gameText": {
@@ -358,6 +366,7 @@
     },
     {
       "id": "eternal_feast_countess",
+      "collectorId": "HFA1056",
       "name": "Countess of the Eternal Feast",
       "displayNameEs": "Condesa del Banquete Eterno",
       "gameText": {
@@ -425,6 +434,7 @@
     },
     {
       "id": "blood_pact",
+      "collectorId": "HFA1057",
       "name": "Blood Pact",
       "displayNameEs": "Pacto de Sangre",
       "gameText": {
@@ -468,6 +478,7 @@
     },
     {
       "id": "crimson_impulse",
+      "collectorId": "HFA1058",
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
@@ -534,6 +545,7 @@
     },
     {
       "id": "drain_essence",
+      "collectorId": "HFA1059",
       "name": "Drain Essence",
       "displayNameEs": "Drenar la Esencia",
       "gameText": {
@@ -597,6 +609,7 @@
     },
     {
       "id": "predatory_thirst",
+      "collectorId": "HFA1060",
       "name": "Predatory Thirst",
       "displayNameEs": "Sed Depredadora",
       "gameText": {
@@ -645,6 +658,7 @@
     },
     {
       "id": "final_banquet",
+      "collectorId": "HFA1061",
       "name": "Final Banquet",
       "displayNameEs": "Banquete Final",
       "gameText": {

@@ -25,6 +25,7 @@
   "tokens": [
     {
       "id": "ember_scrap_runner",
+      "collectorId": "HFA1031",
       "name": "Ember-Scrap Runner",
       "displayNameEs": "Corredor de Ascua y Chatarra",
       "gameText": {
@@ -56,6 +57,7 @@
   "cards": [
     {
       "id": "ember_scrap_runner",
+      "collectorId": "HFA1031",
       "name": "Ember-Scrap Runner",
       "displayNameEs": "Corredor de Ascua y Chatarra",
       "gameText": {
@@ -86,6 +88,7 @@
     },
     {
       "id": "burning_tally_foreman",
+      "collectorId": "HFA1032",
       "name": "Foreman of the Burning Tally",
       "displayNameEs": "Capataz del Recuento Ardiente",
       "gameText": {
@@ -175,6 +178,7 @@
     },
     {
       "id": "next_crew_caller",
+      "collectorId": "HFA1033",
       "name": "Caller of the Next Crew",
       "displayNameEs": "Llamador de la Próxima Cuadrilla",
       "gameText": {
@@ -261,6 +265,7 @@
     },
     {
       "id": "open_furnace_crier",
+      "collectorId": "HFA1034",
       "name": "Open-Furnace Crier",
       "displayNameEs": "Pregonero del Horno Abierto",
       "gameText": {
@@ -323,6 +328,7 @@
     },
     {
       "id": "shift_hammer",
+      "collectorId": "HFA1035",
       "name": "The Shift Hammer",
       "displayNameEs": "El Martillo de Turno",
       "gameText": {
@@ -372,6 +378,7 @@
     },
     {
       "id": "rain_of_rivets",
+      "collectorId": "HFA1036",
       "name": "Rain of Rivets",
       "displayNameEs": "Lluvia de Remaches",
       "gameText": {
@@ -412,6 +419,7 @@
     },
     {
       "id": "double_crew_boss",
+      "collectorId": "HFA1037",
       "name": "Boss of the Double Crew",
       "displayNameEs": "Jefe de la Cuadrilla Doble",
       "gameText": {
@@ -461,6 +469,7 @@
     },
     {
       "id": "three_furnaces_foreman",
+      "collectorId": "HFA1038",
       "name": "Foreman of Three Furnaces",
       "displayNameEs": "Capataz de los Tres Hornos",
       "gameText": {
@@ -510,6 +519,7 @@
     },
     {
       "id": "first_siren_agitator",
+      "collectorId": "HFA1039",
       "name": "Agitator of the First Siren",
       "displayNameEs": "Agitador de la Primera Sirena",
       "gameText": {
@@ -583,6 +593,7 @@
     },
     {
       "id": "open_another_gate",
+      "collectorId": "HFA1040",
       "name": "Open Another Gate!",
       "displayNameEs": "¡Abran Otra Compuerta!",
       "gameText": {
@@ -659,6 +670,7 @@
     },
     {
       "id": "three_under_one_anvil",
+      "collectorId": "HFA1041",
       "name": "Three Under One Anvil",
       "displayNameEs": "Tres Bajo el Mismo Yunque",
       "gameText": {
@@ -688,6 +700,7 @@
     },
     {
       "id": "slag_volley_master",
+      "collectorId": "HFA1042",
       "name": "Master of the Slag Volley",
       "displayNameEs": "Maestro de la Salva de Escoria",
       "gameText": {
@@ -750,6 +763,7 @@
     },
     {
       "id": "varka_revolt_axis",
+      "collectorId": "HFA1043",
       "name": "Varka, Axis of the Revolt",
       "displayNameEs": "Varka, Eje de la Revuelta",
       "gameText": {
@@ -799,6 +813,7 @@
     },
     {
       "id": "salvaged_armor_master",
+      "collectorId": "HFA1044",
       "name": "Master of Salvaged Armor",
       "displayNameEs": "Maestro de la Armadura Recuperada",
       "gameText": {
@@ -893,6 +908,7 @@
     },
     {
       "id": "repeating_blow_marshal",
+      "collectorId": "HFA1045",
       "name": "Marshal of the Repeating Blow",
       "displayNameEs": "Mariscal del Golpe Repetido",
       "gameText": {
@@ -961,6 +977,7 @@
     },
     {
       "id": "brakka_growing_tally",
+      "collectorId": "HFA1046",
       "name": "Brakka, the Growing Tally",
       "displayNameEs": "Brakka, la Cuenta Creciente",
       "gameText": {
@@ -1027,6 +1044,7 @@
     },
     {
       "id": "last_rivets_gunner",
+      "collectorId": "HFA1047",
       "name": "Gunner of the Last Rivets",
       "displayNameEs": "Artillero de los Últimos Remaches",
       "gameText": {

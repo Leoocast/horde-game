@@ -326,6 +326,8 @@
                 && card.costo !== undefined
                 && !card.isToken;
             const number = String(index + 1).padStart(3, "0");
+            const collectorId = String(card.collectorId || `${setCode}${number}`);
+            const artist = String(card.artist || "").trim();
             const quantity = Number(card.cantidad || card.quantity || 0);
             const art = String(card.art_crop || "");
             const artStyle = artTransform(card);
@@ -368,6 +370,8 @@
                             alt="${escapeHtml(cardName)}"
                             ${artStyle ? `style="--art-transform: ${artStyle}"` : ""}
                         >
+                        ${artist ? `<div class="tcg-art-credit">ARTE · ${escapeHtml(artist)}</div>` : ""}
+                        ${fullArt ? `<div class="tcg-full-art-footer">${escapeHtml(collectorId)} ${layout.footerSeparator} © HOSTFALL 2026</div>` : ""}
                     </div>
 
                     <div class="tcg-typeband">
@@ -384,7 +388,7 @@
                         ${showEffect && hasLore ? '<div class="tcg-divider"></div>' : ""}
                         ${hasLore ? `<p class="${flavorClass}">${escapeHtml(lore)}</p>` : ""}
                         ${layout.emptyMark && !hasEffect && !hasLore ? '<div class="tcg-empty-mark" aria-hidden="true"></div>' : ""}
-                        <div class="tcg-footer-info">${setCode} #${number} ${layout.footerSeparator} © HOSTFALL 2026</div>
+                        <div class="tcg-footer-info">${escapeHtml(collectorId)} ${layout.footerSeparator} © HOSTFALL 2026</div>
                     </div>
                 </div>
 

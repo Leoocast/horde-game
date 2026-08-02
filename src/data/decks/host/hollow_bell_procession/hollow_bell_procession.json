@@ -29,6 +29,7 @@
   "cards": [
     {
       "id": "last_knell_dead",
+      "collectorId": "HFA1014",
       "name": "Last-Knell Dead",
       "displayNameEs": "Muerto del Último Taño",
       "gameText": {
@@ -58,6 +59,7 @@
     },
     {
       "id": "mass_grave_colossus",
+      "collectorId": "HFA1015",
       "name": "Mass-Grave Colossus",
       "displayNameEs": "Coloso de la Fosa Común",
       "gameText": {
@@ -88,6 +90,7 @@
     },
     {
       "id": "hollow_bell",
+      "collectorId": "HFA1016",
       "name": "The Hollow Bell",
       "displayNameEs": "La Campana Hueca",
       "gameText": {
@@ -203,6 +206,7 @@
     },
     {
       "id": "five_knot_gallows",
+      "collectorId": "HFA1017",
       "name": "The Five-Knot Gallows",
       "displayNameEs": "El Cadalso de los Cinco Nudos",
       "gameText": {
@@ -270,6 +274,7 @@
     },
     {
       "id": "last_thought_carrion",
+      "collectorId": "HFA1018",
       "name": "Last-Thought Carrion",
       "displayNameEs": "Carroña del Último Pensamiento",
       "gameText": {
@@ -319,6 +324,7 @@
     },
     {
       "id": "memory_shroud_bearer",
+      "collectorId": "HFA1019",
       "name": "Bearer of the Memory Shroud",
       "displayNameEs": "Portador de la Mortaja Mnémica",
       "gameText": {
@@ -369,6 +375,7 @@
     },
     {
       "id": "flesh_root_tithe",
+      "collectorId": "HFA1020",
       "name": "Tithe of Flesh and Root",
       "displayNameEs": "Diezmo de Carne y Raíz",
       "gameText": {
@@ -427,6 +434,7 @@
     },
     {
       "id": "crypt_rotwing",
+      "collectorId": "HFA1021",
       "name": "Crypt Rotwing",
       "displayNameEs": "Alapútrida de la Cripta",
       "gameText": {
@@ -474,6 +482,7 @@
     },
     {
       "id": "basted_wing",
+      "collectorId": "HFA1022",
       "name": "Basted Wing",
       "displayNameEs": "Ala Hilvanada",
       "gameText": {
@@ -524,6 +533,7 @@
     },
     {
       "id": "reinforced_gravewing",
+      "collectorId": "HFA1023",
       "name": "Reinforced Gravewing",
       "displayNameEs": "Ala Sepulcral Reforzada",
       "gameText": {
@@ -574,6 +584,7 @@
     },
     {
       "id": "archive_carrion_crow",
+      "collectorId": "HFA1024",
       "name": "Archive Carrion-Crow",
       "displayNameEs": "Cuervo Carroñero del Archivo",
       "gameText": {
@@ -640,6 +651,7 @@
     },
     {
       "id": "horned_linebreaker",
+      "collectorId": "HFA1025",
       "name": "Horned Linebreaker",
       "displayNameEs": "Rompelíneas Astado",
       "gameText": {
@@ -671,6 +683,7 @@
     },
     {
       "id": "seventh_memory_hound",
+      "collectorId": "HFA1026",
       "name": "Hound of the Seventh Memory",
       "displayNameEs": "Sabueso de la Séptima Memoria",
       "gameText": {
@@ -742,6 +755,7 @@
     },
     {
       "id": "full_ossuary_mastiff",
+      "collectorId": "HFA1027",
       "name": "Mastiff of the Full Ossuary",
       "displayNameEs": "Mastín del Osario Colmado",
       "gameText": {
@@ -794,6 +808,7 @@
     },
     {
       "id": "silent_bite_rats",
+      "collectorId": "HFA1028",
       "name": "Silent-Bite Rats",
       "displayNameEs": "Ratas de la Mordida Silente",
       "gameText": {
@@ -827,6 +842,7 @@
     },
     {
       "id": "fallen_gatherer",
+      "collectorId": "HFA1029",
       "name": "Gatherer of the Fallen",
       "displayNameEs": "Recolector de los Caídos",
       "gameText": {
@@ -879,6 +895,7 @@
     },
     {
       "id": "last_march_marshal",
+      "collectorId": "HFA1030",
       "name": "Marshal of the Last March",
       "displayNameEs": "Mariscal de la Última Marcha",
       "gameText": {

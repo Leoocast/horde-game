@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/player/last_rain/last_rain.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "first_dew_gatherers",

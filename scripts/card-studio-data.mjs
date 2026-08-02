@@ -280,8 +280,19 @@ export function buildStudioCards(deckId) {
     if (typeof runtimeCard.showFlavorText !== "boolean") {
       throw new Error(`${deckId}/${presentation.id}: showFlavorText debe ser booleano en el JSON runtime.`);
     }
+    if (!/^HFA1\d{3}$/u.test(String(runtimeCard.collectorId ?? ""))) {
+      throw new Error(
+        `${deckId}/${presentation.id}: collectorId debe usar el formato HFA1 + tres dígitos.`,
+      );
+    }
+    const artist = String(presentation.artist ?? config.defaultArtist ?? "").trim();
+    if (!artist) {
+      throw new Error(`${deckId}/${presentation.id}: falta el crédito de arte.`);
+    }
     return {
       id: runtimeCard.id,
+      collectorId: runtimeCard.collectorId,
+      artist,
       art_crop: presentation.artCrop,
       nombre: runtimeCard.displayNameEs ?? runtimeCard.name,
       tipo: presentation.typeLineEs,

@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "last_knell_dead",

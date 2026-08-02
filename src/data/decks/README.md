@@ -38,6 +38,7 @@ Required top-level fields:
 Card definitions should use stable ids and explicit structured data:
 
 - `id`
+- `collectorId`: identificador impreso global; el Acto I usa la secuencia `HFA1xxx`.
 - `name`
 - `flavorText.en` y `flavorText.es`: texto narrativo obligatorio y no vacío.
 - `showFlavorText`: booleano obligatorio; controla su impresión sin eliminarlo de los datos.

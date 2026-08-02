@@ -5,6 +5,8 @@ import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export type NewDeckCard = {
   id: string;
+  /** Stable printed identity: HF (Hostfall) + A1 (Act I) + three-digit sequence. */
+  collectorId?: string;
   name: string;
   displayNameEs?: string;
   gameText?: {

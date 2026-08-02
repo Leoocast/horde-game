@@ -487,11 +487,52 @@ input {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
     background:
         linear-gradient(180deg, transparent 55%, var(--art-overlay)),
         radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.34));
     box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.55);
     pointer-events: none;
+}
+
+.tcg-art-credit {
+    position: absolute;
+    right: 16px;
+    bottom: 13px;
+    z-index: 3;
+    padding: 5px 10px 4px;
+    border: 1px solid rgba(234, 217, 168, 0.2);
+    border-radius: 5px;
+    color: rgba(246, 239, 218, 0.88);
+    background: rgba(10, 9, 8, 0.72);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.42);
+    font: 700 16px/1.1 "Outfit", sans-serif;
+    letter-spacing: 1.4px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.tcg-full-art-footer {
+    position: absolute;
+    bottom: 10px;
+    left: 18px;
+    z-index: 3;
+    padding: 0;
+    border: 0;
+    color: rgba(246, 239, 218, 0.58);
+    background: none;
+    font: 700 15px/1.1 "Outfit", sans-serif;
+    letter-spacing: 1.3px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.96);
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.tcg-card--full-art .tcg-art-credit {
+    right: auto;
+    left: 16px;
+    bottom: 34px;
 }
 
 .tcg-typeband {

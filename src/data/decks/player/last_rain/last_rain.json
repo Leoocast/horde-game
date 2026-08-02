@@ -11,6 +11,7 @@
   "cards": [
     {
       "id": "first_dew_gatherers",
+      "collectorId": "HFA1001",
       "name": "First-Dew Gatherers",
       "displayNameEs": "Recolectores del Primer Rocío",
       "gameText": {
@@ -58,6 +59,7 @@
     },
     {
       "id": "iria_voice_last_rain",
+      "collectorId": "HFA1002",
       "name": "Iria, Voice of the Last Rain",
       "displayNameEs": "Iria, Voz de la Última Lluvia",
       "gameText": {
@@ -126,6 +128,7 @@
     },
     {
       "id": "keeper_sleeping_root",
+      "collectorId": "HFA1003",
       "name": "Keeper of the Sleeping Root",
       "displayNameEs": "Custodio de la Raíz Dormida",
       "gameText": {
@@ -173,6 +176,7 @@
     },
     {
       "id": "black_sap_stalker",
+      "collectorId": "HFA1004",
       "name": "Black-Sap Stalker",
       "displayNameEs": "Acechador de Savia Negra",
       "gameText": {
@@ -204,6 +208,7 @@
     },
     {
       "id": "arven_first_pack",
+      "collectorId": "HFA1005",
       "name": "Arven, First of the Pack",
       "displayNameEs": "Arven, Primero de la Manada",
       "gameText": {
@@ -273,6 +278,7 @@
     },
     {
       "id": "ancient_canopy_watchers",
+      "collectorId": "HFA1006",
       "name": "Watchers of the Ancient Canopy",
       "displayNameEs": "Vigías del Dosel Antiguo",
       "gameText": {
@@ -304,6 +310,7 @@
     },
     {
       "id": "hollow_skybreaker",
+      "collectorId": "HFA1007",
       "name": "Skybreaker of the Hollow",
       "displayNameEs": "Quebracielos de la Hondonada",
       "gameText": {
@@ -335,6 +342,7 @@
     },
     {
       "id": "orun_waking_root",
+      "collectorId": "HFA1008",
       "name": "Orun, the Waking Root",
       "displayNameEs": "Orun, la Raíz Despierta",
       "gameText": {
@@ -366,6 +374,7 @@
     },
     {
       "id": "marked_prey",
+      "collectorId": "HFA1009",
       "name": "The Marked Prey",
       "displayNameEs": "La Presa Señalada",
       "gameText": {
@@ -445,6 +454,7 @@
     },
     {
       "id": "oath_clearing",
+      "collectorId": "HFA1010",
       "name": "Oath of the Clearing",
       "displayNameEs": "El Juramento del Claro",
       "gameText": {
@@ -540,6 +550,7 @@
     },
     {
       "id": "roots_touched_sky",
+      "collectorId": "HFA1011",
       "name": "When the Roots Touched the Sky",
       "displayNameEs": "Cuando las Raíces Tocaron el Cielo",
       "gameText": {
@@ -607,6 +618,7 @@
     },
     {
       "id": "first_tree_sap",
+      "collectorId": "HFA1012",
       "name": "Sap of the First Tree",
       "displayNameEs": "Savia del Primer Árbol",
       "gameText": {
@@ -665,6 +677,7 @@
     },
     {
       "id": "deep_root_spring",
+      "collectorId": "HFA1013",
       "name": "Deep-Root Spring",
       "displayNameEs": "Manantial de Raízhonda",
       "gameText": {

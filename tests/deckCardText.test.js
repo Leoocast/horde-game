@@ -136,6 +136,11 @@ test("card studios consume one generated projection instead of embedded or mirro
     const generatedUrl = new URL(`../${definition.directory}/deck-data.generated.js`, import.meta.url);
     const indexHtml = fs.readFileSync(indexUrl, "utf8");
     assert.match(indexHtml, /<script src="\.\/deck-data\.generated\.js"><\/script>/u);
+    assert.match(
+      indexHtml,
+      /<script src="\.\.\/deck-card-studio\.js"><\/script>/u,
+      `${deckId} must use the shared studio renderer`,
+    );
     assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
     assert.equal(fs.readFileSync(generatedUrl, "utf8"), generatedStudioData(deckId));
 
@@ -172,12 +177,7 @@ test("card studios consume one generated projection instead of embedded or mirro
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const lastRainRenderer = fs.readFileSync(
-    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
-    "utf8",
-  );
   assert.match(sharedRenderer, /card\.showFlavorText !== false/u);
-  assert.match(lastRainRenderer, /card\.showFlavorText !== false/u);
 
   const hiddenFlavor = buildStudioCards("crimson_court").find((card) => card.id === "court_duelist");
   assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
@@ -228,23 +228,50 @@ test("runtime deck studios use the same minimal header presentation", () => {
   );
 });
 
+test("Card Studio removes preview chrome and focus-mode overflow", () => {
+  const studioApp = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.js", import.meta.url),
+    "utf8",
+  );
+  const studioShell = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.html", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(studioApp, /\.studio-header \{ display: none !important; \}/u);
+  assert.match(studioApp, /html\.studio-focus, body\.studio-focus \{ overflow: hidden !important; \}/u);
+  assert.match(studioApp, /doc\.documentElement\.classList\.toggle\("studio-focus"/u);
+  assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
+  assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
+});
+
 test("card generators print the Hostfall copyright footer", () => {
   const sharedStudio = fs.readFileSync(
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const lastRainIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
-    "utf8",
-  );
 
-  for (const [label, source] of [
-    ["shared studio", sharedStudio],
-    ["La Última Lluvia studio", lastRainIndex],
-  ]) {
-    assert.match(source, /© HOSTFALL 2026/u, `${label} is missing the copyright footer`);
-    assert.doesNotMatch(source, /Hostfall TCG/iu, `${label} still prints the retired footer`);
-  }
+  assert.match(sharedStudio, /© HOSTFALL 2026/u, "shared studio is missing the copyright footer");
+  assert.match(sharedStudio, /tcg-art-credit/u, "shared studio is missing the explicit art credit");
+  assert.match(sharedStudio, /tcg-full-art-footer/u, "full-art cards are missing printable metadata");
+  assert.match(sharedStudio, /ARTE ·/u, "shared studio does not label the artist's role");
+  assert.doesNotMatch(sharedStudio, /Hostfall TCG/iu, "shared studio still prints the retired footer");
+});
+
+test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
+  const cards = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ].flatMap((deckId) => buildStudioCards(deckId));
+
+  assert.equal(cards.length, 61);
+  assert.deepEqual(
+    cards.map((card) => card.collectorId),
+    Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
+  );
+  assert.equal(cards.every((card) => card.artist === "Dean Spencer"), true);
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {

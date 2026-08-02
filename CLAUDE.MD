@@ -195,6 +195,10 @@ Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No
 nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
 `public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
 
+Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
+continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
+carta. El renderer imprime el rol como `ARTE · nombre` dentro del marco de ilustración.
+
 Los registros `docs/asset_provenance_*.json` conservan prompts, dimensiones y hashes de los lotes de
 arte actuales. Son documentación de activos vigentes.
 

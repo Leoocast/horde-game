@@ -63,6 +63,7 @@ export type CardFilter = {
 
 export type CardDefinition = {
   id: string;
+  collectorId?: string;
   name: string;
   displayNameEs?: string;
   gameText?: {

@@ -31,6 +31,12 @@ runtime. El estudio siempre recibe el flavor desde allí. Si `showFlavorText` es
 permanece en la proyección generada pero el renderer no lo imprime para dejar espacio a reglas
 extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para un deck runtime.
 
+El JSON runtime también declara el `collectorId` impreso. Para el Acto I la serie es continua:
+`HFA1001`, `HFA1002`, etc. El pie de carta muestra ese ID junto a `© HOSTFALL 2026`. El crédito de
+ilustración se coloca por separado dentro del borde inferior del arte como `ARTE · NOMBRE`, para
+que el artista no parezca autor o propietario del juego. El nombre por defecto vive en
+`defaultArtist` dentro de `studio.config.json`; una carta puede reemplazarlo con `artist`.
+
 ## Card Studio
 
 El editor visual vive en una sola página para todos los decks. Necesita un servidor local

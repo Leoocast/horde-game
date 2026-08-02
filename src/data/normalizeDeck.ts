@@ -22,6 +22,7 @@ function normalizeCard(card: NewDeckCard): CardDefinition {
   const abilities = (card.abilities ?? []).filter((ability) => !ability.engineSupport);
   return {
     id: card.id,
+    collectorId: card.collectorId,
     name: card.name,
     displayNameEs: card.displayNameEs,
     gameText: card.gameText,

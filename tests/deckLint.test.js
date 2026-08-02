@@ -45,9 +45,22 @@ test("pending abilities are reported as WIP, not as errors", () => {
   }
 });
 
-test("every active card authors bilingual flavor and an explicit print flag", () => {
+test("every active card authors print metadata, bilingual flavor and an explicit print flag", () => {
+  const collectorOwners = new Map();
+
   for (const entry of DECK_REGISTRY) {
     for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.match(
+        card.collectorId,
+        /^HFA1\d{3}$/u,
+        `${entry.raw.id}/${card.id} lacks a valid Act I collectorId`,
+      );
+      const previous = collectorOwners.get(card.collectorId);
+      assert.ok(
+        !previous || previous === `${entry.raw.id}/${card.id}`,
+        `${card.collectorId} is shared by ${previous} and ${entry.raw.id}/${card.id}`,
+      );
+      collectorOwners.set(card.collectorId, `${entry.raw.id}/${card.id}`);
       assert.equal(typeof card.flavorText?.en, "string", `${entry.raw.id}/${card.id} lacks flavorText.en`);
       assert.ok(card.flavorText.en.trim(), `${entry.raw.id}/${card.id} has empty flavorText.en`);
       assert.equal(typeof card.flavorText?.es, "string", `${entry.raw.id}/${card.id} lacks flavorText.es`);
@@ -59,6 +72,12 @@ test("every active card authors bilingual flavor and an explicit print flag", ()
       );
     }
   }
+
+  assert.deepEqual(
+    [...collectorOwners.keys()].sort(),
+    Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
+    "Act I collector IDs must remain continuous from HFA1001 through HFA1061",
+  );
 });
 
 test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {

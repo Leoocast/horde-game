@@ -145,6 +145,7 @@ async function listDecks() {
             const presentation = presentationById.get(card.id) ?? {};
             return {
                 id: card.id,
+                collectorId: card.collectorId ?? null,
                 nombre: card.nombre,
                 tipo: card.tipo,
                 artCrop: card.art_crop ?? null,
