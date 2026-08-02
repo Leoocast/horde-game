@@ -8,6 +8,7 @@ import {
   buildStudioCards,
   generatedStudioData,
   loadStudioConfig,
+  resolveStudioFullArt,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
 
@@ -247,6 +248,10 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
     new URL("../dev/tools/Decks/studio.html", import.meta.url),
     "utf8",
   );
+  const studioServer = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio-server.cjs", import.meta.url),
+    "utf8",
+  );
 
   assert.match(studioApp, /\.studio-header \{ display: none !important; \}/u);
   assert.match(studioApp, /html\.studio-focus, body\.studio-focus \{ overflow: hidden !important; \}/u);
@@ -261,6 +266,9 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioApp, /label: "Rotación", value: values\.rotation/u);
   assert.doesNotMatch(studioApp, /hint:/u, "motif panels must not include helper copy");
   assert.doesNotMatch(studioShell, /El motivo es la textura del mazo/u);
+  assert.match(studioShell, /id="full-art-toggle"/u);
+  assert.match(studioApp, /fullArtOverrides/u);
+  assert.match(studioServer, /capabilities: \{ fullArtOverrides: true \}/u);
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
   assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
   assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
@@ -327,7 +335,7 @@ test("Act I print metadata stays sequential and credits Dean Spencer as artist",
   assert.equal(cards.every((card) => card.artist === "Dean Spencer"), true);
 });
 
-test("Card Studio reserves full art for Chronicles, Energy and selected tokens", () => {
+test("Card Studio defaults full art to Chronicles, Energy and selected tokens", () => {
   const lastRain = new Map(buildStudioCards("last_rain").map((card) => [card.id, card]));
   const crimsonCourt = new Map(buildStudioCards("crimson_court").map((card) => [card.id, card]));
   const brokenForge = new Map(buildStudioCards("broken_forge_mutiny").map((card) => [card.id, card]));
@@ -357,6 +365,16 @@ test("Card Studio reserves full art for Chronicles, Energy and selected tokens",
   assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
 
   assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
+});
+
+test("Card Studio allows a per-card full-art override", () => {
+  assert.equal(resolveStudioFullArt("card", {}, true), true);
+  assert.equal(resolveStudioFullArt("card", { fullArt: true }, false), true);
+  assert.equal(resolveStudioFullArt("card", { fullArt: false }, true), false);
+  assert.throws(
+    () => resolveStudioFullArt("card", { fullArt: "yes" }, false),
+    /fullArt debe ser booleano/u,
+  );
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {

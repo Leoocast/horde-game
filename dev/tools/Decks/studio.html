@@ -633,6 +633,71 @@
             white-space: nowrap;
         }
 
+        .full-art-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding: 10px 11px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--text);
+            background: var(--panel-raised);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .full-art-switch {
+            position: relative;
+            display: block;
+            width: 38px;
+            height: 22px;
+            flex: 0 0 38px;
+        }
+
+        .full-art-switch input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .full-art-track {
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            background: #0d0c0a;
+            transition: border-color 120ms ease, background 120ms ease;
+        }
+
+        .full-art-track::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--muted);
+            transition: transform 120ms ease, background 120ms ease;
+        }
+
+        .full-art-switch input:checked + .full-art-track {
+            border-color: rgba(184, 162, 107, 0.72);
+            background: rgba(184, 162, 107, 0.2);
+        }
+
+        .full-art-switch input:checked + .full-art-track::after {
+            background: var(--gold-bright);
+            transform: translateX(16px);
+        }
+
+        .full-art-switch input:focus-visible + .full-art-track {
+            outline: 2px solid var(--focus);
+            outline-offset: 2px;
+        }
+
         .note {
             padding: 9px 11px;
             border-left: 2px solid var(--line-strong);
@@ -854,6 +919,13 @@
                     </span>
                     <input id="art-file" type="file"
                         accept="image/png,image/jpeg,image/webp,image/avif">
+                </label>
+                <label class="full-art-row" for="full-art-toggle">
+                    <span>Full art</span>
+                    <span class="full-art-switch">
+                        <input id="full-art-toggle" type="checkbox">
+                        <span class="full-art-track" aria-hidden="true"></span>
+                    </span>
                 </label>
                 <div id="art-controls" style="margin-top: 16px;"></div>
             </section>

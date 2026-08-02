@@ -150,6 +150,10 @@ async function listDecks() {
                 tipo: card.tipo,
                 artCrop: card.art_crop ?? null,
                 artFrame: presentation.artFrame ?? null,
+                fullArt: Boolean(card.fullArt),
+                fullArtOverride: typeof presentation.fullArt === 'boolean'
+                    ? presentation.fullArt
+                    : null,
             };
         });
         return {
@@ -162,7 +166,11 @@ async function listDecks() {
         };
     });
 
-    return { decks, regenerated };
+    return {
+        decks,
+        regenerated,
+        capabilities: { fullArtOverrides: true },
+    };
 }
 
 /*
@@ -178,20 +186,39 @@ async function saveDeck(payload) {
     const frames = payload.artFrames && typeof payload.artFrames === 'object'
         ? payload.artFrames
         : {};
+    const fullArtOverrides = payload.fullArtOverrides
+        && typeof payload.fullArtOverrides === 'object'
+        ? payload.fullArtOverrides
+        : {};
     const known = new Set(config.cards.map((card) => card.id));
 
-    for (const cardId of Object.keys(frames)) {
+    for (const cardId of new Set([...Object.keys(frames), ...Object.keys(fullArtOverrides)])) {
         if (!known.has(cardId)) {
             throw new HttpError(400, `${deckId} no contiene la carta "${cardId}".`);
         }
     }
 
+    for (const [cardId, value] of Object.entries(fullArtOverrides)) {
+        if (value !== null && typeof value !== 'boolean') {
+            throw new HttpError(400, `${deckId}/${cardId}: fullArt debe ser booleano o null.`);
+        }
+    }
+
     config.cards = config.cards.map((card) => {
-        if (!Object.hasOwn(frames, card.id)) return card;
-        const frame = frames[card.id];
+        const hasFrame = Object.hasOwn(frames, card.id);
+        const hasFullArt = Object.hasOwn(fullArtOverrides, card.id);
+        if (!hasFrame && !hasFullArt) return card;
         const next = { ...card };
-        if (frame === null) delete next.artFrame;
-        else next.artFrame = frame;
+        if (hasFrame) {
+            const frame = frames[card.id];
+            if (frame === null) delete next.artFrame;
+            else next.artFrame = frame;
+        }
+        if (hasFullArt) {
+            const fullArt = fullArtOverrides[card.id];
+            if (fullArt === null) delete next.fullArt;
+            else next.fullArt = fullArt;
+        }
         return next;
     });
 

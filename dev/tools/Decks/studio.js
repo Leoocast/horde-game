@@ -42,6 +42,7 @@
     const artDrop = el("art-drop");
     const artThumb = el("art-thumb");
     const artFileName = el("art-file-name");
+    const fullArtToggle = el("full-art-toggle");
     const statusLine = el("status");
     const saveButton = el("save");
     const resetButton = el("reset");
@@ -65,6 +66,7 @@
     let listFilter = "all";
     let searchQuery = "";
     let lastRegenerated = [];
+    let supportsFullArtOverrides = false;
 
     const deck = () => decks.find((entry) => entry.id === deckId) ?? null;
     const card = () => deck()?.cards.find((entry) => entry.id === cardId) ?? null;
@@ -76,6 +78,11 @@
                 artFrames: new Map(
                     (current?.cards ?? []).map((entry) => [entry.id, entry.artFrame ?? null])
                 ),
+                fullArtOverrides: new Map(
+                    (current?.cards ?? []).map(
+                        (entry) => [entry.id, entry.fullArtOverride ?? null]
+                    )
+                ),
                 motif: structuredClone(current?.motif ?? null)
             });
         }
@@ -84,6 +91,12 @@
 
     const frameOf = (id) => ({ ...DEFAULT_FRAME, ...(draft().artFrames.get(id) ?? {}) });
     const isAdjusted = (frame) => frame.zoom !== 1 || frame.x !== 0 || frame.y !== 0;
+
+    function fullArtOf(id) {
+        const override = draft().fullArtOverrides.get(id);
+        if (typeof override === "boolean") return override;
+        return Boolean(deck()?.cards.find((entry) => entry.id === id)?.fullArt);
+    }
 
     /* Hay cambios sin guardar si el borrador difiere de lo que hay en disco. */
     function isDirty() {
@@ -96,7 +109,11 @@
             (entry) => JSON.stringify(local.artFrames.get(entry.id) ?? null)
                 === JSON.stringify(entry.artFrame ?? null)
         );
-        return !(sameMotif && sameFrames);
+        const sameFullArt = current.cards.every(
+            (entry) => (local.fullArtOverrides.get(entry.id) ?? null)
+                === (entry.fullArtOverride ?? null)
+        );
+        return !(sameMotif && sameFrames && sameFullArt);
     }
 
     function setFrame(id, frame) {
@@ -104,6 +121,14 @@
         applyFrameToPreview(id);
         renderCardList();
         renderDirty();
+    }
+
+    function setFullArt(id, enabled) {
+        if (!supportsFullArtOverrides) return;
+        draft().fullArtOverrides.set(id, Boolean(enabled));
+        renderArtControls();
+        renderDirty();
+        refreshPreviewCards();
     }
 
     function motifOf(slot) {
@@ -212,9 +237,13 @@
         const doc = previewDocument();
         if (!doc) return;
 
-        const style = doc.createElement("style");
-        style.textContent = PREVIEW_CSS;
-        doc.head.append(style);
+        let style = doc.getElementById("hostfall-studio-preview-css");
+        if (!style) {
+            style = doc.createElement("style");
+            style.id = "hostfall-studio-preview-css";
+            style.textContent = PREVIEW_CSS;
+            doc.head.append(style);
+        }
 
         for (const entry of doc.querySelectorAll(".tcg-card")) {
             const id = entry.dataset.cardId;
@@ -273,7 +302,29 @@
 
         applyMotifToPreview();
         applyViewMode();
+        doc.removeEventListener("keydown", onArrowKeys);
         doc.addEventListener("keydown", onArrowKeys);
+    }
+
+    function refreshPreviewCards() {
+        const previewWindow = preview.contentWindow;
+        const studio = previewWindow?.HostfallStudio;
+        if (!studio) return;
+        const sourceCards = studio.readGeneratedCards();
+        for (const source of sourceCards) {
+            const current = deck()?.cards.find((entry) => entry.id === source.id);
+            if (current && typeof current.fullArt !== "boolean") {
+                current.fullArt = Boolean(source.fullArt);
+            }
+        }
+        const cards = sourceCards.map((entry) => ({
+            ...entry,
+            fullArt: fullArtOf(entry.id)
+        }));
+        studio.renderCards(cards);
+        wirePreview();
+        renderArtControls();
+        focusCardInPreview();
     }
 
     function nudgeZoom(id, factor) {
@@ -310,8 +361,7 @@
     }
 
     preview.addEventListener("load", () => {
-        wirePreview();
-        focusCardInPreview();
+        refreshPreviewCards();
     });
 
     /* --------------------------------------------------------------- controles */
@@ -385,6 +435,8 @@
             ? current.artCrop.split("/").pop()
             : "Ningún arte todavía";
 
+        fullArtToggle.disabled = !current || !supportsFullArtOverrides;
+        fullArtToggle.checked = current ? fullArtOf(cardId) : false;
         if (!current) return;
         const frame = frameOf(cardId);
 
@@ -629,6 +681,7 @@
         const payload = await api("/api/decks");
         decks = payload.decks;
         lastRegenerated = payload.regenerated ?? [];
+        supportsFullArtOverrides = payload.capabilities?.fullArtOverrides === true;
 
         deckSelect.replaceChildren();
         for (const entry of decks) {
@@ -645,6 +698,10 @@
 
         if (keepSelection) renderAll();
         else selectDeck(target);
+
+        if (!supportsFullArtOverrides) {
+            setStatus("Reinicia el servidor del taller para activar Full art.", "error");
+        }
     }
 
     async function uploadArt(file) {
@@ -677,6 +734,7 @@
                 body: JSON.stringify({
                     deck: deckId,
                     artFrames: Object.fromEntries(current.artFrames),
+                    fullArtOverrides: Object.fromEntries(current.fullArtOverrides),
                     motif: current.motif
                 })
             });
@@ -782,6 +840,10 @@
         const file = artFile.files?.[0];
         if (file && cardId) await uploadArt(file);
         artFile.value = "";
+    });
+
+    fullArtToggle.addEventListener("change", () => {
+        if (cardId) setFullArt(cardId, fullArtToggle.checked);
     });
 
     for (const [event, handler] of [

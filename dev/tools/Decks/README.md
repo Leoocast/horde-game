@@ -40,8 +40,9 @@ nombre del artista, para que el artista no parezca autor o propietario del juego
 El renderer deriva tres variantes sin duplicar markup por deck:
 
 - carta común: marco metálico, panel de reglas y motivo del deck;
-- *full art*: sin marco metálico ni motivo; se reserva a Ecos con el modificador runtime
-  `CHRONICLE`, Energías (`SOURCE`) y tokens seleccionados;
+- *full art*: sin marco metálico ni motivo; se aplica por defecto a Ecos con el modificador
+  runtime `CHRONICLE`, Energías (`SOURCE`) y tokens seleccionados, pero puede activarse o
+  desactivarse por carta desde el taller;
 - token: no imprime reglas ni flavor y coloca los stats más abajo.
 
 Las Energías siguen la composición mínima de los tokens: no imprimen coste, reglas ni flavor; sólo
@@ -64,13 +65,14 @@ node dev/tools/Decks/studio-server.cjs
 
 Después, abrir `http://127.0.0.1:5178/dev/tools/Decks/studio.html`. Permite elegir deck y carta,
 cargar la imagen de una carta, encuadrarla dentro de su marco (arrastrar para mover, rueda para
-zoom, o los campos en píxeles) y desplazar el motivo de cabecera, banda de tipo y stats. El coste
-no usa motivo.
+zoom, o los campos en píxeles), alternar su composición *full art* y desplazar el motivo de
+cabecera, banda de tipo y stats. El coste no usa motivo.
 
 Lo que se guarda son datos, no HTML:
 
 - `artFrame` por carta en `studio.config.json`: `{ "zoom": 1.35, "x": 24, "y": -18 }`.
   Los píxeles son los de la carta a tamaño real (976×1360), no los del preview.
+- `fullArt` por carta como override booleano del diseño predeterminado.
 - `motif` por deck, con los slots `head`, `band` y `stats`; cada slot admite `x`, `y`, `zoom` y
   `rotation`.
 

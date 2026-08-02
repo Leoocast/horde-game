@@ -239,8 +239,17 @@ function validatePresentationCards(deckId, cards) {
     if (!card?.id || ids.has(card.id)) {
       throw new Error(`${deckId}: id de presentación ausente o duplicado: ${card?.id ?? "(vacío)"}.`);
     }
+    resolveStudioFullArt(`${deckId}/${card.id}`, card, false);
     ids.add(card.id);
   }
+}
+
+export function resolveStudioFullArt(label, presentation, fallback) {
+  if (!Object.hasOwn(presentation, "fullArt")) return Boolean(fallback);
+  if (typeof presentation.fullArt !== "boolean") {
+    throw new Error(`${label}: fullArt debe ser booleano.`);
+  }
+  return presentation.fullArt;
 }
 
 export function loadStudioConfig(deckId) {
@@ -313,9 +322,14 @@ export function buildStudioCards(deckId) {
     const isToken = authoredIsToken(runtimeCard);
     const isChronicle = authoredIsChronicle(runtimeCard);
     const isEnergy = authoredIsEnergy(runtimeCard);
-    const fullArt = isChronicle
+    const defaultFullArt = isChronicle
       || isEnergy
       || (isToken && imageManifest.cards?.[runtimeCard.id]?.fullArt === true);
+    const fullArt = resolveStudioFullArt(
+      `${deckId}/${presentation.id}`,
+      presentation,
+      defaultFullArt,
+    );
     return {
       id: runtimeCard.id,
       collectorId: runtimeCard.collectorId,
