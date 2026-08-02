@@ -80,6 +80,7 @@
         );
     --noise:
         url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
+    --elf-foliage: url("../../Decks/last_rain/motivo.avif");
 }
 
 * {
@@ -263,6 +264,13 @@ body {
     color: var(--jade-bright);
 }
 
+.leaf-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: var(--jade-bright);
+}
+
 .effect {
     margin: 0;
     text-wrap: pretty;
@@ -295,11 +303,36 @@ body {
     text-transform: uppercase;
 }
 
-/* Crédito de arte: misma línea del pie, pero pegado a la derecha. */
+/* Crédito de ilustración compartido con las cartas actuales del estudio. */
 .art-credit {
-    font: 700 22px/1 "Outfit", sans-serif;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.48);
+    pointer-events: none;
+}
+
+.art-credit-icon {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    opacity: 0.68;
+    transform: translateY(4px);
+}
+
+.art-credit-name {
+    color: inherit;
+    font: italic 500 22px/1 "Lora", Georgia, serif;
+    letter-spacing: 0.2px;
 }
 
 /*
@@ -322,8 +355,9 @@ body {
     border: 3px solid rgba(191, 166, 106, 0.62);
     border-radius: 30px 8px 30px 8px;
     color: #f5eee0;
+    isolation: isolate;
+    overflow: hidden;
     background:
-        var(--pattern),
         var(--noise),
         linear-gradient(180deg, rgba(47, 125, 88, 0.95), rgba(14, 48, 35, 0.96) 56%, rgba(4, 14, 11, 0.97));
     box-shadow:
@@ -332,6 +366,22 @@ body {
         0 8px 20px rgba(0, 0, 0, 0.72);
     font: 900 54px/1 "Oswald", sans-serif;
     text-shadow: 2px 3px 5px rgba(0, 0, 0, 0.9);
+}
+
+.card--comun .stats::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: 1;
+    background: var(--elf-foliage) center 58% / cover no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0.33;
+    pointer-events: none;
+}
+
+.stats > * {
+    position: relative;
+    z-index: 2;
 }
 
 .stats .sep {
@@ -418,43 +468,61 @@ body {
  * (quita el relleno y el borde recto) y el arco de oro lo dibuja ::before.
  *
  *   orbe: 90px de diámetro, centro en (84, 83) de la carta
- *   mordida: mismo centro, radio 54 → 9px de aire alrededor del orbe
+ *   cabecera: empieza en ese mismo eje y abraza el orbe desde atrás
+ *   mordida: radio 45, igual al orbe; el arco dorado aporta 2px exteriores
  */
 .card--comun .head {
     position: absolute;
-    top: 32px;
+    top: 36px;
     right: 32px;
-    left: 96px;
+    left: 84px;
     z-index: 8;
     display: flex;
-    height: 102px;
+    height: 94px;
     align-items: center;
     gap: 17px;
     padding: 0 20px 0 62px;
     overflow: hidden;
     border: 2px solid rgba(191, 166, 106, 0.55);
-    border-radius: 12px 18px 9px 12px;
+    border-radius: 0 18px 9px 0;
     background:
-        var(--pattern),
         var(--noise),
         linear-gradient(90deg, rgba(10, 40, 30, 0.94), rgba(30, 88, 64, 0.86) 48%, rgba(6, 20, 17, 0.94));
     box-shadow:
         inset 0 1px rgba(255, 255, 255, 0.12),
         0 10px 26px rgba(0, 0, 0, 0.7);
-    -webkit-mask: radial-gradient(circle 54px at -12px 51px, transparent 0 54px, #000 54.5px);
-    mask: radial-gradient(circle 54px at -12px 51px, transparent 0 54px, #000 54.5px);
+    -webkit-mask: radial-gradient(circle 45px at 0 47px, transparent 0 45px, #000 45.5px);
+    mask: radial-gradient(circle 45px at 0 47px, transparent 0 45px, #000 45.5px);
 }
 
-/* El arco de oro de la mordida: anillo justo por fuera del corte, recortado por la banda. */
+/* El arco comparte exactamente el centro de la máscara y del orbe. */
 .card--comun .head::before {
     content: "";
     position: absolute;
-    top: -8px;
-    left: -71px;
-    width: 114px;
-    height: 114px;
+    top: 0;
+    left: -47px;
+    z-index: 1;
+    width: 94px;
+    height: 94px;
     border: 2px solid rgba(191, 166, 106, 0.55);
     border-radius: 50%;
+    pointer-events: none;
+}
+
+.card--comun .head::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: 0;
+    background: var(--elf-foliage) center 38% / cover no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0.33;
+    pointer-events: none;
+}
+
+.card--comun .head > * {
+    position: relative;
+    z-index: 2;
 }
 
 .card--comun .cost-gem {
@@ -503,6 +571,7 @@ body {
 }
 
 .card--comun .typeband {
+    position: relative;
     display: flex;
     min-height: 74px;
     align-items: center;
@@ -514,7 +583,6 @@ body {
     border-radius: 8px;
     color: #f0e7d2;
     background:
-        var(--pattern),
         var(--noise),
         linear-gradient(90deg, rgba(6, 26, 20, 0.95), rgba(47, 125, 88, 0.9), rgba(6, 26, 20, 0.95));
     box-shadow:
@@ -524,6 +592,22 @@ body {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     text-shadow: 2px 3px 7px rgba(0, 0, 0, 0.86);
+}
+
+.card--comun .typeband::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: 0;
+    background: var(--elf-foliage) center 67% / cover no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0.33;
+    pointer-events: none;
+}
+
+.card--comun .typeband > * {
+    position: relative;
+    z-index: 1;
 }
 
 .card--comun .typeband .type-icon {
@@ -562,7 +646,7 @@ body {
     display: grid;
     place-items: center;
     color: rgba(var(--jade-rgb), 0.075);
-    font: 700 350px/1 "Cinzel Decorative", serif;
+    font: 700 315px/1 "Cinzel Decorative", serif;
     pointer-events: none;
 }
 
@@ -583,20 +667,29 @@ body {
     position: relative;
     z-index: 1;
     width: 100%;
-    height: 2px;
-    margin: 23px 0 20px;
-    background: linear-gradient(90deg, transparent, rgba(var(--jade-rgb), 0.56), transparent);
+    height: 3px;
+    min-height: 3px;
+    margin: 12px 0;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(52, 96, 59, 0.45) 25%,
+        rgba(52, 96, 59, 0.45) 47%,
+        transparent 47%,
+        transparent 53%,
+        rgba(52, 96, 59, 0.45) 53%,
+        rgba(52, 96, 59, 0.45) 75%,
+        transparent 100%);
 }
 
 .card--comun .divider::after {
-    content: "◆";
+    content: "\25C6";
     position: absolute;
     top: 50%;
     left: 50%;
-    padding: 0 13px;
-    color: rgba(var(--jade-rgb), 0.72);
-    background: var(--paper-top);
-    font-size: 19px;
+    padding: 0;
+    color: #386b40;
+    background: transparent;
+    font-size: 21px;
     line-height: 1;
     transform: translate(-50%, -50%);
 }
@@ -622,6 +715,7 @@ body {
 
 .card--comun .art-credit {
     right: 38px;
+    color: rgba(43, 34, 24, 0.72);
 }
 
 /* ================================================================== */
@@ -666,7 +760,7 @@ body {
     bottom: 54px;
     z-index: 3;
     color: rgba(159, 240, 178, 0.065);
-    font: 700 350px/1 "Cinzel Decorative", serif;
+    font: 700 315px/1 "Cinzel Decorative", serif;
     transform: translateX(50%);
     pointer-events: none;
 }
@@ -730,10 +824,11 @@ body {
     position: absolute;
     right: 0;
     bottom: 0;
-    color: rgba(214, 203, 172, 0.42);
+    color: rgba(250, 245, 231, 0.9);
 }
 
 .card--cronica .typeband {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 16px;
@@ -772,10 +867,31 @@ body {
 }
 
 .card--cronica .divider {
-    width: 220px;
-    height: 2px;
-    margin: 20px 0 18px;
-    background: linear-gradient(90deg, rgba(191, 166, 106, 0.75), transparent);
+    position: relative;
+    width: 100%;
+    height: 3px;
+    min-height: 3px;
+    margin: 12px 0;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(191, 166, 106, 0.5) 25%,
+        rgba(191, 166, 106, 0.5) 47%,
+        transparent 47%,
+        transparent 53%,
+        rgba(191, 166, 106, 0.5) 53%,
+        rgba(191, 166, 106, 0.5) 75%,
+        transparent 100%);
+}
+
+.card--cronica .divider::after {
+    content: "\25C6";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: rgba(234, 220, 173, 0.78);
+    font-size: 21px;
+    line-height: 1;
+    transform: translate(-50%, -50%);
 }
 
 .card--cronica .flavor {
