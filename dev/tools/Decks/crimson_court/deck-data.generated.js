@@ -2,6 +2,8 @@
 window.HostfallDeckData = [
   {
     "id": "crimson_energy",
+    "collectorId": "HFA1048",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/crimson_energy.webp",
     "nombre": "Energía Carmesí",
     "tipo": "Fuente — Santuario",
@@ -15,6 +17,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "blood_page",
+    "collectorId": "HFA1049",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/blood_page.jpg",
     "nombre": "Paje de la Sed",
     "tipo": "Eco — Vampiro Sirviente",
@@ -28,6 +32,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "crimson_bat",
+    "collectorId": "HFA1050",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/crimson_bat.webp",
     "nombre": "Murciélago Carmesí",
     "tipo": "Eco — Murciélago Vampiro",
@@ -41,6 +47,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "tithe_acolyte",
+    "collectorId": "HFA1051",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/tithe_acolyte.webp",
     "nombre": "Acólito del Diezmo",
     "tipo": "Eco — Vampiro Clérigo",
@@ -54,6 +62,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "court_duelist",
+    "collectorId": "HFA1052",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/court_duelist.webp",
     "nombre": "Duelista de la Corte",
     "tipo": "Eco — Vampiro Guerrero",
@@ -67,6 +77,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "crypt_guardian",
+    "collectorId": "HFA1053",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/crypt_guardian.webp",
     "nombre": "Guardián de la Cripta",
     "tipo": "Eco — Vampiro Caballero",
@@ -80,6 +92,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "black_vein_executioner",
+    "collectorId": "HFA1054",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/black_vein_executioner.webp",
     "nombre": "Verdugo de la Vena Negra",
     "tipo": "Eco — Vampiro Asesino",
@@ -93,6 +107,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "blood_sentinel",
+    "collectorId": "HFA1055",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/blood_sentinel.webp",
     "nombre": "Centinela de Sangre",
     "tipo": "Eco — Vampiro Caballero",
@@ -106,6 +122,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "eternal_feast_countess",
+    "collectorId": "HFA1056",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/eternal_feast_countess.webp",
     "nombre": "Condesa del Banquete Eterno",
     "tipo": "Eco de Crónica — Vampiro Noble",
@@ -119,6 +137,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "blood_pact",
+    "collectorId": "HFA1057",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/blood_pact.webp",
     "nombre": "Pacto de Sangre",
     "tipo": "Hechizo",
@@ -132,6 +152,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "crimson_impulse",
+    "collectorId": "HFA1058",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/crimson_impulse.webp",
     "nombre": "Impulso Carmesí",
     "tipo": "Hechizo · Rápido",
@@ -145,6 +167,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "drain_essence",
+    "collectorId": "HFA1059",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/drain_essence.webp",
     "nombre": "Drenar la Esencia",
     "tipo": "Hechizo · Rápido",
@@ -158,6 +182,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "predatory_thirst",
+    "collectorId": "HFA1060",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/predatory_thirst.webp",
     "nombre": "Sed Depredadora",
     "tipo": "Hechizo · Rápido",
@@ -171,6 +197,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "final_banquet",
+    "collectorId": "HFA1061",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/crimson_court/art/final_banquet.webp",
     "nombre": "Banquete Final",
     "tipo": "Hechizo · Rápido",

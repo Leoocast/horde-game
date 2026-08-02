@@ -370,7 +370,7 @@
                             alt="${escapeHtml(cardName)}"
                             ${artStyle ? `style="--art-transform: ${artStyle}"` : ""}
                         >
-                        ${artist ? `<div class="tcg-art-credit">ARTE · ${escapeHtml(artist)}</div>` : ""}
+                        ${artist ? `<div class="tcg-art-credit" aria-label="Ilustración: ${escapeHtml(artist)}"><svg class="tcg-art-credit-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6"></path></svg><span class="tcg-art-credit-name">${escapeHtml(artist)}</span></div>` : ""}
                         ${fullArt ? `<div class="tcg-full-art-footer">${escapeHtml(collectorId)} ${layout.footerSeparator} © HOSTFALL 2026</div>` : ""}
                     </div>
 

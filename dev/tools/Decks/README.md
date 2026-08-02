@@ -33,7 +33,8 @@ extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para u
 
 El JSON runtime también declara el `collectorId` impreso. Para el Acto I la serie es continua:
 `HFA1001`, `HFA1002`, etc. El pie de carta muestra ese ID junto a `© HOSTFALL 2026`. El crédito de
-ilustración se coloca por separado dentro del borde inferior del arte como `ARTE · NOMBRE`, para
+ilustración se coloca por separado dentro del borde inferior del arte con un icono de imagen y el
+nombre del artista, para
 que el artista no parezca autor o propietario del juego. El nombre por defecto vive en
 `defaultArtist` dentro de `studio.config.json`; una carta puede reemplazarlo con `artist`.
 

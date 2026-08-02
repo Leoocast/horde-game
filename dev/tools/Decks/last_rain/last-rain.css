@@ -419,20 +419,36 @@ body {
 
 .tcg-art-credit {
     position: absolute;
-    right: 16px;
-    bottom: 13px;
+    right: 18px;
+    bottom: 12px;
     z-index: 3;
-    padding: 5px 10px 4px;
-    border: 1px solid rgba(234, 217, 168, 0.2);
-    border-radius: 5px;
-    color: rgba(246, 239, 218, 0.88);
-    background: rgba(10, 9, 8, 0.72);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.42);
-    font: 700 16px/1.1 "Outfit", sans-serif;
-    letter-spacing: 1.4px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-    text-transform: uppercase;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.98);
     pointer-events: none;
+}
+
+.tcg-art-credit-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    fill: none;
+    stroke: rgba(246, 239, 218, 0.62);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    transform: translateY(4px);
+}
+
+.tcg-art-credit-name {
+    color: rgba(250, 245, 231, 0.9);
+    font: italic 500 19px/1 "Lora", Georgia, serif;
+    letter-spacing: 0.2px;
 }
 
 .tcg-full-art-footer {
@@ -442,9 +458,9 @@ body {
     z-index: 3;
     padding: 0;
     border: 0;
-    color: rgba(246, 239, 218, 0.58);
+    color: rgba(246, 239, 218, 0.44);
     background: none;
-    font: 700 15px/1.1 "Outfit", sans-serif;
+    font: 600 14px/1.1 "Outfit", sans-serif;
     letter-spacing: 1.3px;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.96);
     text-transform: uppercase;
@@ -453,8 +469,8 @@ body {
 
 .tcg-card--full-art-land .tcg-art-credit {
     right: auto;
-    left: 16px;
-    bottom: 34px;
+    left: 18px;
+    bottom: 32px;
 }
 
 /* --- CINTA DE TIPO RIBBON CUT --- */

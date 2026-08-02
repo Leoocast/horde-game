@@ -28,7 +28,6 @@
         body.studio-focus .tcg-card.studio-selected { display: block; }
         body.studio-grid .tcg-card:not(.studio-selected) { opacity: .28; }
         body.studio-grid .tcg-card:not(.studio-selected):hover { opacity: .6; }
-        .tcg-card.studio-selected { outline: 3px solid rgba(184,162,107,.9); outline-offset: 12px; }
         .tcg-art-frame { cursor: grab; }
         .tcg-art-frame.is-dragging { cursor: grabbing; }
     `;

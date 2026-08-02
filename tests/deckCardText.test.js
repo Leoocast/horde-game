@@ -241,7 +241,9 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioApp, /\.studio-header \{ display: none !important; \}/u);
   assert.match(studioApp, /html\.studio-focus, body\.studio-focus \{ overflow: hidden !important; \}/u);
   assert.match(studioApp, /doc\.documentElement\.classList\.toggle\("studio-focus"/u);
+  assert.doesNotMatch(studioApp, /\.tcg-card\.studio-selected\s*\{[^}]*outline:/u);
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
+  assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
   assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
 });
 
@@ -254,7 +256,8 @@ test("card generators print the Hostfall copyright footer", () => {
   assert.match(sharedStudio, /© HOSTFALL 2026/u, "shared studio is missing the copyright footer");
   assert.match(sharedStudio, /tcg-art-credit/u, "shared studio is missing the explicit art credit");
   assert.match(sharedStudio, /tcg-full-art-footer/u, "full-art cards are missing printable metadata");
-  assert.match(sharedStudio, /ARTE ·/u, "shared studio does not label the artist's role");
+  assert.match(sharedStudio, /tcg-art-credit-icon/u, "shared studio is missing the illustration icon");
+  assert.match(sharedStudio, /aria-label="Ilustración:/u, "shared studio does not label the artist's role accessibly");
   assert.doesNotMatch(sharedStudio, /Hostfall TCG/iu, "shared studio still prints the retired footer");
 });
 

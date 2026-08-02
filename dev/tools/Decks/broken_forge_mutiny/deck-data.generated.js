@@ -2,6 +2,8 @@
 window.HostfallDeckData = [
   {
     "id": "ember_scrap_runner",
+    "collectorId": "HFA1031",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
     "nombre": "Corredor de Ascua y Chatarra",
     "tipo": "Eco · Ficha — Trasgo Corredor",
@@ -16,6 +18,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "burning_tally_foreman",
+    "collectorId": "HFA1032",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
     "nombre": "Capataz del Recuento Ardiente",
     "tipo": "Eco — Trasgo Capataz",
@@ -29,6 +33,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "next_crew_caller",
+    "collectorId": "HFA1033",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
     "nombre": "Llamador de la Próxima Cuadrilla",
     "tipo": "Eco — Trasgo Llamador",
@@ -42,6 +48,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "open_furnace_crier",
+    "collectorId": "HFA1034",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
     "nombre": "Pregonero del Horno Abierto",
     "tipo": "Eco — Trasgo Pregonero",
@@ -55,6 +63,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "shift_hammer",
+    "collectorId": "HFA1035",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.png",
     "nombre": "El Martillo de Turno",
     "tipo": "Apoyo",
@@ -68,6 +78,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "rain_of_rivets",
+    "collectorId": "HFA1036",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
     "nombre": "Lluvia de Remaches",
     "tipo": "Apoyo",
@@ -81,6 +93,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "double_crew_boss",
+    "collectorId": "HFA1037",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
     "nombre": "Jefe de la Cuadrilla Doble",
     "tipo": "Eco — Trasgo Capataz",
@@ -94,6 +108,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "three_furnaces_foreman",
+    "collectorId": "HFA1038",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
     "nombre": "Capataz de los Tres Hornos",
     "tipo": "Eco — Trasgo Capataz",
@@ -107,6 +123,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "first_siren_agitator",
+    "collectorId": "HFA1039",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
     "nombre": "Agitador de la Primera Sirena",
     "tipo": "Eco — Trasgo Agitador",
@@ -120,6 +138,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "open_another_gate",
+    "collectorId": "HFA1040",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.png",
     "nombre": "¡Abran Otra Compuerta!",
     "tipo": "Hechizo · Rápido",
@@ -133,6 +153,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "three_under_one_anvil",
+    "collectorId": "HFA1041",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
     "nombre": "Tres Bajo el Mismo Yunque",
     "tipo": "Eco — Trasgo Cuadrilla",
@@ -146,6 +168,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "slag_volley_master",
+    "collectorId": "HFA1042",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
     "nombre": "Maestro de la Salva de Escoria",
     "tipo": "Eco — Trasgo Artillero",
@@ -159,6 +183,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "varka_revolt_axis",
+    "collectorId": "HFA1043",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
     "nombre": "Varka, Eje de la Revuelta",
     "tipo": "Eco de Crónica — Trasgo Giracadenas",
@@ -172,6 +198,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "salvaged_armor_master",
+    "collectorId": "HFA1044",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
     "nombre": "Maestro de la Armadura Recuperada",
     "tipo": "Eco — Trasgo Armero",
@@ -185,6 +213,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "repeating_blow_marshal",
+    "collectorId": "HFA1045",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
     "nombre": "Mariscal del Golpe Repetido",
     "tipo": "Eco — Trasgo Mariscal",
@@ -198,6 +228,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "brakka_growing_tally",
+    "collectorId": "HFA1046",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
     "nombre": "Brakka, la Cuenta Creciente",
     "tipo": "Eco — Trasgo Reclutador",
@@ -211,6 +243,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "last_rivets_gunner",
+    "collectorId": "HFA1047",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
     "nombre": "Artillero de los Últimos Remaches",
     "tipo": "Eco — Trasgo Artillero",

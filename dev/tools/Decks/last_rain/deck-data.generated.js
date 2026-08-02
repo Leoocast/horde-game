@@ -2,6 +2,8 @@
 window.HostfallDeckData = [
   {
     "id": "first_dew_gatherers",
+    "collectorId": "HFA1001",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/first_dew_gatherers.png",
     "nombre": "Recolectores del Primer Rocío",
     "tipo": "Eco — Recolector",
@@ -15,6 +17,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "iria_voice_last_rain",
+    "collectorId": "HFA1002",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/iria_voice_last_rain.png",
     "nombre": "Iria, Voz de la Última Lluvia",
     "tipo": "Eco de Crónica — Humana Restauradora",
@@ -28,6 +32,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "keeper_sleeping_root",
+    "collectorId": "HFA1003",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/keeper_sleeping_root.png",
     "nombre": "Custodio de la Raíz Dormida",
     "tipo": "Eco — Custodio",
@@ -41,6 +47,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "black_sap_stalker",
+    "collectorId": "HFA1004",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/black_sap_stalker.png",
     "nombre": "Acechador de Savia Negra",
     "tipo": "Eco — Basilisco",
@@ -54,6 +62,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "arven_first_pack",
+    "collectorId": "HFA1005",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/arven_first_pack.png",
     "nombre": "Arven, Primero de la Manada",
     "tipo": "Eco — Líder Lupino",
@@ -67,6 +77,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "ancient_canopy_watchers",
+    "collectorId": "HFA1006",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.png",
     "nombre": "Vigías del Dosel Antiguo",
     "tipo": "Eco — Vigía Arbóreo",
@@ -80,6 +92,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "hollow_skybreaker",
+    "collectorId": "HFA1007",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/hollow_skybreaker.png",
     "nombre": "Quebracielos de la Hondonada",
     "tipo": "Eco — Bestia Primordial",
@@ -93,6 +107,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "orun_waking_root",
+    "collectorId": "HFA1008",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/orun_waking_root.png",
     "nombre": "Orun, la Raíz Despierta",
     "tipo": "Eco — Guardián Ancestral",
@@ -106,6 +122,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "marked_prey",
+    "collectorId": "HFA1009",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/marked_prey.png",
     "nombre": "La Presa Señalada",
     "tipo": "Hechizo · Rápido",
@@ -119,6 +137,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "oath_clearing",
+    "collectorId": "HFA1010",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/oath_clearing.png",
     "nombre": "El Juramento del Claro",
     "tipo": "Hechizo",
@@ -132,6 +152,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "roots_touched_sky",
+    "collectorId": "HFA1011",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/roots_touched_sky.png",
     "nombre": "Cuando las Raíces Tocaron el Cielo",
     "tipo": "Hechizo · Rápido",
@@ -145,6 +167,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "first_tree_sap",
+    "collectorId": "HFA1012",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/first_tree_sap.png",
     "nombre": "Savia del Primer Árbol",
     "tipo": "Hechizo · Rápido",
@@ -158,6 +182,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "deep_root_spring",
+    "collectorId": "HFA1013",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/last_rain/art/deep_root_spring.png",
     "nombre": "Manantial de Raízhonda",
     "tipo": "Fuente — Manantial",

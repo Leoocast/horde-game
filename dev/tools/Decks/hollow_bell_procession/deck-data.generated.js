@@ -2,6 +2,8 @@
 window.HostfallDeckData = [
   {
     "id": "last_knell_dead",
+    "collectorId": "HFA1014",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.png",
     "nombre": "Muerto del Último Taño",
     "tipo": "Eco · Ficha — Zombi",
@@ -16,6 +18,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "mass_grave_colossus",
+    "collectorId": "HFA1015",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
     "nombre": "Coloso de la Fosa Común",
     "tipo": "Eco · Ficha — Zombi Gigante",
@@ -30,6 +34,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "hollow_bell",
+    "collectorId": "HFA1016",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.png",
     "nombre": "La Campana Hueca",
     "tipo": "Apoyo",
@@ -43,6 +49,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "five_knot_gallows",
+    "collectorId": "HFA1017",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.png",
     "nombre": "El Cadalso de los Cinco Nudos",
     "tipo": "Eco — Zombi Nacido del cadalso",
@@ -56,6 +64,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "last_thought_carrion",
+    "collectorId": "HFA1018",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.png",
     "nombre": "Carroña del Último Pensamiento",
     "tipo": "Eco — Zombi Carroña",
@@ -69,6 +79,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "memory_shroud_bearer",
+    "collectorId": "HFA1019",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
     "nombre": "Portador de la Mortaja Mnémica",
     "tipo": "Eco — Zombi Portador de mortaja",
@@ -82,6 +94,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "flesh_root_tithe",
+    "collectorId": "HFA1020",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
     "nombre": "Diezmo de Carne y Raíz",
     "tipo": "Hechizo",
@@ -95,6 +109,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "crypt_rotwing",
+    "collectorId": "HFA1021",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.png",
     "nombre": "Alapútrida de la Cripta",
     "tipo": "Eco — Zombi Murciélago",
@@ -108,6 +124,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "basted_wing",
+    "collectorId": "HFA1022",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.png",
     "nombre": "Ala Hilvanada",
     "tipo": "Eco — Zombi Constructo",
@@ -121,6 +139,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "reinforced_gravewing",
+    "collectorId": "HFA1023",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
     "nombre": "Ala Sepulcral Reforzada",
     "tipo": "Eco — Zombi Constructo",
@@ -134,6 +154,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "archive_carrion_crow",
+    "collectorId": "HFA1024",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
     "nombre": "Cuervo Carroñero del Archivo",
     "tipo": "Eco — Zombi Ave",
@@ -147,6 +169,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "horned_linebreaker",
+    "collectorId": "HFA1025",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.png",
     "nombre": "Rompelíneas Astado",
     "tipo": "Eco — Zombi Minotauro",
@@ -160,6 +184,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "seventh_memory_hound",
+    "collectorId": "HFA1026",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
     "nombre": "Sabueso de la Séptima Memoria",
     "tipo": "Eco — Zombi Sabueso",
@@ -173,6 +199,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "full_ossuary_mastiff",
+    "collectorId": "HFA1027",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
     "nombre": "Mastín del Osario Colmado",
     "tipo": "Eco — Zombi Sabueso",
@@ -186,6 +214,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "silent_bite_rats",
+    "collectorId": "HFA1028",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.png",
     "nombre": "Ratas de la Mordida Silente",
     "tipo": "Eco — Zombi Rata",
@@ -199,6 +229,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "fallen_gatherer",
+    "collectorId": "HFA1029",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.png",
     "nombre": "Recolector de los Caídos",
     "tipo": "Eco — Zombi Recolector",
@@ -212,6 +244,8 @@ window.HostfallDeckData = [
   },
   {
     "id": "last_march_marshal",
+    "collectorId": "HFA1030",
+    "artist": "Dean Spencer",
     "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.png",
     "nombre": "Mariscal de la Última Marcha",
     "tipo": "Eco — Zombi Mariscal",
