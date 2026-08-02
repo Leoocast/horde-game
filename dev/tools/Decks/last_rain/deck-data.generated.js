@@ -4,7 +4,7 @@ window.HostfallDeckData = [
     "id": "first_dew_gatherers",
     "collectorId": "HFA1001",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/last_rain/art/first_dew_gatherers.png",
+    "art_crop": "../../../../public/cards/last_rain/art/first_dew_gatherers.jpg",
     "nombre": "Recolectores del Primer Rocío",
     "tipo": "Eco — Recolector",
     "costo": 1,

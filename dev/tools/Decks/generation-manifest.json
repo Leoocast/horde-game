@@ -2,11 +2,11 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "last_rain": {
-      "inputHash": "ed857268e64dd904c7a46775638cb84c92f231922e6882083fb01be3836398e0",
+      "inputHash": "fef5490f0cdd064bb9c5be34509f243ef0589f27b7d55445190455e4d83ba144",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "ee2c54f2e586f1d9332809bd9568931592ccf40fe5803a0ab11a54afb93d9d96"
+          "sha256": "f1f6c89f7849f231d00d34b6b743d41d2220501fb4f2e927249bfe0dfe9b6559"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
@@ -22,7 +22,7 @@
         },
         {
           "path": "dev/tools/Decks/last_rain/deck-data.generated.js",
-          "sha256": "ac6c46f21f764c2a3b50c91e25be7b5ac329350ca6125fd5d5b4d06cdff80b88"
+          "sha256": "2bf4c730a44127b8e4fa376a40f06eabfbb1ea4eb762ac614f6f5504f92b79f9"
         },
         {
           "path": "dev/tools/Decks/last_rain/index.html",
@@ -34,7 +34,7 @@
         },
         {
           "path": "dev/tools/Decks/last_rain/studio.config.json",
-          "sha256": "324ed88182c403cc675258af7cd327106345a2c4661d6ac9db8369b009c17a5a"
+          "sha256": "4268929f2ce6d90815b8b38e20614cbcd4ac4650e78cd197252d82ed4892741a"
         },
         {
           "path": "public/cards/last_rain/art/ancient_canopy_watchers.png",
@@ -53,8 +53,8 @@
           "sha256": "c165841f537df4148dc1a18d7adbf956444046e8d6e9d06bde83d2e7310a5da4"
         },
         {
-          "path": "public/cards/last_rain/art/first_dew_gatherers.png",
-          "sha256": "41863b0d1a9d60e3922290b64c2047cf7f51d9ee67d9d3088d8d22217b9bf9ef"
+          "path": "public/cards/last_rain/art/first_dew_gatherers.jpg",
+          "sha256": "8ffefabb07173ced021bdff0666a7b043e2b092283330f7435ea34e693ef3dcd"
         },
         {
           "path": "public/cards/last_rain/art/first_tree_sap.png",
@@ -129,7 +129,7 @@
         {
           "id": "first_dew_gatherers",
           "path": "public/cards/last_rain/first_dew_gatherers.png",
-          "sha256": "80e81fc9a30035bd67373c9b70cce883503ef30c24fed20393da8bbf6a95f584",
+          "sha256": "d91179f4b39d03b5ac0d2dd3092b2b80ca32a188f0d62a7f6a7338ca7eb40e1c",
           "width": 976,
           "height": 1360
         },
@@ -143,70 +143,70 @@
         {
           "id": "keeper_sleeping_root",
           "path": "public/cards/last_rain/keeper_sleeping_root.png",
-          "sha256": "623b2fa4184413fd1422a9e32c88edaec2a5cc76d439aada81e66a36b157a777",
+          "sha256": "11d809d331dda6070f39bae5dbf64ae412f553bc4d6b6f98f23e77eaa49effca",
           "width": 976,
           "height": 1360
         },
         {
           "id": "black_sap_stalker",
           "path": "public/cards/last_rain/black_sap_stalker.png",
-          "sha256": "fd8d8479179c032f82811de7aef40e309729d19d212cc433e26d2ab50308d550",
+          "sha256": "ab342558c68abc7d2b4b5953a0f6aa434d42dd7605b38dbabbee7c5761c449e3",
           "width": 976,
           "height": 1360
         },
         {
           "id": "arven_first_pack",
           "path": "public/cards/last_rain/arven_first_pack.png",
-          "sha256": "64af2d4a6072a0c8939258ace51e41318f3d7db168af480cb3dcdbddbd410aa8",
+          "sha256": "0bfe0b57775cf6b3daa43287ddc1c998a105e84c5944579b9f4c8c2f477d468f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "ancient_canopy_watchers",
           "path": "public/cards/last_rain/ancient_canopy_watchers.png",
-          "sha256": "c83cacfcb854d4f647262988dbf01c56825cedc244d142483d17466786b7b5b6",
+          "sha256": "77ff1b5dd873080114b995bdd1ee132027313e2f5b8d112753b51f215816bdf6",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hollow_skybreaker",
           "path": "public/cards/last_rain/hollow_skybreaker.png",
-          "sha256": "1535166c6144ceb873c76d6f2b2f24b285c3845bc90683cbad0974255d6bb2cb",
+          "sha256": "29edd7ba3f445e847f3d59298672acdc1ca87ab9927146a1a306e22f465c872b",
           "width": 976,
           "height": 1360
         },
         {
           "id": "orun_waking_root",
           "path": "public/cards/last_rain/orun_waking_root.png",
-          "sha256": "0ee2617db7ab2f74c9ec34910c1ac8aee333fc940c3d72a76a393e8e1b78c566",
+          "sha256": "87836903b396324bfb4805a42aafe09ec261ea2c20f648def9119edccf6805e0",
           "width": 976,
           "height": 1360
         },
         {
           "id": "marked_prey",
           "path": "public/cards/last_rain/marked_prey.png",
-          "sha256": "1ce3d2db321b7eb96f33548179d648fd5cc7997d0b22b6adde5b453b66e2baaa",
+          "sha256": "f5717e899fff193303f24295948f505b26c96676ffcf168006d4ceae76e19fed",
           "width": 976,
           "height": 1360
         },
         {
           "id": "oath_clearing",
           "path": "public/cards/last_rain/oath_clearing.png",
-          "sha256": "7c1bf8752b8deb7d516dac8c3b5f313bec35f5007f3bba97e7fb660e7174392c",
+          "sha256": "eb3a88b95f8dbdabbc1e6aba20e89a1a69a0c59f1b525ac7ef8552b1d58bfe39",
           "width": 976,
           "height": 1360
         },
         {
           "id": "roots_touched_sky",
           "path": "public/cards/last_rain/roots_touched_sky.png",
-          "sha256": "b0581dab9cd77e83861e9fbd7a2b2633658b4ef409544ba70d0662c06d048887",
+          "sha256": "1769a03ba5796018d3f418fd732e2840e03ce77b93a3e86cadadd9b520f1c8e6",
           "width": 976,
           "height": 1360
         },
         {
           "id": "first_tree_sap",
           "path": "public/cards/last_rain/first_tree_sap.png",
-          "sha256": "f8613a00c8dc3e6c7b7de6b30ee147d44f2f46f744ccbb41571c58c01eb33a83",
+          "sha256": "6a2ec3dc571422cea4918e9876469dca79aea8881a56d9ea841667108eeca9b5",
           "width": 976,
           "height": 1360
         },
