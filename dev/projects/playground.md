@@ -137,8 +137,8 @@ de juego y setup turns.
 en el lab desencadenaba el turno entero de la horda de zombies cargada: destapaba, revelaba tres
 cartas suyas y atacaba. `revealHordeCardFromTop` en `HordeController.ts` revela y juega **una** carta
 del tope por el mismo camino que usa el turno (`revealAndPlayOne`: ETB, triggers, parking de
-Smallpox) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
-que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de Smallpox) pero no arranca
+Diezmo de Carne y Raíz / `smallpox`) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
+que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de `smallpox`) pero no arranca
 combate. Hay test que verifica que el turno de Horda no avanza, la fase no cambia y no se declaran
 atacantes.
 
@@ -183,7 +183,7 @@ La pestana Cards tiene un boton **Play** que hace lo que dice, ruteado por lado:
 
 Debajo, separado, queda el "ponlo directo en" para armar tableros: silencioso, sin coste ni
 triggers. Las zonas ofrecidas dependen de la carta (`destinationsFor`): un sorcery no ofrece
-battlefield y la Horda no ofrece mano. Antes se podia dejar Smallpox en el campo de la Horda, un
+battlefield y la Horda no ofrece mano. Antes se podia dejar Diezmo de Carne y Raíz en el campo de la Horda, un
 estado al que el juego no puede llegar nunca.
 
 ### loadScenario
@@ -257,7 +257,7 @@ React recibia keys duplicadas y dejaba nodos fantasma en la lista de resultados.
 - **Kill it**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
   reales. **Remove it** es otra cosa a proposito: movimiento crudo de zona, sin muerte y sin
   triggers. **Wipe** (`clearBattlefield`) es lo mismo por lado entero. Hay test que los distingue
-  con Pashalik Mons (destruir una ficha de Goblin quema una criatura del jugador; moverla al
+  con Artillero de los Últimos Remaches (`pashalik_mons`; destruir una ficha de Trasgo quema un Eco del jugador; moverla al
   cementerio o barrer el campo no).
 - **Jugar sin coste**: `grantManaForCard` sube el pool exactamente al coste impreso y despues corre
   el `castCard` normal. Si la carta pide targets se abre el `SpellTargetingOverlay` de verdad, la
@@ -286,7 +286,7 @@ Reproduccion **animada, paso a paso**:
 - `isPlaygroundBusy()` deriva de las colas que ya existen en el store (combate de Horda, summoning,
   triggers, mills, descartes, animaciones de ataque/quemado). El driver no avanza mientras siga en
   true. **No** se agregaron timers nuevos.
-- `isWaitingForInput()` detecta targeting/descarte/Smallpox abiertos: el auto-play se **pausa** en vez
+- `isWaitingForInput()` detecta targeting/descarte/selección de `smallpox` abiertos: el auto-play se **pausa** en vez
   de contestar por el jugador.
 - Nada se graba mientras se reproduce (`replayCursor !== undefined`), o el replay se copiaria a si
   mismo.
@@ -351,7 +351,7 @@ El JSON exportado sirve tal cual como fixture para `tests/engine.test.js`.
       clickeandola en el tablero real, y de ahi salen **Kill it** (`destroyPermanent`, muerte real
       con sus triggers), **Remove it** (movimiento crudo de zona, sin muerte) y el wipe por lado
       (`clearBattlefield`, silencioso: limpiar la mesa entre pruebas no puede disparar doce
-      triggers). Hay test que distingue los tres con Pashalik Mons.
+      triggers). Hay test que distingue los tres con Artillero de los Últimos Remaches (`pashalik_mons`).
 - [x] **Fase 5 — Timeline: grabar y reproducir.** `timeline.ts` (`TimelineStep`, `executeStep`,
       `describeStep`, `isPlaygroundBusy`, `isWaitingForInput`), `panels/TimelinePanel.tsx` (toggle de
       grabacion, lista de pasos con borrar, Step / Auto / Stop) y el driver de reproduccion en

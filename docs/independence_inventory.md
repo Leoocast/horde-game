@@ -115,10 +115,12 @@ Los tests actuales comparan estudios y JSON, pero no pueden leer el texto raster
 PNG. L2 debe introducir una prueba de frescura basada en entradas y hashes, no depender de OCR.
 
 Cierre de L2 (2026-07-31): el manifest y la verificación por hashes ya existen. Mono Green (13 PNG)
-y Vampiros (14 PNG) fueron regenerados y son verificables. Los 34 PNG de Zombies y Trasgos siguen
-sin prueba válida porque sus estudios apuntan circularmente a esos mismos PNG como arte; el
-exportador ahora los rechaza antes de sobrescribirlos. El usuario aceptó conservarlos intactos y
-resolverlos con arte fuente nuevo en L6.
+y Vampiros (14 PNG) fueron regenerados y eran verificables en aquel corte. Los 34 PNG de Zombies y
+Trasgos se difirieron porque sus estudios apuntaban circularmente a esos mismos PNG como arte.
+
+Actualización L6 (2026-08-01): La Procesión de la Campana Hueca y El Motín de la Forja Rota ya
+tienen 17 fuentes separadas y 17 exportaciones verificables cada uno. La incorporación posterior de
+flavor authored dejó los 14 PNG de Vampiros como la única deuda de frescura del inventario actual.
 
 ## L3 — Authored data legacy
 

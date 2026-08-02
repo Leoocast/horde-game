@@ -4,88 +4,88 @@
   "cards": [
     {
       "id": "goblin_token_1_1_red",
-      "artCrop": "../../../../public/cards/goblins/goblin_token_1_1_red.png",
-      "typeLineEs": "Eco · Ficha — Trasgo"
+      "artCrop": "../../../../public/cards/goblins/art/goblin_token_1_1_red.png",
+      "typeLineEs": "Eco · Ficha — Trasgo Corredor"
     },
     {
       "id": "hobgoblin_bandit_lord",
-      "artCrop": "../../../../public/cards/goblins/hobgoblin_bandit_lord.png",
-      "typeLineEs": "Eco — Trasgo Bribón"
+      "artCrop": "../../../../public/cards/goblins/art/hobgoblin_bandit_lord.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
     },
     {
       "id": "rundvelt_hordemaster",
-      "artCrop": "../../../../public/cards/goblins/rundvelt_hordemaster.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/rundvelt_hordemaster.png",
+      "typeLineEs": "Eco — Trasgo Llamador"
     },
     {
       "id": "battle_cry_goblin",
-      "artCrop": "../../../../public/cards/goblins/battle_cry_goblin.png",
-      "typeLineEs": "Eco — Trasgo"
+      "artCrop": "../../../../public/cards/goblins/art/battle_cry_goblin.png",
+      "typeLineEs": "Eco — Trasgo Pregonero"
     },
     {
       "id": "goblin_war_drums",
-      "artCrop": "../../../../public/cards/goblins/goblin_war_drums.png",
+      "artCrop": "../../../../public/cards/goblins/art/goblin_war_drums.png",
       "typeLineEs": "Apoyo"
     },
     {
       "id": "raid_bombardment",
-      "artCrop": "../../../../public/cards/goblins/raid_bombardment.png",
+      "artCrop": "../../../../public/cards/goblins/art/raid_bombardment.png",
       "typeLineEs": "Apoyo"
     },
     {
       "id": "beetleback_chief",
-      "artCrop": "../../../../public/cards/goblins/beetleback_chief.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/beetleback_chief.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
     },
     {
       "id": "siege_gang_commander",
-      "artCrop": "../../../../public/cards/goblins/siege_gang_commander.png",
-      "typeLineEs": "Eco — Trasgo"
+      "artCrop": "../../../../public/cards/goblins/art/siege_gang_commander.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
     },
     {
       "id": "goblin_rabblemaster",
-      "artCrop": "../../../../public/cards/goblins/goblin_rabblemaster.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/goblin_rabblemaster.png",
+      "typeLineEs": "Eco — Trasgo Agitador"
     },
     {
       "id": "goblin_surprise",
-      "artCrop": "../../../../public/cards/goblins/goblin_surprise.png",
+      "artCrop": "../../../../public/cards/goblins/art/goblin_surprise.png",
       "typeLineEs": "Hechizo · Rápido"
     },
     {
       "id": "mogg_mob",
-      "artCrop": "../../../../public/cards/goblins/mogg_mob.png",
-      "typeLineEs": "Eco — Trasgo"
+      "artCrop": "../../../../public/cards/goblins/art/mogg_mob.png",
+      "typeLineEs": "Eco — Trasgo Cuadrilla"
     },
     {
       "id": "volley_veteran",
-      "artCrop": "../../../../public/cards/goblins/volley_veteran.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/volley_veteran.png",
+      "typeLineEs": "Eco — Trasgo Artillero"
     },
     {
       "id": "goblin_chainwhirler",
-      "artCrop": "../../../../public/cards/goblins/goblin_chainwhirler.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/goblin_chainwhirler.png",
+      "typeLineEs": "Eco de Crónica — Trasgo Giracadenas"
     },
     {
       "id": "goblin_trashmaster",
-      "artCrop": "../../../../public/cards/goblins/goblin_trashmaster.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/goblin_trashmaster.png",
+      "typeLineEs": "Eco — Trasgo Armero"
     },
     {
       "id": "general_kreat_the_boltbringer",
-      "artCrop": "../../../../public/cards/goblins/general_kreat_the_boltbringer.png",
-      "typeLineEs": "Eco — Trasgo Soldado"
+      "artCrop": "../../../../public/cards/goblins/art/general_kreat_the_boltbringer.png",
+      "typeLineEs": "Eco — Trasgo Mariscal"
     },
     {
       "id": "krenko_tin_street_kingpin",
-      "artCrop": "../../../../public/cards/goblins/krenko_tin_street_kingpin.png",
-      "typeLineEs": "Eco — Trasgo"
+      "artCrop": "../../../../public/cards/goblins/art/krenko_tin_street_kingpin.png",
+      "typeLineEs": "Eco — Trasgo Reclutador"
     },
     {
       "id": "pashalik_mons",
-      "artCrop": "../../../../public/cards/goblins/pashalik_mons.png",
-      "typeLineEs": "Eco — Trasgo Guerrero"
+      "artCrop": "../../../../public/cards/goblins/art/pashalik_mons.png",
+      "typeLineEs": "Eco — Trasgo Artillero"
     }
   ]
 }

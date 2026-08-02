@@ -13,24 +13,22 @@ persona responsable del producto y, si corresponde, asesoria legal.
 
 **No publicar el build actual en Steam.** Renombrar `mana`, `graveyard` o las keywords no basta.
 
-Bloqueos encontrados en el repositorio:
+Bloqueos vigentes encontrados en el repositorio:
 
-- 44 definiciones usan nombres de cartas publicadas de Magic; tres definiciones adicionales son
-  fichas basadas en esos mismos mazos. Son 47 definiciones Magic-derived entre Mono Green,
-  Zombies y Goblins.
-- `public/cards/mono_green_ramp`, `public/cards/zombies` y `public/cards/goblins` contienen 60
-  archivos de carta/arte derivados. Vite copia `public` completo al build, incluso si un recurso
-  no se abre desde la UI.
-- El deck de Zombies declara `"source": "Horde Magic - Limited Edition 2.1"`.
-- Los nombres y varios assets de Mono Green, Zombies y Goblins todavía proceden de cartas Magic,
-  aunque las consultas, URLs y metadata del proveedor remoto ya fueron retiradas.
+- Los nombres visibles y artes de La Última Lluvia, La Procesión de la Campana Hueca y El Motín de
+  la Forja Rota ya son propios; sus ids técnicos heredados permanecen hasta la migración explícita
+  de persistencia prevista para L7.
+- Los 14 PNG finales de Vampiros quedaron anteriores a la incorporación de flavor authored y deben
+  regenerarse o revisarse dentro de L6 antes de considerar cerrado el inventario de assets.
 - La superficie reproduce en conjunto las categorias de Magic: mana, land, creature, instant,
   sorcery, enchantment, library, battlefield, graveyard, exile, untap/main/combat/end, cast,
   tap, mill, +1/+1 counters y gran parte de sus keywords perennes.
 - El tutorial heredado ya fue retirado por completo; el menú conserva solamente el botón
   deshabilitado `How to Play`. El log ya normaliza el texto del engine y no usa la categoría
   `Magic`.
-- No existe un registro de procedencia/licencia para arte, musica, SFX, fuentes y otros recursos.
+- Los tres lotes visuales nuevos tienen registro de generación, prompts, dimensiones y hashes, pero
+  su revisión de derechos continúa pendiente. Música, SFX, fuentes y demás recursos también
+  necesitan su propio registro antes de publicar.
 
 Referencias externas para el criterio:
 
@@ -366,22 +364,19 @@ Los nombres de Magic del antiguo deck Mono Green fueron retirados del JSON y del
 2026-08-01. La equivalencia técnica de ids y los nombres vigentes se conserva en
 `docs/chronicle_last_rain.md`.
 
-### Hueste Zombie
+### La Procesión de la Campana Hueca — retirado de producción
 
-Graf Harvest, Noosegraf Mob, Rottenheart Ghoul, Miasmic Mummy, Smallpox, Blighted Bat, Stitchwing
-Skaab, Advanced Stitchwing, Crow of Dark Tidings, Cursed Minotaur, Thraben Foulbloods, Hound of the
-Farbogs, Rancid Rats, Gavony Unhallowed y Diregraf Captain, ademas de sus dos fichas derivadas.
+Los nombres heredados del antiguo deck Zombie fueron retirados del JSON y del arte el 2026-08-01.
+La equivalencia entre los ids técnicos conservados, las identidades vigentes y sus roles mecánicos
+vive en `docs/procession_hollow_bell.md`.
 
-### Hueste Goblin
+### El Motín de la Forja Rota — retirado de producción
 
-Hobgoblin Bandit Lord, Rundvelt Hordemaster, Battle Cry Goblin, Goblin War Drums, Raid
-Bombardment, Beetleback Chief, Siege-Gang Commander, Goblin Rabblemaster, Goblin Surprise, Mogg
-Mob, Volley Veteran, Goblin Chainwhirler, Goblin Trashmaster, General Kreat, Krenko y Pashalik
-Mons, ademas de su ficha derivada.
-
-No se acepta un reskin uno-a-uno que conserve nombre cambiado + mismo arte + mismo coste + mismas
-estadisticas + mismo texto + misma cantidad. Cada reemplazo necesita nombre, arte, texto y balance
-propios, aunque reutilice una mecanica generica implementada por el engine.
+Los nombres heredados del antiguo deck Goblin fueron retirados del JSON y del arte el 2026-08-01.
+La equivalencia entre los ids técnicos conservados, las identidades vigentes y sus roles mecánicos
+vive en `docs/mutiny_broken_forge.md`. Varka, Eje de la Revuelta es el único Eco de Crónica del
+deck. La procedencia e integridad de sus 17 artes fuente se registra en
+`docs/asset_provenance_broken_forge.json`.
 
 ## Direccion de producto recomendada
 

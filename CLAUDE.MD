@@ -73,7 +73,7 @@ src/
   store/
     useGameStore.ts       puente UI/engine: acciones, targeting, secuencia de combate del player
     hostBeats.ts          sistema de beats de la Host (handlers, aura estatica, epoch de secuencia)
-    smallpoxSequence.ts   secuencia interactiva bespoke de Smallpox
+    smallpoxSequence.ts   secuencia interactiva bespoke de Diezmo de Carne y Raíz
     presentationEffects.ts helpers compartidos: uiText/uiCardName, toasts, SFX policy, buff/flash beats, discard/mill diffs
     useAudioStore.ts      SFX y musica
     useToastStore.ts      notificaciones
@@ -266,11 +266,11 @@ Horde:
 - other permanents deben ser una zona extra dentro de la fila principal, a la izquierda, como overlay, sin empujar ni recentrar a los zombies
 - si un other permanent es target valido durante un spell, esa zona debe subir sobre el fade negro
 
-Graf Harvest:
+La Campana Hueca (`graf_harvest`):
 - esta en `src/data/decks/horde/zombies/horde-zombies.json`
 - es Enchantment
 - va en Other permanents de Horde
-- da `MENACE` a zombies via `STATIC_GRANT_KEYWORD`
+- da `MENACE` a Zombis via `STATIC_GRANT_KEYWORD`
 
 ## Card badges
 
@@ -357,7 +357,7 @@ imagenes junto al JSON.
 Marcador `engineSupport` por habilidad (ver `deckCatalog.ts`):
 - `"pending"`: aun no implementada; el normalizador la salta y el lint la reporta como WIP. Es el estado normal del flujo "primero jugable, luego efectos".
 - `"ignored"`: deliberadamente no implementada en este modo (p.ej. dar HASTE a la Horda).
-- `"custom"`: resuelta por un camino bespoke fuera del resolver generico (p.ej. Smallpox).
+- `"custom"`: resuelta por un camino bespoke fuera del resolver generico (p.ej. `smallpox`).
 
 Sin marcador = la habilidad debe validar completa contra el vocabulario del engine, o el lint (y la suite de tests) fallan. Nunca dejar que una carta "no haga nada" en silencio.
 
@@ -465,7 +465,7 @@ Instant:
 
 Instant:
 - destruye artifact/enchantment/flying creature segun targets del JSON
-- debe poder targetear `Graf Harvest`
+- debe poder targetear La Campana Hueca (`graf_harvest`)
 - target valido en Other permanents debe quedar sobre fade negro
 - CardPreview no debe bloquear la vista mientras eliges target
 - al confirmar, dos cortes verdes atraviesan el target sin moverlo; hojas, plumas oscuras y
@@ -491,16 +491,16 @@ No implementar Forestcycling; no aporta en este modo.
 
 ## Host specifics
 
-### Graf Harvest
+### La Campana Hueca (`graf_harvest`)
 
 Debe:
 - entrar como Other permanent de la Horda
-- aparecer en zona overlay izquierda dentro de la fila principal de zombies
+- aparecer en zona overlay izquierda dentro de la fila principal de Zombis
 - no empujar ni recentrar criaturas
-- dar MENACE a zombies via `STATIC_GRANT_KEYWORD`
+- dar MENACE a Zombis via `STATIC_GRANT_KEYWORD`
 - ser destruible con Cuando las Raíces Tocaron el Cielo
 
-### Crow of Dark Tidings y triggers de Horda
+### Cuervo Carroñero del Archivo (`crow_of_dark_tidings`) y triggers de Horda
 
 Flujo deseado:
 1. Horda invoca cartas.
@@ -731,15 +731,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Todos los decks vigentes parten de esqueletos mecánicos cuyo balance se conserva por defecto. La
   identidad final se trabaja de uno en uno y en orden narrativo: escribir una Crónica, derivar
   nombres y roles, hacerlos corresponder con los stats/efectos aprobados y sólo después producir
-  arte. L6 queda como deuda deliberada; Zombies y Goblins mantienen pausada la exportación de PNG.
-  L7 final depende de ese trabajo y no puede declararse cerrada ni esconder sus blockers mientras
-  falten reemplazos.
+  arte. La Última Lluvia, La Procesión de la Campana Hueca y El Motín de la Forja Rota ya
+  completaron ese corte; L6 conserva como deuda la revisión de derechos de los lotes y la frescura
+  de los 14 PNG de Vampiros. L7 final depende de cerrar esa revisión y migrar los ids técnicos sin
+  esconder sus blockers.
   El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Eco de
   Crónica y significado narrativo, nombres, conservación de mecánicas salvo excepciones aprobadas,
   arte/procedencia y corte final de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no
   repite la migración del engine.
-- El usuario descartó el rediseño mecánico previsto originalmente para L5. Mono Green, Zombies y
-  Goblins conservan por defecto costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias; las
+- El usuario descartó el rediseño mecánico previsto originalmente para L5. La Última Lluvia, La
+  Procesión y El Motín conservan por defecto costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias; las
   únicas excepciones actuales son las de La Última Lluvia enumeradas arriba. No presentar ese
   trabajo como cumplimiento del criterio original de independencia por rediseño. L6 queda para
   arte/procedencia y L7 para el retiro final de identidades y archivos antiguos; cualquier nuevo
@@ -818,34 +819,34 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Reglas de Hueste como data: `game.hostRules` viene del `rulesProfile` del deck JSON mediante `buildHostRules`. El +1/+0 de surge es exclusivo del deck zombie (test lo cubre); goblins usa la misma base sin bono.
 - Puentes por nombre eliminados: `wildwood_scourge`/`biogenic_upgrade`/`elvish_archdruid` eran codigo muerto (cartas ya no existen); `sunshower_druid` en CounterTargetingOverlay se generalizo a "toda Reacción manual de Invocación es obligatoria" via `findManualInvokedTargetTrigger`. El unico bridge por definitionId vigente es `smallpox` (marcado `engineSupport: "custom"`); el seed de developer conserva su preparación genérica.
 - Fix de stacking/reorden en combate: `groupBattlefieldCopies` congela la key de grupo previa de cada carta (`battlefieldGroupKeys`) durante TODA la secuencia de Horda (combate + beats, `holdCasualties`), y cada grupo recuerda su orden/suborden/ancla (`battlefieldGroupMeta`) mientras exista — una muerte dentro de un stack nunca reordena la fila ni remonta el stack.
-- Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que tierras y other permanents (Graf Harvest, los Forest del player) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con zombies (Graf Harvest) y en defensa (tierras), pero no con un campo de goblins pelado.
+- Layout del campo extraido a `src/components/battlefieldLayout.ts` (funciones puras + tests). Ahi vive la regla que arreglo el bug de reagrupado: **solo criaturas sostienen slot y solo criaturas pueden heredar uno**. `battlefieldCardOrder` es el registro de la fila de criaturas y `renderCardStacks` purga de el todo lo demas en cada render, asi que Fuentes y otros permanentes (La Campana Hueca / `graf_harvest`) parecen recien llegados siempre; sin ese guard, el primero de ellos se comia el slot sostenido apenas moria una carta y toda la fila se recentraba a mitad de la secuencia de ataque. Por eso pasaba con La Procesión y en defensa, pero no con un campo de Trasgos pelado.
 - Contratos engine-store (fase 4): las acciones del engine (playLand/castCard/recycleEnergy/activateAbility/declareBlocker) escriben `game.lastActionResult = { ok, reason }`; el store lee eso, NUNCA compara strings de `game.log`. Los toasts de descarte se derivan del diff mano->cementerio (`notifyDiscardEffects`), no de parsear texto de log. El log es solo display.
-- `useGameStore.ts` quedo fragmentado: beats de Host en `hostBeats.ts` (con `resetHostSequence`/`hostSequenceEpoch` para invalidar callbacks al resetear), Smallpox en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
-- `goblin_assault_horde` paso de deck solo-inspector a deck de Host seleccionable via `getHostDeck` en `decks.ts`. Mogg Mob se simplifico a Eco vanilla 3/3; la obligacion de atacar de Goblin Rabblemaster esta marcada `ignored` porque la regla global de la Host ya la satisface.
-- Hobgoblin Bandit Lord ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
+- `useGameStore.ts` quedo fragmentado: beats de Host en `hostBeats.ts` (con `resetHostSequence`/`hostSequenceEpoch` para invalidar callbacks al resetear), Diezmo de Carne y Raíz en `smallpoxSequence.ts`, y helpers compartidos en `presentationEffects.ts` (`startBuffBeat`/`startLifeBuffBeat`/`flashAutoPaidLands` reemplazan los bloques de timers copy-pasteados). Hay imports circulares deliberados store<->modulos (solo se usan en runtime, nunca en evaluacion de modulo).
+- `goblin_assault_horde` paso de deck solo-inspector a deck de Host seleccionable via `getHostDeck` en `decks.ts`. Tres Bajo el Mismo Yunque (`mogg_mob`) se simplifico a Eco vanilla 3/3; la obligacion de atacar de Agitador de la Primera Sirena (`goblin_rabblemaster`) esta marcada `ignored` porque la regla global de la Host ya la satisface.
+- Capataz del Recuento Ardiente (`hobgoblin_bandit_lord`) ya no tiene su burn pendiente: al entrar cuenta los Goblins que entraron
   este turno y usa el beat Burn contra una criatura del player. Cuando su aura estatica ya hizo
   el pulso dorado, el ETB se resuelve despues en cola sin volver a iluminar la carta. La entrega
   entre ambos beats es corta (160ms) y la cola se libera 360ms despues de aterrizar el buff; las
   lineas pueden terminar mientras comienza el Burn para no frenar los efectos posteriores.
-- Battle Cry Goblin se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
+- Pregonero del Horno Abierto (`battle_cry_goblin`) se simplifico para este modo: al entrar da +1/+0 a los Goblins de la Horda
   hasta fin de turno. Haste y Pack tactics se omiten; el ETB pulsa una vez y el beat de buff no
   vuelve a iluminar la fuente.
-- Raid Bombardment cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
+- Lluvia de Remaches (`raid_bombardment`) cuenta una sola vez cada Goblin atacante de fuerza 2 o menos y guarda el dano
   hasta que termina toda la secuencia animada de ataque. Entonces pulsa una vez y dispara una
   rafaga Burn compacta hacia la vida del player con un unico impacto por el total.
-- Siege-Gang Commander conserva solamente su ETB de tres tokens; se elimino el modo activado de
-  sacrificar un Goblin para hacer dano. Pashalik Mons conserva solamente el Burn cuando muere otro
+- Capataz de los Tres Hornos (`siege_gang_commander`) conserva solamente su ETB de tres tokens; se elimino el modo activado de
+  sacrificar un Goblin para hacer dano. Artillero de los Últimos Remaches (`pashalik_mons`) conserva solamente el Burn cuando muere otro
   Goblin; se elimino su modo activado de sacrificar para crear tokens.
-- Goblin Chainwhirler usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
+- Varka, Eje de la Revuelta (`goblin_chainwhirler`) usa FIRST_STRIKE real en combate. Su ETB pulsa una sola vez y luego dispara
   una rafaga Burn con una ruta, salida, impacto y sonido por cada objetivo (vida del player y cada
   criatura). Los impactos se escalonan visualmente, pero todo el dano se aplica simultaneamente
   en el ultimo.
 - Las keywords inglesas de varias palabras se presentan con espacios (`FIRST STRIKE`), nunca con
   el identificador interno `FIRST_STRIKE`; carta, preview y tooltip comparten esa localizacion.
-- Diregraf Captain conserva perdida de vida (no dano), pero la difiere hasta el impacto de
+- Mariscal de la Última Marcha (`diregraf_captain`) conserva perdida de vida (no dano), pero la difiere hasta el impacto de
   `BURN_PLAYER_LIFE_LOSS`: una bola Burn negra, aceitosa y con brillo violeta usa temporalmente
   los mismos sonidos de lanzamiento e impacto que el fuego normal.
-- General Kreat conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
+- Mariscal del Golpe Repetido (`general_kreat_the_boltbringer`) conserva la regla natural: uno o mas Goblins atacando crean exactamente un token
   `exhausted` y atacando. Cada otra criatura que entra encola su propio Burn de 1 a la vida; no se
   agrupan danos. El token creado por el propio General encadena ese Burn sin volver a iluminarlo,
   usando `causeSourceId` para reconocer que ambos beats pertenecen a la misma cadena.
@@ -961,7 +962,7 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   el icono en lugar de anteponerle un número.
   Cada
   oracion/habilidad ocupa su propio parrafo y los efectos secuenciales unidos por `y luego
-  crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: Noosegraf
+  crea/lucha` tambien se separan. Una causa y su consecuencia directa permanecen juntas: El Cadalso
   usa `quita ... e Invoca ...`, y Sunshower `pon ... y ganas ...`. La regresion pura vive en
   `tests/deckCardText.test.js`.
 - Los estudios ya no mantienen copias editables de reglas ni flavor. Para cada deck jugable,
@@ -977,36 +978,43 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   `public/cards/` y actualiza `dev/tools/Decks/generation-manifest.json`. Ese manifest prueba frescura
   con hashes del deck, configuración, renderer, fuentes, arte y PNG. Los estudios no dependen de
   CDN. El flujo y los comandos están en `dev/tools/Decks/README.md`.
-- El estudio de Zombies y `horde-zombies.json` comparten vocabulario visible Hostfall para sus 17
+- El estudio de La Procesión de la Campana Hueca y `horde-zombies.json` comparten vocabulario
+  visible Hostfall para sus 17
   definiciones: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo`, `Hueste`, `Archivo`, `Memoria`,
   `Cronista`, `Imponente`, `Letal` y `Furtivo`. Crear fichas se redacta con `Invoca`; enviar cartas
   del Archivo a la Memoria se escribe completo y no recibe keyword. `Apoyo` conserva el glifo del
   tipo Support. Habilidades todavia inactivas, como regresar los Stitchwing desde la Memoria, y las
-  activaciones pendientes de Graf Harvest permanecen en los datos internos pero no se imprimen.
+  activaciones pendientes de La Campana Hueca permanecen en los datos internos pero no se imprimen.
   La regresión compara cantidad, coste, stats, tipos y texto del estudio contra el deck runtime, y
-  rechaza vocabulario visible retirado. Sus 17 PNG todavía no fueron regenerados: no existe arte
-  fuente separado y el exportador bloquea sus rutas circulares antes de sobrescribirlos.
-  Smallpox imprime `sacrifica una Fuente`: la Fuente es la carta permanente elegida, mientras que
+  rechaza vocabulario visible retirado. El deck visible se llama `La Procesión de la Campana Hueca`;
+  sus 17 nombres y flavor bilingüe viven en el JSON runtime. Sus artes fuente originales viven en
+  `public/cards/zombies/art/` y sus 17 PNG completos fueron regenerados con huella válida. Los dos
+  tokens usan fuente vertical 1024x1536 y composición full-art; no volverlos horizontales.
+  Diezmo de Carne y Raíz (`smallpox`) imprime `sacrifica una Fuente`: la Fuente es la carta permanente elegida, mientras que
   Energía es el recurso que genera. Su prompt runtime también pide `Elige una Fuente para
   Sacrificar`. El índice usa el mismo header mínimo de los decks migrados y su glifo de Eco mide
-  56px, el doble del icono legacy. Todos los generadores activos imprimen `© HOSTFALL 2026` en el
+  56px, el doble del icono legacy. El mapeo visual y mecánico vive en
+  `docs/procession_hollow_bell.md` y la procedencia en `docs/asset_provenance_hollow_bell.json`.
+  Todos los generadores activos imprimen `© HOSTFALL 2026` en el
   footer en lugar de `Hostfall TCG`.
-- El estudio de Goblins y `goblin_assault_horde.json` mantienen alineadas sus 17 definiciones con
+- El estudio de El Motín de la Forja Rota y `goblin_assault_horde.json` mantienen alineadas sus 17 definiciones con
   vocabulario visible Hostfall: `Eco`, `Eco · Ficha`, `Apoyo`, `Hechizo · Rápido`, `Hueste`,
-  `Archivo`, `Cronista`, `Imponente` y `Reflejos`. Las fichas usan `Invoca`; Rundvelt mira la
+  `Archivo`, `Cronista`, `Imponente` y `Reflejos`. Las fichas usan `Invoca`; Llamador de la Próxima Cuadrilla (`rundvelt_hordemaster`) mira la
   primera carta del Archivo, Invoca un Eco Trasgo y manda cualquier otro tipo al fondo. No usa el
-  Olvido. Maestro Chatarrero imprime solamente su
-  aura: la activación para destruir artefactos permanece modelada, pero no se muestra porque la
-  Hueste todavía no tiene una política para usarla. La obligación de atacar del Agitador continúa
+  Olvido. Maestro de la Armadura Recuperada (`goblin_trashmaster`) imprime solamente su aura: la
+  activación para destruir artefactos permanece modelada, pero no se muestra porque la Hueste
+  todavía no tiene una política para usarla. La obligación de atacar del Agitador continúa
   omitida porque la regla global de la Hueste ya la cumple. El header es mínimo, el glifo de Eco
   mide 56px y la regresión compara cantidad, coste, stats, tipo y reglas contra el deck runtime.
-  Sus 17 PNG tampoco fueron regenerados: no existe arte fuente separado y el exportador bloquea
-  sus rutas circulares antes de sobrescribirlos. El usuario aceptó conservar esta excepción hasta
-  que el arte definitivo los sustituya en L6. Por eso el PNG vigente de General Kreat no imprime
-  su modificador `CHRONICLE`; no es un fallo del runtime ni bloqueó L4.1. La identidad de Chronicler
-  de Trasgos se revisará cuando cambie el arte: el candidato actual del usuario es Goblin
-  Chainwhirler en lugar de General Kreat. No cambiar esa asignación durante la limpieza del engine.
-  No se cambiaron nombres, arte, balance, ids ni aliases del motor.
+  El deck visible se llama `El Motín de la Forja Rota`; sus nombres y flavor bilingüe viven en el
+  JSON runtime. Los 17 artes fuente originales viven en `public/cards/goblins/art/` y sus 17 PNG
+  completos fueron regenerados con huella válida. Corredor de Ascua y Chatarra usa fuente vertical
+  1024x1536 y composición full-art; no volverlo horizontal. Varka, Eje de la Revuelta
+  (`goblin_chainwhirler`) es el único Eco de Crónica; Mariscal del Golpe Repetido, Brakka y
+  Artillero de los Últimos Remaches ya no declaran `CHRONICLE`. El mapeo visual y mecánico vive en
+  `docs/mutiny_broken_forge.md` y la procedencia en
+  `docs/asset_provenance_broken_forge.json`. Stats, cantidades y reglas permanecen sin cambios;
+  los ids técnicos se conservan para L7.
 - Cazadores sigue siendo un estudio preview de 13 definiciones y 40 cartas, sin deck runtime ni
   mecánicas registradas. `hunters/studio.config.json` es su única fuente editable y genera la
   proyección que consume el índice. La presentación usa
@@ -1154,9 +1162,9 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   layout siga apilando copias iguales. La secuencia de combate no apaga globalmente el idle de
   `FLYING`: solo la carta que participa en el impacto actual pausa su vuelo; las demas siguen
   flotando mientras atacan otras criaturas.
-- En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; `Graf Harvest`
+- En developer mode se fuerzan `goblin_token_1_1_red` y `rundvelt_hordemaster`; La Campana Hueca (`graf_harvest`)
   queda explícitamente fuera de esas dos posiciones protegidas.
-- `Graf Harvest` debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
+- La Campana Hueca (`graf_harvest`) debe aparecer como Other permanent overlay izquierdo dentro de la fila principal de Horda.
 - Las keywords superpuestas sobre cartas ya no usan pills verdes brillantes ni la placa generica de
   dashboard. Full y cutted comparten el material del header: degradado vegetal oscuro, grano tenue,
   borde dorado, Lora, texto en Camel Case y la silueta redondeada diagonal de los stats. La carta
@@ -1171,11 +1179,11 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 - Card hover no debe abrir preview durante targeting cuando `suppressHoverOverlay` esta activo.
 - `startSpellTargeting` limpia `focusedCardId`/`hoveredCardId` para que CardInfo no tape Cuando las
   Raíces Tocaron el Cielo.
-- La seleccion bespoke de Smallpox conserva el borde de target y la flecha, pero nunca muestra
+- La selección bespoke de Diezmo de Carne y Raíz (`smallpox`) conserva el borde de target y la flecha, pero nunca muestra
   `card-actionable-gem`: ni sobre permanentes del battlefield ni sobre cartas de la mano. Durante
-  Smallpox o el descarte por limite, la carta seleccionada permanece elevada; el hover de otra
+  esa selección o el descarte por límite, la carta seleccionada permanece elevada; el hover de otra
   carta tambien se eleva y usa una capa superior a la seleccionada. El panel de confirmacion de
-  Smallpox se ancla fuera del centro derecho de la propia carta de Smallpox; no va
+  el Hechizo se ancla fuera del centro derecho de la propia carta de Diezmo de Carne y Raíz; no va
   debajo de ella ni junto a la carta elegida.
 - El targeting de hechizos tampoco muestra `card-actionable-gem` sobre sus objetivos: el borde,
   la elevacion y la flecha ya comunican que cartas se pueden elegir.

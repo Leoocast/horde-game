@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "monogreen": {
-      "inputHash": "bce9ab5a3c45d4494c79c4b3a2c699b8aac15bdd2fa0b787971ae503648b7516",
+      "inputHash": "7831e3cf0367c9fd8a0e219621e4891477d0d274755459f21fd705ca295a6a02",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -18,7 +18,7 @@
         },
         {
           "path": "dev/tools/Decks/monogreen/index.html",
-          "sha256": "27a566aa929fcc23cbc65b0bb8d1c65b82fa77e869576b864ac62ecfef72038a"
+          "sha256": "490b05cdd53f9bf196ecd41f38e070c739cb06c3e3de41fd2c597728330ac77c"
         },
         {
           "path": "dev/tools/Decks/monogreen/motivo.avif",
@@ -138,7 +138,7 @@
         {
           "id": "ichorspit_basilisk",
           "path": "public/cards/mono_green_ramp/ichorspit_basilisk.png",
-          "sha256": "5fe015a2b9ed17bd9be931ce4fde9a45ac0448e5a3c01f3febb7cce0aac2a5d9",
+          "sha256": "1b408f51f410dd6aaf619e861d0f58ccf1cf9233cd5dec2300ac0ee4671c5345",
           "width": 976,
           "height": 1360
         },
@@ -202,6 +202,522 @@
           "id": "forest",
           "path": "public/cards/mono_green_ramp/forest.png",
           "sha256": "f8912daca2439b7c174df4cc8377f1e7579bcb9644ecbb2b76bb4cd4ed7a918c",
+          "width": 976,
+          "height": 1360
+        }
+      ]
+    },
+    "zombies": {
+      "inputHash": "b7a5221ebf9b473fed3230f77a8af0a344d4ccc62bf51570ec9ffb35a9d1101c",
+      "sources": [
+        {
+          "path": "dev/tools/Decks/deck-card-studio.css",
+          "sha256": "29d406a22a7fdfa66b9f7e479de0eadb0640dc58b1dfef4cccdfe9f71dabda74"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.js",
+          "sha256": "73980ce316a4110fba674f0b3d4b0c9b6b7edf9f5ae471bccbb1288a44c18ff2"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-text.js",
+          "sha256": "b989a091262cac2a4fc8d40c8ca6a87523ecf4ed5203154f32a88dd33c594412"
+        },
+        {
+          "path": "dev/tools/Decks/export_cards.cjs",
+          "sha256": "8d4d481b918b88e2ffed2361fd142b810568efd850fe2387ce973490989535af"
+        },
+        {
+          "path": "dev/tools/Decks/zombies/deck-data.generated.js",
+          "sha256": "826f1d1b5152b4223e20e907f90eaffd2afaa3eaf3fb2bfe24bd418771f01c75"
+        },
+        {
+          "path": "dev/tools/Decks/zombies/index.html",
+          "sha256": "ffcf84c03ac41e8081521e6919b9399ec92cba74785fa8c5769b251d3a4eee45"
+        },
+        {
+          "path": "dev/tools/Decks/zombies/motivo.avif",
+          "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
+        },
+        {
+          "path": "dev/tools/Decks/zombies/studio.config.json",
+          "sha256": "6d60cc82e0441411ecdd29c59663f97bb61dd5f58efc98307f9085ac56a22f3a"
+        },
+        {
+          "path": "public/cards/zombies/art/advanced_stitchwing.png",
+          "sha256": "3ade458b5fee98eaef7cb9113804ee93024d90e9f91f6b42803b7748cbf253f1"
+        },
+        {
+          "path": "public/cards/zombies/art/blighted_bat.png",
+          "sha256": "0b6a823fcaad3f305f84ebe74c60b13e7528ee9c58fd63029ca4186d956d7d60"
+        },
+        {
+          "path": "public/cards/zombies/art/crow_of_dark_tidings.png",
+          "sha256": "68fe452f84a5dce6e60206efc996c586261b63bb76b33c920da5fb3d27877905"
+        },
+        {
+          "path": "public/cards/zombies/art/cursed_minotaur.png",
+          "sha256": "23f4b76693d68ab00532ee266156c0b5f686c9161b0358537517d15556d4ffe1"
+        },
+        {
+          "path": "public/cards/zombies/art/diregraf_captain.png",
+          "sha256": "ce7c6378f63eb70a410e8a6ad1fbce679e4cebb7fa518cd8632cf99f0d7b0cf2"
+        },
+        {
+          "path": "public/cards/zombies/art/gavony_unhallowed.png",
+          "sha256": "6db577df4a8831d8ed198295842b4db7137bfec32675ba9e08b2207422a7fc45"
+        },
+        {
+          "path": "public/cards/zombies/art/graf_harvest.png",
+          "sha256": "614ca8176244ec826d5009320622888eca9fe68778c8589d4a5af602b41eabb5"
+        },
+        {
+          "path": "public/cards/zombies/art/hound_of_the_farbogs.png",
+          "sha256": "11eb460f2ce955f26d1f16538a61c1241c6a6dea562d6375e652aa200bb3fa60"
+        },
+        {
+          "path": "public/cards/zombies/art/miasmic_mummy.png",
+          "sha256": "d52f2f857eb5a2257b4e33007fd20681df3f4a076c7155f9f2dd8c7af000774e"
+        },
+        {
+          "path": "public/cards/zombies/art/noosegraf_mob.png",
+          "sha256": "47ee564a2119ce65080f5293a10df985053fcf6a7a4ea0876530c652f45de9b7"
+        },
+        {
+          "path": "public/cards/zombies/art/rancid_rats.png",
+          "sha256": "7013c1fe90506107c0f2c151dcc8b351f64bdafeba3b22057f58f08ace9a6f5b"
+        },
+        {
+          "path": "public/cards/zombies/art/rottenheart_ghoul.png",
+          "sha256": "3daf6ada5f9524d15b50b9e281f916e39ef6966ac97aabcd840d670cf7800e32"
+        },
+        {
+          "path": "public/cards/zombies/art/smallpox.png",
+          "sha256": "c05d6a0030004b9725b25117bbfa9f877cc124f2abf6e0eab77017f18fae50f7"
+        },
+        {
+          "path": "public/cards/zombies/art/stitchwing_skaab.png",
+          "sha256": "16d30ccd7d4efe8d1c9d38fa27711e684f5d2f1760a06386292214b99cdf9eb7"
+        },
+        {
+          "path": "public/cards/zombies/art/thraben_foulbloods.png",
+          "sha256": "a6a926b3b7c5497294a0a3f3c7bd3fee62128690c442bf5059604c888c26a125"
+        },
+        {
+          "path": "public/cards/zombies/art/zombie_giant_token.png",
+          "sha256": "8ab19a655784e0adc38983394eb598014a8dc0c22cb3288243eecca8430c275f"
+        },
+        {
+          "path": "public/cards/zombies/art/zombie_token.png",
+          "sha256": "e05e870cda25bc63b960a5a63db8bdca32f04452e5e76ffe3b813fa16885778f"
+        },
+        {
+          "path": "public/fonts/mono-green/cinzel-decorative-latin.woff2",
+          "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
+        },
+        {
+          "path": "public/fonts/mono-green/cinzel-latin.woff2",
+          "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
+        },
+        {
+          "path": "public/fonts/mono-green/lora-italic-latin.woff2",
+          "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
+        },
+        {
+          "path": "public/fonts/mono-green/lora-normal-latin.woff2",
+          "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+        },
+        {
+          "path": "public/fonts/mono-green/oswald-latin.woff2",
+          "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
+        },
+        {
+          "path": "public/fonts/mono-green/outfit-latin.woff2",
+          "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
+        },
+        {
+          "path": "scripts/card-studio-data.mjs",
+          "sha256": "988f9baf1119d05676aa21e4696932b2f3b80189483a197058472b4651a4a901"
+        },
+        {
+          "path": "src/data/decks/horde/zombies/horde-zombies.json",
+          "sha256": "7ac33c5b410b017c9d5554c299b009a15df268d1c96597d57a4bc2fd950cdc64"
+        }
+      ],
+      "cards": [
+        {
+          "id": "zombie_token",
+          "path": "public/cards/zombies/zombie_token.png",
+          "sha256": "f883e604a19ed97d8469267e3e4c657bd4d1b3a8052197c7b1f85e6394bb9e03",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "zombie_giant_token",
+          "path": "public/cards/zombies/zombie_giant_token.png",
+          "sha256": "addf522e8b751fb741556da6c9b90b988fca35169b5597734b213f40527a4c05",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "graf_harvest",
+          "path": "public/cards/zombies/graf_harvest.png",
+          "sha256": "ccdc957a009664455871923e2d4020c818dcfa5738e5f4ce74bb80ed67d62973",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "noosegraf_mob",
+          "path": "public/cards/zombies/noosegraf_mob.png",
+          "sha256": "3f6077410730b417a33fc1483195cdf07a0de4e5a4ad549838a2936510b0682a",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "rottenheart_ghoul",
+          "path": "public/cards/zombies/rottenheart_ghoul.png",
+          "sha256": "141ea3d0794f39a6cc1acebdd17a998257d42478066f44bf66f72113fd37f83a",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "miasmic_mummy",
+          "path": "public/cards/zombies/miasmic_mummy.png",
+          "sha256": "95fcc678632d3ca49bfa4e9a3d1f461e3196d721285ebe8bdacab00be7586b15",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "smallpox",
+          "path": "public/cards/zombies/smallpox.png",
+          "sha256": "d41bee119f35b33008f3bbdb2f00bc778410f0de52f0558f663494e78fd21187",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "blighted_bat",
+          "path": "public/cards/zombies/blighted_bat.png",
+          "sha256": "3870019e0d0ad3bff0f9813029f4119ec08286f3e1aac247362f99543fd81114",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "stitchwing_skaab",
+          "path": "public/cards/zombies/stitchwing_skaab.png",
+          "sha256": "8da6de5beed3f68b7b61af049becfe808b621517c3d2761c0711048557f0868f",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "advanced_stitchwing",
+          "path": "public/cards/zombies/advanced_stitchwing.png",
+          "sha256": "f1135b96b67b3cfd0a07a0d6d707e8070eac876239fc7864a3986adfda9e1d32",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "crow_of_dark_tidings",
+          "path": "public/cards/zombies/crow_of_dark_tidings.png",
+          "sha256": "5920ba2c1afa93a3331538b0bd5953a8f0061d76bf403d4db0134b86a4928861",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "cursed_minotaur",
+          "path": "public/cards/zombies/cursed_minotaur.png",
+          "sha256": "e51d4c9842cce01f4cce8cc712cc69c2788dd931c7aa1c5c1fbc15302246eee0",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "thraben_foulbloods",
+          "path": "public/cards/zombies/thraben_foulbloods.png",
+          "sha256": "c3a2e92540ced6eefca94b59bd02512fe4a36493d37ad1bf8973c643d1ce29ed",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "hound_of_the_farbogs",
+          "path": "public/cards/zombies/hound_of_the_farbogs.png",
+          "sha256": "3b448eabe492e31a11984cc6b17791c0092fa5498bc509d5efd02b4bc6e407f1",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "rancid_rats",
+          "path": "public/cards/zombies/rancid_rats.png",
+          "sha256": "51a9e24ff1f4a4ad27bd89b58e614fa5c9cc370adb5e4908c666164791e914fd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "gavony_unhallowed",
+          "path": "public/cards/zombies/gavony_unhallowed.png",
+          "sha256": "2e1c8da447ef5aeec088c68d9665b211a774117c58462445dfa1fdc1385ba47c",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "diregraf_captain",
+          "path": "public/cards/zombies/diregraf_captain.png",
+          "sha256": "ff6a934982897e1e9e5f44cd05795f897375526e678b5e474d2bd5d05dcfc4f2",
+          "width": 976,
+          "height": 1360
+        }
+      ]
+    },
+    "goblins": {
+      "inputHash": "327f1eb8d9e0560eab43d3b0b7b6519f66f9d3747683afc6b578a64e41049e7f",
+      "sources": [
+        {
+          "path": "dev/tools/Decks/deck-card-studio.css",
+          "sha256": "29d406a22a7fdfa66b9f7e479de0eadb0640dc58b1dfef4cccdfe9f71dabda74"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.js",
+          "sha256": "73980ce316a4110fba674f0b3d4b0c9b6b7edf9f5ae471bccbb1288a44c18ff2"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-text.js",
+          "sha256": "b989a091262cac2a4fc8d40c8ca6a87523ecf4ed5203154f32a88dd33c594412"
+        },
+        {
+          "path": "dev/tools/Decks/export_cards.cjs",
+          "sha256": "8d4d481b918b88e2ffed2361fd142b810568efd850fe2387ce973490989535af"
+        },
+        {
+          "path": "dev/tools/Decks/goblins/deck-data.generated.js",
+          "sha256": "a9241980b2b3c8ee75aaa0e47e012b233f2baad6755e3c231708ee002d1522db"
+        },
+        {
+          "path": "dev/tools/Decks/goblins/index.html",
+          "sha256": "4e961b651cfd9a1f2aff39b797a0b0b0e38b8d0dbdf2a19c54154cbe567738d8"
+        },
+        {
+          "path": "dev/tools/Decks/goblins/motivo.avif",
+          "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
+        },
+        {
+          "path": "dev/tools/Decks/goblins/studio.config.json",
+          "sha256": "1cc7806264f6368a297351dd541b0ef4b34d35570172c6bba3d8da125075e5fb"
+        },
+        {
+          "path": "public/cards/goblins/art/battle_cry_goblin.png",
+          "sha256": "f95b61071a0f38eba5b9f37d03a11c3bdd538956033f7a9bae61da12a717bd7b"
+        },
+        {
+          "path": "public/cards/goblins/art/beetleback_chief.png",
+          "sha256": "6beae7e6e7f5a73b8990556ce73a5b54ad581e58cc0fc82ac69e202dbdf35a7f"
+        },
+        {
+          "path": "public/cards/goblins/art/general_kreat_the_boltbringer.png",
+          "sha256": "a7d22fc9b62ef5c50421b33e500aef0757a7f529610012cc94115c5992b54b73"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_chainwhirler.png",
+          "sha256": "3ef7c0fa63d94f3a35273b26a9364e36084d603e71408cdd5931414bdcb5e4cd"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_rabblemaster.png",
+          "sha256": "f03a9da4183f77e65453e6e2a185ff302b6817b863aa26b2bdb5c18624ebae19"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_surprise.png",
+          "sha256": "695084a18685aba279397c97f0be133b4f008a94a4b0a804f5eff08b2ddf42b2"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_token_1_1_red.png",
+          "sha256": "4047f6827d12001c9ebbd205db863d66a310e205ffd56b305229d0b83a2143b3"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_trashmaster.png",
+          "sha256": "4b1269748c580dc8e295e630459641a7805e5c0f46cb7e127af7f46559373837"
+        },
+        {
+          "path": "public/cards/goblins/art/goblin_war_drums.png",
+          "sha256": "f348723bd16f27fc38e149af1ae0234105c0524fa1a496a87824334a28f703ee"
+        },
+        {
+          "path": "public/cards/goblins/art/hobgoblin_bandit_lord.png",
+          "sha256": "5aba4ceb6f66cdf3610acff88c7a1c2e776104590a05972465dbcaf62c86c6cf"
+        },
+        {
+          "path": "public/cards/goblins/art/krenko_tin_street_kingpin.png",
+          "sha256": "a028568085edc5a42ffee6d1da5732dd156d2049f68042ce82da28127f468c9d"
+        },
+        {
+          "path": "public/cards/goblins/art/mogg_mob.png",
+          "sha256": "2d74ee3916af8fb86a915b8a788b60c5ff038643c088b54a1f2e99645f2ba0ba"
+        },
+        {
+          "path": "public/cards/goblins/art/pashalik_mons.png",
+          "sha256": "d9946ac5147ca189fb160ac4bb6796d69da9f7f9b78e507e9a8542d915382641"
+        },
+        {
+          "path": "public/cards/goblins/art/raid_bombardment.png",
+          "sha256": "e1496ca7dd0bd46c3bcf18b0bd5312663b36ffbb3374cb6f5fd188ff2548d9d4"
+        },
+        {
+          "path": "public/cards/goblins/art/rundvelt_hordemaster.png",
+          "sha256": "2119a021bc4f81ef66ce208528a9dba5f4fd0399f6e34e242fe784cd5ba3b30b"
+        },
+        {
+          "path": "public/cards/goblins/art/siege_gang_commander.png",
+          "sha256": "c5f32237d1445f211d01a474f391a192672c05ad511ad81e69b3f402192a54c1"
+        },
+        {
+          "path": "public/cards/goblins/art/volley_veteran.png",
+          "sha256": "240fd7a43c1a85813d23296e41a61107b148b214902de8c37027fc542e297d9d"
+        },
+        {
+          "path": "public/fonts/mono-green/cinzel-decorative-latin.woff2",
+          "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
+        },
+        {
+          "path": "public/fonts/mono-green/cinzel-latin.woff2",
+          "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
+        },
+        {
+          "path": "public/fonts/mono-green/lora-italic-latin.woff2",
+          "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
+        },
+        {
+          "path": "public/fonts/mono-green/lora-normal-latin.woff2",
+          "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+        },
+        {
+          "path": "public/fonts/mono-green/oswald-latin.woff2",
+          "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
+        },
+        {
+          "path": "public/fonts/mono-green/outfit-latin.woff2",
+          "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
+        },
+        {
+          "path": "scripts/card-studio-data.mjs",
+          "sha256": "988f9baf1119d05676aa21e4696932b2f3b80189483a197058472b4651a4a901"
+        },
+        {
+          "path": "src/data/decks/horde/goblins/goblin_assault_horde.json",
+          "sha256": "ec827512dc5c7c13d54f32803b695096c985514b8ffb837aaa11d70687973bab"
+        }
+      ],
+      "cards": [
+        {
+          "id": "goblin_token_1_1_red",
+          "path": "public/cards/goblins/goblin_token_1_1_red.png",
+          "sha256": "3880d032042519590f298296fa02771e4a69aca945e753e392bafa8e437e8666",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "hobgoblin_bandit_lord",
+          "path": "public/cards/goblins/hobgoblin_bandit_lord.png",
+          "sha256": "9bc090b3ffb8d5c7d5c5dc330071691ab4dd772f461037728c0d641223930332",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "rundvelt_hordemaster",
+          "path": "public/cards/goblins/rundvelt_hordemaster.png",
+          "sha256": "93ef0ebdbeda591dcaa5627130c9a1eab0b6eee5e70062f9dea22435e36148e9",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "battle_cry_goblin",
+          "path": "public/cards/goblins/battle_cry_goblin.png",
+          "sha256": "cf74ce9ed6856deec49e6ee45e4382190e97847faa691324485bf7b687903028",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "goblin_war_drums",
+          "path": "public/cards/goblins/goblin_war_drums.png",
+          "sha256": "2d60799b7c516328872d45200ce533472143eefb060bdc1632152c6359438124",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "raid_bombardment",
+          "path": "public/cards/goblins/raid_bombardment.png",
+          "sha256": "5a9c5d42615a8513ea3878426e8b4f1b86c40c67a3fefc651204365298490374",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "beetleback_chief",
+          "path": "public/cards/goblins/beetleback_chief.png",
+          "sha256": "8c8b7dbe60dc76080be94f43132037d6b105679e8a4c7438dd26879f6f3d4cba",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "siege_gang_commander",
+          "path": "public/cards/goblins/siege_gang_commander.png",
+          "sha256": "bbc42414344d271eddb794f4a04332847bfa5427bb826bf71c2630df8c68a554",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "goblin_rabblemaster",
+          "path": "public/cards/goblins/goblin_rabblemaster.png",
+          "sha256": "8bce8142cc374d9fcebd58b9247dcdb2ad73ee2b67cda2ea91a335538fa022b1",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "goblin_surprise",
+          "path": "public/cards/goblins/goblin_surprise.png",
+          "sha256": "024c3d0d35e84442ee7245e683cd4c832ffb61fa02de4cdf6015ef3337ec1b25",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "mogg_mob",
+          "path": "public/cards/goblins/mogg_mob.png",
+          "sha256": "aff97f60cfa32752889633998b304a2c33d6821b7db970ca49730902342fb816",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "volley_veteran",
+          "path": "public/cards/goblins/volley_veteran.png",
+          "sha256": "ee5226683de5f320a203ebe4e93ddb2c76caed175e17e0cd75ae2d68b2aab1cd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "goblin_chainwhirler",
+          "path": "public/cards/goblins/goblin_chainwhirler.png",
+          "sha256": "9a871674901defcab21471063414c91535dd29d7245ef4d7ea5be794c92b88bd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "goblin_trashmaster",
+          "path": "public/cards/goblins/goblin_trashmaster.png",
+          "sha256": "c69623abe3509b0ff7d73fc7c971aaed1c46b5c5b5e267fdbbb860423e9c0474",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "general_kreat_the_boltbringer",
+          "path": "public/cards/goblins/general_kreat_the_boltbringer.png",
+          "sha256": "9e0c759795fa52609a981d3c7976eb5433c748e6b0ae3244d43d65f7dffe723d",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "krenko_tin_street_kingpin",
+          "path": "public/cards/goblins/krenko_tin_street_kingpin.png",
+          "sha256": "d0591dd42d4d8a6b2d8ac90d04f1e2276ddf0160ca4093e5fea768bf2872c7d3",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "pashalik_mons",
+          "path": "public/cards/goblins/pashalik_mons.png",
+          "sha256": "e9fa82bfca704e55affa4bffb18597fe60747aa9c66a0ba1e7378dd9b7f04c2f",
           "width": 976,
           "height": 1360
         }

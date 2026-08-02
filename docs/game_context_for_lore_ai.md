@@ -94,35 +94,52 @@ No existe "vida de la Horda". En cambio, el daño de combate que recibe se tradu
 
 Actualmente hay dos mazos de Horda seleccionables:
 
-### Zombie Horde (mazo predeterminado y seleccionable, 50 cartas)
-Tema: zombies negros/azules, cementerio, discard, sinergia de graveyard.
-- **Zombie Token** (2/2, x21) y **Zombie Giant Token** (5/5, x4): la carne de cañón de la horda.
-- **Graf Harvest** (Enchantment): actualmente da Menace a todos los zombies. Su trigger de upkeep y
-  su activación para crear tokens están declarados `engineSupport: "pending"` y no se ejecutan.
-- **Noosegraf Mob** (0/0 con 5 counters +1/+1 iniciales, 5/5 efectivo): cada vez que se castea una
-  carta no-token, saca un counter y genera un Zombie Token.
-- Varias criaturas con "discard forzado al oponente" (Rottenheart Ghoul al morir, Miasmic Mummy al entrar) — adaptadas a "each opponent discards" porque la Horda no tiene mano propia que perder.
-- **Smallpox**: sorcery que castiga fuerte al Player (pierde vida, descarta, sacrifica criatura y tierra).
-- Criaturas voladoras (Blighted Bat, Stitchwing Skaab, Advanced Stitchwing, Crow of Dark Tidings):
-  la recursión desde graveyard que paga descarte está **ignorada en este modo** porque la Horda no
-  tiene mano.
-- Crow of Dark Tidings: millea a la propia Horda al entrar y al morir (le da velocidad al Player para vaciarla).
-- Cursed Minotaur: Menace nativo.
-- Rancid Rats: Deathtouch + Skulk (no puede ser bloqueada por poder mayor — en este contexto es al revés: son ellos atacando, así que "skulk" afecta cómo el Player puede bloquearlas... revisar en Targeting.ts si hace falta precisión de regla).
-- Thraben Foulbloods / Hound of the Farbogs: "Threshold" custom — se agrandan y ganan Menace si el graveyard de la Horda tiene 7+ cartas (o sea, cuanto más desgastada está la Horda, más peligrosos se vuelven sus zombies sobrevivientes — tensión de diseño interesante para lore: "los zombies se alimentan de sus propios caídos").
-- Gavony Unhallowed: gana +1/+1 counter cada vez que muere otra criatura de la Horda.
-- Diregraf Captain: lord de zombies (+1/+1 a otros zombies) + Deathtouch, y cuando muere un zombie, el Player pierde 1 vida.
+### La Procesión de la Campana Hueca (mazo predeterminado y seleccionable, 50 cartas)
 
-### Goblin Assault Horde (mazo seleccionable, 50 cartas)
-Tema: trasgos rojos, generación masiva de tokens y daño directo.
-- **Goblin Token** (1/1 rojo, x25): volumen puro.
-- Varios "lords" que dan +1/+1 a otros goblins (Hobgoblin Bandit Lord, Rundvelt Hordemaster, Goblin Trashmaster).
-- Generadores de tokens al entrar (Beetleback Chief, Siege-Gang Commander) o al atacar (Goblin Rabblemaster, Krenko Tin Street Kingpin, General Kreat).
-- Los modos activados de sacrificio de Siege-Gang Commander y Pashalik Mons están omitidos
-  deliberadamente. Mogg Mob es una criatura vanilla 3/3 en este modo.
-- Goblin War Drums / Raid Bombardment: enchantments que dan Menace global o pegan daño extra por atacantes chicos.
-- Goblin Chainwhirler: daño en área al entrar (1 a Player y a todo lo que controla).
-- Varias legendarias (General Kreat, Krenko, Pashalik Mons) con triggers de generar tokens al atacar o al morir un goblin.
+Tema: una ciudad-campanario ahogada reconstruye una procesión de muertos con recuerdos robados.
+
+- **Muerto del Último Taño** (2/2, x21) y **Coloso de la Fosa Común** (5/5, x4) son las dos Fichas;
+  ambas usan arte vertical de cuerpo completo.
+- **La Campana Hueca** da Imponente a todos los Zombis. Sus otras dos habilidades permanecen
+  declaradas como pendientes y no se ejecutan.
+- **El Cadalso de los Cinco Nudos** entra con cinco contadores +1/+1. Cada carta no Ficha invocada
+  retira uno e Invoca un Muerto del Último Taño.
+- **Carroña del Último Pensamiento** al morir y **Portador de la Mortaja Mnémica** al ser invocada
+  obligan al Cronista a descartar.
+- **Diezmo de Carne y Raíz** hace perder 1 de Vida, descartar una carta y sacrificar un Eco y una
+  Fuente al Cronista.
+- **Alapútrida de la Cripta**, **Ala Hilvanada**, **Ala Sepulcral Reforzada** y **Cuervo Carroñero
+  del Archivo** tienen Volar. La recursión de las dos Alas continúa ignorada porque la Hueste no
+  tiene mano.
+- **Cuervo Carroñero del Archivo** descarta las dos primeras cartas del Archivo de la Hueste a su
+  Memoria al ser invocado o morir.
+- **Rompelíneas Astado** tiene Imponente; **Ratas de la Mordida Silente** tiene Letal y Furtivo.
+- **Sabueso de la Séptima Memoria** y **Mastín del Osario Colmado** se fortalecen al llegar a siete
+  cartas en la Memoria de la Hueste.
+- **Recolector de los Caídos** recibe un contador +1/+1 por cada otro Zombi aliado que muere.
+- **Mariscal de la Última Marcha** fortalece a los demás Zombis; tiene Letal y cada muerte aliada
+  hace perder 1 de Vida al Cronista.
+
+### El Motín de la Forja Rota (Hueste seleccionable, 50 cartas)
+
+Tema: una revuelta de cuadrillas trasgas dentro de una ciudad-horno; muchas piezas pequeñas se
+convierten en refuerzos, crecimiento y daño directo.
+
+- **Corredor de Ascua y Chatarra** es la Ficha 1/1 y ocupa 24 espacios del Archivo.
+- **Capataz del Recuento Ardiente**, **Llamador de la Próxima Cuadrilla** y **Maestro de la
+  Armadura Recuperada** fortalecen a otros Trasgos; los dos primeros añaden respectivamente daño
+  por llegadas y reemplazo de caídos.
+- **Jefe de la Cuadrilla Doble** y **Capataz de los Tres Hornos** Invocan exactamente dos y tres
+  Fichas al entrar. **Agitador de la Primera Sirena**, **Mariscal del Golpe Repetido** y **Brakka,
+  la Cuenta Creciente** generan refuerzos al atacar.
+- **El Martillo de Turno** da Imponente a la Hueste; **Lluvia de Remaches** convierte cada Trasgo
+  atacante de Fuerza 2 o menos en 1 de daño al Cronista.
+- **¡Abran Otra Compuerta!** da +2/+0 a la formación o inicia otra ronda de revelado si el Campo
+  está vacío. **Tres Bajo el Mismo Yunque** es un Eco Trasgo vanilla 3/3.
+- **Maestro de la Salva de Escoria** escala su daño de entrada con la cantidad de Trasgos.
+  **Artillero de los Últimos Remaches** dispara a un Eco enemigo aleatorio por cada muerte aliada.
+- **Varka, Eje de la Revuelta** es el único Eco de Crónica: tiene Reflejos y al entrar hace 1 de
+  daño al Cronista y a cada Eco que controla.
 
 Este mazo es jugable, seleccionable y no conserva habilidades `engineSupport: "pending"`.
 Zombies sí mantiene trabajo parcial declarado. El comando `scripts/lint-decks.mjs` es la fuente

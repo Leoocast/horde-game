@@ -309,7 +309,10 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
   assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
   assert.deepEqual(rawById.goblin_chainwhirler.traits, ["REFLEX"]);
-  assert.deepEqual(rawById.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(rawById.goblin_chainwhirler.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.general_kreat_the_boltbringer.modifiers, undefined);
+  assert.equal(rawById.krenko_tin_street_kingpin.modifiers, undefined);
+  assert.equal(rawById.pashalik_mons.modifiers, undefined);
   assert.equal(rawById.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(rawById.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
 
@@ -328,8 +331,11 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
   assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
   assert.deepEqual(byId.goblin_chainwhirler.traits, ["REFLEX"]);
+  assert.deepEqual(byId.goblin_chainwhirler.modifiers, ["CHRONICLE"]);
   assert.deepEqual(byId.general_kreat_the_boltbringer.kinds, ["ECHO"]);
-  assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, []);
+  assert.deepEqual(byId.krenko_tin_street_kingpin.modifiers, []);
+  assert.deepEqual(byId.pashalik_mons.modifiers, []);
   assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
 });

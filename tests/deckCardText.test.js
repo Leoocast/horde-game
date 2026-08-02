@@ -402,7 +402,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
   }
 });
 
-test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => {
+test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("zombies");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
@@ -506,7 +506,7 @@ test("Zombie Host studio cards use Hostfall vocabulary and stay aligned", () => 
   }
 });
 
-test("Goblin Host studio cards use Hostfall vocabulary and stay aligned", () => {
+test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("goblins");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(

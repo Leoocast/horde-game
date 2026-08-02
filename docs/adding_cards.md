@@ -327,7 +327,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-`Smallpox` es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Diezmo de Carne y Raíz (`smallpox`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones

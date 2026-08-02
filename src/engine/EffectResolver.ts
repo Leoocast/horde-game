@@ -67,8 +67,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     game.host.pendingRevealRounds = (game.host.pendingRevealRounds ?? 0) + 1;
     game.log.unshift("Host effect calls for another normal reveal round.");
   },
-  HOST_INSPECT_TOP_GOBLIN: (game) => {
-    inspectTopGoblin(game);
+  HOST_INSPECT_TOP_GOBLIN: (game, _effect, context) => {
+    inspectTopGoblin(game, context.source?.name);
   },
   GAIN_ENERGY: (game, effect, context) => {
     const amount = Math.max(0, Number(effect.amount ?? 1));
@@ -685,13 +685,13 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   });
 }
 
-function inspectTopGoblin(game: GameState): void {
+function inspectTopGoblin(game: GameState, sourceName = "Host effect"): void {
   const card = game.host.archive.shift();
   if (!card) {
-    game.log.unshift("Rundvelt Hordemaster finds no card to inspect.");
+    game.log.unshift(`${sourceName} finds no card to inspect.`);
     return;
   }
-  game.log.unshift(`Rundvelt Hordemaster inspects ${card.name}.`);
+  game.log.unshift(`${sourceName} inspects ${card.name}.`);
   if (!card.kinds.includes("ECHO") || !card.subtypes.includes("Goblin")) {
     game.host.archive.push(card);
     game.log.unshift(`${card.name} moves to the bottom of the Host Archive.`);

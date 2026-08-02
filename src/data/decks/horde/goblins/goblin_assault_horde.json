@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "goblin_assault_horde",
-  "name": "Goblin Assault Host",
+  "name": "El Motín de la Forja Rota",
   "format": "host",
   "side": "HOST",
   "deckSize": 50,
   "archetype": "host",
-  "gamePlan": "Abrumar con fichas de Trasgo, señores tribales, invocación de fichas y daño directo al atacar o sacrificar Trasgos.",
+  "gamePlan": "Abrumar con cuadrillas de Trasgos, relevos de la forja, refuerzos al atacar y salvas construidas con herramientas y bajas.",
   "rulesProfile": {
     "revealCount": 3,
     "stopOnNonToken": true,
@@ -25,22 +25,23 @@
   "tokens": [
     {
       "id": "goblin_token_1_1_red",
-      "name": "Goblin Token",
-      "displayNameEs": "Ficha de Trasgo",
+      "name": "Ember-Scrap Runner",
+      "displayNameEs": "Corredor de Ascua y Chatarra",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "First comes one. Then the whole horizon starts screaming.",
-        "es": "Primero llega uno. Después, el horizonte entero empieza a gritar."
+        "en": "Each runner carries one ember. Together they carry the fire.",
+        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
       },
       "showFlavorText": true,
       "energyCost": {
         "amount": 0
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Runner"
       ],
       "power": 1,
       "endurance": 1,
@@ -55,22 +56,23 @@
   "cards": [
     {
       "id": "goblin_token_1_1_red",
-      "name": "Goblin Token",
-      "displayNameEs": "Ficha de Trasgo",
+      "name": "Ember-Scrap Runner",
+      "displayNameEs": "Corredor de Ascua y Chatarra",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "First comes one. Then the whole horizon starts screaming.",
-        "es": "Primero llega uno. Después, el horizonte entero empieza a gritar."
+        "en": "Each runner carries one ember. Together they carry the fire.",
+        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
       },
       "showFlavorText": true,
       "energyCost": {
         "amount": 0
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Runner"
       ],
       "power": 1,
       "endurance": 1,
@@ -84,15 +86,15 @@
     },
     {
       "id": "hobgoblin_bandit_lord",
-      "name": "Hobgoblin Bandit Lord",
-      "displayNameEs": "Señor de los bandidos hobgoblin",
+      "name": "Foreman of the Burning Tally",
+      "displayNameEs": "Capataz del Recuento Ardiente",
       "gameText": {
         "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
         "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
       },
       "flavorText": {
-        "en": "He counts victories by how many arrive before the smoke clears.",
-        "es": "Cuenta las victorias por cuántos llegan antes de que se disipe el humo."
+        "en": "He counts no workers, only blows the enemy is still owed.",
+        "es": "No cuenta trabajadores; cuenta golpes que aún le debe al enemigo."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -101,7 +103,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Rogue"
+        "Foreman"
       ],
       "power": 2,
       "endurance": 3,
@@ -173,15 +175,15 @@
     },
     {
       "id": "rundvelt_hordemaster",
-      "name": "Rundvelt Hordemaster",
-      "displayNameEs": "Señor de la horda de Rundvelt",
+      "name": "Caller of the Next Crew",
+      "displayNameEs": "Llamador de la Próxima Cuadrilla",
       "gameText": {
         "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
         "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
       },
       "flavorText": {
-        "en": "Every fallen banner points the next raider toward battle.",
-        "es": "Cada estandarte caído señala al siguiente saqueador el camino a la batalla."
+        "en": "When one falls, their shift plate calls the next.",
+        "es": "Si uno cae, su placa de turno llama al siguiente."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -190,11 +192,11 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Caller"
       ],
       "power": 1,
       "endurance": 1,
-      "triggerMessage": "Rundvelt Hordemaster looks at the top card of the Archive.",
+      "triggerMessage": "Caller of the Next Crew inspects the top plate of the Archive.",
       "abilities": [
         {
           "id": "rundvelt_hordemaster_other_goblins_buff",
@@ -259,15 +261,15 @@
     },
     {
       "id": "battle_cry_goblin",
-      "name": "Battle Cry Goblin",
-      "displayNameEs": "Goblin del grito de guerra",
+      "name": "Open-Furnace Crier",
+      "displayNameEs": "Pregonero del Horno Abierto",
       "gameText": {
         "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
         "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
       },
       "flavorText": {
-        "en": "The shout is short because the charge has already begun.",
-        "es": "El grito es breve porque la carga ya comenzó."
+        "en": "The gate was open before the cry had ended.",
+        "es": "Abrió la compuerta antes de terminar el grito."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -275,7 +277,8 @@
         "amount": 2
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Crier"
       ],
       "power": 2,
       "endurance": 2,
@@ -320,15 +323,15 @@
     },
     {
       "id": "goblin_war_drums",
-      "name": "Goblin War Drums",
-      "displayNameEs": null,
+      "name": "The Shift Hammer",
+      "displayNameEs": "El Martillo de Turno",
       "gameText": {
         "en": "Allied Goblins gain Daunting.",
         "es": "Los Trasgos aliados ganan Imponente."
       },
       "flavorText": {
-        "en": "The rhythm does not ask who is ready.",
-        "es": "El ritmo no pregunta quién está listo."
+        "en": "Every blow advances another rank.",
+        "es": "Cada golpe hace avanzar otra fila."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -369,15 +372,15 @@
     },
     {
       "id": "raid_bombardment",
-      "name": "Raid Bombardment",
-      "displayNameEs": "Bombardeo de incursión",
+      "name": "Rain of Rivets",
+      "displayNameEs": "Lluvia de Remaches",
       "gameText": {
         "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
         "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
       "flavorText": {
-        "en": "A thousand weak arms still throw a thousand stones.",
-        "es": "Mil brazos débiles todavía lanzan mil piedras."
+        "en": "What cannot serve as armor can still serve as ammunition.",
+        "es": "Lo que no sirve de armadura todavía sirve de proyectil."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -409,15 +412,15 @@
     },
     {
       "id": "beetleback_chief",
-      "name": "Beetleback Chief",
-      "displayNameEs": "Jefe lomo de escarabajo",
+      "name": "Boss of the Double Crew",
+      "displayNameEs": "Jefe de la Cuadrilla Doble",
       "gameText": {
         "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
       },
       "flavorText": {
-        "en": "A good chief never arrives without witnesses.",
-        "es": "Un buen jefe nunca llega sin testigos."
+        "en": "Two carry the tools. The boss carries the credit.",
+        "es": "Dos cargan las herramientas. El jefe carga el mérito."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -426,7 +429,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Foreman"
       ],
       "power": 2,
       "endurance": 2,
@@ -458,15 +461,15 @@
     },
     {
       "id": "siege_gang_commander",
-      "name": "Siege-Gang Commander",
-      "displayNameEs": "Comandante de sitiadores",
+      "name": "Foreman of Three Furnaces",
+      "displayNameEs": "Capataz de los Tres Hornos",
       "gameText": {
         "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
       },
       "flavorText": {
-        "en": "He calls it a formation. Everyone else calls it a crowd.",
-        "es": "Él lo llama formación. Todos los demás lo llaman multitud."
+        "en": "Three furnaces, three crews, one order misunderstood together.",
+        "es": "Tres hornos, tres cuadrillas, una orden mal entendida entre todos."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -474,7 +477,8 @@
         "amount": 5
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Foreman"
       ],
       "power": 2,
       "endurance": 2,
@@ -506,15 +510,15 @@
     },
     {
       "id": "goblin_rabblemaster",
-      "name": "Goblin Rabblemaster",
-      "displayNameEs": "Agitador trasgo",
+      "name": "Agitator of the First Siren",
+      "displayNameEs": "Agitador de la Primera Sirena",
       "gameText": {
         "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
         "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
       },
       "flavorText": {
-        "en": "If no one follows, he shouts until someone does.",
-        "es": "Si nadie lo sigue, grita hasta que alguien lo hace."
+        "en": "The first siren does not warn of danger. It makes it.",
+        "es": "La primera sirena no anuncia peligro. Lo fabrica."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -523,7 +527,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Agitator"
       ],
       "power": 2,
       "endurance": 2,
@@ -579,15 +583,15 @@
     },
     {
       "id": "goblin_surprise",
-      "name": "Goblin Surprise",
-      "displayNameEs": "Sorpresa trasga",
+      "name": "Open Another Gate!",
+      "displayNameEs": "¡Abran Otra Compuerta!",
       "gameText": {
         "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
         "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
       },
       "flavorText": {
-        "en": "Silence was the only warning.",
-        "es": "El silencio fue la única advertencia."
+        "en": "Behind every gate wait reinforcements, or enough fire to imitate them.",
+        "es": "Tras cada compuerta hay refuerzos o suficiente fuego para fingirlos."
       },
       "showFlavorText": false,
       "quantity": 3,
@@ -655,15 +659,15 @@
     },
     {
       "id": "mogg_mob",
-      "name": "Mogg Mob",
-      "displayNameEs": "Pandilla mogg",
+      "name": "Three Under One Anvil",
+      "displayNameEs": "Tres Bajo el Mismo Yunque",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Three arguments, six fists, no plan.",
-        "es": "Tres discusiones, seis puños, ningún plan."
+        "en": "Three hammers, one anvil, and no agreement on who leads.",
+        "es": "Tres martillos, un yunque y ningún acuerdo sobre quién manda."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -671,7 +675,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Crew"
       ],
       "power": 3,
       "endurance": 3,
@@ -683,15 +688,15 @@
     },
     {
       "id": "volley_veteran",
-      "name": "Volley Veteran",
-      "displayNameEs": "Veterano de salvas",
+      "name": "Master of the Slag Volley",
+      "displayNameEs": "Maestro de la Salva de Escoria",
       "gameText": {
         "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
         "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
       },
       "flavorText": {
-        "en": "He never misses the target everyone else is pointing at.",
-        "es": "Nunca falla al blanco que todos los demás están señalando."
+        "en": "He measures the volley by the voices that answer.",
+        "es": "Mide la salva por las voces que responden."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -700,7 +705,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Gunner"
       ],
       "power": 4,
       "endurance": 2,
@@ -745,15 +750,15 @@
     },
     {
       "id": "goblin_chainwhirler",
-      "name": "Goblin Chainwhirler",
-      "displayNameEs": null,
+      "name": "Varka, Axis of the Revolt",
+      "displayNameEs": "Varka, Eje de la Revuelta",
       "gameText": {
         "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
         "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
       },
       "flavorText": {
-        "en": "There is no safe side of the chain once it begins to turn.",
-        "es": "No hay un lado seguro de la cadena cuando empieza a girar."
+        "en": "She did not break the chains. She learned to make them turn.",
+        "es": "No rompió las cadenas. Aprendió a hacerlas girar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -762,7 +767,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Chainfighter"
       ],
       "power": 3,
       "endurance": 3,
@@ -785,21 +790,24 @@
       "kinds": [
         "ECHO"
       ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
       "traits": [
         "REFLEX"
       ]
     },
     {
       "id": "goblin_trashmaster",
-      "name": "Goblin Trashmaster",
-      "displayNameEs": "Maestro chatarrero trasgo",
+      "name": "Master of Salvaged Armor",
+      "displayNameEs": "Maestro de la Armadura Recuperada",
       "gameText": {
         "en": "Other allied Goblins gain +1/+1.",
         "es": "Los demás Trasgos aliados ganan +1/+1."
       },
       "flavorText": {
-        "en": "One Goblin's rubbish is another Goblin's arsenal.",
-        "es": "La basura de un Trasgo es el arsenal de otro."
+        "en": "Every stolen plate turns another worker into a soldier.",
+        "es": "Cada placa robada convierte a otro obrero en soldado."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -808,7 +816,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Armorer"
       ],
       "power": 3,
       "endurance": 3,
@@ -885,15 +893,15 @@
     },
     {
       "id": "general_kreat_the_boltbringer",
-      "name": "General Kreat, the Boltbringer",
-      "displayNameEs": "General Kreat, la Crearrayos",
+      "name": "Marshal of the Repeating Blow",
+      "displayNameEs": "Mariscal del Golpe Repetido",
       "gameText": {
         "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
         "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
       },
       "flavorText": {
-        "en": "Every new recruit is another spark in his fuse.",
-        "es": "Cada nuevo recluta es otra chispa en su mecha."
+        "en": "Every new hammer repeats his order against the Chronicler's bones.",
+        "es": "Cada nuevo martillo repite su orden sobre los huesos del Cronista."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -902,7 +910,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Soldier"
+        "Marshal"
       ],
       "power": 2,
       "endurance": 2,
@@ -949,22 +957,19 @@
       "kinds": [
         "ECHO"
       ],
-      "modifiers": [
-        "CHRONICLE"
-      ],
       "traits": []
     },
     {
       "id": "krenko_tin_street_kingpin",
-      "name": "Krenko, Tin Street Kingpin",
-      "displayNameEs": "Krenko, líder de la Calle Hojalata",
+      "name": "Brakka, the Growing Tally",
+      "displayNameEs": "Brakka, la Cuenta Creciente",
       "gameText": {
         "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
         "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
       },
       "flavorText": {
-        "en": "His army grows at exactly the speed of his confidence.",
-        "es": "Su ejército crece exactamente a la velocidad de su confianza."
+        "en": "She marks one victory on her armor, and the crew arrives to collect it.",
+        "es": "Marca una victoria en su armadura y la cuadrilla aparece para cobrarla."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -972,7 +977,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin"
+        "Goblin",
+        "Recruiter"
       ],
       "power": 1,
       "endurance": 2,
@@ -1017,22 +1023,19 @@
       "kinds": [
         "ECHO"
       ],
-      "modifiers": [
-        "CHRONICLE"
-      ],
       "traits": []
     },
     {
       "id": "pashalik_mons",
-      "name": "Pashalik Mons",
-      "displayNameEs": "Pashalik Mons",
+      "name": "Gunner of the Last Rivets",
+      "displayNameEs": "Artillero de los Últimos Remaches",
       "gameText": {
         "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
         "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
       },
       "flavorText": {
-        "en": "He considers every casualty an opportunity for aim practice.",
-        "es": "Considera cada baja una oportunidad para practicar puntería."
+        "en": "He catches the last rivet before the body reaches the floor.",
+        "es": "Recoge el último remache antes de que el cuerpo toque el suelo."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -1041,7 +1044,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Warrior"
+        "Gunner"
       ],
       "power": 2,
       "endurance": 2,
@@ -1092,9 +1095,6 @@
       ],
       "kinds": [
         "ECHO"
-      ],
-      "modifiers": [
-        "CHRONICLE"
       ],
       "traits": []
     }

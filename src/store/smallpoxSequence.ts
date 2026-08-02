@@ -66,7 +66,7 @@ function beginSmallpoxPlayerRound(resetEpoch: number): void {
   const card = useGameStore.getState().smallpoxCard;
   useAudioStore.getState().playSfx("activateEffect");
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Smallpox" }), tone: "host" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Tithe of Flesh and Root" }), tone: "host" });
   window.setTimeout(() => {
     if (resetEpoch !== hostSequenceEpoch()) return;
     useGameStore.setState((state) => {

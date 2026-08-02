@@ -1,127 +1,125 @@
-# Goblin Horde card rules
+# Reglas de las cartas de El Motín de la Forja Rota
 
-This document records the PvE behavior used by the game. Card JSON is the rules source of truth; this file explains intentional deviations from tabletop Magic and the expected presentation.
+Este documento registra el comportamiento PvE que usa el juego. El JSON de cartas es la fuente de
+verdad de reglas; este archivo explica las adaptaciones intencionales y la presentación esperada.
+Los ids heredados aparecen entre paréntesis únicamente como referencias técnicas.
 
-`engineSupport: "pending"` and “not active in matches” are not identical. A Horde activated
-ability may normalize to a valid engine effect but still have no automated policy that decides
-when to use it. `scripts/lint-decks.mjs` is the source of truth for explicit WIP markers; the notes
-below also call out valid-but-uninvoked Horde activations.
+`engineSupport: "pending"` y «no se activa automáticamente en partidas» no son equivalentes. Una
+habilidad activada de Hueste puede normalizarse como efecto válido y aun así carecer de una política
+que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para los marcadores WIP.
 
-## Goblin Token
+## Corredor de Ascua y Chatarra (`goblin_token_1_1_red`)
 
-- Copies remain visually stacked by definition and arrival grouping.
-- Horde creatures never show the `Tapped` badge or the grey "spent" filter: tapping is a rule of the mode, not a choice the player made.
-- They lean, with their attack chevron, from the frame they land during the Horde's turn — not when attackers are formally declared several effects later.
+- Las copias se apilan visualmente por definición y grupo de llegada.
+- Las criaturas de la Hueste nunca muestran badge de Agotada ni filtro gris: su agotamiento es una
+  regla del modo, no una decisión del jugador.
+- Se inclinan con el chevrón de ataque desde que aterrizan durante el turno de la Hueste, antes de
+  que los atacantes se declaren formalmente.
 
-## Hobgoblin Bandit Lord
+## Capataz del Recuento Ardiente (`hobgoblin_bandit_lord`)
 
-- Other Goblins receive the static +1/+1 bonus.
-- PvE adaptation: on entry, it Burns the best opposing creature for the number of Goblins that
-  entered under Horde control during the current turn, including itself.
-- Its static aura resolves first. If that aura already supplied the activation pulse, the entry
-  damage remains a separate queued beat but does not make the card glow or play the activation
-  sound a second time.
+- Los otros Trasgos reciben +1/+1.
+- Adaptación PvE: al entrar, hace daño al mejor Eco enemigo por cada Trasgo invocado bajo control de
+  la Hueste durante el turno actual, incluido él mismo.
+- El aura se resuelve primero. Si ya produjo el pulso de activación, el daño de entrada sigue como
+  beat separado sin volver a iluminar la carta ni repetir el sonido.
 
-## Rundvelt Hordemaster
+## Llamador de la Próxima Cuadrilla (`rundvelt_hordemaster`)
 
-- Other Goblins receive the static +1/+1 bonus, announced through the Static activation beat when it starts covering new Goblins.
-- A Goblin death inspects the top card of the Host Archive. A Goblin Echo is Invoked immediately;
-  any other card moves to the bottom of the Archive.
-- The effect never uses Oblivion. Any Goblin death gives Rundvelt an activation pulse. When
-  Rundvelt itself is the Goblin that died, it uses the Death reveal beat beside the Host Memory
-  before the inspection resolves.
+- Los otros Trasgos reciben +1/+1 y el aura anuncia su cobertura mediante el beat de activación
+  estática.
+- La muerte de un Trasgo inspecciona la primera carta del Archivo. Un Eco Trasgo se Invoca de
+  inmediato; cualquier otra carta se mueve al fondo.
+- El efecto nunca usa el Olvido. Toda muerte de Trasgo activa al Llamador; si él mismo muere, usa el
+  beat de revelado de muerte junto a la Memoria antes de resolver la inspección.
 
-## Battle Cry Goblin
+## Pregonero del Horno Abierto (`battle_cry_goblin`)
 
-- PvE adaptation: when it enters, Horde Goblins get +1/+0 until end of turn.
-- Haste and Pack tactics are deliberately omitted.
-- The entry trigger supplies one activation pulse; the queued group-buff beat only plays the blue
-  buff lines and does not make the source glow again.
+- Adaptación PvE: al entrar, los Trasgos de la Hueste reciben +1/+0 hasta el fin del turno.
+- Ímpetu y Pack tactics se omiten deliberadamente.
+- El trigger de entrada produce un pulso; el buff grupal sólo reproduce sus líneas azules.
 
-## Goblin War Drums
+## El Martillo de Turno (`goblin_war_drums`)
 
-- Horde creatures have Menace while this enchantment remains on the battlefield.
+- Las criaturas de la Hueste tienen Imponente mientras este Apoyo permanece en el Campo.
 
-## Raid Bombardment
+## Lluvia de Remaches (`raid_bombardment`)
 
-- PvE adaptation: each attacking Goblin with power 2 or less contributes 1 damage.
-- Eligible attackers are captured once at declaration, so a Goblin with multiple blockers never
-  contributes more than once and still contributes if it dies during its attack.
-- The damage waits until every Horde attack animation has finished. Raid Bombardment then pulses
-  once and launches one compact Burn volley toward the player's life; the impact applies and shows
-  the combined damage rather than playing a full Burn sequence for every Goblin.
-- At most six projectiles are drawn for readability, but the damage number always shows the real total.
+- Cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño.
+- Los atacantes elegibles se capturan una sola vez al declararlos: varios bloqueadores no duplican
+  la aportación y morir durante el ataque no la elimina.
+- El daño espera hasta que terminen todas las animaciones de ataque. Después el Apoyo pulsa una vez
+  y lanza una salva compacta hacia la Vida del Cronista con el total combinado.
+- Se dibujan como máximo seis proyectiles para conservar legibilidad, pero el número de daño siempre
+  muestra el total real.
 
-## Beetleback Chief
+## Jefe de la Cuadrilla Doble (`beetleback_chief`)
 
-- Its entry effect creates two Goblin tokens.
+- Su efecto de entrada Invoca dos Corredores de Ascua y Chatarra.
 
-## Siege-Gang Commander
+## Capataz de los Tres Hornos (`siege_gang_commander`)
 
-- Its entry effect creates three Goblin tokens.
-- Its activated sacrifice damage is modeled but is not invoked in matches because the Horde has
-  no generic activation policy.
+- Su efecto de entrada Invoca tres Corredores de Ascua y Chatarra.
+- Su daño activado por sacrificio fue retirado del corte de la carta.
 
-## Goblin Rabblemaster
+## Agitador de la Primera Sirena (`goblin_rabblemaster`)
 
-- Creates one Goblin token before attackers are declared.
-- Its printed "other Goblins attack if able" clause is marked `engineSupport: "ignored"` because
-  the Horde's global attack rule already makes every able creature attack.
-- Its attack bonus counts other Goblins that are attacking when the trigger resolves.
+- Invoca un Corredor antes de declarar atacantes.
+- La obligación impresa anterior de atacar está marcada `engineSupport: "ignored"` porque la regla
+  global de la Hueste ya hace atacar a toda criatura capaz.
+- Su bono cuenta los otros Trasgos atacantes cuando el trigger se resuelve.
 
-## Goblin Surprise
+## ¡Abran Otra Compuerta! (`goblin_surprise`)
 
-- If the Horde controls at least one creature, all of its creatures get +2/+0 until end of turn.
-  The spell is presented beside the Horde deck and the bonus lands with the shared blue buff animation.
-- If the Horde controls no creatures, it immediately performs another normal reveal round. This is
-  part of the same Horde turn and does not add another Mini Surge or Surge reveal.
+- Si la Hueste controla al menos una criatura, todas sus criaturas reciben +2/+0 hasta el fin del
+  turno. El Hechizo se presenta junto al Archivo y el bono aterriza con el buff compartido.
+- Si no controla criaturas, ejecuta inmediatamente otra ronda normal de revelado dentro del mismo
+  turno, sin sumar otra Mini Oleada u Oleada.
 
-## Mogg Mob
+## Tres Bajo el Mismo Yunque (`mogg_mob`)
 
-- PvE adaptation: it is only a vanilla 3/3 Goblin — a sack of meat with no abilities.
+- Adaptación PvE: es solamente un Eco Trasgo vanilla 3/3.
 
-## Volley Veteran
+## Maestro de la Salva de Escoria (`volley_veteran`)
 
-- Its entry effect uses the reusable Burn animation.
-- Horde targeting is selected by the JSON policy, not by component code.
+- Su efecto de entrada usa la animación Burn reutilizable.
+- El objetivo de la Hueste se decide mediante la política declarada en JSON, no en componentes.
 
-## Goblin Chainwhirler
+## Varka, Eje de la Revuelta (`goblin_chainwhirler`)
 
-- First strike is resolved as a separate combat-damage step. A 3/3 Chainwhirler kills a normal
-  4/3 blocker before it can answer and survives; against a 4/4, that blocker survives the
-  first-strike step and kills Chainwhirler in the normal step.
-- Its entry effect queues one simultaneous damage event for the player and every opposing
-  creature. The ETB supplies the card's only activation pulse, then a compact Burn volley sends
-  one fireball along a distinct route to each target.
-- Every visible fireball has its own launch and impact sound. Visual impacts are staggered by
-  90ms, but the rules damage is committed to every target together on the final impact.
+- Es el único Eco de Crónica del deck.
+- Reflejos se resuelve en un paso separado de daño de combate. Varka 3/3 mata a un bloqueador 4/3
+  antes de que responda y sobrevive; un 4/4 sobrevive a Reflejos y la mata en el paso normal.
+- Su entrada encola un único evento simultáneo de daño para el Cronista y todos sus Ecos. El trigger
+  produce el único pulso y una salva compacta envía un proyectil por una ruta distinta a cada blanco.
+- Los impactos visuales se escalonan 90 ms, pero el daño de reglas se confirma para todos a la vez
+  en el impacto final.
 
-## Goblin Trashmaster
+## Maestro de la Armadura Recuperada (`goblin_trashmaster`)
 
-- Other Goblins receive the static +1/+1 bonus.
-- Activated artifact destruction is modeled but is not invoked in matches because the Horde has
-  no generic activation policy.
+- Los otros Trasgos reciben +1/+1.
+- La activación anterior de destrucción de artefactos fue retirada del corte de la carta.
 
-## General Kreat, the Boltbringer
+## Mariscal del Golpe Repetido (`general_kreat_the_boltbringer`)
 
-- When one or more Goblins attack, General Kreat creates exactly one tapped and attacking Goblin
-  token. The trigger is once per attack declaration, not once per attacker.
-- Each other Horde creature entering queues its own 1-damage Burn toward the player's life.
-  Damage triggers are never grouped: two creatures entering produce two complete Burns in order.
-- The token created by General Kreat naturally triggers that second ability. Because the first
-  attack beat already illuminated General Kreat, this self-caused follow-up does not pulse the
-  same card a second time.
+- Cuando uno o más Trasgos atacan, Invoca exactamente un Corredor agotado y atacando. El trigger
+  ocurre una vez por declaración, no una vez por atacante.
+- Cada otra criatura de la Hueste que entra encola su propio daño de 1 a la Vida del Cronista; dos
+  entradas producen dos Burns completos y ordenados.
+- El Corredor creado por el Mariscal activa naturalmente la segunda habilidad. Como el primer beat
+  ya lo iluminó, esa continuación no pulsa la misma carta otra vez.
 
-## Krenko, Tin Street Kingpin
+## Brakka, la Cuenta Creciente (`krenko_tin_street_kingpin`)
 
-- When Krenko attacks, add a +1/+1 counter first, then create tapped and attacking Goblin tokens equal to its new power.
+- Cuando Brakka ataca, recibe primero un contador +1/+1 y después Invoca esa cantidad de Corredores
+  agotados y atacando según su nueva Fuerza.
 
-## Pashalik Mons
+## Artillero de los Últimos Remaches (`pashalik_mons`)
 
-- Intentional PvE rule: whenever a Horde Goblin dies, Pashalik deals 1 damage to a random opposing battlefield creature instead of choosing any Magic target.
-- Selection is deterministic from the seeded engine RNG and is declared in JSON as `selection: "RANDOM"`.
-- Each Goblin death resolves separately at the moment it occurs. Combat does not batch Pashalik triggers until the end.
-- Damage uses the reusable `BURN` animation: source activation pulse, layered fireball travel, burn shader and spark burst on impact, floating damage number, and scorch plus smoke on a surviving target until end-step cleanup.
-- When Pashalik and another card react to the same Goblin death, each gets its own beat; they never resolve simultaneously.
-- Activated token creation is modeled but is not invoked in matches because the Horde has no
-  generic activation policy.
+- Regla PvE: cuando muere un Trasgo de la Hueste, hace 1 de daño a un Eco enemigo aleatorio.
+- La selección es determinista con el RNG sembrado y se declara en JSON como `selection: "RANDOM"`.
+- Cada muerte se resuelve por separado en el momento en que ocurre; el combate no agrupa triggers.
+- El daño usa la animación `BURN`: pulso de fuente, viaje, shader y chispas, número flotante y marca
+  de quemadura sobre un superviviente hasta la limpieza de fin de turno.
+- Si otro elemento reacciona a la misma muerte, cada fuente conserva su propio beat.
+- La activación anterior de creación de fichas fue retirada del corte de la carta.

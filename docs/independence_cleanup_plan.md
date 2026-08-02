@@ -28,8 +28,8 @@ demostrarse.
 | L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
 | L4 — Limpieza interna del engine | En curso: L4.1-L4.6a cerradas; L4.6b pendiente de validación manual | Autorizada por subfases |
-| L5 — Independencia de los mazos | No iniciada | No autorizada todavía |
-| L6 — Arte y procedencia | La Última Lluvia integrada 13/13; revisión de derechos pendiente | Autorizada para el corte completo de este deck |
+| L5 — Independencia de los mazos | En curso: La Última Lluvia y La Procesión de la Campana Hueca integradas | Autorizada por deck |
+| L6 — Arte y procedencia | La Última Lluvia 13/13 y La Procesión 17/17 integradas; revisión de derechos pendiente | Autorizada por deck |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
 
 ## Protocolo de trabajo
@@ -195,24 +195,22 @@ de Vida aunque sus estudios y JSON ya tengan texto nuevo.
 - Se regeneraron y verificaron 13 PNG de Mono Green y 14 de Vampiros. Ambos lotes imprimen el
   vocabulario vigente y pasan la prueba de frescura.
 
-### Excepción aceptada y diferida a L6
+### Excepción de Huestes resuelta en L6
 
-Zombies y Trasgos no conservan arte fuente local. Sus estudios recibían URLs remotas hasta que se
-retiró Scryfall y ahora apuntan a sus propios PNG finales. Regenerarlos así anidaría una carta
-dentro de otra y sobrescribiría la única copia conservada; extraer el arte desde el raster final
-también duplicaría overlays y degradaría la imagen.
+Zombies y Trasgos no conservaban arte fuente local. Sus estudios habían quedado apuntando a sus
+propios PNG finales después de retirar las URLs remotas; regenerarlos así habría anidado una carta
+dentro de otra y sobrescrito la única copia conservada.
 
-El usuario autorizó conservar intactos esos 34 PNG y resolverlos al generar el arte definitivo en
-L6. El exportador continúa bloqueándolos deliberadamente para impedir una exportación recursiva.
-Esta excepción ya no impide cerrar L2: queda registrada como deuda explícita de assets para L6.
-
-No se inició L3 y los PNG actuales de ambas Huestes permanecen intactos.
+El usuario autorizó diferir esos 34 PNG hasta sus cortes de arte definitivo. La Procesión de la
+Campana Hueca y El Motín de la Forja Rota ya resolvieron ambos lotes: cada Hueste tiene 17 fuentes
+separadas bajo su carpeta `art/`, exportaciones frescas y registro de procedencia. Ningún estudio de
+Hueste conserva ya una ruta circular ni un PNG sin arte fuente.
 
 ### Criterio de aceptación
 
 Una edición de datos tiene un solo lugar de origen y existe una forma objetiva de saber si las
-imágenes distribuidas están actualizadas. Los 34 PNG legacy sin arte fuente constituyen la excepción
-documentada y protegida hasta su sustitución en L6.
+imágenes distribuidas están actualizadas. La excepción temporal de Zombies y Trasgos quedó cerrada
+con sus sustituciones de L6.
 
 ## Fase L3 — Schema Hostfall para decks
 
@@ -626,8 +624,8 @@ estadísticas + mismo efecto + misma cantidad.
 6. Regenerar los PNG finales y cambiar nombres visibles y rutas en un único corte verificado. Los
    ids sólo se renombran si se aprueba también su migración de persistencia.
 
-Este pipeline se ejecuta para un solo deck a la vez. La preparación narrativa de La Última Lluvia
-fue autorizada, documentada e integrada. Zombies y Trasgos siguen pendientes de su propio corte.
+Este pipeline se ejecuta para un solo deck a la vez. La Última Lluvia, La Procesión de la Campana
+Hueca y El Motín de la Forja Rota fueron autorizados, documentados e integrados.
 
 ## Fase L6 — Arte y procedencia
 
@@ -641,18 +639,28 @@ L6 completó el corte visual y narrativo de La Última Lluvia. Sus 13 artes orig
 las fuentes JPG anteriores en `public/cards/mono_green_ramp/art/`; nombres, flavor, subtipos y las
 excepciones mecánicas aprobadas viven en el JSON runtime, el Card Studio apunta a los PNG fuente y
 las 13 cartas completas de producción fueron regeneradas. Los ids técnicos se conservaron para no
-introducir una migración de persistencia no solicitada. Zombies y Goblins continúan con su
-exportación pausada.
+introducir una migración de persistencia no solicitada.
 
-El lote de concepto tiene registro de herramienta, política de referencias internas, prompts,
-dimensiones y SHA-256 en `docs/asset_provenance_last_rain.json`. La revisión de derechos bajo los
-términos aplicables del propietario queda explícitamente pendiente, de modo que el registro todavía
-no constituye aprobación final de procedencia ni cierra L6.
+La Procesión de la Campana Hueca completó también su corte: 17 nombres y flavor bilingüe viven en
+el JSON runtime, 17 artes fuente originales se guardaron en `public/cards/zombies/art/` y las 17
+cartas completas fueron regeneradas. Los dos tokens tienen fuente vertical 1024x1536 y composición
+full-art. Las reglas, stats y cantidades se conservaron; los ids técnicos permanecen para L7.
+
+El Motín de la Forja Rota completó el tercer corte: 17 nombres y flavor bilingüe viven en el JSON
+runtime, 17 artes fuente originales se guardaron en `public/cards/goblins/art/` y las 17 cartas
+completas fueron regeneradas. Corredor de Ascua y Chatarra usa fuente vertical 1024x1536 y
+composición full-art. Varka, Eje de la Revuelta quedó como único Eco de Crónica; reglas, stats y
+cantidades permanecen intactos y los ids técnicos se conservan para L7.
+
+Los tres lotes tienen registro de herramienta, política de referencias, prompts, dimensiones y
+SHA-256 en `docs/asset_provenance_last_rain.json`, `docs/asset_provenance_hollow_bell.json` y
+`docs/asset_provenance_broken_forge.json`. La revisión de derechos bajo los términos aplicables del
+propietario queda explícitamente pendiente, de modo que los registros todavía no constituyen
+aprobación final de procedencia ni cierran L6.
 
 La incorporación obligatoria de flavor bilingüe y `showFlavorText` al JSON runtime había dejado 61
-PNG stale/no verificables. El corte de La Última Lluvia renovó sus 13 imágenes y su manifest; quedan
-pendientes 14 PNG de Vampiros, 17 de Zombies y 17 de Trasgos. Las proyecciones
-`deck-data.generated.js` están sincronizadas.
+PNG stale/no verificables. Los tres cortes renovaron 47 imágenes y sus manifests; quedan pendientes
+únicamente los 14 PNG de Vampiros. Las proyecciones `deck-data.generated.js` están sincronizadas.
 
 ### Registro mínimo por recurso
 
@@ -787,6 +795,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 62 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
 | 2026-08-01 | L6 — concepto Mono Green | Generación del primer lote visual de La Última Lluvia. | 13 artes originales guardados sin reemplazar fuentes ni PNG actuales; lámina de revisión y registro de prompts/procedencia/hashes creados. | 13/13 archivos presentes, dimensiones compatibles con el crop, SHA-256 verificados contra el registro; aprobación visual y revisión de derechos pendientes. |
 | 2026-08-01 | L5/L6 — corte La Última Lluvia | Integración completa de identidad, arte y excepciones mecánicas aprobadas. | Los 13 nombres, subtipos y flavor se migraron; Iria recupera 3 de Vida; Arven conserva su primer +1/+1 hasta el próximo turno y todo el deck perdió Desborde. Los JPG fuente y PNG completos anteriores fueron sustituidos. Los ids técnicos se conservaron para L7. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Mono Green 13/13; hashes de procedencia 13/13. Auditor normal: 34 identidades de Huestes y 48 PNG ajenos a este corte siguen pendientes; revisión de derechos del lote y validación visual del usuario pendientes. |
+| 2026-08-01 | L5/L6 — corte La Procesión de la Campana Hueca | Integración completa de la identidad y arte propios del antiguo deck Zombie. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Muerto del Último Taño y Coloso de la Fosa Común usan fuentes verticales 1024x1536. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Zombies 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: quedan 17 identidades de Trasgos y 31 PNG no verificables (14 Vampiros, 17 Trasgos); revisión de derechos de los lotes propios pendiente. |
+| 2026-08-01 | L5/L6 — corte El Motín de la Forja Rota | Integración completa de la identidad y arte propios del antiguo deck Goblin. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Corredor de Ascua y Chatarra usa fuente vertical 1024x1536. Varka es el único Eco de Crónica. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Goblins 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: definiciones derivadas 0, quedan 3 coincidencias heredadas en `dist` y 14 PNG stale de Vampiros; revisión de derechos de los lotes propios pendiente. |
 
 ## Plantilla para cerrar una fase
 

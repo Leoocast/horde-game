@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "1.0.0",
+  "batchId": "hollow-bell-art-2026-08-01",
+  "deck": "La Procesión de la Campana Hueca",
+  "createdAt": "2026-08-01",
+  "generator": {
+    "provider": "OpenAI",
+    "surface": "Codex built-in image_gen tool",
+    "model": "Not exposed by the built-in tool",
+    "mode": "Text-to-image with visual continuity established inside this same batch"
+  },
+  "sourcePolicy": {
+    "externalReferenceImages": false,
+    "existingRepositoryArtUsedAsReference": false,
+    "internalConsistencyReferences": [
+      "zombie_token.png",
+      "zombie_giant_token.png",
+      "graf_harvest.png"
+    ]
+  },
+  "rightsReview": {
+    "status": "pending-owner-verification",
+    "commercialUse": "Verify against the project owner's applicable OpenAI terms before distribution.",
+    "modification": "Verify against the same applicable terms before final production use.",
+    "attribution": "Not determined; no attribution statement has been added.",
+    "note": "This record documents origin and integrity but does not by itself close L6."
+  },
+  "commonPrompt": "Original dark-medieval funerary fantasy for a drowned bell-city and ossuary: verdigris bronze, wet black stone, burial cloth, black funeral oil and corpse-blue fog. Painterly realism, tactile materials, strong silhouettes and one readable mechanical idea per image. No card frame, text, logos, trademarks, watermark, gore, existing franchise or named-artist imitation. Non-token art is landscape for a card-art window; both token sources are strict portrait 2:3 full-body compositions.",
+  "assets": [
+    {
+      "id": "advanced_stitchwing",
+      "workingNameEs": "Ala Sepulcral Reforzada",
+      "file": "../public/cards/zombies/art/advanced_stitchwing.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "3ade458b5fee98eaef7cb9113804ee93024d90e9f91f6b42803b7748cbf253f1",
+      "prompt": "A reinforced funerary flying construct with doubled seams, bronze ribs and broad durable wings, visually related to Ala Hilvanada but clearly built to endure as a 3/4."
+    },
+    {
+      "id": "blighted_bat",
+      "workingNameEs": "Alapútrida de la Cripta",
+      "file": "../public/cards/zombies/art/blighted_bat.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "0b6a823fcaad3f305f84ebe74c60b13e7528ee9c58fd63029ca4186d956d7d60",
+      "prompt": "A fast undead crypt bat made from bone and torn burial membrane, sharp and airborne but visibly light and fragile, communicating 2/1 Flying."
+    },
+    {
+      "id": "crow_of_dark_tidings",
+      "workingNameEs": "Cuervo Carroñero del Archivo",
+      "file": "../public/cards/zombies/art/crow_of_dark_tidings.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "68fe452f84a5dce6e60206efc996c586261b63bb76b33c920da5fb3d27877905",
+      "prompt": "An undead archive crow flying downward with exactly two blank memory tablets; its shadow suggests the same delivery will repeat on death."
+    },
+    {
+      "id": "cursed_minotaur",
+      "workingNameEs": "Rompelíneas Astado",
+      "file": "../public/cards/zombies/art/cursed_minotaur.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "23f4b76693d68ab00532ee266156c0b5f686c9161b0358537517d15556d4ffe1",
+      "prompt": "An undead minotaur advances between two grave shields with extremely broad horns, making the need for two defenders readable while retaining a lean 3/2 body."
+    },
+    {
+      "id": "diregraf_captain",
+      "workingNameEs": "Mariscal de la Última Marcha",
+      "file": "../public/cards/zombies/art/diregraf_captain.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "ce7c6378f63eb70a410e8a6ad1fbce679e4cebb7fa518cd8632cf99f0d7b0cf2",
+      "prompt": "A 2/2 undead marshal braces ordered ranks beneath the hollow bell while a black-oil ember from one fallen soldier travels toward the unseen Chronicler."
+    },
+    {
+      "id": "gavony_unhallowed",
+      "workingNameEs": "Recolector de los Caídos",
+      "file": "../public/cards/zombies/art/gavony_unhallowed.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "6db577df4a8831d8ed198295842b4db7137bfec32675ba9e08b2207422a7fc45",
+      "prompt": "A durable corpse collector fastens armor plates and memory fragments taken from fallen allies onto its own body, showing permanent growth from each death."
+    },
+    {
+      "id": "graf_harvest",
+      "workingNameEs": "La Campana Hueca",
+      "file": "../public/cards/zombies/art/graf_harvest.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "614ca8176244ec826d5009320622888eca9fe68778c8589d4a5af602b41eabb5",
+      "prompt": "A colossal hollow verdigris bell rings over a drowned ossuary and forces every undead rank to straighten into an intimidating formation; persistent Support, not a creature."
+    },
+    {
+      "id": "hound_of_the_farbogs",
+      "workingNameEs": "Mastín del Osario Colmado",
+      "file": "../public/cards/zombies/art/hound_of_the_farbogs.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "11eb460f2ce955f26d1f16538a61c1241c6a6dea562d6375e652aa200bb3fa60",
+      "prompt": "A massive 5/3 undead mastiff stands before seven visibly filled ossuary vaults as its gate chain breaks, signaling that a full Memory grants Daunting."
+    },
+    {
+      "id": "miasmic_mummy",
+      "workingNameEs": "Portador de la Mortaja Mnémica",
+      "file": "../public/cards/zombies/art/miasmic_mummy.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "d52f2f857eb5a2257b4e33007fd20681df3f4a076c7155f9f2dd8c7af000774e",
+      "prompt": "A balanced shroud-bearing corpse crosses an archive doorway while mnemonic smoke pulls away one blank tablet, clearly communicating an on-entry discard effect."
+    },
+    {
+      "id": "noosegraf_mob",
+      "workingNameEs": "El Cadalso de los Cinco Nudos",
+      "file": "../public/cards/zombies/art/noosegraf_mob.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "47ee564a2119ce65080f5293a10df985053fcf6a7a4ea0876530c652f45de9b7",
+      "prompt": "A composite undead mob suspended by exactly five heavy ritual knots; one loosens and releases a separate rank corpse, visualizing five counters consumed to make tokens."
+    },
+    {
+      "id": "rancid_rats",
+      "workingNameEs": "Ratas de la Mordida Silente",
+      "file": "../public/cards/zombies/art/rancid_rats.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "7013c1fe90506107c0f2c151dcc8b351f64bdafeba3b22057f58f08ace9a6f5b",
+      "prompt": "Tiny undead rats hide in a flooded tunnel below the pavement; black funeral oil marks a lethal bite while their scale and concealment communicate 1/1 Furtive."
+    },
+    {
+      "id": "rottenheart_ghoul",
+      "workingNameEs": "Carroña del Último Pensamiento",
+      "file": "../public/cards/zombies/art/rottenheart_ghoul.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "3daf6ada5f9524d15b50b9e281f916e39ef6966ac97aabcd840d670cf7800e32",
+      "prompt": "A broad durable corpse is built around a single sealed memory reliquary that cracks open at death, explaining 2/4 endurance and a death-triggered discard."
+    },
+    {
+      "id": "smallpox",
+      "workingNameEs": "Diezmo de Carne y Raíz",
+      "file": "../public/cards/zombies/art/smallpox.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "c05d6a0030004b9725b25117bbfa9f877cc124f2abf6e0eab77017f18fae50f7",
+      "prompt": "A nonviolent symbolic tithe altar beneath the hollow bell holds four extinguishing offerings: a life candle, memory tablet, clay Echo effigy and root-bound Source stone."
+    },
+    {
+      "id": "stitchwing_skaab",
+      "workingNameEs": "Ala Hilvanada",
+      "file": "../public/cards/zombies/art/stitchwing_skaab.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "16d30ccd7d4efe8d1c9d38fa27711e684f5d2f1760a06386292214b99cdf9eb7",
+      "prompt": "A crude asymmetrical funerary flying construct with powerful wings held by sparse uneven stitches, visually communicating strong impact and only 1 endurance."
+    },
+    {
+      "id": "thraben_foulbloods",
+      "workingNameEs": "Sabueso de la Séptima Memoria",
+      "file": "../public/cards/zombies/art/thraben_foulbloods.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "a6a926b3b7c5497294a0a3f3c7bd3fee62128690c442bf5059604c888c26a125",
+      "prompt": "A lean undead hound consumes the seventh glowing memory tablet and begins to thicken, with six spent tablets behind it and the seventh clearly active."
+    },
+    {
+      "id": "zombie_giant_token",
+      "workingNameEs": "Coloso de la Fosa Común",
+      "file": "../public/cards/zombies/art/zombie_giant_token.png",
+      "width": 1024,
+      "height": 1536,
+      "sha256": "8ab19a655784e0adc38983394eb598014a8dc0c22cb3288243eecca8430c275f",
+      "prompt": "Strict vertical 2:3 full-art portrait of a monumental communal-grave colossus made from compressed bodies, grave slabs and chains; full figure, low viewpoint, unmistakable 5/5 mass."
+    },
+    {
+      "id": "zombie_token",
+      "workingNameEs": "Muerto del Último Taño",
+      "file": "../public/cards/zombies/art/zombie_token.png",
+      "width": 1024,
+      "height": 1536,
+      "sha256": "e05e870cda25bc63b960a5a63db8bdca32f04452e5e76ffe3b813fa16885778f",
+      "prompt": "Strict vertical 2:3 full-art portrait of one balanced rank corpse standing beneath the hollow bell; full body and restrained equipment communicate a basic 2/2 token."
+    }
+  ]
+}

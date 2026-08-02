@@ -37,13 +37,13 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("Zombie Host 50", hostZombiesRaw as NewDeckList, hostZombiesImagesRaw as DeckImageManifest, {
+  register("La Procesión de la Campana Hueca 50", hostZombiesRaw as NewDeckList, hostZombiesImagesRaw as DeckImageManifest, {
     keyCardId: "zombie_token",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("Goblin Host 50", goblinHostRaw as unknown as NewDeckList, goblinHostImagesRaw as DeckImageManifest, {
+  register("El Motín de la Forja Rota 50", goblinHostRaw as unknown as NewDeckList, goblinHostImagesRaw as DeckImageManifest, {
     keyCardId: "goblin_token_1_1_red",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
