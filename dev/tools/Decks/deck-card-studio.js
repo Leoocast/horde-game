@@ -57,9 +57,9 @@
         const normalized = String(type || "").toLocaleLowerCase("es");
 
         if (
-            theme === "zombies"
-            || theme === "goblins"
-            || theme === "vampires"
+            theme === "hollow_bell_procession"
+            || theme === "broken_forge_mutiny"
+            || theme === "crimson_court"
             || theme === "hunters"
         ) {
             if (theme === "hunters" && normalized.includes("trampa")) {
@@ -79,7 +79,7 @@
                 `;
             }
             if (
-                theme === "vampires"
+                theme === "crimson_court"
                 && (
                     normalized.includes("fuente")
                     || normalized.includes("source")
@@ -126,7 +126,7 @@
     }
 
     function factionSymbol() {
-        if (theme === "goblins") {
+        if (theme === "broken_forge_mutiny") {
             return `
                 <svg class="tcg-faction-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
                     <path fill="currentColor" fill-rule="evenodd" d="M15.362 5.214A8.252 8.252 0 0 1 12 21a8.25 8.25 0 0 1-5.962-13.953A8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3.001 2.48ZM12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-3.252 5.032A3.75 3.75 0 0 0 12 18Z" clip-rule="evenodd"></path>
@@ -134,7 +134,7 @@
             `;
         }
 
-        if (theme === "vampires") {
+        if (theme === "crimson_court") {
             return `
                 <svg class="tcg-faction-icon tcg-faction-icon--blood" aria-hidden="true" focusable="false" viewBox="0 0 384 512">
                     <path fill="currentColor" d="M192 0C79.9 95.2 0 213.9 0 320c0 106 86 192 192 192s192-86 192-192C384 213.9 304.1 95.2 192 0Z"></path>
@@ -158,10 +158,10 @@
         const type = String(card.tipo || "").toLocaleLowerCase("es");
         const description = String(card.desc || "").trim().toLocaleLowerCase("es");
         const isHordeToken =
-            (theme === "zombies" || theme === "goblins")
+            (theme === "hollow_bell_procession" || theme === "broken_forge_mutiny")
             && Boolean(card.isToken);
         const isVanillaHordeEcho =
-            (theme === "zombies" || theme === "goblins")
+            (theme === "hollow_bell_procession" || theme === "broken_forge_mutiny")
             && (type.includes("criatura") || type.includes("eco") || type.includes("echo"))
             && description === "sin efecto adicional.";
         return type.includes("tierra")
@@ -224,7 +224,7 @@
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);
             const isHordeDeck =
-                theme === "zombies" || theme === "goblins";
+                theme === "hollow_bell_procession" || theme === "broken_forge_mutiny";
             const showCost = !isHordeDeck
                 && !fullArt
                 && card.costo !== null

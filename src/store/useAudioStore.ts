@@ -122,7 +122,7 @@ export const useAudioStore = create<AudioStore>()(
       },
     }),
     {
-      name: "horde-audio-settings",
+      name: "hostfall-audio-settings:v2",
       partialize: (state) => ({ enabled: state.enabled, sfxVolume: state.sfxVolume, musicEnabled: state.musicEnabled, musicVolume: state.musicVolume }),
       onRehydrateStorage: () => () => syncEngine(),
     },

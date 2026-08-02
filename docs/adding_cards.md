@@ -40,15 +40,15 @@ Archivos autoritativos:
 
 Ejemplos útiles:
 
-- Efecto activado de maná: `llanowar_elves`.
-- Trigger de entrada con target manual: `sunshower_druid`.
-- Trigger al entrar otra criatura: `beast_kin_ranger`.
-- Spell con un target: `giant_growth` o `broken_wings`.
-- Spell con dos targets: `cosmic_hunger` o `ruthless_predation`.
-- Aura estática: `graf_harvest`, `diregraf_captain` o `goblin_war_drums`.
-- Trigger de muerte: `rottenheart_ghoul`, `rundvelt_hordemaster` o `pashalik_mons`.
-- Trigger de ataque: `krenko_tin_street_kingpin`.
-- Efecto de Horda con presentación Burn: `volley_veteran` o `pashalik_mons`.
+- Efecto activado de maná: `first_dew_gatherers`.
+- Trigger de entrada con target manual: `iria_voice_last_rain`.
+- Trigger al entrar otra criatura: `arven_first_pack`.
+- Spell con un target: `first_tree_sap` o `roots_touched_sky`.
+- Spell con dos targets: `marked_prey` o `oath_clearing`.
+- Aura estática: `hollow_bell`, `last_march_marshal` o `shift_hammer`.
+- Trigger de muerte: `last_thought_carrion`, `next_crew_caller` o `last_rivets_gunner`.
+- Trigger de ataque: `brakka_growing_tally`.
+- Efecto de Horda con presentación Burn: `slag_volley_master` o `last_rivets_gunner`.
 
 ## 1. Añadir la definición al deck
 
@@ -57,7 +57,7 @@ Los decks viven bajo:
 ```text
 src/data/decks/
   player/<deck_id>/
-  horde/<deck_id>/
+  host/<deck_id>/
 ```
 
 El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un Eco vanilla mínimo:
@@ -327,7 +327,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-Diezmo de Carne y Raíz (`smallpox`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Diezmo de Carne y Raíz (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones

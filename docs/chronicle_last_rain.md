@@ -1,16 +1,16 @@
 # Crónica: La Última Lluvia
 
-Estado: **integrada en runtime y Card Studio; ids técnicos pendientes de L7**
-Deck actual: `mono_green_ramp` / `La Última Lluvia`
+Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
+Deck actual: `last_rain` / `La Última Lluvia`
 Última actualización: 2026-08-01
 
 Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual acordados
 para el primer pase de contenido propio del deck. El usuario autorizó el corte completo el
 2026-08-01: los 13 artes aprobados sustituyen las fuentes anteriores bajo
-`public/cards/mono_green_ramp/art/`, los nombres y flavor viven en el JSON runtime, las excepciones
+`public/cards/last_rain/art/`, los nombres y flavor viven en el JSON runtime, las excepciones
 mecánicas de Iria y Arven están implementadas y los 13 PNG completos fueron regenerados. La
-procedencia, prompts y hashes del lote viven en `docs/asset_provenance_last_rain.json`. Se conservan
-los ids técnicos actuales para no introducir una migración de persistencia no solicitada.
+procedencia, prompts y hashes del lote viven en `docs/asset_provenance_last_rain.json`. L7 sustituyó
+los ids y rutas heredados por las claves finales de esta Crónica.
 
 ## Premisa
 
@@ -74,25 +74,23 @@ coste de decisión.
 
 ## Mapeo carta por carta
 
-Los ids actuales aparecen únicamente como claves técnicas heredadas. Los nombres de identidad son
-los nombres visibles finales; en L7 se decidirá si las claves se conservan o se renombran mediante
-una migración explícita de persistencia.
+Los ids Hostfall finales aparecen junto a los nombres visibles de la Crónica.
 
 | Id técnico | Identidad final | Mecánica conservada o aprobada | Papel narrativo y brief visual |
 | --- | --- | --- | --- |
-| `forest` | **Manantial de Raízhonda** | 15 copias. Fuente que se Agota para ganar 1 Energía. | Red de agua enterrada que Iria reactiva. Un estanque oscuro entre ruinas; raíces bajo el agua empiezan a iluminarse. Es la base literal del despertar. |
-| `llanowar_elves` | **Recolectores del Primer Rocío** | 2 copias. Coste 1, 1/1; se Agota para ganar 1 Energía. | Pequeños habitantes que recogen gotas de hojas, estatuas y piedras. Su fragilidad comunica que trabajan y transportan, no que sean guerreros. |
-| `sunshower_druid` | **Iria, Voz de la Última Lluvia** | 3 copias. Coste 1, 0/2. Eco de Crónica. Al ser invocada, da un contador +1/+1 a un aliado y recupera 3 de Vida. | Protagonista. No vence por Fuerza propia: restaura a otro ser y al Chronicler. Porta un cuenco o recipiente de piedra que nunca deja de contener lluvia. |
-| `druid_of_the_cowl` | **Custodio de la Raíz Dormida** | 2 copias. Coste 2, 1/3; se Agota para ganar 1 Energía. | Guardián paciente de los conductos profundos. Debe verse más resistente y experimentado que los Recolectores, cerca de una cámara de raíces o un pozo sellado. |
-| `ichorspit_basilisk` | **Acechador de Savia Negra** | 2 copias. Coste 3, 1/3; Letal y Veneno 1. | Criatura nacida de la parte enferma del bosque. Es delgada, resistente y poco poderosa, pero una sola mordida es mortal. La savia negra aparece en colmillos y grietas, no como armadura masiva. |
-| `beast_kin_ranger` | **Arven, Primero de la Manada** | 3 copias. Coste 3, 3/3, sin Rasgos. Primera invocación aliada del turno: +1/+1 hasta el próximo turno. | Compañero principal de Iria. Reúne y conduce a las criaturas despertadas. Su presencia debe leerse como la de un líder que corre junto a la manada, no como un jinete que la domina. |
-| `magnigoth_sentry` | **Vigías del Dosel Antiguo** | 2 copias. Coste 4, 4/4; Guardia aérea. | Guardianes altos y sólidos que vuelven a ocupar las copas. Brazos, astas o lanzas de madera alcanzan amenazas aéreas. Su silueta debe explicar Guardia aérea sin depender del texto. |
-| `colossadactyl` | **Quebracielos de la Hondonada** | 2 copias. Coste 4, 4/5; Guardia aérea. Sin Desborde. | Grandes bestias primordiales que emergen cuando el bosque ya recuperó suficiente Energía. Su altura o anatomía les permite disputar el cielo; el Aguante 5 debe sentirse en masa y protección corporal. |
-| `timberland_ancient` | **Orun, la Raíz Despierta** | 1 copia. Coste 6, 6/5; Guardia aérea. Sin Desborde. | Culminación de la Crónica. Coloso de madera, piedra y vegetación cuyo cuerpo formaba parte del paisaje. Iria no lo controla: logra que el bosque lo recuerde y vuelva a levantarse. |
-| `cosmic_hunger` | **La Presa Señalada** | 2 copias. Coste 2, Rápido. Un aliado hace daño igual a su Fuerza a otro Eco. | Emboscada coordinada por Arven. El aliado encuentra la apertura y golpea sin recibir daño; la imagen no debe parecer un duelo simultáneo. |
-| `ruthless_predation` | **El Juramento del Claro** | 1 copia. Coste 2. Un aliado gana +1/+2 hasta el final del turno y después lucha contra un enemigo. | Un defensor se cubre de raíces o corteza antes del choque frontal. A diferencia de La Presa Señalada, ambos combatientes deben verse comprometidos en la confrontación. |
-| `broken_wings` | **Cuando las Raíces Tocaron el Cielo** | 2 copias. Coste 3, Rápido. Destruye un Apoyo o un Eco con Volar. | Momento concreto de la historia: raíces gigantes derriban una estructura y alcanzan una amenaza aérea. La composición debe admitir visualmente ambos tipos de objetivo. |
-| `giant_growth` | **Savia del Primer Árbol** | 2 copias. Coste 1, Rápido. Un Eco gana +3/+3 hasta el final del turno. | Un aliado recibe por un instante la fuerza del bosque original. Raíces luminosas recorren su cuerpo y detrás aparece la silueta incompleta de una criatura ancestral. |
+| `deep_root_spring` | **Manantial de Raízhonda** | 15 copias. Fuente que se Agota para ganar 1 Energía. | Red de agua enterrada que Iria reactiva. Un estanque oscuro entre ruinas; raíces bajo el agua empiezan a iluminarse. Es la base literal del despertar. |
+| `first_dew_gatherers` | **Recolectores del Primer Rocío** | 2 copias. Coste 1, 1/1; se Agota para ganar 1 Energía. | Pequeños habitantes que recogen gotas de hojas, estatuas y piedras. Su fragilidad comunica que trabajan y transportan, no que sean guerreros. |
+| `iria_voice_last_rain` | **Iria, Voz de la Última Lluvia** | 3 copias. Coste 1, 0/2. Eco de Crónica. Al ser invocada, da un contador +1/+1 a un aliado y recupera 3 de Vida. | Protagonista. No vence por Fuerza propia: restaura a otro ser y al Chronicler. Porta un cuenco o recipiente de piedra que nunca deja de contener lluvia. |
+| `keeper_sleeping_root` | **Custodio de la Raíz Dormida** | 2 copias. Coste 2, 1/3; se Agota para ganar 1 Energía. | Guardián paciente de los conductos profundos. Debe verse más resistente y experimentado que los Recolectores, cerca de una cámara de raíces o un pozo sellado. |
+| `black_sap_stalker` | **Acechador de Savia Negra** | 2 copias. Coste 3, 1/3; Letal y Veneno 1. | Criatura nacida de la parte enferma del bosque. Es delgada, resistente y poco poderosa, pero una sola mordida es mortal. La savia negra aparece en colmillos y grietas, no como armadura masiva. |
+| `arven_first_pack` | **Arven, Primero de la Manada** | 3 copias. Coste 3, 3/3, sin Rasgos. Primera invocación aliada del turno: +1/+1 hasta el próximo turno. | Compañero principal de Iria. Reúne y conduce a las criaturas despertadas. Su presencia debe leerse como la de un líder que corre junto a la manada, no como un jinete que la domina. |
+| `ancient_canopy_watchers` | **Vigías del Dosel Antiguo** | 2 copias. Coste 4, 4/4; Guardia aérea. | Guardianes altos y sólidos que vuelven a ocupar las copas. Brazos, astas o lanzas de madera alcanzan amenazas aéreas. Su silueta debe explicar Guardia aérea sin depender del texto. |
+| `hollow_skybreaker` | **Quebracielos de la Hondonada** | 2 copias. Coste 4, 4/5; Guardia aérea. Sin Desborde. | Grandes bestias primordiales que emergen cuando el bosque ya recuperó suficiente Energía. Su altura o anatomía les permite disputar el cielo; el Aguante 5 debe sentirse en masa y protección corporal. |
+| `orun_waking_root` | **Orun, la Raíz Despierta** | 1 copia. Coste 6, 6/5; Guardia aérea. Sin Desborde. | Culminación de la Crónica. Coloso de madera, piedra y vegetación cuyo cuerpo formaba parte del paisaje. Iria no lo controla: logra que el bosque lo recuerde y vuelva a levantarse. |
+| `marked_prey` | **La Presa Señalada** | 2 copias. Coste 2, Rápido. Un aliado hace daño igual a su Fuerza a otro Eco. | Emboscada coordinada por Arven. El aliado encuentra la apertura y golpea sin recibir daño; la imagen no debe parecer un duelo simultáneo. |
+| `oath_clearing` | **El Juramento del Claro** | 1 copia. Coste 2. Un aliado gana +1/+2 hasta el final del turno y después lucha contra un enemigo. | Un defensor se cubre de raíces o corteza antes del choque frontal. A diferencia de La Presa Señalada, ambos combatientes deben verse comprometidos en la confrontación. |
+| `roots_touched_sky` | **Cuando las Raíces Tocaron el Cielo** | 2 copias. Coste 3, Rápido. Destruye un Apoyo o un Eco con Volar. | Momento concreto de la historia: raíces gigantes derriban una estructura y alcanzan una amenaza aérea. La composición debe admitir visualmente ambos tipos de objetivo. |
+| `first_tree_sap` | **Savia del Primer Árbol** | 2 copias. Coste 1, Rápido. Un Eco gana +3/+3 hasta el final del turno. | Un aliado recibe por un instante la fuerza del bosque original. Raíces luminosas recorren su cuerpo y detrás aparece la silueta incompleta de una criatura ancestral. |
 
 ## Relaciones narrativas
 
@@ -130,13 +128,9 @@ El corte de producción usa estas decisiones:
   primeros son frágiles y ágiles, mientras el Custodio es mayor, ancho y resistente.
 - Vigías son guardianes arbóreos verticales y disciplinados; Quebracielos es una bestia cuadrúpeda
   de gran masa; Orun es un fragmento asimétrico del paisaje que vuelve a levantarse.
-- El lote conserva los ids técnicos actuales sólo como nombres de archivo y claves de persistencia.
-  Los nombres visibles en español e inglés ya son los definitivos de esta Crónica.
+- Los ids, nombres de archivo y rutas usan la identidad final de la Crónica.
 
-## Pendiente después del corte
+## Estado después de L7
 
-- Validación visual del usuario en partida completa.
-- Confirmar los derechos aplicables del lote antes de declarar L6 cerrada; el registro de origen no
-  sustituye esa revisión.
-- Decidir en L7 si los ids técnicos heredados se renombran mediante un corte con migración o si se
-  conservan como claves internas no visibles.
+- Identidad visible, ids, rutas y PNG usan nombres Hostfall.
+- Los escenarios y preferencias anteriores al corte no se migran.

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "cards": [
+    {
+      "id": "last_knell_dead",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.png",
+      "typeLineEs": "Eco · Ficha — Zombi"
+    },
+    {
+      "id": "mass_grave_colossus",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
+      "typeLineEs": "Eco · Ficha — Zombi Gigante"
+    },
+    {
+      "id": "hollow_bell",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.png",
+      "typeLineEs": "Apoyo"
+    },
+    {
+      "id": "five_knot_gallows",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.png",
+      "typeLineEs": "Eco — Zombi Nacido del cadalso"
+    },
+    {
+      "id": "last_thought_carrion",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.png",
+      "typeLineEs": "Eco — Zombi Carroña"
+    },
+    {
+      "id": "memory_shroud_bearer",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
+      "typeLineEs": "Eco — Zombi Portador de mortaja"
+    },
+    {
+      "id": "flesh_root_tithe",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
+      "typeLineEs": "Hechizo"
+    },
+    {
+      "id": "crypt_rotwing",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.png",
+      "typeLineEs": "Eco — Zombi Murciélago"
+    },
+    {
+      "id": "basted_wing",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.png",
+      "typeLineEs": "Eco — Zombi Constructo"
+    },
+    {
+      "id": "reinforced_gravewing",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
+      "typeLineEs": "Eco — Zombi Constructo"
+    },
+    {
+      "id": "archive_carrion_crow",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
+      "typeLineEs": "Eco — Zombi Ave"
+    },
+    {
+      "id": "horned_linebreaker",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.png",
+      "typeLineEs": "Eco — Zombi Minotauro"
+    },
+    {
+      "id": "seventh_memory_hound",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
+      "typeLineEs": "Eco — Zombi Sabueso"
+    },
+    {
+      "id": "full_ossuary_mastiff",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
+      "typeLineEs": "Eco — Zombi Sabueso"
+    },
+    {
+      "id": "silent_bite_rats",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.png",
+      "typeLineEs": "Eco — Zombi Rata"
+    },
+    {
+      "id": "fallen_gatherer",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.png",
+      "typeLineEs": "Eco — Zombi Recolector"
+    },
+    {
+      "id": "last_march_marshal",
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.png",
+      "typeLineEs": "Eco — Zombi Mariscal"
+    }
+  ]
+}

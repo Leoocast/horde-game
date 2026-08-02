@@ -8,8 +8,8 @@ export function enqueue(game: GameState, event: Omit<EventItem, "id">): void {
     payload: {
       ...(event.payload ?? {}),
       // Only permanents already in play when the event happened may react to it. Without this,
-      // an Echo that reaches the Field BECAUSE of this event reacts to it: Rundvelt
-      // Invoking Pashalik from the Archive made Pashalik burn for the death that summoned it.
+      // an Echo that reaches the Field BECAUSE of this event reacts to it: Caller of the Next Crew
+      // Invoking Gunner of the Last Rivets from the Archive made Gunner of the Last Rivets burn for the death that summoned it.
       // The event's own source is always allowed — a dying card has already left the Field
       // by the time its death event is queued.
       witnessIds: [...game.player.field, ...game.host.field].map((card) => card.instanceId),

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "first_dew_gatherers": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/first_dew_gatherers.png"
+    },
+    "iria_voice_last_rain": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/iria_voice_last_rain.png"
+    },
+    "keeper_sleeping_root": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/keeper_sleeping_root.png"
+    },
+    "black_sap_stalker": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/black_sap_stalker.png"
+    },
+    "arven_first_pack": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/arven_first_pack.png"
+    },
+    "ancient_canopy_watchers": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/ancient_canopy_watchers.png"
+    },
+    "hollow_skybreaker": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/hollow_skybreaker.png"
+    },
+    "orun_waking_root": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/orun_waking_root.png"
+    },
+    "marked_prey": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/marked_prey.png"
+    },
+    "oath_clearing": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/oath_clearing.png"
+    },
+    "roots_touched_sky": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/roots_touched_sky.png"
+    },
+    "first_tree_sap": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/first_tree_sap.png"
+    },
+    "deep_root_spring": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/last_rain/deep_root_spring.png"
+    }
+  }
+}

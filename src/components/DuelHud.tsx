@@ -17,16 +17,16 @@ export function DuelHud({ game }: { game: GameState }) {
   const language = useLanguageStore((state) => state.language);
   const hostMillQueue = useGameStore((state) => state.hostMillAnimationQueue);
   const hostMillPreviewCards = useGameStore((state) => state.hostMillPreviewCards);
-  const smallpoxCard = useGameStore((state) => state.smallpoxCard);
+  const fleshRootTitheCard = useGameStore((state) => state.fleshRootTitheCard);
   const deathRevealCard = useGameStore((state) => state.deathRevealCard);
   const hostSpellCard = useGameStore((state) => state.hostSpellCard);
-  // Primitive selectors: smallpoxSelection.x/y update on every mousemove while the
-  // SmallpoxSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
-  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
-  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
-  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
-  const deselectSmallpoxSelectionTarget = useGameStore((state) => state.deselectSmallpoxSelectionTarget);
-  const confirmSmallpoxSelection = useGameStore((state) => state.confirmSmallpoxSelection);
+  // Primitive selectors: fleshRootTitheSelection.x/y update on every mousemove while the
+  // FleshRootTitheSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
+  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
+  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
+  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
+  const deselectFleshRootTitheSelectionTarget = useGameStore((state) => state.deselectFleshRootTitheSelectionTarget);
+  const confirmFleshRootTitheSelection = useGameStore((state) => state.confirmFleshRootTitheSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const lifestealAttackAnimations = useGameStore((state) => state.lifestealAttackAnimations);
@@ -37,7 +37,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hostTakingDamage, setHostTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
-  const smallpoxTarget = smallpoxSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === smallpoxSelectionTargetId) : undefined;
+  const fleshRootTitheTarget = fleshRootTitheSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === fleshRootTitheSelectionTargetId) : undefined;
   const normalMillQueueLength = hostMillQueue.filter((item) => !item.preview).length;
   const hostLibraryIds = new Set(game.host.archive.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hostMillPreviewCards.filter((card) => hostLibraryIds.has(card.instanceId)).length;
@@ -72,7 +72,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : smallpoxCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : fleshRootTitheCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -83,7 +83,7 @@ export function DuelHud({ game }: { game: GameState }) {
             // store commits a combat impact and the whole battlefield re-renders, and a
             // main-thread JS animation loses that race every time. A CSS keyframe on
             // transform/opacity is handed to the compositor and is immune to it. Only the exit
-            // stays here, because AnimatePresence has to own unmount. Smallpox dodges this by
+            // stays here, because AnimatePresence has to own unmount. Tithe of Flesh and Root dodges this by
             // mounting with initial={false} and having no entrance at all.
             initial={false}
             // Exits into the Host graveyard button, which sits up and to the right of this host.
@@ -156,9 +156,9 @@ export function DuelHud({ game }: { game: GameState }) {
             </div>
           </motion.div>
         )}
-        {smallpoxCard && (
+        {fleshRootTitheCard && (
           <motion.div
-            key={smallpoxCard.instanceId}
+            key={fleshRootTitheCard.instanceId}
             className="host-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
@@ -171,46 +171,46 @@ export function DuelHud({ game }: { game: GameState }) {
             }}
           >
             <div
-              data-card-id={smallpoxCard.instanceId}
+              data-card-id={fleshRootTitheCard.instanceId}
               className={[
                 "host-special-card",
-                smallpoxSelectionActive ? "host-special-card-targeting" : "",
-                !smallpoxSelectionActive ? "host-special-card-resolving" : "",
-                activatingEffectCardId === smallpoxCard.instanceId ? "effect-card-activating" : "",
+                fleshRootTitheSelectionActive ? "host-special-card-targeting" : "",
+                !fleshRootTitheSelectionActive ? "host-special-card-resolving" : "",
+                activatingEffectCardId === fleshRootTitheCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
               <Card
                 game={game}
-                card={smallpoxCard}
+                card={fleshRootTitheCard}
                 selectionDisabled
                 suppressContextMenu
                 suppressCardId
                 suppressStabilizing
-                showFullImage={shouldShowFullCardImage(smallpoxCard.definitionId)}
-                preferNativeImageRendering={shouldShowFullCardImage(smallpoxCard.definitionId)}
+                showFullImage={shouldShowFullCardImage(fleshRootTitheCard.definitionId)}
+                preferNativeImageRendering={shouldShowFullCardImage(fleshRootTitheCard.definitionId)}
               />
             </div>
-            {smallpoxSelectionActive && (
-              <div className="smallpox-selection-panel-inline old-panel-soft">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(smallpoxSelectionKind === "discard" ? "target.discardCard" : smallpoxSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
+            {fleshRootTitheSelectionActive && (
+              <div className="flesh-root-tithe-selection-panel-inline old-panel-soft">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(fleshRootTitheSelectionKind === "discard" ? "target.discardCard" : fleshRootTitheSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
                 <span className="text-sm text-[#d6b879]">
-                  {smallpoxSelectionKind === "sacrifice-land" && smallpoxSelectionTargetId
+                  {fleshRootTitheSelectionKind === "sacrifice-land" && fleshRootTitheSelectionTargetId
                     ? t("target.energySelected")
-                    : smallpoxTarget
-                      ? localizedCardName(smallpoxTarget, language)
+                    : fleshRootTitheTarget
+                      ? localizedCardName(fleshRootTitheTarget, language)
                       : t("target.noSelection")}
                 </span>
                 <div className="counter-target-actions">
-                  {smallpoxSelectionTargetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectSmallpoxSelectionTarget} title={t("common.cancel")}>
+                  {fleshRootTitheSelectionTargetId && (
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectFleshRootTitheSelectionTarget} title={t("common.cancel")}>
                       {t("common.cancel")}
                     </button>
                   )}
                   <button
-                    data-audio-click={smallpoxSelectionTargetId ? "valid" : undefined}
+                    data-audio-click={fleshRootTitheSelectionTargetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
-                    disabled={!smallpoxSelectionTargetId}
-                    onClick={confirmSmallpoxSelection}
+                    disabled={!fleshRootTitheSelectionTargetId}
+                    onClick={confirmFleshRootTitheSelection}
                     title={t("common.confirm")}
                   >
                     <Check size={22} />

@@ -45,12 +45,12 @@ export function Hand({ game }: { game: GameState }) {
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   // Primitive/stable selectors: avoids re-rendering the whole hand on every mousemove
-  // while a CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay arrow
+  // while a CounterTargetingOverlay/SpellTargetingOverlay/FleshRootTitheSelectionOverlay arrow
   // is tracking the pointer (those only mutate x/y on the underlying object).
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
-  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
-  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
-  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
+  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
+  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
+  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
   const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
@@ -77,7 +77,7 @@ export function Hand({ game }: { game: GameState }) {
   const startEnergyRecycle = useGameStore((state) => state.startEnergyRecycle);
   const setEnergyRecycleDragActive = useGameStore((state) => state.setEnergyRecycleDragActive);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
-  const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
+  const lockFleshRootTitheSelectionTarget = useGameStore((state) => state.lockFleshRootTitheSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
   const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
@@ -252,7 +252,7 @@ export function Hand({ game }: { game: GameState }) {
     }
   }
 
-  const smallpoxDiscardMode = smallpoxSelectionKind === "discard";
+  const flesh_root_titheDiscardMode = fleshRootTitheSelectionKind === "discard";
   const handInteractionBlocked = Boolean(
     counterTargetingActive ||
       spellTargetingActive ||
@@ -267,7 +267,7 @@ export function Hand({ game }: { game: GameState }) {
       energyRecycleAnimation ||
       energyFlowAnimating ||
       unresolvedTriggerCount > 0 ||
-      (smallpoxSelectionActive && !smallpoxDiscardMode),
+      (fleshRootTitheSelectionActive && !flesh_root_titheDiscardMode),
   );
   const hoverSuppressed = false;
 
@@ -303,7 +303,7 @@ export function Hand({ game }: { game: GameState }) {
       </div>
       <section className={[
         "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
-        draggingCardId ? "z-[150]" : smallpoxDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
+        draggingCardId ? "z-[150]" : flesh_root_titheDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
       ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
@@ -322,16 +322,16 @@ export function Hand({ game }: { game: GameState }) {
             {visibleHand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, unresolvedTriggerCount);
             const energyRecyclable = isEnergyRecyclable(game, card, unresolvedTriggerCount);
-            const discardTargetable = smallpoxSelectionKind === "discard" && !smallpoxSelectionTargetId;
-            const discardTargetLocked = smallpoxSelectionKind === "discard" && smallpoxSelectionTargetId === card.instanceId;
+            const discardTargetable = fleshRootTitheSelectionKind === "discard" && !fleshRootTitheSelectionTargetId;
+            const discardTargetLocked = fleshRootTitheSelectionKind === "discard" && fleshRootTitheSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const cardAvailable =
               !handLimitDiscardActive &&
-              !smallpoxSelectionActive &&
+              !fleshRootTitheSelectionActive &&
               (playable || energyRecyclable);
-            const cardActionable = handLimitDiscardActive ? handLimitTargetable : smallpoxSelectionActive ? discardTargetable : cardAvailable;
-            const cardTargetable = Boolean(handLimitTargetable || (smallpoxSelectionActive && discardTargetable));
+            const cardActionable = handLimitDiscardActive ? handLimitTargetable : fleshRootTitheSelectionActive ? discardTargetable : cardAvailable;
+            const cardTargetable = Boolean(handLimitTargetable || (fleshRootTitheSelectionActive && discardTargetable));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -363,7 +363,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!smallpoxSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
+                drag={!fleshRootTitheSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -427,7 +427,7 @@ export function Hand({ game }: { game: GameState }) {
                       dragging={draggingCardId === card.instanceId}
                       actionable={cardActionable}
                       suppressActionableChrome={cardAvailable}
-                      suppressContextMenu={smallpoxSelectionActive || handLimitDiscardActive}
+                      suppressContextMenu={fleshRootTitheSelectionActive || handLimitDiscardActive}
                       suppressHoverOverlay
                       darkenOnHover={false}
                       highRes={isHeld}
@@ -442,8 +442,8 @@ export function Hand({ game }: { game: GameState }) {
                           selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
                           return;
                         }
-                        if (smallpoxSelectionActive) {
-                          if (discardTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+                        if (fleshRootTitheSelectionActive) {
+                          if (discardTargetable) lockFleshRootTitheSelectionTarget(card.instanceId);
                           return;
                         }
                         selectHand(card.instanceId);
@@ -454,7 +454,7 @@ export function Hand({ game }: { game: GameState }) {
                     />
                   </div>
                   {UI_FEATURE_FLAGS.showPlayerHandActionableGems &&
-                    !smallpoxSelectionActive &&
+                    !fleshRootTitheSelectionActive &&
                     cardActionable &&
                     draggingCardId !== card.instanceId && (
                       <span

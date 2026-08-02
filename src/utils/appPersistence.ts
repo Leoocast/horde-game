@@ -1,9 +1,9 @@
-export const DEVELOPER_MODE_STORAGE_KEY = "horde-game-developer-mode";
-export const PLAYER_NAME_STORAGE_KEY = "horde-game-player-name";
-export const ONBOARDING_STORAGE_KEY = "horde-game-onboarding-complete";
-export const ASSET_PRELOAD_STORAGE_KEY = "horde-game-assets-preloaded-v2";
+export const DEVELOPER_MODE_STORAGE_KEY = "hostfall-developer-mode:v2";
+export const PLAYER_NAME_STORAGE_KEY = "hostfall-player-name:v2";
+export const ONBOARDING_STORAGE_KEY = "hostfall-onboarding-complete:v2";
+export const ASSET_PRELOAD_STORAGE_KEY = "hostfall-assets-preloaded:v3";
 
-const APP_CACHE_PREFIXES = ["horde-card-details:", "horde-deck-card-details:"];
+const APP_CACHE_PREFIXES = ["hostfall-card-details:", "hostfall-deck-card-details:"];
 
 export function readStoredDeveloperMode(): boolean {
   return typeof window !== "undefined" && window.localStorage.getItem(DEVELOPER_MODE_STORAGE_KEY) === "true";

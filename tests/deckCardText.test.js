@@ -33,7 +33,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const fightSpell = formatEffectText(
     "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
   );
-  const noosegraf = formatEffectText(
+  const gallows = formatEffectText(
     "Siempre que se lance una carta que no sea ficha, quita un contador +1/+1 de esta criatura y crea un Zombie 2/2.",
   );
   const invokedToken = formatEffectText("Invoca un Eco Ficha Zombi 2/2.");
@@ -79,8 +79,8 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.match(fightSpell, /class="effect-stat">\+1\/\+2<\/strong>/);
   assert.equal((fightSpell.match(/class="effect-paragraph"/g) ?? []).length, 2);
 
-  assert.match(noosegraf, /y <strong class="effect-token">crea un Zombie 2\/2<\/strong>/);
-  assert.equal((noosegraf.match(/class="effect-paragraph"/g) ?? []).length, 1);
+  assert.match(gallows, /y <strong class="effect-token">crea un Zombie 2\/2<\/strong>/);
+  assert.equal((gallows.match(/class="effect-paragraph"/g) ?? []).length, 1);
   assert.match(
     invokedToken,
     /class="effect-token">Invoca un Eco Ficha Zombi 2\/2<\/strong>/,
@@ -118,8 +118,8 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
-  const indexUrl = new URL("../dev/tools/Decks/vampires/index.html", import.meta.url);
-  for (const card of buildStudioCards("vampires")) {
+  const indexUrl = new URL("../dev/tools/Decks/crimson_court/index.html", import.meta.url);
+  for (const card of buildStudioCards("crimson_court")) {
     assert.doesNotMatch(card.art_crop, /^https?:/iu, `${card.id} still uses remote art`);
     assert.ok(
       fs.existsSync(new URL(card.art_crop, indexUrl)),
@@ -172,42 +172,42 @@ test("card studios consume one generated projection instead of embedded or mirro
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const monoGreenRenderer = fs.readFileSync(
-    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+  const lastRainRenderer = fs.readFileSync(
+    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
     "utf8",
   );
   assert.match(sharedRenderer, /card\.showFlavorText !== false/u);
-  assert.match(monoGreenRenderer, /card\.showFlavorText !== false/u);
+  assert.match(lastRainRenderer, /card\.showFlavorText !== false/u);
 
-  const hiddenFlavor = buildStudioCards("vampires").find((card) => card.id === "court_duelist");
+  const hiddenFlavor = buildStudioCards("crimson_court").find((card) => card.id === "court_duelist");
   assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
   assert.equal(hiddenFlavor.showFlavorText, false);
 
   for (const retiredMirror of [
-    "../dev/tools/Decks/monogreen/mono-green.json",
-    "../dev/tools/Decks/vampires/vampires.json",
+    "../dev/tools/Decks/last_rain/La Última Lluvia.json",
+    "../dev/tools/Decks/crimson_court/crimson_court.json",
     "../dev/tools/Decks/hunters/hunters.json",
-    "../src/data/decks/player/mono_green_ramp/mono_green_ramp_card_generator.json",
+    "../src/data/decks/player/last_rain/last_rain_card_generator.json",
   ]) {
     assert.equal(fs.existsSync(new URL(retiredMirror, import.meta.url)), false, `${retiredMirror} survived`);
   }
 });
 
 test("migrated deck studios use the same minimal header presentation", () => {
-  const monoGreenIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+  const lastRainIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
     "utf8",
   );
   const vampireIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/vampires/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/crimson_court/index.html", import.meta.url),
     "utf8",
   );
   const zombieIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/zombies/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/hollow_bell_procession/index.html", import.meta.url),
     "utf8",
   );
   const goblinIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/goblins/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/broken_forge_mutiny/index.html", import.meta.url),
     "utf8",
   );
   const hunterIndex = fs.readFileSync(
@@ -217,7 +217,7 @@ test("migrated deck studios use the same minimal header presentation", () => {
   const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360|Preview visual|antes de exportar)/iu;
 
   for (const [label, indexHtml] of [
-    ["Mono Green", monoGreenIndex],
+    ["La Última Lluvia", lastRainIndex],
     ["Vampires", vampireIndex],
     ["Zombies", zombieIndex],
     ["Goblins", goblinIndex],
@@ -241,14 +241,14 @@ test("card generators print the Hostfall copyright footer", () => {
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const monoGreenIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/monogreen/index.html", import.meta.url),
+  const lastRainIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
     "utf8",
   );
 
   for (const [label, source] of [
     ["shared studio", sharedStudio],
-    ["Mono Green studio", monoGreenIndex],
+    ["La Última Lluvia studio", lastRainIndex],
   ]) {
     assert.match(source, /© HOSTFALL 2026/u, `${label} is missing the copyright footer`);
     assert.doesNotMatch(source, /Hostfall TCG/iu, `${label} still prints the retired footer`);
@@ -258,12 +258,12 @@ test("card generators print the Hostfall copyright footer", () => {
 test("Vampire studio cards stay aligned with the runtime deck", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
-      new URL("../src/data/decks/player/vampire_preview/vampire_preview.json", import.meta.url),
+      new URL("../src/data/decks/player/crimson_court/crimson_court.json", import.meta.url),
       "utf8",
     ),
   );
   const studioSources = [
-    { label: "generated studio projection", cards: buildStudioCards("vampires"), includesQuantity: true },
+    { label: "generated studio projection", cards: buildStudioCards("crimson_court"), includesQuantity: true },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
@@ -319,18 +319,18 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
   }
 });
 
-test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
+test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
+        "../src/data/decks/player/last_rain/last_rain.json",
         import.meta.url,
       ),
       "utf8",
     ),
   );
   const studioSources = [
-    { label: "generated studio projection", cards: buildStudioCards("monogreen") },
+    { label: "generated studio projection", cards: buildStudioCards("last_rain") },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
@@ -342,7 +342,7 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
     assert.equal(
       source.cards.length,
       runtimeDeck.cards.length,
-      `${source.label} has a stale Mono Green card count`,
+      `${source.label} has a stale La Última Lluvia card count`,
     );
   }
 
@@ -394,8 +394,8 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
       }
 
       assert.equal(
-        normalizeMonoGreenEffect(studioCard.desc),
-        normalizeMonoGreenEffect(expectedRules),
+        normalizeLastRainEffect(studioCard.desc),
+        normalizeLastRainEffect(expectedRules),
         `${source.label} has stale rules for ${runtimeCard.id}`,
       );
     }
@@ -403,10 +403,10 @@ test("Mono Green studio cards use Hostfall vocabulary and stay aligned", () => {
 });
 
 test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and stay aligned", () => {
-  const studioCards = buildStudioCards("zombies");
+  const studioCards = buildStudioCards("hollow_bell_procession");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
-      new URL("../src/data/decks/horde/zombies/horde-zombies.json", import.meta.url),
+      new URL("../src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json", import.meta.url),
       "utf8",
     ),
   );
@@ -430,7 +430,7 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
   );
   assert.match(
     studioCss,
-    /body\[data-theme="zombies"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
+    /body\[data-theme="hollow_bell_procession"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
     "Zombie Echo glyph must use the same doubled size as the migrated player decks",
   );
 
@@ -507,11 +507,11 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
 });
 
 test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay aligned", () => {
-  const studioCards = buildStudioCards("goblins");
+  const studioCards = buildStudioCards("broken_forge_mutiny");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../src/data/decks/horde/goblins/goblin_assault_horde.json",
+        "../src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
         import.meta.url,
       ),
       "utf8",
@@ -535,7 +535,7 @@ test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay a
   );
   assert.match(
     studioCss,
-    /body\[data-theme="goblins"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
+    /body\[data-theme="broken_forge_mutiny"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
     "Goblin Echo glyph must use the same doubled size as the other migrated decks",
   );
 
@@ -662,10 +662,10 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
   const studioDecks = [
-    ["Mono Green", buildStudioCards("monogreen")],
-    ["Vampires", buildStudioCards("vampires")],
-    ["Zombies", buildStudioCards("zombies")],
-    ["Goblins", buildStudioCards("goblins")],
+    ["La Última Lluvia", buildStudioCards("last_rain")],
+    ["Vampires", buildStudioCards("crimson_court")],
+    ["Zombies", buildStudioCards("hollow_bell_procession")],
+    ["Goblins", buildStudioCards("broken_forge_mutiny")],
     ["Hunters", buildStudioCards("hunters")],
   ];
   const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
@@ -713,7 +713,7 @@ function normalizeVampireEffect(text) {
     .toLocaleLowerCase("es");
 }
 
-function normalizeMonoGreenEffect(text) {
+function normalizeLastRainEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
     .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)

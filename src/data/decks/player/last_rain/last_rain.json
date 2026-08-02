@@ -1,0 +1,714 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "last_rain",
+  "name": "La Última Lluvia",
+  "format": "casual",
+  "side": "CHRONICLER",
+  "deckSize": 39,
+  "archetype": "restoration-ramp",
+  "gamePlan": "Restaura el flujo de Energía con Recolectores y Custodios, reúne a los guardianes del bosque y culmina la Crónica con el despertar de Orun.",
+  "tokens": [],
+  "cards": [
+    {
+      "id": "first_dew_gatherers",
+      "name": "First-Dew Gatherers",
+      "displayNameEs": "Recolectores del Primer Rocío",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "The grove remembered rain one stone cup at a time.",
+        "es": "El bosque recordó la lluvia, un cuenco de piedra a la vez."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Rootfolk",
+        "Gatherer"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "abilities": [
+        {
+          "id": "first_dew_gatherers_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "iria_voice_last_rain",
+      "name": "Iria, Voice of the Last Rain",
+      "displayNameEs": "Iria, Voz de la Última Lluvia",
+      "gameText": {
+        "en": "When Invoked, put a +1/+1 counter on an ally and gain 3 Life.",
+        "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
+      },
+      "flavorText": {
+        "en": "She did not bring the storm. She carried what it had forgotten.",
+        "es": "No trajo la tormenta. Cargó con aquello que había olvidado."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Human",
+        "Restorer"
+      ],
+      "power": 0,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "iria_voice_last_rain_enter_counter_and_life",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_COUNTERS",
+              "target": "targetCreature",
+              "counter": "+1/+1",
+              "amount": 1
+            },
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": []
+    },
+    {
+      "id": "keeper_sleeping_root",
+      "name": "Keeper of the Sleeping Root",
+      "displayNameEs": "Custodio de la Raíz Dormida",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "He waited beneath the roots until the water spoke again.",
+        "es": "Esperó bajo las raíces hasta que el agua volvió a hablar."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Rootfolk",
+        "Keeper"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "keeper_sleeping_root_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "black_sap_stalker",
+      "name": "Black-Sap Stalker",
+      "displayNameEs": "Acechador de Savia Negra",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The sickness remained. Iria merely taught it where to bite.",
+        "es": "La enfermedad permaneció. Iria sólo le enseñó dónde morder."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Basilisk"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL",
+        "POISON_1"
+      ]
+    },
+    {
+      "id": "arven_first_pack",
+      "name": "Arven, First of the Pack",
+      "displayNameEs": "Arven, Primero de la Manada",
+      "gameText": {
+        "en": "The first time another ally is Invoked during your turn, Arven gets +1/+1 until your next turn.",
+        "es": "La primera vez que otro aliado sea invocado durante tu turno, Arven gana +1/+1 hasta tu próximo turno."
+      },
+      "flavorText": {
+        "en": "When the first call answered his own, the whole forest ran beside him.",
+        "es": "Cuando la primera llamada respondió a la suya, todo el bosque corrió a su lado."
+      },
+      "showFlavorText": false,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Wolfkin",
+        "Packleader"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "arven_first_pack_other_creature_enters",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "ACTIVE_PLAYER_IS",
+              "player": "SELF"
+            },
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "echo",
+              "controller": "SELF",
+              "excludeSource": true,
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "type": "SOURCE_ONCE_PER_TURN_UNUSED",
+              "key": "arven_first_packmate"
+            }
+          ],
+          "effects": [
+            {
+              "type": "PUMP_UNTIL_NEXT_PLAYER_TURN",
+              "target": "SELF",
+              "power": 1,
+              "endurance": 1,
+              "oncePerTurnKey": "arven_first_packmate"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "ancient_canopy_watchers",
+      "name": "Watchers of the Ancient Canopy",
+      "displayNameEs": "Vigías del Dosel Antiguo",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The canopy had been undefended for an age. Then the spears rose.",
+        "es": "El dosel llevaba una era indefenso. Entonces se alzaron las lanzas."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Arboreal",
+        "Sentinel"
+      ],
+      "power": 4,
+      "endurance": 4,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "hollow_skybreaker",
+      "name": "Skybreaker of the Hollow",
+      "displayNameEs": "Quebracielos de la Hondonada",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "It needed no wings. The sky descended whenever it stood.",
+        "es": "No necesitaba alas. El cielo descendía cada vez que se alzaba."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Primordial",
+        "Beast"
+      ],
+      "power": 4,
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "orun_waking_root",
+      "name": "Orun, the Waking Root",
+      "displayNameEs": "Orun, la Raíz Despierta",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Iria awakened no servant. She reminded the grove of its own name.",
+        "es": "Iria no despertó a un sirviente. Le recordó al bosque su propio nombre."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 6
+      },
+      "subtypes": [
+        "Ancient",
+        "Guardian"
+      ],
+      "power": 6,
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "marked_prey",
+      "name": "The Marked Prey",
+      "displayNameEs": "La Presa Señalada",
+      "gameText": {
+        "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
+        "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
+      },
+      "flavorText": {
+        "en": "Arven's hand fell. The grove struck before the prey could turn.",
+        "es": "La mano de Arven descendió. El bosque golpeó antes de que la presa pudiera girarse."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "marked_prey_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "sourceCreature",
+              "zone": "FIELD",
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "id": "damageTarget",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "kinds": [
+                      "ECHO"
+                    ]
+                  }
+                ],
+                "excludeTargetIds": [
+                  "sourceCreature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE",
+              "source": "sourceCreature",
+              "target": "damageTarget",
+              "amount": {
+                "type": "STAT",
+                "object": "sourceCreature",
+                "stat": "POWER"
+              },
+              "damageKind": "NON_COMBAT"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "oath_clearing",
+      "name": "Oath of the Clearing",
+      "displayNameEs": "El Juramento del Claro",
+      "gameText": {
+        "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
+        "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
+      },
+      "flavorText": {
+        "en": "Root and bone yielded together, but the clearing did not.",
+        "es": "Las raíces y los huesos cedieron, pero el claro no."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "oath_clearing_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "MAIN",
+          "targets": [
+            {
+              "id": "yourCreature",
+              "zone": "FIELD",
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "id": "opponentCreature",
+              "zone": "FIELD",
+              "controller": "OPPONENT",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "yourCreature",
+              "power": 1,
+              "endurance": 2,
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "SEQUENCE",
+              "simultaneous": true,
+              "customHandler": "fight_simultaneously",
+              "steps": [
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "yourCreature",
+                  "target": "opponentCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "yourCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                },
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "opponentCreature",
+                  "target": "yourCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "opponentCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                }
+              ],
+              "implementationNote": "Las dos criaturas se hacen daño simultáneamente después de aplicar el +1/+2."
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
+    },
+    {
+      "id": "roots_touched_sky",
+      "name": "When the Roots Touched the Sky",
+      "displayNameEs": "Cuando las Raíces Tocaron el Cielo",
+      "gameText": {
+        "en": "Destroy a Support or an Echo with Flying.",
+        "es": "Destruye un Apoyo o un Eco con Volar."
+      },
+      "flavorText": {
+        "en": "When the earth remembered its reach, nothing remained beyond it.",
+        "es": "Cuando la tierra recordó su alcance, nada quedó fuera de él."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "roots_touched_sky_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetPermanent",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "kinds": [
+                      "SUPPORT"
+                    ]
+                  },
+                  {
+                    "kinds": [
+                      "ECHO"
+                    ],
+                    "traits": [
+                      "FLYING"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY",
+              "target": "targetPermanent"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "first_tree_sap",
+      "name": "Sap of the First Tree",
+      "displayNameEs": "Savia del Primer Árbol",
+      "gameText": {
+        "en": "The target Echo gains +3/+3 until the end of the turn.",
+        "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "For one heartbeat, the smallest among them carried the strength of the first tree.",
+        "es": "Durante un latido, el más pequeño llevó la fuerza del primer árbol."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "first_tree_sap_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 3,
+              "endurance": 3,
+              "duration": "END_OF_TURN"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "deep_root_spring",
+      "name": "Deep-Root Spring",
+      "displayNameEs": "Manantial de Raízhonda",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "The first drop did not break the silence. It taught the roots to answer.",
+        "es": "La primera gota no rompió el silencio. Enseñó a las raíces a responder."
+      },
+      "showFlavorText": true,
+      "quantity": 15,
+      "energyCost": {
+        "amount": 0
+      },
+      "subtypes": [
+        "Spring"
+      ],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "deep_root_spring_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SOURCE"
+      ],
+      "traits": []
+    }
+  ],
+  "engineSupportNeeded": []
+}

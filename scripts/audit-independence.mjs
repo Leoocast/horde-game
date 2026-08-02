@@ -9,16 +9,16 @@ const JSON_OUTPUT = process.argv.includes("--json");
 const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".svg", ".ts", ".tsx", ".txt"]);
 
 const ACTIVE_DECK_FILES = [
-  "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-  "src/data/decks/player/vampire_preview/vampire_preview.json",
-  "src/data/decks/horde/zombies/horde-zombies.json",
-  "src/data/decks/horde/goblins/goblin_assault_horde.json",
+  "src/data/decks/player/last_rain/last_rain.json",
+  "src/data/decks/player/crimson_court/crimson_court.json",
+  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
 ];
 
 const DERIVED_DECK_FILES = [
-  "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-  "src/data/decks/horde/zombies/horde-zombies.json",
-  "src/data/decks/horde/goblins/goblin_assault_horde.json",
+  "src/data/decks/player/last_rain/last_rain.json",
+  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
 ];
 
 // This list is intentionally fixed. It must shrink as authored identities are replaced; deriving it
@@ -170,6 +170,20 @@ function scanMatchedTerms(files, terms) {
   return {
     count: matches.length,
     samples: matches.map(({ term, files: matchingFiles }) => `${term} :: ${matchingFiles.slice(0, 3).join(", ")}`),
+  };
+}
+
+function derivedDistIdentityInventory() {
+  const named = scanMatchedTerms(
+    distText,
+    [...DERIVED_CARD_NAMES].filter((name) => name !== "Forest").sort(),
+  );
+  const genericNameId = scanTextPatterns(distText, [
+    { label: "retired Forest card id", pattern: /["']forest["']/iu },
+  ]);
+  return {
+    count: named.count + genericNameId.count,
+    samples: [...named.samples, ...genericNameId.samples],
   };
 }
 
@@ -559,7 +573,7 @@ const checks = [
     "blocker",
     "L4.4",
     "Legacy card-state model in active runtime consumers",
-    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v3 boundary uses the same states.",
+    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v4 boundary uses the same states.",
     scanTextPatterns(l44Text, l44LegacyPatterns),
   ),
   finding(
@@ -588,7 +602,7 @@ const checks = [
     "blocker",
     "L4.6b",
     "Legacy Horde identity in runtime consumers",
-    "Runtime state, engine, store, UI, Playground and migrated tests must use Host identity; authored deck ids and unrelated preference keys remain explicit boundaries.",
+    "Runtime state, engine, store, UI, Playground and migrated tests must use Host identity.",
     scanTextPatternsIgnoringTaggedLines(
       l46HostIdentityText,
       l46HostIdentityLegacyPatterns,
@@ -601,7 +615,7 @@ const checks = [
     "blocker",
     "L4.6c",
     "Legacy Playground external contract",
-    "Scenario v3, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
+    "Scenario v4, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
     scanTextPatternsIgnoringTaggedLines(
       l46PlaygroundContractText,
       l46PlaygroundContractLegacyPatterns,
@@ -631,14 +645,14 @@ const checks = [
     "L7",
     "Legacy card-name strings in the production build",
     "Authored names are clean; compiled technical residues are removed during L7.",
-    scanMatchedTerms(distText, [...DERIVED_CARD_NAMES].sort()),
+    derivedDistIdentityInventory(),
   ),
   finding(
     "derived-assets-in-public",
     "blocker",
     "L7",
     "Legacy card-asset roots under public",
-    "The art is replaced; L7 still needs to rename or retire the inherited technical paths.",
+    "The inherited technical paths must stay retired after the L7 rename.",
     assetInventory(legacyAssetRoots),
   ),
   finding(
@@ -653,8 +667,8 @@ const checks = [
     "legacy-test-vocabulary",
     "info",
     "L7",
-    "Legacy vocabulary in tests",
-    "Tests intentionally preserve current engine contracts and must be migrated with their domains.",
+    "Negative legacy-vocabulary guards in tests",
+    "Rejection fixtures intentionally retain retired terms so the canonical Hostfall contracts cannot regress.",
     scanTextPatterns(testText, internalLegacyPatterns),
   ),
 ];
@@ -684,7 +698,7 @@ if (JSON_OUTPUT) {
     for (const sample of check.samples.slice(0, 12)) console.log(`  - ${sample}`);
     if (check.samples.length > 12) console.log(`  - … ${check.samples.length - 12} more sample(s)`);
   }
-  console.log("\nDefault mode is informational. Use --strict to fail while L7 cleanup blockers remain.");
+  console.log("\nDefault mode is informational. Use --strict as the final independence gate.");
 }
 
 if (STRICT && summary.blockerCategories > 0) process.exitCode = 1;

@@ -61,14 +61,14 @@ export function TimelinePanel({
           </button>
         </div>
         {replays.length > 0 && (
-          <ul className="playground-library-list">
+          <ul className="playground-saved-list">
             {replays.map((replay) => (
-              <li key={replay.id} className="playground-library-entry">
-                <div className="playground-library-info">
+              <li key={replay.id} className="playground-saved-entry">
+                <div className="playground-saved-info">
                   <strong>{replay.name}</strong>
                   <span>{replay.steps.length} step{replay.steps.length === 1 ? "" : "s"}</span>
                 </div>
-                <div className="playground-library-actions">
+                <div className="playground-saved-actions">
                   <button className="playground-compact-button" type="button" onClick={() => onLoadReplay(replay)}>
                     <FolderOpen size={12} /> Load
                   </button>

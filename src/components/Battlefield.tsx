@@ -47,9 +47,9 @@ const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 const HEAVY_MONO_GREEN_CREATURE_IDS = new Set([
-  "magnigoth_sentry",
-  "colossadactyl",
-  "timberland_ancient",
+  "ancient_canopy_watchers",
+  "hollow_skybreaker",
+  "orun_waking_root",
 ]);
 
 type EnergyChangeSource = "card" | "land" | "turn";
@@ -165,13 +165,13 @@ export function Battlefield({ game, side, cards }: Props) {
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   // Split into primitive/stable selectors so mousemove-driven x/y updates on these
-  // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/SmallpoxSelectionOverlay)
+  // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/FleshRootTitheSelectionOverlay)
   // don't force a full Battlefield re-render on every pointer event.
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
   const counterTargetingTargetId = useGameStore((state) => state.counterTargeting?.targetId);
-  const smallpoxSelectionActive = useGameStore((state) => Boolean(state.smallpoxSelection));
-  const smallpoxSelectionKind = useGameStore((state) => state.smallpoxSelection?.kind);
-  const smallpoxSelectionTargetId = useGameStore((state) => state.smallpoxSelection?.targetId);
+  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
+  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
+  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
   const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellTargetingStepIndex = useGameStore((state) => state.spellTargeting?.stepIndex);
@@ -199,7 +199,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
   const lockCounterTarget = useGameStore((state) => state.lockCounterTarget);
-  const lockSmallpoxSelectionTarget = useGameStore((state) => state.lockSmallpoxSelectionTarget);
+  const lockFleshRootTitheSelectionTarget = useGameStore((state) => state.lockFleshRootTitheSelectionTarget);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -214,7 +214,7 @@ export function Battlefield({ game, side, cards }: Props) {
   // resolve in sequence. Removing them from the row right then would re-center every survivor
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
   // let them all leave at once. This covers both animated Host combat and the Host's own
-  // auto-triggers (e.g. Smallpox sacrificing its weakest creature), which also kill mid-sequence.
+  // auto-triggers (e.g. Tithe of Flesh and Root sacrificing its weakest creature), which also kill mid-sequence.
   const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
@@ -442,7 +442,7 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.filter = "";
           endSummoningAnimation();
           // fill:"both" is only needed through the entrance delay. Release the finished
-          // WAAPI effect so later CSS effects (for example Sunshower's activation pulse)
+          // WAAPI effect so later CSS effects (for example Iria's activation pulse)
           // can own transform/filter on this slot again.
           animation.cancel();
           entranceAnimatingIds.current.delete(card.instanceId);
@@ -604,9 +604,9 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const smallpoxLandSelectionActive = smallpoxSelectionKind === "sacrifice-land";
-    const smallpoxLandTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
-    const canSelectEnergyCore = smallpoxLandSelectionActive && !smallpoxSelectionTargetId && Boolean(smallpoxLandTarget);
+    const fleshRootTitheSourceSelectionActive = fleshRootTitheSelectionKind === "sacrifice-land";
+    const fleshRootTitheSourceTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
+    const canSelectEnergyCore = fleshRootTitheSourceSelectionActive && !fleshRootTitheSelectionTargetId && Boolean(fleshRootTitheSourceTarget);
     const availableEnergySlots = Array.from({ length: MAX_PLAYER_LANDS });
     const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
 
@@ -614,7 +614,7 @@ export function Battlefield({ game, side, cards }: Props) {
       <aside
         ref={landDockRef}
         data-player-mana-core="true"
-        data-smallpox-mana-target={smallpoxLandSelectionActive ? "true" : undefined}
+        data-flesh-root-tithe-mana-target={fleshRootTitheSourceSelectionActive ? "true" : undefined}
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
         role={canSelectEnergyCore ? "button" : undefined}
         tabIndex={canSelectEnergyCore ? 0 : undefined}
@@ -623,15 +623,15 @@ export function Battlefield({ game, side, cards }: Props) {
           "player-mana-core",
           "player-mana-corner",
           game.activeSide === "player" ? "is-player-turn" : "",
-          smallpoxLandSelectionActive ? "is-targeting" : "",
+          fleshRootTitheSourceSelectionActive ? "is-targeting" : "",
         ].join(" ")}
         onClick={() => {
-          if (canSelectEnergyCore && smallpoxLandTarget) lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+          if (canSelectEnergyCore && fleshRootTitheSourceTarget) lockFleshRootTitheSelectionTarget(fleshRootTitheSourceTarget.instanceId);
         }}
         onKeyDown={(event) => {
-          if (canSelectEnergyCore && smallpoxLandTarget && (event.key === "Enter" || event.key === " ")) {
+          if (canSelectEnergyCore && fleshRootTitheSourceTarget && (event.key === "Enter" || event.key === " ")) {
             event.preventDefault();
-            lockSmallpoxSelectionTarget(smallpoxLandTarget.instanceId);
+            lockFleshRootTitheSelectionTarget(fleshRootTitheSourceTarget.instanceId);
           }
         }}
       >
@@ -701,7 +701,7 @@ export function Battlefield({ game, side, cards }: Props) {
             })}
           </div>
         </div>
-        {smallpoxLandSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
+        {fleshRootTitheSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
     );
   }
@@ -761,7 +761,7 @@ export function Battlefield({ game, side, cards }: Props) {
       battlefieldGroupKeys.current,
       battlefieldGroupMeta.current,
       // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
-      // The aura beat window (e.g. Graf Harvest announcing Menace before attackers declare)
+      // The aura beat window (e.g. The Hollow Bell announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
       holdCasualties,
     ).map((group) => (
@@ -812,14 +812,14 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.kinds.includes("SOURCE");
-    const smallpoxTargetable = Boolean(
-      smallpoxSelectionActive &&
-        !smallpoxSelectionTargetId &&
+    const fleshRootTitheTargetable = Boolean(
+      fleshRootTitheSelectionActive &&
+        !fleshRootTitheSelectionTargetId &&
         side === "player" &&
-        ((smallpoxSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
-          (smallpoxSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
+        ((fleshRootTitheSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
+          (fleshRootTitheSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
     );
-    const smallpoxTargetLocked = smallpoxSelectionTargetId === card.instanceId;
+    const fleshRootTitheTargetLocked = fleshRootTitheSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -838,7 +838,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
-      (isLand && !smallpoxTargetable && !smallpoxTargetLocked) ||
+      (isLand && !fleshRootTitheTargetable && !fleshRootTitheTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "host") ||
       (hostCombat && side === "player" && !selectableBlocker) ||
@@ -877,7 +877,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const isCombatGhost = casualtyIds.has(card.instanceId);
     const visuallyDead = isCombatGhost || hostCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
-    const cardTargetable = counterTargetable || smallpoxTargetable || spellTargetable;
+    const cardTargetable = counterTargetable || fleshRootTitheTargetable || spellTargetable;
     const cardActionable = actionable || cardTargetable;
     const isDraggedDefender = blockDragBlockerId === card.instanceId;
     const draggedDefender = blockDragActive ? game.player.field.find((item) => item.instanceId === blockDragBlockerId) : undefined;
@@ -899,7 +899,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem =
       !counterTargetingActive &&
-      !smallpoxSelectionActive &&
+      !fleshRootTitheSelectionActive &&
       !spellTargetingActive &&
       !combatAvailabilityTone &&
       !showEffectAvailabilityBorder &&
@@ -921,8 +921,8 @@ export function Battlefield({ game, side, cards }: Props) {
         effectActivating ||
         counterTargetable ||
         counterTargetLocked ||
-        smallpoxTargetable ||
-        smallpoxTargetLocked ||
+        fleshRootTitheTargetable ||
+        fleshRootTitheTargetLocked ||
         spellTargetable ||
         spellTargetLocked,
     );
@@ -994,8 +994,8 @@ export function Battlefield({ game, side, cards }: Props) {
           burnSourceCardId === card.instanceId ? "burn-source-casting" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
-          smallpoxTargetable ? "counter-targetable-card" : "",
-          smallpoxTargetLocked ? "counter-target-locked-card" : "",
+          fleshRootTitheTargetable ? "counter-targetable-card" : "",
+          fleshRootTitheTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
         ].join(" ")}
@@ -1067,8 +1067,8 @@ export function Battlefield({ game, side, cards }: Props) {
         linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
-        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || smallpoxSelectionActive}
+        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || fleshRootTitheSelectionActive}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || fleshRootTitheSelectionActive}
         visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
@@ -1088,8 +1088,8 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
-          if (smallpoxSelectionActive) {
-            if (smallpoxTargetable) lockSmallpoxSelectionTarget(card.instanceId);
+          if (fleshRootTitheSelectionActive) {
+            if (fleshRootTitheTargetable) lockFleshRootTitheSelectionTarget(card.instanceId);
             return;
           }
           if (counterTargetingActive) {

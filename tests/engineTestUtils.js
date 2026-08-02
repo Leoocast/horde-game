@@ -78,8 +78,8 @@ export function addCard(game, card, side = card.controller, zone = card.zone) {
   return card;
 }
 
-export function addForests(game, amount) {
-  return Array.from({ length: amount }, () => addCard(game, cardFromDeck("forest", "player")));
+export function addSources(game, amount) {
+  return Array.from({ length: amount }, () => addCard(game, cardFromDeck("deep_root_spring", "player")));
 }
 
 function cardFromDefinition(definition, side, zone) {

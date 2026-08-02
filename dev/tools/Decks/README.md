@@ -44,7 +44,7 @@ node scripts/check-card-assets.mjs
 Exportar un deck:
 
 ```powershell
-node dev/tools/Decks/export_cards.cjs monogreen
+node dev/tools/Decks/export_cards.cjs last_rain
 ```
 
 El exportador actualiza tanto `exported-png/` como `public/cards/` y registra la huella del lote.
@@ -57,7 +57,7 @@ El arte fuente debe ser local y estar separado del PNG final, normalmente bajo
 raíz de su propia carpeta de salida: eso produciría una carta anidada y destruiría la fuente al
 sobrescribir el archivo.
 
-Mono Green, Vampiros, Zombies y Trasgos cumplen el contrato y pasan la verificación de frescura.
+La Última Lluvia, Vampiros, Zombies y Trasgos cumplen el contrato y pasan la verificación de frescura.
 Zombies y Trasgos recibieron arte fuente separado durante L6; sus estudios ya no apuntan a los PNG
 completos. Cazadores conserva también sus fuentes locales, aunque todavía es un preview sin deck
 runtime ni lote de PNG finales.

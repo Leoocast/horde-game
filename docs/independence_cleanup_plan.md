@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L6 cerrada — los cuatro decks jugables tienen identidad y arte propios; L7 pendiente**
+Estado: **L7 cerrada — identidad visible y técnica Hostfall; auditoría estricta limpia**
 Última actualización: 2026-08-01
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -31,7 +31,7 @@ manera explícita.
 | L4 — Limpieza interna del engine | Completada | Autorizada por subfases y validada |
 | L5 — Independencia de los mazos | Completada: cuatro decks con identidad Hostfall | Autorizada por deck y validada |
 | L6 — Arte y limpieza visual | Completada: 61/61 PNG frescos desde arte local propio | Autorizada y validada |
-| L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
+| L7 — Retiro legacy y auditoría final | Completada | Autorizada y verificada |
 
 ## Protocolo de trabajo
 
@@ -185,15 +185,15 @@ de Vida aunque sus estudios y JSON ya tengan texto nuevo.
   `showFlavorText` impida imprimirlo por falta de espacio.
 - Los cinco índices consumen `deck-data.generated.js`; ya no contienen arreglos de cartas
   embebidos. `scripts/card-studio-data.mjs --check` falla si la proyección deja de coincidir.
-- Se eliminaron cuatro mirrors editables: `mono-green.json`, `vampires.json`, `hunters.json` y
-  `mono_green_ramp_card_generator.json`. Cazadores quedó como una única configuración preview
+- Se eliminaron cuatro mirrors editables: `La Última Lluvia.json`, `vampires.json`, `hunters.json` y
+  `last_rain_card_generator.json`. Cazadores quedó como una única configuración preview
   porque todavía no tiene deck runtime.
 - Los estudios dejaron de depender de CDN para tipografías e iconos. Sus entradas son locales y
   enumerables.
 - El exportador sincroniza datos, rechaza arte circular y actualiza
   `dev/tools/Decks/generation-manifest.json` con hashes del deck, presentación, renderer, fuentes,
   arte y cada PNG de salida.
-- Se regeneraron y verificaron 13 PNG de Mono Green y 14 de Vampiros. Ambos lotes imprimen el
+- Se regeneraron y verificaron 13 PNG de La Última Lluvia y 14 de Vampiros. Ambos lotes imprimen el
   vocabulario vigente y pasan la prueba de frescura.
 
 ### Excepción de Huestes resuelta en L6
@@ -242,9 +242,9 @@ retirar la compatibilidad de colores en L4.
 Se convierte un deck por vez. Cada conversión debe producir el mismo estado runtime que antes del
 cambio hasta que una fase de diseño autorice modificar reglas.
 
-### Avance L3.1 — Mono Green
+### Avance L3.1 — La Última Lluvia
 
-- `mono_green_ramp.json` usa schema `1.0.0` y ya no contiene campos authored legacy.
+- `last_rain.json` usa schema `1.0.0` y ya no contiene campos authored legacy.
 - El coste usa una sola cantidad de Energía, sin colores; el adaptador genera el coste genérico que
   todavía paga el engine conservando la cantidad de Fuentes requerida.
 - `hostfallDeckAdapter.ts` traduce tipos, Rasgos, Aguante, zonas, Agotar, eventos y generación de
@@ -255,27 +255,27 @@ cambio hasta que una fase de diseño autorice modificar reglas.
 
 ### Avance L3.2 — Vampiros
 
-- El usuario validó Mono Green mediante una partida completa antes de autorizar este bloque.
+- El usuario validó La Última Lluvia mediante una partida completa antes de autorizar este bloque.
 - El contrato canónico Hostfall se fijó en `1.0.0` para código, documentación y decks migrados.
-- `vampire_preview.json` usa `CHRONICLER`, `energyCost`, `kinds`, `modifiers`, `endurance`,
+- `crimson_court.json` usa `CHRONICLER`, `energyCost`, `kinds`, `modifiers`, `endurance`,
   `traits`, `FIELD`, `QUICK`, `exhaust`, `requiresStabilized`, `SOURCE_IS_READY` y `GAIN_ENERGY`.
 - La Condesa conserva su identidad de `Chronicle Echo` mediante `CHRONICLE`; los Rasgos declarados
   dentro de efectos también pasan por el adaptador, como `DRAIN` hacia el alias temporal del engine.
 - El auditor bajó el inventario authored legacy de 327 a 234 apariciones. Las restantes pertenecen
   exclusivamente a Zombies y Trasgos, que continúan en `0.2.0` hasta sus respectivos bloques.
-- Mono Green y Vampiros fueron reexportados para renovar su huella de frescura bajo `1.0.0`; los
+- La Última Lluvia y Vampiros fueron reexportados para renovar su huella de frescura bajo `1.0.0`; los
   únicos PNG todavía no verificables son los 34 de Horda diferidos a L6.
 
 ### Avance L3.3 — Zombies
 
 - El usuario validó Vampiros mediante una partida completa antes de autorizar este bloque.
-- `horde-zombies.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`, `SPELL`,
+- `hollow_bell_procession.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`, `SPELL`,
   `energyCost`, `endurance`, `traits`, `FIELD`, `MEMORY`, `INVOKED` y controladores `HOST`.
 - `rulesProfile` habla Hostfall (`damagePerArchiveDiscard`, `poisonPerArchiveDiscard`,
   `hostEchosHaveImpetus`) y el adaptador restaura temporalmente el contrato que consume L4.
 - Los aliases de reglas exclusivos de este deck se migraron a `BEGIN_READY`, `CARD_PLAYED`,
   `ECHO_DIED`, `MEMORY_COUNT_AT_LEAST`, `DISCARD_OWN_ARCHIVE_TO_MEMORY` y costes de Energía.
-- Graf Harvest mantiene sus dos habilidades pendientes y Smallpox conserva su resolución custom;
+- The Hollow Bell mantiene sus dos habilidades pendientes y Tithe of Flesh and Root conserva su resolución custom;
   ninguna habilidad WIP fue activada accidentalmente.
 - El auditor bajó el inventario authored legacy de 234 a 128 apariciones, todas pertenecientes a
   Trasgos. Los 34 PNG de Zombies y Trasgos siguen bajo la excepción de arte aceptada para L6.
@@ -283,13 +283,13 @@ cambio hasta que una fase de diseño autorice modificar reglas.
 ### Avance L3.4 — Trasgos
 
 - El usuario validó Zombies mediante una partida completa antes de autorizar este bloque.
-- `goblin_assault_horde.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`,
+- `broken_forge_mutiny.json` usa schema `1.0.0`, `side: HOST`, `ECHO`, `TOKEN`, `SUPPORT`,
   `SPELL`, `QUICK`, `CHRONICLE`, `REFLEX`, `DAUNTING`, `FIELD` y `ECHO_DIED`.
 - Los aliases exclusivos de Trasgos hablan Hostfall en authoring: `BEGIN_BATTLE`,
   `REVEAL_HOST_ROUND`, `DEAL_DAMAGE_TO_OPPONENT_ECHO`, `COUNT_ECHOS` y
   `COUNT_ECHOS_INVOKED_THIS_TURN`. El adaptador restaura temporalmente los identificadores que
   todavía consume L4.
-- General Kreat, Krenko y Pashalik declaran `CHRONICLE` sin conservar `supertypes: Legendary`.
+- Marshal of the Repeating Blow, Brakka y Pashalik declaran `CHRONICLE` sin conservar `supertypes: Legendary`.
 - El Card Studio de Trasgos consume los campos canónicos de coste, Aguante, Rasgos, tipos y
   modificadores; no se regeneraron ni alteraron sus PNG.
 - Los cuatro decks activos usan ya el schema Hostfall. La auditoría reporta cero apariciones en
@@ -397,7 +397,7 @@ adaptador con una fase de eliminación conocida.
   deliberadamente pausados hasta el cambio de arte. Esta deuda visual no contradice el modificador
   runtime ni bloquea L4.1.
 - La identidad futura de Chronicler de Trasgos se decidirá en una fase de arte posterior; el
-  candidato actual del usuario es Goblin Chainwhirler en lugar de General Kreat. L4 no cambia esa
+  candidato actual del usuario es Varka, Axis of the Revolt en lugar de Marshal of the Repeating Blow. L4 no cambia esa
   asignación de contenido.
 
 ### Avance L4.2 — Zonas
@@ -479,7 +479,7 @@ adaptador con una fase de eliminación conocida.
   rechazo sin quedar fuera de la auditoría.
 - Las pruebas semánticas cubren Sunshower, Noosegraf por sus rutas reales, Crow, el umbral exacto
   de Memoria, targets/conteos de Eco, destrucción de Apoyos, llegadas diferidas observadas por
-  General Kreat, Mini Surge, Surge y perfiles Host con valores no predeterminados. El HUD toma los
+  Marshal of the Repeating Blow, Mini Surge, Surge y perfiles Host con valores no predeterminados. El HUD toma los
   divisores de `hostRules`, sin asumir el valor 3.
 - Verificación automática: TypeScript, deck lint, Card Studio, 216/216 tests, blocker
   `legacy-l45-actions-events-host-rules` en cero, build y `git diff --check` en verde. El usuario
@@ -509,7 +509,7 @@ adaptador con una fase de eliminación conocida.
   `setupCompletePendingHost` y `hostAttackers` reemplazan sus equivalentes legacy.
 - Engine, store y UI usan nombres Host, incluidos `HostController.ts`, `hostBeats.ts`,
   `HostAttackAnimator.tsx`, `HostMillAnimator.tsx`, funciones, estado de animación, selectores,
-  tonos y clases de presentación. Los nombres propios como Rundvelt Hordemaster no se alteran.
+  tonos y clases de presentación. Los nombres propios como Caller of the Next Crew no se alteran.
 - El adaptador deja pasar `side: HOST` y controladores `HOST` sin downgrade. `normalizeDeck` produce
   la identidad runtime `host`, y el deck lint protege el contrato authored canónico.
 - El schema v2 de escenarios/replays todavía conservaba temporalmente `horde*` en este punto; ese
@@ -575,7 +575,7 @@ sin conservar una ficha uno-a-uno de una carta publicada.
 1. Validar Vampiros como Crónica original de referencia.
 2. Crear una Hueste original a partir del espacio jugable de Zombies.
 3. Rediseñar Trasgos.
-4. Rediseñar Mono Green.
+4. Rediseñar La Última Lluvia.
 
 Antes de tocar un deck se prepara una tabla carta por carta y el usuario aprueba el diseño. Solo un
 deck puede estar en migración de contenido a la vez.
@@ -587,7 +587,7 @@ estadísticas + mismo efecto + misma cantidad.
 
 ### Decisión de alcance del usuario (2026-08-01)
 
-- No se cambiará ningún coste, Fuerza, Aguante, efecto, timing, cantidad ni sinergia de Mono Green,
+- No se cambiará ningún coste, Fuerza, Aguante, efecto, timing, cantidad ni sinergia de La Última Lluvia,
   Zombies o Goblins. El balance actual queda congelado por decisión explícita del usuario.
 - Por tanto, L5 no se ejecutará como rediseño de contenido y no se afirmará que cumple el criterio
   de aceptación original. El trabajo futuro se limitará a cambiar nombres, ids y rutas, conservando
@@ -601,7 +601,7 @@ estadísticas + mismo efecto + misma cantidad.
 
 ### Excepción narrativa y mecánica aprobada para La Última Lluvia (2026-08-01)
 
-- El pase narrativo del deck provisional `mono_green_ramp` comenzó con autorización explícita del
+- El pase narrativo del deck provisional `last_rain` comenzó con autorización explícita del
   usuario. Su base aprobada vive en [`chronicle_last_rain.md`](chronicle_last_rain.md).
 - El jugador continúa siendo el Chronicler de todas las Crónicas. Iria, Voz de la Última Lluvia es
   el Eco de Crónica y protagonista de este deck; no existe un Chronicler distinto por deck.
@@ -638,23 +638,23 @@ con los datos actuales de Hostfall.
 ### Cierre (2026-08-01)
 
 L6 completó el corte visual y narrativo de La Última Lluvia. Sus 13 artes originales sustituyeron
-las fuentes JPG anteriores en `public/cards/mono_green_ramp/art/`; nombres, flavor, subtipos y las
+las fuentes JPG anteriores en `public/cards/last_rain/art/`; nombres, flavor, subtipos y las
 excepciones mecánicas aprobadas viven en el JSON runtime, el Card Studio apunta a los PNG fuente y
 las 13 cartas completas de producción fueron regeneradas. Los ids técnicos se conservaron para no
 introducir una migración de persistencia no solicitada.
 
 La Procesión de la Campana Hueca completó también su corte: 17 nombres y flavor bilingüe viven en
-el JSON runtime, 17 artes fuente originales se guardaron en `public/cards/zombies/art/` y las 17
+el JSON runtime, 17 artes fuente originales se guardaron en `public/cards/hollow_bell_procession/art/` y las 17
 cartas completas fueron regeneradas. Los dos tokens tienen fuente vertical 1024x1536 y composición
 full-art. Las reglas, stats y cantidades se conservaron; los ids técnicos permanecen para L7.
 
 El Motín de la Forja Rota completó el tercer corte: 17 nombres y flavor bilingüe viven en el JSON
-runtime, 17 artes fuente originales se guardaron en `public/cards/goblins/art/` y las 17 cartas
+runtime, 17 artes fuente originales se guardaron en `public/cards/broken_forge_mutiny/art/` y las 17 cartas
 completas fueron regeneradas. Corredor de Ascua y Chatarra usa fuente vertical 1024x1536 y
 composición full-art. Varka, Eje de la Revuelta quedó como único Eco de Crónica; reglas, stats y
 cantidades permanecen intactos y los ids técnicos se conservan para L7.
 
-La Corte Carmesí ya contaba con 14 artes propios separados bajo `public/cards/vampires/art/`. El
+La Corte Carmesí ya contaba con 14 artes propios separados bajo `public/cards/crimson_court/art/`. El
 usuario confirmó que ese arte pertenece al proyecto y aprobó conservar `Blood Pact / Pacto de
 Sangre`; una coincidencia con un nombre genérico no se trata como identidad heredada. Sus 14 PNG
 fueron regenerados desde el JSON y el renderer vigentes.
@@ -710,6 +710,17 @@ auditoría final de nombres y residuos técnicos.
 Una persona que recibe únicamente el build no encuentra nombres, arte, texto, metadata, servicios
 ni terminología específica de Magic.
 
+### Resultado
+
+- Los decks finales son `last_rain`, `crimson_court`, `hollow_bell_procession` y
+  `broken_forge_mutiny`; datos, estudios, arte fuente, PNG y manifests usan esas rutas.
+- Los ids de cartas, habilidades bespoke, animadores y fixtures usan las identidades Hostfall. No
+  hay aliases de lectura para ids anteriores.
+- `ScenarioDefinition` subió a v4; boards y replays usan archivos/namespaces v3. La persistencia de
+  aplicación cambió a namespaces `hostfall-*`; los datos anteriores quedan intencionalmente fuera.
+- Los 61 PNG fueron reexportados desde arte local y el manifest de frescura quedó válido.
+- El build reconstruido pasa el auditor `--strict` con 0 bloqueos y 0 advertencias.
+
 ## Matriz de verificación
 
 Cada fase con cambios de código debe cerrar con:
@@ -751,7 +762,7 @@ Estos puntos justificaron el plan, pero no sustituyen el inventario reproducible
 - Existe al menos una procedencia explícita de Horde Magic en datos de producción.
 - Existen herramientas HTML antiguas con créditos de Wizards.
 - La documentación de vocabulario estima 44 definiciones nombradas y tres fichas derivadas entre
-  Mono Green, Zombies y Goblins.
+  La Última Lluvia, Zombies y Goblins.
 
 Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarlos.
 
@@ -778,8 +789,8 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-07-31 | L1 | Retiro de herramientas deprecated y referencias explícitas. | 27 archivos eliminados; los seis checks de L1 quedaron en cero; quedan 6 bloqueos, 2 advertencias y 6 checks limpios. | TypeScript OK; deck lint OK; 194/194 tests; build OK; auditor L1 limpio; `git diff --check` OK. |
 
 | 2026-07-31 | L2 | Fuente runtime única, proyecciones generadas, pipeline local y manifest de frescura. | 27 PNG verificados; el usuario aceptó diferir a L6 los 34 PNG sin arte fuente de Zombies/Trasgos, protegidos contra exportación recursiva. | Proyección OK; TypeScript OK; deck lint OK; 195/195 tests; build OK; `git diff --check` OK. El auditor conserva la excepción como advertencia de L6. |
-| 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de Mono Green. | Mono Green quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
-| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | Mono Green y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
+| 2026-07-31 | L3.1 | Schema Hostfall y adaptador temporal; migración exclusiva de La Última Lluvia. | La Última Lluvia quedó en el contrato canónico `1.0.0`; el inventario authored legacy bajó de 425 a 327 ocurrencias, todas pertenecientes a los tres decks pendientes. | TypeScript OK; deck lint OK; 196/196 tests; revisión visual de PNG y partida completa del usuario OK. |
+| 2026-07-31 | L3.2 | Promoción del schema a `1.0.0` y migración exclusiva de Vampiros. | La Última Lluvia y Vampiros usan el contrato canónico; el inventario authored legacy bajó a 234 ocurrencias, todas en Zombies y Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 197/197 tests; partida completa del usuario OK. |
 | 2026-07-31 | L3.3 | Migración exclusiva de Zombies y ampliación de aliases de Hueste. | Tres decks usan `1.0.0`; el inventario authored legacy bajó a 128 ocurrencias, todas en Trasgos. | TypeScript OK; deck lint OK; Card Studio OK; 198/198 tests; build OK; auditor restaurado a los 34 PNG de Horda ya diferidos; partida completa del usuario OK. |
 | 2026-07-31 | L3.4 | Migración exclusiva de Trasgos y cierre de L3. | Los cuatro decks usan `1.0.0`; el inventario `legacy-authored-schema` llegó a cero y el usuario validó la partida. | TypeScript OK; deck lint OK; Card Studio OK; 199/199 tests; build OK; auditor OK para L3; `git diff --check` OK; partida completa del usuario OK. |
 | 2026-07-31 | L4.1 | Migración interna de tipos de carta, modificadores y Rasgos. | El runtime consume valores Hostfall sin traducción de tipos/Rasgos; el blocker `legacy-l41-card-model` quedó en cero. Los PNG pausados de Zombies/Trasgos siguen fuera de alcance. | TypeScript OK; deck lint OK; Card Studio OK; 200/200 tests; build OK; auditor OK para L4.1; `git diff --check` OK; prueba dirigida del usuario OK. |
@@ -790,11 +801,12 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
 | 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
 | 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 61 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
-| 2026-08-01 | L6 — concepto Mono Green | Generación del primer lote visual de La Última Lluvia. | 13 artes originales guardados sin reemplazar fuentes ni PNG actuales; lámina de revisión y registro de prompts/procedencia/hashes creados. | 13/13 archivos presentes, dimensiones compatibles con el crop, SHA-256 verificados contra el registro; aprobación visual y revisión de derechos pendientes. |
-| 2026-08-01 | L5/L6 — corte La Última Lluvia | Integración completa de identidad, arte y excepciones mecánicas aprobadas. | Los 13 nombres, subtipos y flavor se migraron; Iria recupera 3 de Vida; Arven conserva su primer +1/+1 hasta el próximo turno y todo el deck perdió Desborde. Los JPG fuente y PNG completos anteriores fueron sustituidos. Los ids técnicos se conservaron para L7. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Mono Green 13/13; hashes de procedencia 13/13. Auditor normal: 34 identidades de Huestes y 48 PNG ajenos a este corte siguen pendientes; revisión de derechos del lote y validación visual del usuario pendientes. |
+| 2026-08-01 | L6 — concepto La Última Lluvia | Generación del primer lote visual de La Última Lluvia. | 13 artes originales guardados sin reemplazar fuentes ni PNG actuales; lámina de revisión y registro de prompts/procedencia/hashes creados. | 13/13 archivos presentes, dimensiones compatibles con el crop, SHA-256 verificados contra el registro; aprobación visual y revisión de derechos pendientes. |
+| 2026-08-01 | L5/L6 — corte La Última Lluvia | Integración completa de identidad, arte y excepciones mecánicas aprobadas. | Los 13 nombres, subtipos y flavor se migraron; Iria recupera 3 de Vida; Arven conserva su primer +1/+1 hasta el próximo turno y todo el deck perdió Desborde. Los JPG fuente y PNG completos anteriores fueron sustituidos. Los ids técnicos se conservaron para L7. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura La Última Lluvia 13/13; hashes de procedencia 13/13. Auditor normal: 34 identidades de Huestes y 48 PNG ajenos a este corte siguen pendientes; revisión de derechos del lote y validación visual del usuario pendientes. |
 | 2026-08-01 | L5/L6 — corte La Procesión de la Campana Hueca | Integración completa de la identidad y arte propios del antiguo deck Zombie. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Muerto del Último Taño y Coloso de la Fosa Común usan fuentes verticales 1024x1536. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Zombies 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: quedan 17 identidades de Trasgos y 31 PNG no verificables (14 Vampiros, 17 Trasgos); revisión de derechos de los lotes propios pendiente. |
 | 2026-08-01 | L5/L6 — corte El Motín de la Forja Rota | Integración completa de la identidad y arte propios del antiguo deck Goblin. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Corredor de Ascua y Chatarra usa fuente vertical 1024x1536. Varka es el único Eco de Crónica. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Goblins 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: definiciones derivadas 0, quedan 3 coincidencias heredadas en `dist` y 14 PNG stale de Vampiros; revisión de derechos de los lotes propios pendiente. |
-| 2026-08-01 | L6 — cierre de arte y limpieza visual | Cierre práctico de los cuatro decks jugables bajo identidad Hostfall. | El usuario confirmó que Vampiros ya usa arte propio y aprobó conservar `Blood Pact / Pacto de Sangre`; se regeneraron sus 14 PNG sin cambiar nombres ni arte. L6 queda limitada a identidad visual, fuentes locales y frescura, no a una auditoría legal de todos los recursos del juego. | Card Studio OK; frescura Mono Green 13/13, Vampiros 14/14, Zombies 17/17 y Goblins 17/17. Los ids, nombres técnicos y rutas heredadas permanecen para L7. |
+| 2026-08-01 | L6 — cierre de arte y limpieza visual | Cierre práctico de los cuatro decks jugables bajo identidad Hostfall. | El usuario confirmó que Vampiros ya usa arte propio y aprobó conservar `Blood Pact / Pacto de Sangre`; se regeneraron sus 14 PNG sin cambiar nombres ni arte. L6 queda limitada a identidad visual, fuentes locales y frescura, no a una auditoría legal de todos los recursos del juego. | Card Studio OK; frescura La Última Lluvia 13/13, Vampiros 14/14, Zombies 17/17 y Goblins 17/17. Los ids, nombres técnicos y rutas heredadas permanecen para L7. |
+| 2026-08-01 | L7 — retiro legacy y auditoría final | Corte final de ids, rutas, módulos bespoke, fixtures y persistencia. | Los cuatro decks y 61 cartas usan identidades técnicas Hostfall; escenarios v4 y almacenamiento nuevo invalidan datos anteriores sin aliases; `dist` fue reconstruido sin rutas ni nombres heredados. | TypeScript OK; deck lint OK; Card Studio y frescura 61/61 OK; 222/222 tests; build OK; auditor estricto: 0 bloqueos, 0 advertencias; `git diff --check` OK. |
 
 ## Plantilla para cerrar una fase
 

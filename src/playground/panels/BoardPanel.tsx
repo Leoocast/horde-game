@@ -77,17 +77,17 @@ export function BoardPanel({
           }}
         />
         {boards.length > 0 && (
-          <ul className="playground-library-list">
+          <ul className="playground-saved-list">
             {boards.map((board) => (
-              <li key={board.id} className="playground-library-entry">
-                <div className="playground-library-info">
+              <li key={board.id} className="playground-saved-entry">
+                <div className="playground-saved-info">
                   <strong>{board.name}</strong>
                   <span>{board.definition.zones.playerHand?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0} hand · {
                     (board.definition.zones.playerField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0) +
                     (board.definition.zones.hostField?.reduce((total, card) => total + (card.amount ?? 1), 0) ?? 0)
                   } field</span>
                 </div>
-                <div className="playground-library-actions">
+                <div className="playground-saved-actions">
                   <button className="playground-compact-button" type="button" onClick={() => onLoadBoard(board)}>
                     <FolderOpen size={12} /> Load
                   </button>

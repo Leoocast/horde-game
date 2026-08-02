@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "ember_scrap_runner": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/broken_forge_mutiny/ember_scrap_runner.png"
+    },
+    "burning_tally_foreman": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/burning_tally_foreman.png"
+    },
+    "next_crew_caller": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/next_crew_caller.png"
+    },
+    "open_furnace_crier": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/open_furnace_crier.png"
+    },
+    "shift_hammer": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/shift_hammer.png"
+    },
+    "rain_of_rivets": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/rain_of_rivets.png"
+    },
+    "double_crew_boss": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/double_crew_boss.png"
+    },
+    "three_furnaces_foreman": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/three_furnaces_foreman.png"
+    },
+    "first_siren_agitator": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/first_siren_agitator.png"
+    },
+    "open_another_gate": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/open_another_gate.png"
+    },
+    "three_under_one_anvil": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/broken_forge_mutiny/three_under_one_anvil.png"
+    },
+    "slag_volley_master": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/slag_volley_master.png"
+    },
+    "varka_revolt_axis": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/varka_revolt_axis.png"
+    },
+    "salvaged_armor_master": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/salvaged_armor_master.png"
+    },
+    "repeating_blow_marshal": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/repeating_blow_marshal.png"
+    },
+    "brakka_growing_tally": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/brakka_growing_tally.png"
+    },
+    "last_rivets_gunner": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/broken_forge_mutiny/last_rivets_gunner.png"
+    }
+  }
+}

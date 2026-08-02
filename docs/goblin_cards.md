@@ -8,7 +8,7 @@ Los ids heredados aparecen entre paréntesis únicamente como referencias técni
 habilidad activada de Hueste puede normalizarse como efecto válido y aun así carecer de una política
 que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para los marcadores WIP.
 
-## Corredor de Ascua y Chatarra (`goblin_token_1_1_red`)
+## Corredor de Ascua y Chatarra (`ember_scrap_runner`)
 
 - Las copias se apilan visualmente por definición y grupo de llegada.
 - Las criaturas de la Hueste nunca muestran badge de Agotada ni filtro gris: su agotamiento es una
@@ -16,7 +16,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Se inclinan con el chevrón de ataque desde que aterrizan durante el turno de la Hueste, antes de
   que los atacantes se declaren formalmente.
 
-## Capataz del Recuento Ardiente (`hobgoblin_bandit_lord`)
+## Capataz del Recuento Ardiente (`burning_tally_foreman`)
 
 - Los otros Trasgos reciben +1/+1.
 - Adaptación PvE: al entrar, hace daño al mejor Eco enemigo por cada Trasgo invocado bajo control de
@@ -24,7 +24,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - El aura se resuelve primero. Si ya produjo el pulso de activación, el daño de entrada sigue como
   beat separado sin volver a iluminar la carta ni repetir el sonido.
 
-## Llamador de la Próxima Cuadrilla (`rundvelt_hordemaster`)
+## Llamador de la Próxima Cuadrilla (`next_crew_caller`)
 
 - Los otros Trasgos reciben +1/+1 y el aura anuncia su cobertura mediante el beat de activación
   estática.
@@ -33,17 +33,17 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - El efecto nunca usa el Olvido. Toda muerte de Trasgo activa al Llamador; si él mismo muere, usa el
   beat de revelado de muerte junto a la Memoria antes de resolver la inspección.
 
-## Pregonero del Horno Abierto (`battle_cry_goblin`)
+## Pregonero del Horno Abierto (`open_furnace_crier`)
 
 - Adaptación PvE: al entrar, los Trasgos de la Hueste reciben +1/+0 hasta el fin del turno.
 - Ímpetu y Pack tactics se omiten deliberadamente.
 - El trigger de entrada produce un pulso; el buff grupal sólo reproduce sus líneas azules.
 
-## El Martillo de Turno (`goblin_war_drums`)
+## El Martillo de Turno (`shift_hammer`)
 
 - Las criaturas de la Hueste tienen Imponente mientras este Apoyo permanece en el Campo.
 
-## Lluvia de Remaches (`raid_bombardment`)
+## Lluvia de Remaches (`rain_of_rivets`)
 
 - Cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño.
 - Los atacantes elegibles se capturan una sola vez al declararlos: varios bloqueadores no duplican
@@ -53,39 +53,39 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Se dibujan como máximo seis proyectiles para conservar legibilidad, pero el número de daño siempre
   muestra el total real.
 
-## Jefe de la Cuadrilla Doble (`beetleback_chief`)
+## Jefe de la Cuadrilla Doble (`double_crew_boss`)
 
 - Su efecto de entrada Invoca dos Corredores de Ascua y Chatarra.
 
-## Capataz de los Tres Hornos (`siege_gang_commander`)
+## Capataz de los Tres Hornos (`three_furnaces_foreman`)
 
 - Su efecto de entrada Invoca tres Corredores de Ascua y Chatarra.
 - Su daño activado por sacrificio fue retirado del corte de la carta.
 
-## Agitador de la Primera Sirena (`goblin_rabblemaster`)
+## Agitador de la Primera Sirena (`first_siren_agitator`)
 
 - Invoca un Corredor antes de declarar atacantes.
 - La obligación impresa anterior de atacar está marcada `engineSupport: "ignored"` porque la regla
   global de la Hueste ya hace atacar a toda criatura capaz.
 - Su bono cuenta los otros Trasgos atacantes cuando el trigger se resuelve.
 
-## ¡Abran Otra Compuerta! (`goblin_surprise`)
+## ¡Abran Otra Compuerta! (`open_another_gate`)
 
 - Si la Hueste controla al menos una criatura, todas sus criaturas reciben +2/+0 hasta el fin del
   turno. El Hechizo se presenta junto al Archivo y el bono aterriza con el buff compartido.
 - Si no controla criaturas, ejecuta inmediatamente otra ronda normal de revelado dentro del mismo
   turno, sin sumar otra Mini Oleada u Oleada.
 
-## Tres Bajo el Mismo Yunque (`mogg_mob`)
+## Tres Bajo el Mismo Yunque (`three_under_one_anvil`)
 
 - Adaptación PvE: es solamente un Eco Trasgo vanilla 3/3.
 
-## Maestro de la Salva de Escoria (`volley_veteran`)
+## Maestro de la Salva de Escoria (`slag_volley_master`)
 
 - Su efecto de entrada usa la animación Burn reutilizable.
 - El objetivo de la Hueste se decide mediante la política declarada en JSON, no en componentes.
 
-## Varka, Eje de la Revuelta (`goblin_chainwhirler`)
+## Varka, Eje de la Revuelta (`varka_revolt_axis`)
 
 - Es el único Eco de Crónica del deck.
 - Reflejos se resuelve en un paso separado de daño de combate. Varka 3/3 mata a un bloqueador 4/3
@@ -95,12 +95,12 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Los impactos visuales se escalonan 90 ms, pero el daño de reglas se confirma para todos a la vez
   en el impacto final.
 
-## Maestro de la Armadura Recuperada (`goblin_trashmaster`)
+## Maestro de la Armadura Recuperada (`salvaged_armor_master`)
 
 - Los otros Trasgos reciben +1/+1.
 - La activación anterior de destrucción de artefactos fue retirada del corte de la carta.
 
-## Mariscal del Golpe Repetido (`general_kreat_the_boltbringer`)
+## Mariscal del Golpe Repetido (`repeating_blow_marshal`)
 
 - Cuando uno o más Trasgos atacan, Invoca exactamente un Corredor agotado y atacando. El trigger
   ocurre una vez por declaración, no una vez por atacante.
@@ -109,12 +109,12 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - El Corredor creado por el Mariscal activa naturalmente la segunda habilidad. Como el primer beat
   ya lo iluminó, esa continuación no pulsa la misma carta otra vez.
 
-## Brakka, la Cuenta Creciente (`krenko_tin_street_kingpin`)
+## Brakka, la Cuenta Creciente (`brakka_growing_tally`)
 
 - Cuando Brakka ataca, recibe primero un contador +1/+1 y después Invoca esa cantidad de Corredores
   agotados y atacando según su nueva Fuerza.
 
-## Artillero de los Últimos Remaches (`pashalik_mons`)
+## Artillero de los Últimos Remaches (`last_rivets_gunner`)
 
 - Regla PvE: cuando muere un Trasgo de la Hueste, hace 1 de daño a un Eco enemigo aleatorio.
 - La selección es determinista con el RNG sembrado y se declara en JSON como `selection: "RANDOM"`.

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "crimson_energy": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/crimson_energy.png"
+    },
+    "blood_page": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/blood_page.png"
+    },
+    "crimson_bat": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/crimson_bat.png"
+    },
+    "tithe_acolyte": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/tithe_acolyte.png"
+    },
+    "court_duelist": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/court_duelist.png"
+    },
+    "crypt_guardian": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/crypt_guardian.png"
+    },
+    "black_vein_executioner": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/black_vein_executioner.png"
+    },
+    "blood_sentinel": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/blood_sentinel.png"
+    },
+    "eternal_feast_countess": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/eternal_feast_countess.png"
+    },
+    "blood_pact": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/blood_pact.png"
+    },
+    "crimson_impulse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/crimson_impulse.png"
+    },
+    "drain_essence": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/drain_essence.png"
+    },
+    "predatory_thirst": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/predatory_thirst.png"
+    },
+    "final_banquet": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/crimson_court/final_banquet.png"
+    }
+  }
+}

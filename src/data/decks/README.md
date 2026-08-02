@@ -5,7 +5,7 @@ Este archivo resume el formato. La guía operativa completa para implementar una
 
 Deck folders under `src/data/decks/` are the current gameplay card data format.
 
-Each deck should live under its side (`player` or `horde`) and in its own folder:
+Each deck should live under its side (`player` or `host`) and in its own folder:
 
 ```text
 src/data/decks/
@@ -13,7 +13,7 @@ src/data/decks/
     deck_id/
       deck_id.json
       deck_id_images.json
-  horde/
+  host/
     deck_id/
       deck_id.json
       deck_id_images.json
@@ -79,7 +79,7 @@ Example:
 
 ```json
 {
-  "id": "llanowar_elves_add_green",
+  "id": "first_dew_gatherers_gain_energy",
   "kind": "ACTIVATED",
   "zone": "FIELD",
   "cost": { "exhaust": true },
@@ -110,10 +110,10 @@ Each card entry should be keyed by card id:
 
 ```json
 {
-  "llanowar_elves": {
+  "first_dew_gatherers": {
     "source": "local",
     "imageKind": "card",
-    "imageUrl": "/cards/mono_green_ramp/llanowar_elves.png"
+    "imageUrl": "/cards/last_rain/first_dew_gatherers.png"
   }
 }
 ```
@@ -137,12 +137,12 @@ deck, presentation config, renderer, fonts, source art and every exported PNG. S
 
 Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo en el inspector:
 
-- `mono_green_ramp`
-- `vampire_chronicle_preview`
-- `horde_zombies`
-- `goblin_assault_horde`
+- `last_rain`
+- `crimson_court`
+- `hollow_bell_procession`
+- `broken_forge_mutiny`
 
-Mono Green, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
+La Última Lluvia, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 
 `hostfallDeckAdapter` conserva temporalmente sólo la normalización de casing de zonas;
 `kinds`, `traits`, `endurance`, eventos, Acciones y reglas pasan sin degradación. `normalizeDeck`

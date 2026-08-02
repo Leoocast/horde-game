@@ -25,7 +25,7 @@ echo ==================================================
 echo              EXPORTADOR DE CARTAS
 echo ==================================================
 echo.
-echo   1. Mono Green
+echo   1. La Última Lluvia
 echo   2. Zombies
 echo   3. Goblins
 echo   4. Vampires
@@ -35,30 +35,30 @@ choice /C 12340 /N /M "Elige el deck que quieres exportar: "
 
 if errorlevel 5 exit /b 0
 if errorlevel 4 (
-    set "DECK=vampires"
+    set "DECK=crimson_court"
     goto validate_deck
 )
 if errorlevel 3 (
-    set "DECK=goblins"
+    set "DECK=broken_forge_mutiny"
     goto validate_deck
 )
 if errorlevel 2 (
-    set "DECK=zombies"
+    set "DECK=hollow_bell_procession"
     goto validate_deck
 )
 if errorlevel 1 (
-    set "DECK=monogreen"
+    set "DECK=last_rain"
     goto validate_deck
 )
 
 :validate_deck
-if /i "%DECK%"=="monogreen" goto export_deck
-if /i "%DECK%"=="zombies" goto export_deck
-if /i "%DECK%"=="goblins" goto export_deck
-if /i "%DECK%"=="vampires" goto export_deck
+if /i "%DECK%"=="last_rain" goto export_deck
+if /i "%DECK%"=="hollow_bell_procession" goto export_deck
+if /i "%DECK%"=="broken_forge_mutiny" goto export_deck
+if /i "%DECK%"=="crimson_court" goto export_deck
 
 echo Deck invalido: %DECK%
-echo Opciones: monogreen, zombies, goblins o vampires.
+echo Opciones: last_rain, hollow_bell_procession, broken_forge_mutiny o crimson_court.
 echo.
 pause
 exit /b 1

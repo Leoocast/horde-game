@@ -4,16 +4,16 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const DECKS = new Set([
-    'monogreen',
-    'zombies',
-    'goblins',
-    'vampires'
+    'last_rain',
+    'hollow_bell_procession',
+    'broken_forge_mutiny',
+    'crimson_court'
 ]);
 const PUBLIC_CARD_FOLDERS = {
-    monogreen: 'mono_green_ramp',
-    zombies: 'zombies',
-    goblins: 'goblins',
-    vampires: 'vampires'
+    last_rain: 'last_rain',
+    hollow_bell_procession: 'hollow_bell_procession',
+    broken_forge_mutiny: 'broken_forge_mutiny',
+    crimson_court: 'crimson_court'
 };
 
 function requireExporterDependency(name) {

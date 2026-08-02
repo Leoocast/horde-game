@@ -88,7 +88,7 @@ test("stored energy respects the engine's cap instead of growing forever", () =>
 test("play free grants exactly the printed cost and the card then casts through the normal path", () => {
   // No Energy anywhere: the only way this cast can succeed is the explicit Playground grant.
   const start = buildScenarioGame(
-    scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "llanowar_elves" }] } }),
+    scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "first_dew_gatherers" }] } }),
   );
   const handId = start.player.hand[0].instanceId;
 
@@ -100,47 +100,47 @@ test("play free grants exactly the printed cost and the card then casts through 
   assert.equal(granted.ok, true);
   const cast = castCard(granted.game, handId);
   assert.equal(cast.lastActionResult.ok, true);
-  assert.equal(cast.player.field.filter((card) => card.definitionId === "llanowar_elves").length, 1);
+  assert.equal(cast.player.field.filter((card) => card.definitionId === "first_dew_gatherers").length, 1);
   // The grant is exact: casting spent all of it.
   assert.deepEqual(cast.player.energyPool, { available: 0, stored: 0 });
 });
 
 test("destroy runs death triggers and to-graveyard does not", () => {
   const definition = scenario({
-    hostDeckId: "goblin_assault_horde",
+    hostDeckId: "broken_forge_mutiny",
     // No energy sources: the only player permanent is the creature this test is watching die.
     player: { life: 50, energy: 0, storedEnergy: 0 },
     zones: {
-      hostField: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
-      playerField: [{ definitionId: "llanowar_elves" }],
+      hostField: [{ definitionId: "last_rivets_gunner" }, { definitionId: "ember_scrap_runner" }],
+      playerField: [{ definitionId: "first_dew_gatherers" }],
     },
   });
 
-  const token = (game) => game.host.field.find((card) => card.definitionId === "goblin_token_1_1_red").instanceId;
+  const token = (game) => game.host.field.find((card) => card.definitionId === "ember_scrap_runner").instanceId;
 
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
 
-  // Pashalik Mons burns an opposing creature for each Goblin death; a 1/1 Recolector dies to it.
+  // Gunner of the Last Rivets burns an opposing creature for each Goblin death; a 1/1 Recolector dies to it.
   assert.equal(destroyed.game.player.field.length, 0);
   assert.equal(destroyed.game.player.memory.length, 1);
 
   // The raw move puts the same token in the graveyard without any death ever happening.
-  assert.equal(moved.game.host.memory.at(-1).definitionId, "goblin_token_1_1_red");
+  assert.equal(moved.game.host.memory.at(-1).definitionId, "ember_scrap_runner");
   assert.equal(moved.game.player.field.length, 1);
   assert.equal(moved.game.eventQueue.length, 0);
 });
 
 test("wiping a board is silent: nothing dies, so nothing triggers", () => {
-  // Same Pashalik Mons setup as above. Destroying a Goblin burns a player creature; clearing the
+  // Same Gunner of the Last Rivets setup as above. Destroying a Goblin burns a player creature; clearing the
   // table has to leave that creature alone, or tidying up between tests would change the test.
   const game = buildScenarioGame(
     scenario({
-      hostDeckId: "goblin_assault_horde",
+      hostDeckId: "broken_forge_mutiny",
       player: { life: 50, energy: 0, storedEnergy: 0 },
       zones: {
-        hostField: [{ definitionId: "pashalik_mons" }, { definitionId: "goblin_token_1_1_red" }],
-        playerField: [{ definitionId: "llanowar_elves" }],
+        hostField: [{ definitionId: "last_rivets_gunner" }, { definitionId: "ember_scrap_runner" }],
+        playerField: [{ definitionId: "first_dew_gatherers" }],
       },
     }),
   );
@@ -183,7 +183,7 @@ test("the same action sequence over two rebuilds lands on identical states", () 
   const definition = scenario({
     seed: "replayable",
     player: { life: 50, energy: 0, storedEnergy: 0 },
-    zones: { playerField: [{ definitionId: "forest", amount: 3 }], hostField: [{ definitionId: "zombie_token" }] },
+    zones: { playerField: [{ definitionId: "deep_root_spring", amount: 3 }], hostField: [{ definitionId: "last_knell_dead" }] },
   });
 
   const run = () => {

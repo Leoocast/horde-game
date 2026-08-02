@@ -162,8 +162,8 @@ test("Host rules reject unknown keys, unsafe divisors and malformed profiles", (
   assert.match(messages, /surgeBonus must be an object/u);
 });
 
-test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "mono_green_ramp");
+test("La Última Lluvia keeps Hostfall card kinds and traits at the runtime bridge", () => {
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "last_rain");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "CHRONICLER");
@@ -177,34 +177,34 @@ test("Mono Green keeps Hostfall card kinds and traits at the runtime bridge", ()
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
   assert.equal(adapted.name, "La Última Lluvia");
-  assert.deepEqual(byId.ichorspit_basilisk.traits, ["LETHAL", "POISON_1"]);
-  assert.deepEqual(byId.sunshower_druid.modifiers, ["CHRONICLE"]);
-  assert.equal(byId.sunshower_druid.abilities[0].effects[1].amount, 3);
-  assert.deepEqual(byId.beast_kin_ranger.traits, []);
-  assert.deepEqual(byId.colossadactyl.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.timberland_ancient.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.cosmic_hunger.kinds, ["SPELL"]);
-  assert.deepEqual(byId.cosmic_hunger.modifiers, ["QUICK"]);
-  assert.deepEqual(byId.ruthless_predation.kinds, ["SPELL"]);
-  assert.deepEqual(byId.ruthless_predation.modifiers, []);
-  assert.deepEqual(byId.forest.kinds, ["SOURCE"]);
-  assert.deepEqual(byId.colossadactyl.energyCost, { amount: 4 });
-  assert.equal(byId.colossadactyl.endurance, 5);
+  assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
+  assert.deepEqual(byId.iria_voice_last_rain.modifiers, ["CHRONICLE"]);
+  assert.equal(byId.iria_voice_last_rain.abilities[0].effects[1].amount, 3);
+  assert.deepEqual(byId.arven_first_pack.traits, []);
+  assert.deepEqual(byId.hollow_skybreaker.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.orun_waking_root.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.marked_prey.kinds, ["SPELL"]);
+  assert.deepEqual(byId.marked_prey.modifiers, ["QUICK"]);
+  assert.deepEqual(byId.oath_clearing.kinds, ["SPELL"]);
+  assert.deepEqual(byId.oath_clearing.modifiers, []);
+  assert.deepEqual(byId.deep_root_spring.kinds, ["SOURCE"]);
+  assert.deepEqual(byId.hollow_skybreaker.energyCost, { amount: 4 });
+  assert.equal(byId.hollow_skybreaker.endurance, 5);
 
-  const energyAction = byId.llanowar_elves.abilities[0];
+  const energyAction = byId.first_dew_gatherers.abilities[0];
   assert.equal(energyAction.zone, "field");
   assert.deepEqual(energyAction.cost, { exhaust: true });
   assert.deepEqual(energyAction.effects[0], { type: "GAIN_ENERGY", player: "SELF", amount: 1 });
 
-  const brokenWingsFilter = byId.broken_wings.abilities[0].targets[0].filters;
-  assert.deepEqual(brokenWingsFilter.anyOf, [
+  const rootsTouchedSkyFilter = byId.roots_touched_sky.abilities[0].targets[0].filters;
+  assert.deepEqual(rootsTouchedSkyFilter.anyOf, [
     { kinds: ["SUPPORT"] },
     { kinds: ["ECHO"], traits: ["FLYING"] },
   ]);
 });
 
 test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "vampire_chronicle_preview");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "crimson_court");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "CHRONICLER");
@@ -242,7 +242,7 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
 });
 
 test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "horde_zombies");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "hollow_bell_procession");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "HOST");
@@ -254,14 +254,14 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
-  assert.deepEqual(rawById.zombie_token.kinds, ["ECHO", "TOKEN"]);
-  assert.deepEqual(rawById.zombie_token.energyCost, { amount: 2 });
-  assert.deepEqual(rawById.graf_harvest.kinds, ["SUPPORT"]);
-  assert.equal(rawById.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
-  assert.deepEqual(rawById.rancid_rats.traits, ["LETHAL", "FURTIVE"]);
-  assert.equal(rawById.crow_of_dark_tidings.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
-  assert.equal(rawById.diregraf_captain.abilities[1].trigger.event, "ECHO_DIED");
+  assert.deepEqual(rawById.last_knell_dead.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.last_knell_dead.energyCost, { amount: 2 });
+  assert.deepEqual(rawById.hollow_bell.kinds, ["SUPPORT"]);
+  assert.equal(rawById.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
+  assert.deepEqual(rawById.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.equal(rawById.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(rawById.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
@@ -274,22 +274,22 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
   assert.equal(adapted.rulesProfile.surgeBonus.endurance, 0);
-  assert.deepEqual(byId.zombie_token.kinds, ["ECHO", "TOKEN"]);
-  assert.equal(byId.zombie_token.isToken, true);
-  assert.deepEqual(byId.zombie_token.energyCost, { amount: 2 });
-  assert.deepEqual(byId.graf_harvest.kinds, ["SUPPORT"]);
-  assert.equal(byId.graf_harvest.abilities[0].effects[0].scope.controller, "HOST");
-  assert.deepEqual(byId.graf_harvest.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
-  assert.equal(byId.graf_harvest.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.graf_harvest.abilities[1].trigger.event, "BEGIN_READY");
-  assert.deepEqual(byId.rancid_rats.traits, ["LETHAL", "FURTIVE"]);
-  assert.equal(byId.crow_of_dark_tidings.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
-  assert.equal(byId.diregraf_captain.abilities[1].trigger.event, "ECHO_DIED");
-  assert.equal(byId.diregraf_captain.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
+  assert.deepEqual(byId.last_knell_dead.kinds, ["ECHO", "TOKEN"]);
+  assert.equal(byId.last_knell_dead.isToken, true);
+  assert.deepEqual(byId.last_knell_dead.energyCost, { amount: 2 });
+  assert.deepEqual(byId.hollow_bell.kinds, ["SUPPORT"]);
+  assert.equal(byId.hollow_bell.abilities[0].effects[0].scope.controller, "HOST");
+  assert.deepEqual(byId.hollow_bell.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
+  assert.equal(byId.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(byId.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
+  assert.deepEqual(byId.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.equal(byId.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(byId.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
+  assert.equal(byId.last_march_marshal.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
 });
 
 test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "goblin_assault_horde");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "broken_forge_mutiny");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "HOST");
@@ -301,20 +301,20 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
-  assert.deepEqual(rawById.goblin_token_1_1_red.kinds, ["ECHO", "TOKEN"]);
-  assert.deepEqual(rawById.goblin_war_drums.kinds, ["SUPPORT"]);
-  assert.equal(rawById.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_BATTLE");
-  assert.equal(rawById.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
-  assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
-  assert.equal(rawById.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
-  assert.deepEqual(rawById.goblin_chainwhirler.traits, ["REFLEX"]);
-  assert.deepEqual(rawById.goblin_chainwhirler.modifiers, ["CHRONICLE"]);
-  assert.equal(rawById.general_kreat_the_boltbringer.modifiers, undefined);
-  assert.equal(rawById.krenko_tin_street_kingpin.modifiers, undefined);
-  assert.equal(rawById.pashalik_mons.modifiers, undefined);
-  assert.equal(rawById.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
-  assert.equal(rawById.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(rawById.ember_scrap_runner.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.shift_hammer.kinds, ["SUPPORT"]);
+  assert.equal(rawById.shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.first_siren_agitator.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(rawById.open_another_gate.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(rawById.burning_tally_foreman.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(rawById.burning_tally_foreman.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.deepEqual(rawById.varka_revolt_axis.traits, ["REFLEX"]);
+  assert.deepEqual(rawById.varka_revolt_axis.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.repeating_blow_marshal.modifiers, undefined);
+  assert.equal(rawById.brakka_growing_tally.modifiers, undefined);
+  assert.equal(rawById.last_rivets_gunner.modifiers, undefined);
+  assert.equal(rawById.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(rawById.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
 
   const adapted = adaptHostfallDeck(entry.raw);
   const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
@@ -322,20 +322,20 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
-  assert.deepEqual(byId.goblin_token_1_1_red.kinds, ["ECHO", "TOKEN"]);
-  assert.equal(byId.goblin_token_1_1_red.isToken, true);
-  assert.deepEqual(byId.goblin_war_drums.kinds, ["SUPPORT"]);
-  assert.equal(byId.goblin_war_drums.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.goblin_rabblemaster.abilities[1].trigger.event, "BEGIN_BATTLE");
-  assert.equal(byId.goblin_surprise.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
-  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
-  assert.equal(byId.hobgoblin_bandit_lord.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
-  assert.deepEqual(byId.goblin_chainwhirler.traits, ["REFLEX"]);
-  assert.deepEqual(byId.goblin_chainwhirler.modifiers, ["CHRONICLE"]);
-  assert.deepEqual(byId.general_kreat_the_boltbringer.kinds, ["ECHO"]);
-  assert.deepEqual(byId.general_kreat_the_boltbringer.modifiers, []);
-  assert.deepEqual(byId.krenko_tin_street_kingpin.modifiers, []);
-  assert.deepEqual(byId.pashalik_mons.modifiers, []);
-  assert.equal(byId.pashalik_mons.abilities[0].trigger.event, "ECHO_DIED");
-  assert.equal(byId.pashalik_mons.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(byId.ember_scrap_runner.kinds, ["ECHO", "TOKEN"]);
+  assert.equal(byId.ember_scrap_runner.isToken, true);
+  assert.deepEqual(byId.shift_hammer.kinds, ["SUPPORT"]);
+  assert.equal(byId.shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(byId.first_siren_agitator.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(byId.open_another_gate.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(byId.burning_tally_foreman.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(byId.burning_tally_foreman.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.deepEqual(byId.varka_revolt_axis.traits, ["REFLEX"]);
+  assert.deepEqual(byId.varka_revolt_axis.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(byId.repeating_blow_marshal.kinds, ["ECHO"]);
+  assert.deepEqual(byId.repeating_blow_marshal.modifiers, []);
+  assert.deepEqual(byId.brakka_growing_tally.modifiers, []);
+  assert.deepEqual(byId.last_rivets_gunner.modifiers, []);
+  assert.equal(byId.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(byId.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
 });

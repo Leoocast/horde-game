@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+  "cards": [
+    {
+      "id": "ember_scrap_runner",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
+      "typeLineEs": "Eco · Ficha — Trasgo Corredor"
+    },
+    {
+      "id": "burning_tally_foreman",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
+    },
+    {
+      "id": "next_crew_caller",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
+      "typeLineEs": "Eco — Trasgo Llamador"
+    },
+    {
+      "id": "open_furnace_crier",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
+      "typeLineEs": "Eco — Trasgo Pregonero"
+    },
+    {
+      "id": "shift_hammer",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.png",
+      "typeLineEs": "Apoyo"
+    },
+    {
+      "id": "rain_of_rivets",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
+      "typeLineEs": "Apoyo"
+    },
+    {
+      "id": "double_crew_boss",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
+    },
+    {
+      "id": "three_furnaces_foreman",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
+      "typeLineEs": "Eco — Trasgo Capataz"
+    },
+    {
+      "id": "first_siren_agitator",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
+      "typeLineEs": "Eco — Trasgo Agitador"
+    },
+    {
+      "id": "open_another_gate",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.png",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "three_under_one_anvil",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
+      "typeLineEs": "Eco — Trasgo Cuadrilla"
+    },
+    {
+      "id": "slag_volley_master",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
+      "typeLineEs": "Eco — Trasgo Artillero"
+    },
+    {
+      "id": "varka_revolt_axis",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
+      "typeLineEs": "Eco de Crónica — Trasgo Giracadenas"
+    },
+    {
+      "id": "salvaged_armor_master",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
+      "typeLineEs": "Eco — Trasgo Armero"
+    },
+    {
+      "id": "repeating_blow_marshal",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
+      "typeLineEs": "Eco — Trasgo Mariscal"
+    },
+    {
+      "id": "brakka_growing_tally",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
+      "typeLineEs": "Eco — Trasgo Reclutador"
+    },
+    {
+      "id": "last_rivets_gunner",
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
+      "typeLineEs": "Eco — Trasgo Artillero"
+    }
+  ]
+}

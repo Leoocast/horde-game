@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "last_knell_dead": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/hollow_bell_procession/last_knell_dead.png"
+    },
+    "mass_grave_colossus": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/hollow_bell_procession/mass_grave_colossus.png"
+    },
+    "hollow_bell": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/hollow_bell.png"
+    },
+    "five_knot_gallows": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/five_knot_gallows.png"
+    },
+    "last_thought_carrion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/last_thought_carrion.png"
+    },
+    "memory_shroud_bearer": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/memory_shroud_bearer.png"
+    },
+    "flesh_root_tithe": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/flesh_root_tithe.png"
+    },
+    "crypt_rotwing": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/crypt_rotwing.png"
+    },
+    "basted_wing": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/basted_wing.png"
+    },
+    "reinforced_gravewing": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/reinforced_gravewing.png"
+    },
+    "archive_carrion_crow": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/archive_carrion_crow.png"
+    },
+    "horned_linebreaker": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/horned_linebreaker.png"
+    },
+    "seventh_memory_hound": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/seventh_memory_hound.png"
+    },
+    "full_ossuary_mastiff": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/full_ossuary_mastiff.png"
+    },
+    "silent_bite_rats": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/silent_bite_rats.png"
+    },
+    "fallen_gatherer": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/fallen_gatherer.png"
+    },
+    "last_march_marshal": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/hollow_bell_procession/last_march_marshal.png"
+    }
+  }
+}

@@ -140,7 +140,7 @@ export function ScenarioPanel({ draft, queue, onChange, onChangeQueue, onUpdate,
                 <li
                   key={`${entry.definitionId}-${index}`}
                   className={[
-                    "playground-library-entry",
+                    "playground-saved-entry",
                     "playground-host-queue-card",
                     draggedIndex === index ? "is-dragging" : "",
                     dropIndex === index && draggedIndex !== index ? "is-drop-target" : "",

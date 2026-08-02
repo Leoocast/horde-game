@@ -20,8 +20,7 @@ se prepara una publicación comercial, sus licencias se revisarán como un traba
 Estado vigente de la limpieza:
 
 - Los nombres visibles y artes de La Última Lluvia, La Procesión de la Campana Hueca y El Motín de
-  la Forja Rota ya son propios; sus ids técnicos heredados permanecen hasta la migración explícita
-  de persistencia prevista para L7.
+  la Forja Rota ya son propios; L7 completó también sus ids, rutas y corte de persistencia.
 - Los 61 PNG finales de los cuatro decks jugables están sincronizados con sus datos y arte local.
 - El tutorial heredado ya fue retirado por completo; el menú conserva solamente el botón
   deshabilitado `How to Play`. El log ya normaliza el texto del engine y no usa la categoría
@@ -343,7 +342,7 @@ Reglas de estilo:
 
 ### Crónica La Última Lluvia — retirado de producción
 
-Los nombres de Magic del antiguo deck Mono Green fueron retirados del JSON y del arte el
+Los nombres de Magic del antiguo deck La Última Lluvia fueron retirados del JSON y del arte el
 2026-08-01. La equivalencia técnica de ids y los nombres vigentes se conserva en
 `docs/chronicle_last_rain.md`.
 
@@ -433,8 +432,8 @@ inventario legal más amplio de recursos no es requisito de estas fases.
 3. **Completado:** convertir La Corte Carmesí, que ya tiene nombres y arte propios, al nuevo
    vocabulario y regenerar sus cartas finales.
 4. Crear al menos una Hueste completamente original para que exista un loop publicable.
-5. **Completado:** reemplazar nombres y arte de Mono Green, Zombies y Goblins. Sus ids y rutas
-   técnicas se limpian después en L7.
+5. **Completado:** reemplazar nombres, arte, ids y rutas de La Última Lluvia, La Procesión de la
+   Campana Hueca y El Motín de la Forja Rota.
 6. **Completado:** eliminar proveedores remotos de cartas y metadata Magic del camino de
    produccion y de los generadores que exportan cartas finales.
 7. Diseñar un onboarding original cuando haga falta y reescribir documentación de jugador y
