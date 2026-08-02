@@ -142,6 +142,77 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
   return lines.join("\n") || "Sin efecto adicional.";
 }
 
+/*
+ * Encuadre de arte y motivo. Ambos son presentación pura: viven en studio.config.json,
+ * nunca en el JSON runtime. Un valor por defecto no se emite, de modo que una carta sin
+ * ajustar produce exactamente el mismo HTML —y el mismo PNG— que antes de existir esta feature.
+ */
+const MOTIF_SLOTS = Object.freeze(["head", "gem", "band", "stats"]);
+
+function finiteNumber(label, value, fallback) {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${label}: debe ser un número finito, se recibió ${JSON.stringify(value)}.`);
+  }
+  return value;
+}
+
+function normalizeArtFrame(label, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${label}: artFrame debe ser un objeto {zoom, x, y}.`);
+  }
+  const unknown = Object.keys(raw).filter((key) => !["zoom", "x", "y"].includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`${label}: artFrame no reconoce ${unknown.join(", ")}.`);
+  }
+  const zoom = finiteNumber(`${label}.artFrame.zoom`, raw.zoom, 1);
+  if (zoom <= 0) throw new Error(`${label}: artFrame.zoom debe ser mayor que 0.`);
+  const x = finiteNumber(`${label}.artFrame.x`, raw.x, 0);
+  const y = finiteNumber(`${label}.artFrame.y`, raw.y, 0);
+  if (zoom === 1 && x === 0 && y === 0) return null;
+  return { zoom, x, y };
+}
+
+function normalizeMotif(deckId, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${deckId}: motif debe ser un objeto con slots ${MOTIF_SLOTS.join(", ")}.`);
+  }
+  const unknown = Object.keys(raw).filter((slot) => !MOTIF_SLOTS.includes(slot));
+  if (unknown.length > 0) {
+    throw new Error(`${deckId}: motif no reconoce el slot ${unknown.join(", ")}.`);
+  }
+  const motif = {};
+  for (const slot of MOTIF_SLOTS) {
+    const value = raw[slot];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`${deckId}: motif.${slot} debe ser un objeto {x, y, size}.`);
+    }
+    const unknownKeys = Object.keys(value).filter((key) => !["x", "y", "size"].includes(key));
+    if (unknownKeys.length > 0) {
+      throw new Error(`${deckId}: motif.${slot} no reconoce ${unknownKeys.join(", ")}.`);
+    }
+    const x = finiteNumber(`${deckId}.motif.${slot}.x`, value.x, 0);
+    const y = finiteNumber(`${deckId}.motif.${slot}.y`, value.y, 0);
+    const size = value.size === undefined || value.size === null
+      ? null
+      : finiteNumber(`${deckId}.motif.${slot}.size`, value.size, null);
+    if (size !== null && size <= 0) {
+      throw new Error(`${deckId}: motif.${slot}.size debe ser un ancho en px mayor que 0.`);
+    }
+    if (x === 0 && y === 0 && size === null) continue;
+    motif[slot] = { x, y, ...(size === null ? {} : { size }) };
+  }
+  return Object.keys(motif).length > 0 ? motif : null;
+}
+
+export function studioMotif(deckId) {
+  const { config } = loadStudioConfig(deckId);
+  return normalizeMotif(deckId, config.motif);
+}
+
 function validatePresentationCards(deckId, cards) {
   if (!Array.isArray(cards) || cards.length === 0) {
     throw new Error(`${deckId}: studio.config.json debe declarar cards[].`);
@@ -167,7 +238,13 @@ export function loadStudioConfig(deckId) {
 
 export function buildStudioCards(deckId) {
   const { config, paths } = loadStudioConfig(deckId);
-  if (config.previewOnly) return config.cards;
+  if (config.previewOnly) {
+    return config.cards.map((card) => {
+      const artFrame = normalizeArtFrame(`${deckId}/${card.id}`, card.artFrame);
+      const { artFrame: _ignored, ...rest } = card;
+      return { ...rest, ...(artFrame ? { art_frame: artFrame } : {}) };
+    });
+  }
   if (!config.runtimeDeck) throw new Error(`${deckId}: falta runtimeDeck.`);
 
   const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
@@ -195,6 +272,7 @@ export function buildStudioCards(deckId) {
         `${deckId}/${presentation.id}: el flavor debe vivir únicamente en flavorText del JSON runtime.`,
       );
     }
+    const artFrame = normalizeArtFrame(`${deckId}/${presentation.id}`, presentation.artFrame);
     const runtimeFlavor = String(runtimeCard.flavorText?.es ?? "").trim();
     if (!runtimeFlavor) {
       throw new Error(`${deckId}/${presentation.id}: falta flavorText.es en el JSON runtime.`);
@@ -215,6 +293,7 @@ export function buildStudioCards(deckId) {
       showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
       ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
+      ...(artFrame ? { art_frame: artFrame } : {}),
     };
   });
 
@@ -229,9 +308,11 @@ export function buildStudioCards(deckId) {
 
 export function generatedStudioData(deckId) {
   const cards = buildStudioCards(deckId);
+  const motif = studioMotif(deckId);
   return [
     "/* Generado por scripts/card-studio-data.mjs. No editar a mano. */",
     `window.HostfallDeckData = ${JSON.stringify(cards, null, 2)};`,
+    ...(motif ? [`window.HostfallDeckMotif = ${JSON.stringify(motif, null, 2)};`] : []),
     "",
   ].join("\n");
 }
@@ -269,8 +350,11 @@ export function studioSourceFiles(deckId) {
   if (config.runtimeDeck) sourceFiles.push(path.resolve(paths.directory, config.runtimeDeck));
 
   if (deckId === "last_rain") {
+    /* Comparte el renderer, pero conserva su propia hoja: no carga deck-card-studio.css. */
     sourceFiles.push(
+      absolute("dev/tools/Decks/deck-card-studio.js"),
       absolute("dev/tools/Decks/deck-card-text.js"),
+      absolute("dev/tools/Decks/last_rain/last-rain.css"),
       absolute("dev/tools/Decks/last_rain/motivo.avif"),
     );
   } else {
@@ -292,6 +376,11 @@ export function studioSourceFiles(deckId) {
 
   const cards = buildStudioCards(deckId);
   for (const card of cards) {
+    if (!card.art_crop) {
+      throw new Error(
+        `${deckId}/${card.id}: todavía no tiene arte. Cárgalo desde el estudio antes de exportar.`,
+      );
+    }
     if (/^https?:/iu.test(card.art_crop)) {
       throw new Error(`${deckId}/${card.id}: el arte debe ser local: ${card.art_crop}.`);
     }

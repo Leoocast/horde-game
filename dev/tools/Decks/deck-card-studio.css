@@ -474,6 +474,13 @@ input {
     object-fit: cover;
     object-position: center 28%;
     filter: saturate(0.92) contrast(1.04);
+    /*
+     * Encuadre por carta. Sin ajustes la variable no existe y el valor es `none`,
+     * es decir ninguna transformación: la carta se rasteriza igual que antes.
+     * El estudio escribe --art-transform sólo cuando la carta tiene encuadre propio.
+     */
+    transform: var(--art-transform, none);
+    transform-origin: center center;
 }
 
 .tcg-art-frame::after {
@@ -902,7 +909,10 @@ body[data-theme="broken_forge_mutiny"] .tcg-head::after {
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./broken_forge_mutiny/motivo.avif") center 38% / cover no-repeat;
+    background:
+        url("./broken_forge_mutiny/motivo.avif")
+        calc(50% + var(--motif-head-x, 0px)) calc(38% + var(--motif-head-y, 0px))
+        / var(--motif-head-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1049,7 +1059,10 @@ body[data-theme="broken_forge_mutiny"] .tcg-typeband::after {
     inset: 2px;
     z-index: 0;
     border-radius: 7px 0 0 7px;
-    background: url("./broken_forge_mutiny/motivo.avif") center 67% / cover no-repeat;
+    background:
+        url("./broken_forge_mutiny/motivo.avif")
+        calc(50% + var(--motif-band-x, 0px)) calc(67% + var(--motif-band-y, 0px))
+        / var(--motif-band-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1261,7 +1274,10 @@ body[data-theme="broken_forge_mutiny"] .tcg-stats-badge::before {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./broken_forge_mutiny/motivo.avif") center 58% / cover no-repeat;
+    background:
+        url("./broken_forge_mutiny/motivo.avif")
+        calc(50% + var(--motif-stats-x, 0px)) calc(58% + var(--motif-stats-y, 0px))
+        / var(--motif-stats-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1472,7 +1488,10 @@ body[data-theme="hollow_bell_procession"] .tcg-head::after {
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./hollow_bell_procession/motivo.avif") center 38% / cover no-repeat;
+    background:
+        url("./hollow_bell_procession/motivo.avif")
+        calc(50% + var(--motif-head-x, 0px)) calc(38% + var(--motif-head-y, 0px))
+        / var(--motif-head-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1567,7 +1586,10 @@ body[data-theme="hollow_bell_procession"] .tcg-mana-gem::before {
     inset: 3px;
     z-index: 1;
     border-radius: 50%;
-    background: url("./hollow_bell_procession/motivo.avif") center 52% / cover no-repeat;
+    background:
+        url("./hollow_bell_procession/motivo.avif")
+        calc(50% + var(--motif-gem-x, 0px)) calc(52% + var(--motif-gem-y, 0px))
+        / var(--motif-gem-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.34;
     pointer-events: none;
@@ -1687,7 +1709,10 @@ body[data-theme="hollow_bell_procession"] .tcg-typeband::after {
     inset: 2px;
     z-index: 0;
     border-radius: 7px 0 0 7px;
-    background: url("./hollow_bell_procession/motivo.avif") center 67% / cover no-repeat;
+    background:
+        url("./hollow_bell_procession/motivo.avif")
+        calc(50% + var(--motif-band-x, 0px)) calc(67% + var(--motif-band-y, 0px))
+        / var(--motif-band-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1966,7 +1991,10 @@ body[data-theme="hollow_bell_procession"] .tcg-stats-badge::before {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./hollow_bell_procession/motivo.avif") center 58% / cover no-repeat;
+    background:
+        url("./hollow_bell_procession/motivo.avif")
+        calc(50% + var(--motif-stats-x, 0px)) calc(58% + var(--motif-stats-y, 0px))
+        / var(--motif-stats-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -2151,7 +2179,10 @@ body[data-theme="crimson_court"] .tcg-head::after {
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./crimson_court/motivo.jpg") center 38% / cover no-repeat;
+    background:
+        url("./crimson_court/motivo.jpg")
+        calc(50% + var(--motif-head-x, 0px)) calc(38% + var(--motif-head-y, 0px))
+        / var(--motif-head-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -2255,7 +2286,10 @@ body[data-theme="crimson_court"] .tcg-mana-gem::before {
     inset: 3px;
     z-index: 1;
     border-radius: 50%;
-    background: url("./crimson_court/motivo.jpg") center 52% / cover no-repeat;
+    background:
+        url("./crimson_court/motivo.jpg")
+        calc(50% + var(--motif-gem-x, 0px)) calc(52% + var(--motif-gem-y, 0px))
+        / var(--motif-gem-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.34;
     pointer-events: none;
@@ -2377,7 +2411,10 @@ body[data-theme="crimson_court"] .tcg-typeband::after {
     z-index: 0;
     transform: none;
     border-radius: 7px 0 0 7px;
-    background: url("./crimson_court/motivo.jpg") center 67% / cover no-repeat;
+    background:
+        url("./crimson_court/motivo.jpg")
+        calc(50% + var(--motif-band-x, 0px)) calc(67% + var(--motif-band-y, 0px))
+        / var(--motif-band-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -2621,7 +2658,10 @@ body[data-theme="crimson_court"] .tcg-stats-badge::before {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./crimson_court/motivo.jpg") center 58% / cover no-repeat;
+    background:
+        url("./crimson_court/motivo.jpg")
+        calc(50% + var(--motif-stats-x, 0px)) calc(58% + var(--motif-stats-y, 0px))
+        / var(--motif-stats-size, cover) no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;

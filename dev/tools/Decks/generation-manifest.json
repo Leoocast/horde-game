@@ -2,8 +2,12 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "last_rain": {
-      "inputHash": "0f07fc6e3ab439c32cae505cbd7e1419df11c7a55a2038246973f8ee401d484f",
+      "inputHash": "2174956e04b04c647b629aee08994892ecde814e7665b58d6174f66ada3ad092",
       "sources": [
+        {
+          "path": "dev/tools/Decks/deck-card-studio.js",
+          "sha256": "db83ad3e2a8f2d65204658d7721a1e684560c0532ce263d4f8887c259383e319"
+        },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
           "sha256": "b989a091262cac2a4fc8d40c8ca6a87523ecf4ed5203154f32a88dd33c594412"
@@ -18,7 +22,11 @@
         },
         {
           "path": "dev/tools/Decks/last_rain/index.html",
-          "sha256": "3da08ace249439206c9e512347366e7b7b6b46683f206140173cf00475cf9348"
+          "sha256": "f354fee2c06b82ecca61af61851f528c8711e167b3ad16234c584ec4a7296d1f"
+        },
+        {
+          "path": "dev/tools/Decks/last_rain/last-rain.css",
+          "sha256": "f15a0420e98e5c2215fd11304db0c5c0ea4c7deecd45e4f11763fbc3ca4d1193"
         },
         {
           "path": "dev/tools/Decks/last_rain/motivo.avif",
@@ -26,7 +34,7 @@
         },
         {
           "path": "dev/tools/Decks/last_rain/studio.config.json",
-          "sha256": "c55f3313415a3c40a3633aa54ffce2ce8d6aade5913229fb180e962b0ae4338d"
+          "sha256": "d6904ad90726029fa13849581d2d6ab3c59c07a4289dfb2981dfb13efdda76ae"
         },
         {
           "path": "public/cards/last_rain/art/ancient_canopy_watchers.png",
@@ -106,7 +114,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+          "sha256": "2930cae0ff24fb98bef21ded17c62b6d7d45c0932cc41f83394af32088d4508b"
         },
         {
           "path": "src/data/decks/player/last_rain/last_rain.json",
@@ -208,15 +216,15 @@
       ]
     },
     "hollow_bell_procession": {
-      "inputHash": "91efaf19fad23db443d6d0af1d63263acdfa2d45f0354a4ef319acefd7be4569",
+      "inputHash": "093a27fcf21f96b4e4c46e07f3dfa7624d1d3574589dbcb85538730f34618519",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
+          "sha256": "f4cdeb3d7fa3161aa48f5b8f72c5bc09592bb048d1b0450b9ea2333180db4ca9"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
+          "sha256": "db83ad3e2a8f2d65204658d7721a1e684560c0532ce263d4f8887c259383e319"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -336,7 +344,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+          "sha256": "2930cae0ff24fb98bef21ded17c62b6d7d45c0932cc41f83394af32088d4508b"
         },
         {
           "path": "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
@@ -466,7 +474,7 @@
       ]
     },
     "broken_forge_mutiny": {
-      "inputHash": "1306b46dc3c882db39d4b3888228176c68af48a9c272d3b290715f4168b4da7f",
+      "inputHash": "ab7672500edd61f8a4f0770b4dd76e3f3b6921bbcde8d534dfdf8b6fc987ef26",
       "sources": [
         {
           "path": "dev/tools/Decks/broken_forge_mutiny/deck-data.generated.js",
@@ -486,11 +494,11 @@
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
+          "sha256": "f4cdeb3d7fa3161aa48f5b8f72c5bc09592bb048d1b0450b9ea2333180db4ca9"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
+          "sha256": "db83ad3e2a8f2d65204658d7721a1e684560c0532ce263d4f8887c259383e319"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -594,7 +602,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+          "sha256": "2930cae0ff24fb98bef21ded17c62b6d7d45c0932cc41f83394af32088d4508b"
         },
         {
           "path": "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
@@ -724,11 +732,11 @@
       ]
     },
     "crimson_court": {
-      "inputHash": "07a92452a9d0796343275ac079c3ed09ad77f124d5fcf2bbadf1792851299b90",
+      "inputHash": "6ffc010e5ed4490f2afc34822b4dc28ccc079ecc4c625afb69d75273d8d22524",
       "sources": [
         {
           "path": "dev/tools/Decks/crimson_court/deck-data.generated.js",
-          "sha256": "df11f478d280ef11c06ec30019103955e49b158b83b5cea56dae6abce293c340"
+          "sha256": "7998242137f91e6f7bc4f44570dddb5434a6ca83b2f008f2d5718ca3aeafde61"
         },
         {
           "path": "dev/tools/Decks/crimson_court/index.html",
@@ -740,15 +748,15 @@
         },
         {
           "path": "dev/tools/Decks/crimson_court/studio.config.json",
-          "sha256": "dc27caeb582a32bc936c723e3b89e7a09f52f459e56f87dbda0c49b5c58c3573"
+          "sha256": "3f4aa5bb40c986b5a040ab67aaa5304aab384dce1e11236e71b807a03cff094f"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
+          "sha256": "f4cdeb3d7fa3161aa48f5b8f72c5bc09592bb048d1b0450b9ea2333180db4ca9"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
+          "sha256": "db83ad3e2a8f2d65204658d7721a1e684560c0532ce263d4f8887c259383e319"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -767,8 +775,8 @@
           "sha256": "d6f0ea91aaeac4792c06722b6b04e435aac67d53665e6ef422bb6557992e0052"
         },
         {
-          "path": "public/cards/crimson_court/art/blood_page.webp",
-          "sha256": "55c78acdc828ab28d39537ca2b3e88b718a0087de6bb78471894ed138ec2dd57"
+          "path": "public/cards/crimson_court/art/blood_page.jpg",
+          "sha256": "cb19e7eb0e15b9a6117ea9a4963781f497f8cbfefea74d0ef64f7110a2f2ff3f"
         },
         {
           "path": "public/cards/crimson_court/art/blood_sentinel.webp",
@@ -840,7 +848,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+          "sha256": "2930cae0ff24fb98bef21ded17c62b6d7d45c0932cc41f83394af32088d4508b"
         },
         {
           "path": "src/data/decks/player/crimson_court/crimson_court.json",
@@ -858,7 +866,7 @@
         {
           "id": "blood_page",
           "path": "public/cards/crimson_court/blood_page.png",
-          "sha256": "23737e7f1f03e9f391aa3b88a41127e3cecf2beb3344bcf571e5ae378c64610c",
+          "sha256": "f08ab2a1dbf8aaa9e5b093f3d0b9c62e0323369d46ce77cbea4120798bff3457",
           "width": 976,
           "height": 1360
         },

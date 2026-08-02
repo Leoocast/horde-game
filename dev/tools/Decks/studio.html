@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hostfall — Card Studio</title>
+    <style>
+        :root {
+            --panel: #14120f;
+            --panel-soft: #1c1915;
+            --line: #3a3227;
+            --gold: #b8a26b;
+            --gold-bright: #ead9a8;
+            --text: #e6e0d4;
+            --muted: #8e8375;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 246px 1fr 306px;
+            background: #0b0a09;
+            color: var(--text);
+            font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+        }
+
+        aside {
+            display: flex;
+            min-height: 0;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        aside:last-child {
+            border-right: 0;
+            border-left: 1px solid var(--line);
+        }
+
+        h1 {
+            margin: 0;
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--line);
+            color: var(--gold-bright);
+            font-size: 15px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .deck-picker {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 7px 9px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #0e0d0b;
+            color: var(--text);
+            font: inherit;
+        }
+
+        .card-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .card-entry {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 9px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: none;
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+        }
+
+        .card-entry:hover {
+            background: var(--panel-soft);
+        }
+
+        .card-entry.is-active {
+            border-color: rgba(184, 162, 107, 0.55);
+            background: rgba(184, 162, 107, 0.12);
+            color: var(--gold-bright);
+        }
+
+        .card-entry .dot {
+            width: 7px;
+            height: 7px;
+            flex: none;
+            border-radius: 50%;
+            background: #4a4137;
+        }
+
+        .card-entry.has-art .dot {
+            background: #6f9a5a;
+        }
+
+        .card-entry.is-adjusted .dot {
+            background: var(--gold);
+        }
+
+        .card-entry .label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        main {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+        }
+
+        .stage {
+            position: relative;
+            flex: 1;
+            overflow: auto;
+            background:
+                repeating-conic-gradient(#161412 0% 25%, #100f0d 0% 50%) 50% / 22px 22px;
+        }
+
+        #preview {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .stage-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+            font-size: 13px;
+        }
+
+        .stage-bar .hint {
+            color: var(--muted);
+        }
+
+        .panel-body {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 14px;
+        }
+
+        fieldset {
+            margin: 0 0 16px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel-soft);
+        }
+
+        legend {
+            padding: 0 6px;
+            color: var(--gold);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .row {
+            display: grid;
+            align-items: center;
+            gap: 8px;
+            grid-template-columns: 58px 1fr 74px;
+            margin-bottom: 8px;
+        }
+
+        .row label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--gold);
+        }
+
+        button {
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: #221e18;
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+        }
+
+        button:hover {
+            border-color: var(--gold);
+            color: var(--gold-bright);
+        }
+
+        button.primary {
+            border-color: rgba(184, 162, 107, 0.6);
+            background: linear-gradient(180deg, #3b3226, #262017);
+            color: var(--gold-bright);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 14px;
+            border-top: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        .actions button {
+            flex: 1;
+        }
+
+        #status {
+            padding: 8px 14px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            min-height: 33px;
+        }
+
+        #status.error {
+            color: #e0857b;
+        }
+
+        #status.ok {
+            color: #9ec27f;
+        }
+
+        .file-drop {
+            display: block;
+            padding: 14px;
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .file-drop:hover {
+            border-color: var(--gold);
+            color: var(--gold-bright);
+        }
+
+        .file-drop input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <aside>
+        <h1>Cartas</h1>
+        <div class="deck-picker">
+            <select id="deck-select"></select>
+        </div>
+        <div class="card-list" id="card-list"></div>
+    </aside>
+
+    <main>
+        <div class="stage-bar">
+            <button id="fit-card" type="button">Centrar carta</button>
+            <button id="reload-data" type="button">Releer JSON</button>
+            <span class="hint">Arrastra el arte para moverlo · rueda para zoom</span>
+        </div>
+        <div class="stage">
+            <iframe id="preview" title="Vista del deck"></iframe>
+        </div>
+    </main>
+
+    <aside>
+        <h1>Ajustes</h1>
+        <div class="panel-body">
+            <fieldset>
+                <legend>Arte de la carta</legend>
+                <label class="file-drop">
+                    Cargar imagen
+                    <input id="art-file" type="file" accept="image/png,image/jpeg,image/webp,image/avif">
+                </label>
+                <div id="art-controls" style="margin-top: 12px;"></div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Motivo del deck</legend>
+                <div id="motif-controls"></div>
+            </fieldset>
+        </div>
+        <div id="status"></div>
+        <div class="actions">
+            <button id="reset" type="button">Restablecer</button>
+            <button id="save" class="primary" type="button">Guardar</button>
+        </div>
+    </aside>
+
+    <script src="./studio.js"></script>
+</body>
+
+</html>

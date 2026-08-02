@@ -15,7 +15,7 @@ window.HostfallDeckData = [
   },
   {
     "id": "blood_page",
-    "art_crop": "../../../../public/cards/crimson_court/art/blood_page.webp",
+    "art_crop": "../../../../public/cards/crimson_court/art/blood_page.jpg",
     "nombre": "Paje de la Sed",
     "tipo": "Eco — Vampiro Sirviente",
     "costo": 1,
