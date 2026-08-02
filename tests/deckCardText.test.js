@@ -317,6 +317,12 @@ test("the shared printed design keeps the approved compact geometry", () => {
   assert.match(sharedStudio, /&& !isEnergy;/u, "Energy cards must not print a cost orb");
   assert.match(sharedStudio, /hasEffect && !isToken && !isEnergy/u, "Energy cards must not print rules");
   assert.match(sharedStudio, /hasLore && !isToken && !isEnergy/u, "Energy cards must not print lore");
+  assert.match(
+    sharedStudio,
+    /const coverScale = Math\.max\(CARD_WIDTH \/ sourceWidth, CARD_HEIGHT \/ sourceHeight\)/u,
+    "art zoom must operate on the complete source image instead of a pre-cropped cover box",
+  );
+  assert.match(sharedCss, /\.tcg-art-image\.tcg-art-image--positioned/u);
 });
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {

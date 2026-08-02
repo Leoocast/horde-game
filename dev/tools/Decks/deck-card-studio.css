@@ -286,6 +286,15 @@ body {
     transform-origin: center;
 }
 
+.tcg-art-image.tcg-art-image--positioned {
+    inset: auto;
+    left: var(--art-base-left);
+    top: var(--art-base-top);
+    width: var(--art-base-width);
+    height: var(--art-base-height);
+    object-fit: fill;
+}
+
 .tcg-card-veil {
     position: absolute;
     inset: 0;

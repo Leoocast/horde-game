@@ -5,6 +5,8 @@
     const container = document.getElementById("cards-container");
     const status = document.getElementById("studio-status");
     const generatedData = window.HostfallDeckData;
+    const CARD_WIDTH = 976;
+    const CARD_HEIGHT = 1360;
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
     const cardText = window.HostfallCardText;
@@ -241,6 +243,29 @@
         return `translate(${x}px, ${y}px) scale(${zoom})`;
     }
 
+    /*
+     * object-fit: cover recorta la imagen antes de aplicar transform. Eso hace que un zoom
+     * menor que 1 sólo encoja el recorte y nunca revele la ilustración completa. Conservamos
+     * exactamente el encuadre cover en 1×, pero dimensionamos el bitmap real para que al
+     * alejarlo aparezcan de nuevo sus bordes naturales.
+     */
+    function positionArtImage(image, fullArt) {
+        const sourceWidth = image.naturalWidth;
+        const sourceHeight = image.naturalHeight;
+        if (!sourceWidth || !sourceHeight) return;
+
+        const coverScale = Math.max(CARD_WIDTH / sourceWidth, CARD_HEIGHT / sourceHeight);
+        const width = sourceWidth * coverScale;
+        const height = sourceHeight * coverScale;
+        const verticalAnchor = fullArt ? 0.2 : 0.18;
+
+        image.style.setProperty("--art-base-width", `${width}px`);
+        image.style.setProperty("--art-base-height", `${height}px`);
+        image.style.setProperty("--art-base-left", `${(CARD_WIDTH - width) * 0.5}px`);
+        image.style.setProperty("--art-base-top", `${(CARD_HEIGHT - height) * verticalAnchor}px`);
+        image.classList.add("tcg-art-image--positioned");
+    }
+
     function applyDeckMotif(motif) {
         if (!motif) return;
         for (const [slot, values] of Object.entries(motif)) {
@@ -394,6 +419,7 @@
             `;
 
             const image = cardElement.querySelector(".tcg-art-image");
+            image.addEventListener("load", () => positionArtImage(image, fullArt));
             image.addEventListener(
                 "error",
                 () => {
@@ -401,6 +427,7 @@
                 },
                 { once: true }
             );
+            if (image.complete) positionArtImage(image, fullArt);
 
             container.appendChild(cardElement);
         });

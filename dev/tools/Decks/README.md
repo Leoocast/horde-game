@@ -68,6 +68,10 @@ cargar la imagen de una carta, encuadrarla dentro de su marco (arrastrar para mo
 zoom, o los campos en píxeles), alternar su composición *full art* y desplazar el motivo de
 cabecera, banda de tipo y stats. El coste no usa motivo.
 
+El zoom se aplica sobre el bitmap completo: `1×` conserva el encuadre `cover` aprobado y los
+valores menores revelan progresivamente los bordes reales de la ilustración, sin partir de una
+imagen ya recortada.
+
 Lo que se guarda son datos, no HTML:
 
 - `artFrame` por carta en `studio.config.json`: `{ "zoom": 1.35, "x": 24, "y": -18 }`.
