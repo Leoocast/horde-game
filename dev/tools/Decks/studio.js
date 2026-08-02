@@ -12,9 +12,9 @@
     const CARD_WIDTH = 976;
     const DEFAULT_FRAME = Object.freeze({ zoom: 1, x: 0, y: 0 });
     const MOTIF_SLOTS = [
-        { key: "head", label: "Cabecera", hint: "La franja del nombre y el coste." },
-        { key: "band", label: "Banda de tipo", hint: "La franja de la línea de tipo." },
-        { key: "stats", label: "Stats", hint: "El recuadro de Fuerza / Aguante." }
+        { key: "head", label: "Cabecera" },
+        { key: "band", label: "Banda de tipo" },
+        { key: "stats", label: "Stats" }
     ];
 
     /* Estilos que sólo existen mientras se edita; el exportador abre su propio documento. */
@@ -111,14 +111,17 @@
         return {
             x: stored?.x ?? 0,
             y: stored?.y ?? 0,
-            ...(stored?.size ? { size: stored.size } : {})
+            zoom: stored?.zoom ?? 1,
+            rotation: stored?.rotation ?? 0
         };
     }
 
     function setMotif(slot, values) {
         const current = draft();
         const next = current.motif ? { ...current.motif } : {};
-        if (values.x === 0 && values.y === 0 && !values.size) delete next[slot];
+        if (values.x === 0 && values.y === 0 && values.zoom === 1 && values.rotation === 0) {
+            delete next[slot];
+        }
         else next[slot] = values;
         current.motif = Object.keys(next).length > 0 ? next : null;
         applyMotifToPreview();
@@ -171,12 +174,16 @@
             doc.body.style.removeProperty(`--motif-${key}-x`);
             doc.body.style.removeProperty(`--motif-${key}-y`);
             doc.body.style.removeProperty(`--motif-${key}-size`);
+            doc.body.style.removeProperty(`--motif-${key}-rotation`);
         }
         for (const [slot, values] of Object.entries(draft().motif ?? {})) {
             if (values.x) doc.body.style.setProperty(`--motif-${slot}-x`, `${values.x}px`);
             if (values.y) doc.body.style.setProperty(`--motif-${slot}-y`, `${values.y}px`);
-            if (values.size) {
-                doc.body.style.setProperty(`--motif-${slot}-size`, `${values.size}px auto`);
+            if (values.zoom && values.zoom !== 1) {
+                doc.body.style.setProperty(`--motif-${slot}-size`, `${values.zoom * 100}% auto`);
+            }
+            if (values.rotation) {
+                doc.body.style.setProperty(`--motif-${slot}-rotation`, `${values.rotation}deg`);
             }
         }
     }
@@ -333,7 +340,7 @@
             type: "range", min, max, step, value
         });
         const number = Object.assign(document.createElement("input"), {
-            type: "number", step, value
+            type: "number", min, max, step, value
         });
         const reset = document.createElement("button");
         reset.type = "button";
@@ -434,7 +441,10 @@
             button.textContent = label;
             button.classList.toggle("is-on", key === motifSlot);
             const values = motifOf(key);
-            button.classList.toggle("dirty", values.x !== 0 || values.y !== 0);
+            button.classList.toggle(
+                "dirty",
+                values.x !== 0 || values.y !== 0 || values.zoom !== 1 || values.rotation !== 0
+            );
             button.addEventListener("click", () => {
                 motifSlot = key;
                 renderSlotPicker();
@@ -446,15 +456,14 @@
 
     function renderMotifControls() {
         motifControls.replaceChildren();
-        const slot = MOTIF_SLOTS.find((entry) => entry.key === motifSlot);
         const values = motifOf(motifSlot);
 
-        const hint = document.createElement("p");
-        hint.className = "note";
-        hint.textContent = slot.hint;
-
         motifControls.append(
-            hint,
+            control({
+                label: "Zoom", value: values.zoom, min: 0.2, max: 4, step: 0.01,
+                unit: "×", isDefault: 1,
+                onInput: (value) => setMotif(motifSlot, { ...motifOf(motifSlot), zoom: value })
+            }),
             control({
                 label: "Horizontal", value: values.x, min: -200, max: 200, step: 1,
                 unit: " px", isDefault: 0,
@@ -464,6 +473,14 @@
                 label: "Vertical", value: values.y, min: -200, max: 200, step: 1,
                 unit: " px", isDefault: 0,
                 onInput: (value) => setMotif(motifSlot, { ...motifOf(motifSlot), y: value })
+            }),
+            control({
+                label: "Rotación", value: values.rotation, min: -180, max: 180, step: 1,
+                unit: "°", isDefault: 0,
+                onInput: (value) => setMotif(
+                    motifSlot,
+                    { ...motifOf(motifSlot), rotation: value }
+                )
             })
         );
     }

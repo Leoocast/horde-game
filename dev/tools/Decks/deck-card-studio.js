@@ -249,8 +249,14 @@
             const y = Number(values.y ?? 0);
             if (x !== 0) body.style.setProperty(`--motif-${slot}-x`, `${x}px`);
             if (y !== 0) body.style.setProperty(`--motif-${slot}-y`, `${y}px`);
-            if (values.size !== undefined && values.size !== null) {
-                body.style.setProperty(`--motif-${slot}-size`, `${Number(values.size)}px auto`);
+            if (values.zoom !== undefined && values.zoom !== null) {
+                body.style.setProperty(`--motif-${slot}-size`, `${Number(values.zoom) * 100}% auto`);
+            }
+            if (values.rotation !== undefined && values.rotation !== null) {
+                body.style.setProperty(
+                    `--motif-${slot}-rotation`,
+                    `${Number(values.rotation)}deg`
+                );
             }
         }
     }
@@ -296,8 +302,8 @@
                 && card.costo !== undefined
                 && !isToken
                 && !isEnergy;
-            const showEffect = hasEffect && !isToken;
-            const showLore = hasLore && !isToken;
+            const showEffect = hasEffect && !isToken && !isEnergy;
+            const showLore = hasLore && !isToken && !isEnergy;
             const number = String(index + 1).padStart(3, "0");
             const collectorId = String(card.collectorId || `${setCode}${number}`);
             const artist = String(card.artist || "").trim();

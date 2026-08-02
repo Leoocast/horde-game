@@ -2,15 +2,15 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "last_rain": {
-      "inputHash": "8089052fd1312bf7e0243790cd0739d10fcfa5f875bcca0f21fa6cea9c953b79",
+      "inputHash": "ca4bff7fd4392e7e9c42e23f2b76ed84e1461ea4f57948e0bfc1ab1cb01411bc",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "7592e5474895a191988478765d996ed04d117da84c0f7cd61fd31de60604a61f"
+          "sha256": "ee2c54f2e586f1d9332809bd9568931592ccf40fe5803a0ab11a54afb93d9d96"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "d5ac7248b869e6043314bc8bc2854176f6e2525afcbd5a577e64e449f2e30c28"
+          "sha256": "a31f58bb4379facaa08a62342545b925bcbd18831989edf5311ac7f500a79894"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -114,7 +114,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "ff4a1a2d3edfd1d105793c178eee91b0d172521bca72ff9dcddf21aaac6a3922"
+          "sha256": "d4fe19f6db61852435623894b3badc46a095a8b832406826569d47e5c5af6c91"
         },
         {
           "path": "src/data/decks/player/last_rain/last_rain.json",
@@ -129,106 +129,106 @@
         {
           "id": "first_dew_gatherers",
           "path": "public/cards/last_rain/first_dew_gatherers.png",
-          "sha256": "fa6b012bd659fbfedf158abcadb138a18906d79aaa35abd7d8545d78c7573787",
+          "sha256": "80e81fc9a30035bd67373c9b70cce883503ef30c24fed20393da8bbf6a95f584",
           "width": 976,
           "height": 1360
         },
         {
           "id": "iria_voice_last_rain",
           "path": "public/cards/last_rain/iria_voice_last_rain.png",
-          "sha256": "a65c683452993e1a9b96a25f187c60c1483b66cf0e90bdf4cfd3f60f5783a789",
+          "sha256": "56db36512fbf5abf34946d6d8a2107031fa4477b5d7ee934b34c864586142f0a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "keeper_sleeping_root",
           "path": "public/cards/last_rain/keeper_sleeping_root.png",
-          "sha256": "c544977a9738aac508c2c0ab5e2ebd621e01afa59215e0b730c6af43786d21ee",
+          "sha256": "623b2fa4184413fd1422a9e32c88edaec2a5cc76d439aada81e66a36b157a777",
           "width": 976,
           "height": 1360
         },
         {
           "id": "black_sap_stalker",
           "path": "public/cards/last_rain/black_sap_stalker.png",
-          "sha256": "8dc61efd71950fde42e6168ae03ad5ae7add3a1543500b80c432c605441af075",
+          "sha256": "fd8d8479179c032f82811de7aef40e309729d19d212cc433e26d2ab50308d550",
           "width": 976,
           "height": 1360
         },
         {
           "id": "arven_first_pack",
           "path": "public/cards/last_rain/arven_first_pack.png",
-          "sha256": "f435c6a6c667162c50c2cc5449d5da3e6f0a170db0ff641821fc202357576757",
+          "sha256": "64af2d4a6072a0c8939258ace51e41318f3d7db168af480cb3dcdbddbd410aa8",
           "width": 976,
           "height": 1360
         },
         {
           "id": "ancient_canopy_watchers",
           "path": "public/cards/last_rain/ancient_canopy_watchers.png",
-          "sha256": "35592a706f41a403a121e026411d120c10fbb4f9e0c6707a600ffd8af1535644",
+          "sha256": "c83cacfcb854d4f647262988dbf01c56825cedc244d142483d17466786b7b5b6",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hollow_skybreaker",
           "path": "public/cards/last_rain/hollow_skybreaker.png",
-          "sha256": "1ea5fc9a07fc0d999b2eadb7474e2b00abd0fe8f9afa2eb218bc1ef5091a3f6c",
+          "sha256": "1535166c6144ceb873c76d6f2b2f24b285c3845bc90683cbad0974255d6bb2cb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "orun_waking_root",
           "path": "public/cards/last_rain/orun_waking_root.png",
-          "sha256": "50ae8471a16442e1092bbb2e3c657ae8fe15b8f96a0fafdddd15c935343dd393",
+          "sha256": "0ee2617db7ab2f74c9ec34910c1ac8aee333fc940c3d72a76a393e8e1b78c566",
           "width": 976,
           "height": 1360
         },
         {
           "id": "marked_prey",
           "path": "public/cards/last_rain/marked_prey.png",
-          "sha256": "61e50bb148fee1e49a7a6699b69e4a13c29fec1a5f6cf342abd68cb6f0ea4f6f",
+          "sha256": "1ce3d2db321b7eb96f33548179d648fd5cc7997d0b22b6adde5b453b66e2baaa",
           "width": 976,
           "height": 1360
         },
         {
           "id": "oath_clearing",
           "path": "public/cards/last_rain/oath_clearing.png",
-          "sha256": "f3cf76e8d2963f04378e1654d4a506ba5a7bcbcde1d4e488131f896d560362aa",
+          "sha256": "7c1bf8752b8deb7d516dac8c3b5f313bec35f5007f3bba97e7fb660e7174392c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "roots_touched_sky",
           "path": "public/cards/last_rain/roots_touched_sky.png",
-          "sha256": "a23748419a830eba14361779213c33e2ea638c89003b524ec1b5ebb8421da53e",
+          "sha256": "b0581dab9cd77e83861e9fbd7a2b2633658b4ef409544ba70d0662c06d048887",
           "width": 976,
           "height": 1360
         },
         {
           "id": "first_tree_sap",
           "path": "public/cards/last_rain/first_tree_sap.png",
-          "sha256": "cd632153e652f30a930e655d735262c2fd329fd46e472ffd43d912e463162566",
+          "sha256": "f8613a00c8dc3e6c7b7de6b30ee147d44f2f46f744ccbb41571c58c01eb33a83",
           "width": 976,
           "height": 1360
         },
         {
           "id": "deep_root_spring",
           "path": "public/cards/last_rain/deep_root_spring.png",
-          "sha256": "0a88dde3b6c79edfdc603200dfc014375a6781595398b618d71c4b213ee47892",
+          "sha256": "2671c195e824e8adb75b15ff7a73726e39720168dcc06b6449c003115184c8d3",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "hollow_bell_procession": {
-      "inputHash": "6961162a18979855fbd1cb0f263690ddb8e4f301fd9918a9e9bc33fd1edcdf70",
+      "inputHash": "d3c2ecb597ca4cc6d0a4ff7c25fcbe6a9e3c2b925314c9ed2595a8daef65db6a",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "7592e5474895a191988478765d996ed04d117da84c0f7cd61fd31de60604a61f"
+          "sha256": "0806475c7721b33ae9cff186fef0ed6e45b859d020d112f19183fb64aa78bd94"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "d5ac7248b869e6043314bc8bc2854176f6e2525afcbd5a577e64e449f2e30c28"
+          "sha256": "a31f58bb4379facaa08a62342545b925bcbd18831989edf5311ac7f500a79894"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -348,7 +348,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "ff4a1a2d3edfd1d105793c178eee91b0d172521bca72ff9dcddf21aaac6a3922"
+          "sha256": "d4fe19f6db61852435623894b3badc46a095a8b832406826569d47e5c5af6c91"
         },
         {
           "path": "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
@@ -377,112 +377,112 @@
         {
           "id": "hollow_bell",
           "path": "public/cards/hollow_bell_procession/hollow_bell.png",
-          "sha256": "ace992d08638c4be5d09256712c99a9ad99c171599837a7c3c8537b44ec10517",
+          "sha256": "6fe8d5ede3ee1c6ca434fe5e619802edc3e2a36b531340a9cf059efa739e1cbd",
           "width": 976,
           "height": 1360
         },
         {
           "id": "five_knot_gallows",
           "path": "public/cards/hollow_bell_procession/five_knot_gallows.png",
-          "sha256": "c429260c2499352725c0bdd2ffbce3ad5d44f155a2f8e5a948a54ac94d2a5b95",
+          "sha256": "0341ff34ff465418f84e66627f9d11465cdd354b45b0982ce42e1d3f71741550",
           "width": 976,
           "height": 1360
         },
         {
           "id": "last_thought_carrion",
           "path": "public/cards/hollow_bell_procession/last_thought_carrion.png",
-          "sha256": "d7962c105bac4d28913af6b738c8bba6aaa1f734c58184484c84ba0a1a919461",
+          "sha256": "d2d2d7fa00f98503d753e522974e0e44bf58c1e5c196dcedac99c8ca55eb56a7",
           "width": 976,
           "height": 1360
         },
         {
           "id": "memory_shroud_bearer",
           "path": "public/cards/hollow_bell_procession/memory_shroud_bearer.png",
-          "sha256": "1709af025883b0dedf6a9d738f3474766adf44493b053d50fbd21795f9f1c958",
+          "sha256": "e1d27eb93287ebf93b4bc5a0a311391bd303204522952a5771fb39ae64d4aafd",
           "width": 976,
           "height": 1360
         },
         {
           "id": "flesh_root_tithe",
           "path": "public/cards/hollow_bell_procession/flesh_root_tithe.png",
-          "sha256": "03a9b51fe69883425dab20d52552965d8739b162f6bf0da12bb173cf34118d24",
+          "sha256": "7c0d8900e3754e8ca2da5129ba4591fd7d3916453986dffad82aa9e1667154dd",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crypt_rotwing",
           "path": "public/cards/hollow_bell_procession/crypt_rotwing.png",
-          "sha256": "c336f5c43298838e677d37bf5c97914d73354fd96a74c9146fbf42f52e087ae9",
+          "sha256": "29b20c7e9294a42f3b1aab871bf7f9a688eed638ef612bf5e3a3f0898ae51f9a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "basted_wing",
           "path": "public/cards/hollow_bell_procession/basted_wing.png",
-          "sha256": "d468be269e2aed5a74e991c57bf903998fba34f6693ec8ad2d2cfb3ecbc081e8",
+          "sha256": "83d36ff8630c34fee03a3ec94115b50c4d4180ceb5bb836701cabed98492f060",
           "width": 976,
           "height": 1360
         },
         {
           "id": "reinforced_gravewing",
           "path": "public/cards/hollow_bell_procession/reinforced_gravewing.png",
-          "sha256": "064c9002979dd932a1db1688d0530a98eac7331a4bb68b78b21b579ae767efb4",
+          "sha256": "958eb2450a706017def0136aa7b378b4a2f5c291adf558e6aa7ac2a487059d0e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "archive_carrion_crow",
           "path": "public/cards/hollow_bell_procession/archive_carrion_crow.png",
-          "sha256": "dc4575ea002b1ccb5b13edfb85c2bfc519fecbe946fdf7f8195db2f7d6f17eb3",
+          "sha256": "b5691bcad360488183d4c0f5f140c3a6c3352fe0f77bad0c67f0d37abbdec3e2",
           "width": 976,
           "height": 1360
         },
         {
           "id": "horned_linebreaker",
           "path": "public/cards/hollow_bell_procession/horned_linebreaker.png",
-          "sha256": "49760ae39c4d16c310d5669530fdd1ab0b8e698e0678466573de999c6d432456",
+          "sha256": "69fbaaae4582e146201b8e64b14dcf850f891ffb780a26f4521a52af7e0216bb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "seventh_memory_hound",
           "path": "public/cards/hollow_bell_procession/seventh_memory_hound.png",
-          "sha256": "5219c86872d045ab2e6d62f70c89eba3c3a8ed4c98e73d64c921e3edd6bb470f",
+          "sha256": "e7168d2432f3f1a47191f515eeeaf8c70ad9d7e117b7878b0d7f54f8e8a8b56a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "full_ossuary_mastiff",
           "path": "public/cards/hollow_bell_procession/full_ossuary_mastiff.png",
-          "sha256": "3e4ea97fb6d6f7d0702c060840e9c1ef804e603b96f2a0bc931f0278c908e1a5",
+          "sha256": "3ab4cef40a2f3c4781aeaae773089f596f97fd2857ac2fc7ee7f34cba8843e56",
           "width": 976,
           "height": 1360
         },
         {
           "id": "silent_bite_rats",
           "path": "public/cards/hollow_bell_procession/silent_bite_rats.png",
-          "sha256": "a8c4b9ee85af72eb4715dead9ca373b6f6aaf71bab674faa77edf01c07030fb8",
+          "sha256": "e99502a8fb4459ee64c03a14d1e3ea78c17305075c60cf4299f126faaab6d50b",
           "width": 976,
           "height": 1360
         },
         {
           "id": "fallen_gatherer",
           "path": "public/cards/hollow_bell_procession/fallen_gatherer.png",
-          "sha256": "e2921727e9e6240b59a6d40756c99aceb429248af3862cd79db63d2bfd192bb6",
+          "sha256": "1803c768ee6b162373c2a78614bc7fc5729e4a39a301c295dbe4495f8090ac68",
           "width": 976,
           "height": 1360
         },
         {
           "id": "last_march_marshal",
           "path": "public/cards/hollow_bell_procession/last_march_marshal.png",
-          "sha256": "957b4fca7593dcb14a4f83ef37bf46b50196992e564f8b95c9a41ef986067ea9",
+          "sha256": "526286f714354b98651829528d1ba17364a03071f2c3fc33e1f805a121385fbc",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "broken_forge_mutiny": {
-      "inputHash": "3884338de032a5caa15d4df0799e7d36b7257022bb38a498f802588acd22b955",
+      "inputHash": "6de2673ba53113f9e2e51405de9a94ac1ba85b7f0aea3ac32993cb2a34d79a5a",
       "sources": [
         {
           "path": "dev/tools/Decks/broken_forge_mutiny/deck-data.generated.js",
@@ -502,11 +502,11 @@
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "7592e5474895a191988478765d996ed04d117da84c0f7cd61fd31de60604a61f"
+          "sha256": "0806475c7721b33ae9cff186fef0ed6e45b859d020d112f19183fb64aa78bd94"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "d5ac7248b869e6043314bc8bc2854176f6e2525afcbd5a577e64e449f2e30c28"
+          "sha256": "a31f58bb4379facaa08a62342545b925bcbd18831989edf5311ac7f500a79894"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -610,7 +610,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "ff4a1a2d3edfd1d105793c178eee91b0d172521bca72ff9dcddf21aaac6a3922"
+          "sha256": "d4fe19f6db61852435623894b3badc46a095a8b832406826569d47e5c5af6c91"
         },
         {
           "path": "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
@@ -632,77 +632,77 @@
         {
           "id": "burning_tally_foreman",
           "path": "public/cards/broken_forge_mutiny/burning_tally_foreman.png",
-          "sha256": "458e302f07c0deeaea6d97e9c31122e6b7261368139bcc28a9c19b5139b18069",
+          "sha256": "264f98a7620d945f276aac29b6d1189d5d20eab92054959de8814fe502cd2cab",
           "width": 976,
           "height": 1360
         },
         {
           "id": "next_crew_caller",
           "path": "public/cards/broken_forge_mutiny/next_crew_caller.png",
-          "sha256": "58d6e7804a0800d44e37ae92d7576c5bdaa3c74a07800d64a21018aaa51e6596",
+          "sha256": "fa9fe698c211de420726e3bd21101b7548e77167bd4bdfeef8de6169f4450af5",
           "width": 976,
           "height": 1360
         },
         {
           "id": "open_furnace_crier",
           "path": "public/cards/broken_forge_mutiny/open_furnace_crier.png",
-          "sha256": "0d0ae6ca22f60d78f3563e60ace0de07cda3704353f33580abf52c060031b88c",
+          "sha256": "a4e161fe9eb1eea486893ed56487973381bfe6e7b09da296330036f08c86972e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "shift_hammer",
           "path": "public/cards/broken_forge_mutiny/shift_hammer.png",
-          "sha256": "9a01275591547cbbc5a1f2520dd65174d8aa69dd84faff61b783a441af5d2a3a",
+          "sha256": "6dfd7be20d8003720c052e68b88aea04f9ba2324aea950a1991dc192ba38cc6c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rain_of_rivets",
           "path": "public/cards/broken_forge_mutiny/rain_of_rivets.png",
-          "sha256": "1f963d00b53e933e5551dba400548d3d6c4657252536763e23b2718fc32535e7",
+          "sha256": "bb64b0079d143857d44f87c70ccaa21ae807ae186e40cf553aea2bd01a269d9b",
           "width": 976,
           "height": 1360
         },
         {
           "id": "double_crew_boss",
           "path": "public/cards/broken_forge_mutiny/double_crew_boss.png",
-          "sha256": "b46da4717b5dd398f7a789ab17ceafdc12f5e704981739879552749e78360b9e",
+          "sha256": "740d9f01b9754a782a8438abb3214dabc411f8078df8830241a4f42b4988889a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "three_furnaces_foreman",
           "path": "public/cards/broken_forge_mutiny/three_furnaces_foreman.png",
-          "sha256": "20617a1de8fc7147f116e078598561ae3798a7147d7681d42876a685ac7e295d",
+          "sha256": "bf8abb4d6c6892a791efccdb1a85247b169f1fb09b57d7f472950885524dcdb9",
           "width": 976,
           "height": 1360
         },
         {
           "id": "first_siren_agitator",
           "path": "public/cards/broken_forge_mutiny/first_siren_agitator.png",
-          "sha256": "4e6e410d436d186b62f4b12337e7aa7ce23d2ce7eb83ccdac738ccd6620c3890",
+          "sha256": "2e60831ec3c83babebc6ea7bfab32d2df46f377e0f08b3c66e601c221dbe8c07",
           "width": 976,
           "height": 1360
         },
         {
           "id": "open_another_gate",
           "path": "public/cards/broken_forge_mutiny/open_another_gate.png",
-          "sha256": "b69816e0dfdeb512dc8fc6692b6aee2f1329e3ef2d702d5aa35c888785a37942",
+          "sha256": "396c91bf752147c68c51ae89ca6c982ae762b7cbeaf8c211f5937b59a1c26659",
           "width": 976,
           "height": 1360
         },
         {
           "id": "three_under_one_anvil",
           "path": "public/cards/broken_forge_mutiny/three_under_one_anvil.png",
-          "sha256": "6a4aa979089ad88be1432a53300b077f20a6e1086b4829be2da217b63b798059",
+          "sha256": "758ab0d30ed1c83debe6978856231057d318abab489c6deab5e79ef412755ef1",
           "width": 976,
           "height": 1360
         },
         {
           "id": "slag_volley_master",
           "path": "public/cards/broken_forge_mutiny/slag_volley_master.png",
-          "sha256": "fe8a74ad2964da27ce9bb08e291d6fc8fecd92737e1bfd6e81cea4e314757615",
+          "sha256": "0289fbf1811d980013bccae16ff0a7ede1be41c2f8a90aebbc7c620cd42005e7",
           "width": 976,
           "height": 1360
         },
@@ -716,35 +716,35 @@
         {
           "id": "salvaged_armor_master",
           "path": "public/cards/broken_forge_mutiny/salvaged_armor_master.png",
-          "sha256": "e9144d8b00255acf0d88947f12c2fcd549d8f8a7cefd24bd36beeaf22b90c197",
+          "sha256": "fb9aed54626b805ec7f8e2079da3098a552ecf86e3f14a1d25febd3ba0acc622",
           "width": 976,
           "height": 1360
         },
         {
           "id": "repeating_blow_marshal",
           "path": "public/cards/broken_forge_mutiny/repeating_blow_marshal.png",
-          "sha256": "b002ef120f003579e2e1f082778e9af091bfef157c5e21a5810ace6923d8a102",
+          "sha256": "2e4bd787adb06aa6eafc5b016a8224b6abd5011c0717d33b739668e3e9f9c0fb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "brakka_growing_tally",
           "path": "public/cards/broken_forge_mutiny/brakka_growing_tally.png",
-          "sha256": "c24eba795d36c549dbd1f4cf8560f1c44e0dad271e3a17cb4779a8638b21afa8",
+          "sha256": "610310d0ea77532b88dd7b1796d85c6e15a30691e08b166459565d72efcf5ca2",
           "width": 976,
           "height": 1360
         },
         {
           "id": "last_rivets_gunner",
           "path": "public/cards/broken_forge_mutiny/last_rivets_gunner.png",
-          "sha256": "f03faca05df410141e5274b7ab1646a13b9fd25b675d0af0958f913cd327d81e",
+          "sha256": "f2e69da5cb6b5d32a1fbce75b4dd37dd145d5be7578f4fff3e3610ee091b144a",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "crimson_court": {
-      "inputHash": "8ea598457f8ff2e3f96463b000d95b8b891a47b63803d57c76fe6d7db31f0ee2",
+      "inputHash": "8fe6dcbe85d1833ed6e04045417f74d6814be76c0bae072980c18fc8a060543d",
       "sources": [
         {
           "path": "dev/tools/Decks/crimson_court/deck-data.generated.js",
@@ -764,11 +764,11 @@
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "7592e5474895a191988478765d996ed04d117da84c0f7cd61fd31de60604a61f"
+          "sha256": "0806475c7721b33ae9cff186fef0ed6e45b859d020d112f19183fb64aa78bd94"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "d5ac7248b869e6043314bc8bc2854176f6e2525afcbd5a577e64e449f2e30c28"
+          "sha256": "a31f58bb4379facaa08a62342545b925bcbd18831989edf5311ac7f500a79894"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -860,7 +860,7 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "ff4a1a2d3edfd1d105793c178eee91b0d172521bca72ff9dcddf21aaac6a3922"
+          "sha256": "d4fe19f6db61852435623894b3badc46a095a8b832406826569d47e5c5af6c91"
         },
         {
           "path": "src/data/decks/player/crimson_court/crimson_court.json",
@@ -875,98 +875,98 @@
         {
           "id": "crimson_energy",
           "path": "public/cards/crimson_court/crimson_energy.png",
-          "sha256": "743b59ee3b14476718d93266340c6b04e2174497f7e412ac061a6d01078e9038",
+          "sha256": "b8412a9ce94a9bcbc5d521896a1a4f4364a7d8ba2787f8f58a5a2ae1a9c11c1b",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_page",
           "path": "public/cards/crimson_court/blood_page.png",
-          "sha256": "d94548a229981a9310e5bde92ab92c5fa992ca3900e60c2cd90d3b7c9ea47a3d",
+          "sha256": "7b36549d4d5cdf42dddffcc3f9499ba389fd9936377a0da0f491eb0084fbf807",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_bat",
           "path": "public/cards/crimson_court/crimson_bat.png",
-          "sha256": "0cfb5e63cb9ce523cc627fd468c008862a556ae46c818291ebd2ccc23ed7326f",
+          "sha256": "6a638bd25e90f183a89cf4e106b8ad5204eca693f758673a5c68ef8036b4f6cb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "tithe_acolyte",
           "path": "public/cards/crimson_court/tithe_acolyte.png",
-          "sha256": "56ed74d88a18e6a094766709a758c36ede496da2d55fb0fde01dd76c47d177a1",
+          "sha256": "a2cf359d26af5d754586335ce79615d57a7bb53934c7543679a6b8289969d13f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "court_duelist",
           "path": "public/cards/crimson_court/court_duelist.png",
-          "sha256": "e6063f1cc15810f0e66d5f249e1b825c11f9695991a5a1a8c85a02562cd79f26",
+          "sha256": "776f4ca77e3660d3e83e7c8cd87094ac0b2693551aef028099c206dbf68405b2",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crypt_guardian",
           "path": "public/cards/crimson_court/crypt_guardian.png",
-          "sha256": "73459ec60437da4766f50577cc473b78fb8e5b33a9049121a0bc6fcd3097f9dd",
+          "sha256": "15329a60bc1f832f98d83e6e11893a580c25b3e37fcffa3f7ef2a24f65925e3a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "black_vein_executioner",
           "path": "public/cards/crimson_court/black_vein_executioner.png",
-          "sha256": "f55b588ab38ba35b0b2e9052bf6f4e2f091ec2db2affa97b5008e3fe602d1fe5",
+          "sha256": "7fec67323c22b681bbc06e375ffd583fb377bb5003ab304cd39550a3574dcc0f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_sentinel",
           "path": "public/cards/crimson_court/blood_sentinel.png",
-          "sha256": "7fd0b85bbadc4037bcdcdd55a82e6c39091406cea1ce7a0ba5118be0efd717a5",
+          "sha256": "13316b89849feb53efd76feee92df6c0a2a13d29474000150d459d2a7ae9bb85",
           "width": 976,
           "height": 1360
         },
         {
           "id": "eternal_feast_countess",
           "path": "public/cards/crimson_court/eternal_feast_countess.png",
-          "sha256": "eb8c65f05ab6fdc6cb6eb598ffb0d4ebcbaeff632c25bf2f1a24e375577c8d70",
+          "sha256": "9a9d4b52632a71c68b4730dc27d6982811052f9cba9e4cc7657d9e7c5ffc4bd0",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_pact",
           "path": "public/cards/crimson_court/blood_pact.png",
-          "sha256": "7bbe72f3058d55b9a17efd2023bb97f6b6afa253a96cf105f208c5ef111d6532",
+          "sha256": "cdd61355a82d05cf7d3a6049c2e6c2701f262a368cae33ac0c863ff1d15e37ed",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_impulse",
           "path": "public/cards/crimson_court/crimson_impulse.png",
-          "sha256": "a3335fbce8c2868a4650f8c8fc3e744517f21337d68108c5566d125a6c3df6a5",
+          "sha256": "135dc74b8ba1ca7f363ea5f655ebde5354d9c7878e2a4d144ccc6801b7aea25d",
           "width": 976,
           "height": 1360
         },
         {
           "id": "drain_essence",
           "path": "public/cards/crimson_court/drain_essence.png",
-          "sha256": "a4f4f97f4497d6164229cbdde6504eb894c421ccd99b7a59e40909fd39a6c1a2",
+          "sha256": "2daa4951e0883cddabbcf86dee226a108066655dc626b6a4b1558ff44b2ee829",
           "width": 976,
           "height": 1360
         },
         {
           "id": "predatory_thirst",
           "path": "public/cards/crimson_court/predatory_thirst.png",
-          "sha256": "64d2fd890d6726beb224b7306fb32d5d7e2df4729fb2a11bfd7ba29c889fcce1",
+          "sha256": "f8178bb16d0f2a0908a790bfabc3dbb4516c3bde50d96640a5bb1f7764a86e91",
           "width": 976,
           "height": 1360
         },
         {
           "id": "final_banquet",
           "path": "public/cards/crimson_court/final_banquet.png",
-          "sha256": "f2e0a5a1fd95e3d01833fc72472fb70ec4e869f0d0e9e372b2e400c150537c88",
+          "sha256": "7e466e0d383f0e7da4e63898867c4eaef0dc1cb03ee3369f1debfd46bb8cf0e3",
           "width": 976,
           "height": 1360
         }

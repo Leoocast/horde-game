@@ -155,7 +155,7 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
  * nunca en el JSON runtime. Un valor por defecto no se emite, de modo que una carta sin
  * ajustar produce exactamente el mismo HTML —y el mismo PNG— que antes de existir esta feature.
  */
-const MOTIF_SLOTS = Object.freeze(["head", "gem", "band", "stats"]);
+const MOTIF_SLOTS = Object.freeze(["head", "band", "stats"]);
 
 function finiteNumber(label, value, fallback) {
   if (value === undefined || value === null) return fallback;
@@ -196,22 +196,31 @@ function normalizeMotif(deckId, raw) {
     const value = raw[slot];
     if (value === undefined || value === null) continue;
     if (typeof value !== "object" || Array.isArray(value)) {
-      throw new Error(`${deckId}: motif.${slot} debe ser un objeto {x, y, size}.`);
+      throw new Error(`${deckId}: motif.${slot} debe ser un objeto {x, y, zoom, rotation}.`);
     }
-    const unknownKeys = Object.keys(value).filter((key) => !["x", "y", "size"].includes(key));
+    const unknownKeys = Object.keys(value).filter(
+      (key) => !["x", "y", "zoom", "rotation"].includes(key),
+    );
     if (unknownKeys.length > 0) {
       throw new Error(`${deckId}: motif.${slot} no reconoce ${unknownKeys.join(", ")}.`);
     }
     const x = finiteNumber(`${deckId}.motif.${slot}.x`, value.x, 0);
     const y = finiteNumber(`${deckId}.motif.${slot}.y`, value.y, 0);
-    const size = value.size === undefined || value.size === null
-      ? null
-      : finiteNumber(`${deckId}.motif.${slot}.size`, value.size, null);
-    if (size !== null && size <= 0) {
-      throw new Error(`${deckId}: motif.${slot}.size debe ser un ancho en px mayor que 0.`);
+    const zoom = finiteNumber(`${deckId}.motif.${slot}.zoom`, value.zoom, 1);
+    const rotation = finiteNumber(`${deckId}.motif.${slot}.rotation`, value.rotation, 0);
+    if (zoom < 0.2 || zoom > 4) {
+      throw new Error(`${deckId}: motif.${slot}.zoom debe estar entre 0.2 y 4.`);
     }
-    if (x === 0 && y === 0 && size === null) continue;
-    motif[slot] = { x, y, ...(size === null ? {} : { size }) };
+    if (rotation < -180 || rotation > 180) {
+      throw new Error(`${deckId}: motif.${slot}.rotation debe estar entre -180 y 180.`);
+    }
+    if (x === 0 && y === 0 && zoom === 1 && rotation === 0) continue;
+    motif[slot] = {
+      x,
+      y,
+      ...(zoom === 1 ? {} : { zoom }),
+      ...(rotation === 0 ? {} : { rotation }),
+    };
   }
   return Object.keys(motif).length > 0 ? motif : null;
 }

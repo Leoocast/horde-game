@@ -44,6 +44,10 @@ El renderer deriva tres variantes sin duplicar markup por deck:
   `CHRONICLE`, Energías (`SOURCE`) y tokens seleccionados;
 - token: no imprime reglas ni flavor y coloca los stats más abajo.
 
+Las Energías siguen la composición mínima de los tokens: no imprimen coste, reglas ni flavor; sólo
+nombre, línea de tipo y metadatos. El motivo de cabecera, tipo y stats admite posición, zoom desde
+20% y rotación.
+
 Un token se selecciona como *full art* con `"fullArt": true` en su entrada del manifest de imágenes
 runtime (`src/data/decks/**/*_images.json`). Esa excepción es visual; `TOKEN` y `CHRONICLE` siguen
 siendo propiedades de reglas del JSON runtime. Cazadores, mientras siga siendo sólo un preview sin
@@ -67,7 +71,8 @@ Lo que se guarda son datos, no HTML:
 
 - `artFrame` por carta en `studio.config.json`: `{ "zoom": 1.35, "x": 24, "y": -18 }`.
   Los píxeles son los de la carta a tamaño real (976×1360), no los del preview.
-- `motif` por deck, con los slots `head`, `gem`, `band` y `stats`.
+- `motif` por deck, con los slots `head`, `band` y `stats`; cada slot admite `x`, `y`, `zoom` y
+  `rotation`.
 
 Una carta sin ajustes no emite datos de encuadre. El estudio no toca los `index.html`: la vista previa es un iframe con el mismo documento
 que fotografía el exportador, así que preview y PNG no pueden divergir.

@@ -253,6 +253,14 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioApp, /doc\.documentElement\.classList\.toggle\("studio-focus"/u);
   assert.doesNotMatch(studioApp, /\.tcg-card\.studio-selected\s*\{[^}]*outline:/u);
   assert.doesNotMatch(studioApp, /\{ key: "gem"/u, "the motif editor must not expose the plain cost orb");
+  assert.match(
+    studioApp,
+    /label: "Zoom", value: values\.zoom, min: 0\.2, max: 4/u,
+    "every motif slot must allow zooming below 100%",
+  );
+  assert.match(studioApp, /label: "Rotación", value: values\.rotation/u);
+  assert.doesNotMatch(studioApp, /hint:/u, "motif panels must not include helper copy");
+  assert.doesNotMatch(studioShell, /El motivo es la textura del mazo/u);
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
   assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
   assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
@@ -284,7 +292,7 @@ test("the shared printed design keeps the approved compact geometry", () => {
 
   assert.match(
     sharedCss,
-    /\.tcg-card--common \.tcg-head\s*\{[^}]*top:\s*46px;[^}]*height:\s*74px;/u,
+    /\.tcg-card--common \.tcg-head\s*\{[^}]*top:\s*32px;[^}]*height:\s*74px;/u,
     "the common header must stay centered on the cost at type-band height",
   );
   assert.match(
@@ -299,6 +307,8 @@ test("the shared printed design keeps the approved compact geometry", () => {
   );
   assert.doesNotMatch(sharedCss, /motif-gem/u, "the cost orb must not render a motif");
   assert.match(sharedStudio, /&& !isEnergy;/u, "Energy cards must not print a cost orb");
+  assert.match(sharedStudio, /hasEffect && !isToken && !isEnergy/u, "Energy cards must not print rules");
+  assert.match(sharedStudio, /hasLore && !isToken && !isEnergy/u, "Energy cards must not print lore");
 });
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
