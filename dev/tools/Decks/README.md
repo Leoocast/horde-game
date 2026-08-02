@@ -57,7 +57,7 @@ El arte fuente debe ser local y estar separado del PNG final, normalmente bajo
 raíz de su propia carpeta de salida: eso produciría una carta anidada y destruiría la fuente al
 sobrescribir el archivo.
 
-Mono Green, Vampiros y Cazadores cumplen el contrato. Zombies y Trasgos permanecen bloqueados:
-su arte original nunca se guardó localmente y sus configuraciones todavía apuntan a los PNG
-completos. Esos dos lotes no deben exportarse hasta recibir arte fuente separado o ser sustituidos
-durante la migración de contenido y procedencia.
+Mono Green, Vampiros, Zombies y Trasgos cumplen el contrato y pasan la verificación de frescura.
+Zombies y Trasgos recibieron arte fuente separado durante L6; sus estudios ya no apuntan a los PNG
+completos. Cazadores conserva también sus fuentes locales, aunque todavía es un preview sin deck
+runtime ni lote de PNG finales.

@@ -9,44 +9,27 @@ superficie del producto todo lo que haga que se lea como una implementacion de M
 opinion legal. Antes de una publicacion comercial hace falta revisar derechos y procedencia con la
 persona responsable del producto y, si corresponde, asesoria legal.
 
-## Veredicto de publicacion
+Esa revisión comercial no forma parte de L0-L7 salvo petición explícita del usuario. Las fases
+actuales son una limpieza técnica y creativa para que el juego use identidad Hostfall.
 
-**No publicar el build actual en Steam.** Renombrar `mana`, `graveyard` o las keywords no basta.
+## Nota futura de publicación
 
-Bloqueos vigentes encontrados en el repositorio:
+Esta guía no decide si el juego está listo para Steam ni convierte L0-L7 en una revisión legal. Si
+se prepara una publicación comercial, sus licencias se revisarán como un trabajo separado.
+
+Estado vigente de la limpieza:
 
 - Los nombres visibles y artes de La Última Lluvia, La Procesión de la Campana Hueca y El Motín de
   la Forja Rota ya son propios; sus ids técnicos heredados permanecen hasta la migración explícita
   de persistencia prevista para L7.
-- Los 14 PNG finales de Vampiros quedaron anteriores a la incorporación de flavor authored y deben
-  regenerarse o revisarse dentro de L6 antes de considerar cerrado el inventario de assets.
-- La superficie reproduce en conjunto las categorias de Magic: mana, land, creature, instant,
-  sorcery, enchantment, library, battlefield, graveyard, exile, untap/main/combat/end, cast,
-  tap, mill, +1/+1 counters y gran parte de sus keywords perennes.
+- Los 61 PNG finales de los cuatro decks jugables están sincronizados con sus datos y arte local.
 - El tutorial heredado ya fue retirado por completo; el menú conserva solamente el botón
   deshabilitado `How to Play`. El log ya normaliza el texto del engine y no usa la categoría
   `Magic`.
-- Los tres lotes visuales nuevos tienen registro de generación, prompts, dimensiones y hashes, pero
-  su revisión de derechos continúa pendiente. Música, SFX, fuentes y demás recursos también
-  necesitan su propio registro antes de publicar.
-
-Referencias externas para el criterio:
-
-- Steam no permite publicar contenido que el desarrollador no posea o para el que no tenga
-  derechos adecuados: <https://partner.steamgames.com/steamdirect/>.
-- La oficina de copyright de EE. UU. distingue los metodos de juego, que no quedan protegidos por
-  copyright, de la expresion grafica y textual original, que si puede quedar protegida:
-  <https://www.copyright.gov/register/tx-games.html>.
-- La politica de fan content de Wizards permite solamente ciertos usos gratuitos y excluye usar su
-  IP dentro de otros juegos: <https://company.wizards.com/en/legal/fancontentpolicy>.
-- Wizards identifica como propias las ilustraciones, imagenes, textos y otros contenidos
-  protegibles de sus productos: <https://company.wizards.com/en/legal/terms>.
-- Una marca identifica el origen comercial de bienes o servicios; una palabra no se posee en todos
-  sus usos posibles: <https://www.uspto.gov/trademarks/basics/what-trademark>.
-
-La consecuencia practica es sencilla: una mecanica puede inspirar otra mecanica, pero no debemos
-reutilizar cartas, arte, personajes, lugares, marcos, texto expresivo ni la impresion global de que
-Hostfall es una version digital no autorizada de Magic.
+- Los tres lotes visuales generados tienen registro de generación, prompts, dimensiones y hashes;
+  el usuario confirmó además que el arte existente de Vampiros es propio. Una revisión separada de
+  licencias de música, SFX, fuentes y demás recursos sólo sería necesaria al preparar una
+  publicación comercial.
 
 ## Que significa cada capa de lenguaje
 
@@ -423,42 +406,35 @@ El registro tipado vive en `src/i18n/gameVocabulary.ts`; la normalización de te
 No volver a repartir mappings entre `translations.ts`, `cardLocalization.ts`, `selectors.ts`,
 componentes, generadores y JSON.
 
-## Guardas automatizadas de publicacion
+## Guardas automatizadas de limpieza
 
 La suite ya falla si el tutorial reaparece, si el copy localizado contiene vocabulario retirado o
-si el texto/tipo visible de una carta no se puede presentar con el vocabulario Hostfall. Todavía
-faltan guardas de assets y procedencia que fallen cuando:
+si el texto/tipo visible de una carta no se puede presentar con el vocabulario Hostfall. Las
+guardas de limpieza deben detectar cuando:
 
 - un campo visible contiene `Magic`, `mana`, metadata de proveedor, un card type/zone legacy o un
   nombre de la lista anterior;
 - un deck de produccion declara un lookup remoto, set code, collector number o una URL de cartas;
-- un manifest de produccion no tiene procedencia de arte;
 - un Rasgo carece de nombre, tooltip o definicion en ingles o espanol;
 - una fase, zona, tipo, Accion o Estado visible no sale del registro canonico;
 - un componente de juego agrega copy literal fuera de i18n;
-- el build contiene los directorios Magic-derived bajo `public/cards`;
+- el build contiene arte heredado, sin confundirlo con reemplazos propios que todavía usan una ruta
+  técnica antigua;
 - una carta impresa no coincide con el JSON runtime.
 
-El registro de recursos debe incluir, como minimo:
-
-- ruta del archivo;
-- autor/proveedor;
-- tipo de licencia o contrato;
-- permiso para uso comercial y modificacion;
-- fecha y comprobante;
-- notas de atribucion;
-- hash del archivo aprobado.
+Los manifests de generación relacionan cada PNG con su JSON, renderer y arte fuente local. Un
+inventario legal más amplio de recursos no es requisito de estas fases.
 
 ## Orden de migracion
 
 1. **Completado:** congelar el vocabulario v1.0.
 2. **Completado:** implementar el registro canónico, retirar el tutorial heredado y migrar el copy
    controlado por la app: UI, log, ARIA, tooltips, modales y caras de carta generadas por código.
-3. Convertir La Corte Carmesí, que ya tiene nombres propios, al nuevo vocabulario y verificar la
-   procedencia de todo su arte.
+3. **Completado:** convertir La Corte Carmesí, que ya tiene nombres y arte propios, al nuevo
+   vocabulario y regenerar sus cartas finales.
 4. Crear al menos una Hueste completamente original para que exista un loop publicable.
-5. Reemplazar o retirar Mono Green, Zombies y Goblins; borrar sus recursos de `public`, no solo
-   ocultarlos del selector.
+5. **Completado:** reemplazar nombres y arte de Mono Green, Zombies y Goblins. Sus ids y rutas
+   técnicas se limpian después en L7.
 6. **Completado:** eliminar proveedores remotos de cartas y metadata Magic del camino de
    produccion y de los generadores que exportan cartas finales.
 7. Diseñar un onboarding original cuando haga falta y reescribir documentación de jugador y
@@ -470,4 +446,4 @@ El registro de recursos debe incluir, como minimo:
 
 Hostfall esta listo para una revision de independencia cuando una persona que solo recibe el build
 no encuentra nombres, arte, texto, metadata, servicios ni terminologia de Magic; entiende todas las
-reglas desde el glosario Hostfall; y cada recurso distribuido tiene prueba de derechos comerciales.
+reglas desde el glosario Hostfall.

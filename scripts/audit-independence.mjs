@@ -444,18 +444,20 @@ const l46PlaygroundContractLegacyPatterns = [
   },
 ];
 
-const derivedAssetRoots = [
+// These paths still use technical names inherited from the original decks. Their current contents
+// are Hostfall replacements, so path presence is an L7 cleanup signal rather than evidence that L6
+// still ships derived art.
+const legacyAssetRoots = [
   "public/cards/mono_green_ramp",
   "public/cards/zombies",
   "public/cards/goblins",
 ];
-const derivedDistAssetRoots = [
+const legacyDistAssetRoots = [
   "dist/cards/mono_green_ramp",
   "dist/cards/zombies",
   "dist/cards/goblins",
 ];
 const cardAssetFreshness = verifyGenerationManifest();
-const provenanceFiles = walk("docs").filter((file) => /(?:resource|asset)[_-]?provenance/i.test(path.basename(file)));
 const deprecatedCardTools = walk("dev/tools/Cards");
 
 const checks = [
@@ -610,9 +612,9 @@ const checks = [
   finding(
     "legacy-internal-vocabulary",
     "warning",
-    "L4",
-    "Legacy vocabulary in engine consumers",
-    "Engine, store and playground still model legacy zones, resources, traits and states.",
+    "L7",
+    "Broad legacy-word matches in internal consumers",
+    "The exact L4 contracts are clean; L7 reviews remaining contextual or technical strings.",
     scanTextPatterns(internalText, internalLegacyPatterns),
   ),
   finding(
@@ -626,37 +628,26 @@ const checks = [
   finding(
     "derived-identities-in-dist",
     "blocker",
-    "L5",
-    "Known derived card names in the production build",
-    "The compiled build still exposes known card identities.",
+    "L7",
+    "Legacy card-name strings in the production build",
+    "Authored names are clean; compiled technical residues are removed during L7.",
     scanMatchedTerms(distText, [...DERIVED_CARD_NAMES].sort()),
   ),
   finding(
     "derived-assets-in-public",
     "blocker",
-    "L6",
-    "Known derived asset files under public",
-    "Vite copies these checked-in files into the production build.",
-    assetInventory(derivedAssetRoots),
+    "L7",
+    "Legacy card-asset roots under public",
+    "The art is replaced; L7 still needs to rename or retire the inherited technical paths.",
+    assetInventory(legacyAssetRoots),
   ),
   finding(
     "derived-assets-in-dist",
     "blocker",
-    "L6",
-    "Known derived asset files in the production build",
-    "The generated build contains the three legacy deck asset trees.",
-    assetInventory(derivedDistAssetRoots),
-  ),
-  finding(
-    "missing-resource-provenance",
-    "blocker",
-    "L6",
-    "Missing resource-provenance registry",
-    "No machine-readable art/audio/resource provenance registry was found.",
-    {
-      count: provenanceFiles.length === 0 ? 1 : 0,
-      samples: provenanceFiles.length === 0 ? ["no resource/asset provenance registry found"] : provenanceFiles.map(relative),
-    },
+    "L7",
+    "Legacy card-asset roots in the production build",
+    "The art is replaced; a rebuilt L7 package must use the final Hostfall paths.",
+    assetInventory(legacyDistAssetRoots),
   ),
   finding(
     "legacy-test-vocabulary",
@@ -693,7 +684,7 @@ if (JSON_OUTPUT) {
     for (const sample of check.samples.slice(0, 12)) console.log(`  - ${sample}`);
     if (check.samples.length > 12) console.log(`  - … ${check.samples.length - 12} more sample(s)`);
   }
-  console.log("\nDefault mode is informational. Use --strict to fail while publication blockers remain.");
+  console.log("\nDefault mode is informational. Use --strict to fail while L7 cleanup blockers remain.");
 }
 
 if (STRICT && summary.blockerCategories > 0) process.exitCode = 1;

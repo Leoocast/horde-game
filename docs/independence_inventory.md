@@ -119,8 +119,9 @@ y Vampiros (14 PNG) fueron regenerados y eran verificables en aquel corte. Los 3
 Trasgos se difirieron porque sus estudios apuntaban circularmente a esos mismos PNG como arte.
 
 Actualización L6 (2026-08-01): La Procesión de la Campana Hueca y El Motín de la Forja Rota ya
-tienen 17 fuentes separadas y 17 exportaciones verificables cada uno. La incorporación posterior de
-flavor authored dejó los 14 PNG de Vampiros como la única deuda de frescura del inventario actual.
+tienen 17 fuentes separadas y 17 exportaciones verificables cada uno. Los 14 PNG de Vampiros fueron
+regenerados después de incorporar el flavor authored. Los cuatro decks jugables suman 61/61 PNG
+frescos desde arte local separado.
 
 ## L3 — Authored data legacy
 
@@ -184,12 +185,13 @@ Las 47 identidades aparecen también como strings dentro del chunk principal del
 auditor es fija: cambiar el contenido del deck no mueve la meta automáticamente, y una identidad
 solo deja de contar cuando su nombre realmente sale de authored data y `dist`.
 
-Vampiros no forma parte de esta lista fija de identidades, pero sus recursos todavía necesitan
-procedencia y sus PNG deben sincronizarse en L2.
+Vampiros no forma parte de esta lista fija de identidades. El usuario confirmó que sus 14 artes son
+propios y L6 regeneró sus PNG desde esas fuentes locales.
 
-## L6 — Assets y procedencia
+## L6 — Arte y limpieza visual
 
-Los tres árboles derivados contienen 60 archivos y 92.68 MiB:
+Este bloque nació como inventario L0 de los tres árboles heredados. Sus rutas técnicas permanecen,
+pero el contenido visual fue sustituido durante L6:
 
 | Ruta | Archivos |
 | --- | ---: |
@@ -197,17 +199,19 @@ Los tres árboles derivados contienen 60 archivos y 92.68 MiB:
 | `public/cards/zombies` | 17 |
 | `public/cards/goblins` | 17 |
 
-Vite copia los 60 archivos y los mismos 92.68 MiB a `dist/cards`, incluso si una carta no se abre
-desde la UI.
+Vite sigue copiando esos árboles a `dist/cards`; renombrar ids y rutas pertenece a L7 y no implica
+que el arte actual siga siendo derivado.
 
-En total, `public/cards` contiene 101 archivos:
+Estado al cierre de L6:
 
-- 60 archivos de los tres árboles derivados;
-- 28 archivos de Vampiros, entre arte fuente y PNG finales;
-- 13 art crops del preview de Cazadores.
+- La Última Lluvia: 13 fuentes locales y 13 PNG frescos;
+- La Corte Carmesí: 14 fuentes locales propias y 14 PNG frescos;
+- La Procesión de la Campana Hueca: 17 fuentes locales y 17 PNG frescos;
+- El Motín de la Forja Rota: 17 fuentes locales y 17 PNG frescos.
 
-No existe un registro machine-readable de procedencia de arte, audio y otros recursos. La ausencia
-se considera un bloqueo hasta que L6 cree el registro y se documenten derechos comerciales.
+Los tres lotes creados durante la migración conservan registros de prompts y hashes. La limpieza de
+Hostfall no exige un registro legal individual de audio, fuentes o cada archivo distribuido; una
+revisión comercial completa sólo se hará si el usuario la solicita aparte.
 
 ## L7 — Pruebas y retiro de compatibilidad
 
@@ -224,11 +228,11 @@ comentarios y aliases una vez que el engine ya no dependa de ellos.
 | --- | --- |
 | Referencias explícitas y herramientas antiguas | L1 |
 | Pipeline y prueba de frescura de PNG | L2 |
-| 34 PNG legacy sin arte fuente separado | L6 |
+| 34 PNG legacy sin arte fuente separado | Resuelto en L6 |
 | 128 campos legacy restantes en authored data (baseline: 425) | L3 |
 | 859 coincidencias en engine/store/playground | L4 |
 | 47 identidades derivadas | L5 |
-| 60 assets derivados y ausencia de procedencia | L6 |
+| Arte derivado bajo los tres árboles originales | Resuelto en L6; ids y rutas técnicas pasan a L7 |
 | 1025 coincidencias en pruebas y aliases finales | L7 |
 
 ## Interpretación del baseline

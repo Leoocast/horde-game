@@ -155,8 +155,9 @@ el menú; no existe implementación, estado ni ruta de tutorial.
 
 Durante la migracion pueden sobrevivir ids legacy dentro del engine, pero no deben filtrarse a UI,
 cartas impresas, logs, ARIA ni assets de produccion. No agregar proveedores remotos de cartas ni
-arte, nombres, metadata o texto heredado de Magic. Todo recurso final necesita procedencia y
-derechos de uso comercial documentados.
+arte, nombres, metadata o texto heredado de Magic. Para estas fases, la meta es limpieza e identidad
+Hostfall; una revisión formal de licencias para publicación comercial queda fuera de alcance salvo
+que el usuario la solicite explícitamente.
 
 ## Estado actual del juego
 
@@ -711,12 +712,16 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
 
 ## Cambios recientes que importan
 
-- El flavor ya forma parte del contrato authored de los cuatro decks jugables: las 62 definiciones,
+- El flavor ya forma parte del contrato authored de los cuatro decks jugables: las 61 definiciones,
   incluidas las Fichas, tienen `flavorText.en`, `flavorText.es` y un `showFlavorText` booleano. El
   Card Studio toma ambos campos exclusivamente del JSON runtime; `showFlavorText: false` sólo evita
   imprimir el flavor cuando el texto de reglas necesita el espacio, pero no elimina el contenido.
-  TypeScript, deck lint, proyección de Card Studio y build pasan. Los 13 PNG de La Última Lluvia se
-  regeneraron en su corte de identidad; permanecen pendientes 14 de Vampiros y 34 de las Huestes.
+  TypeScript, deck lint, proyección de Card Studio y build pasan. Los 61 PNG finales de los cuatro
+  decks jugables fueron regenerados en sus respectivos cortes y pasan la prueba de frescura.
+- El usuario aprobó conservar `Blood Pact / Pacto de Sangre`: una coincidencia con un nombre
+  genérico de otra carta no convierte por sí sola el nombre en identidad heredada. La limpieza busca
+  retirar nombres realmente copiados del material de origen, no prohibir vocabulario común ni hacer
+  barridos externos de colisiones nominales.
 - El deck técnico `mono_green_ramp` ya se presenta como **La Última Lluvia** y está documentado en
   `docs/chronicle_last_rain.md`. Iria, Voz de la
   Última Lluvia es su Eco de Crónica y protagonista. El jugador sigue siendo el Chronicler común a
@@ -732,18 +737,18 @@ Cuando una carta target valida queda debajo del fade, usualmente el problema es 
   identidad final se trabaja de uno en uno y en orden narrativo: escribir una Crónica, derivar
   nombres y roles, hacerlos corresponder con los stats/efectos aprobados y sólo después producir
   arte. La Última Lluvia, La Procesión de la Campana Hueca y El Motín de la Forja Rota ya
-  completaron ese corte; L6 conserva como deuda la revisión de derechos de los lotes y la frescura
-  de los 14 PNG de Vampiros. L7 final depende de cerrar esa revisión y migrar los ids técnicos sin
-  esconder sus blockers.
+  completaron ese corte. El usuario confirmó que Vampiros ya usa arte propio; sus 14 PNG fueron
+  regenerados desde las fuentes WebP existentes y L6 quedó cerrada como limpieza visual. L7 final
+  se ocupa de los ids técnicos, rutas y residuos heredados sin esconder sus blockers.
   El pipeline completo quedó documentado en `docs/independence_cleanup_plan.md`: Crónica, Eco de
   Crónica y significado narrativo, nombres, conservación de mecánicas salvo excepciones aprobadas,
-  arte/procedencia y corte final de PNG/ids/rutas. L7 es limpieza y auditoría de publicación; no
+  arte local y corte final de PNG/ids/rutas. L7 es limpieza técnica final; no
   repite la migración del engine.
 - El usuario descartó el rediseño mecánico previsto originalmente para L5. La Última Lluvia, La
   Procesión y El Motín conservan por defecto costes, Fuerza/Aguante, efectos, timing, cantidades y sinergias; las
   únicas excepciones actuales son las de La Última Lluvia enumeradas arriba. No presentar ese
-  trabajo como cumplimiento del criterio original de independencia por rediseño. L6 queda para
-  arte/procedencia y L7 para el retiro final de identidades y archivos antiguos; cualquier nuevo
+  trabajo como cumplimiento del criterio original de independencia por rediseño. L6 cerró el arte
+  y la frescura; L7 queda para el retiro final de identidades y archivos antiguos. Cualquier nuevo
   rebalanceo requiere aprobación explícita.
 - El ajuste final de L4 está cerrado y validado por el usuario. `EnergySystem.ts` consume
   Stored Energy antes de Energía disponible/Sources; el autopago agota sólo las Sources necesarias

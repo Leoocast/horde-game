@@ -724,7 +724,7 @@
       ]
     },
     "vampires": {
-      "inputHash": "006ef90224a7d7939dc8a7ffb247614609834d5c1c44b1c13a51dcb087f4accb",
+      "inputHash": "79ad2a9e53730745ecf46a06df36bc2473e1de5bc40e30ffafd5a6222f78bfb9",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -732,7 +732,7 @@
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "0985999cc05af5df5d70487933e329e9b43ba41aac9cac0b45fe4f92dc57460f"
+          "sha256": "73980ce316a4110fba674f0b3d4b0c9b6b7edf9f5ae471bccbb1288a44c18ff2"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -740,15 +740,15 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "d70b5b2eb3596836d64a566f408f52197f5e5d6b5e7aefab4c6d3ef7605d25e7"
+          "sha256": "8d4d481b918b88e2ffed2361fd142b810568efd850fe2387ce973490989535af"
         },
         {
           "path": "dev/tools/Decks/vampires/deck-data.generated.js",
-          "sha256": "261825f230bdccbb682a0723da21a178999003e4ef069c652b727359917f4537"
+          "sha256": "939137ba915c90ad7fc345211c80de36322110df5e4ad8d84ec35703c9ef8384"
         },
         {
           "path": "dev/tools/Decks/vampires/index.html",
-          "sha256": "d5017e7fa3a8e29b03b316c343f9ef7daabd1cbcf806a32c264d82495ab6e757"
+          "sha256": "37b44e3162f0888357842e818f5626bbf992154bcd24414164aa867eb3d5a536"
         },
         {
           "path": "dev/tools/Decks/vampires/motivo.jpg",
@@ -756,7 +756,7 @@
         },
         {
           "path": "dev/tools/Decks/vampires/studio.config.json",
-          "sha256": "edd26586508936c706d2f60485ddc14bc239f58af54ddb8fb7cf3b3c331572c3"
+          "sha256": "663fa6907e4b9af0feeefea4c585c3c3f959f3915612b7b306c019bcd00de46e"
         },
         {
           "path": "public/cards/vampires/art/black_vein_executioner.webp",
@@ -840,11 +840,11 @@
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
+          "sha256": "988f9baf1119d05676aa21e4696932b2f3b80189483a197058472b4651a4a901"
         },
         {
           "path": "src/data/decks/player/vampire_preview/vampire_preview.json",
-          "sha256": "3f4392709b18539ef8de79bc990f1730e76a1c75952822df4be9767b140745d2"
+          "sha256": "7ae263c18b778a1f03f8e6a16a26d864c49319be1bdd47ac53b74300c6008873"
         }
       ],
       "cards": [
@@ -879,7 +879,7 @@
         {
           "id": "court_duelist",
           "path": "public/cards/vampires/court_duelist.png",
-          "sha256": "c85e9b24e6b47774b1253c26f53b127e636d68bf8c42e0d629c9130116d716fa",
+          "sha256": "0225cfb0ecaae71ee841e132d7a590fd61deafb01d040aed94420cd293518616",
           "width": 976,
           "height": 1360
         },
@@ -907,21 +907,21 @@
         {
           "id": "eternal_feast_countess",
           "path": "public/cards/vampires/eternal_feast_countess.png",
-          "sha256": "7748a181f88023fb4be6b2153dd78b5a9900c1c5ac0fab73eef2a53532084287",
+          "sha256": "4b1361fb4d1e2a17226088a746ac976cfd274f0159e769afaed0c4cfcadfdcdb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_pact",
           "path": "public/cards/vampires/blood_pact.png",
-          "sha256": "dea56a7248b5a4b4395e2a34783b5677e294a14be879d174469aa7ed51716885",
+          "sha256": "c4f64288ae1160d146f842a520f4c40151ddaac7d06b212a6ed4b642ec7c4c7c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_impulse",
           "path": "public/cards/vampires/crimson_impulse.png",
-          "sha256": "26690c55e0e58e77c517ede15086416988e443af3245e221c7c09c0ca22354ef",
+          "sha256": "9637bcb73e6f6d392cf8d72fa8d488fd0e7b3d52ff355118ae8a9100b8938e4f",
           "width": 976,
           "height": 1360
         },

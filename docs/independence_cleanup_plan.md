@@ -1,6 +1,6 @@
 # Plan de limpieza e independencia de Hostfall
 
-Estado: **L4 en curso — L4.1-L4.6a cerradas; L4.6b implementada y pendiente de validación manual**
+Estado: **L6 cerrada — los cuatro decks jugables tienen identidad y arte propios; L7 pendiente**
 Última actualización: 2026-08-01
 Checkpoint de origen: el usuario confirmó que la rama fue enviada y estaba limpia antes de iniciar
 este proceso.
@@ -14,9 +14,10 @@ No reemplaza a [`game_vocabulary.md`](game_vocabulary.md): ese documento sigue s
 canónica de términos y conceptos de Hostfall. Este archivo define el orden de ejecución, los límites
 de cada fase, sus criterios de aceptación y el registro de decisiones.
 
-El proceso no es una opinión ni una certificación legal. Su objetivo es producir un build cuya
-identidad, contenido, recursos y lenguaje técnico pertenezcan a Hostfall y cuya procedencia pueda
-demostrarse.
+El proceso no es una opinión ni una certificación legal. Su objetivo es limpiar el juego para que
+su identidad, contenido, recursos y lenguaje técnico pertenezcan a Hostfall. Una revisión formal
+de licencias para publicación comercial queda fuera de estas fases salvo que el usuario la pida de
+manera explícita.
 
 ## Estado general
 
@@ -25,11 +26,11 @@ demostrarse.
 | Preparación del plan | Completada | Autorizada |
 | L0 — Punto seguro e inventario | Completada | Autorizada |
 | L1 — Basura y referencias explícitas | Completada | Autorizada |
-| L2 — Fuente única para cartas | Completada con excepción diferida a L6 | Autorizada |
+| L2 — Fuente única para cartas | Completada; excepción de PNG resuelta en L6 | Autorizada |
 | L3 — Schema Hostfall para decks | Completada: 4/4 decks | Autorizada por partes y validada |
-| L4 — Limpieza interna del engine | En curso: L4.1-L4.6a cerradas; L4.6b pendiente de validación manual | Autorizada por subfases |
-| L5 — Independencia de los mazos | En curso: La Última Lluvia y La Procesión de la Campana Hueca integradas | Autorizada por deck |
-| L6 — Arte y procedencia | La Última Lluvia 13/13 y La Procesión 17/17 integradas; revisión de derechos pendiente | Autorizada por deck |
+| L4 — Limpieza interna del engine | Completada | Autorizada por subfases y validada |
+| L5 — Independencia de los mazos | Completada: cuatro decks con identidad Hostfall | Autorizada por deck y validada |
+| L6 — Arte y limpieza visual | Completada: 61/61 PNG frescos desde arte local propio | Autorizada y validada |
 | L7 — Retiro legacy y auditoría final | No iniciada | No autorizada todavía |
 
 ## Protocolo de trabajo
@@ -627,13 +628,14 @@ estadísticas + mismo efecto + misma cantidad.
 Este pipeline se ejecuta para un solo deck a la vez. La Última Lluvia, La Procesión de la Campana
 Hueca y El Motín de la Forja Rota fueron autorizados, documentados e integrados.
 
-## Fase L6 — Arte y procedencia
+## Fase L6 — Arte y limpieza visual
 
 ### Objetivo
 
-Sustituir recursos derivados y demostrar derechos de uso.
+Sustituir el arte heredado, conservar fuentes locales separadas y sincronizar las cartas finales
+con los datos actuales de Hostfall.
 
-### Deuda deliberada (2026-08-01)
+### Cierre (2026-08-01)
 
 L6 completó el corte visual y narrativo de La Última Lluvia. Sus 13 artes originales sustituyeron
 las fuentes JPG anteriores en `public/cards/mono_green_ramp/art/`; nombres, flavor, subtipos y las
@@ -652,33 +654,30 @@ completas fueron regeneradas. Corredor de Ascua y Chatarra usa fuente vertical 1
 composición full-art. Varka, Eje de la Revuelta quedó como único Eco de Crónica; reglas, stats y
 cantidades permanecen intactos y los ids técnicos se conservan para L7.
 
-Los tres lotes tienen registro de herramienta, política de referencias, prompts, dimensiones y
+La Corte Carmesí ya contaba con 14 artes propios separados bajo `public/cards/vampires/art/`. El
+usuario confirmó que ese arte pertenece al proyecto y aprobó conservar `Blood Pact / Pacto de
+Sangre`; una coincidencia con un nombre genérico no se trata como identidad heredada. Sus 14 PNG
+fueron regenerados desde el JSON y el renderer vigentes.
+
+Los tres lotes generados conservan, como documentación útil, herramienta, prompts, dimensiones y
 SHA-256 en `docs/asset_provenance_last_rain.json`, `docs/asset_provenance_hollow_bell.json` y
-`docs/asset_provenance_broken_forge.json`. La revisión de derechos bajo los términos aplicables del
-propietario queda explícitamente pendiente, de modo que los registros todavía no constituyen
-aprobación final de procedencia ni cierran L6.
+`docs/asset_provenance_broken_forge.json`. Esos registros no convierten L6 en una auditoría legal ni
+obligan a inventariar música, fuentes u otros recursos ajenos a la limpieza de cartas.
 
-La incorporación obligatoria de flavor bilingüe y `showFlavorText` al JSON runtime había dejado 61
-PNG stale/no verificables. Los tres cortes renovaron 47 imágenes y sus manifests; quedan pendientes
-únicamente los 14 PNG de Vampiros. Las proyecciones `deck-data.generated.js` están sincronizadas.
+### Contrato práctico del arte
 
-### Registro mínimo por recurso
-
-- ruta;
-- autor o proveedor;
-- licencia o contrato;
-- permiso comercial y de modificación;
-- fecha y comprobante;
-- atribución necesaria;
-- hash del archivo aprobado.
+- nombres y arte visibles propios de Hostfall;
+- arte fuente local y separado del PNG final;
+- ninguna consulta a proveedores remotos de cartas;
+- PNG final sincronizado con su JSON, renderer y arte mediante el manifest de generación.
 
 Los art crops editables deben vivir en carpetas `art/`. Un PNG final de carta no puede convertirse
 en la fuente de arte de su propio generador.
 
 ### Criterio de aceptación
 
-Cada recurso distribuido tiene procedencia documentada y todos los PNG fueron generados desde arte
-y datos locales aprobados.
+Los cuatro decks jugables muestran identidad y arte propios de Hostfall, y sus 61 PNG finales pasan
+la verificación de frescura contra datos y arte locales.
 
 ## Fase L7 — Retiro legacy y auditoría final
 
@@ -688,16 +687,14 @@ Eliminar la capa de compatibilidad y revisar el build como un tercero.
 
 ### Dependencia de las Crónicas y L6
 
-L7 final no puede cerrarse antes del pase narrativo y de L6: sin nombres, ids, rutas y arte de
-reemplazo no es posible borrar correctamente las identidades y recursos provisionales. No se
-debilitará la auditoría para ocultar esta deuda; sus blockers permanecerán visibles hasta que existan
-los reemplazos. Puede hacerse limpieza técnica no relacionada, pero no se marcará L7 completa ni se
-usará `--strict` como gate superado antes de ese corte final.
+L7 dependía del pase narrativo y visual de L6 para poder retirar correctamente ids, rutas y residuos
+provisionales. Esa dependencia ya está resuelta: los reemplazos existen y L7 puede concentrarse en
+la limpieza técnica restante.
 
 L7 no repite la migración del engine de L4 ni autoriza cambios funcionales. Su alcance es retirar
 identidades, ids, rutas, imágenes, fixtures, comentarios y compatibilidades realmente obsoletas;
 resolver de forma explícita cualquier persistencia afectada; reconstruir `dist`; y pasar la
-auditoría final de nombres, recursos, procedencia y residuos técnicos.
+auditoría final de nombres y residuos técnicos.
 
 ### Trabajo previsto
 
@@ -706,12 +703,12 @@ auditoría final de nombres, recursos, procedencia y residuos técnicos.
 - Borrar imágenes y archivos sustituidos.
 - Migrar o invalidar saves antiguos de forma explícita.
 - Ejecutar la auditoría sobre `dist`, no solamente sobre `src`.
-- Revisar nombres, imágenes, reglas, iconos, créditos y procedencia del producto final.
+- Revisar nombres, imágenes, reglas, iconos y residuos del producto final.
 
 ### Criterio de aceptación
 
 Una persona que recibe únicamente el build no encuentra nombres, arte, texto, metadata, servicios
-ni terminología específica de Magic, y cada recurso tiene prueba de derechos comerciales.
+ni terminología específica de Magic.
 
 ## Matriz de verificación
 
@@ -792,11 +789,12 @@ Todos deben confirmarse, cuantificarse y asignarse durante L0 antes de eliminarl
 | 2026-08-01 | L4.5 | Migración interna de Acciones, eventos y reglas de la Hueste. | Runtime y datos normalizados usan el vocabulario Hostfall; `game.hostRules` reemplaza el contrato anterior. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blocker L4.5 en cero; validación del usuario OK. |
 | 2026-08-01 | L4.6a | Retiro de aliases estructurales de cartas. | Runtime y consumidores usan `kinds`, `traits` y `endurance`; `Traits.ts` reemplaza `Keywords.ts` y el adaptador ya no degrada esos campos. | TypeScript OK; deck lint OK; Card Studio OK; 216/216 tests; build OK; blockers L4.5/L4.6a en cero; prueba visual dirigida OK. |
 | 2026-08-01 | L4.6b | Migración de identidad runtime a Host. | Estado, engine, store y UI usan `host`; escenarios/replays v2 traducen sus aliases únicamente en el borde. | TypeScript OK; deck lint OK; Card Studio OK; 218/218 tests; build OK; blocker L4.6b en cero; prueba visual dirigida pendiente. |
-| 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 62 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
+| 2026-08-01 | Mantenimiento L2/L6 | Flavor authored obligatorio y control explícito de impresión. | Las 61 definiciones activas conservan flavor bilingüe en el JSON runtime y el Card Studio lo proyecta sin mirrors; `showFlavorText` puede ocultarlo sin borrarlo. Los 61 PNG quedan pendientes del futuro lote de arte. | TypeScript OK; deck lint OK; Card Studio OK; 221/221 tests; build OK; auditor normal OK con deuda de assets L6 esperada; `git diff --check` OK. |
 | 2026-08-01 | L6 — concepto Mono Green | Generación del primer lote visual de La Última Lluvia. | 13 artes originales guardados sin reemplazar fuentes ni PNG actuales; lámina de revisión y registro de prompts/procedencia/hashes creados. | 13/13 archivos presentes, dimensiones compatibles con el crop, SHA-256 verificados contra el registro; aprobación visual y revisión de derechos pendientes. |
 | 2026-08-01 | L5/L6 — corte La Última Lluvia | Integración completa de identidad, arte y excepciones mecánicas aprobadas. | Los 13 nombres, subtipos y flavor se migraron; Iria recupera 3 de Vida; Arven conserva su primer +1/+1 hasta el próximo turno y todo el deck perdió Desborde. Los JPG fuente y PNG completos anteriores fueron sustituidos. Los ids técnicos se conservaron para L7. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Mono Green 13/13; hashes de procedencia 13/13. Auditor normal: 34 identidades de Huestes y 48 PNG ajenos a este corte siguen pendientes; revisión de derechos del lote y validación visual del usuario pendientes. |
 | 2026-08-01 | L5/L6 — corte La Procesión de la Campana Hueca | Integración completa de la identidad y arte propios del antiguo deck Zombie. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Muerto del Último Taño y Coloso de la Fosa Común usan fuentes verticales 1024x1536. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Zombies 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: quedan 17 identidades de Trasgos y 31 PNG no verificables (14 Vampiros, 17 Trasgos); revisión de derechos de los lotes propios pendiente. |
 | 2026-08-01 | L5/L6 — corte El Motín de la Forja Rota | Integración completa de la identidad y arte propios del antiguo deck Goblin. | Los 17 nombres, subtipos y flavor se migraron sin alterar reglas, stats, cantidades ni ids técnicos. Se añadieron 17 fuentes originales separadas y se regeneraron 17 PNG; Corredor de Ascua y Chatarra usa fuente vertical 1024x1536. Varka es el único Eco de Crónica. | TypeScript OK; deck lint OK; Card Studio OK; 222/222 tests; build OK; frescura Goblins 17/17; hashes de procedencia 17/17; revisión visual 17/17. Auditor normal: definiciones derivadas 0, quedan 3 coincidencias heredadas en `dist` y 14 PNG stale de Vampiros; revisión de derechos de los lotes propios pendiente. |
+| 2026-08-01 | L6 — cierre de arte y limpieza visual | Cierre práctico de los cuatro decks jugables bajo identidad Hostfall. | El usuario confirmó que Vampiros ya usa arte propio y aprobó conservar `Blood Pact / Pacto de Sangre`; se regeneraron sus 14 PNG sin cambiar nombres ni arte. L6 queda limitada a identidad visual, fuentes locales y frescura, no a una auditoría legal de todos los recursos del juego. | Card Studio OK; frescura Mono Green 13/13, Vampiros 14/14, Zombies 17/17 y Goblins 17/17. Los ids, nombres técnicos y rutas heredadas permanecen para L7. |
 
 ## Plantilla para cerrar una fase
 
