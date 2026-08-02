@@ -288,12 +288,14 @@
             const fullArt = isFullArt(card);
             const isToken = Boolean(card.isToken);
             const isChronicle = Boolean(card.isChronicle);
+            const isEnergy = Boolean(card.isEnergy);
             const isHordeDeck =
                 theme === "hollow_bell_procession" || theme === "broken_forge_mutiny";
             const showCost = !isHordeDeck
                 && card.costo !== null
                 && card.costo !== undefined
-                && !isToken;
+                && !isToken
+                && !isEnergy;
             const showEffect = hasEffect && !isToken;
             const showLore = hasLore && !isToken;
             const number = String(index + 1).padStart(3, "0");
@@ -314,8 +316,9 @@
                     : "";
             const variantClass = fullArt ? " tcg-card--full-art" : " tcg-card--common";
             const tokenClass = isToken ? " tcg-card--token" : "";
+            const energyClass = isEnergy ? " tcg-card--energy" : "";
             const noCostClass = showCost ? "" : " tcg-card--no-cost";
-            const metadata = `${escapeHtml(collectorId)} ${footerSeparator} © HOSTFALL 2026`;
+            const metadata = `${escapeHtml(collectorId)} ${footerSeparator} © 2026 HOSTFALL`;
             const artCredit = artist
                 ? `<div class="tcg-art-credit" aria-label="Ilustración: ${escapeHtml(artist)}"><svg class="tcg-art-credit-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6"></path></svg><span class="tcg-art-credit-name">${escapeHtml(artist)}</span></div>`
                 : "";
@@ -331,7 +334,7 @@
                 : "";
 
             const cardElement = document.createElement("article");
-            cardElement.className = `tcg-card${variantClass}${tokenClass}${noCostClass}${densityClass}`;
+            cardElement.className = `tcg-card${variantClass}${tokenClass}${energyClass}${noCostClass}${densityClass}`;
             cardElement.id = `card-${cardId.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
             cardElement.dataset.cardId = cardId;
 
@@ -361,18 +364,22 @@
                     ${stats}
                     ${typeband}
                     ${fullArt ? `
-                        ${effectMarkup}
-                        ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
-                        ${flavorMarkup}
+                        <div class="tcg-copy">
+                            ${effectMarkup}
+                            ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
+                            ${flavorMarkup}
+                        </div>
                         <div class="tcg-meta-row">
                             <div class="tcg-full-art-footer">${metadata}</div>
                             ${artCredit}
                         </div>
                     ` : `
                         <div class="tcg-textplate">
-                            ${effectMarkup}
-                            ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
-                            ${flavorMarkup}
+                            <div class="tcg-copy">
+                                ${effectMarkup}
+                                ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
+                                ${flavorMarkup}
+                            </div>
                             <div class="tcg-footer-info">${metadata}</div>
                             ${artCredit}
                         </div>

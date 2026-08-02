@@ -252,6 +252,7 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioApp, /html\.studio-focus, body\.studio-focus \{ overflow: hidden !important; \}/u);
   assert.match(studioApp, /doc\.documentElement\.classList\.toggle\("studio-focus"/u);
   assert.doesNotMatch(studioApp, /\.tcg-card\.studio-selected\s*\{[^}]*outline:/u);
+  assert.doesNotMatch(studioApp, /\{ key: "gem"/u, "the motif editor must not expose the plain cost orb");
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
   assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
   assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
@@ -263,12 +264,41 @@ test("card generators print the Hostfall copyright footer", () => {
     "utf8",
   );
 
-  assert.match(sharedStudio, /© HOSTFALL 2026/u, "shared studio is missing the copyright footer");
+  assert.match(sharedStudio, /© 2026 HOSTFALL/u, "shared studio is missing the year-first copyright footer");
   assert.match(sharedStudio, /tcg-art-credit/u, "shared studio is missing the explicit art credit");
   assert.match(sharedStudio, /tcg-full-art-footer/u, "full-art cards are missing printable metadata");
   assert.match(sharedStudio, /tcg-art-credit-icon/u, "shared studio is missing the illustration icon");
   assert.match(sharedStudio, /aria-label="Ilustración:/u, "shared studio does not label the artist's role accessibly");
   assert.doesNotMatch(sharedStudio, /Hostfall TCG/iu, "shared studio still prints the retired footer");
+});
+
+test("the shared printed design keeps the approved compact geometry", () => {
+  const sharedCss = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
+    "utf8",
+  );
+  const sharedStudio = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-head\s*\{[^}]*top:\s*46px;[^}]*height:\s*74px;/u,
+    "the common header must stay centered on the cost at type-band height",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-typeband\s*\{[^}]*min-height:\s*74px;/u,
+    "the common type band must match the header height",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-copy\s*\{[^}]*justify-content:\s*center;/u,
+    "common card copy must remain vertically centered",
+  );
+  assert.doesNotMatch(sharedCss, /motif-gem/u, "the cost orb must not render a motif");
+  assert.match(sharedStudio, /&& !isEnergy;/u, "Energy cards must not print a cost orb");
 });
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
@@ -287,7 +317,7 @@ test("Act I print metadata stays sequential and credits Dean Spencer as artist",
   assert.equal(cards.every((card) => card.artist === "Dean Spencer"), true);
 });
 
-test("Card Studio reserves full art for Chronicle Echoes and selected tokens", () => {
+test("Card Studio reserves full art for Chronicles, Energy and selected tokens", () => {
   const lastRain = new Map(buildStudioCards("last_rain").map((card) => [card.id, card]));
   const crimsonCourt = new Map(buildStudioCards("crimson_court").map((card) => [card.id, card]));
   const brokenForge = new Map(buildStudioCards("broken_forge_mutiny").map((card) => [card.id, card]));
@@ -303,13 +333,19 @@ test("Card Studio reserves full art for Chronicle Echoes and selected tokens", (
   assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.isChronicle, true);
   assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.fullArt, true);
 
+  assert.equal(lastRain.get("deep_root_spring")?.isEnergy, true);
+  assert.equal(lastRain.get("deep_root_spring")?.fullArt, true);
+  assert.equal(crimsonCourt.get("crimson_energy")?.isEnergy, true);
+  assert.equal(crimsonCourt.get("crimson_energy")?.fullArt, true);
+  assert.equal(hunters.get("territorio_de_caza")?.isEnergy, true);
+  assert.equal(hunters.get("territorio_de_caza")?.fullArt, true);
+
   assert.equal(hollowBell.get("last_knell_dead")?.isToken, true);
   assert.equal(hollowBell.get("last_knell_dead")?.fullArt, true);
   assert.equal(hollowBell.get("mass_grave_colossus")?.fullArt, true);
   assert.equal(brokenForge.get("ember_scrap_runner")?.isToken, true);
   assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
 
-  assert.equal(lastRain.get("deep_root_spring")?.fullArt, undefined);
   assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
 });
 

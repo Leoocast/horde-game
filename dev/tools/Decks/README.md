@@ -32,7 +32,7 @@ permanece en la proyección generada pero el renderer no lo imprime para dejar e
 extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para un deck runtime.
 
 El JSON runtime también declara el `collectorId` impreso. Para el Acto I la serie es continua:
-`HFA1001`, `HFA1002`, etc. El pie de carta muestra ese ID junto a `© HOSTFALL 2026`. El crédito de
+`HFA1001`, `HFA1002`, etc. El pie de carta muestra ese ID junto a `© 2026 HOSTFALL`. El crédito de
 ilustración se coloca por separado dentro del borde inferior del arte con un icono de imagen y el
 nombre del artista, para que el artista no parezca autor o propietario del juego. El nombre por defecto vive en
 `defaultArtist` dentro de `studio.config.json`; una carta puede reemplazarlo con `artist`.
@@ -41,13 +41,13 @@ El renderer deriva tres variantes sin duplicar markup por deck:
 
 - carta común: marco metálico, panel de reglas y motivo del deck;
 - *full art*: sin marco metálico ni motivo; se reserva a Ecos con el modificador runtime
-  `CHRONICLE` y a tokens seleccionados;
+  `CHRONICLE`, Energías (`SOURCE`) y tokens seleccionados;
 - token: no imprime reglas ni flavor y coloca los stats más abajo.
 
 Un token se selecciona como *full art* con `"fullArt": true` en su entrada del manifest de imágenes
 runtime (`src/data/decks/**/*_images.json`). Esa excepción es visual; `TOKEN` y `CHRONICLE` siguen
 siendo propiedades de reglas del JSON runtime. Cazadores, mientras siga siendo sólo un preview sin
-JSON runtime, declara `isChronicle` y `fullArt` en su configuración de presentación.
+JSON runtime, declara `isChronicle`, `isEnergy` y `fullArt` en su configuración de presentación.
 
 ## Card Studio
 
@@ -60,7 +60,8 @@ node dev/tools/Decks/studio-server.cjs
 
 Después, abrir `http://127.0.0.1:5178/dev/tools/Decks/studio.html`. Permite elegir deck y carta,
 cargar la imagen de una carta, encuadrarla dentro de su marco (arrastrar para mover, rueda para
-zoom, o los campos en píxeles) y desplazar el motivo de cabecera, banda de tipo, gema y stats.
+zoom, o los campos en píxeles) y desplazar el motivo de cabecera, banda de tipo y stats. El coste
+no usa motivo.
 
 Lo que se guarda son datos, no HTML:
 

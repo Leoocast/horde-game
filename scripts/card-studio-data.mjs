@@ -75,6 +75,10 @@ function authoredIsChronicle(card) {
   return Boolean(card.modifiers?.includes("CHRONICLE"));
 }
 
+function authoredIsEnergy(card) {
+  return Boolean(card.kinds?.includes("SOURCE"));
+}
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
@@ -299,7 +303,9 @@ export function buildStudioCards(deckId) {
     }
     const isToken = authoredIsToken(runtimeCard);
     const isChronicle = authoredIsChronicle(runtimeCard);
+    const isEnergy = authoredIsEnergy(runtimeCard);
     const fullArt = isChronicle
+      || isEnergy
       || (isToken && imageManifest.cards?.[runtimeCard.id]?.fullArt === true);
     return {
       id: runtimeCard.id,
@@ -317,6 +323,7 @@ export function buildStudioCards(deckId) {
       cantidad: runtimeCard.quantity,
       ...(isToken ? { isToken: true } : {}),
       ...(isChronicle ? { isChronicle: true } : {}),
+      ...(isEnergy ? { isEnergy: true } : {}),
       ...(fullArt ? { fullArt: true } : {}),
       ...(artFrame ? { art_frame: artFrame } : {}),
     };

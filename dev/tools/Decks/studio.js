@@ -13,7 +13,6 @@
     const DEFAULT_FRAME = Object.freeze({ zoom: 1, x: 0, y: 0 });
     const MOTIF_SLOTS = [
         { key: "head", label: "Cabecera", hint: "La franja del nombre y el coste." },
-        { key: "gem", label: "Gema", hint: "El círculo del coste de Energía." },
         { key: "band", label: "Banda de tipo", hint: "La franja de la línea de tipo." },
         { key: "stats", label: "Stats", hint: "El recuadro de Fuerza / Aguante." }
     ];

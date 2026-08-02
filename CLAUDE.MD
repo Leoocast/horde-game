@@ -198,8 +198,9 @@ nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/
 Los cinco estudios usan `deck-card-studio.js` y `deck-card-studio.css`: existe una sola estructura
 de carta y los decks sólo aportan variables de tema, motivo e insignia. El diseño común usa marco
 metálico, panel de reglas y motivo. El diseño *full art* no usa marco metálico ni motivo y se aplica
-a todo Eco `CHRONICLE` y a los tokens cuyo manifest de imágenes declare `fullArt: true`. Los tokens
-no imprimen reglas ni flavor y llevan los stats más abajo. No crear variantes copiadas por deck.
+a todo Eco `CHRONICLE`, a toda Energía `SOURCE` y a los tokens cuyo manifest de imágenes declare
+`fullArt: true`. Las Energías no imprimen coste. Los tokens no imprimen reglas ni flavor y llevan
+los stats más abajo. No crear variantes copiadas por deck.
 
 Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
 continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por

@@ -195,6 +195,8 @@ window.HostfallDeckData = [
     "desc": "Agota: Gana {E}.",
     "lore": "La primera gota no rompió el silencio. Enseñó a las raíces a responder.",
     "showFlavorText": true,
-    "cantidad": 15
+    "cantidad": 15,
+    "isEnergy": true,
+    "fullArt": true
   }
 ];

@@ -13,7 +13,9 @@ window.HostfallDeckData = [
     "desc": "Agota: Gana {E}.",
     "lore": "Todo juramento deja algo atrás.",
     "showFlavorText": true,
-    "cantidad": 12
+    "cantidad": 12,
+    "isEnergy": true,
+    "fullArt": true
   },
   {
     "id": "blood_page",

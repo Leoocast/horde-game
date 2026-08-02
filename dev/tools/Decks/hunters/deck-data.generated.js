@@ -10,7 +10,9 @@ window.HostfallDeckData = [
     "def": null,
     "desc": "Agota: Gana {E}.",
     "lore": "Toda presa deja un rastro. Todo rastro termina aquí.",
-    "cantidad": 12
+    "cantidad": 12,
+    "isEnergy": true,
+    "fullArt": true
   },
   {
     "id": "trampa_de_mandibulas",
