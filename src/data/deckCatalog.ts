@@ -1,7 +1,7 @@
 import type { CardKind, CardModifier, Trait } from "../engine/hostfallVocabulary";
 import type { TranslationKey } from "../i18n/translations";
 import { DECK_REGISTRY } from "./decks";
-import { adaptHostfallDeck } from "./hostfallDeckAdapter";
+import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export type NewDeckCard = {
   id: string;
@@ -11,6 +11,13 @@ export type NewDeckCard = {
     en?: string;
     es?: string;
   };
+  /** Narrative text is authored for every card even when the printed layout hides it. */
+  flavorText: {
+    en: string;
+    es: string;
+  };
+  /** Card Studio printing flag; false preserves flavor in data without rendering it on the card. */
+  showFlavorText: boolean;
   quantity?: number;
   isToken?: boolean;
   energyCost?: number | { amount: number };
@@ -34,7 +41,7 @@ export type NewDeckCard = {
 /** Marks an ability the engine does not run generically.
  *  - "pending": not implemented yet; the normalizer skips it and deck lint reports it as WIP.
  *  - "ignored": deliberately not implemented for this game mode (e.g. haste grants for the Host).
- *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Smallpox). */
+ *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Tithe of Flesh and Root). */
 export type AbilityEngineSupport = "pending" | "ignored" | "custom";
 
 export type NewDeckAbility = {
@@ -110,7 +117,7 @@ function toInspectable(entry: (typeof DECK_REGISTRY)[number]): InspectableDeck {
   return {
     id: entry.deck.id,
     label: entry.label,
-    deck: adaptHostfallDeck(entry.raw),
+    deck: normalizeAuthoredDeck(entry.raw),
     images: entry.images,
     presentation: entry.presentation,
   };

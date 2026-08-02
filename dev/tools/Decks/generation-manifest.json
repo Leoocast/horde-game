@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "decks": {
-    "monogreen": {
-      "inputHash": "499484ea1055dc8f80347c612612d44fc7aa9323cd8db7b1d4308185e6677733",
+    "last_rain": {
+      "inputHash": "0f07fc6e3ab439c32cae505cbd7e1419df11c7a55a2038246973f8ee401d484f",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -10,213 +10,213 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "d70b5b2eb3596836d64a566f408f52197f5e5d6b5e7aefab4c6d3ef7605d25e7"
+          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
         },
         {
-          "path": "dev/tools/Decks/monogreen/deck-data.generated.js",
-          "sha256": "41f363056df03b903bb9c755b0db2778ff07d0f856d3d3b85dd0bc2fe36860ae"
+          "path": "dev/tools/Decks/last_rain/deck-data.generated.js",
+          "sha256": "354bd837f8c9bf15df74dbd9bcd170a9bf2eca8132c785548940ef31924700ce"
         },
         {
-          "path": "dev/tools/Decks/monogreen/index.html",
-          "sha256": "fecf52428232164fd676e7ae7fed29c6d111517bd9f84a433b381565858c90e7"
+          "path": "dev/tools/Decks/last_rain/index.html",
+          "sha256": "3da08ace249439206c9e512347366e7b7b6b46683f206140173cf00475cf9348"
         },
         {
-          "path": "dev/tools/Decks/monogreen/motivo.avif",
+          "path": "dev/tools/Decks/last_rain/motivo.avif",
           "sha256": "283d0b935e8fab6eb5c314c8b64510168b1e698e86ea38c56362aa32fc71e9d6"
         },
         {
-          "path": "dev/tools/Decks/monogreen/studio.config.json",
-          "sha256": "459f7e10568ef3669c02d9249cf5a3be6d39c4af9ba21bb6731255727572f4df"
+          "path": "dev/tools/Decks/last_rain/studio.config.json",
+          "sha256": "c55f3313415a3c40a3633aa54ffce2ce8d6aade5913229fb180e962b0ae4338d"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/beast_kin_ranger.jpg",
-          "sha256": "51e7ee5f8f67bcd836ac6ff090b7405192756db44b89473f342d353658f38f81"
+          "path": "public/cards/last_rain/art/ancient_canopy_watchers.png",
+          "sha256": "0d8e20b36cf6b281df1e6d499a87364c690dc2c5e4fef10ef2047daee9e0b724"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/broken_wings.jpg",
-          "sha256": "55cfacd6de5543a4ba1400dafff732c00d98382e4bfa725ae66a2d404c97cdeb"
+          "path": "public/cards/last_rain/art/arven_first_pack.png",
+          "sha256": "754e811ef1a8dfbc721fa9f0f1ac3795f5d9353ddb50dba3d06b93bdc38fe90f"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/colossadactyl.jpg",
-          "sha256": "ef689a0adf076575013818b735390eeca9264a8bf1b42a6caaa3eab2c48a7483"
+          "path": "public/cards/last_rain/art/black_sap_stalker.png",
+          "sha256": "05cb72bf7da1f4baec9c93bc0f102eeb15f0674c178dad1cddb8a400f77360f4"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/cosmic_hunger.jpg",
-          "sha256": "6628993e4e3e663e56b629c2ab80a106e3492923800ce959ce388163ceedaffd"
+          "path": "public/cards/last_rain/art/deep_root_spring.png",
+          "sha256": "c165841f537df4148dc1a18d7adbf956444046e8d6e9d06bde83d2e7310a5da4"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/druid_of_the_cowl.jpg",
-          "sha256": "166848043ac36ffa6441d7b00e54151ef7711bf000e6479d7f13c3df3b3b7f5d"
+          "path": "public/cards/last_rain/art/first_dew_gatherers.png",
+          "sha256": "41863b0d1a9d60e3922290b64c2047cf7f51d9ee67d9d3088d8d22217b9bf9ef"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/forest.jpg",
-          "sha256": "2d36dcb61f6128900dc8d4cc2f423a5cece46c42be9144b011417e259a92ce2a"
+          "path": "public/cards/last_rain/art/first_tree_sap.png",
+          "sha256": "68841d7dc62221441cad4a105a8cbe778c64e2871e4ec8f6fa37740f81a94680"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/giant_growth.jpg",
-          "sha256": "31f23be3dd33035d52c7c605b64d69b69f93eb35b49fed3303cc3215bf41ef66"
+          "path": "public/cards/last_rain/art/hollow_skybreaker.png",
+          "sha256": "693618e467be2eeba88f8e3ded0fce0f3afc085f3a7b5546d548f7845f0dd2f0"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/ichorspit_basilisk.jpg",
-          "sha256": "bb371566bd59d8ca2f42a937876e11edb0c40455c1cf55ea2f9a67615032b613"
+          "path": "public/cards/last_rain/art/iria_voice_last_rain.png",
+          "sha256": "4699357b569150c9370d688e8f3628ebabead65afb710078d77c58370237a149"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/llanowar_elves.jpg",
-          "sha256": "20810bc6d332e5785e4f091303f2439eccd8fd6ddfd2ca3c27d37d3eca86d289"
+          "path": "public/cards/last_rain/art/keeper_sleeping_root.png",
+          "sha256": "f95de4f0a676d56f6e5d841b94fef8a66b06b4fcccf475ea03299fbd720da806"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/magnigoth_sentry.jpg",
-          "sha256": "ad34e76231410a3777273a406c0a79f3995327846db56424306d5d089d40bb31"
+          "path": "public/cards/last_rain/art/marked_prey.png",
+          "sha256": "b4c0cc0b7dbbd255de2ef89d95564390d8dd1659310992423633a876f51f4814"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/ruthless_predation.jpg",
-          "sha256": "c92db124eb650db75772ce855ce741b337bc3de75223c593807d4cd59854661c"
+          "path": "public/cards/last_rain/art/oath_clearing.png",
+          "sha256": "d0a5df056c319b480c70272611229f21c4226989af096b7f68ae3f05688803da"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/sunshower_druid.jpg",
-          "sha256": "6f694877422c3e45c87073970c7f72bb503342702399d9b4832e11628fd6c30a"
+          "path": "public/cards/last_rain/art/orun_waking_root.png",
+          "sha256": "e6b4165864fb5b5beffe7185b369c2fddfdd60762266f4e68763a70ab15264fc"
         },
         {
-          "path": "public/cards/mono_green_ramp/art/timberland_ancient.jpg",
-          "sha256": "108f52832a9a91dcd6b7d44dcfbf55890250b69d9bec087438c7c77bcedd2742"
+          "path": "public/cards/last_rain/art/roots_touched_sky.png",
+          "sha256": "3e0e819fe7cfd93a6e1f5086e58e2ccda87f096c1bca6f1f4ae2b6349369b2c2"
         },
         {
-          "path": "public/fonts/mono-green/cinzel-decorative-latin.woff2",
+          "path": "public/fonts/last-rain/cinzel-decorative-latin.woff2",
           "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
         },
         {
-          "path": "public/fonts/mono-green/cinzel-latin.woff2",
+          "path": "public/fonts/last-rain/cinzel-latin.woff2",
           "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
         },
         {
-          "path": "public/fonts/mono-green/lora-italic-latin.woff2",
+          "path": "public/fonts/last-rain/lora-italic-latin.woff2",
           "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
         },
         {
-          "path": "public/fonts/mono-green/lora-normal-latin.woff2",
+          "path": "public/fonts/last-rain/lora-normal-latin.woff2",
           "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
         },
         {
-          "path": "public/fonts/mono-green/oswald-latin.woff2",
+          "path": "public/fonts/last-rain/oswald-latin.woff2",
           "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
         },
         {
-          "path": "public/fonts/mono-green/outfit-latin.woff2",
+          "path": "public/fonts/last-rain/outfit-latin.woff2",
           "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
+          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
         },
         {
-          "path": "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-          "sha256": "82e9a3a8de862ffad4eee614f87f03097fb552e6b49a433325847d9a71fdac3f"
+          "path": "src/data/decks/player/last_rain/last_rain.json",
+          "sha256": "3e558649e007d1353bf568bda82fd3cfb1de03dc9072b033f8251e4f681a57af"
         }
       ],
       "cards": [
         {
-          "id": "llanowar_elves",
-          "path": "public/cards/mono_green_ramp/llanowar_elves.png",
-          "sha256": "8f1c7182428f71712bacb5b015fa22f7aa9fa5cef2457602f78a7dc8f0422841",
+          "id": "first_dew_gatherers",
+          "path": "public/cards/last_rain/first_dew_gatherers.png",
+          "sha256": "e1825fa6c84071fb5257dc13db411c2e1b034619a2de0205e69a3017541d037a",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "sunshower_druid",
-          "path": "public/cards/mono_green_ramp/sunshower_druid.png",
-          "sha256": "ca157dbb15717a88fe2aade26dbdfd091548720e10801ae151058e5d7d7f3e8a",
+          "id": "iria_voice_last_rain",
+          "path": "public/cards/last_rain/iria_voice_last_rain.png",
+          "sha256": "0deb775a923cbf872f59a045dbff492f37497a9fa8c8810e8aa9b3cf79f55b6a",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "druid_of_the_cowl",
-          "path": "public/cards/mono_green_ramp/druid_of_the_cowl.png",
-          "sha256": "e874c0fd8c44c96a3aa3d3c58f3b9b297933dd855bc22946cad3349172da77cd",
+          "id": "keeper_sleeping_root",
+          "path": "public/cards/last_rain/keeper_sleeping_root.png",
+          "sha256": "18842b73d20c2cb44a3fbc0547a9a41f0a3aa6d3f8c572aa9596f16f40d17fb7",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "ichorspit_basilisk",
-          "path": "public/cards/mono_green_ramp/ichorspit_basilisk.png",
-          "sha256": "d6d6c9c043a46eb9458ced0d37e36878e44aae00986f07cc173277bf80e86126",
+          "id": "black_sap_stalker",
+          "path": "public/cards/last_rain/black_sap_stalker.png",
+          "sha256": "1b408f51f410dd6aaf619e861d0f58ccf1cf9233cd5dec2300ac0ee4671c5345",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "beast_kin_ranger",
-          "path": "public/cards/mono_green_ramp/beast_kin_ranger.png",
-          "sha256": "07fb738847205158a0797628d7b87da3c7c7478cf8f07c55d8ec62e70d19d01e",
+          "id": "arven_first_pack",
+          "path": "public/cards/last_rain/arven_first_pack.png",
+          "sha256": "1f78ace0b028f6b64129060e089970242f5cdee52d517603309a5336538afb09",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "magnigoth_sentry",
-          "path": "public/cards/mono_green_ramp/magnigoth_sentry.png",
-          "sha256": "756d1370b6ca6eccaed1f7df20359282a1810afbab0ed2541798ff4aa57feae3",
+          "id": "ancient_canopy_watchers",
+          "path": "public/cards/last_rain/ancient_canopy_watchers.png",
+          "sha256": "9aa2046b456b08248d4255c34e36436a27ec2fc5b917b21f10e1f06f891ee165",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "colossadactyl",
-          "path": "public/cards/mono_green_ramp/colossadactyl.png",
-          "sha256": "b6f9d70ce68f721eef93c54735313d79ff8e0bf5e0e3714c72b8931fcc4bf5c0",
+          "id": "hollow_skybreaker",
+          "path": "public/cards/last_rain/hollow_skybreaker.png",
+          "sha256": "3395b66614ab9a335e2e2d490b9d15ba5b7d51ad467b65880fa58c197c9e49b8",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "timberland_ancient",
-          "path": "public/cards/mono_green_ramp/timberland_ancient.png",
-          "sha256": "c314ad33fb5c6ae7583f810ec7ff3a8490fb24a4a6e9c1de87d89134ab77d9a1",
+          "id": "orun_waking_root",
+          "path": "public/cards/last_rain/orun_waking_root.png",
+          "sha256": "9c5140e6579494ce17dfd7642bec583ff0ecdaedbd6fac7155abcba59f455593",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "cosmic_hunger",
-          "path": "public/cards/mono_green_ramp/cosmic_hunger.png",
-          "sha256": "f23c4d1910244ed137abf72ed992bd2432a3ead9b04c773b912eeef2a83c1756",
+          "id": "marked_prey",
+          "path": "public/cards/last_rain/marked_prey.png",
+          "sha256": "d97188efa0bc444826ca2aa3f9aba076cc7f7f584037b928633d1ca3b52a6e92",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "ruthless_predation",
-          "path": "public/cards/mono_green_ramp/ruthless_predation.png",
-          "sha256": "ab704b338588fa3c7091931d53c4a73d37f74a389567b1cea0a5d7d3d25b00b0",
+          "id": "oath_clearing",
+          "path": "public/cards/last_rain/oath_clearing.png",
+          "sha256": "6a461849600f1d0938e8a403076bcdc4ac04be84d216c1ee4be999486180883e",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "broken_wings",
-          "path": "public/cards/mono_green_ramp/broken_wings.png",
-          "sha256": "0f1de07f4381d0b1f32a3d8d1bdecd3df04974972b721ec17acb825dfa2aff1e",
+          "id": "roots_touched_sky",
+          "path": "public/cards/last_rain/roots_touched_sky.png",
+          "sha256": "b3f1f8e3e597e445b08b0c2ab36fad4c15b46937c81e48fe81920e8f9623dc05",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "giant_growth",
-          "path": "public/cards/mono_green_ramp/giant_growth.png",
-          "sha256": "62d401c7116e0988115f0d93c698dc950280885dfaf90529dd737afe6dde4025",
+          "id": "first_tree_sap",
+          "path": "public/cards/last_rain/first_tree_sap.png",
+          "sha256": "64b9cb3400d018b8fa3c71b3875de4ebfda22fe075288c51289424e2068ecd8e",
           "width": 976,
           "height": 1360
         },
         {
-          "id": "forest",
-          "path": "public/cards/mono_green_ramp/forest.png",
-          "sha256": "bef7548a0bb332281baa5df0119a483ef75f4c32adf1a0d2aca50c021b922f0a",
+          "id": "deep_root_spring",
+          "path": "public/cards/last_rain/deep_root_spring.png",
+          "sha256": "f8912daca2439b7c174df4cc8377f1e7579bcb9644ecbb2b76bb4cd4ed7a918c",
           "width": 976,
           "height": 1360
         }
       ]
     },
-    "vampires": {
-      "inputHash": "006ef90224a7d7939dc8a7ffb247614609834d5c1c44b1c13a51dcb087f4accb",
+    "hollow_bell_procession": {
+      "inputHash": "91efaf19fad23db443d6d0af1d63263acdfa2d45f0354a4ef319acefd7be4569",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "29d406a22a7fdfa66b9f7e479de0eadb0640dc58b1dfef4cccdfe9f71dabda74"
+          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
-          "sha256": "0985999cc05af5df5d70487933e329e9b43ba41aac9cac0b45fe4f92dc57460f"
+          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
         },
         {
           "path": "dev/tools/Decks/deck-card-text.js",
@@ -224,208 +224,724 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "d70b5b2eb3596836d64a566f408f52197f5e5d6b5e7aefab4c6d3ef7605d25e7"
+          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
         },
         {
-          "path": "dev/tools/Decks/vampires/deck-data.generated.js",
-          "sha256": "261825f230bdccbb682a0723da21a178999003e4ef069c652b727359917f4537"
+          "path": "dev/tools/Decks/hollow_bell_procession/deck-data.generated.js",
+          "sha256": "289bcf33024fae2ccf0af18583ca87a52f3900c74a62def9f97039c69c549039"
         },
         {
-          "path": "dev/tools/Decks/vampires/index.html",
-          "sha256": "d5017e7fa3a8e29b03b316c343f9ef7daabd1cbcf806a32c264d82495ab6e757"
+          "path": "dev/tools/Decks/hollow_bell_procession/index.html",
+          "sha256": "6f34c1d531fac4499a09c612516aca6138a208d203f2e3b2aed9c70ef94f7b35"
         },
         {
-          "path": "dev/tools/Decks/vampires/motivo.jpg",
-          "sha256": "d65476f89e08a0ae90198eb0395414d02bd8aafcddc95e8147bd64ae8cfb3180"
+          "path": "dev/tools/Decks/hollow_bell_procession/motivo.avif",
+          "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
         },
         {
-          "path": "dev/tools/Decks/vampires/studio.config.json",
-          "sha256": "edd26586508936c706d2f60485ddc14bc239f58af54ddb8fb7cf3b3c331572c3"
+          "path": "dev/tools/Decks/hollow_bell_procession/studio.config.json",
+          "sha256": "11c30482a6abb1f37a052f793a559ce3bcdcfa86efe1e52c3dfa8f987fcfc008"
         },
         {
-          "path": "public/cards/vampires/art/black_vein_executioner.webp",
-          "sha256": "bb8901ba19135545353ec0962d6c273f7367f1cedeb245aeda0c078246d65684"
+          "path": "public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
+          "sha256": "68fe452f84a5dce6e60206efc996c586261b63bb76b33c920da5fb3d27877905"
         },
         {
-          "path": "public/cards/vampires/art/blood_pact.webp",
-          "sha256": "d6f0ea91aaeac4792c06722b6b04e435aac67d53665e6ef422bb6557992e0052"
+          "path": "public/cards/hollow_bell_procession/art/basted_wing.png",
+          "sha256": "16d30ccd7d4efe8d1c9d38fa27711e684f5d2f1760a06386292214b99cdf9eb7"
         },
         {
-          "path": "public/cards/vampires/art/blood_page.webp",
-          "sha256": "55c78acdc828ab28d39537ca2b3e88b718a0087de6bb78471894ed138ec2dd57"
+          "path": "public/cards/hollow_bell_procession/art/crypt_rotwing.png",
+          "sha256": "0b6a823fcaad3f305f84ebe74c60b13e7528ee9c58fd63029ca4186d956d7d60"
         },
         {
-          "path": "public/cards/vampires/art/blood_sentinel.webp",
-          "sha256": "9e8a5a4a1c2aec8f33465256c97ce606fee9435acf02681cea7266a179b81ecf"
+          "path": "public/cards/hollow_bell_procession/art/fallen_gatherer.png",
+          "sha256": "6db577df4a8831d8ed198295842b4db7137bfec32675ba9e08b2207422a7fc45"
         },
         {
-          "path": "public/cards/vampires/art/court_duelist.webp",
-          "sha256": "17636533ea3f477e037a0f63911e3a623573333d7ab9dac1956c0094cbc073c0"
+          "path": "public/cards/hollow_bell_procession/art/five_knot_gallows.png",
+          "sha256": "47ee564a2119ce65080f5293a10df985053fcf6a7a4ea0876530c652f45de9b7"
         },
         {
-          "path": "public/cards/vampires/art/crimson_bat.webp",
-          "sha256": "a08941a5ce06aa37dc9d6055b7b775cafbd486cdbb5e23d9826a6b957688d2ef"
+          "path": "public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
+          "sha256": "c05d6a0030004b9725b25117bbfa9f877cc124f2abf6e0eab77017f18fae50f7"
         },
         {
-          "path": "public/cards/vampires/art/crimson_energy.webp",
-          "sha256": "dc6892164542a762fef314503714b143db85788eb4c98d132e74ce6459a6cafb"
+          "path": "public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
+          "sha256": "11eb460f2ce955f26d1f16538a61c1241c6a6dea562d6375e652aa200bb3fa60"
         },
         {
-          "path": "public/cards/vampires/art/crimson_impulse.webp",
-          "sha256": "c306df1fd30438a6fc27e3c568975b49b37f71319055921e47aba5f55ff53809"
+          "path": "public/cards/hollow_bell_procession/art/hollow_bell.png",
+          "sha256": "614ca8176244ec826d5009320622888eca9fe68778c8589d4a5af602b41eabb5"
         },
         {
-          "path": "public/cards/vampires/art/crypt_guardian.webp",
-          "sha256": "ce368d0ac82ca0ac878f6c2c52739ace7735ad5e5cd110f33ed03a9e1b307986"
+          "path": "public/cards/hollow_bell_procession/art/horned_linebreaker.png",
+          "sha256": "23f4b76693d68ab00532ee266156c0b5f686c9161b0358537517d15556d4ffe1"
         },
         {
-          "path": "public/cards/vampires/art/drain_essence.webp",
-          "sha256": "9171ccec201bd78a6bd78842b55ac01e32d029ba948b149593732c19674b11ee"
+          "path": "public/cards/hollow_bell_procession/art/last_knell_dead.png",
+          "sha256": "e05e870cda25bc63b960a5a63db8bdca32f04452e5e76ffe3b813fa16885778f"
         },
         {
-          "path": "public/cards/vampires/art/eternal_feast_countess.webp",
-          "sha256": "868076daff3db988aaea6dc6299374fff2d10eea064eb3713fa9088525253b99"
+          "path": "public/cards/hollow_bell_procession/art/last_march_marshal.png",
+          "sha256": "ce7c6378f63eb70a410e8a6ad1fbce679e4cebb7fa518cd8632cf99f0d7b0cf2"
         },
         {
-          "path": "public/cards/vampires/art/final_banquet.webp",
-          "sha256": "4e8761574429b22603b32d94cf393d91d1a72b2978ed820aa00dc3565307f741"
+          "path": "public/cards/hollow_bell_procession/art/last_thought_carrion.png",
+          "sha256": "3daf6ada5f9524d15b50b9e281f916e39ef6966ac97aabcd840d670cf7800e32"
         },
         {
-          "path": "public/cards/vampires/art/predatory_thirst.webp",
-          "sha256": "86da71052942618e8647cb73b7770bf328a631f702049a63ca764f15f128a744"
+          "path": "public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
+          "sha256": "8ab19a655784e0adc38983394eb598014a8dc0c22cb3288243eecca8430c275f"
         },
         {
-          "path": "public/cards/vampires/art/tithe_acolyte.webp",
-          "sha256": "2742b3d8a9e65c5048eeb7fcb76eb41226b7d4be0fe84e978a31aa7460ca9847"
+          "path": "public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
+          "sha256": "d52f2f857eb5a2257b4e33007fd20681df3f4a076c7155f9f2dd8c7af000774e"
         },
         {
-          "path": "public/fonts/mono-green/cinzel-decorative-latin.woff2",
+          "path": "public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
+          "sha256": "3ade458b5fee98eaef7cb9113804ee93024d90e9f91f6b42803b7748cbf253f1"
+        },
+        {
+          "path": "public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
+          "sha256": "a6a926b3b7c5497294a0a3f3c7bd3fee62128690c442bf5059604c888c26a125"
+        },
+        {
+          "path": "public/cards/hollow_bell_procession/art/silent_bite_rats.png",
+          "sha256": "7013c1fe90506107c0f2c151dcc8b351f64bdafeba3b22057f58f08ace9a6f5b"
+        },
+        {
+          "path": "public/fonts/last-rain/cinzel-decorative-latin.woff2",
           "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
         },
         {
-          "path": "public/fonts/mono-green/cinzel-latin.woff2",
+          "path": "public/fonts/last-rain/cinzel-latin.woff2",
           "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
         },
         {
-          "path": "public/fonts/mono-green/lora-italic-latin.woff2",
+          "path": "public/fonts/last-rain/lora-italic-latin.woff2",
           "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
         },
         {
-          "path": "public/fonts/mono-green/lora-normal-latin.woff2",
+          "path": "public/fonts/last-rain/lora-normal-latin.woff2",
           "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
         },
         {
-          "path": "public/fonts/mono-green/oswald-latin.woff2",
+          "path": "public/fonts/last-rain/oswald-latin.woff2",
           "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
         },
         {
-          "path": "public/fonts/mono-green/outfit-latin.woff2",
+          "path": "public/fonts/last-rain/outfit-latin.woff2",
           "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
         },
         {
           "path": "scripts/card-studio-data.mjs",
-          "sha256": "1ea29023069eb86c361c0649e6009e1199cd9b7da7b000e76ce999a5ed065d62"
+          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
         },
         {
-          "path": "src/data/decks/player/vampire_preview/vampire_preview.json",
-          "sha256": "3f4392709b18539ef8de79bc990f1730e76a1c75952822df4be9767b140745d2"
+          "path": "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+          "sha256": "f1386aef8361391a3cd59485bcde929153859f7967814db674cd57d7351f3830"
+        }
+      ],
+      "cards": [
+        {
+          "id": "last_knell_dead",
+          "path": "public/cards/hollow_bell_procession/last_knell_dead.png",
+          "sha256": "f883e604a19ed97d8469267e3e4c657bd4d1b3a8052197c7b1f85e6394bb9e03",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "mass_grave_colossus",
+          "path": "public/cards/hollow_bell_procession/mass_grave_colossus.png",
+          "sha256": "addf522e8b751fb741556da6c9b90b988fca35169b5597734b213f40527a4c05",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "hollow_bell",
+          "path": "public/cards/hollow_bell_procession/hollow_bell.png",
+          "sha256": "ccdc957a009664455871923e2d4020c818dcfa5738e5f4ce74bb80ed67d62973",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "five_knot_gallows",
+          "path": "public/cards/hollow_bell_procession/five_knot_gallows.png",
+          "sha256": "3f6077410730b417a33fc1483195cdf07a0de4e5a4ad549838a2936510b0682a",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "last_thought_carrion",
+          "path": "public/cards/hollow_bell_procession/last_thought_carrion.png",
+          "sha256": "141ea3d0794f39a6cc1acebdd17a998257d42478066f44bf66f72113fd37f83a",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "memory_shroud_bearer",
+          "path": "public/cards/hollow_bell_procession/memory_shroud_bearer.png",
+          "sha256": "95fcc678632d3ca49bfa4e9a3d1f461e3196d721285ebe8bdacab00be7586b15",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "flesh_root_tithe",
+          "path": "public/cards/hollow_bell_procession/flesh_root_tithe.png",
+          "sha256": "d41bee119f35b33008f3bbdb2f00bc778410f0de52f0558f663494e78fd21187",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "crypt_rotwing",
+          "path": "public/cards/hollow_bell_procession/crypt_rotwing.png",
+          "sha256": "3870019e0d0ad3bff0f9813029f4119ec08286f3e1aac247362f99543fd81114",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "basted_wing",
+          "path": "public/cards/hollow_bell_procession/basted_wing.png",
+          "sha256": "8da6de5beed3f68b7b61af049becfe808b621517c3d2761c0711048557f0868f",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "reinforced_gravewing",
+          "path": "public/cards/hollow_bell_procession/reinforced_gravewing.png",
+          "sha256": "f1135b96b67b3cfd0a07a0d6d707e8070eac876239fc7864a3986adfda9e1d32",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "archive_carrion_crow",
+          "path": "public/cards/hollow_bell_procession/archive_carrion_crow.png",
+          "sha256": "5920ba2c1afa93a3331538b0bd5953a8f0061d76bf403d4db0134b86a4928861",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "horned_linebreaker",
+          "path": "public/cards/hollow_bell_procession/horned_linebreaker.png",
+          "sha256": "e51d4c9842cce01f4cce8cc712cc69c2788dd931c7aa1c5c1fbc15302246eee0",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "seventh_memory_hound",
+          "path": "public/cards/hollow_bell_procession/seventh_memory_hound.png",
+          "sha256": "c3a2e92540ced6eefca94b59bd02512fe4a36493d37ad1bf8973c643d1ce29ed",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "full_ossuary_mastiff",
+          "path": "public/cards/hollow_bell_procession/full_ossuary_mastiff.png",
+          "sha256": "3b448eabe492e31a11984cc6b17791c0092fa5498bc509d5efd02b4bc6e407f1",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "silent_bite_rats",
+          "path": "public/cards/hollow_bell_procession/silent_bite_rats.png",
+          "sha256": "51a9e24ff1f4a4ad27bd89b58e614fa5c9cc370adb5e4908c666164791e914fd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "fallen_gatherer",
+          "path": "public/cards/hollow_bell_procession/fallen_gatherer.png",
+          "sha256": "2e1c8da447ef5aeec088c68d9665b211a774117c58462445dfa1fdc1385ba47c",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "last_march_marshal",
+          "path": "public/cards/hollow_bell_procession/last_march_marshal.png",
+          "sha256": "ff6a934982897e1e9e5f44cd05795f897375526e678b5e474d2bd5d05dcfc4f2",
+          "width": 976,
+          "height": 1360
+        }
+      ]
+    },
+    "broken_forge_mutiny": {
+      "inputHash": "1306b46dc3c882db39d4b3888228176c68af48a9c272d3b290715f4168b4da7f",
+      "sources": [
+        {
+          "path": "dev/tools/Decks/broken_forge_mutiny/deck-data.generated.js",
+          "sha256": "ec4cd9f5cf1b76602a9ad5facd0c7df223a0307cba7b8424cd9c5815918e234a"
+        },
+        {
+          "path": "dev/tools/Decks/broken_forge_mutiny/index.html",
+          "sha256": "eb411e3f14f88dc9833a5a2b438e731d657e70ea20a406926fdb52f9b9390dc2"
+        },
+        {
+          "path": "dev/tools/Decks/broken_forge_mutiny/motivo.avif",
+          "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
+        },
+        {
+          "path": "dev/tools/Decks/broken_forge_mutiny/studio.config.json",
+          "sha256": "3b7eb057dffca630b338b1037f52b644133b2be87552b20a069e8a97786e4c62"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.css",
+          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.js",
+          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-text.js",
+          "sha256": "b989a091262cac2a4fc8d40c8ca6a87523ecf4ed5203154f32a88dd33c594412"
+        },
+        {
+          "path": "dev/tools/Decks/export_cards.cjs",
+          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
+          "sha256": "a028568085edc5a42ffee6d1da5732dd156d2049f68042ce82da28127f468c9d"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
+          "sha256": "5aba4ceb6f66cdf3610acff88c7a1c2e776104590a05972465dbcaf62c86c6cf"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/double_crew_boss.png",
+          "sha256": "6beae7e6e7f5a73b8990556ce73a5b54ad581e58cc0fc82ac69e202dbdf35a7f"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
+          "sha256": "4047f6827d12001c9ebbd205db863d66a310e205ffd56b305229d0b83a2143b3"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
+          "sha256": "f03a9da4183f77e65453e6e2a185ff302b6817b863aa26b2bdb5c18624ebae19"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
+          "sha256": "d9946ac5147ca189fb160ac4bb6796d69da9f7f9b78e507e9a8542d915382641"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/next_crew_caller.png",
+          "sha256": "2119a021bc4f81ef66ce208528a9dba5f4fd0399f6e34e242fe784cd5ba3b30b"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/open_another_gate.png",
+          "sha256": "695084a18685aba279397c97f0be133b4f008a94a4b0a804f5eff08b2ddf42b2"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
+          "sha256": "f95b61071a0f38eba5b9f37d03a11c3bdd538956033f7a9bae61da12a717bd7b"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
+          "sha256": "e1496ca7dd0bd46c3bcf18b0bd5312663b36ffbb3374cb6f5fd188ff2548d9d4"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
+          "sha256": "a7d22fc9b62ef5c50421b33e500aef0757a7f529610012cc94115c5992b54b73"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
+          "sha256": "4b1269748c580dc8e295e630459641a7805e5c0f46cb7e127af7f46559373837"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/shift_hammer.png",
+          "sha256": "f348723bd16f27fc38e149af1ae0234105c0524fa1a496a87824334a28f703ee"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/slag_volley_master.png",
+          "sha256": "240fd7a43c1a85813d23296e41a61107b148b214902de8c37027fc542e297d9d"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
+          "sha256": "c5f32237d1445f211d01a474f391a192672c05ad511ad81e69b3f402192a54c1"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
+          "sha256": "2d74ee3916af8fb86a915b8a788b60c5ff038643c088b54a1f2e99645f2ba0ba"
+        },
+        {
+          "path": "public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
+          "sha256": "3ef7c0fa63d94f3a35273b26a9364e36084d603e71408cdd5931414bdcb5e4cd"
+        },
+        {
+          "path": "public/fonts/last-rain/cinzel-decorative-latin.woff2",
+          "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
+        },
+        {
+          "path": "public/fonts/last-rain/cinzel-latin.woff2",
+          "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
+        },
+        {
+          "path": "public/fonts/last-rain/lora-italic-latin.woff2",
+          "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
+        },
+        {
+          "path": "public/fonts/last-rain/lora-normal-latin.woff2",
+          "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+        },
+        {
+          "path": "public/fonts/last-rain/oswald-latin.woff2",
+          "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
+        },
+        {
+          "path": "public/fonts/last-rain/outfit-latin.woff2",
+          "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
+        },
+        {
+          "path": "scripts/card-studio-data.mjs",
+          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+        },
+        {
+          "path": "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+          "sha256": "7b898c203a65fa716541c7b9538ba2e3300fe4ae6cf115a9ea37bceb97e54027"
+        }
+      ],
+      "cards": [
+        {
+          "id": "ember_scrap_runner",
+          "path": "public/cards/broken_forge_mutiny/ember_scrap_runner.png",
+          "sha256": "3880d032042519590f298296fa02771e4a69aca945e753e392bafa8e437e8666",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "burning_tally_foreman",
+          "path": "public/cards/broken_forge_mutiny/burning_tally_foreman.png",
+          "sha256": "9bc090b3ffb8d5c7d5c5dc330071691ab4dd772f461037728c0d641223930332",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "next_crew_caller",
+          "path": "public/cards/broken_forge_mutiny/next_crew_caller.png",
+          "sha256": "93ef0ebdbeda591dcaa5627130c9a1eab0b6eee5e70062f9dea22435e36148e9",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "open_furnace_crier",
+          "path": "public/cards/broken_forge_mutiny/open_furnace_crier.png",
+          "sha256": "cf74ce9ed6856deec49e6ee45e4382190e97847faa691324485bf7b687903028",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "shift_hammer",
+          "path": "public/cards/broken_forge_mutiny/shift_hammer.png",
+          "sha256": "2d60799b7c516328872d45200ce533472143eefb060bdc1632152c6359438124",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "rain_of_rivets",
+          "path": "public/cards/broken_forge_mutiny/rain_of_rivets.png",
+          "sha256": "5a9c5d42615a8513ea3878426e8b4f1b86c40c67a3fefc651204365298490374",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "double_crew_boss",
+          "path": "public/cards/broken_forge_mutiny/double_crew_boss.png",
+          "sha256": "8c8b7dbe60dc76080be94f43132037d6b105679e8a4c7438dd26879f6f3d4cba",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "three_furnaces_foreman",
+          "path": "public/cards/broken_forge_mutiny/three_furnaces_foreman.png",
+          "sha256": "bbc42414344d271eddb794f4a04332847bfa5427bb826bf71c2630df8c68a554",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "first_siren_agitator",
+          "path": "public/cards/broken_forge_mutiny/first_siren_agitator.png",
+          "sha256": "8bce8142cc374d9fcebd58b9247dcdb2ad73ee2b67cda2ea91a335538fa022b1",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "open_another_gate",
+          "path": "public/cards/broken_forge_mutiny/open_another_gate.png",
+          "sha256": "024c3d0d35e84442ee7245e683cd4c832ffb61fa02de4cdf6015ef3337ec1b25",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "three_under_one_anvil",
+          "path": "public/cards/broken_forge_mutiny/three_under_one_anvil.png",
+          "sha256": "aff97f60cfa32752889633998b304a2c33d6821b7db970ca49730902342fb816",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "slag_volley_master",
+          "path": "public/cards/broken_forge_mutiny/slag_volley_master.png",
+          "sha256": "ee5226683de5f320a203ebe4e93ddb2c76caed175e17e0cd75ae2d68b2aab1cd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "varka_revolt_axis",
+          "path": "public/cards/broken_forge_mutiny/varka_revolt_axis.png",
+          "sha256": "9a871674901defcab21471063414c91535dd29d7245ef4d7ea5be794c92b88bd",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "salvaged_armor_master",
+          "path": "public/cards/broken_forge_mutiny/salvaged_armor_master.png",
+          "sha256": "c69623abe3509b0ff7d73fc7c971aaed1c46b5c5b5e267fdbbb860423e9c0474",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "repeating_blow_marshal",
+          "path": "public/cards/broken_forge_mutiny/repeating_blow_marshal.png",
+          "sha256": "9e0c759795fa52609a981d3c7976eb5433c748e6b0ae3244d43d65f7dffe723d",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "brakka_growing_tally",
+          "path": "public/cards/broken_forge_mutiny/brakka_growing_tally.png",
+          "sha256": "d0591dd42d4d8a6b2d8ac90d04f1e2276ddf0160ca4093e5fea768bf2872c7d3",
+          "width": 976,
+          "height": 1360
+        },
+        {
+          "id": "last_rivets_gunner",
+          "path": "public/cards/broken_forge_mutiny/last_rivets_gunner.png",
+          "sha256": "e9fa82bfca704e55affa4bffb18597fe60747aa9c66a0ba1e7378dd9b7f04c2f",
+          "width": 976,
+          "height": 1360
+        }
+      ]
+    },
+    "crimson_court": {
+      "inputHash": "07a92452a9d0796343275ac079c3ed09ad77f124d5fcf2bbadf1792851299b90",
+      "sources": [
+        {
+          "path": "dev/tools/Decks/crimson_court/deck-data.generated.js",
+          "sha256": "df11f478d280ef11c06ec30019103955e49b158b83b5cea56dae6abce293c340"
+        },
+        {
+          "path": "dev/tools/Decks/crimson_court/index.html",
+          "sha256": "1654600c3e1b8c44b60e2eda7f752f9cb3bde4a58b4d4e66f23a31a4c22c2ba6"
+        },
+        {
+          "path": "dev/tools/Decks/crimson_court/motivo.jpg",
+          "sha256": "d65476f89e08a0ae90198eb0395414d02bd8aafcddc95e8147bd64ae8cfb3180"
+        },
+        {
+          "path": "dev/tools/Decks/crimson_court/studio.config.json",
+          "sha256": "dc27caeb582a32bc936c723e3b89e7a09f52f459e56f87dbda0c49b5c58c3573"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.css",
+          "sha256": "c515a0db88b5ce62da8a1439de82a2f4ddbc327cb1855539a98b5bd78f8b3168"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-studio.js",
+          "sha256": "aa0b838c838df66457743102e360750e8b5b5d38ed2b5a08249335c34f2183d7"
+        },
+        {
+          "path": "dev/tools/Decks/deck-card-text.js",
+          "sha256": "b989a091262cac2a4fc8d40c8ca6a87523ecf4ed5203154f32a88dd33c594412"
+        },
+        {
+          "path": "dev/tools/Decks/export_cards.cjs",
+          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+        },
+        {
+          "path": "public/cards/crimson_court/art/black_vein_executioner.webp",
+          "sha256": "bb8901ba19135545353ec0962d6c273f7367f1cedeb245aeda0c078246d65684"
+        },
+        {
+          "path": "public/cards/crimson_court/art/blood_pact.webp",
+          "sha256": "d6f0ea91aaeac4792c06722b6b04e435aac67d53665e6ef422bb6557992e0052"
+        },
+        {
+          "path": "public/cards/crimson_court/art/blood_page.webp",
+          "sha256": "55c78acdc828ab28d39537ca2b3e88b718a0087de6bb78471894ed138ec2dd57"
+        },
+        {
+          "path": "public/cards/crimson_court/art/blood_sentinel.webp",
+          "sha256": "9e8a5a4a1c2aec8f33465256c97ce606fee9435acf02681cea7266a179b81ecf"
+        },
+        {
+          "path": "public/cards/crimson_court/art/court_duelist.webp",
+          "sha256": "17636533ea3f477e037a0f63911e3a623573333d7ab9dac1956c0094cbc073c0"
+        },
+        {
+          "path": "public/cards/crimson_court/art/crimson_bat.webp",
+          "sha256": "a08941a5ce06aa37dc9d6055b7b775cafbd486cdbb5e23d9826a6b957688d2ef"
+        },
+        {
+          "path": "public/cards/crimson_court/art/crimson_energy.webp",
+          "sha256": "dc6892164542a762fef314503714b143db85788eb4c98d132e74ce6459a6cafb"
+        },
+        {
+          "path": "public/cards/crimson_court/art/crimson_impulse.webp",
+          "sha256": "c306df1fd30438a6fc27e3c568975b49b37f71319055921e47aba5f55ff53809"
+        },
+        {
+          "path": "public/cards/crimson_court/art/crypt_guardian.webp",
+          "sha256": "ce368d0ac82ca0ac878f6c2c52739ace7735ad5e5cd110f33ed03a9e1b307986"
+        },
+        {
+          "path": "public/cards/crimson_court/art/drain_essence.webp",
+          "sha256": "9171ccec201bd78a6bd78842b55ac01e32d029ba948b149593732c19674b11ee"
+        },
+        {
+          "path": "public/cards/crimson_court/art/eternal_feast_countess.webp",
+          "sha256": "868076daff3db988aaea6dc6299374fff2d10eea064eb3713fa9088525253b99"
+        },
+        {
+          "path": "public/cards/crimson_court/art/final_banquet.webp",
+          "sha256": "4e8761574429b22603b32d94cf393d91d1a72b2978ed820aa00dc3565307f741"
+        },
+        {
+          "path": "public/cards/crimson_court/art/predatory_thirst.webp",
+          "sha256": "86da71052942618e8647cb73b7770bf328a631f702049a63ca764f15f128a744"
+        },
+        {
+          "path": "public/cards/crimson_court/art/tithe_acolyte.webp",
+          "sha256": "2742b3d8a9e65c5048eeb7fcb76eb41226b7d4be0fe84e978a31aa7460ca9847"
+        },
+        {
+          "path": "public/fonts/last-rain/cinzel-decorative-latin.woff2",
+          "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
+        },
+        {
+          "path": "public/fonts/last-rain/cinzel-latin.woff2",
+          "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
+        },
+        {
+          "path": "public/fonts/last-rain/lora-italic-latin.woff2",
+          "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
+        },
+        {
+          "path": "public/fonts/last-rain/lora-normal-latin.woff2",
+          "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+        },
+        {
+          "path": "public/fonts/last-rain/oswald-latin.woff2",
+          "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
+        },
+        {
+          "path": "public/fonts/last-rain/outfit-latin.woff2",
+          "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
+        },
+        {
+          "path": "scripts/card-studio-data.mjs",
+          "sha256": "57ebf5558c1dbac36f683527fd4ee9341550974342cc7894d835b6a45e8f2e0c"
+        },
+        {
+          "path": "src/data/decks/player/crimson_court/crimson_court.json",
+          "sha256": "e5bc01a234c2c55bb706009ae1971bb4f04d661dd3c8bd6a31f9c0fa773357d3"
         }
       ],
       "cards": [
         {
           "id": "crimson_energy",
-          "path": "public/cards/vampires/crimson_energy.png",
+          "path": "public/cards/crimson_court/crimson_energy.png",
           "sha256": "33bd24abc3e002e830b6d43dcb8a4767e72460c7b667f02fdb085b744fe4042c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_page",
-          "path": "public/cards/vampires/blood_page.png",
+          "path": "public/cards/crimson_court/blood_page.png",
           "sha256": "23737e7f1f03e9f391aa3b88a41127e3cecf2beb3344bcf571e5ae378c64610c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_bat",
-          "path": "public/cards/vampires/crimson_bat.png",
+          "path": "public/cards/crimson_court/crimson_bat.png",
           "sha256": "07d95844a0972e1811b94f63fb513291c80cd13313da1d8c02192b3a8b9d18ec",
           "width": 976,
           "height": 1360
         },
         {
           "id": "tithe_acolyte",
-          "path": "public/cards/vampires/tithe_acolyte.png",
+          "path": "public/cards/crimson_court/tithe_acolyte.png",
           "sha256": "a96967b3ec6894991ef209f38c8f0454e514fa538096b9c8a5497ef1fbae7ee3",
           "width": 976,
           "height": 1360
         },
         {
           "id": "court_duelist",
-          "path": "public/cards/vampires/court_duelist.png",
-          "sha256": "c85e9b24e6b47774b1253c26f53b127e636d68bf8c42e0d629c9130116d716fa",
+          "path": "public/cards/crimson_court/court_duelist.png",
+          "sha256": "0225cfb0ecaae71ee841e132d7a590fd61deafb01d040aed94420cd293518616",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crypt_guardian",
-          "path": "public/cards/vampires/crypt_guardian.png",
+          "path": "public/cards/crimson_court/crypt_guardian.png",
           "sha256": "349617357f04fd57ecb0f634cd8004f12b191bc509c3ba6c1a41c78b547e6f9f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "black_vein_executioner",
-          "path": "public/cards/vampires/black_vein_executioner.png",
+          "path": "public/cards/crimson_court/black_vein_executioner.png",
           "sha256": "5b4cdc4424e4e5d99a12b83df180c36be491b5c6609d7e35142ae18470582d7b",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_sentinel",
-          "path": "public/cards/vampires/blood_sentinel.png",
+          "path": "public/cards/crimson_court/blood_sentinel.png",
           "sha256": "3133360dd326a360a47c4727f58287307a1c105cd621d52e141e64df2e3df9ac",
           "width": 976,
           "height": 1360
         },
         {
           "id": "eternal_feast_countess",
-          "path": "public/cards/vampires/eternal_feast_countess.png",
-          "sha256": "7748a181f88023fb4be6b2153dd78b5a9900c1c5ac0fab73eef2a53532084287",
+          "path": "public/cards/crimson_court/eternal_feast_countess.png",
+          "sha256": "4b1361fb4d1e2a17226088a746ac976cfd274f0159e769afaed0c4cfcadfdcdb",
           "width": 976,
           "height": 1360
         },
         {
           "id": "blood_pact",
-          "path": "public/cards/vampires/blood_pact.png",
+          "path": "public/cards/crimson_court/blood_pact.png",
           "sha256": "dea56a7248b5a4b4395e2a34783b5677e294a14be879d174469aa7ed51716885",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_impulse",
-          "path": "public/cards/vampires/crimson_impulse.png",
-          "sha256": "26690c55e0e58e77c517ede15086416988e443af3245e221c7c09c0ca22354ef",
+          "path": "public/cards/crimson_court/crimson_impulse.png",
+          "sha256": "9637bcb73e6f6d392cf8d72fa8d488fd0e7b3d52ff355118ae8a9100b8938e4f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "drain_essence",
-          "path": "public/cards/vampires/drain_essence.png",
+          "path": "public/cards/crimson_court/drain_essence.png",
           "sha256": "4cd8a5c08f79eaefe601277c41dc03254d308f48dc9fd92a55e44596a50036a7",
           "width": 976,
           "height": 1360
         },
         {
           "id": "predatory_thirst",
-          "path": "public/cards/vampires/predatory_thirst.png",
+          "path": "public/cards/crimson_court/predatory_thirst.png",
           "sha256": "a57f599bfb8f8852c084308d3733261afa4a2846e56fb386609f9ad2194036fc",
           "width": 976,
           "height": 1360
         },
         {
           "id": "final_banquet",
-          "path": "public/cards/vampires/final_banquet.png",
+          "path": "public/cards/crimson_court/final_banquet.png",
           "sha256": "9d99796c227c3f2bbb32ee8f5f72d8f12a250aa25175923505016338bb3c73ed",
           "width": 976,
           "height": 1360

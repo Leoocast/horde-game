@@ -9,16 +9,16 @@ const JSON_OUTPUT = process.argv.includes("--json");
 const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".svg", ".ts", ".tsx", ".txt"]);
 
 const ACTIVE_DECK_FILES = [
-  "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-  "src/data/decks/player/vampire_preview/vampire_preview.json",
-  "src/data/decks/horde/zombies/horde-zombies.json",
-  "src/data/decks/horde/goblins/goblin_assault_horde.json",
+  "src/data/decks/player/last_rain/last_rain.json",
+  "src/data/decks/player/crimson_court/crimson_court.json",
+  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
 ];
 
 const DERIVED_DECK_FILES = [
-  "src/data/decks/player/mono_green_ramp/mono_green_ramp.json",
-  "src/data/decks/horde/zombies/horde-zombies.json",
-  "src/data/decks/horde/goblins/goblin_assault_horde.json",
+  "src/data/decks/player/last_rain/last_rain.json",
+  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
+  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
 ];
 
 // This list is intentionally fixed. It must shrink as authored identities are replaced; deriving it
@@ -173,6 +173,20 @@ function scanMatchedTerms(files, terms) {
   };
 }
 
+function derivedDistIdentityInventory() {
+  const named = scanMatchedTerms(
+    distText,
+    [...DERIVED_CARD_NAMES].filter((name) => name !== "Forest").sort(),
+  );
+  const genericNameId = scanTextPatterns(distText, [
+    { label: "retired Forest card id", pattern: /["']forest["']/iu },
+  ]);
+  return {
+    count: named.count + genericNameId.count,
+    samples: [...named.samples, ...genericNameId.samples],
+  };
+}
+
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(absolute(relativePath), "utf8"));
 }
@@ -229,11 +243,11 @@ function assetInventory(relativeRoots) {
   };
 }
 
-function finding(id, severity, phase, title, description, result) {
+function finding(id, severity, scope, title, description, result) {
   return {
     id,
     severity,
-    phase,
+    scope,
     title,
     description,
     count: result.count,
@@ -243,8 +257,6 @@ function finding(id, severity, phase, title, description, result) {
 
 const productionText = textFiles(["src"])
   .concat([absolute("index.html"), absolute("vite.config.js")].filter(fs.existsSync));
-const activeConfigurationText = productionText
-  .concat([absolute("package.json")].filter(fs.existsSync));
 const toolText = textFiles(["dev/tools"]);
 const distText = textFiles(["dist"]);
 const internalText = textFiles(["src/engine", "src/store", "src/playground"]);
@@ -258,7 +270,7 @@ const l43Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => ![
     "src/data/deckLint.ts",
-    "src/data/hostfallDeckAdapter.ts",
+    "src/data/authoredDeckNormalizer.ts",
     "src/i18n/rulesText.ts",
     "tests/deckLint.test.js",
     "tests/vocabulary.test.js",
@@ -267,7 +279,7 @@ const l44Text = textFiles(["src", "tests"])
   .filter((file) => [".js", ".jsx", ".ts", ".tsx"].includes(path.extname(file).toLowerCase()))
   .filter((file) => ![
     "src/data/deckLint.ts",
-    "src/data/hostfallDeckAdapter.ts",
+    "src/data/authoredDeckNormalizer.ts",
     "src/i18n/rulesText.ts",
     "src/playground/panels/CardsPanel.tsx",
     "src/playground/scenario.ts",
@@ -325,7 +337,7 @@ const l41LegacyPatterns = [
     pattern: /["'](?:REACH|VIGILANCE|MENACE|DEATHTOUCH|FIRST_STRIKE|SKULK|LIFESTEAL|TRAMPLE|HASTE|TOXIC(?:_\d+)?)["']/u,
   },
   {
-    label: "retired L4.1 runtime identifier",
+    label: "retired runtime identifier",
     pattern: /\b(?:deathtouchDamage|getToxicAmount|resolvePlayerAttackerLifesteal)\b/u,
   },
 ];
@@ -397,7 +409,7 @@ const l45LegacyPatterns = [
     pattern: /["']?eventObject["']?\s*:\s*["']permanent["']/u,
   },
   {
-    label: "legacy speed downgrade in the Hostfall adapter",
+    label: "legacy speed downgrade in authored deck normalization",
     pattern: /nestedValue\s*===\s*["']QUICK["'][^\n]+["']INSTANT["']|nestedValue\s*===\s*["']MAIN["'][^\n]+["']SORCERY["']/u,
   },
 ];
@@ -444,25 +456,23 @@ const l46PlaygroundContractLegacyPatterns = [
   },
 ];
 
-const derivedAssetRoots = [
+// These retired asset roots must not reappear now that every active deck has a final Hostfall path.
+const legacyAssetRoots = [
   "public/cards/mono_green_ramp",
   "public/cards/zombies",
   "public/cards/goblins",
 ];
-const derivedDistAssetRoots = [
+const legacyDistAssetRoots = [
   "dist/cards/mono_green_ramp",
   "dist/cards/zombies",
   "dist/cards/goblins",
 ];
 const cardAssetFreshness = verifyGenerationManifest();
-const provenanceFiles = walk("docs").filter((file) => /(?:resource|asset)[_-]?provenance/i.test(path.basename(file)));
-const deprecatedCardTools = walk("dev/tools/Cards");
-
 const checks = [
   finding(
     "production-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in production source",
     "Source imported by the product still names Magic or Wizards.",
     scanTextPatterns(productionText, explicitIpPatterns),
@@ -470,7 +480,7 @@ const checks = [
   finding(
     "tool-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in tools",
     "Developer tools still contain external credits or identifiers.",
     scanTextPatterns(toolText, explicitIpPatterns),
@@ -478,7 +488,7 @@ const checks = [
   finding(
     "dist-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in the production build",
     "Compiled product files still name Magic or Wizards.",
     scanTextPatterns(distText, explicitIpPatterns),
@@ -486,33 +496,15 @@ const checks = [
   finding(
     "remote-card-provider",
     "blocker",
-    "L1",
+    "providers",
     "Remote card-provider references",
     "Runtime, tools and build must remain local-only.",
     scanTextPatterns([...productionText, ...toolText, ...distText], remoteProviderPatterns),
   ),
   finding(
-    "deprecated-card-tools",
-    "warning",
-    "L1",
-    "Candidate deprecated card-tool files",
-    "The old dev/tools/Cards tree must be proven unused before deletion.",
-    { count: deprecatedCardTools.length, samples: deprecatedCardTools.map(relative) },
-  ),
-  finding(
-    "deprecated-card-tool-consumers",
-    "warning",
-    "L1",
-    "Active consumers of the deprecated card-tool tree",
-    "This must remain zero before L1 can delete the candidate tree.",
-    scanTextPatterns(activeConfigurationText, [
-      { label: "dev/tools/Cards reference", pattern: /(?:dev\/)?tools\/Cards\//u },
-    ]),
-  ),
-  finding(
     "unverifiable-generated-pngs",
     "warning",
-    "L6",
+    "assets",
     "Generated card PNGs without a valid freshness proof",
     "Every checked-in PNG must match the current local data, renderer and source-art hashes.",
     {
@@ -523,147 +515,136 @@ const checks = [
   finding(
     "legacy-authored-schema",
     "blocker",
-    "L3",
+    "authoring",
     "Legacy fields in active deck authoring",
     "Active deck JSON still uses the pre-Hostfall schema.",
     authoredKeyInventory(),
   ),
   finding(
-    "legacy-l41-card-model",
+    "retired-card-model",
     "blocker",
-    "L4.1",
+    "card-model",
     "Legacy card kinds or Traits in active consumers",
-    "Runtime, UI and migrated tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
+    "Runtime, UI and tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
     scanTextPatterns(l41Text, l41LegacyPatterns),
   ),
   finding(
-    "legacy-l42-zones",
+    "retired-zones",
     "blocker",
-    "L4.2",
+    "zones",
     "Legacy zones in active runtime state",
     "GameState and CardInstance must use archive, field, memory and oblivion without parallel legacy arrays.",
     scanTextPatterns(l42Text, l42LegacyPatterns),
   ),
   finding(
-    "legacy-l43-energy-model",
+    "retired-energy-model",
     "blocker",
-    "L4.3",
+    "energy",
     "Legacy Energy state or cost model in active consumers",
-    "Runtime, UI, Playground and migrated tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
+    "Runtime, UI, Playground and tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
     scanTextPatterns(l43Text, l43LegacyPatterns),
   ),
   finding(
-    "legacy-l44-card-states",
+    "retired-card-states",
     "blocker",
-    "L4.4",
+    "card-state",
     "Legacy card-state model in active runtime consumers",
-    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v3 boundary uses the same states.",
+    "Runtime consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v4 boundary uses the same states.",
     scanTextPatterns(l44Text, l44LegacyPatterns),
   ),
   finding(
-    "legacy-l45-actions-events-host-rules",
+    "retired-actions-events-host-rules",
     "blocker",
-    "L4.5",
+    "rules",
     "Legacy Actions, events or Host rules in active runtime consumers",
-    "Runtime, normalized data and migrated tests must consume Hostfall event/effect discriminants and the canonical Host rules profile without adapter translations.",
+    "Runtime, normalized data and tests must consume Hostfall event/effect discriminants and the canonical Host rules profile.",
     scanTextPatternsIgnoringTaggedLines(
       l45Text,
       l45LegacyPatterns,
-      "audit-allow legacy-l45-rejection-fixture",
+      "audit-allow retired-rules-rejection-fixture",
       ["tests/deckLint.test.js"],
     ),
   ),
   finding(
-    "legacy-l46-card-structure",
+    "retired-card-structure",
     "blocker",
-    "L4.6a",
+    "card-structure",
     "Legacy card structure in runtime consumers",
-    "Runtime, UI and migrated tests must use kinds, traits and endurance without structural aliases.",
+    "Runtime, UI and tests must use kinds, traits and endurance without structural aliases.",
     scanTextPatterns(l46CardStructureText, l46CardStructureLegacyPatterns),
   ),
   finding(
-    "legacy-l46-host-identity",
+    "retired-host-identity",
     "blocker",
-    "L4.6b",
+    "host-identity",
     "Legacy Horde identity in runtime consumers",
-    "Runtime state, engine, store, UI, Playground and migrated tests must use Host identity; authored deck ids and unrelated preference keys remain explicit boundaries.",
+    "Runtime state, engine, store, UI, Playground and tests must use Host identity.",
     scanTextPatternsIgnoringTaggedLines(
       l46HostIdentityText,
       l46HostIdentityLegacyPatterns,
-      "audit-allow legacy-l46b-compatibility",
+      "audit-allow retired-host-compatibility",
       ["src/store/useGameStore.ts"],
     ),
   ),
   finding(
-    "legacy-l46-playground-contract",
+    "retired-playground-contract",
     "blocker",
-    "L4.6c",
+    "playground",
     "Legacy Playground external contract",
-    "Scenario v3, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
+    "Scenario v4, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
     scanTextPatternsIgnoringTaggedLines(
       l46PlaygroundContractText,
       l46PlaygroundContractLegacyPatterns,
-      "audit-allow legacy-l46c-retired-storage",
+      "audit-allow retired-playground-storage",
       ["src/playground/scenarioStorage.ts"],
     ),
   ),
   finding(
     "legacy-internal-vocabulary",
     "warning",
-    "L4",
-    "Legacy vocabulary in engine consumers",
-    "Engine, store and playground still model legacy zones, resources, traits and states.",
+    "internal-vocabulary",
+    "Broad legacy-word matches in internal consumers",
+    "Exact runtime contracts are clean; this broader scan reviews remaining contextual or technical strings.",
     scanTextPatterns(internalText, internalLegacyPatterns),
   ),
   finding(
     "derived-card-definitions",
     "blocker",
-    "L5",
+    "authored-identities",
     "Known derived card definitions",
-    "Authored identities in the three legacy decks still match the fixed inventory.",
+    "Authored identities must not match the retired source inventory.",
     derivedDefinitionInventory(),
   ),
   finding(
     "derived-identities-in-dist",
     "blocker",
-    "L5",
-    "Known derived card names in the production build",
-    "The compiled build still exposes known card identities.",
-    scanMatchedTerms(distText, [...DERIVED_CARD_NAMES].sort()),
+    "compiled-identities",
+    "Legacy card-name strings in the production build",
+    "The production build must not contain retired card-name strings.",
+    derivedDistIdentityInventory(),
   ),
   finding(
     "derived-assets-in-public",
     "blocker",
-    "L6",
-    "Known derived asset files under public",
-    "Vite copies these checked-in files into the production build.",
-    assetInventory(derivedAssetRoots),
+    "assets",
+    "Legacy card-asset roots under public",
+    "Retired technical asset paths must not reappear.",
+    assetInventory(legacyAssetRoots),
   ),
   finding(
     "derived-assets-in-dist",
     "blocker",
-    "L6",
-    "Known derived asset files in the production build",
-    "The generated build contains the three legacy deck asset trees.",
-    assetInventory(derivedDistAssetRoots),
-  ),
-  finding(
-    "missing-resource-provenance",
-    "blocker",
-    "L6",
-    "Missing resource-provenance registry",
-    "No machine-readable art/audio/resource provenance registry was found.",
-    {
-      count: provenanceFiles.length === 0 ? 1 : 0,
-      samples: provenanceFiles.length === 0 ? ["no resource/asset provenance registry found"] : provenanceFiles.map(relative),
-    },
+    "assets",
+    "Legacy card-asset roots in the production build",
+    "A production build must use the final Hostfall asset paths.",
+    assetInventory(legacyDistAssetRoots),
   ),
   finding(
     "legacy-test-vocabulary",
     "info",
-    "L7",
-    "Legacy vocabulary in tests",
-    "Tests intentionally preserve current engine contracts and must be migrated with their domains.",
+    "tests",
+    "Negative legacy-vocabulary guards in tests",
+    "Rejection fixtures intentionally retain retired terms so the canonical Hostfall contracts cannot regress.",
     scanTextPatterns(testText, internalLegacyPatterns),
   ),
 ];
@@ -689,11 +670,11 @@ if (JSON_OUTPUT) {
   for (const check of checks) {
     const status = check.count === 0 ? "PASS" : check.severity.toUpperCase();
     console.log(`\n[${status}] ${check.id} — ${check.title}: ${check.count}`);
-    console.log(`  phase: ${check.phase}; ${check.description}`);
+    console.log(`  scope: ${check.scope}; ${check.description}`);
     for (const sample of check.samples.slice(0, 12)) console.log(`  - ${sample}`);
     if (check.samples.length > 12) console.log(`  - … ${check.samples.length - 12} more sample(s)`);
   }
-  console.log("\nDefault mode is informational. Use --strict to fail while publication blockers remain.");
+  console.log("\nDefault mode is informational. Use --strict as the final independence gate.");
 }
 
 if (STRICT && summary.blockerCategories > 0) process.exitCode = 1;

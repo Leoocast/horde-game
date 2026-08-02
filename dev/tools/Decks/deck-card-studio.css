@@ -1,37 +1,37 @@
 @font-face {
     font-family: "Cinzel";
-    src: url("../../../public/fonts/mono-green/cinzel-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/cinzel-latin.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
     font-family: "Cinzel Decorative";
-    src: url("../../../public/fonts/mono-green/cinzel-decorative-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/cinzel-decorative-latin.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
     font-family: "Lora";
-    src: url("../../../public/fonts/mono-green/lora-normal-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/lora-normal-latin.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
     font-family: "Lora";
-    src: url("../../../public/fonts/mono-green/lora-italic-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/lora-italic-latin.woff2") format("woff2");
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
     font-family: "Oswald";
-    src: url("../../../public/fonts/mono-green/oswald-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/oswald-latin.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
     font-family: "Outfit";
-    src: url("../../../public/fonts/mono-green/outfit-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/last-rain/outfit-latin.woff2") format("woff2");
     font-display: swap;
 }
 
@@ -782,7 +782,7 @@ input {
 }
 
 /* Goblins: chapa robada, remaches y cortes agresivos. */
-body[data-theme="goblins"] {
+body[data-theme="broken_forge_mutiny"] {
     --page: #090706;
     --page-glow: rgba(184, 49, 13, 0.35);
     --accent: #a63216;
@@ -810,7 +810,7 @@ body[data-theme="goblins"] {
         );
 }
 
-body[data-theme="goblins"] .tcg-card {
+body[data-theme="broken_forge_mutiny"] .tcg-card {
     overflow: visible;
     border-radius: 48px;
     background: #090a08;
@@ -819,7 +819,7 @@ body[data-theme="goblins"] .tcg-card {
         0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
-body[data-theme="goblins"] .tcg-outer-border {
+body[data-theme="broken_forge_mutiny"] .tcg-outer-border {
     padding: 18px;
     border-radius: 48px;
     background-image:
@@ -834,20 +834,20 @@ body[data-theme="goblins"] .tcg-outer-border {
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
 }
 
-body[data-theme="goblins"] .tcg-card::before,
-body[data-theme="goblins"] .tcg-outer-border::before,
-body[data-theme="goblins"] .tcg-outer-border::after {
+body[data-theme="broken_forge_mutiny"] .tcg-card::before,
+body[data-theme="broken_forge_mutiny"] .tcg-outer-border::before,
+body[data-theme="broken_forge_mutiny"] .tcg-outer-border::after {
     content: none;
 }
 
-body[data-theme="goblins"] .tcg-inner {
+body[data-theme="broken_forge_mutiny"] .tcg-inner {
     inset: 18px;
     overflow: hidden;
     border-radius: 30px;
     background: linear-gradient(180deg, #41170c 0%, #160a07 100%);
 }
 
-body[data-theme="goblins"] .tcg-inner::after {
+body[data-theme="broken_forge_mutiny"] .tcg-inner::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -859,7 +859,7 @@ body[data-theme="goblins"] .tcg-inner::after {
     pointer-events: none;
 }
 
-body[data-theme="goblins"] .tcg-head {
+body[data-theme="broken_forge_mutiny"] .tcg-head {
     height: auto;
     min-height: 0;
     justify-content: space-between;
@@ -874,7 +874,7 @@ body[data-theme="goblins"] .tcg-head {
     clip-path: none;
 }
 
-body[data-theme="goblins"] .tcg-head::before {
+body[data-theme="broken_forge_mutiny"] .tcg-head::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -896,13 +896,13 @@ body[data-theme="goblins"] .tcg-head::before {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="goblins"] .tcg-head::after {
+body[data-theme="broken_forge_mutiny"] .tcg-head::after {
     content: "";
     position: absolute;
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./goblins/motivo.avif") center 38% / cover no-repeat;
+    background: url("./broken_forge_mutiny/motivo.avif") center 38% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -910,12 +910,12 @@ body[data-theme="goblins"] .tcg-head::after {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="goblins"] .tcg-title-wrap {
+body[data-theme="broken_forge_mutiny"] .tcg-title-wrap {
     overflow: visible;
     gap: 18px;
 }
 
-body[data-theme="goblins"] .tcg-title {
+body[data-theme="broken_forge_mutiny"] .tcg-title {
     overflow: hidden;
     color: #f8eedc;
     font-family: "Lora", serif;
@@ -928,15 +928,15 @@ body[data-theme="goblins"] .tcg-title {
     white-space: nowrap;
 }
 
-body[data-theme="goblins"] .tcg-title--medium {
+body[data-theme="broken_forge_mutiny"] .tcg-title--medium {
     font-size: 35px;
 }
 
-body[data-theme="goblins"] .tcg-title--long {
+body[data-theme="broken_forge_mutiny"] .tcg-title--long {
     font-size: 29px;
 }
 
-body[data-theme="goblins"] .tcg-faction-seal {
+body[data-theme="broken_forge_mutiny"] .tcg-faction-seal {
     display: flex;
     width: 64px;
     height: 64px;
@@ -958,11 +958,11 @@ body[data-theme="goblins"] .tcg-faction-seal {
     transform: none;
 }
 
-body[data-theme="goblins"] .tcg-faction-seal::before {
+body[data-theme="broken_forge_mutiny"] .tcg-faction-seal::before {
     content: none;
 }
 
-body[data-theme="goblins"] .tcg-faction-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-faction-icon {
     display: block;
     width: 32px;
     height: 36px;
@@ -971,7 +971,7 @@ body[data-theme="goblins"] .tcg-faction-icon {
     transform: translateY(1px);
 }
 
-body[data-theme="goblins"] .tcg-art-frame {
+body[data-theme="broken_forge_mutiny"] .tcg-art-frame {
     z-index: auto;
     height: 560px;
     min-height: 0;
@@ -984,12 +984,12 @@ body[data-theme="goblins"] .tcg-art-frame {
     clip-path: none;
 }
 
-body[data-theme="goblins"] .tcg-art-image {
+body[data-theme="broken_forge_mutiny"] .tcg-art-image {
     object-position: center 25%;
     filter: none;
 }
 
-body[data-theme="goblins"] .tcg-art-frame::after {
+body[data-theme="broken_forge_mutiny"] .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.05) 0%,
@@ -998,7 +998,7 @@ body[data-theme="goblins"] .tcg-art-frame::after {
     box-shadow: none;
 }
 
-body[data-theme="goblins"] .tcg-typeband {
+body[data-theme="broken_forge_mutiny"] .tcg-typeband {
     min-height: 0;
     justify-content: flex-start;
     margin: 0 12px;
@@ -1022,7 +1022,7 @@ body[data-theme="goblins"] .tcg-typeband {
     );
 }
 
-body[data-theme="goblins"] .tcg-typeband::before {
+body[data-theme="broken_forge_mutiny"] .tcg-typeband::before {
     content: "";
     position: absolute;
     inset: 2px;
@@ -1043,13 +1043,13 @@ body[data-theme="goblins"] .tcg-typeband::before {
     );
 }
 
-body[data-theme="goblins"] .tcg-typeband::after {
+body[data-theme="broken_forge_mutiny"] .tcg-typeband::after {
     content: "";
     position: absolute;
     inset: 2px;
     z-index: 0;
     border-radius: 7px 0 0 7px;
-    background: url("./goblins/motivo.avif") center 67% / cover no-repeat;
+    background: url("./broken_forge_mutiny/motivo.avif") center 67% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1062,7 +1062,7 @@ body[data-theme="goblins"] .tcg-typeband::after {
     );
 }
 
-body[data-theme="goblins"] .tcg-type-text {
+body[data-theme="broken_forge_mutiny"] .tcg-type-text {
     gap: 18px;
     color: #f3e4cf;
     font-family: "Lora", serif;
@@ -1074,7 +1074,7 @@ body[data-theme="goblins"] .tcg-type-text {
     text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
 }
 
-body[data-theme="goblins"] .tcg-type-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-type-icon {
     display: inline;
     width: auto;
     height: auto;
@@ -1083,7 +1083,7 @@ body[data-theme="goblins"] .tcg-type-icon {
     font-size: 28px;
 }
 
-body[data-theme="goblins"] .tcg-type-icon .fa-inline-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-type-icon .fa-inline-icon {
     display: block;
     width: 28px;
     height: 28px;
@@ -1092,31 +1092,31 @@ body[data-theme="goblins"] .tcg-type-icon .fa-inline-icon {
     color: #ffad4c;
 }
 
-body[data-theme="goblins"] .tcg-type-icon .tcg-echo-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-type-icon .tcg-echo-icon {
     width: 56px;
     height: 56px;
     flex-basis: 56px;
 }
 
-body[data-theme="goblins"] .tcg-enchantment-icon,
-body[data-theme="zombies"] .tcg-enchantment-icon,
-body[data-theme="vampires"] .tcg-enchantment-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-enchantment-icon,
+body[data-theme="hollow_bell_procession"] .tcg-enchantment-icon,
+body[data-theme="crimson_court"] .tcg-enchantment-icon {
     display: block;
     font-size: 34px;
     line-height: 1;
     transform: translateY(3px);
 }
 
-body[data-theme="goblins"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon,
-body[data-theme="zombies"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon,
-body[data-theme="vampires"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon {
+body[data-theme="broken_forge_mutiny"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon,
+body[data-theme="hollow_bell_procession"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon,
+body[data-theme="crimson_court"] .tcg-type-icon .fa-inline-icon.tcg-spell-icon {
     width: 34px;
     height: 34px;
     flex-basis: 34px;
     transform: translateY(3px);
 }
 
-body[data-theme="goblins"] .tcg-body {
+body[data-theme="broken_forge_mutiny"] .tcg-body {
     z-index: auto;
     justify-content: center;
     align-items: flex-start;
@@ -1133,7 +1133,7 @@ body[data-theme="goblins"] .tcg-body {
     box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
 }
 
-body[data-theme="goblins"] .tcg-body::before {
+body[data-theme="broken_forge_mutiny"] .tcg-body::before {
     content: "H";
     position: absolute;
     inset: 0;
@@ -1147,11 +1147,11 @@ body[data-theme="goblins"] .tcg-body::before {
     pointer-events: none;
 }
 
-body[data-theme="goblins"] .tcg-body::after {
+body[data-theme="broken_forge_mutiny"] .tcg-body::after {
     content: none;
 }
 
-body[data-theme="goblins"] .tcg-effect {
+body[data-theme="broken_forge_mutiny"] .tcg-effect {
     width: 100%;
     margin: 0;
     color: #2d190d;
@@ -1160,11 +1160,11 @@ body[data-theme="goblins"] .tcg-effect {
     text-shadow: none;
 }
 
-body[data-theme="goblins"] .tcg-effect strong {
+body[data-theme="broken_forge_mutiny"] .tcg-effect strong {
     color: #76220f;
 }
 
-body[data-theme="goblins"] .symbol-badge {
+body[data-theme="broken_forge_mutiny"] .symbol-badge {
     display: inline-flex;
     width: 64px;
     height: 64px;
@@ -1176,7 +1176,7 @@ body[data-theme="goblins"] .symbol-badge {
     transform: translateY(-5px);
 }
 
-body[data-theme="goblins"] .tcg-divider {
+body[data-theme="broken_forge_mutiny"] .tcg-divider {
     width: 100%;
     height: 3px;
     min-height: 3px;
@@ -1195,7 +1195,7 @@ body[data-theme="goblins"] .tcg-divider {
     );
 }
 
-body[data-theme="goblins"] .tcg-divider::after {
+body[data-theme="broken_forge_mutiny"] .tcg-divider::after {
     content: "◆";
     top: 50%;
     left: 50%;
@@ -1207,7 +1207,7 @@ body[data-theme="goblins"] .tcg-divider::after {
     transform: translate(-50%, -50%);
 }
 
-body[data-theme="goblins"] .tcg-flavor {
+body[data-theme="broken_forge_mutiny"] .tcg-flavor {
     width: 100%;
     margin: 0;
     color: #5c3c22;
@@ -1217,7 +1217,7 @@ body[data-theme="goblins"] .tcg-flavor {
     text-shadow: none;
 }
 
-body[data-theme="goblins"] .tcg-footer-info {
+body[data-theme="broken_forge_mutiny"] .tcg-footer-info {
     bottom: 18px;
     left: 30px;
     color: rgba(75, 35, 15, 0.58);
@@ -1225,12 +1225,12 @@ body[data-theme="goblins"] .tcg-footer-info {
     letter-spacing: 3px;
 }
 
-body[data-theme="goblins"] .tcg-empty-mark,
-body[data-theme="goblins"] .tcg-quantity {
+body[data-theme="broken_forge_mutiny"] .tcg-empty-mark,
+body[data-theme="broken_forge_mutiny"] .tcg-quantity {
     display: none;
 }
 
-body[data-theme="goblins"] .tcg-stats-badge {
+body[data-theme="broken_forge_mutiny"] .tcg-stats-badge {
     isolation: isolate;
     right: 2px;
     bottom: 2px;
@@ -1256,18 +1256,18 @@ body[data-theme="goblins"] .tcg-stats-badge {
     line-height: normal;
 }
 
-body[data-theme="goblins"] .tcg-stats-badge::before {
+body[data-theme="broken_forge_mutiny"] .tcg-stats-badge::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./goblins/motivo.avif") center 58% / cover no-repeat;
+    background: url("./broken_forge_mutiny/motivo.avif") center 58% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
 }
 
-body[data-theme="goblins"] .tcg-stats-badge::after {
+body[data-theme="broken_forge_mutiny"] .tcg-stats-badge::after {
     content: "";
     position: absolute;
     inset: 2px;
@@ -1277,7 +1277,7 @@ body[data-theme="goblins"] .tcg-stats-badge::after {
     pointer-events: none;
 }
 
-body[data-theme="goblins"] .tcg-stat-item {
+body[data-theme="broken_forge_mutiny"] .tcg-stat-item {
     position: relative;
     z-index: 3;
     display: flex;
@@ -1285,13 +1285,13 @@ body[data-theme="goblins"] .tcg-stat-item {
     gap: 12px;
 }
 
-body[data-theme="goblins"] .tcg-stat-val {
+body[data-theme="broken_forge_mutiny"] .tcg-stat-val {
     color: #f2f0e6;
     font: 950 51px/1 "Trebuchet MS", "Outfit", sans-serif;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.86);
 }
 
-body[data-theme="goblins"] .tcg-stat-sep {
+body[data-theme="broken_forge_mutiny"] .tcg-stat-sep {
     position: relative;
     z-index: 3;
     margin: 0 3px;
@@ -1300,11 +1300,11 @@ body[data-theme="goblins"] .tcg-stat-sep {
 }
 
 /* Los tokens de la Horda usan la composición full art de la tierra original. */
-body[data-theme="goblins"] .tcg-card--full-art .tcg-inner {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-inner {
     background: #160a07;
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-art-frame {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-art-frame {
     position: absolute;
     top: 101px;
     right: 12px;
@@ -1320,11 +1320,11 @@ body[data-theme="goblins"] .tcg-card--full-art .tcg-art-frame {
         inset 0 0 45px rgba(0, 0, 0, 0.6);
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-art-image {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-art-image {
     object-position: center center;
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-art-frame::after {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.04) 0%,
@@ -1334,7 +1334,7 @@ body[data-theme="goblins"] .tcg-card--full-art .tcg-art-frame::after {
     );
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-typeband {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-typeband {
     position: absolute;
     right: 12px;
     bottom: 12px;
@@ -1346,18 +1346,18 @@ body[data-theme="goblins"] .tcg-card--full-art .tcg-typeband {
     clip-path: none;
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-typeband::before,
-body[data-theme="goblins"] .tcg-card--full-art .tcg-typeband::after {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-typeband::before,
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-typeband::after {
     border-radius: 7px;
     clip-path: none;
 }
 
-body[data-theme="goblins"] .tcg-card--full-art .tcg-body {
+body[data-theme="broken_forge_mutiny"] .tcg-card--full-art .tcg-body {
     display: none;
 }
 
 /* Zombies: piedra húmeda, hueso y costuras de mausoleo. */
-body[data-theme="zombies"] {
+body[data-theme="hollow_bell_procession"] {
     --page: #050909;
     --page-glow: rgba(50, 111, 94, 0.3);
     --accent: #315f55;
@@ -1381,7 +1381,7 @@ body[data-theme="zombies"] {
         radial-gradient(circle at 80% 68%, rgba(0, 0, 0, 0.12) 0 3px, transparent 4px);
 }
 
-body[data-theme="zombies"] .tcg-outer-border {
+body[data-theme="hollow_bell_procession"] .tcg-outer-border {
     padding: 18px;
     border-radius: 48px;
     background-image:
@@ -1396,7 +1396,7 @@ body[data-theme="zombies"] .tcg-outer-border {
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
 }
 
-body[data-theme="zombies"] .tcg-card {
+body[data-theme="hollow_bell_procession"] .tcg-card {
     overflow: visible;
     border-radius: 48px;
     background: #090a08;
@@ -1405,20 +1405,20 @@ body[data-theme="zombies"] .tcg-card {
         0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
-body[data-theme="zombies"] .tcg-card::before,
-body[data-theme="zombies"] .tcg-outer-border::before,
-body[data-theme="zombies"] .tcg-outer-border::after {
+body[data-theme="hollow_bell_procession"] .tcg-card::before,
+body[data-theme="hollow_bell_procession"] .tcg-outer-border::before,
+body[data-theme="hollow_bell_procession"] .tcg-outer-border::after {
     content: none;
 }
 
-body[data-theme="zombies"] .tcg-inner {
+body[data-theme="hollow_bell_procession"] .tcg-inner {
     inset: 18px;
     overflow: hidden;
     border-radius: 30px;
     background: linear-gradient(180deg, #233b34 0%, #0c1714 100%);
 }
 
-body[data-theme="zombies"] .tcg-inner::after {
+body[data-theme="hollow_bell_procession"] .tcg-inner::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -1430,7 +1430,7 @@ body[data-theme="zombies"] .tcg-inner::after {
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-head {
+body[data-theme="hollow_bell_procession"] .tcg-head {
     height: auto;
     min-height: 0;
     justify-content: space-between;
@@ -1444,7 +1444,7 @@ body[data-theme="zombies"] .tcg-head {
     box-shadow: none;
 }
 
-body[data-theme="zombies"] .tcg-head::before {
+body[data-theme="hollow_bell_procession"] .tcg-head::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -1466,13 +1466,13 @@ body[data-theme="zombies"] .tcg-head::before {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="zombies"] .tcg-head::after {
+body[data-theme="hollow_bell_procession"] .tcg-head::after {
     content: "";
     position: absolute;
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./zombies/motivo.avif") center 38% / cover no-repeat;
+    background: url("./hollow_bell_procession/motivo.avif") center 38% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1480,12 +1480,12 @@ body[data-theme="zombies"] .tcg-head::after {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="zombies"] .tcg-title-wrap {
+body[data-theme="hollow_bell_procession"] .tcg-title-wrap {
     overflow: visible;
     gap: 18px;
 }
 
-body[data-theme="zombies"] .tcg-title {
+body[data-theme="hollow_bell_procession"] .tcg-title {
     overflow: hidden;
     color: #f2f5e8;
     font-family: "Lora", serif;
@@ -1498,15 +1498,15 @@ body[data-theme="zombies"] .tcg-title {
     white-space: nowrap;
 }
 
-body[data-theme="zombies"] .tcg-title--medium {
+body[data-theme="hollow_bell_procession"] .tcg-title--medium {
     font-size: 35px;
 }
 
-body[data-theme="zombies"] .tcg-title--long {
+body[data-theme="hollow_bell_procession"] .tcg-title--long {
     font-size: 29px;
 }
 
-body[data-theme="zombies"] .tcg-faction-seal {
+body[data-theme="hollow_bell_procession"] .tcg-faction-seal {
     display: flex;
     width: 64px;
     height: 64px;
@@ -1527,7 +1527,7 @@ body[data-theme="zombies"] .tcg-faction-seal {
     font-size: 33px;
 }
 
-body[data-theme="zombies"] .tcg-faction-seal::before {
+body[data-theme="hollow_bell_procession"] .tcg-faction-seal::before {
     display: grid;
     width: 100%;
     height: 100%;
@@ -1536,7 +1536,7 @@ body[data-theme="zombies"] .tcg-faction-seal::before {
     transform: translateY(5px);
 }
 
-body[data-theme="zombies"] .tcg-cost {
+body[data-theme="hollow_bell_procession"] .tcg-cost {
     isolation: isolate;
     display: flex;
     width: 90px;
@@ -1561,19 +1561,19 @@ body[data-theme="zombies"] .tcg-cost {
         0 6px 12px rgba(0, 0, 0, 0.52);
 }
 
-body[data-theme="zombies"] .tcg-mana-gem::before {
+body[data-theme="hollow_bell_procession"] .tcg-mana-gem::before {
     content: "";
     position: absolute;
     inset: 3px;
     z-index: 1;
     border-radius: 50%;
-    background: url("./zombies/motivo.avif") center 52% / cover no-repeat;
+    background: url("./hollow_bell_procession/motivo.avif") center 52% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.34;
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-mana-gem::after {
+body[data-theme="hollow_bell_procession"] .tcg-mana-gem::after {
     content: "";
     position: absolute;
     inset: 8px;
@@ -1584,7 +1584,7 @@ body[data-theme="zombies"] .tcg-mana-gem::after {
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-mana-gem span {
+body[data-theme="hollow_bell_procession"] .tcg-mana-gem span {
     position: relative;
     z-index: 4;
     display: flex;
@@ -1605,12 +1605,12 @@ body[data-theme="zombies"] .tcg-mana-gem span {
     transform: translateY(-1px);
 }
 
-body[data-theme="zombies"] .tcg-mana-gem span[data-cost="1"],
-body[data-theme="zombies"] .tcg-mana-gem span[data-cost="4"] {
+body[data-theme="hollow_bell_procession"] .tcg-mana-gem span[data-cost="1"],
+body[data-theme="hollow_bell_procession"] .tcg-mana-gem span[data-cost="4"] {
     transform: translate(-1px, -1px);
 }
 
-body[data-theme="zombies"] .tcg-art-frame {
+body[data-theme="hollow_bell_procession"] .tcg-art-frame {
     z-index: auto;
     height: 560px;
     min-height: 0;
@@ -1622,12 +1622,12 @@ body[data-theme="zombies"] .tcg-art-frame {
         inset 0 0 45px rgba(0, 0, 0, 0.6);
 }
 
-body[data-theme="zombies"] .tcg-art-image {
+body[data-theme="hollow_bell_procession"] .tcg-art-image {
     object-position: center 25%;
     filter: none;
 }
 
-body[data-theme="zombies"] .tcg-art-frame::after {
+body[data-theme="hollow_bell_procession"] .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.05) 0%,
@@ -1636,7 +1636,7 @@ body[data-theme="zombies"] .tcg-art-frame::after {
     box-shadow: none;
 }
 
-body[data-theme="zombies"] .tcg-typeband {
+body[data-theme="hollow_bell_procession"] .tcg-typeband {
     min-height: 0;
     justify-content: flex-start;
     margin: 0 12px;
@@ -1660,7 +1660,7 @@ body[data-theme="zombies"] .tcg-typeband {
     );
 }
 
-body[data-theme="zombies"] .tcg-typeband::before {
+body[data-theme="hollow_bell_procession"] .tcg-typeband::before {
     content: "";
     position: absolute;
     inset: 2px;
@@ -1681,13 +1681,13 @@ body[data-theme="zombies"] .tcg-typeband::before {
     );
 }
 
-body[data-theme="zombies"] .tcg-typeband::after {
+body[data-theme="hollow_bell_procession"] .tcg-typeband::after {
     content: "";
     position: absolute;
     inset: 2px;
     z-index: 0;
     border-radius: 7px 0 0 7px;
-    background: url("./zombies/motivo.avif") center 67% / cover no-repeat;
+    background: url("./hollow_bell_procession/motivo.avif") center 67% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -1700,7 +1700,7 @@ body[data-theme="zombies"] .tcg-typeband::after {
     );
 }
 
-body[data-theme="zombies"] .tcg-type-text {
+body[data-theme="hollow_bell_procession"] .tcg-type-text {
     gap: 18px;
     color: #eae4cf;
     font-family: "Lora", serif;
@@ -1712,7 +1712,7 @@ body[data-theme="zombies"] .tcg-type-text {
     text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
 }
 
-body[data-theme="zombies"] .tcg-type-icon {
+body[data-theme="hollow_bell_procession"] .tcg-type-icon {
     display: inline;
     width: auto;
     height: auto;
@@ -1721,7 +1721,7 @@ body[data-theme="zombies"] .tcg-type-icon {
     font-size: 28px;
 }
 
-body[data-theme="zombies"] .tcg-type-icon .fa-inline-icon {
+body[data-theme="hollow_bell_procession"] .tcg-type-icon .fa-inline-icon {
     display: block;
     width: 28px;
     height: 28px;
@@ -1730,13 +1730,13 @@ body[data-theme="zombies"] .tcg-type-icon .fa-inline-icon {
     color: #86efac;
 }
 
-body[data-theme="zombies"] .tcg-type-icon .tcg-echo-icon {
+body[data-theme="hollow_bell_procession"] .tcg-type-icon .tcg-echo-icon {
     width: 56px;
     height: 56px;
     flex-basis: 56px;
 }
 
-body[data-theme="zombies"] .tcg-body {
+body[data-theme="hollow_bell_procession"] .tcg-body {
     z-index: auto;
     justify-content: center;
     align-items: flex-start;
@@ -1753,7 +1753,7 @@ body[data-theme="zombies"] .tcg-body {
     box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
 }
 
-body[data-theme="zombies"] .tcg-body::before {
+body[data-theme="hollow_bell_procession"] .tcg-body::before {
     content: "H";
     position: absolute;
     inset: 0;
@@ -1766,11 +1766,11 @@ body[data-theme="zombies"] .tcg-body::before {
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-body::after {
+body[data-theme="hollow_bell_procession"] .tcg-body::after {
     content: none;
 }
 
-body[data-theme="zombies"] .tcg-effect {
+body[data-theme="hollow_bell_procession"] .tcg-effect {
     width: 100%;
     margin: 0;
     color: #1a211b;
@@ -1779,11 +1779,11 @@ body[data-theme="zombies"] .tcg-effect {
     text-shadow: none;
 }
 
-body[data-theme="zombies"] .tcg-effect strong {
+body[data-theme="hollow_bell_procession"] .tcg-effect strong {
     color: #234d41;
 }
 
-body[data-theme="zombies"] .symbol-badge {
+body[data-theme="hollow_bell_procession"] .symbol-badge {
     display: inline-flex;
     width: 64px;
     height: 64px;
@@ -1796,7 +1796,7 @@ body[data-theme="zombies"] .symbol-badge {
     transform: translateY(-5px);
 }
 
-body[data-theme="zombies"] .symbol-tap {
+body[data-theme="hollow_bell_procession"] .symbol-tap {
     border: 3px solid rgba(184, 162, 107, 0.66);
     color: #eadcae;
     background:
@@ -1810,7 +1810,7 @@ body[data-theme="zombies"] .symbol-tap {
     text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
 }
 
-body[data-theme="zombies"] .symbol-energy {
+body[data-theme="hollow_bell_procession"] .symbol-energy {
     border: 3px solid rgba(137, 198, 213, 0.66);
     color: #dceff0;
     background:
@@ -1824,7 +1824,7 @@ body[data-theme="zombies"] .symbol-energy {
     text-shadow: 0 1px 2px rgba(3, 16, 27, 0.95);
 }
 
-body[data-theme="zombies"] .tcg-divider {
+body[data-theme="hollow_bell_procession"] .tcg-divider {
     width: 100%;
     height: 3px;
     min-height: 3px;
@@ -1843,7 +1843,7 @@ body[data-theme="zombies"] .tcg-divider {
     );
 }
 
-body[data-theme="zombies"] .tcg-divider::after {
+body[data-theme="hollow_bell_procession"] .tcg-divider::after {
     content: "◆";
     top: 50%;
     left: 50%;
@@ -1855,7 +1855,7 @@ body[data-theme="zombies"] .tcg-divider::after {
     transform: translate(-50%, -50%);
 }
 
-body[data-theme="zombies"] .tcg-flavor {
+body[data-theme="hollow_bell_procession"] .tcg-flavor {
     width: 100%;
     margin: 0;
     color: #454e40;
@@ -1866,11 +1866,11 @@ body[data-theme="zombies"] .tcg-flavor {
 }
 
 /* Las fichas Zombie usan la misma composición full art que la tierra original. */
-body[data-theme="zombies"] .tcg-card--full-art .tcg-inner {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-inner {
     background: #0a100c;
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-art-frame {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-art-frame {
     position: absolute;
     top: 101px;
     right: 12px;
@@ -1886,11 +1886,11 @@ body[data-theme="zombies"] .tcg-card--full-art .tcg-art-frame {
         inset 0 0 45px rgba(0, 0, 0, 0.6);
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-art-image {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-art-image {
     object-position: center center;
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-art-frame::after {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.04) 0%,
@@ -1900,7 +1900,7 @@ body[data-theme="zombies"] .tcg-card--full-art .tcg-art-frame::after {
     );
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-typeband {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-typeband {
     position: absolute;
     right: 12px;
     bottom: 12px;
@@ -1912,17 +1912,17 @@ body[data-theme="zombies"] .tcg-card--full-art .tcg-typeband {
     clip-path: none;
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-typeband::before,
-body[data-theme="zombies"] .tcg-card--full-art .tcg-typeband::after {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-typeband::before,
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-typeband::after {
     border-radius: 7px;
     clip-path: none;
 }
 
-body[data-theme="zombies"] .tcg-card--full-art .tcg-body {
+body[data-theme="hollow_bell_procession"] .tcg-card--full-art .tcg-body {
     display: none;
 }
 
-body[data-theme="zombies"] .tcg-footer-info {
+body[data-theme="hollow_bell_procession"] .tcg-footer-info {
     bottom: 18px;
     left: 30px;
     color: rgba(48, 67, 57, 0.58);
@@ -1930,12 +1930,12 @@ body[data-theme="zombies"] .tcg-footer-info {
     letter-spacing: 3px;
 }
 
-body[data-theme="zombies"] .tcg-empty-mark,
-body[data-theme="zombies"] .tcg-quantity {
+body[data-theme="hollow_bell_procession"] .tcg-empty-mark,
+body[data-theme="hollow_bell_procession"] .tcg-quantity {
     display: none;
 }
 
-body[data-theme="zombies"] .tcg-stats-badge {
+body[data-theme="hollow_bell_procession"] .tcg-stats-badge {
     isolation: isolate;
     right: 2px;
     bottom: 2px;
@@ -1961,18 +1961,18 @@ body[data-theme="zombies"] .tcg-stats-badge {
     line-height: normal;
 }
 
-body[data-theme="zombies"] .tcg-stats-badge::before {
+body[data-theme="hollow_bell_procession"] .tcg-stats-badge::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./zombies/motivo.avif") center 58% / cover no-repeat;
+    background: url("./hollow_bell_procession/motivo.avif") center 58% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-stats-badge::after {
+body[data-theme="hollow_bell_procession"] .tcg-stats-badge::after {
     content: "";
     position: absolute;
     inset: 2px;
@@ -1982,7 +1982,7 @@ body[data-theme="zombies"] .tcg-stats-badge::after {
     pointer-events: none;
 }
 
-body[data-theme="zombies"] .tcg-stat-item {
+body[data-theme="hollow_bell_procession"] .tcg-stat-item {
     position: relative;
     z-index: 3;
     display: flex;
@@ -1990,13 +1990,13 @@ body[data-theme="zombies"] .tcg-stat-item {
     gap: 12px;
 }
 
-body[data-theme="zombies"] .tcg-stat-val {
+body[data-theme="hollow_bell_procession"] .tcg-stat-val {
     color: #f2f0e6;
     font: 950 51px/1 "Trebuchet MS", "Outfit", sans-serif;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.86);
 }
 
-body[data-theme="zombies"] .tcg-stat-sep {
+body[data-theme="hollow_bell_procession"] .tcg-stat-sep {
     position: relative;
     z-index: 3;
     margin: 0 3px;
@@ -2005,7 +2005,7 @@ body[data-theme="zombies"] .tcg-stat-sep {
 }
 
 /* Vampiros: obsidiana pulida, lacre carmesí y ornamento cortesano. */
-body[data-theme="vampires"] {
+body[data-theme="crimson_court"] {
     --page: #080507;
     --page-glow: rgba(126, 8, 38, 0.37);
     --accent: #77152f;
@@ -2034,20 +2034,20 @@ body[data-theme="vampires"] {
         );
 }
 
-body[data-theme="vampires"] .tcg-card {
+body[data-theme="crimson_court"] .tcg-card {
     border-radius: 56px;
 }
 
-body[data-theme="vampires"] .tcg-head {
+body[data-theme="crimson_court"] .tcg-head {
     border-radius: 25px 25px 5px 5px;
 }
 
-body[data-theme="vampires"] .tcg-art-frame {
+body[data-theme="crimson_court"] .tcg-art-frame {
     border-radius: 180px 180px 12px 12px / 74px 74px 12px 12px;
     border-color: rgba(225, 190, 119, 0.62);
 }
 
-body[data-theme="vampires"] .tcg-faction-seal {
+body[data-theme="crimson_court"] .tcg-faction-seal {
     border-radius: 50% 50% 45% 45%;
     box-shadow:
         inset 0 -11px 14px rgba(0, 0, 0, 0.52),
@@ -2055,12 +2055,12 @@ body[data-theme="vampires"] .tcg-faction-seal {
         0 0 18px rgba(128, 20, 48, 0.45);
 }
 
-body[data-theme="vampires"] .tcg-stats-badge {
+body[data-theme="crimson_court"] .tcg-stats-badge {
     border-color: rgba(225, 190, 119, 0.7);
 }
 
 /* Vampiros usa el layout físico del player con acabado carmesí. */
-body[data-theme="vampires"] .tcg-card {
+body[data-theme="crimson_court"] .tcg-card {
     overflow: visible;
     border-radius: 48px;
     background: #090a08;
@@ -2069,7 +2069,7 @@ body[data-theme="vampires"] .tcg-card {
         0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
-body[data-theme="vampires"] .tcg-outer-border {
+body[data-theme="crimson_court"] .tcg-outer-border {
     padding: 18px;
     border-radius: 48px;
     background-image:
@@ -2084,20 +2084,20 @@ body[data-theme="vampires"] .tcg-outer-border {
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
 }
 
-body[data-theme="vampires"] .tcg-card::before,
-body[data-theme="vampires"] .tcg-outer-border::before,
-body[data-theme="vampires"] .tcg-outer-border::after {
+body[data-theme="crimson_court"] .tcg-card::before,
+body[data-theme="crimson_court"] .tcg-outer-border::before,
+body[data-theme="crimson_court"] .tcg-outer-border::after {
     content: none;
 }
 
-body[data-theme="vampires"] .tcg-inner {
+body[data-theme="crimson_court"] .tcg-inner {
     inset: 18px;
     overflow: hidden;
     border-radius: 30px;
     background: linear-gradient(180deg, #3b0d1d 0%, #12070c 100%);
 }
 
-body[data-theme="vampires"] .tcg-inner::after {
+body[data-theme="crimson_court"] .tcg-inner::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -2109,7 +2109,7 @@ body[data-theme="vampires"] .tcg-inner::after {
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-head {
+body[data-theme="crimson_court"] .tcg-head {
     height: auto;
     min-height: 0;
     justify-content: space-between;
@@ -2123,7 +2123,7 @@ body[data-theme="vampires"] .tcg-head {
     box-shadow: none;
 }
 
-body[data-theme="vampires"] .tcg-head::before {
+body[data-theme="crimson_court"] .tcg-head::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -2145,13 +2145,13 @@ body[data-theme="vampires"] .tcg-head::before {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="vampires"] .tcg-head::after {
+body[data-theme="crimson_court"] .tcg-head::after {
     content: "";
     position: absolute;
     inset: 3px 0 3px 3px;
     z-index: 0;
     border-radius: 15px 0 0 6px;
-    background: url("./vampires/motivo.jpg") center 38% / cover no-repeat;
+    background: url("./crimson_court/motivo.jpg") center 38% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -2159,12 +2159,12 @@ body[data-theme="vampires"] .tcg-head::after {
     mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
-body[data-theme="vampires"] .tcg-title-wrap {
+body[data-theme="crimson_court"] .tcg-title-wrap {
     overflow: visible;
     gap: 18px;
 }
 
-body[data-theme="vampires"] .tcg-title {
+body[data-theme="crimson_court"] .tcg-title {
     overflow: hidden;
     color: #f6ece7;
     font-family: "Lora", serif;
@@ -2177,15 +2177,15 @@ body[data-theme="vampires"] .tcg-title {
     white-space: nowrap;
 }
 
-body[data-theme="vampires"] .tcg-title--medium {
+body[data-theme="crimson_court"] .tcg-title--medium {
     font-size: 35px;
 }
 
-body[data-theme="vampires"] .tcg-title--long {
+body[data-theme="crimson_court"] .tcg-title--long {
     font-size: 29px;
 }
 
-body[data-theme="vampires"] .tcg-faction-seal {
+body[data-theme="crimson_court"] .tcg-faction-seal {
     display: flex;
     width: 64px;
     height: 64px;
@@ -2206,7 +2206,7 @@ body[data-theme="vampires"] .tcg-faction-seal {
     font-size: 33px;
 }
 
-body[data-theme="vampires"] .tcg-faction-seal::before {
+body[data-theme="crimson_court"] .tcg-faction-seal::before {
     content: none;
     display: grid;
     width: 100%;
@@ -2216,7 +2216,7 @@ body[data-theme="vampires"] .tcg-faction-seal::before {
     transform: translateY(1px);
 }
 
-body[data-theme="vampires"] .tcg-faction-icon--blood {
+body[data-theme="crimson_court"] .tcg-faction-icon--blood {
     display: block;
     width: 28px;
     height: 36px;
@@ -2224,7 +2224,7 @@ body[data-theme="vampires"] .tcg-faction-icon--blood {
     transform: translateY(-2px);
 }
 
-body[data-theme="vampires"] .tcg-cost {
+body[data-theme="crimson_court"] .tcg-cost {
     isolation: isolate;
     display: flex;
     width: 90px;
@@ -2249,19 +2249,19 @@ body[data-theme="vampires"] .tcg-cost {
         0 6px 12px rgba(0, 0, 0, 0.52);
 }
 
-body[data-theme="vampires"] .tcg-mana-gem::before {
+body[data-theme="crimson_court"] .tcg-mana-gem::before {
     content: "";
     position: absolute;
     inset: 3px;
     z-index: 1;
     border-radius: 50%;
-    background: url("./vampires/motivo.jpg") center 52% / cover no-repeat;
+    background: url("./crimson_court/motivo.jpg") center 52% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.34;
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-mana-gem::after {
+body[data-theme="crimson_court"] .tcg-mana-gem::after {
     content: "";
     position: absolute;
     inset: 8px;
@@ -2272,7 +2272,7 @@ body[data-theme="vampires"] .tcg-mana-gem::after {
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-mana-gem span {
+body[data-theme="crimson_court"] .tcg-mana-gem span {
     position: relative;
     z-index: 4;
     display: flex;
@@ -2293,12 +2293,12 @@ body[data-theme="vampires"] .tcg-mana-gem span {
     transform: translateY(-1px);
 }
 
-body[data-theme="vampires"] .tcg-mana-gem span[data-cost="1"],
-body[data-theme="vampires"] .tcg-mana-gem span[data-cost="4"] {
+body[data-theme="crimson_court"] .tcg-mana-gem span[data-cost="1"],
+body[data-theme="crimson_court"] .tcg-mana-gem span[data-cost="4"] {
     transform: translate(-1px, -1px);
 }
 
-body[data-theme="vampires"] .tcg-art-frame {
+body[data-theme="crimson_court"] .tcg-art-frame {
     z-index: auto;
     height: 560px;
     min-height: 0;
@@ -2310,12 +2310,12 @@ body[data-theme="vampires"] .tcg-art-frame {
         inset 0 0 45px rgba(0, 0, 0, 0.6);
 }
 
-body[data-theme="vampires"] .tcg-art-image {
+body[data-theme="crimson_court"] .tcg-art-image {
     object-position: center 25%;
     filter: none;
 }
 
-body[data-theme="vampires"] .tcg-art-frame::after {
+body[data-theme="crimson_court"] .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.05) 0%,
@@ -2324,7 +2324,7 @@ body[data-theme="vampires"] .tcg-art-frame::after {
     box-shadow: none;
 }
 
-body[data-theme="vampires"] .tcg-typeband {
+body[data-theme="crimson_court"] .tcg-typeband {
     min-height: 0;
     justify-content: flex-start;
     margin: 0 12px;
@@ -2348,7 +2348,7 @@ body[data-theme="vampires"] .tcg-typeband {
     );
 }
 
-body[data-theme="vampires"] .tcg-typeband::before {
+body[data-theme="crimson_court"] .tcg-typeband::before {
     content: "";
     position: absolute;
     inset: 2px;
@@ -2370,14 +2370,14 @@ body[data-theme="vampires"] .tcg-typeband::before {
     );
 }
 
-body[data-theme="vampires"] .tcg-typeband::after {
+body[data-theme="crimson_court"] .tcg-typeband::after {
     content: "";
     position: absolute;
     inset: 2px;
     z-index: 0;
     transform: none;
     border-radius: 7px 0 0 7px;
-    background: url("./vampires/motivo.jpg") center 67% / cover no-repeat;
+    background: url("./crimson_court/motivo.jpg") center 67% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
@@ -2390,7 +2390,7 @@ body[data-theme="vampires"] .tcg-typeband::after {
     );
 }
 
-body[data-theme="vampires"] .tcg-type-text {
+body[data-theme="crimson_court"] .tcg-type-text {
     gap: 18px;
     color: #f3e6e2;
     font-family: "Lora", serif;
@@ -2402,7 +2402,7 @@ body[data-theme="vampires"] .tcg-type-text {
     text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
 }
 
-body[data-theme="vampires"] .tcg-type-icon {
+body[data-theme="crimson_court"] .tcg-type-icon {
     display: inline;
     width: auto;
     height: auto;
@@ -2411,7 +2411,7 @@ body[data-theme="vampires"] .tcg-type-icon {
     font-size: 28px;
 }
 
-body[data-theme="vampires"] .tcg-type-icon .fa-inline-icon {
+body[data-theme="crimson_court"] .tcg-type-icon .fa-inline-icon {
     display: block;
     width: 28px;
     height: 28px;
@@ -2420,13 +2420,13 @@ body[data-theme="vampires"] .tcg-type-icon .fa-inline-icon {
     color: #e4939e;
 }
 
-body[data-theme="vampires"] .tcg-type-icon .tcg-echo-icon {
+body[data-theme="crimson_court"] .tcg-type-icon .tcg-echo-icon {
     width: 56px;
     height: 56px;
     flex-basis: 56px;
 }
 
-body[data-theme="vampires"] .tcg-body {
+body[data-theme="crimson_court"] .tcg-body {
     z-index: auto;
     justify-content: center;
     align-items: flex-start;
@@ -2443,7 +2443,7 @@ body[data-theme="vampires"] .tcg-body {
     box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.15);
 }
 
-body[data-theme="vampires"] .tcg-body::before {
+body[data-theme="crimson_court"] .tcg-body::before {
     content: "H";
     position: absolute;
     inset: 0;
@@ -2457,11 +2457,11 @@ body[data-theme="vampires"] .tcg-body::before {
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-body::after {
+body[data-theme="crimson_court"] .tcg-body::after {
     content: none;
 }
 
-body[data-theme="vampires"] .tcg-effect {
+body[data-theme="crimson_court"] .tcg-effect {
     width: 100%;
     margin: 0;
     color: #2b171e;
@@ -2470,11 +2470,11 @@ body[data-theme="vampires"] .tcg-effect {
     text-shadow: none;
 }
 
-body[data-theme="vampires"] .tcg-effect strong {
+body[data-theme="crimson_court"] .tcg-effect strong {
     color: #77152f;
 }
 
-body[data-theme="vampires"] .symbol-badge {
+body[data-theme="crimson_court"] .symbol-badge {
     display: inline-flex;
     width: 64px;
     height: 64px;
@@ -2487,14 +2487,14 @@ body[data-theme="vampires"] .symbol-badge {
     transform: translateY(-5px);
 }
 
-body[data-theme="vampires"] .symbol-badge > svg {
+body[data-theme="crimson_court"] .symbol-badge > svg {
     display: block;
     width: 40px;
     height: 40px;
     fill: currentColor;
 }
 
-body[data-theme="vampires"] .symbol-tap {
+body[data-theme="crimson_court"] .symbol-tap {
     border: 3px solid rgba(184, 162, 107, 0.66);
     color: #eadcae;
     background:
@@ -2508,7 +2508,7 @@ body[data-theme="vampires"] .symbol-tap {
     text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
 }
 
-body[data-theme="vampires"] .symbol-energy {
+body[data-theme="crimson_court"] .symbol-energy {
     border: 3px solid rgba(184, 162, 107, 0.66);
     color: #f6d76f;
     background:
@@ -2522,7 +2522,7 @@ body[data-theme="vampires"] .symbol-energy {
     text-shadow: 0 1px 2px rgba(13, 10, 6, 0.95);
 }
 
-body[data-theme="vampires"] .tcg-divider {
+body[data-theme="crimson_court"] .tcg-divider {
     width: 100%;
     height: 3px;
     min-height: 3px;
@@ -2541,7 +2541,7 @@ body[data-theme="vampires"] .tcg-divider {
     );
 }
 
-body[data-theme="vampires"] .tcg-divider::after {
+body[data-theme="crimson_court"] .tcg-divider::after {
     content: "◆";
     top: 50%;
     left: 50%;
@@ -2553,7 +2553,7 @@ body[data-theme="vampires"] .tcg-divider::after {
     transform: translate(-50%, -50%);
 }
 
-body[data-theme="vampires"] .tcg-flavor {
+body[data-theme="crimson_court"] .tcg-flavor {
     width: 100%;
     margin: 0;
     color: #60424a;
@@ -2563,21 +2563,21 @@ body[data-theme="vampires"] .tcg-flavor {
     text-shadow: none;
 }
 
-body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-body {
+body[data-theme="crimson_court"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-body {
     gap: 12px;
     padding: 22px 36px 58px;
 }
 
-body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-title {
+body[data-theme="crimson_court"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-title {
     font-size: 39px;
 }
 
-body[data-theme="vampires"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-flavor {
+body[data-theme="crimson_court"] .tcg-card[data-card-id="eternal_feast_countess"] .tcg-flavor {
     font-size: 34px;
     line-height: 1.3;
 }
 
-body[data-theme="vampires"] .tcg-footer-info {
+body[data-theme="crimson_court"] .tcg-footer-info {
     bottom: 18px;
     left: 30px;
     color: rgba(75, 35, 49, 0.58);
@@ -2585,12 +2585,12 @@ body[data-theme="vampires"] .tcg-footer-info {
     letter-spacing: 3px;
 }
 
-body[data-theme="vampires"] .tcg-empty-mark,
-body[data-theme="vampires"] .tcg-quantity {
+body[data-theme="crimson_court"] .tcg-empty-mark,
+body[data-theme="crimson_court"] .tcg-quantity {
     display: none;
 }
 
-body[data-theme="vampires"] .tcg-stats-badge {
+body[data-theme="crimson_court"] .tcg-stats-badge {
     isolation: isolate;
     right: 2px;
     bottom: 2px;
@@ -2616,18 +2616,18 @@ body[data-theme="vampires"] .tcg-stats-badge {
     line-height: normal;
 }
 
-body[data-theme="vampires"] .tcg-stats-badge::before {
+body[data-theme="crimson_court"] .tcg-stats-badge::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: url("./vampires/motivo.jpg") center 58% / cover no-repeat;
+    background: url("./crimson_court/motivo.jpg") center 58% / cover no-repeat;
     mix-blend-mode: multiply;
     opacity: 0.33;
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-stats-badge::after {
+body[data-theme="crimson_court"] .tcg-stats-badge::after {
     content: "";
     position: absolute;
     inset: 2px;
@@ -2637,7 +2637,7 @@ body[data-theme="vampires"] .tcg-stats-badge::after {
     pointer-events: none;
 }
 
-body[data-theme="vampires"] .tcg-stat-item {
+body[data-theme="crimson_court"] .tcg-stat-item {
     position: relative;
     z-index: 3;
     display: flex;
@@ -2645,13 +2645,13 @@ body[data-theme="vampires"] .tcg-stat-item {
     gap: 12px;
 }
 
-body[data-theme="vampires"] .tcg-stat-val {
+body[data-theme="crimson_court"] .tcg-stat-val {
     color: #f2f0e6;
     font: 950 51px/1 "Trebuchet MS", "Outfit", sans-serif;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.86);
 }
 
-body[data-theme="vampires"] .tcg-stat-sep {
+body[data-theme="crimson_court"] .tcg-stat-sep {
     position: relative;
     z-index: 3;
     margin: 0 3px;
@@ -2660,11 +2660,11 @@ body[data-theme="vampires"] .tcg-stat-sep {
 }
 
 /* Energía Carmesí conserva la composición full art del player. */
-body[data-theme="vampires"] .tcg-card--full-art .tcg-inner {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-inner {
     background: #12070c;
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-art-frame {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-art-frame {
     position: absolute;
     top: 101px;
     right: 12px;
@@ -2680,11 +2680,11 @@ body[data-theme="vampires"] .tcg-card--full-art .tcg-art-frame {
         inset 0 0 45px rgba(0, 0, 0, 0.6);
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-art-image {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-art-image {
     object-position: center center;
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-art-frame::after {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-art-frame::after {
     background: linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.04) 0%,
@@ -2694,7 +2694,7 @@ body[data-theme="vampires"] .tcg-card--full-art .tcg-art-frame::after {
     );
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-typeband {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-typeband {
     position: absolute;
     right: 12px;
     bottom: 12px;
@@ -2706,18 +2706,18 @@ body[data-theme="vampires"] .tcg-card--full-art .tcg-typeband {
     clip-path: none;
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-typeband::before,
-body[data-theme="vampires"] .tcg-card--full-art .tcg-typeband::after {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-typeband::before,
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-typeband::after {
     border-radius: 7px;
     clip-path: none;
 }
 
-body[data-theme="vampires"] .tcg-card--full-art .tcg-body {
+body[data-theme="crimson_court"] .tcg-card--full-art .tcg-body {
     display: none;
 }
 
 /*
- * Los costes del player conservan siempre el orbe azul de Mono Green:
+ * Los costes del player conservan siempre el orbe azul de La Última Lluvia:
  * el tema de la carta no los recolorea ni les aplica su motivo.
  */
 .tcg-card .tcg-cost.tcg-mana-gem {

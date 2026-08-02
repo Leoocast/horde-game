@@ -6,10 +6,10 @@ export type BuffAnimationVariant =
   | "growth-feral";
 
 const GROWTH_VARIANTS: Record<string, Exclude<BuffAnimationVariant, "default" | "growth-preview">> = {
-  sunshower_druid: "growth-strong",
-  beast_kin_ranger: "growth-strong",
-  giant_growth: "growth-strong",
-  ruthless_predation: "growth-strong",
+  iria_voice_last_rain: "growth-strong",
+  arven_first_pack: "growth-strong",
+  first_tree_sap: "growth-strong",
+  oath_clearing: "growth-strong",
 };
 
 /** Presentation mapping only. Rules remain generic; this chooses how an already-confirmed buff

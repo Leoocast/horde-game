@@ -24,7 +24,7 @@ if [ -z "$DECK" ]; then
     echo "             EXPORTADOR DE CARTAS"
     echo "=================================================="
     echo
-    echo "  1. Mono Green"
+    echo "  1. La Última Lluvia"
     echo "  2. Zombies"
     echo "  3. Goblins"
     echo "  4. Vampires"
@@ -34,10 +34,10 @@ if [ -z "$DECK" ]; then
     read -r choice
 
     case "$choice" in
-        1) DECK="monogreen" ;;
-        2) DECK="zombies" ;;
-        3) DECK="goblins" ;;
-        4) DECK="vampires" ;;
+        1) DECK="last_rain" ;;
+        2) DECK="hollow_bell_procession" ;;
+        3) DECK="broken_forge_mutiny" ;;
+        4) DECK="crimson_court" ;;
         0) exit 0 ;;
         *)
             echo
@@ -50,10 +50,10 @@ fi
 DECK=$(printf "%s" "$DECK" | tr "[:upper:]" "[:lower:]")
 
 case "$DECK" in
-    monogreen|zombies|goblins|vampires) ;;
+    last_rain|hollow_bell_procession|broken_forge_mutiny|crimson_court) ;;
     *)
         echo "Deck invalido: $DECK"
-        echo "Opciones: monogreen, zombies, goblins o vampires."
+        echo "Opciones: last_rain, hollow_bell_procession, broken_forge_mutiny o crimson_court."
         exit 1
         ;;
 esac

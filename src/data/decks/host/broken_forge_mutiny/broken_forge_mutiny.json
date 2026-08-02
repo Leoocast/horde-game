@@ -1,0 +1,1103 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "broken_forge_mutiny",
+  "name": "El Motín de la Forja Rota",
+  "format": "host",
+  "side": "HOST",
+  "deckSize": 50,
+  "archetype": "host",
+  "gamePlan": "Abrumar con cuadrillas de Trasgos, relevos de la forja, refuerzos al atacar y salvas construidas con herramientas y bajas.",
+  "rulesProfile": {
+    "revealCount": 3,
+    "stopOnNonToken": true,
+    "miniSurgeTurn": 6,
+    "miniSurgeExtraReveals": 1,
+    "surgeTurn": 10,
+    "surgeTurnChaos": 8,
+    "surgeExtraReveals": 2,
+    "damagePerArchiveDiscard": 3,
+    "poisonPerArchiveDiscard": 3,
+    "hostEchosHaveImpetus": true,
+    "swarmTokenSubtypes": [
+      "Goblin"
+    ]
+  },
+  "tokens": [
+    {
+      "id": "ember_scrap_runner",
+      "name": "Ember-Scrap Runner",
+      "displayNameEs": "Corredor de Ascua y Chatarra",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Each runner carries one ember. Together they carry the fire.",
+        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
+      },
+      "showFlavorText": true,
+      "energyCost": {
+        "amount": 0
+      },
+      "subtypes": [
+        "Goblin",
+        "Runner"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "abilities": [],
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "traits": []
+    }
+  ],
+  "cards": [
+    {
+      "id": "ember_scrap_runner",
+      "name": "Ember-Scrap Runner",
+      "displayNameEs": "Corredor de Ascua y Chatarra",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Each runner carries one ember. Together they carry the fire.",
+        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
+      },
+      "showFlavorText": true,
+      "energyCost": {
+        "amount": 0
+      },
+      "subtypes": [
+        "Goblin",
+        "Runner"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "abilities": [],
+      "quantity": 24,
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "traits": []
+    },
+    {
+      "id": "burning_tally_foreman",
+      "name": "Foreman of the Burning Tally",
+      "displayNameEs": "Capataz del Recuento Ardiente",
+      "gameText": {
+        "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
+      },
+      "flavorText": {
+        "en": "He counts no workers, only blows the enemy is still owed.",
+        "es": "No cuenta trabajadores; cuenta golpes que aún le debe al enemigo."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Foreman"
+      ],
+      "power": 2,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "burning_tally_foreman_other_goblins_buff",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
+            }
+          ]
+        },
+        {
+          "id": "burning_tally_foreman_entered_goblins_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+              "targetPolicy": "BEST_LETHAL",
+              "animation": "BURN",
+              "amount": {
+                "type": "COUNT_ECHOS_INVOKED_THIS_TURN",
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
+                }
+              },
+              "damageKind": "NON_COMBAT"
+            }
+          ],
+          "implementationNote": "PvE adaptation: when Invoked, Burn the best enemy Echo for the number of allied Goblins Invoked this turn."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "next_crew_caller",
+      "name": "Caller of the Next Crew",
+      "displayNameEs": "Llamador de la Próxima Cuadrilla",
+      "gameText": {
+        "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
+        "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
+      },
+      "flavorText": {
+        "en": "When one falls, their shift plate calls the next.",
+        "es": "Si uno cae, su placa de turno llama al siguiente."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Goblin",
+        "Caller"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "triggerMessage": "Caller of the Next Crew inspects the top plate of the Archive.",
+      "abilities": [
+        {
+          "id": "next_crew_caller_other_goblins_buff",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
+            }
+          ]
+        },
+        {
+          "id": "next_crew_caller_goblin_died_inspect",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ECHO_DIED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "echo",
+              "controller": "SELF",
+              "excludeSource": false,
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ],
+                "subtypes": [
+                  "Goblin"
+                ]
+              }
+            }
+          ],
+          "effects": [],
+          "customHandler": "next_crew_caller_inspect_top_if_goblin",
+          "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is a Goblin Echo; otherwise put it on the bottom of the Archive."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "open_furnace_crier",
+      "name": "Open-Furnace Crier",
+      "displayNameEs": "Pregonero del Horno Abierto",
+      "gameText": {
+        "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
+        "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "The gate was open before the cry had ended.",
+        "es": "Abrió la compuerta antes de terminar el grito."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Goblin",
+        "Crier"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "open_furnace_crier_enter_pump",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
+                }
+              },
+              "power": 1,
+              "endurance": 0,
+              "duration": "END_OF_TURN",
+              "animation": "BUFF"
+            }
+          ],
+          "implementationNote": "PvE adaptation: when Invoked, allied Goblins get +1/+0 until the end of the turn. Impetus and Pack tactics are omitted."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "shift_hammer",
+      "name": "The Shift Hammer",
+      "displayNameEs": "El Martillo de Turno",
+      "gameText": {
+        "en": "Allied Goblins gain Daunting.",
+        "es": "Los Trasgos aliados ganan Imponente."
+      },
+      "flavorText": {
+        "en": "Every blow advances another rank.",
+        "es": "Cada golpe hace avanzar otra fila."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "shift_hammer_grant_menace",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ]
+                }
+              },
+              "keyword": "DAUNTING",
+              "duration": "WHILE_SOURCE_ON_FIELD"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
+    },
+    {
+      "id": "rain_of_rivets",
+      "name": "Rain of Rivets",
+      "displayNameEs": "Lluvia de Remaches",
+      "gameText": {
+        "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
+        "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
+      },
+      "flavorText": {
+        "en": "What cannot serve as armor can still serve as ammunition.",
+        "es": "Lo que no sirve de armadura todavía sirve de proyectil."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "rain_of_rivets_small_attacker_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "rain_of_rivets_small_attacker_damage",
+          "implementationNote": "PvE adaptation: capture each attacking Goblin with Power 2 or less once, then deal the combined damage to the Chronicler as a Burn volley after the Host attack sequence."
+        }
+      ],
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
+    },
+    {
+      "id": "double_crew_boss",
+      "name": "Boss of the Double Crew",
+      "displayNameEs": "Jefe de la Cuadrilla Doble",
+      "gameText": {
+        "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
+      },
+      "flavorText": {
+        "en": "Two carry the tools. The boss carries the credit.",
+        "es": "Dos cargan las herramientas. El jefe carga el mérito."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Goblin",
+        "Foreman"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "double_crew_boss_create_goblins",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "CREATE_TOKEN",
+              "player": "SELF",
+              "tokenId": "ember_scrap_runner",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "three_furnaces_foreman",
+      "name": "Foreman of Three Furnaces",
+      "displayNameEs": "Capataz de los Tres Hornos",
+      "gameText": {
+        "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
+        "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
+      },
+      "flavorText": {
+        "en": "Three furnaces, three crews, one order misunderstood together.",
+        "es": "Tres hornos, tres cuadrillas, una orden mal entendida entre todos."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 5
+      },
+      "subtypes": [
+        "Goblin",
+        "Foreman"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "three_furnaces_foreman_create_goblins",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "CREATE_TOKEN",
+              "player": "SELF",
+              "tokenId": "ember_scrap_runner",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "first_siren_agitator",
+      "name": "Agitator of the First Siren",
+      "displayNameEs": "Agitador de la Primera Sirena",
+      "gameText": {
+        "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
+        "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
+      },
+      "flavorText": {
+        "en": "The first siren does not warn of danger. It makes it.",
+        "es": "La primera sirena no anuncia peligro. Lo fabrica."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Agitator"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "first_siren_agitator_other_goblins_must_attack",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "first_siren_agitator_force_other_goblins_attack",
+          "engineSupport": "ignored",
+          "implementationNote": "Deliberately omitted: the Host's global rule already makes every able Echo attack each Battle."
+        },
+        {
+          "id": "first_siren_agitator_begin_combat_token",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "BEGIN_BATTLE"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "ACTIVE_PLAYER_IS",
+              "player": "SELF"
+            }
+          ],
+          "effects": [],
+          "customHandler": "first_siren_agitator_begin_combat_token",
+          "implementationNote": "Invoke one 1/1 Goblin Echo Token. It gains Impetus until the end of the turn."
+        },
+        {
+          "id": "first_siren_agitator_attack_buff",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "first_siren_agitator_attack_buff",
+          "implementationNote": "This source gets +1/+0 until end of turn for each other attacking Goblin."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "open_another_gate",
+      "name": "Open Another Gate!",
+      "displayNameEs": "¡Abran Otra Compuerta!",
+      "gameText": {
+        "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
+        "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
+      },
+      "flavorText": {
+        "en": "Behind every gate wait reinforcements, or enough fire to imitate them.",
+        "es": "Tras cada compuerta hay refuerzos o suficiente fuego para fingirlos."
+      },
+      "showFlavorText": false,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "open_another_gate_choose_mode",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "CHOOSE",
+              "player": "SELF",
+              "min": 1,
+              "max": 1,
+              "options": [
+                {
+                  "id": "open_another_gate_pump",
+                  "effects": [
+                    {
+                      "type": "MODIFY_STATS",
+                      "scope": {
+                        "controller": "SELF",
+                        "filters": {
+                          "kinds": [
+                            "ECHO"
+                          ]
+                        }
+                      },
+                      "power": 2,
+                      "endurance": 0,
+                      "duration": "END_OF_TURN",
+                      "animation": "BUFF"
+                    }
+                  ]
+                },
+                {
+                  "id": "open_another_gate_reveal",
+                  "effects": [
+                    {
+                      "type": "REVEAL_HOST_ROUND"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "three_under_one_anvil",
+      "name": "Three Under One Anvil",
+      "displayNameEs": "Tres Bajo el Mismo Yunque",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Three hammers, one anvil, and no agreement on who leads.",
+        "es": "Tres martillos, un yunque y ningún acuerdo sobre quién manda."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Crew"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "slag_volley_master",
+      "name": "Master of the Slag Volley",
+      "displayNameEs": "Maestro de la Salva de Escoria",
+      "gameText": {
+        "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
+        "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
+      },
+      "flavorText": {
+        "en": "He measures the volley by the voices that answer.",
+        "es": "Mide la salva por las voces que responden."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Goblin",
+        "Gunner"
+      ],
+      "power": 4,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "slag_volley_master_enter_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE_TO_OPPONENT_ECHO",
+              "targetPolicy": "BEST_LETHAL",
+              "animation": "BURN",
+              "amount": {
+                "type": "COUNT_ECHOS",
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ]
+                }
+              },
+              "damageKind": "NON_COMBAT"
+            }
+          ],
+          "implementationNote": "Host targeting policy chooses a lethal enemy Echo when possible, then the highest-value Echo."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "varka_revolt_axis",
+      "name": "Varka, Axis of the Revolt",
+      "displayNameEs": "Varka, Eje de la Revuelta",
+      "gameText": {
+        "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
+        "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
+      },
+      "flavorText": {
+        "en": "She did not break the chains. She learned to make them turn.",
+        "es": "No rompió las cadenas. Aprendió a hacerlas girar."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Chainfighter"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "varka_revolt_axis_enter_damage_all",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "varka_revolt_axis_enter_damage_all",
+          "implementationNote": "Deal 1 damage to the Chronicler and each enemy Echo."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": [
+        "REFLEX"
+      ]
+    },
+    {
+      "id": "salvaged_armor_master",
+      "name": "Master of Salvaged Armor",
+      "displayNameEs": "Maestro de la Armadura Recuperada",
+      "gameText": {
+        "en": "Other allied Goblins gain +1/+1.",
+        "es": "Los demás Trasgos aliados ganan +1/+1."
+      },
+      "flavorText": {
+        "en": "Every stolen plate turns another worker into a soldier.",
+        "es": "Cada placa robada convierte a otro obrero en soldado."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Goblin",
+        "Armorer"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "salvaged_armor_master_other_goblins_buff",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "scope": {
+                "controller": "SELF",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Goblin"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "endurance": 1,
+              "duration": "WHILE_SOURCE_ON_FIELD"
+            }
+          ]
+        },
+        {
+          "id": "salvaged_armor_master_sacrifice_destroy_artifact",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "sacrifice": {
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ],
+                "subtypes": [
+                  "Goblin"
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "id": "targetArtifact",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "SUPPORT"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY",
+              "target": "targetArtifact"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "repeating_blow_marshal",
+      "name": "Marshal of the Repeating Blow",
+      "displayNameEs": "Mariscal del Golpe Repetido",
+      "gameText": {
+        "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
+        "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
+      },
+      "flavorText": {
+        "en": "Every new hammer repeats his order against the Chronicler's bones.",
+        "es": "Cada nuevo martillo repite su orden sobre los huesos del Cronista."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Marshal"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "repeating_blow_marshal_goblins_attack_token",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [],
+          "customHandler": "repeating_blow_marshal_goblins_attack_token",
+          "implementationNote": "Whenever one or more allied Goblins attack, Invoke one 1/1 Goblin Echo Token exhausted and attacking. Trigger only once for each attack declaration."
+        },
+        {
+          "id": "repeating_blow_marshal_other_creature_enters_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "echo",
+              "controller": "SELF",
+              "excludeSource": true,
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "effects": [],
+          "customHandler": "repeating_blow_marshal_damage_each_opponent",
+          "implementationNote": "Deal 1 damage to each opponent."
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "brakka_growing_tally",
+      "name": "Brakka, the Growing Tally",
+      "displayNameEs": "Brakka, la Cuenta Creciente",
+      "gameText": {
+        "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
+        "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
+      },
+      "flavorText": {
+        "en": "She marks one victory on her armor, and the crew arrives to collect it.",
+        "es": "Marca una victoria en su armadura y la cuadrilla aparece para cobrarla."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Recruiter"
+      ],
+      "power": 1,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "brakka_growing_tally_attack_grow_and_tokens",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ATTACK_DECLARED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "SEQUENCE",
+              "effects": [
+                {
+                  "type": "ADD_COUNTERS",
+                  "target": "SELF",
+                  "counter": "+1/+1",
+                  "amount": 1
+                },
+                {
+                  "type": "CREATE_TOKEN",
+                  "player": "SELF",
+                  "tokenId": "ember_scrap_runner",
+                  "exhausted": true,
+                  "attacking": true,
+                  "amount": {
+                    "type": "STAT",
+                    "object": "SELF",
+                    "stat": "POWER"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "last_rivets_gunner",
+      "name": "Gunner of the Last Rivets",
+      "displayNameEs": "Artillero de los Últimos Remaches",
+      "gameText": {
+        "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
+        "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
+      },
+      "flavorText": {
+        "en": "He catches the last rivet before the body reaches the floor.",
+        "es": "Recoge el último remache antes de que el cuerpo toque el suelo."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Goblin",
+        "Gunner"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "last_rivets_gunner_goblin_died_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ECHO_DIED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "echo",
+              "controller": "SELF",
+              "excludeSource": false,
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ],
+                "subtypes": [
+                  "Goblin"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE_TO_RANDOM_OPPONENT_ECHO",
+              "amount": 1,
+              "damageKind": "NON_COMBAT",
+              "animation": "BURN",
+              "target": {
+                "zone": "FIELD",
+                "controller": "OPPONENT",
+                "selection": "RANDOM",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    }
+  ],
+  "engineSupportNeeded": []
+}

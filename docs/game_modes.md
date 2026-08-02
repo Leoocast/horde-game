@@ -78,7 +78,7 @@ El pool se forma con las keywords impresas originalmente en las criaturas y toke
 
 ### Cartas excluidas
 
-- Graf Harvest no forma parte del deck de Zombies en Chaos.
+- La Campana Hueca (`hollow_bell`) no forma parte del deck de La Procesión en Chaos.
 - Los permanentes no criatura se eliminan del deck antes de barajarlo.
 - Las tierras/energías son la excepción y permanecen en el deck.
 - Los instants y sorceries permanecen en el deck.

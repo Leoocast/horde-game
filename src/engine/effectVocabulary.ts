@@ -50,6 +50,7 @@ export const TRIGGER_CONDITION_TYPES = new Set([
   "FIRST_LIFE_LOSS_THIS_TURN",
   "SOURCE_IS_READY",
   "SOURCE_IS_ATTACKING",
+  "SOURCE_ONCE_PER_TURN_UNUSED",
   "PLAYED_CARD_IS_NON_TOKEN",
   "ANOTHER_ALLIED_ECHO_DIED",
   "ANOTHER_ALLIED_ECHO_INVOKED",
@@ -78,13 +79,13 @@ export const AMOUNT_TYPES = new Set([
 /** Mirrors the switch in normalizeDeck.normalizeCustomTriggeredEffect, including the
  *  `fight_simultaneously` effect-level handler. */
 export const CUSTOM_HANDLERS = new Set([
-  "rundvelt_hordemaster_inspect_top_if_goblin",
-  "raid_bombardment_small_attacker_damage",
-  "goblin_rabblemaster_begin_combat_token",
-  "goblin_rabblemaster_attack_buff",
-  "general_kreat_goblins_attack_token",
-  "general_kreat_damage_each_opponent",
-  "goblin_chainwhirler_enter_damage_all",
+  "next_crew_caller_inspect_top_if_goblin",
+  "rain_of_rivets_small_attacker_damage",
+  "first_siren_agitator_begin_combat_token",
+  "first_siren_agitator_attack_buff",
+  "repeating_blow_marshal_goblins_attack_token",
+  "repeating_blow_marshal_damage_each_opponent",
+  "varka_revolt_axis_enter_damage_all",
   "fight_simultaneously",
 ]);
 

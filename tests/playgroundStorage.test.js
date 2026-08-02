@@ -9,7 +9,7 @@ function storedEntry(overrides = {}) {
     id: "scenario-1",
     name: "Zombie test",
     savedAt: "2026-07-24T10:00:00.000Z",
-    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hostField: [{ definitionId: "zombie_token", amount: 2 }] } },
+    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hostField: [{ definitionId: "last_knell_dead", amount: 2 }] } },
     steps: [{ kind: "draw" }, { kind: "addEnergySource" }],
     ...overrides,
   };
@@ -25,7 +25,7 @@ test("an exported scenario round-trips with its recorded flow", () => {
   assert.deepEqual(parsed.entry.steps, entry.steps);
 });
 
-test("scenario v3 replay steps use Hostfall-native discriminants", () => {
+test("scenario v4 replay steps use Hostfall-native discriminants", () => {
   const entry = storedEntry({
     steps: [
       { kind: "hostTurn" },
@@ -44,10 +44,10 @@ test("an exported board JSON round-trips as Hand and Fields only", () => {
     ...BLANK_SCENARIO,
     name: "Board JSON",
     zones: {
-      playerHand: [{ definitionId: "giant_growth" }],
-      playerField: [{ definitionId: "llanowar_elves" }],
-      hostField: [{ definitionId: "zombie_token" }],
-      playerMemory: [{ definitionId: "broken_wings" }],
+      playerHand: [{ definitionId: "first_tree_sap" }],
+      playerField: [{ definitionId: "first_dew_gatherers" }],
+      hostField: [{ definitionId: "last_knell_dead" }],
+      playerMemory: [{ definitionId: "roots_touched_sky" }],
     },
   };
   const board = { id: "board-1", name: definition.name, savedAt: "2026-07-24T10:00:00.000Z", definition };
@@ -74,7 +74,7 @@ test("a retired board wrapper is rejected without migration", () => {
 
   const parsed = parseBoardFile(retiredFile);
   assert.equal(parsed.board, undefined);
-  assert.match(parsed.problems[0], /retired.*requires 2/i);
+  assert.match(parsed.problems[0], /retired.*requires 3/i);
 });
 
 test("a bare scenario definition is accepted as a file too", () => {
@@ -108,7 +108,7 @@ test("a file from a retired scenario version is rejected without migration", () 
 
   const parsed = parseScenarioFile(JSON.stringify(entry));
   assert.equal(parsed.entry, undefined);
-  assert.match(parsed.problems[0], /retired.*requires 3/i);
+  assert.match(parsed.problems[0], /retired.*requires 4/i);
 });
 
 test("a file from a newer scenario version is rejected", () => {

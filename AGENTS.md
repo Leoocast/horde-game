@@ -8,9 +8,8 @@ Guia para agentes (Codex, Claude Code, etc.) trabajando en este repo.
 proyecto, estado del juego, contratos de UI/animacion, decks, developer mode, y las preferencias
 del usuario.
 
-Este archivo NO repite ese contenido a proposito. Antes era una copia completa de `CLAUDE.md` y se
-quedo varias fases atras — llego a documentar como vigentes JSONs de deck que ya no existen. Un
-solo documento canonico, y este apuntando a el.
+Este archivo no repite ese contenido a proposito: hay un solo documento canonico para evitar que
+las instrucciones se contradigan.
 
 Si actualizas documentacion, actualiza `CLAUDE.md`.
 
@@ -56,9 +55,6 @@ Verifica por tipos y tests.
   activation, death reveal, y por que el campo debe quedarse quieto entre beats.
 - [`docs/game_modes.md`](docs/game_modes.md) — modos de juego.
 - [`docs/goblin_cards.md`](docs/goblin_cards.md) — estado del deck de goblins.
-- [`docs/game_context_for_lore_ai.md`](docs/game_context_for_lore_ai.md) — contexto narrativo.
-
-## Formato legacy eliminado
-
-`player_deck.json` y `horde_deck.json` fueron eliminados. Los decks vigentes viven únicamente bajo
-`src/data/decks/`.
+- [`docs/chronicle_last_rain.md`](docs/chronicle_last_rain.md) — identidad de La Última Lluvia.
+- [`docs/procession_hollow_bell.md`](docs/procession_hollow_bell.md) — identidad de la Procesión.
+- [`docs/mutiny_broken_forge.md`](docs/mutiny_broken_forge.md) — identidad del Motín.

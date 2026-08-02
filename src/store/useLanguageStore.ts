@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AppLanguage } from "../i18n/translations";
 
-export const LANGUAGE_STORAGE_KEY = "horde-game-language";
+export const LANGUAGE_STORAGE_KEY = "hostfall-language:v2";
 
 type LanguageStore = {
   language: AppLanguage;

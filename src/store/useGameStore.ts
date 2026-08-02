@@ -44,7 +44,7 @@ import {
   startHostCombatSequence,
 } from "./hostBeats";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
-import { advanceSmallpoxSequence, runSmallpoxSequence } from "./smallpoxSequence";
+import { advanceFleshRootTitheSequence, runFleshRootTitheSequence } from "./fleshRootTitheSequence";
 import {
   hasQueuedPlayerTriggers,
   resetPlayerTriggerSequence,
@@ -126,11 +126,11 @@ export type GameStore = {
   playerAttackDrag?: PlayerAttackDragState;
   cardContextMenu?: CardContextMenuState;
   counterTargeting?: CounterTargetingState;
-  smallpoxCard?: CardInstance;
-  smallpoxSelection?: SmallpoxSelectionState;
+  fleshRootTitheCard?: CardInstance;
+  fleshRootTitheSelection?: FleshRootTitheSelectionState;
   spellTargeting?: SpellTargetingState;
   spellFightAnimation?: SpellFightAnimationState;
-  brokenWingsAnimation?: BrokenWingsAnimationState;
+  rootsTouchedSkyAnimation?: RootsTouchedSkyAnimationState;
   pendingSpellHandId?: string;
   buffAnimationCardIds: string[];
   buffAnimationEventId?: number;
@@ -163,10 +163,10 @@ export type GameStore = {
   deselectCounterTarget: () => void;
   cancelCounterTargeting: () => void;
   confirmCounterTargeting: () => void;
-  updateSmallpoxSelectionPointer: (x: number, y: number) => void;
-  lockSmallpoxSelectionTarget: (targetId: string) => void;
-  deselectSmallpoxSelectionTarget: () => void;
-  confirmSmallpoxSelection: () => void;
+  updateFleshRootTitheSelectionPointer: (x: number, y: number) => void;
+  lockFleshRootTitheSelectionTarget: (targetId: string) => void;
+  deselectFleshRootTitheSelectionTarget: () => void;
+  confirmFleshRootTitheSelection: () => void;
   selectHandLimitDiscard: (id?: string) => void;
   confirmHandLimitDiscard: () => void;
   startSpellTargeting: (handId: string, x: number, y: number) => void;
@@ -232,7 +232,7 @@ export type GameStore = {
   stopGamePresentation: () => void;
 };
 
-const SEED_STORAGE_KEY = "horde-game-seed"; // audit-allow legacy-l46b-compatibility
+const SEED_STORAGE_KEY = "hostfall-seed:v2";
 const defaultSeed = readStoredSeed();
 const HOST_ATTACK_ANIMATION_MS = 500;
 const COMBAT_VOLLEY_LEAD_IN_MS = 360;
@@ -258,8 +258,8 @@ const ENERGY_FLOW_ANIMATION_SAFETY_CLEAR_MS = 1500;
 const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
 const SPELL_FIGHT_IMPACT_MS = 520;
 const SPELL_FIGHT_DEATH_FADE_MS = 260;
-const BROKEN_WINGS_IMPACT_MS = 420;
-const BROKEN_WINGS_DEATH_FADE_MS = 260;
+const ROOTS_TOUCHED_SKY_IMPACT_MS = 420;
+const ROOTS_TOUCHED_SKY_DEATH_FADE_MS = 260;
 let activeEffectCloseTimer: number | undefined;
 let effectActivationPulseTimer: number | undefined;
 let summoningAnimationSafetyTimer: number | undefined;
@@ -434,7 +434,7 @@ export type CounterTargetingState = {
   y: number;
 };
 
-export type SmallpoxSelectionState = {
+export type FleshRootTitheSelectionState = {
   kind: "discard" | "sacrifice-creature" | "sacrifice-land";
   targetId?: string;
   x: number;
@@ -456,7 +456,7 @@ export type SpellFightAnimationState = {
   eventId: number;
 };
 
-export type BrokenWingsAnimationState = {
+export type RootsTouchedSkyAnimationState = {
   id: string;
   targetId: string;
 };
@@ -517,11 +517,11 @@ function createCleanUiState(): Partial<GameStore> {
     playerAttackDrag: undefined,
     cardContextMenu: undefined,
     counterTargeting: undefined,
-    smallpoxCard: undefined,
-    smallpoxSelection: undefined,
+    fleshRootTitheCard: undefined,
+    fleshRootTitheSelection: undefined,
     spellTargeting: undefined,
     spellFightAnimation: undefined,
-    brokenWingsAnimation: undefined,
+    rootsTouchedSkyAnimation: undefined,
     pendingSpellHandId: undefined,
     buffAnimationCardIds: [],
     buffAnimationEventId: undefined,
@@ -576,11 +576,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAttackDrag: undefined,
   cardContextMenu: undefined,
   counterTargeting: undefined,
-  smallpoxCard: undefined,
-  smallpoxSelection: undefined,
+  fleshRootTitheCard: undefined,
+  fleshRootTitheSelection: undefined,
   spellTargeting: undefined,
   spellFightAnimation: undefined,
-  brokenWingsAnimation: undefined,
+  rootsTouchedSkyAnimation: undefined,
   pendingSpellHandId: undefined,
   buffAnimationCardIds: [],
   buffAnimationEventId: undefined,
@@ -733,33 +733,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
     }),
-  updateSmallpoxSelectionPointer: (x, y) =>
-    set(({ smallpoxSelection }) => ({
-      smallpoxSelection: smallpoxSelection && !smallpoxSelection.targetId ? { ...smallpoxSelection, x, y } : smallpoxSelection,
+  updateFleshRootTitheSelectionPointer: (x, y) =>
+    set(({ fleshRootTitheSelection }) => ({
+      fleshRootTitheSelection: fleshRootTitheSelection && !fleshRootTitheSelection.targetId ? { ...fleshRootTitheSelection, x, y } : fleshRootTitheSelection,
     })),
-  lockSmallpoxSelectionTarget: (targetId) =>
-    set(({ smallpoxSelection }) => {
-      if (!smallpoxSelection) return {};
+  lockFleshRootTitheSelectionTarget: (targetId) =>
+    set(({ fleshRootTitheSelection }) => {
+      if (!fleshRootTitheSelection) return {};
       useAudioStore.getState().playSfx("playLand");
-      return { smallpoxSelection: { ...smallpoxSelection, targetId } };
+      return { fleshRootTitheSelection: { ...fleshRootTitheSelection, targetId } };
     }),
-  deselectSmallpoxSelectionTarget: () =>
-    set(({ smallpoxSelection }) => ({
-      smallpoxSelection: smallpoxSelection ? { ...smallpoxSelection, targetId: undefined } : undefined,
+  deselectFleshRootTitheSelectionTarget: () =>
+    set(({ fleshRootTitheSelection }) => ({
+      fleshRootTitheSelection: fleshRootTitheSelection ? { ...fleshRootTitheSelection, targetId: undefined } : undefined,
     })),
-  confirmSmallpoxSelection: () => {
-    const { game, smallpoxSelection } = get();
-    if (!smallpoxSelection?.targetId) return;
-    const { kind, targetId } = smallpoxSelection;
+  confirmFleshRootTitheSelection: () => {
+    const { game, fleshRootTitheSelection } = get();
+    if (!fleshRootTitheSelection?.targetId) return;
+    const { kind, targetId } = fleshRootTitheSelection;
     if (kind === "discard") {
       const next = structuredClone(game) as GameState;
       discardChosenCard(next, targetId);
       notifyDiscardEffects(game, next);
-      set({ game: next, smallpoxSelection: undefined });
-      resumeAfterDiscardPause(() => advanceSmallpoxSequence("after-discard"));
+      set({ game: next, fleshRootTitheSelection: undefined });
+      resumeAfterDiscardPause(() => advanceFleshRootTitheSequence("after-discard"));
       return;
     }
-    set({ smallpoxSelection: undefined, specialDeadCardIds: [targetId] });
+    set({ fleshRootTitheSelection: undefined, specialDeadCardIds: [targetId] });
     useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
       set((state) => {
@@ -768,7 +768,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
-      window.setTimeout(() => advanceSmallpoxSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
+      window.setTimeout(() => advanceFleshRootTitheSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
     }, 260);
   },
   selectHandLimitDiscard: (id) => {
@@ -1263,8 +1263,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         storedEnergyGained > 0 &&
         source &&
         (
-          source.definitionId === "llanowar_elves" ||
-          source.definitionId === "druid_of_the_cowl" ||
+          source.definitionId === "first_dew_gatherers" ||
+          source.definitionId === "keeper_sleeping_root" ||
           source.definitionId === "tithe_acolyte"
         ),
       );
@@ -1500,7 +1500,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
-      scheduleHostArrivalEffects(enteredCards, () => runSmallpoxSequence(pendingCard));
+      scheduleHostArrivalEffects(enteredCards, () => runFleshRootTitheSequence(pendingCard));
       return;
     }
     if (main.host.field.length > game.host.field.length) useAudioStore.getState().playSfx("draw");
@@ -1519,7 +1519,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   /**
    * Playground only. Same beats as `runHostMain` — enter triggers, static aura capture, mill
-   * animations, the Smallpox hand-off — but for exactly one card and without starting combat.
+   * animations, the Tithe of Flesh and Root hand-off — but for exactly one card and without starting combat.
    * Playing a single Goblin token in the lab used to run a whole Zombie Host turn, which is not
    * what "play this card" means anywhere.
    */
@@ -1549,7 +1549,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
     if (pendingCard) {
-      scheduleHostArrivalEffects(entered, () => runSmallpoxSequence(pendingCard));
+      scheduleHostArrivalEffects(entered, () => runFleshRootTitheSequence(pendingCard));
       return;
     }
     scheduleHostArrivalEffects(entered, () => scheduleQueuedHostTriggers());
@@ -2057,10 +2057,10 @@ function combatResolutionInProgress(state: GameStore): boolean {
   );
 }
 
-// Creature casts and land plays both bump the shared summoningAnimationCount, but each used to
+// Echo invocations and Source plays both bump the shared summoningAnimationCount, but each used to
 // share one safety-clear timer var: rescheduling it from one call site canceled the other's
-// fallback, and firing it hard-set the count to 0 instead of decrementing — so a land's flight
-// still in flight when a creature was cast could get its own pending decrement wiped out (or
+// fallback, and firing it hard-set the count to 0 instead of decrementing — so a Source's flight
+// still in flight when an Echo was invoked could get its own pending decrement wiped out (or
 // vice versa). Give each its own timer and decrement by 1 so they never step on each other.
 function scheduleSummoningAnimationSafetyClear(): void {
   if (summoningAnimationSafetyTimer) window.clearTimeout(summoningAnimationSafetyTimer);
@@ -2160,7 +2160,7 @@ function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDe
 }
 
 // `.effect-card-lifted`/`.effect-card-activating` (the pulse this triggers) animate the same
-// `transform`/`filter` on the same card slot the summon "pop" animation (Battlefield.tsx) does.
+// `transform`/`filter` on the same card slot as the field summon "pop" animation.
 // The fixed delay callers pass is usually enough clearance, but under main-thread jank the pulse
 // can still start while the pop is mid-flight and cut it short. Wait for summoningAnimationCount
 // to actually drop to 0 (with a bounded safety clear already in the store) instead of guessing.
@@ -2193,7 +2193,7 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
 }
 
 // Card already entered play (or resolved) synchronously with `deferReactiveTriggers`; this only
-// resolves the Host's reaction to that cast (e.g. Noosegraf Mob), so it can glow and finish
+// resolves the Host's reaction to that cast (e.g. The Five-Knot Gallows), so it can glow and finish
 // *after* the card is already visible, without delaying the cast itself. Host resolves before
 // any manual trigger on the just-cast card (APNAP: non-active player's trigger goes on top of the stack).
 function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {
@@ -2343,7 +2343,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
   const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
-  const usesBrokenWingsAnimation = card.definitionId === "broken_wings";
+  const usesRootsTouchedSkyAnimation = card.definitionId === "roots_touched_sky";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (
     latest: GameState,
@@ -2500,15 +2500,15 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   }
   if (!isFightSpell) {
     if (isDestroySpell && destroyTargetIds.length > 0) {
-      if (usesBrokenWingsAnimation) {
-        const animationId = `broken-wings-${card.instanceId}-${Date.now()}`;
+      if (usesRootsTouchedSkyAnimation) {
+        const animationId = `roots-touched-sky-${card.instanceId}-${Date.now()}`;
         const gameSessionId = state.gameSessionId;
         window.setTimeout(() => {
           const current = useGameStore.getState();
           if (
             current.gameSessionId !== gameSessionId ||
             current.pendingSpellHandId !== handId ||
-            current.brokenWingsAnimation?.id !== animationId
+            current.rootsTouchedSkyAnimation?.id !== animationId
           ) return;
           useAudioStore.getState().playSfx("attack");
           useGameStore.setState({ specialDeadCardIds: destroyTargetIds });
@@ -2518,22 +2518,22 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
             if (
               latest.gameSessionId !== gameSessionId ||
               latest.pendingSpellHandId !== handId ||
-              latest.brokenWingsAnimation?.id !== animationId
+              latest.rootsTouchedSkyAnimation?.id !== animationId
             ) return;
             useGameStore.setState({
               ...resolveSpell(latest.game),
-              brokenWingsAnimation: undefined,
+              rootsTouchedSkyAnimation: undefined,
               specialDeadCardIds: [],
               pendingSpellHandId: undefined,
             });
-          }, BROKEN_WINGS_DEATH_FADE_MS);
-        }, BROKEN_WINGS_IMPACT_MS);
+          }, ROOTS_TOUCHED_SKY_DEATH_FADE_MS);
+        }, ROOTS_TOUCHED_SKY_IMPACT_MS);
         return {
           spellTargeting: undefined,
           selectedHandId: undefined,
           focusedCardId: undefined,
           pendingSpellHandId: handId,
-          brokenWingsAnimation: {
+          rootsTouchedSkyAnimation: {
             id: animationId,
             targetId: destroyTargetIds[0],
           },

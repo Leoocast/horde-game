@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "1.0.0",
+  "batchId": "broken-forge-art-2026-08-01",
+  "deck": "El Motín de la Forja Rota",
+  "createdAt": "2026-08-01",
+  "generator": {
+    "provider": "OpenAI",
+    "surface": "Codex built-in image_gen tool",
+    "model": "Not exposed by the built-in tool",
+    "mode": "Text-to-image with visual continuity established inside this same batch"
+  },
+  "sourcePolicy": {
+    "externalReferenceImages": false,
+    "existingRepositoryArtUsedAsReference": false,
+    "internalConsistencyReferences": [
+      "ember_scrap_runner.png",
+      "varka_revolt_axis.png",
+      "shift_hammer.png"
+    ]
+  },
+  "rightsReview": {
+    "status": "pending-owner-verification",
+    "commercialUse": "Verify against the project owner's applicable OpenAI terms before distribution.",
+    "modification": "Verify against the same applicable terms before final production use.",
+    "attribution": "Not determined; no attribution statement has been added.",
+    "note": "This record documents the origin and integrity of the current art batch."
+  },
+  "commonPrompt": "Original dark-medieval industrial fantasy inside a broken furnace-city: wiry adult forge goblins with rust-red soot-stained skin, long angular ears and pale ember eyes; black iron, cracked ceramic kilns, chains, rivets, oxidized copper, ember-orange furnace light and soot haze. Painterly dark-fantasy realism resembling an early-2000s PC strategy/card game, tactile materials, strong silhouettes and one readable mechanical idea per image. No card frame, text, logos, trademarks, watermark, gore, existing franchise or named-artist imitation. Non-token art is landscape for a card-art window; the token source is a strict portrait 2:3 full-body composition.",
+  "assets": [
+    {
+      "id": "open_furnace_crier",
+      "workingNameEs": "Pregonero del Horno Abierto",
+      "file": "../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "f95b61071a0f38eba5b9f37d03a11c3bdd538956033f7a9bae61da12a717bd7b",
+      "prompt": "A forge crier opens a furnace gate and shouts through a metal horn as a wave of heat visibly drives the surrounding goblin crew forward, communicating a temporary group attack bonus."
+    },
+    {
+      "id": "double_crew_boss",
+      "workingNameEs": "Jefe de la Cuadrilla Doble",
+      "file": "../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "6beae7e6e7f5a73b8990556ce73a5b54ad581e58cc0fc82ac69e202dbdf35a7f",
+      "prompt": "One goblin crew boss arrives with exactly two smaller assistants and a shared tool chest, clearly visualizing an entry effect that creates two basic runners."
+    },
+    {
+      "id": "repeating_blow_marshal",
+      "workingNameEs": "Mariscal del Golpe Repetido",
+      "file": "../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "a7d22fc9b62ef5c50421b33e500aef0757a7f529610012cc94115c5992b54b73",
+      "prompt": "A 2/2 goblin marshal opens a side hatch for one attacking runner while synchronized pile drivers strike once for every arriving crew member."
+    },
+    {
+      "id": "varka_revolt_axis",
+      "workingNameEs": "Varka, Eje de la Revuelta",
+      "file": "../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "3ef7c0fa63d94f3a35273b26a9364e36084d603e71408cdd5931414bdcb5e4cd",
+      "prompt": "Varka, an adult female forge-goblin with a broken left ear, spins two burning chains into one precise ring that reaches every surrounding target; balanced 3/3 posture, Reflex speed and clear Chronicle leadership."
+    },
+    {
+      "id": "first_siren_agitator",
+      "workingNameEs": "Agitador de la Primera Sirena",
+      "file": "../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "f03a9da4183f77e65453e6e2a185ff302b6817b863aa26b2bdb5c18624ebae19",
+      "prompt": "A siren agitator releases exactly one fresh runner through a gate while the answering crowd visibly increases the agitator's force."
+    },
+    {
+      "id": "open_another_gate",
+      "workingNameEs": "¡Abran Otra Compuerta!",
+      "file": "../public/cards/broken_forge_mutiny/art/open_another_gate.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "695084a18685aba279397c97f0be133b4f008a94a4b0a804f5eff08b2ddf42b2",
+      "prompt": "A blast gate bursts open to reveal both incoming reinforcements and a violent pressure wave, expressing the spell's two outcomes: another reveal when empty or an offensive surge for an existing army."
+    },
+    {
+      "id": "ember_scrap_runner",
+      "workingNameEs": "Corredor de Ascua y Chatarra",
+      "file": "../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
+      "width": 1024,
+      "height": 1536,
+      "sha256": "4047f6827d12001c9ebbd205db863d66a310e205ffd56b305229d0b83a2143b3",
+      "prompt": "Strict vertical 2:3 full-art portrait of one modest forge runner carrying ember tongs and a scrap-metal buckler; full body, agile silhouette and light equipment communicate a basic 1/1 token."
+    },
+    {
+      "id": "salvaged_armor_master",
+      "workingNameEs": "Maestro de la Armadura Recuperada",
+      "file": "../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "4b1269748c580dc8e295e630459641a7805e5c0f46cb7e127af7f46559373837",
+      "prompt": "A broad forge armorer rivets salvaged plates onto other goblins around the workbench, making the +1/+1 benefit to allies visually explicit."
+    },
+    {
+      "id": "shift_hammer",
+      "workingNameEs": "El Martillo de Turno",
+      "file": "../public/cards/broken_forge_mutiny/art/shift_hammer.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "f348723bd16f27fc38e149af1ae0234105c0524fa1a496a87824334a28f703ee",
+      "prompt": "A monumental suspended shift hammer strikes the central anvil and sends pressure rings through goblin ranks, making the whole formation require multiple defenders; persistent Support, not a creature."
+    },
+    {
+      "id": "burning_tally_foreman",
+      "workingNameEs": "Capataz del Recuento Ardiente",
+      "file": "../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "5aba4ceb6f66cdf3610acff88c7a1c2e776104590a05972465dbcaf62c86c6cf",
+      "prompt": "A sturdy 2/3 foreman uses a tally wheel and scaled ember projector while fastening fresh armor onto arriving workers, combining an ally aura with entry damage based on the turn's arrivals."
+    },
+    {
+      "id": "brakka_growing_tally",
+      "workingNameEs": "Brakka, la Cuenta Creciente",
+      "file": "../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "a028568085edc5a42ffee6d1da5732dd156d2049f68042ce82da28127f468c9d",
+      "prompt": "Brakka hammers a new tally plate onto her own armor while attacking; each added plate draws a visibly larger formation of recruits behind her."
+    },
+    {
+      "id": "three_under_one_anvil",
+      "workingNameEs": "Tres Bajo el Mismo Yunque",
+      "file": "../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "2d74ee3916af8fb86a915b8a788b60c5ff038643c088b54a1f2e99645f2ba0ba",
+      "prompt": "Exactly three ordinary forge goblins carry one heavy anvil together, a straightforward collective 3/3 with no magical effect or special ability."
+    },
+    {
+      "id": "last_rivets_gunner",
+      "workingNameEs": "Artillero de los Últimos Remaches",
+      "file": "../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "d9946ac5147ca189fb160ac4bb6796d69da9f7f9b78e507e9a8542d915382641",
+      "prompt": "A goblin gunner catches one glowing rivet from a falling ally and immediately fires it toward one uncertain enemy silhouette, communicating a separate random hit for every death."
+    },
+    {
+      "id": "rain_of_rivets",
+      "workingNameEs": "Lluvia de Remaches",
+      "file": "../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "e1496ca7dd0bd46c3bcf18b0bd5312663b36ffbb3374cb6f5fd188ff2548d9d4",
+      "prompt": "Many visibly weak goblin attackers sling individual hot rivets that converge into one compact airborne volley, explaining one damage contribution from each small attacker."
+    },
+    {
+      "id": "next_crew_caller",
+      "workingNameEs": "Llamador de la Próxima Cuadrilla",
+      "file": "../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "2119a021bc4f81ef66ce208528a9dba5f4fd0399f6e34e242fe784cd5ba3b30b",
+      "prompt": "A fragile goblin signaler feeds a fallen worker's blank shift plate into a soot-black conveyor that calls the next crew member from the Archive."
+    },
+    {
+      "id": "three_furnaces_foreman",
+      "workingNameEs": "Capataz de los Tres Hornos",
+      "file": "../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "c5f32237d1445f211d01a474f391a192672c05ad511ad81e69b3f402192a54c1",
+      "prompt": "One goblin foreman operates a bank of levers while exactly three separate furnaces release exactly three basic runners."
+    },
+    {
+      "id": "slag_volley_master",
+      "workingNameEs": "Maestro de la Salva de Escoria",
+      "file": "../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
+      "width": 1449,
+      "height": 1086,
+      "sha256": "240fd7a43c1a85813d23296e41a61107b148b214902de8c37027fc542e297d9d",
+      "prompt": "A powerful but exposed veteran operates a large slag launcher whose many feed pipes are supplied by every allied goblin, communicating high power, low endurance and damage scaled by the crew."
+    }
+  ]
+}

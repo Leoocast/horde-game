@@ -65,8 +65,8 @@ test("a host death mid-sequence keeps its slot even with an other permanent on t
   const board = makeBoard();
   const zombieA = addCard(game, customCard("zombie_a", "host", { subtypes: ["Zombie"], isToken: true }));
   const zombieB = addCard(game, customCard("zombie_b", "host", { subtypes: ["Zombie"], isToken: true }));
-  // Graf Harvest lives in the "other permanents" dock, so it never registers a creature-row order.
-  const grafHarvest = addCard(game, cardFromDeck("graf_harvest", "host"));
+  // The Hollow Bell lives in the "other permanents" dock, so it never registers a creature-row order.
+  const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
 
   renderFrame(board, [zombieA, zombieB, grafHarvest], true);
   const afterDeath = renderFrame(board, [zombieB, grafHarvest], true);
@@ -84,10 +84,10 @@ test("a player defender's death mid-sequence keeps its slot even with lands on t
   const blocker = addCard(game, customCard("blocker", "player"));
   const survivor = addCard(game, customCard("survivor", "player"));
   // Sources are drawn by the Energy core, never by the creature row, so they too look "unregistered".
-  const forests = Array.from({ length: 5 }, () => addCard(game, cardFromDeck("forest", "player")));
+  const springs = Array.from({ length: 5 }, () => addCard(game, cardFromDeck("deep_root_spring", "player")));
 
-  renderFrame(board, [blocker, survivor, ...forests], true);
-  const afterDeath = renderFrame(board, [survivor, ...forests], true);
+  renderFrame(board, [blocker, survivor, ...springs], true);
+  const afterDeath = renderFrame(board, [survivor, ...springs], true);
 
   assert.deepEqual(
     afterDeath.map((card) => card.instanceId),
@@ -159,9 +159,9 @@ test("non-token Host copies stack only when they entered during the same Host tu
   const game = createTestGame();
   const cardOrder = new Map();
   const familyOrder = new Map();
-  const firstBat = addCard(game, cardFromDeck("blighted_bat", "host"));
+  const firstBat = addCard(game, cardFromDeck("crypt_rotwing", "host"));
   const interveningZombie = addCard(game, customCard("intervening_zombie", "host", { subtypes: ["Zombie"] }));
-  const laterBat = addCard(game, cardFromDeck("blighted_bat", "host"));
+  const laterBat = addCard(game, cardFromDeck("crypt_rotwing", "host"));
   firstBat.fieldEntryTurn = 1;
   interveningZombie.fieldEntryTurn = 1;
   laterBat.fieldEntryTurn = 2;
@@ -181,7 +181,7 @@ test("non-token Host copies stack only when they entered during the same Host tu
   assert.deepEqual(
     separateTurns.map((group) => group.cards.map((card) => card.instanceId)),
     [[firstBat.instanceId], [interveningZombie.instanceId], [laterBat.instanceId]],
-    "the later Blighted Bat keeps its summon position instead of joining the old stack",
+    "the later Crypt Rotwing keeps its summon position instead of joining the old stack",
   );
 
   laterBat.fieldEntryTurn = 1;

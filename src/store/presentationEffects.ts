@@ -14,7 +14,7 @@ import type { BuffAnimationVariant } from "./buffAnimation";
 
 export const BUFF_ANIMATION_MS = 1120;
 const AUTO_PAID_LAND_FLASH_MS = 900;
-const HEAVY_SUMMON_DEFINITION_IDS = new Set(["magnigoth_sentry"]);
+const HEAVY_SUMMON_DEFINITION_IDS = new Set(["ancient_canopy_watchers"]);
 
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
@@ -75,6 +75,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       {
         power: card.temporaryPower,
         endurance: card.temporaryEndurance,
+        untilNextPlayerTurnPower: card.untilNextPlayerTurnPower ?? 0,
+        untilNextPlayerTurnEndurance: card.untilNextPlayerTurnEndurance ?? 0,
         traits: new Set(card.temporaryTraits),
       },
     ]),
@@ -86,6 +88,8 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
       return (
         card.temporaryPower > before.power ||
         card.temporaryEndurance > before.endurance ||
+        (card.untilNextPlayerTurnPower ?? 0) > before.untilNextPlayerTurnPower ||
+        (card.untilNextPlayerTurnEndurance ?? 0) > before.untilNextPlayerTurnEndurance ||
         card.temporaryTraits.some((keyword) => !before.traits.has(keyword))
       );
     })
@@ -93,7 +97,7 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
 }
 
 export function discardPauseInProgress(state: GameStore): boolean {
-  return Boolean(state.handLimitDiscardActive || state.smallpoxSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
+  return Boolean(state.handLimitDiscardActive || state.fleshRootTitheSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
 }
 
 export function resumeAfterDiscardPause(onReady: () => void): void {

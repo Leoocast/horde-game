@@ -21,7 +21,7 @@ Three rules make the sequence readable:
 
 A creature killed in combat leaves game state the instant its impact lands, so its triggers can resolve in sequence. `holdCombatCasualties` (`src/components/battlefieldLayout.ts`) keeps its layout slot as an invisible ghost while `resolvingHostCombat` is true, so survivors never re-center mid-sequence; every casualty leaves together when the combat ends. The held slot must keep its **position**, not just exist: copies in a stack lay out by DOM order (each slot after the first carries a negative margin) and overlap by `--copy-stack-index`, so a ghost appended to the end sent a casualty from the middle of the stack to its back and shifted every copy behind it. The row is re-sorted by entry order for that reason. Grouping also ignores stats during that window, so a dying lord dropping its buff off every creature it covered cannot re-key and remount whole stacks.
 
-**Only the creature row is held, and only creatures may inherit a held slot.** `battlefieldCardOrder` is the creature row's registry: `renderCardStacks` is called with the creature row alone and prunes every card outside it on each render, so lands and other permanents (Graf Harvest, the player's Forests) look like brand-new arrivals on *every* render. The slot-recycling pass — which lets a creature summoned mid-combat take over a casualty's slot instead of landing past a hole — used to accept any card, so the first land or enchantment it walked over consumed the ghost the instant something died. The held slot disappeared mid-sequence and the whole row re-centered. That was the "everything regroups when a card dies" bug: it needed a non-creature permanent on the board to show up, which is why the Zombie deck (Graf Harvest) and the player's side (Forests) both hit it while a bare Goblin board did not. Both ends of the swap are now creature-gated; `tests/battlefieldLayout.test.js` covers it.
+**Only the creature row is held, and only creatures may inherit a held slot.** `battlefieldCardOrder` is the creature row's registry: `renderCardStacks` is called with the creature row alone and prunes every card outside it on each render, so Sources and other permanents (La Campana Hueca / `hollow_bell`) look like brand-new arrivals on *every* render. The slot-recycling pass — which lets an Echo summoned mid-combat take over a casualty's slot instead of landing past a hole — used to accept any card, so the first Source or Support it walked over consumed the ghost the instant something died. The held slot disappeared mid-sequence and the whole row re-centered. That was the "everything regroups when a card dies" bug: it needed a non-Echo permanent on the board to show up, which is why La Procesión de la Campana Hueca and the player's side both hit it while a bare Goblin board did not. Both ends of the swap are now Echo-gated; `tests/battlefieldLayout.test.js` covers it.
 
 A beat that *adds or removes* a permanent reflows the row, and that reflow is worth watching. `resolve()` reports whether the battlefield changed and the runner stamps the time; `done()` then waits only for whatever is **left** of `BOARD_SETTLE_MS` since that moment. Measuring from the end of the beat instead was a real source of dead air: the burn resolves at 500ms and runs to 1180ms, so its reflow was long finished, yet it sat through a second full settle before the next card could act. A creature arriving while casualties are held takes over the rightmost held slot instead of landing past the gap one left behind.
 
@@ -40,7 +40,7 @@ and executing its first Host turn never replays the entrances of existing perman
 
 Attack resolution order is a rules concern and follows `game.host.battlefield` insertion order,
 which is summon chronology. It must never be rebuilt from visual families or stack keys. For
-example, four Goblin tokens, then Hobgoblin Bandit Lord, then two later tokens resolve in exactly
+example, four Corredores de Ascua y Chatarra, then Capataz del Recuento Ardiente, then two later tokens resolve in exactly
 that order. The layout may stack the two token waves, but grouping never moves the second wave in
 front of the lord.
 
@@ -48,7 +48,7 @@ Non-token Host copies also preserve summon chronology. Identical copies may shar
 only when `recordBattlefieldEntry` recorded the same Host turn for both. A later copy starts a new
 stack at its real arrival position instead of jumping back into an older family stack. If entry
 history is unavailable, layout keeps the copies separate rather than guessing that they arrived
-together. `tests/battlefieldLayout.test.js` covers the Blighted Bat regression.
+together. `tests/battlefieldLayout.test.js` covers the Alapútrida de la Cripta (`crypt_rotwing`) regression.
 
 Current handlers:
 
@@ -92,11 +92,12 @@ The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `d
 5. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
 6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
-Use this contract for Pashalik Mons, Volley Veteran, and future Goblin burn effects.
+Use this contract for Artillero de los Últimos Remaches (`last_rivets_gunner`), Maestro de la Salva de
+Escoria (`slag_volley_master`), and future Goblin burn effects.
 
 ### Burn volley to player life
 
-Raid Bombardment reuses Burn with a different target and timing:
+Lluvia de Remaches (`rain_of_rivets`) reuses Burn with a different target and timing:
 
 - Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
   powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
@@ -113,7 +114,7 @@ Raid Bombardment reuses Burn with a different target and timing:
 
 ### Burn volley to multiple targets
 
-Goblin Chainwhirler uses the same compact volley clock with distinct routes:
+Varka, Eje de la Revuelta (`varka_revolt_axis`) uses the same compact volley clock with distinct routes:
 
 - Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
   never pulses it again.
@@ -128,15 +129,15 @@ Goblin Chainwhirler uses the same compact volley clock with distinct routes:
 
 ### Repeated single Burns to player life
 
-General Kreat does not aggregate its creature-entry triggers. Every other creature entering queues
+Mariscal del Golpe Repetido (`repeating_blow_marshal`) does not aggregate its creature-entry triggers. Every other creature entering queues
 one independent Burn toward `[data-player-life-panel]`; each has its own projectile, cast sound,
 hit sound, impact, life reaction, and 1-damage engine resolution before the next trigger begins.
-When General Kreat itself created the entering token, `causeSourceId` marks that causal chain so
+When the Mariscal itself created the entering token, `causeSourceId` marks that causal chain so
 the damage follow-up does not repeat the activation pulse already shown for token creation.
 
 ### Oil Burn to player life
 
-Diregraf Captain preserves its printed life-loss semantics while using the Burn presentation:
+Mariscal de la Última Marcha (`last_march_marshal`) preserves its printed life-loss semantics while using the Burn presentation:
 
 - `EACH_OPPONENT_LOSES_LIFE` with `animation: "OIL_BURN"` queues
   `BURN_PLAYER_LIFE_LOSS`; player life does not change until the projectile impacts.
@@ -162,7 +163,9 @@ The announcement is **two-phase**, and the split is the whole point:
 - **Flush** (`flushStaticAuraBeats`) queues the `STATIC_AURA_ONLINE` beats once the summon sequence is over.
 - **Release** happens in the same frame the beat plays its buff lines, so the numbers rise with the animation.
 
-Capture runs when summons land and again after attack triggers, so tokens created attacking (Krenko, General Kreat) are covered too. Keyword grants are announced but never withheld: a keyword reads as an ability, not as a number that silently changed.
+Capture runs when summons land and again after attack triggers, so tokens created attacking by
+Brakka or the Mariscal are covered too. Keyword grants are announced but never withheld: a keyword
+reads as an ability, not as a number that silently changed.
 
 Resolution order:
 
@@ -173,17 +176,17 @@ Resolution order:
 The rising lines may finish while the next beat begins. If the same permanent also has an ETB
 effect, the aura has already supplied its activation pulse: the ETB uses a short 160ms handoff
 instead of another summon-length pause, then immediately presents any follow-up event such as
-Hobgoblin Bandit Lord's Burn.
+Capataz del Recuento Ardiente's Burn.
 
 ## Death reveal
 
 A card that triggers on its own death has no battlefield slot left to pulse.
 
 - Claimed generically: any dies-trigger whose first pending source is no longer on the battlefield.
-- Side matters. The **left** of the Host panel is the graveyard side — that is where the deck's graveyard button lives — so a dying card is presented there (`host-death-reveal-host`) and exits into it. The **right** (`host-special-card-host`) stays reserved for spells and reveals still resolving, such as Smallpox.
+- Side matters. The **left** of the Host panel is the Memory side — that is where its button lives — so a dying card is presented there (`host-death-reveal-host`) and exits into it. The **right** (`host-special-card-host`) stays reserved for spells and reveals still resolving, such as Diezmo de Carne y Raíz (`flesh_root_tithe`).
 - The card is shown at full colour with an ember glow from below (`host-special-card-dying`). Its position beside the graveyard and its exit into it already say it is dying; a desaturating filter was tried and removed.
 - Strict order: reveal in, activation pulse, card leaves for the graveyard, **then** the effect resolves. Resolving while the reveal is still on screen made whatever the effect puts onto the battlefield land mid-animation and stutter it.
-- The entrance is a **CSS keyframe**, not framer-motion. This card mounts on the same frame the store commits a combat impact and the whole battlefield re-renders, so a main-thread JS animation loses that race every time. Framer-motion keeps only the exit, because `AnimatePresence` has to own unmount. Smallpox dodged the whole problem by mounting with `initial={false}`.
+- The entrance is a **CSS keyframe**, not framer-motion. This card mounts on the same frame the store commits a combat impact and the whole battlefield re-renders, so a main-thread JS animation loses that race every time. Framer-motion keeps only the exit, because `AnimatePresence` has to own unmount. The `flesh_root_tithe` bridge dodged the whole problem by mounting with `initial={false}`.
 - The dying card carries **no `filter` at all** — `filter: none` has to be set explicitly, because `.host-special-card` supplies its own `drop-shadow`. Any filter forces this subtree, a 13rem card plus its image, to be rasterised on its own, and that cost lands on the first frame of the entrance. `box-shadow` gives the same depth against the card's rounded rect for a fraction of the work.
 
 Beat timings live as constants at the top of `src/store/hostBeats.ts` (`DEATH_REVEAL_*`), tuned so the activation reads as a reaction to the death rather than a pause before one.

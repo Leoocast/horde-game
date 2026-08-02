@@ -1,9 +1,9 @@
 import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Trait, Side } from "../engine/GameTypes";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
-import { adaptHostfallDeck } from "./hostfallDeckAdapter";
+import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {
-  const authoredDeck = adaptHostfallDeck(rawDeck);
+  const authoredDeck = normalizeAuthoredDeck(rawDeck);
   return {
     id: authoredDeck.id,
     name: authoredDeck.name,
@@ -169,9 +169,9 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
 
 function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
   switch (ability.customHandler) {
-    case "rundvelt_hordemaster_inspect_top_if_goblin":
+    case "next_crew_caller_inspect_top_if_goblin":
       return { type: "HOST_INSPECT_TOP_GOBLIN" };
-    case "raid_bombardment_small_attacker_damage":
+    case "rain_of_rivets_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
         filter: { kinds: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
@@ -179,30 +179,30 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
         deferUntil: "HOST_ATTACK_SEQUENCE_END",
         animation: "BURN_VOLLEY_TO_PLAYER",
       };
-    case "goblin_rabblemaster_begin_combat_token":
-      return { type: "CREATE_TOKEN", tokenId: "goblin_token_1_1_red", amount: 1 };
-    case "goblin_rabblemaster_attack_buff":
+    case "first_siren_agitator_begin_combat_token":
+      return { type: "CREATE_TOKEN", tokenId: "ember_scrap_runner", amount: 1 };
+    case "first_siren_agitator_attack_buff":
       return {
         type: "PUMP_SELF_PER_ATTACKER_MATCHING",
         filter: { subtypes: ["Goblin"], excludeSelf: true },
         power: 1,
         endurance: 0,
       };
-    case "general_kreat_goblins_attack_token":
+    case "repeating_blow_marshal_goblins_attack_token":
       return {
         type: "CONDITIONAL",
         condition: { type: "DECLARED_ATTACKER_MATCHES", filters: { subtypes: ["Goblin"] } },
         effect: {
           type: "CREATE_TOKEN",
-          tokenId: "goblin_token_1_1_red",
+          tokenId: "ember_scrap_runner",
           amount: 1,
           exhausted: true,
           attacking: true,
         },
       };
-    case "general_kreat_damage_each_opponent":
+    case "repeating_blow_marshal_damage_each_opponent":
       return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
-    case "goblin_chainwhirler_enter_damage_all":
+    case "varka_revolt_axis_enter_damage_all":
       return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 1, animation: "BURN_VOLLEY" };
     default:
       return undefined;

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/player/last_rain/last_rain.json",
+  "cards": [
+    {
+      "id": "first_dew_gatherers",
+      "artCrop": "../../../../public/cards/last_rain/art/first_dew_gatherers.png",
+      "typeLineEs": "Eco — Recolector"
+    },
+    {
+      "id": "iria_voice_last_rain",
+      "artCrop": "../../../../public/cards/last_rain/art/iria_voice_last_rain.png",
+      "typeLineEs": "Eco de Crónica — Humana Restauradora"
+    },
+    {
+      "id": "keeper_sleeping_root",
+      "artCrop": "../../../../public/cards/last_rain/art/keeper_sleeping_root.png",
+      "typeLineEs": "Eco — Custodio"
+    },
+    {
+      "id": "black_sap_stalker",
+      "artCrop": "../../../../public/cards/last_rain/art/black_sap_stalker.png",
+      "typeLineEs": "Eco — Basilisco"
+    },
+    {
+      "id": "arven_first_pack",
+      "artCrop": "../../../../public/cards/last_rain/art/arven_first_pack.png",
+      "typeLineEs": "Eco — Líder Lupino"
+    },
+    {
+      "id": "ancient_canopy_watchers",
+      "artCrop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.png",
+      "typeLineEs": "Eco — Vigía Arbóreo"
+    },
+    {
+      "id": "hollow_skybreaker",
+      "artCrop": "../../../../public/cards/last_rain/art/hollow_skybreaker.png",
+      "typeLineEs": "Eco — Bestia Primordial"
+    },
+    {
+      "id": "orun_waking_root",
+      "artCrop": "../../../../public/cards/last_rain/art/orun_waking_root.png",
+      "typeLineEs": "Eco — Guardián Ancestral"
+    },
+    {
+      "id": "marked_prey",
+      "artCrop": "../../../../public/cards/last_rain/art/marked_prey.png",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "oath_clearing",
+      "artCrop": "../../../../public/cards/last_rain/art/oath_clearing.png",
+      "typeLineEs": "Hechizo"
+    },
+    {
+      "id": "roots_touched_sky",
+      "artCrop": "../../../../public/cards/last_rain/art/roots_touched_sky.png",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "first_tree_sap",
+      "artCrop": "../../../../public/cards/last_rain/art/first_tree_sap.png",
+      "typeLineEs": "Hechizo · Rápido"
+    },
+    {
+      "id": "deep_root_spring",
+      "artCrop": "../../../../public/cards/last_rain/art/deep_root_spring.png",
+      "typeLineEs": "Fuente — Manantial"
+    }
+  ]
+}

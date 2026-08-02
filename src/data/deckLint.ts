@@ -1,7 +1,7 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
-import { adaptHostfallDeck, HOSTFALL_DECK_SCHEMA_VERSION } from "./hostfallDeckAdapter";
+import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 import type { EffectDefinition } from "../engine/GameTypes";
 import { isCardKind, isCardModifier, isTrait } from "../engine/hostfallVocabulary";
 import { isHostfallAuthoredZone } from "../engine/hostfallZones";
@@ -48,7 +48,7 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
     const deckId = entry.deck.id;
     const report: DeckLintReport = { deckId, label: entry.label, cards: [] };
     lintHostfallSchema(entry.raw, errors);
-    const compatibleDeck = adaptHostfallDeck(entry.raw);
+    const compatibleDeck = normalizeAuthoredDeck(entry.raw);
     const authoredCards = [...compatibleDeck.cards, ...(compatibleDeck.tokens ?? [])];
     if (!authoredCards.some((card) => card.id === entry.presentation.keyCardId)) {
       errors.push({
@@ -219,6 +219,7 @@ const HOSTFALL_AUTHORED_TYPE_VALUES = new Set([
   "SACRIFICE_SELF",
   "SEQUENCE",
   "SOURCE_IS_READY",
+  "SOURCE_ONCE_PER_TURN_UNUSED",
   "STAT",
 ]);
 
@@ -440,6 +441,29 @@ function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
   for (const card of [...deck.cards, ...(deck.tokens ?? [])]) {
     if (!Array.isArray(card.kinds) || card.kinds.length === 0) {
       errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "Hostfall cards must declare kinds[]." });
+    }
+    if (
+      !card.flavorText ||
+      typeof card.flavorText !== "object" ||
+      typeof card.flavorText.en !== "string" ||
+      card.flavorText.en.trim().length === 0 ||
+      typeof card.flavorText.es !== "string" ||
+      card.flavorText.es.trim().length === 0
+    ) {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "schema",
+        message: "Hostfall cards must declare non-empty flavorText.en and flavorText.es.",
+      });
+    }
+    if (typeof card.showFlavorText !== "boolean") {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "schema",
+        message: "Hostfall cards must declare showFlavorText as a boolean.",
+      });
     }
     const amount = typeof card.energyCost === "number"
       ? card.energyCost

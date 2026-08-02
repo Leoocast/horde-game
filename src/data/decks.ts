@@ -1,11 +1,11 @@
-import goblinHostRaw from "./decks/horde/goblins/goblin_assault_horde.json";
-import goblinHostImagesRaw from "./decks/horde/goblins/goblin_assault_horde_images_definition.json";
-import hostZombiesRaw from "./decks/horde/zombies/horde-zombies.json";
-import hostZombiesImagesRaw from "./decks/horde/zombies/horde-zombies_images.json";
-import monoGreenRampRaw from "./decks/player/mono_green_ramp/mono_green_ramp.json";
-import monoGreenRampImagesRaw from "./decks/player/mono_green_ramp/mono_green_ramp_images.json";
-import vampirePreviewRaw from "./decks/player/vampire_preview/vampire_preview.json";
-import vampirePreviewImagesRaw from "./decks/player/vampire_preview/vampire_preview_images.json";
+import brokenForgeMutinyRaw from "./decks/host/broken_forge_mutiny/broken_forge_mutiny.json";
+import brokenForgeMutinyImagesRaw from "./decks/host/broken_forge_mutiny/broken_forge_mutiny_images.json";
+import hollowBellProcessionRaw from "./decks/host/hollow_bell_procession/hollow_bell_procession.json";
+import hollowBellProcessionImagesRaw from "./decks/host/hollow_bell_procession/hollow_bell_procession_images.json";
+import lastRainRaw from "./decks/player/last_rain/last_rain.json";
+import lastRainImagesRaw from "./decks/player/last_rain/last_rain_images.json";
+import crimsonCourtRaw from "./decks/player/crimson_court/crimson_court.json";
+import crimsonCourtImagesRaw from "./decks/player/crimson_court/crimson_court_images.json";
 import type { DeckImageManifest, DeckPresentation, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
 import type { CardDefinition, DeckList } from "../engine/GameTypes";
@@ -27,32 +27,32 @@ function register(label: string, raw: NewDeckList, images: DeckImageManifest, pr
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("Mono-Green Ramp 39", monoGreenRampRaw as NewDeckList, monoGreenRampImagesRaw as DeckImageManifest, {
-    keyCardId: "sunshower_druid",
+  register("La Última Lluvia 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
+    keyCardId: "iria_voice_last_rain",
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",
   }),
-  register("La Corte Carmesí 40", vampirePreviewRaw as NewDeckList, vampirePreviewImagesRaw as DeckImageManifest, {
+  register("La Corte Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
     keyCardId: "eternal_feast_countess",
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("Zombie Host 50", hostZombiesRaw as NewDeckList, hostZombiesImagesRaw as DeckImageManifest, {
-    keyCardId: "zombie_token",
+  register("La Procesión de la Campana Hueca 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
+    keyCardId: "last_knell_dead",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("Goblin Host 50", goblinHostRaw as unknown as NewDeckList, goblinHostImagesRaw as DeckImageManifest, {
-    keyCardId: "goblin_token_1_1_red",
+  register("El Motín de la Forja Rota 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
+    keyCardId: "ember_scrap_runner",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
     encounterTone: "goblins",
   }),
 ];
 
-export const DEFAULT_PLAYER_DECK_ID = "mono_green_ramp";
-export const DEFAULT_HOST_DECK_ID = "horde_zombies";
+export const DEFAULT_PLAYER_DECK_ID = "last_rain";
+export const DEFAULT_HOST_DECK_ID = "hollow_bell_procession";
 
 export const playerDeck = requireDeck(DEFAULT_PLAYER_DECK_ID);
 export const hostDeck = requireDeck(DEFAULT_HOST_DECK_ID);

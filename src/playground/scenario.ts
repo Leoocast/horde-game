@@ -4,9 +4,9 @@ import { createCardInstance, createInitialGame } from "../engine/GameState";
 import type { CardInstance, DifficultyMode, GameMode, GameState, Phase, Side } from "../engine/GameTypes";
 import { STORED_ENERGY_CAP, emptyEnergyPool } from "../engine/EnergySystem";
 
-/** Bump when the shape changes in a way older exported JSON can't satisfy.
- *  v3 is the first Hostfall-native Playground contract; v1/v2 are intentionally unsupported. */
-export const SCENARIO_VERSION = 3;
+/** Bump when ids or shape change in a way older exported JSON can't satisfy.
+ *  v4 cuts over to the final Hostfall deck and card identities without compatibility aliases. */
+export const SCENARIO_VERSION = 4;
 
 export type ScenarioZoneKey =
   | "playerHand"
@@ -198,7 +198,7 @@ export function validateScenario(definition: ScenarioDefinition): string[] {
     );
   }
   for (const key of ["name", "playerDeckId", "hostDeckId", "seed"] as const) {
-    if (typeof source[key] !== "string") problems.push(`Scenario is missing Hostfall v3 field "${key}".`);
+    if (typeof source[key] !== "string") problems.push(`Scenario is missing Hostfall field "${key}".`);
   }
   if (source.activeSide !== "player" && source.activeSide !== "host") {
     problems.push('Scenario activeSide must be "player" or "host".');
@@ -207,13 +207,13 @@ export function validateScenario(definition: ScenarioDefinition): string[] {
     problems.push(`Unknown scenario phase "${String(source.phase)}".`);
   }
   if (typeof source.player !== "object" || source.player === null || typeof source.host !== "object" || source.host === null) {
-    problems.push('Scenario v3 requires both "player" and "host" state.');
+    problems.push(`Scenario v${SCENARIO_VERSION} requires both "player" and "host" state.`);
   }
   if (typeof source.turnNumber !== "number" || typeof source.hostTurnNumber !== "number") {
-    problems.push('Scenario v3 requires numeric "turnNumber" and "hostTurnNumber".');
+    problems.push(`Scenario v${SCENARIO_VERSION} requires numeric "turnNumber" and "hostTurnNumber".`);
   }
   if (typeof source.zones !== "object" || source.zones === null || Array.isArray(source.zones)) {
-    problems.push('Scenario v3 requires a "zones" object.');
+    problems.push(`Scenario v${SCENARIO_VERSION} requires a "zones" object.`);
     return problems;
   }
   for (const zone of Object.keys(source.zones)) {
@@ -267,8 +267,8 @@ export function buildScenarioGame(definition: ScenarioDefinition): GameState {
   delete game.lastActionResult;
 
   applyZones(game, scenario);
-  // After the zones: a scenario that lists its own lands already spent part of the land cap, and
-  // the energy field only tops up whatever room is left.
+  // After the zones: a scenario that lists its own Sources already spent part of the Source cap,
+  // and the energy field only tops up whatever room is left.
   placeEnergySources(game, scenario.player.energy);
   game.log = [`Playground scenario "${scenario.name}" loaded with seed "${scenario.seed}".`];
   return game;
@@ -280,13 +280,13 @@ function clamp(value: number, min: number, max: number): number {
 
 /**
  * The card this deck uses as an Energy Source. Available Energy is represented by a ready Source, so the Playground
- * never hardcodes Forest: it takes whatever land the player deck actually runs.
+ * never hardcodes a specific Source: it takes whichever Source the player deck actually runs.
  */
 export function playerEnergyDefinitionId(game: GameState): string | undefined {
   const zones = [game.player.field, game.player.archive, game.player.hand, game.player.memory];
   for (const zone of zones) {
-    const land = zone.find((card) => card.kinds.includes("SOURCE"));
-    if (land) return land.definitionId;
+    const source = zone.find((card) => card.kinds.includes("SOURCE"));
+    if (source) return source.definitionId;
   }
   return undefined;
 }
@@ -401,7 +401,7 @@ function instanceIdTaken(game: GameState, instanceId: string): boolean {
 /**
  * Adds cards to a LIVE game — the Playground's "place" action. Same code path as building a
  * scenario, so a placed card is an ordinary `CardInstance` in an ordinary zone. It does not run
- * enter-the-battlefield triggers: that is the separate "resolve" action, which goes through the
+ * Invoked triggers: that is the separate "resolve" action, which goes through the
  * engine's normal cast/reveal flow.
  */
 export function addScenarioCard(game: GameState, zone: ScenarioZoneKey, entry: ScenarioCard): GameState {

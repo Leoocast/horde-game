@@ -40,15 +40,15 @@ Archivos autoritativos:
 
 Ejemplos útiles:
 
-- Efecto activado de maná: `llanowar_elves`.
-- Trigger de entrada con target manual: `sunshower_druid`.
-- Trigger al entrar otra criatura: `beast_kin_ranger`.
-- Spell con un target: `giant_growth` o `broken_wings`.
-- Spell con dos targets: `cosmic_hunger` o `ruthless_predation`.
-- Aura estática: `graf_harvest`, `diregraf_captain` o `goblin_war_drums`.
-- Trigger de muerte: `rottenheart_ghoul`, `rundvelt_hordemaster` o `pashalik_mons`.
-- Trigger de ataque: `krenko_tin_street_kingpin`.
-- Efecto de Horda con presentación Burn: `volley_veteran` o `pashalik_mons`.
+- Efecto activado de maná: `first_dew_gatherers`.
+- Trigger de entrada con target manual: `iria_voice_last_rain`.
+- Trigger al entrar otra criatura: `arven_first_pack`.
+- Spell con un target: `first_tree_sap` o `roots_touched_sky`.
+- Spell con dos targets: `marked_prey` o `oath_clearing`.
+- Aura estática: `hollow_bell`, `last_march_marshal` o `shift_hammer`.
+- Trigger de muerte: `last_thought_carrion`, `next_crew_caller` o `last_rivets_gunner`.
+- Trigger de ataque: `brakka_growing_tally`.
+- Efecto de Horda con presentación Burn: `slag_volley_master` o `last_rivets_gunner`.
 
 ## 1. Añadir la definición al deck
 
@@ -57,7 +57,7 @@ Los decks viven bajo:
 ```text
 src/data/decks/
   player/<deck_id>/
-  horde/<deck_id>/
+  host/<deck_id>/
 ```
 
 El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un Eco vanilla mínimo:
@@ -327,7 +327,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-`Smallpox` es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Diezmo de Carne y Raíz (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones
@@ -357,7 +357,7 @@ y los triggers de muerte tampoco necesitan ramas por carta.
 ## 6. Target manual al entrar
 
 Existe un camino genérico para triggers obligatorios de entrada que necesitan un target, usado por
-Sunshower Druid:
+Iria, Voz de la Última Lluvia:
 
 - `findManualEnterTargetTrigger` detecta el wrapper;
 - el store bloquea nuevas invocaciones;
@@ -390,12 +390,16 @@ Entrada típica:
 ```
 
 El manifest solo acepta assets locales. El nombre, tipo y texto mostrado vienen del JSON del deck;
-`gameText` debe describir exactamente el comportamiento de Hostfall.
+`gameText` debe describir exactamente el comportamiento de Hostfall. Cada definición, incluidas las
+Fichas, debe declarar además `flavorText.en`, `flavorText.es` y el booleano `showFlavorText`. El
+flavor siempre existe en datos; `showFlavorText: false` solo evita imprimirlo cuando las reglas no
+dejan espacio suficiente en la carta.
 
 Las cartas impresas se producen con los estudios de `dev/tools/Decks/`. Para un deck jugable, el
 JSON runtime sigue siendo la única fuente de nombre, reglas, coste, estadísticas y cantidad;
-`studio.config.json` agrega únicamente datos de presentación como `artCrop`, `typeLineEs` y lore.
-No copiar `gameText` dentro de la configuración del estudio.
+también es la única fuente de flavor y de su visibilidad impresa. `studio.config.json` agrega
+únicamente datos de presentación como `artCrop` y `typeLineEs`. No copiar `gameText`, `flavorText`
+ni `showFlavorText` dentro de la configuración del estudio.
 
 Después de editar cualquiera de esas fuentes:
 

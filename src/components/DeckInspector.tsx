@@ -26,7 +26,7 @@ type CardCopy = {
 const DECK_COLUMN_OPTIONS = [7, 6, 5] as const;
 type DeckColumnCount = (typeof DECK_COLUMN_OPTIONS)[number];
 const DEFAULT_DECK_COLUMNS = DECK_COLUMN_OPTIONS[0];
-const DECK_COLUMNS_STORAGE_KEY = "horde-deck-inspector-columns";
+const DECK_COLUMNS_STORAGE_KEY = "hostfall-deck-inspector-columns:v2";
 const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, backLabel, onBack }: Props) {

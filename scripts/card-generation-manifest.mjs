@@ -11,7 +11,7 @@ import {
 } from "./card-studio-data.mjs";
 
 export const MANIFEST_PATH = path.join(ROOT, "dev", "tools", "Decks", "generation-manifest.json");
-export const EXPORTED_DECKS = Object.freeze(["monogreen", "zombies", "goblins", "vampires"]);
+export const EXPORTED_DECKS = Object.freeze(["last_rain", "hollow_bell_procession", "broken_forge_mutiny", "crimson_court"]);
 const MANIFEST_SCHEMA_VERSION = "1.0.0";
 
 function relative(filePath) {

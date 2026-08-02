@@ -1,16 +1,9 @@
 import { BLANK_SCENARIO, SCENARIO_VERSION, cloneScenario, validateScenario, type ScenarioDefinition } from "./scenario";
 import type { TimelineStep } from "./timeline";
 
-const BOARD_STORAGE_KEY = "hostfall-playground-boards:v2";
-const REPLAY_STORAGE_KEY = "hostfall-playground-replays:v2";
-const BOARD_FILE_VERSION = 2;
-
-// L4.6c intentionally discards pre-Hostfall Playground data instead of migrating test artifacts.
-const RETIRED_PLAYGROUND_STORAGE_KEYS = [
-  "hostfall-playground-boards:v1", // audit-allow legacy-l46c-retired-storage
-  "hostfall-playground-replays:v1", // audit-allow legacy-l46c-retired-storage
-  "hostfall-playground-scenarios:v1", // audit-allow legacy-l46c-retired-storage
-] as const;
+const BOARD_STORAGE_KEY = "hostfall-playground-boards:v3";
+const REPLAY_STORAGE_KEY = "hostfall-playground-replays:v3";
+const BOARD_FILE_VERSION = 3;
 
 export type StoredBoard = {
   id: string;
@@ -31,7 +24,6 @@ export type StoredReplay = {
 export type StoredScenario = StoredReplay;
 
 export function listStoredBoards(): StoredBoard[] {
-  discardRetiredPlaygroundStorage();
   return readEntries<StoredBoard>(BOARD_STORAGE_KEY, isStoredBoard);
 }
 
@@ -110,7 +102,6 @@ export function parseBoardFile(json: string): { board?: StoredBoard; problems: s
 }
 
 export function listStoredReplays(): StoredReplay[] {
-  discardRetiredPlaygroundStorage();
   return readEntries<StoredReplay>(REPLAY_STORAGE_KEY, isStoredReplay);
 }
 
@@ -228,11 +219,6 @@ function isStoredEntry(value: unknown): boolean {
 function readSavedAt(value: unknown): string {
   if (typeof value !== "object" || value === null) return "";
   return String((value as Record<string, unknown>).savedAt ?? "");
-}
-
-function discardRetiredPlaygroundStorage(): void {
-  if (typeof window === "undefined") return;
-  for (const key of RETIRED_PLAYGROUND_STORAGE_KEYS) window.localStorage.removeItem(key);
 }
 
 function makeId(prefix: string): string {

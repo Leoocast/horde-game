@@ -6,21 +6,21 @@ import { fileURLToPath } from "node:url";
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const STUDIO_DECKS = Object.freeze({
-  monogreen: {
-    directory: "dev/tools/Decks/monogreen",
-    publicDirectory: "public/cards/mono_green_ramp",
+  last_rain: {
+    directory: "dev/tools/Decks/last_rain",
+    publicDirectory: "public/cards/last_rain",
   },
-  zombies: {
-    directory: "dev/tools/Decks/zombies",
-    publicDirectory: "public/cards/zombies",
+  hollow_bell_procession: {
+    directory: "dev/tools/Decks/hollow_bell_procession",
+    publicDirectory: "public/cards/hollow_bell_procession",
   },
-  goblins: {
-    directory: "dev/tools/Decks/goblins",
-    publicDirectory: "public/cards/goblins",
+  broken_forge_mutiny: {
+    directory: "dev/tools/Decks/broken_forge_mutiny",
+    publicDirectory: "public/cards/broken_forge_mutiny",
   },
-  vampires: {
-    directory: "dev/tools/Decks/vampires",
-    publicDirectory: "public/cards/vampires",
+  crimson_court: {
+    directory: "dev/tools/Decks/crimson_court",
+    publicDirectory: "public/cards/crimson_court",
   },
   hunters: {
     directory: "dev/tools/Decks/hunters",
@@ -190,7 +190,18 @@ export function buildStudioCards(deckId) {
         `${deckId}/${presentation.id}: nameEs duplicaría el nombre del JSON runtime. Corrige displayNameEs.`,
       );
     }
-    const runtimeFlavor = runtimeCard.flavorText?.es ?? "";
+    if (Object.hasOwn(presentation, "flavorTextEs") || Object.hasOwn(presentation, "lore")) {
+      throw new Error(
+        `${deckId}/${presentation.id}: el flavor debe vivir únicamente en flavorText del JSON runtime.`,
+      );
+    }
+    const runtimeFlavor = String(runtimeCard.flavorText?.es ?? "").trim();
+    if (!runtimeFlavor) {
+      throw new Error(`${deckId}/${presentation.id}: falta flavorText.es en el JSON runtime.`);
+    }
+    if (typeof runtimeCard.showFlavorText !== "boolean") {
+      throw new Error(`${deckId}/${presentation.id}: showFlavorText debe ser booleano en el JSON runtime.`);
+    }
     return {
       id: runtimeCard.id,
       art_crop: presentation.artCrop,
@@ -200,7 +211,8 @@ export function buildStudioCards(deckId) {
       atk: runtimeCard.power ?? null,
       def: authoredEndurance(runtimeCard),
       desc: visibleRules(runtimeCard, presentation, hiddenTraits),
-      lore: presentation.flavorTextEs ?? runtimeFlavor,
+      lore: runtimeFlavor,
+      showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
       ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
     };
@@ -247,19 +259,19 @@ export function studioSourceFiles(deckId) {
     paths.index,
     absolute("dev/tools/Decks/export_cards.cjs"),
     absolute("scripts/card-studio-data.mjs"),
-    absolute("public/fonts/mono-green/cinzel-decorative-latin.woff2"),
-    absolute("public/fonts/mono-green/cinzel-latin.woff2"),
-    absolute("public/fonts/mono-green/lora-italic-latin.woff2"),
-    absolute("public/fonts/mono-green/lora-normal-latin.woff2"),
-    absolute("public/fonts/mono-green/oswald-latin.woff2"),
-    absolute("public/fonts/mono-green/outfit-latin.woff2"),
+    absolute("public/fonts/last-rain/cinzel-decorative-latin.woff2"),
+    absolute("public/fonts/last-rain/cinzel-latin.woff2"),
+    absolute("public/fonts/last-rain/lora-italic-latin.woff2"),
+    absolute("public/fonts/last-rain/lora-normal-latin.woff2"),
+    absolute("public/fonts/last-rain/oswald-latin.woff2"),
+    absolute("public/fonts/last-rain/outfit-latin.woff2"),
   ];
   if (config.runtimeDeck) sourceFiles.push(path.resolve(paths.directory, config.runtimeDeck));
 
-  if (deckId === "monogreen") {
+  if (deckId === "last_rain") {
     sourceFiles.push(
       absolute("dev/tools/Decks/deck-card-text.js"),
-      absolute("dev/tools/Decks/monogreen/motivo.avif"),
+      absolute("dev/tools/Decks/last_rain/motivo.avif"),
     );
   } else {
     sourceFiles.push(
@@ -273,7 +285,7 @@ export function studioSourceFiles(deckId) {
         absolute("dev/tools/Decks/hunters/motivo.webp"),
       );
     } else {
-      const motif = deckId === "vampires" ? "motivo.jpg" : "motivo.avif";
+      const motif = deckId === "crimson_court" ? "motivo.jpg" : "motivo.avif";
       sourceFiles.push(path.join(paths.directory, motif));
     }
   }

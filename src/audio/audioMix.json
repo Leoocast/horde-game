@@ -23,7 +23,7 @@
     "skipNextBattle": 0,
     "activateEffect": 0,
     "buff": 0,
-    "monoGreenBuff": -13,
+    "lastRainBuff": -13,
     "fireballCast1": -8,
     "fireballCast2": -6.5,
     "fireballCast3": -5,

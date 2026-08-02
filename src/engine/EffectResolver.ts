@@ -8,6 +8,7 @@ import { addAvailableEnergy, addStoredEnergy } from "./EnergySystem";
 import { randomInt } from "./RNG";
 import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { chooseHostTarget, findPermanent } from "./Targeting";
+import { hasUsedOncePerTurn, markOncePerTurnUsed } from "./OncePerTurn";
 
 export type ResolveContext = {
   source?: CardInstance;
@@ -66,8 +67,8 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     game.host.pendingRevealRounds = (game.host.pendingRevealRounds ?? 0) + 1;
     game.log.unshift("Host effect calls for another normal reveal round.");
   },
-  HOST_INSPECT_TOP_GOBLIN: (game) => {
-    inspectTopGoblin(game);
+  HOST_INSPECT_TOP_GOBLIN: (game, _effect, context) => {
+    inspectTopGoblin(game, context.source?.name);
   },
   GAIN_ENERGY: (game, effect, context) => {
     const amount = Math.max(0, Number(effect.amount ?? 1));
@@ -249,6 +250,12 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   PUMP_UNTIL_NEXT_PLAYER_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
+    const oncePerTurnKey = typeof effect.oncePerTurnKey === "string"
+      ? effect.oncePerTurnKey.trim()
+      : "";
+    if (oncePerTurnKey && context.source && hasUsedOncePerTurn(context.source, oncePerTurnKey)) return;
+    if (targets.length === 0) return;
+    if (oncePerTurnKey && context.source) markOncePerTurnUsed(context.source, oncePerTurnKey);
     for (const target of targets) {
       target.untilNextPlayerTurnPower =
         (target.untilNextPlayerTurnPower ?? 0) + Number(effect.power ?? 0);
@@ -563,7 +570,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
 
 // `deferSelfTriggers` queues the card's own invoked ability instead of resolving
 // it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
-// Without it, Beetleback Chief Invoked from the Archive by Rundvelt simply spat out its tokens
+// Without it, Boss of the Double Crew Invoked from the Archive by Caller of the Next Crew simply spat out its tokens
 // with no activation of its own, while the same card arriving through the normal Host reveal
 // (which defers via HostController) announced itself properly.
 export function runInvokedTriggers(
@@ -678,13 +685,13 @@ export function destroyPermanent(game: GameState, card: CardInstance): void {
   });
 }
 
-function inspectTopGoblin(game: GameState): void {
+function inspectTopGoblin(game: GameState, sourceName = "Host effect"): void {
   const card = game.host.archive.shift();
   if (!card) {
-    game.log.unshift("Rundvelt Hordemaster finds no card to inspect.");
+    game.log.unshift(`${sourceName} finds no card to inspect.`);
     return;
   }
-  game.log.unshift(`Rundvelt Hordemaster inspects ${card.name}.`);
+  game.log.unshift(`${sourceName} inspects ${card.name}.`);
   if (!card.kinds.includes("ECHO") || !card.subtypes.includes("Goblin")) {
     game.host.archive.push(card);
     game.log.unshift(`${card.name} moves to the bottom of the Host Archive.`);
@@ -826,6 +833,10 @@ export function triggerConditionMet(game: GameState, condition: Record<string, u
   }
   if (condition.type === "SOURCE_IS_ATTACKING") {
     return declaredAttackerIds(event).includes(source.instanceId);
+  }
+  if (condition.type === "SOURCE_ONCE_PER_TURN_UNUSED") {
+    const key = typeof condition.key === "string" ? condition.key.trim() : "";
+    return key.length > 0 && !hasUsedOncePerTurn(source, key);
   }
   if (condition.type === "PLAYED_CARD_IS_NON_TOKEN") {
     return event.sourceId !== source.instanceId && event.payload?.nonToken === true;
