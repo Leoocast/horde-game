@@ -14,7 +14,8 @@ window.HostfallDeckData = [
     "lore": "Cada corredor lleva una brasa. Juntos llevan el incendio.",
     "showFlavorText": true,
     "cantidad": 24,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true
   },
   {
     "id": "burning_tally_foreman",
@@ -194,7 +195,9 @@ window.HostfallDeckData = [
     "desc": "Reflejos\nAl ser invocado, inflige 1 de daño al Cronista y a cada enemigo.",
     "lore": "No rompió las cadenas. Aprendió a hacerlas girar.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "isChronicle": true,
+    "fullArt": true
   },
   {
     "id": "salvaged_armor_master",

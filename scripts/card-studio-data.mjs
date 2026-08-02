@@ -71,6 +71,10 @@ function authoredIsToken(card) {
   return Boolean(card.isToken || card.kinds?.includes("TOKEN"));
 }
 
+function authoredIsChronicle(card) {
+  return Boolean(card.modifiers?.includes("CHRONICLE"));
+}
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
@@ -249,6 +253,10 @@ export function buildStudioCards(deckId) {
 
   const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
   const runtimeDeck = readJson(runtimePath);
+  const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+  const imageManifest = fs.existsSync(imageManifestPath)
+    ? readJson(imageManifestPath)
+    : { cards: {} };
   const runtimeById = new Map((runtimeDeck.cards ?? []).map((card) => [card.id, card]));
   if (runtimeById.size !== config.cards.length) {
     throw new Error(
@@ -289,6 +297,10 @@ export function buildStudioCards(deckId) {
     if (!artist) {
       throw new Error(`${deckId}/${presentation.id}: falta el crédito de arte.`);
     }
+    const isToken = authoredIsToken(runtimeCard);
+    const isChronicle = authoredIsChronicle(runtimeCard);
+    const fullArt = isChronicle
+      || (isToken && imageManifest.cards?.[runtimeCard.id]?.fullArt === true);
     return {
       id: runtimeCard.id,
       collectorId: runtimeCard.collectorId,
@@ -303,7 +315,9 @@ export function buildStudioCards(deckId) {
       lore: runtimeFlavor,
       showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
-      ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
+      ...(isToken ? { isToken: true } : {}),
+      ...(isChronicle ? { isChronicle: true } : {}),
+      ...(fullArt ? { fullArt: true } : {}),
       ...(artFrame ? { art_frame: artFrame } : {}),
     };
   });
@@ -358,32 +372,24 @@ export function studioSourceFiles(deckId) {
     absolute("public/fonts/last-rain/oswald-latin.woff2"),
     absolute("public/fonts/last-rain/outfit-latin.woff2"),
   ];
-  if (config.runtimeDeck) sourceFiles.push(path.resolve(paths.directory, config.runtimeDeck));
-
-  if (deckId === "last_rain") {
-    /* Comparte el renderer, pero conserva su propia hoja: no carga deck-card-studio.css. */
-    sourceFiles.push(
-      absolute("dev/tools/Decks/deck-card-studio.js"),
-      absolute("dev/tools/Decks/deck-card-text.js"),
-      absolute("dev/tools/Decks/last_rain/last-rain.css"),
-      absolute("dev/tools/Decks/last_rain/motivo.avif"),
-    );
-  } else {
-    sourceFiles.push(
-      absolute("dev/tools/Decks/deck-card-studio.css"),
-      absolute("dev/tools/Decks/deck-card-studio.js"),
-      absolute("dev/tools/Decks/deck-card-text.js"),
-    );
-    if (deckId === "hunters") {
-      sourceFiles.push(
-        absolute("dev/tools/Decks/hunters/hunters.css"),
-        absolute("dev/tools/Decks/hunters/motivo.webp"),
-      );
-    } else {
-      const motif = deckId === "crimson_court" ? "motivo.jpg" : "motivo.avif";
-      sourceFiles.push(path.join(paths.directory, motif));
-    }
+  if (config.runtimeDeck) {
+    const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+    sourceFiles.push(runtimePath);
+    const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+    if (fs.existsSync(imageManifestPath)) sourceFiles.push(imageManifestPath);
   }
+
+  sourceFiles.push(
+    absolute("dev/tools/Decks/deck-card-studio.css"),
+    absolute("dev/tools/Decks/deck-card-studio.js"),
+    absolute("dev/tools/Decks/deck-card-text.js"),
+  );
+  const motif = deckId === "crimson_court"
+    ? "motivo.jpg"
+    : deckId === "hunters"
+      ? "motivo.webp"
+      : "motivo.avif";
+  sourceFiles.push(path.join(paths.directory, motif));
 
   const cards = buildStudioCards(deckId);
   for (const card of cards) {

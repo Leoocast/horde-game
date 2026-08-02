@@ -195,6 +195,12 @@ Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No
 nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
 `public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
 
+Los cinco estudios usan `deck-card-studio.js` y `deck-card-studio.css`: existe una sola estructura
+de carta y los decks sólo aportan variables de tema, motivo e insignia. El diseño común usa marco
+metálico, panel de reglas y motivo. El diseño *full art* no usa marco metálico ni motivo y se aplica
+a todo Eco `CHRONICLE` y a los tokens cuyo manifest de imágenes declare `fullArt: true`. Los tokens
+no imprimen reglas ni flavor y llevan los stats más abajo. No crear variantes copiadas por deck.
+
 Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
 continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
 carta. El renderer imprime un icono de ilustración seguido del nombre del artista dentro del marco.

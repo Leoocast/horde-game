@@ -18,10 +18,10 @@ public/cards/<deck>/*.png             salida consumida por el juego
 dev/tools/Decks/generation-manifest.json hashes de entradas y salidas; no se distribuye
 ```
 
-Los cinco estudios comparten un solo renderer, `deck-card-studio.js`. Lo que cambia entre decks
-es su entrada en `LAYOUT_PROFILES` y su hoja de estilos. Añadir un deck es añadir un perfil, no
-otro `index.html` con su propio JavaScript. `last_rain` conserva su hoja propia
-(`last_rain/last-rain.css`) y por eso no carga `deck-card-studio.css`.
+Los cinco estudios comparten un solo renderer, `deck-card-studio.js`, y una sola hoja estructural,
+`deck-card-studio.css`. La geometría, tipografía y jerarquía visual son el diseño final de
+`test_full_Art`; los decks sólo cambian variables de color, motivo e insignia. Añadir un deck no
+implica copiar HTML, JavaScript ni CSS de carta.
 
 `hunters` todavía es un preview sin deck runtime. Por eso su `studio.config.json` conserva sus
 definiciones completas hasta que se implemente como deck jugable.
@@ -34,9 +34,20 @@ extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para u
 El JSON runtime también declara el `collectorId` impreso. Para el Acto I la serie es continua:
 `HFA1001`, `HFA1002`, etc. El pie de carta muestra ese ID junto a `© HOSTFALL 2026`. El crédito de
 ilustración se coloca por separado dentro del borde inferior del arte con un icono de imagen y el
-nombre del artista, para
-que el artista no parezca autor o propietario del juego. El nombre por defecto vive en
+nombre del artista, para que el artista no parezca autor o propietario del juego. El nombre por defecto vive en
 `defaultArtist` dentro de `studio.config.json`; una carta puede reemplazarlo con `artist`.
+
+El renderer deriva tres variantes sin duplicar markup por deck:
+
+- carta común: marco metálico, panel de reglas y motivo del deck;
+- *full art*: sin marco metálico ni motivo; se reserva a Ecos con el modificador runtime
+  `CHRONICLE` y a tokens seleccionados;
+- token: no imprime reglas ni flavor y coloca los stats más abajo.
+
+Un token se selecciona como *full art* con `"fullArt": true` en su entrada del manifest de imágenes
+runtime (`src/data/decks/**/*_images.json`). Esa excepción es visual; `TOKEN` y `CHRONICLE` siguen
+siendo propiedades de reglas del JSON runtime. Cazadores, mientras siga siendo sólo un preview sin
+JSON runtime, declara `isChronicle` y `fullArt` en su configuración de presentación.
 
 ## Card Studio
 
@@ -57,8 +68,7 @@ Lo que se guarda son datos, no HTML:
   Los píxeles son los de la carta a tamaño real (976×1360), no los del preview.
 - `motif` por deck, con los slots `head`, `gem`, `band` y `stats`.
 
-Una carta sin ajustes no emite nada y se renderiza exactamente igual que antes de existir esta
-feature. El estudio no toca los `index.html`: la vista previa es un iframe con el mismo documento
+Una carta sin ajustes no emite datos de encuadre. El estudio no toca los `index.html`: la vista previa es un iframe con el mismo documento
 que fotografía el exportador, así que preview y PNG no pueden divergir.
 
 La imagen que se carga se escribe en `public/cards/<deck>/art/<carta>.<ext>` y `artCrop` pasa a

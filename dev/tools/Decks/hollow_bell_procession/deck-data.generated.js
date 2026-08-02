@@ -14,7 +14,8 @@ window.HostfallDeckData = [
     "lore": "Un tañido le dio pies. El siguiente le dio un rumbo.",
     "showFlavorText": true,
     "cantidad": 21,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true
   },
   {
     "id": "mass_grave_colossus",
@@ -30,7 +31,8 @@ window.HostfallDeckData = [
     "lore": "Toda una fosa se puso de pie al mismo tiempo.",
     "showFlavorText": true,
     "cantidad": 4,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true
   },
   {
     "id": "hollow_bell",

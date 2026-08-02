@@ -141,6 +141,16 @@ test("card studios consume one generated projection instead of embedded or mirro
       /<script src="\.\.\/deck-card-studio\.js"><\/script>/u,
       `${deckId} must use the shared studio renderer`,
     );
+    assert.match(
+      indexHtml,
+      /<link rel="stylesheet" href="\.\.\/deck-card-studio\.css">/u,
+      `${deckId} must use the shared final card design`,
+    );
+    assert.doesNotMatch(
+      indexHtml,
+      /(?:last-rain|hunters)\.css/u,
+      `${deckId} must not load a per-deck card stylesheet`,
+    );
     assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
     assert.equal(fs.readFileSync(generatedUrl, "utf8"), generatedStudioData(deckId));
 
@@ -275,6 +285,32 @@ test("Act I print metadata stays sequential and credits Dean Spencer as artist",
     Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
   );
   assert.equal(cards.every((card) => card.artist === "Dean Spencer"), true);
+});
+
+test("Card Studio reserves full art for Chronicle Echoes and selected tokens", () => {
+  const lastRain = new Map(buildStudioCards("last_rain").map((card) => [card.id, card]));
+  const crimsonCourt = new Map(buildStudioCards("crimson_court").map((card) => [card.id, card]));
+  const brokenForge = new Map(buildStudioCards("broken_forge_mutiny").map((card) => [card.id, card]));
+  const hollowBell = new Map(buildStudioCards("hollow_bell_procession").map((card) => [card.id, card]));
+  const hunters = new Map(buildStudioCards("hunters").map((card) => [card.id, card]));
+
+  assert.equal(lastRain.get("iria_voice_last_rain")?.isChronicle, true);
+  assert.equal(lastRain.get("iria_voice_last_rain")?.fullArt, true);
+  assert.equal(crimsonCourt.get("eternal_feast_countess")?.isChronicle, true);
+  assert.equal(crimsonCourt.get("eternal_feast_countess")?.fullArt, true);
+  assert.equal(brokenForge.get("varka_revolt_axis")?.isChronicle, true);
+  assert.equal(brokenForge.get("varka_revolt_axis")?.fullArt, true);
+  assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.isChronicle, true);
+  assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.fullArt, true);
+
+  assert.equal(hollowBell.get("last_knell_dead")?.isToken, true);
+  assert.equal(hollowBell.get("last_knell_dead")?.fullArt, true);
+  assert.equal(hollowBell.get("mass_grave_colossus")?.fullArt, true);
+  assert.equal(brokenForge.get("ember_scrap_runner")?.isToken, true);
+  assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
+
+  assert.equal(lastRain.get("deep_root_spring")?.fullArt, undefined);
+  assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {
@@ -452,8 +488,8 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
   );
   assert.match(
     studioCss,
-    /body\[data-theme="hollow_bell_procession"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Zombie Echo glyph must use the same doubled size as the player decks",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Zombie cards must inherit the final shared type-icon geometry",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -557,8 +593,8 @@ test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay a
   );
   assert.match(
     studioCss,
-    /body\[data-theme="broken_forge_mutiny"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Goblin Echo glyph must use the same doubled size as the other decks",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Goblin cards must inherit the final shared type-icon geometry",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -672,13 +708,13 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   }
 
   const hunterCss = fs.readFileSync(
-    new URL("../dev/tools/Decks/hunters/hunters.css", import.meta.url),
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
     "utf8",
   );
   assert.match(
     hunterCss,
-    /body\[data-theme="hunters"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Hunter Echo glyph must use the shared doubled size",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Hunter cards must inherit the final shared type-icon geometry",
   );
 });
 

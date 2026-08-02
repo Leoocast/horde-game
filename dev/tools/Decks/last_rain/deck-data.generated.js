@@ -28,7 +28,9 @@ window.HostfallDeckData = [
     "desc": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida.",
     "lore": "No trajo la tormenta. Cargó con aquello que había olvidado.",
     "showFlavorText": true,
-    "cantidad": 3
+    "cantidad": 3,
+    "isChronicle": true,
+    "fullArt": true
   },
   {
     "id": "keeper_sleeping_root",

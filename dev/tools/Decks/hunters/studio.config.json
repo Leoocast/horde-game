@@ -84,7 +84,9 @@
       "def": 4,
       "desc": "Al ser invocada, marca un enemigo.\nAgota: Ata a Lyra un enemigo Marcado y Aturdido. Mientras permanezca Atado, no puede atacar ni defender. Libéralo cuando Lyra deje el Campo.",
       "lore": "Los demás matan monstruos. Lyra les enseña obediencia.",
-      "cantidad": 2
+      "cantidad": 2,
+      "isChronicle": true,
+      "fullArt": true
     },
     {
       "id": "flecha_sedante",

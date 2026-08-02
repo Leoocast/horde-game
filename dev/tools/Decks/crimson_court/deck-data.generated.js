@@ -133,7 +133,9 @@ window.HostfallDeckData = [
     "desc": "Coste adicional: Paga la mitad de tu Vida.\nVolar. Alerta.\nDurante tu turno, este Eco tiene Drenar.",
     "lore": "Su corte ha esperado siglos al último invitado.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "isChronicle": true,
+    "fullArt": true
   },
   {
     "id": "blood_pact",
