@@ -83,15 +83,15 @@ test("Hostfall schema rejects unknown version, side and canonical vocabulary", (
       kinds: ["ECH0"],
       modifiers: ["QUCIK"],
       traits: ["ALRET", "POISON_ONE"],
-      eventObject: "permanent", // audit-allow legacy-l45-rejection-fixture
-      retiredTarget: { type: "ALL_CREATURES" }, // audit-allow legacy-l45-rejection-fixture
+      eventObject: "permanent", // audit-allow retired-rules-rejection-fixture
+      retiredTarget: { type: "ALL_CREATURES" }, // audit-allow retired-rules-rejection-fixture
       internalRuntimeType: { type: "HOST_GROUP_BUFF" },
       internalRuntimeEvent: { event: "ECHO_INVOKED" },
       nonStringType: { type: 42 },
       nonStringEvent: { event: null },
       activationMode: "HOST_DIRECTIVE",
       selectionRule: "CHEAPEST",
-      selection: "PLAYER_CHOOSES", // audit-allow legacy-l45-rejection-fixture
+      selection: "PLAYER_CHOOSES", // audit-allow retired-rules-rejection-fixture
       targetPolicy: "FIRST",
       speed: "INSTANT",
       controller: "HORDE",
@@ -118,14 +118,14 @@ test("Hostfall schema rejects unknown version, side and canonical vocabulary", (
   assert.match(messages, /Unknown Hostfall trait "LETHL"/u);
   assert.match(messages, /Unknown Hostfall zone "BATTLEGROUND"/u);
   assert.match(messages, /expected "echo"/u);
-  assert.match(messages, /legacy value "ALL_CREATURES"/u); // audit-allow legacy-l45-rejection-fixture
+  assert.match(messages, /legacy value "ALL_CREATURES"/u); // audit-allow retired-rules-rejection-fixture
   assert.match(messages, /Unknown Hostfall authored type "HOST_GROUP_BUFF"/u);
   assert.match(messages, /Unknown Hostfall authored event "ECHO_INVOKED"/u);
   assert.match(messages, /Unknown Hostfall authored type "42"/u);
   assert.match(messages, /Unknown Hostfall authored event "null"/u);
   assert.match(messages, /Unknown Hostfall activationMode "HOST_DIRECTIVE"/u);
   assert.match(messages, /Unknown Hostfall selectionRule "CHEAPEST"/u);
-  assert.match(messages, /Unknown Hostfall selection "PLAYER_CHOOSES"/u); // audit-allow legacy-l45-rejection-fixture
+  assert.match(messages, /Unknown Hostfall selection "PLAYER_CHOOSES"/u); // audit-allow retired-rules-rejection-fixture
   assert.match(messages, /Unknown Hostfall targetPolicy "FIRST"/u);
   assert.match(messages, /Unknown Hostfall speed "INSTANT"/u);
   assert.match(messages, /Unknown Hostfall controller "HORDE"/u);
@@ -162,7 +162,7 @@ test("Host rules reject unknown keys, unsafe divisors and malformed profiles", (
   assert.match(messages, /surgeBonus must be an object/u);
 });
 
-test("La Última Lluvia keeps Hostfall card kinds and traits at the runtime bridge", () => {
+test("La Última Lluvia keeps Hostfall card kinds and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "last_rain");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -174,9 +174,9 @@ test("La Última Lluvia keeps Hostfall card kinds and traits at the runtime brid
     /"(?:ADD_MANA|BATTLEFIELD|ENTERS_BATTLEFIELD|INSTANT|SORCERY|WHILE_SOURCE_ON_BATTLEFIELD|DEATHTOUCH|REACH|TRAMPLE|TOXIC_\d+)"/u,
   );
 
-  const adapted = normalizeAuthoredDeck(entry.raw);
-  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.equal(adapted.name, "La Última Lluvia");
+  const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
+  const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
+  assert.equal(normalizedAuthoring.name, "La Última Lluvia");
   assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
   assert.deepEqual(byId.iria_voice_last_rain.modifiers, ["CHRONICLE"]);
   assert.equal(byId.iria_voice_last_rain.abilities[0].effects[1].amount, 3);
@@ -203,7 +203,7 @@ test("La Última Lluvia keeps Hostfall card kinds and traits at the runtime brid
   ]);
 });
 
-test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
+test("Vampires keep Hostfall card kinds, modifiers and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "crimson_court");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -220,8 +220,8 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
   assert.equal(rawById.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(rawById.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
 
-  const adapted = normalizeAuthoredDeck(entry.raw);
-  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
+  const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
+  const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
   assert.deepEqual(byId.eternal_feast_countess.kinds, ["ECHO"]);
   assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
   assert.deepEqual(byId.eternal_feast_countess.traits, ["FLYING", "ALERT"]);
@@ -241,7 +241,7 @@ test("Vampires keep Hostfall card kinds, modifiers and traits at the runtime bri
   });
 });
 
-test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => {
+test("Zombies keep Hostfall card kinds and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "hollow_bell_procession");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -267,13 +267,13 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
   assert.equal(entry.raw.rulesProfile.surgeBonus.endurance, 0);
 
-  const adapted = normalizeAuthoredDeck(entry.raw);
-  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.equal(adapted.side, "HOST");
-  assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
-  assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
-  assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
-  assert.equal(adapted.rulesProfile.surgeBonus.endurance, 0);
+  const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
+  const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
+  assert.equal(normalizedAuthoring.side, "HOST");
+  assert.equal(normalizedAuthoring.rulesProfile.damagePerArchiveDiscard, 3);
+  assert.equal(normalizedAuthoring.rulesProfile.poisonPerArchiveDiscard, 3);
+  assert.equal(normalizedAuthoring.rulesProfile.hostEchosHaveImpetus, true);
+  assert.equal(normalizedAuthoring.rulesProfile.surgeBonus.endurance, 0);
   assert.deepEqual(byId.last_knell_dead.kinds, ["ECHO", "TOKEN"]);
   assert.equal(byId.last_knell_dead.isToken, true);
   assert.deepEqual(byId.last_knell_dead.energyCost, { amount: 2 });
@@ -288,7 +288,7 @@ test("Zombies keep Hostfall card kinds and traits at the runtime bridge", () => 
   assert.equal(byId.last_march_marshal.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
 });
 
-test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime bridge", () => {
+test("Goblins keep Hostfall card kinds, modifiers and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "broken_forge_mutiny");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -316,12 +316,12 @@ test("Goblins keep Hostfall card kinds, modifiers and traits at the runtime brid
   assert.equal(rawById.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(rawById.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
 
-  const adapted = normalizeAuthoredDeck(entry.raw);
-  const byId = Object.fromEntries(adapted.cards.map((card) => [card.id, card]));
-  assert.equal(adapted.side, "HOST");
-  assert.equal(adapted.rulesProfile.damagePerArchiveDiscard, 3);
-  assert.equal(adapted.rulesProfile.poisonPerArchiveDiscard, 3);
-  assert.equal(adapted.rulesProfile.hostEchosHaveImpetus, true);
+  const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
+  const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
+  assert.equal(normalizedAuthoring.side, "HOST");
+  assert.equal(normalizedAuthoring.rulesProfile.damagePerArchiveDiscard, 3);
+  assert.equal(normalizedAuthoring.rulesProfile.poisonPerArchiveDiscard, 3);
+  assert.equal(normalizedAuthoring.rulesProfile.hostEchosHaveImpetus, true);
   assert.deepEqual(byId.ember_scrap_runner.kinds, ["ECHO", "TOKEN"]);
   assert.equal(byId.ember_scrap_runner.isToken, true);
   assert.deepEqual(byId.shift_hammer.kinds, ["SUPPORT"]);

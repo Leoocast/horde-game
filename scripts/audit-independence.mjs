@@ -243,11 +243,11 @@ function assetInventory(relativeRoots) {
   };
 }
 
-function finding(id, severity, phase, title, description, result) {
+function finding(id, severity, scope, title, description, result) {
   return {
     id,
     severity,
-    phase,
+    scope,
     title,
     description,
     count: result.count,
@@ -257,8 +257,6 @@ function finding(id, severity, phase, title, description, result) {
 
 const productionText = textFiles(["src"])
   .concat([absolute("index.html"), absolute("vite.config.js")].filter(fs.existsSync));
-const activeConfigurationText = productionText
-  .concat([absolute("package.json")].filter(fs.existsSync));
 const toolText = textFiles(["dev/tools"]);
 const distText = textFiles(["dist"]);
 const internalText = textFiles(["src/engine", "src/store", "src/playground"]);
@@ -339,7 +337,7 @@ const l41LegacyPatterns = [
     pattern: /["'](?:REACH|VIGILANCE|MENACE|DEATHTOUCH|FIRST_STRIKE|SKULK|LIFESTEAL|TRAMPLE|HASTE|TOXIC(?:_\d+)?)["']/u,
   },
   {
-    label: "retired L4.1 runtime identifier",
+    label: "retired runtime identifier",
     pattern: /\b(?:deathtouchDamage|getToxicAmount|resolvePlayerAttackerLifesteal)\b/u,
   },
 ];
@@ -458,9 +456,7 @@ const l46PlaygroundContractLegacyPatterns = [
   },
 ];
 
-// These paths still use technical names inherited from the original decks. Their current contents
-// are Hostfall replacements, so path presence is an L7 cleanup signal rather than evidence that L6
-// still ships derived art.
+// These retired asset roots must not reappear now that every active deck has a final Hostfall path.
 const legacyAssetRoots = [
   "public/cards/mono_green_ramp",
   "public/cards/zombies",
@@ -472,13 +468,11 @@ const legacyDistAssetRoots = [
   "dist/cards/goblins",
 ];
 const cardAssetFreshness = verifyGenerationManifest();
-const deprecatedCardTools = walk("dev/tools/Cards");
-
 const checks = [
   finding(
     "production-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in production source",
     "Source imported by the product still names Magic or Wizards.",
     scanTextPatterns(productionText, explicitIpPatterns),
@@ -486,7 +480,7 @@ const checks = [
   finding(
     "tool-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in tools",
     "Developer tools still contain external credits or identifiers.",
     scanTextPatterns(toolText, explicitIpPatterns),
@@ -494,7 +488,7 @@ const checks = [
   finding(
     "dist-explicit-ip",
     "blocker",
-    "L1",
+    "identity",
     "Explicit external-IP references in the production build",
     "Compiled product files still name Magic or Wizards.",
     scanTextPatterns(distText, explicitIpPatterns),
@@ -502,33 +496,15 @@ const checks = [
   finding(
     "remote-card-provider",
     "blocker",
-    "L1",
+    "providers",
     "Remote card-provider references",
     "Runtime, tools and build must remain local-only.",
     scanTextPatterns([...productionText, ...toolText, ...distText], remoteProviderPatterns),
   ),
   finding(
-    "deprecated-card-tools",
-    "warning",
-    "L1",
-    "Candidate deprecated card-tool files",
-    "The old dev/tools/Cards tree must be proven unused before deletion.",
-    { count: deprecatedCardTools.length, samples: deprecatedCardTools.map(relative) },
-  ),
-  finding(
-    "deprecated-card-tool-consumers",
-    "warning",
-    "L1",
-    "Active consumers of the deprecated card-tool tree",
-    "This must remain zero before L1 can delete the candidate tree.",
-    scanTextPatterns(activeConfigurationText, [
-      { label: "dev/tools/Cards reference", pattern: /(?:dev\/)?tools\/Cards\//u },
-    ]),
-  ),
-  finding(
     "unverifiable-generated-pngs",
     "warning",
-    "L6",
+    "assets",
     "Generated card PNGs without a valid freshness proof",
     "Every checked-in PNG must match the current local data, renderer and source-art hashes.",
     {
@@ -539,134 +515,134 @@ const checks = [
   finding(
     "legacy-authored-schema",
     "blocker",
-    "L3",
+    "authoring",
     "Legacy fields in active deck authoring",
     "Active deck JSON still uses the pre-Hostfall schema.",
     authoredKeyInventory(),
   ),
   finding(
-    "legacy-l41-card-model",
+    "retired-card-model",
     "blocker",
-    "L4.1",
+    "card-model",
     "Legacy card kinds or Traits in active consumers",
-    "Runtime, UI and migrated tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
+    "Runtime, UI and tests must use Hostfall card-kind and Trait values; deckLint is the only rejection allowlist.",
     scanTextPatterns(l41Text, l41LegacyPatterns),
   ),
   finding(
-    "legacy-l42-zones",
+    "retired-zones",
     "blocker",
-    "L4.2",
+    "zones",
     "Legacy zones in active runtime state",
     "GameState and CardInstance must use archive, field, memory and oblivion without parallel legacy arrays.",
     scanTextPatterns(l42Text, l42LegacyPatterns),
   ),
   finding(
-    "legacy-l43-energy-model",
+    "retired-energy-model",
     "blocker",
-    "L4.3",
+    "energy",
     "Legacy Energy state or cost model in active consumers",
-    "Runtime, UI, Playground and migrated tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
+    "Runtime, UI, Playground and tests must use the numeric Hostfall Energy model; compatibility/rejection borders are excluded.",
     scanTextPatterns(l43Text, l43LegacyPatterns),
   ),
   finding(
-    "legacy-l44-card-states",
+    "retired-card-states",
     "blocker",
-    "L4.4",
+    "card-state",
     "Legacy card-state model in active runtime consumers",
-    "Runtime and migrated consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v4 boundary uses the same states.",
+    "Runtime consumers must use exhausted, stabilizing, exhaust and requiresStabilized; the Playground v4 boundary uses the same states.",
     scanTextPatterns(l44Text, l44LegacyPatterns),
   ),
   finding(
-    "legacy-l45-actions-events-host-rules",
+    "retired-actions-events-host-rules",
     "blocker",
-    "L4.5",
+    "rules",
     "Legacy Actions, events or Host rules in active runtime consumers",
-    "Runtime, normalized data and migrated tests must consume Hostfall event/effect discriminants and the canonical Host rules profile without adapter translations.",
+    "Runtime, normalized data and tests must consume Hostfall event/effect discriminants and the canonical Host rules profile.",
     scanTextPatternsIgnoringTaggedLines(
       l45Text,
       l45LegacyPatterns,
-      "audit-allow legacy-l45-rejection-fixture",
+      "audit-allow retired-rules-rejection-fixture",
       ["tests/deckLint.test.js"],
     ),
   ),
   finding(
-    "legacy-l46-card-structure",
+    "retired-card-structure",
     "blocker",
-    "L4.6a",
+    "card-structure",
     "Legacy card structure in runtime consumers",
-    "Runtime, UI and migrated tests must use kinds, traits and endurance without structural aliases.",
+    "Runtime, UI and tests must use kinds, traits and endurance without structural aliases.",
     scanTextPatterns(l46CardStructureText, l46CardStructureLegacyPatterns),
   ),
   finding(
-    "legacy-l46-host-identity",
+    "retired-host-identity",
     "blocker",
-    "L4.6b",
+    "host-identity",
     "Legacy Horde identity in runtime consumers",
-    "Runtime state, engine, store, UI, Playground and migrated tests must use Host identity.",
+    "Runtime state, engine, store, UI, Playground and tests must use Host identity.",
     scanTextPatternsIgnoringTaggedLines(
       l46HostIdentityText,
       l46HostIdentityLegacyPatterns,
-      "audit-allow legacy-l46b-compatibility",
+      "audit-allow retired-host-compatibility",
       ["src/store/useGameStore.ts"],
     ),
   ),
   finding(
-    "legacy-l46-playground-contract",
+    "retired-playground-contract",
     "blocker",
-    "L4.6c",
+    "playground",
     "Legacy Playground external contract",
     "Scenario v4, board files, replays and Playground storage must use Hostfall-native names without a migration path.",
     scanTextPatternsIgnoringTaggedLines(
       l46PlaygroundContractText,
       l46PlaygroundContractLegacyPatterns,
-      "audit-allow legacy-l46c-retired-storage",
+      "audit-allow retired-playground-storage",
       ["src/playground/scenarioStorage.ts"],
     ),
   ),
   finding(
     "legacy-internal-vocabulary",
     "warning",
-    "L7",
+    "internal-vocabulary",
     "Broad legacy-word matches in internal consumers",
-    "The exact L4 contracts are clean; L7 reviews remaining contextual or technical strings.",
+    "Exact runtime contracts are clean; this broader scan reviews remaining contextual or technical strings.",
     scanTextPatterns(internalText, internalLegacyPatterns),
   ),
   finding(
     "derived-card-definitions",
     "blocker",
-    "L5",
+    "authored-identities",
     "Known derived card definitions",
-    "Authored identities in the three legacy decks still match the fixed inventory.",
+    "Authored identities must not match the retired source inventory.",
     derivedDefinitionInventory(),
   ),
   finding(
     "derived-identities-in-dist",
     "blocker",
-    "L7",
+    "compiled-identities",
     "Legacy card-name strings in the production build",
-    "Authored names are clean; compiled technical residues are removed during L7.",
+    "The production build must not contain retired card-name strings.",
     derivedDistIdentityInventory(),
   ),
   finding(
     "derived-assets-in-public",
     "blocker",
-    "L7",
+    "assets",
     "Legacy card-asset roots under public",
-    "The inherited technical paths must stay retired after the L7 rename.",
+    "Retired technical asset paths must not reappear.",
     assetInventory(legacyAssetRoots),
   ),
   finding(
     "derived-assets-in-dist",
     "blocker",
-    "L7",
+    "assets",
     "Legacy card-asset roots in the production build",
-    "The art is replaced; a rebuilt L7 package must use the final Hostfall paths.",
+    "A production build must use the final Hostfall asset paths.",
     assetInventory(legacyDistAssetRoots),
   ),
   finding(
     "legacy-test-vocabulary",
     "info",
-    "L7",
+    "tests",
     "Negative legacy-vocabulary guards in tests",
     "Rejection fixtures intentionally retain retired terms so the canonical Hostfall contracts cannot regress.",
     scanTextPatterns(testText, internalLegacyPatterns),
@@ -694,7 +670,7 @@ if (JSON_OUTPUT) {
   for (const check of checks) {
     const status = check.count === 0 ? "PASS" : check.severity.toUpperCase();
     console.log(`\n[${status}] ${check.id} — ${check.title}: ${check.count}`);
-    console.log(`  phase: ${check.phase}; ${check.description}`);
+    console.log(`  scope: ${check.scope}; ${check.description}`);
     for (const sample of check.samples.slice(0, 12)) console.log(`  - ${sample}`);
     if (check.samples.length > 12) console.log(`  - … ${check.samples.length - 12} more sample(s)`);
   }
