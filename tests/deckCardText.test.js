@@ -9,6 +9,7 @@ import {
   generatedStudioData,
   loadStudioConfig,
   resolveStudioFullArt,
+  resolveStudioHeaderFade,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
 
@@ -267,8 +268,13 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.doesNotMatch(studioApp, /hint:/u, "motif panels must not include helper copy");
   assert.doesNotMatch(studioShell, /El motivo es la textura del mazo/u);
   assert.match(studioShell, /id="full-art-toggle"/u);
+  assert.match(studioShell, /id="header-fade-toggle"/u);
   assert.match(studioApp, /fullArtOverrides/u);
-  assert.match(studioServer, /capabilities: \{ fullArtOverrides: true \}/u);
+  assert.match(studioApp, /headerFadeOverrides/u);
+  assert.match(
+    studioServer,
+    /capabilities: \{ fullArtOverrides: true, headerFadeOverrides: true \}/u,
+  );
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
   assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
   assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
@@ -323,6 +329,8 @@ test("the shared printed design keeps the approved compact geometry", () => {
     "art zoom must operate on the complete source image instead of a pre-cropped cover box",
   );
   assert.match(sharedCss, /\.tcg-art-image\.tcg-art-image--positioned/u);
+  assert.match(sharedCss, /\.tcg-card--common\.tcg-card--no-header-fade \.tcg-card-veil/u);
+  assert.match(sharedStudio, /headerFadeClass/u);
 });
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
@@ -380,6 +388,16 @@ test("Card Studio allows a per-card full-art override", () => {
   assert.throws(
     () => resolveStudioFullArt("card", { fullArt: "yes" }, false),
     /fullArt debe ser booleano/u,
+  );
+});
+
+test("Card Studio allows a per-card common header-fade override", () => {
+  assert.equal(resolveStudioHeaderFade("card", {}, true), true);
+  assert.equal(resolveStudioHeaderFade("card", { headerFade: true }, false), true);
+  assert.equal(resolveStudioHeaderFade("card", { headerFade: false }, true), false);
+  assert.throws(
+    () => resolveStudioHeaderFade("card", { headerFade: "yes" }, true),
+    /headerFade debe ser booleano/u,
   );
 });
 

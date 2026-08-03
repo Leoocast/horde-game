@@ -240,6 +240,7 @@ function validatePresentationCards(deckId, cards) {
       throw new Error(`${deckId}: id de presentación ausente o duplicado: ${card?.id ?? "(vacío)"}.`);
     }
     resolveStudioFullArt(`${deckId}/${card.id}`, card, false);
+    resolveStudioHeaderFade(`${deckId}/${card.id}`, card, true);
     ids.add(card.id);
   }
 }
@@ -250,6 +251,14 @@ export function resolveStudioFullArt(label, presentation, fallback) {
     throw new Error(`${label}: fullArt debe ser booleano.`);
   }
   return presentation.fullArt;
+}
+
+export function resolveStudioHeaderFade(label, presentation, fallback = true) {
+  if (!Object.hasOwn(presentation, "headerFade")) return Boolean(fallback);
+  if (typeof presentation.headerFade !== "boolean") {
+    throw new Error(`${label}: headerFade debe ser booleano.`);
+  }
+  return presentation.headerFade;
 }
 
 export function loadStudioConfig(deckId) {
@@ -330,6 +339,11 @@ export function buildStudioCards(deckId) {
       presentation,
       defaultFullArt,
     );
+    const headerFade = resolveStudioHeaderFade(
+      `${deckId}/${presentation.id}`,
+      presentation,
+      true,
+    );
     return {
       id: runtimeCard.id,
       collectorId: runtimeCard.collectorId,
@@ -348,6 +362,7 @@ export function buildStudioCards(deckId) {
       ...(isChronicle ? { isChronicle: true } : {}),
       ...(isEnergy ? { isEnergy: true } : {}),
       ...(fullArt ? { fullArt: true } : {}),
+      ...(headerFade ? {} : { headerFade: false }),
       ...(artFrame ? { art_frame: artFrame } : {}),
     };
   });

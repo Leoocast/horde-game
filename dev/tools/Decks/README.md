@@ -77,6 +77,8 @@ Lo que se guarda son datos, no HTML:
 - `artFrame` por carta en `studio.config.json`: `{ "zoom": 1.35, "x": 24, "y": -18 }`.
   Los píxeles son los de la carta a tamaño real (976×1360), no los del preview.
 - `fullArt` por carta como override booleano del diseño predeterminado.
+- `headerFade` por carta para mostrar u ocultar el fade superior de las cartas comunes. No altera
+  las cartas *full art* ni el fade inferior.
 - `motif` por deck, con los slots `head`, `band` y `stats`; cada slot admite `x`, `y`, `zoom` y
   `rotation`.
 

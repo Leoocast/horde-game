@@ -317,6 +317,7 @@
             const hasStats = card.atk !== null && card.atk !== undefined
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);
+            const headerFade = card.headerFade !== false;
             const isToken = Boolean(card.isToken);
             const isChronicle = Boolean(card.isChronicle);
             const isEnergy = Boolean(card.isEnergy);
@@ -346,6 +347,7 @@
                     ? " tcg-title--medium"
                     : "";
             const variantClass = fullArt ? " tcg-card--full-art" : " tcg-card--common";
+            const headerFadeClass = !fullArt && !headerFade ? " tcg-card--no-header-fade" : "";
             const tokenClass = isToken ? " tcg-card--token" : "";
             const energyClass = isEnergy ? " tcg-card--energy" : "";
             const noCostClass = showCost ? "" : " tcg-card--no-cost";
@@ -365,7 +367,7 @@
                 : "";
 
             const cardElement = document.createElement("article");
-            cardElement.className = `tcg-card${variantClass}${tokenClass}${energyClass}${noCostClass}${densityClass}`;
+            cardElement.className = `tcg-card${variantClass}${headerFadeClass}${tokenClass}${energyClass}${noCostClass}${densityClass}`;
             cardElement.id = `card-${cardId.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
             cardElement.dataset.cardId = cardId;
 

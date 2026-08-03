@@ -43,6 +43,7 @@
     const artThumb = el("art-thumb");
     const artFileName = el("art-file-name");
     const fullArtToggle = el("full-art-toggle");
+    const headerFadeToggle = el("header-fade-toggle");
     const statusLine = el("status");
     const saveButton = el("save");
     const resetButton = el("reset");
@@ -67,6 +68,7 @@
     let searchQuery = "";
     let lastRegenerated = [];
     let supportsFullArtOverrides = false;
+    let supportsHeaderFadeOverrides = false;
 
     const deck = () => decks.find((entry) => entry.id === deckId) ?? null;
     const card = () => deck()?.cards.find((entry) => entry.id === cardId) ?? null;
@@ -81,6 +83,11 @@
                 fullArtOverrides: new Map(
                     (current?.cards ?? []).map(
                         (entry) => [entry.id, entry.fullArtOverride ?? null]
+                    )
+                ),
+                headerFadeOverrides: new Map(
+                    (current?.cards ?? []).map(
+                        (entry) => [entry.id, entry.headerFadeOverride ?? null]
                     )
                 ),
                 motif: structuredClone(current?.motif ?? null)
@@ -98,6 +105,12 @@
         return Boolean(deck()?.cards.find((entry) => entry.id === id)?.fullArt);
     }
 
+    function headerFadeOf(id) {
+        const override = draft().headerFadeOverrides.get(id);
+        if (typeof override === "boolean") return override;
+        return deck()?.cards.find((entry) => entry.id === id)?.headerFade !== false;
+    }
+
     /* Hay cambios sin guardar si el borrador difiere de lo que hay en disco. */
     function isDirty() {
         const current = deck();
@@ -113,7 +126,11 @@
             (entry) => (local.fullArtOverrides.get(entry.id) ?? null)
                 === (entry.fullArtOverride ?? null)
         );
-        return !(sameMotif && sameFrames && sameFullArt);
+        const sameHeaderFade = current.cards.every(
+            (entry) => (local.headerFadeOverrides.get(entry.id) ?? null)
+                === (entry.headerFadeOverride ?? null)
+        );
+        return !(sameMotif && sameFrames && sameFullArt && sameHeaderFade);
     }
 
     function setFrame(id, frame) {
@@ -126,6 +143,14 @@
     function setFullArt(id, enabled) {
         if (!supportsFullArtOverrides) return;
         draft().fullArtOverrides.set(id, Boolean(enabled));
+        renderArtControls();
+        renderDirty();
+        refreshPreviewCards();
+    }
+
+    function setHeaderFade(id, enabled) {
+        if (!supportsHeaderFadeOverrides || fullArtOf(id)) return;
+        draft().headerFadeOverrides.set(id, Boolean(enabled));
         renderArtControls();
         renderDirty();
         refreshPreviewCards();
@@ -319,7 +344,8 @@
         }
         const cards = sourceCards.map((entry) => ({
             ...entry,
-            fullArt: fullArtOf(entry.id)
+            fullArt: fullArtOf(entry.id),
+            headerFade: headerFadeOf(entry.id)
         }));
         studio.renderCards(cards);
         wirePreview();
@@ -437,6 +463,10 @@
 
         fullArtToggle.disabled = !current || !supportsFullArtOverrides;
         fullArtToggle.checked = current ? fullArtOf(cardId) : false;
+        headerFadeToggle.disabled = !current
+            || !supportsHeaderFadeOverrides
+            || fullArtOf(cardId);
+        headerFadeToggle.checked = current ? headerFadeOf(cardId) : false;
         if (!current) return;
         const frame = frameOf(cardId);
 
@@ -682,6 +712,7 @@
         decks = payload.decks;
         lastRegenerated = payload.regenerated ?? [];
         supportsFullArtOverrides = payload.capabilities?.fullArtOverrides === true;
+        supportsHeaderFadeOverrides = payload.capabilities?.headerFadeOverrides === true;
 
         deckSelect.replaceChildren();
         for (const entry of decks) {
@@ -701,6 +732,9 @@
 
         if (!supportsFullArtOverrides) {
             setStatus("Reinicia el servidor del taller para activar Full art.", "error");
+        }
+        else if (!supportsHeaderFadeOverrides) {
+            setStatus("Reinicia el servidor del taller para activar Fade superior.", "error");
         }
     }
 
@@ -735,6 +769,7 @@
                     deck: deckId,
                     artFrames: Object.fromEntries(current.artFrames),
                     fullArtOverrides: Object.fromEntries(current.fullArtOverrides),
+                    headerFadeOverrides: Object.fromEntries(current.headerFadeOverrides),
                     motif: current.motif
                 })
             });
@@ -844,6 +879,10 @@
 
     fullArtToggle.addEventListener("change", () => {
         if (cardId) setFullArt(cardId, fullArtToggle.checked);
+    });
+
+    headerFadeToggle.addEventListener("change", () => {
+        if (cardId) setHeaderFade(cardId, headerFadeToggle.checked);
     });
 
     for (const [event, handler] of [

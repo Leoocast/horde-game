@@ -203,6 +203,9 @@ imágenes declare `fullArt: true`; el taller permite sobrescribirlo con `fullArt
 Energías no imprimen coste, reglas ni flavor. Los tokens no imprimen reglas ni flavor y llevan los
 stats más abajo. No crear variantes copiadas por deck.
 
+El fade superior de las cartas comunes se controla por carta con `headerFade`; no modifica las
+variantes *full art* ni su fade inferior.
+
 Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
 continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
 carta. El renderer imprime un icono de ilustración seguido del nombre del artista dentro del marco.

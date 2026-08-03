@@ -154,6 +154,10 @@ async function listDecks() {
                 fullArtOverride: typeof presentation.fullArt === 'boolean'
                     ? presentation.fullArt
                     : null,
+                headerFade: card.headerFade !== false,
+                headerFadeOverride: typeof presentation.headerFade === 'boolean'
+                    ? presentation.headerFade
+                    : null,
             };
         });
         return {
@@ -169,7 +173,7 @@ async function listDecks() {
     return {
         decks,
         regenerated,
-        capabilities: { fullArtOverrides: true },
+        capabilities: { fullArtOverrides: true, headerFadeOverrides: true },
     };
 }
 
@@ -190,9 +194,17 @@ async function saveDeck(payload) {
         && typeof payload.fullArtOverrides === 'object'
         ? payload.fullArtOverrides
         : {};
+    const headerFadeOverrides = payload.headerFadeOverrides
+        && typeof payload.headerFadeOverrides === 'object'
+        ? payload.headerFadeOverrides
+        : {};
     const known = new Set(config.cards.map((card) => card.id));
 
-    for (const cardId of new Set([...Object.keys(frames), ...Object.keys(fullArtOverrides)])) {
+    for (const cardId of new Set([
+        ...Object.keys(frames),
+        ...Object.keys(fullArtOverrides),
+        ...Object.keys(headerFadeOverrides),
+    ])) {
         if (!known.has(cardId)) {
             throw new HttpError(400, `${deckId} no contiene la carta "${cardId}".`);
         }
@@ -204,10 +216,17 @@ async function saveDeck(payload) {
         }
     }
 
+    for (const [cardId, value] of Object.entries(headerFadeOverrides)) {
+        if (value !== null && typeof value !== 'boolean') {
+            throw new HttpError(400, `${deckId}/${cardId}: headerFade debe ser booleano o null.`);
+        }
+    }
+
     config.cards = config.cards.map((card) => {
         const hasFrame = Object.hasOwn(frames, card.id);
         const hasFullArt = Object.hasOwn(fullArtOverrides, card.id);
-        if (!hasFrame && !hasFullArt) return card;
+        const hasHeaderFade = Object.hasOwn(headerFadeOverrides, card.id);
+        if (!hasFrame && !hasFullArt && !hasHeaderFade) return card;
         const next = { ...card };
         if (hasFrame) {
             const frame = frames[card.id];
@@ -218,6 +237,11 @@ async function saveDeck(payload) {
             const fullArt = fullArtOverrides[card.id];
             if (fullArt === null) delete next.fullArt;
             else next.fullArt = fullArt;
+        }
+        if (hasHeaderFade) {
+            const headerFade = headerFadeOverrides[card.id];
+            if (headerFade === null) delete next.headerFade;
+            else next.headerFade = headerFade;
         }
         return next;
     });

@@ -14,6 +14,7 @@ window.HostfallDeckData = [
     "lore": "El bosque recordó la lluvia, un cuenco de piedra a la vez.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
       "zoom": 0.703,
       "x": 2,

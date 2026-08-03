@@ -12,7 +12,8 @@
         "x": 2,
         "y": -236
       },
-      "fullArt": false
+      "fullArt": false,
+      "headerFade": false
     },
     {
       "id": "iria_voice_last_rain",
