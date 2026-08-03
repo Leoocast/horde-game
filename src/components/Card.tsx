@@ -9,6 +9,7 @@ import {
   battlefieldArtCssVariables,
   battlefieldArtSourceCssVariables,
 } from "../utils/battlefieldArtFrame";
+import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -81,7 +82,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
-  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame } = useCardDetails(card.definitionId);
+  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const usingBattlefieldArt = Boolean(useBattlefieldArt && battlefieldArtUrl);
@@ -141,11 +142,12 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           .join(", "),
       } as CSSProperties)
     : undefined;
-  const style = interactionStyle || useBattlefieldArt
+  const style = interactionStyle || useBattlefieldArt || statsFrame
     ? ({
         ...interactionStyle,
         ...(useBattlefieldArt ? battlefieldArtCssVariables(battlefieldArtFrame) : {}),
         ...(usingBattlefieldArt ? battlefieldArtSourceStyle : {}),
+        ...cardStatFrameCssVariables(statsFrame),
       } as CSSProperties)
     : undefined;
   return (

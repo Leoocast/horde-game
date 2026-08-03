@@ -12003,13 +12003,13 @@
   --card-stat-number: #f5eee0;
   --card-stat-separator: #eadcad;
   isolation: isolate;
-  right: 3.28cqw;
-  bottom: 57.79cqw;
+  right: var(--card-stat-right, 3.28cqw);
+  bottom: var(--card-stat-bottom, 57.79cqw);
   z-index: 40;
   display: flex;
   width: auto;
-  height: 9.32cqw;
-  min-width: 16.19cqw;
+  height: var(--card-stat-height, 9.32cqw);
+  min-width: var(--card-stat-width, 16.19cqw);
   overflow: hidden;
   align-items: center;
   justify-content: center;
@@ -12649,14 +12649,36 @@
    layout explicitly; 58/976 and 136/976 preserve the generator's authored offsets at any size. */
 .card-visual.card-image-full.card-layout-full-art > .card-stat-badge,
 .card-preview-full-card-frame.card-layout-full-art > .card-stat-badge {
-  right: 5.94cqw;
-  bottom: 13.93cqw;
+  right: var(--card-stat-right, 5.94cqw);
+  bottom: var(--card-stat-bottom, 13.93cqw);
   border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
 }
 
 .card-visual.card-image-full.card-layout-full-art > .card-stat-badge::after,
 .card-preview-full-card-frame.card-layout-full-art > .card-stat-badge::after {
   border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
+}
+
+.card-visual.card-image-full.card-layout-full-art > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.08), transparent 46%),
+    linear-gradient(180deg, #284344 0%, #273a39 20%, #141e17 68%, #0e1412 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #182a28 0%, #192824 20%, #131d15 68%, #0c1312 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #3b1e14 0%, #2c221a 20%, #151d14 68%, #12110f 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-vampire > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-vampire > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #2c151c 0%, #281e20 20%, #131d1b 68%, #121112 100%);
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */

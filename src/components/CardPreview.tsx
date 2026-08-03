@@ -6,6 +6,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { cardThemeForDefinition, shouldShowFullCardImage, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
@@ -214,7 +215,7 @@ export function CardPreview() {
         cardTheme ? `card-theme-${cardTheme}` : "",
         usesFullArtLayout ? "card-layout-full-art" : "",
       ].join(" ")}
-      style={hoverStyle}
+      style={{ ...hoverStyle, ...cardStatFrameCssVariables(details.statsFrame) }}
     >
       {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
       {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}

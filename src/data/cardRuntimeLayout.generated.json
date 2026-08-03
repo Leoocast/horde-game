@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0.0",
+  "decks": {
+    "last_rain": {
+      "cards": {
+        "iria_voice_last_rain": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 421.594,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "deep_root_spring": {
+          "fullArt": true
+        }
+      }
+    },
+    "hollow_bell_procession": {
+      "cards": {
+        "last_knell_dead": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 164,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "mass_grave_colossus": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 164,
+            "width": 158,
+            "height": 91
+          }
+        }
+      }
+    },
+    "broken_forge_mutiny": {
+      "cards": {
+        "ember_scrap_runner": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 164,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "varka_revolt_axis": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 440.391,
+            "width": 158,
+            "height": 91
+          }
+        }
+      }
+    },
+    "crimson_court": {
+      "cards": {
+        "crimson_energy": {
+          "fullArt": true
+        },
+        "eternal_feast_countess": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 379.156,
+            "width": 158,
+            "height": 91
+          }
+        }
+      }
+    }
+  }
+}

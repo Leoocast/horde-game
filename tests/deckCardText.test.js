@@ -6,12 +6,14 @@ import {
   cardThemeForDefinition,
   shouldShowFullCardImage,
   useCardDetails,
+  usesFullArtCardImage,
 } from "../src/utils/cardImages";
 import {
   BATTLEFIELD_ART_VIEWPORT,
   battlefieldArtCssVariables,
   battlefieldArtSourceCssVariables,
 } from "../src/utils/battlefieldArtFrame";
+import { cardStatFrameCssVariables } from "../src/utils/cardStatFrame";
 import {
   STUDIO_DECKS,
   buildStudioCards,
@@ -372,7 +374,7 @@ test("the shared printed design keeps the approved compact geometry", () => {
   assert.match(sharedStudio, /headerFadeClass/u);
   assert.match(
     runtimeCss,
-    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?right:\s*3\.28cqw;[\s\S]*?bottom:\s*57\.79cqw;[\s\S]*?height:\s*9\.32cqw;[\s\S]*?min-width:\s*16\.19cqw;/u,
+    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?right:\s*var\(--card-stat-right,\s*3\.28cqw\);[\s\S]*?bottom:\s*var\(--card-stat-bottom,\s*57\.79cqw\);[\s\S]*?height:\s*var\(--card-stat-height,\s*9\.32cqw\);[\s\S]*?min-width:\s*var\(--card-stat-width,\s*16\.19cqw\);/u,
     "hand and hover stats must cover the new printed tab above the common-card type band",
   );
   assert.match(
@@ -428,6 +430,85 @@ test("Card Studio defaults full art to Chronicles, Energy and selected tokens", 
   assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
 
   assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
+});
+
+test("runtime full-art stats use the measured frame of each exported card", () => {
+  const layout = JSON.parse(fs.readFileSync(
+    new URL("../src/data/cardRuntimeLayout.generated.json", import.meta.url),
+    "utf8",
+  ));
+  const exportedDecks = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ];
+
+  for (const deckId of exportedDecks) {
+    const measuredCards = layout.decks?.[deckId]?.cards ?? {};
+    for (const card of buildStudioCards(deckId).filter((candidate) => candidate.fullArt)) {
+      assert.equal(measuredCards[card.id]?.fullArt, true, `${deckId}/${card.id} is missing its full-art runtime layout`);
+      if (card.atk !== null && card.atk !== undefined && card.def !== null && card.def !== undefined) {
+        assert.deepEqual(
+          Object.keys(measuredCards[card.id]?.statsFrame ?? {}).sort(),
+          ["bottom", "height", "right", "width"],
+          `${deckId}/${card.id} is missing its measured stats frame`,
+        );
+      }
+    }
+  }
+
+  const iriaBottom = layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame.bottom;
+  const countessBottom = layout.decks.crimson_court.cards.eternal_feast_countess.statsFrame.bottom;
+  assert.notEqual(iriaBottom, countessBottom, "full-art text flow must be allowed to place stats per card");
+  assert.equal(usesFullArtCardImage("iria_voice_last_rain"), true);
+  assert.equal(usesFullArtCardImage("eternal_feast_countess"), true);
+  assert.deepEqual(
+    useCardDetails("iria_voice_last_rain").statsFrame,
+    layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame,
+  );
+  assert.deepEqual(
+    cardStatFrameCssVariables({ right: 62, bottom: 421.594, width: 158, height: 91 }),
+    {
+      "--card-stat-right": `${(62 / 976) * 100}cqw`,
+      "--card-stat-bottom": `${(421.594 / 976) * 100}cqw`,
+      "--card-stat-width": `${(158 / 976) * 100}cqw`,
+      "--card-stat-height": `${(91 / 976) * 100}cqw`,
+    },
+  );
+
+  const cardImagesSource = fs.readFileSync(
+    new URL("../src/utils/cardImages.ts", import.meta.url),
+    "utf8",
+  );
+  const cardSource = fs.readFileSync(
+    new URL("../src/components/Card.tsx", import.meta.url),
+    "utf8",
+  );
+  const previewSource = fs.readFileSync(
+    new URL("../src/components/CardPreview.tsx", import.meta.url),
+    "utf8",
+  );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
+  const layoutMeasureSource = fs.readFileSync(
+    new URL("../scripts/card-runtime-layout.mjs", import.meta.url),
+    "utf8",
+  );
+  const exporterSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/export_cards.cjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(cardImagesSource, /cardRuntimeLayout\.generated\.json/u);
+  assert.match(cardSource, /cardStatFrameCssVariables\(statsFrame\)/u);
+  assert.match(previewSource, /cardStatFrameCssVariables\(details\.statsFrame\)/u);
+  assert.match(runtimeCss, /right:\s*var\(--card-stat-right,\s*3\.28cqw\)/u);
+  assert.match(runtimeCss, /bottom:\s*var\(--card-stat-bottom,\s*57\.79cqw\)/u);
+  assert.match(layoutMeasureSource, /cardBounds\.bottom - statsBounds\.bottom/u);
+  assert.match(exporterSource, /card-runtime-layout\.mjs/u, "card export must refresh runtime full-art frames");
+  assert.match(exporterSource, /measureDeckRuntimeLayout\(page, deckId\)/u);
 });
 
 test("Card Studio allows a per-card full-art override", () => {

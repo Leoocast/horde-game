@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "last_rain": {
-      "inputHash": "0be81b4aa531103111fe0deb4769dc1d037d76d0009f2fba2f94464464102aff",
+      "inputHash": "331885e89342ff265b622f1bde3f5a2b0ef854d129b2f39a65b6edf6fbdcd04e",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -18,7 +18,7 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+          "sha256": "b62d57e0a004888934fc8d809862073c9e2efb27da921751556c77aac6d9cbdf"
         },
         {
           "path": "dev/tools/Decks/last_rain/deck-data.generated.js",
@@ -220,7 +220,7 @@
       ]
     },
     "hollow_bell_procession": {
-      "inputHash": "1881f611f12143ac0cc925bf9df6a0e1f13c5a1988878fabbb6b48c91a284b36",
+      "inputHash": "e8185894e0162b9180a1679b527010acacd388347277c005edd38e6c4c0c8fce",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -236,7 +236,7 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+          "sha256": "b62d57e0a004888934fc8d809862073c9e2efb27da921751556c77aac6d9cbdf"
         },
         {
           "path": "dev/tools/Decks/hollow_bell_procession/deck-data.generated.js",
@@ -482,7 +482,7 @@
       ]
     },
     "broken_forge_mutiny": {
-      "inputHash": "c8ea0ee62f320749af0fe1d46dc94524480e02db38c1d33ff8b4aa7680cca7c0",
+      "inputHash": "c4fe5f31635772d8f5925d3e8a7659e7c828f8dc9b9846e68a28232c9148f41f",
       "sources": [
         {
           "path": "dev/tools/Decks/broken_forge_mutiny/deck-data.generated.js",
@@ -514,7 +514,7 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+          "sha256": "b62d57e0a004888934fc8d809862073c9e2efb27da921751556c77aac6d9cbdf"
         },
         {
           "path": "public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
@@ -744,7 +744,7 @@
       ]
     },
     "crimson_court": {
-      "inputHash": "ca3def1dae36d43b8753b45732a056e12effae0a809769d5c615220e6097072c",
+      "inputHash": "39804c9991b25357d508d3676e36aa9ff49fd626f45d9afe9e53f29ffc590c62",
       "sources": [
         {
           "path": "dev/tools/Decks/crimson_court/deck-data.generated.js",
@@ -776,7 +776,7 @@
         },
         {
           "path": "dev/tools/Decks/export_cards.cjs",
-          "sha256": "291e65845cc1433214f32b08cd33eed9101297b4f0dbddb13af11f8d3537638f"
+          "sha256": "b62d57e0a004888934fc8d809862073c9e2efb27da921751556c77aac6d9cbdf"
         },
         {
           "path": "public/cards/crimson_court/art/black_vein_executioner.webp",
