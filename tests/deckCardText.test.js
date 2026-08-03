@@ -283,6 +283,11 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioShell, /id="header-fade-toggle"/u);
   assert.match(studioShell, /id="game-preview"/u);
   assert.match(studioShell, /id="game-art-controls"/u);
+  assert.match(
+    studioShell,
+    /\.game-preview-wrap\s*\{[^}]*width:\s*212px;[^}]*max-width:\s*100%;/u,
+    "the Studio game preview must use the battlefield card's real display width",
+  );
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
   assert.match(studioApp, /battlefieldArtFrames/u);
@@ -479,12 +484,26 @@ test("battlefield art framing is canonical, bounded and independent from print f
     new URL("../src/components/Card.tsx", import.meta.url),
     "utf8",
   );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
   assert.match(
     battlefieldSource,
     /useBattlefieldArt=\{!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\}/u,
   );
   assert.match(cardSource, /usingBattlefieldArt\s*\? battlefieldArtUrl/u);
   assert.match(cardSource, /card-battlefield-art-fallback/u);
+  assert.match(
+    runtimeCss,
+    /\.battlefield-row-overflow \.battlefield-card-slot\s*\{[^}]*height:\s*calc\(var\(--battlefield-card-width\) \* 0\.8893442623\);/u,
+    "the runtime crop must use the exact 488x434 Studio viewport ratio",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-battlefield-cropped:not\(\.card-battlefield-art-fallback\) > img\s*\{[^}]*clip-path:\s*none;/u,
+    "the runtime crop must neutralize the full-card image clip used outside the battlefield",
+  );
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {

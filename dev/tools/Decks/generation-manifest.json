@@ -129,7 +129,7 @@
         {
           "id": "first_dew_gatherers",
           "path": "public/cards/last_rain/first_dew_gatherers.png",
-          "sha256": "1ac5ec523917f231105c5272379f2874f7a05cd3313252f9deb03b9d53e4edd1",
+          "sha256": "5ce5740deb0fbbc4b4b628c86362c2b110517507afee21f49fdf6016d13cf81a",
           "width": 976,
           "height": 1360
         },
@@ -213,7 +213,7 @@
         {
           "id": "deep_root_spring",
           "path": "public/cards/last_rain/deep_root_spring.png",
-          "sha256": "8c99c7ffb387d3eeb90f1ba570b3a53ca25f114a4cb54f08be15e2e106446e80",
+          "sha256": "23e8247a44cadb8a92872f9f9819cf3d2c42ce3bfb7146d0da28d38aa7666291",
           "width": 976,
           "height": 1360
         }

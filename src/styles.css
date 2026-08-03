@@ -6307,7 +6307,8 @@
   }
 
   .battlefield-row-overflow .battlefield-card-slot {
-    height: calc(var(--battlefield-card-width) * 0.89);
+    /* Keep the runtime viewport identical to Card Studio's canonical 488x434 crop. */
+    height: calc(var(--battlefield-card-width) * 0.8893442623);
   }
 
   .battlefield-side-player .battlefield-row-overflow .card-keyword-stack {
@@ -6359,6 +6360,7 @@
     max-width: none;
     object-fit: cover;
     object-position: center;
+    clip-path: none;
     transform: translate3d(var(--battlefield-art-x, 0cqw), var(--battlefield-art-y, 0cqw), 0)
       scale(var(--battlefield-art-zoom, 1));
     transform-origin: center;
