@@ -1,9 +1,23 @@
 import { DECK_REGISTRY } from "../data/decks";
 import type { DeckTheme } from "../data/deckCatalog";
+import gameArtRaw from "../data/cardStudioGameArt.generated.json";
+import type { BattlefieldArtFrame } from "./battlefieldArtFrame";
 
 export type CardDetails = {
   imageUrl?: string;
+  battlefieldArtUrl?: string;
+  battlefieldArtFrame?: BattlefieldArtFrame;
 };
+
+type GeneratedGameArt = {
+  schemaVersion: string;
+  cards: Record<string, {
+    artUrl: string;
+    battlefieldArtFrame?: BattlefieldArtFrame;
+  }>;
+};
+
+const gameArt = gameArtRaw as GeneratedGameArt;
 
 const showFullCardImageById = new Map<string, boolean>(
   DECK_REGISTRY.flatMap((entry) =>
@@ -29,7 +43,11 @@ const detailsById = new Map<string, CardDetails>([
   ...DECK_REGISTRY.flatMap((entry) =>
     Object.entries(entry.images.cards).flatMap(([id, image]) =>
       image.imageUrl
-        ? [[id, { imageUrl: image.imageUrl }] as [string, CardDetails]]
+        ? [[id, {
+            imageUrl: image.imageUrl,
+            battlefieldArtUrl: gameArt.cards[id]?.artUrl,
+            battlefieldArtFrame: gameArt.cards[id]?.battlefieldArtFrame,
+          }] as [string, CardDetails]]
         : [],
     ),
   ),

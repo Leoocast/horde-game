@@ -4,6 +4,7 @@ import { localizedCardName, localizedTraitLabel, naturalCaseTraitLabel } from ".
 import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
 import { cardThemeForDefinition, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { battlefieldArtCssVariables } from "../utils/battlefieldArtFrame";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -43,12 +44,13 @@ type Props = {
   showCroppedTitle?: boolean;
   clipActionSweep?: boolean;
   preferNativeImageRendering?: boolean;
+  useBattlefieldArt?: boolean;
   face?: ReactNode;
   dragging?: boolean;
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -75,10 +77,15 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
-  const { imageUrl } = useCardDetails(card.definitionId);
+  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame } = useCardDetails(card.definitionId);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
-  const displayImageUrl = highRes ? highResImageUrl : imageUrl;
+  const usingBattlefieldArt = Boolean(useBattlefieldArt && battlefieldArtUrl);
+  const displayImageUrl = usingBattlefieldArt
+    ? battlefieldArtUrl
+    : highRes
+      ? highResImageUrl
+      : imageUrl;
   const stabilizing = !suppressStabilizing && card.zone === "field" && card.kinds.includes("ECHO") && card.stabilizing;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   const draggingGlow = dragging
@@ -95,7 +102,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const effectGlow = showEffectAvailable
     ? "inset 0 0 0 1px rgba(255,221,134,0.82), 0 0 10px rgba(255,184,64,0.82), 0 0 24px rgba(255,144,32,0.5)"
     : "";
-  const style = accentColor || showActionGlow || showSelectedVisual || showEffectAvailable || dragging
+  const interactionStyle = accentColor || showActionGlow || showSelectedVisual || showEffectAvailable || dragging
     ? ({
         borderColor: dragging ? "#ff6a00" : showSelectedVisual ? "#e8e2cd" : showEffectAvailable ? "rgb(255 211 112 / 0.95)" : accentColor ?? "rgb(190 183 111 / 0.88)",
         "--glow-border-width": dragging ? `${glowBorderWidth}px` : undefined,
@@ -107,6 +114,12 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         ]
           .filter(Boolean)
           .join(", "),
+      } as CSSProperties)
+    : undefined;
+  const style = interactionStyle || useBattlefieldArt
+    ? ({
+        ...interactionStyle,
+        ...(useBattlefieldArt ? battlefieldArtCssVariables(battlefieldArtFrame) : {}),
       } as CSSProperties)
     : undefined;
   return (
@@ -155,7 +168,9 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         compact ? "min-h-24" : "",
         cropTopHalf ? "battlefield-land-card-crop" : "",
         showFullImage ? "card-image-full" : "",
-        preferNativeImageRendering ? "card-image-native-hd" : "",
+        preferNativeImageRendering || useBattlefieldArt ? "card-image-native-hd" : "",
+        useBattlefieldArt ? "card-battlefield-cropped" : "",
+        useBattlefieldArt && !usingBattlefieldArt ? "card-battlefield-art-fallback" : "",
         cardTheme ? `card-theme-${cardTheme}` : "",
         usesFullArtCardImage(card.definitionId) ? "card-layout-full-art" : "",
         stats.buffed ? "card-stats-buffed" : "",

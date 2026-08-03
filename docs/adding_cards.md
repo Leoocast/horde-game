@@ -405,6 +405,12 @@ también es la única fuente de flavor y de su visibilidad impresa. `studio.conf
 únicamente datos de presentación como `artCrop` y `typeLineEs`. No copiar `gameText`, `flavorText`
 ni `showFlavorText` dentro de la configuración del estudio.
 
+Card Studio deriva del mismo `artCrop` la URL de arte que usan los Ecos recortados del campo. Los
+ajustes opcionales de zoom y traslación para esa vista se guardan en
+`dev/tools/Decks/<deck>/game-art.config.json` y se proyectan a
+`src/data/cardStudioGameArt.generated.json`; ninguno de los dos se edita a mano. Este encuadre no
+reemplaza `artFrame` ni invalida por sí solo el PNG imprimible.
+
 Después de editar cualquiera de esas fuentes:
 
 ```powershell

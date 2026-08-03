@@ -2,14 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
-import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
+import {
+  cardThemeForDefinition,
+  shouldShowFullCardImage,
+  useCardDetails,
+} from "../src/utils/cardImages";
+import {
+  BATTLEFIELD_ART_VIEWPORT,
+  battlefieldArtCssVariables,
+} from "../src/utils/battlefieldArtFrame";
 import {
   STUDIO_DECKS,
   buildStudioCards,
+  generatedGameArtData,
   generatedStudioData,
   loadStudioConfig,
+  normalizeBattlefieldArtFrame,
   resolveStudioFullArt,
   resolveStudioHeaderFade,
+  studioGameArt,
+  studioSourceFiles,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
 
@@ -269,11 +281,18 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.doesNotMatch(studioShell, /El motivo es la textura del mazo/u);
   assert.match(studioShell, /id="full-art-toggle"/u);
   assert.match(studioShell, /id="header-fade-toggle"/u);
+  assert.match(studioShell, /id="game-preview"/u);
+  assert.match(studioShell, /id="game-art-controls"/u);
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
+  assert.match(studioApp, /battlefieldArtFrames/u);
+  assert.match(studioServer, /fullArtOverrides: true/u);
+  assert.match(studioServer, /headerFadeOverrides: true/u);
+  assert.match(studioServer, /battlefieldArtFrames: true/u);
   assert.match(
     studioServer,
-    /capabilities: \{ fullArtOverrides: true, headerFadeOverrides: true \}/u,
+    /path\.resolve\(ROOT, 'public', `\.\$\{decoded\}`\)/u,
+    "Card Studio must serve Vite-style /cards URLs from public/",
   );
   assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
   assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
@@ -399,6 +418,73 @@ test("Card Studio allows a per-card common header-fade override", () => {
     () => resolveStudioHeaderFade("card", { headerFade: "yes" }, true),
     /headerFade debe ser booleano/u,
   );
+});
+
+test("battlefield art framing is canonical, bounded and independent from print framing", () => {
+  assert.deepEqual(BATTLEFIELD_ART_VIEWPORT, { width: 488, height: 434 });
+  assert.equal(normalizeBattlefieldArtFrame("card", null), null);
+  assert.equal(normalizeBattlefieldArtFrame("card", { zoom: 1, x: 0, y: 0 }), null);
+  assert.deepEqual(
+    normalizeBattlefieldArtFrame("card", { zoom: 1.25, x: 49, y: -24 }),
+    { zoom: 1.25, x: 49, y: -24 },
+  );
+  assert.throws(
+    () => normalizeBattlefieldArtFrame("card", { zoom: 4.01, x: 0, y: 0 }),
+    /zoom debe estar entre 0\.2 y 4/u,
+  );
+  assert.throws(
+    () => normalizeBattlefieldArtFrame("card", { zoom: 1, x: 489, y: 0 }),
+    /x debe estar entre -488 y 488/u,
+  );
+  assert.deepEqual(
+    battlefieldArtCssVariables({ zoom: 1.5, x: 48.8, y: -48.8 }),
+    {
+      "--battlefield-art-zoom": 1.5,
+      "--battlefield-art-x": "10cqw",
+      "--battlefield-art-y": "-10cqw",
+    },
+  );
+
+  const runtimeCards = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ].flatMap((deckId) => buildStudioCards(deckId));
+  assert.equal(runtimeCards.length, 61);
+  for (const card of runtimeCards) {
+    const details = useCardDetails(card.id);
+    assert.match(details.battlefieldArtUrl ?? "", /^\/cards\/.+\/art\//u);
+    assert.match(details.imageUrl ?? "", /^\/cards\/.+\.png$/u);
+  }
+
+  const generated = JSON.parse(generatedGameArtData());
+  assert.equal(Object.keys(generated.cards).length, 74);
+  assert.match(studioGameArt("last_rain").first_dew_gatherers.artUrl, /\/art\//u);
+
+  for (const deckId of Object.keys(STUDIO_DECKS)) {
+    const printSources = studioSourceFiles(deckId).map((source) => source.replaceAll("\\", "/"));
+    assert.equal(printSources.some((source) => source.endsWith("/game-art.config.json")), false);
+    assert.equal(
+      printSources.some((source) => source.endsWith("/cardStudioGameArt.generated.json")),
+      false,
+    );
+  }
+
+  const battlefieldSource = fs.readFileSync(
+    new URL("../src/components/Battlefield.tsx", import.meta.url),
+    "utf8",
+  );
+  const cardSource = fs.readFileSync(
+    new URL("../src/components/Card.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    battlefieldSource,
+    /useBattlefieldArt=\{!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\}/u,
+  );
+  assert.match(cardSource, /usingBattlefieldArt\s*\? battlefieldArtUrl/u);
+  assert.match(cardSource, /card-battlefield-art-fallback/u);
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {

@@ -11,8 +11,12 @@ Para un deck jugable:
 src/data/decks/**/<deck>.json        reglas, nombre, coste, stats, cantidad y flavor
 dev/tools/Decks/<deck>/studio.config.json
                                       arte, línea de tipo y ajustes visuales
+dev/tools/Decks/<deck>/game-art.config.json
+                                      encuadre del arte fuente en el campo
 scripts/card-studio-data.mjs          combina y valida ambas fuentes
 deck-data.generated.js                proyección generada; no se edita
+src/data/cardStudioGameArt.generated.json
+                                      proyección del arte fuente para runtime; no se edita
 index.html                            renderer visual
 public/cards/<deck>/*.png             salida consumida por el juego
 dev/tools/Decks/generation-manifest.json hashes de entradas y salidas; no se distribuye
@@ -79,11 +83,19 @@ Lo que se guarda son datos, no HTML:
 - `fullArt` por carta como override booleano del diseño predeterminado.
 - `headerFade` por carta para mostrar u ocultar el fade superior de las cartas comunes. No altera
   las cartas *full art* ni el fade inferior.
+- `battlefieldArtFrame` por Eco en `game-art.config.json`: zoom y traslación sobre una ventana
+  canónica de 488×434 px. Este encuadre sólo afecta la carta recortada del campo.
 - `motif` por deck, con los slots `head`, `band` y `stats`; cada slot admite `x`, `y`, `zoom` y
   `rotation`.
 
 Una carta sin ajustes no emite datos de encuadre. El estudio no toca los `index.html`: la vista previa es un iframe con el mismo documento
 que fotografía el exportador, así que preview y PNG no pueden divergir.
+
+La pestaña `Arte` separa `Encuadre impreso` de `Encuadre en juego`. La segunda vista aparece sólo
+para Ecos, usa directamente el arte bajo `public/cards/<deck>/art/` y conserva el PNG final para
+mano, hover, detalles, colección y animaciones. En ventanas estrechas baja debajo de la carta para
+no crear overflow. `game-art.config.json` y su proyección runtime están excluidos de la huella de
+impresión: guardar únicamente este encuadre no vuelve obsoletos los PNG.
 
 La imagen que se carga se escribe en `public/cards/<deck>/art/<carta>.<ext>` y `artCrop` pasa a
 apuntar ahí. Si el arte anterior tenía otra extensión, el archivo viejo se conserva: hay que

@@ -4,6 +4,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+export const GAME_ART_DATA_PATH = path.join(ROOT, "src", "data", "cardStudioGameArt.generated.json");
+export const BATTLEFIELD_ART_VIEWPORT = Object.freeze({ width: 488, height: 434 });
 
 export const STUDIO_DECKS = Object.freeze({
   last_rain: {
@@ -101,6 +103,7 @@ function deckPaths(deckId) {
     ...definition,
     directory,
     config: path.join(directory, "studio.config.json"),
+    gameArtConfig: path.join(directory, "game-art.config.json"),
     generatedData: path.join(directory, "deck-data.generated.js"),
     index: path.join(directory, "index.html"),
     publicDirectory: absolute(definition.publicDirectory),
@@ -245,6 +248,69 @@ function validatePresentationCards(deckId, cards) {
   }
 }
 
+export function normalizeBattlefieldArtFrame(label, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${label}: battlefieldArtFrame debe ser un objeto {zoom, x, y}.`);
+  }
+  const unknown = Object.keys(raw).filter((key) => !["zoom", "x", "y"].includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`${label}: battlefieldArtFrame no reconoce ${unknown.join(", ")}.`);
+  }
+  const zoom = finiteNumber(`${label}.battlefieldArtFrame.zoom`, raw.zoom, 1);
+  const x = finiteNumber(`${label}.battlefieldArtFrame.x`, raw.x, 0);
+  const y = finiteNumber(`${label}.battlefieldArtFrame.y`, raw.y, 0);
+  if (zoom < 0.2 || zoom > 4) {
+    throw new Error(`${label}: battlefieldArtFrame.zoom debe estar entre 0.2 y 4.`);
+  }
+  if (x < -BATTLEFIELD_ART_VIEWPORT.width || x > BATTLEFIELD_ART_VIEWPORT.width) {
+    throw new Error(
+      `${label}: battlefieldArtFrame.x debe estar entre -${BATTLEFIELD_ART_VIEWPORT.width} y ${BATTLEFIELD_ART_VIEWPORT.width}.`,
+    );
+  }
+  if (y < -BATTLEFIELD_ART_VIEWPORT.height || y > BATTLEFIELD_ART_VIEWPORT.height) {
+    throw new Error(
+      `${label}: battlefieldArtFrame.y debe estar entre -${BATTLEFIELD_ART_VIEWPORT.height} y ${BATTLEFIELD_ART_VIEWPORT.height}.`,
+    );
+  }
+  if (zoom === 1 && x === 0 && y === 0) return null;
+  return { zoom, x, y };
+}
+
+export function normalizeGameArtConfig(deckId, raw, knownCardIds) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${deckId}: game-art.config.json debe ser un objeto.`);
+  }
+  if (raw.schemaVersion !== "1.0.0") {
+    throw new Error(
+      `${deckId}: schemaVersion de game-art.config.json no soportada: ${raw.schemaVersion}.`,
+    );
+  }
+  if (!raw.cards || typeof raw.cards !== "object" || Array.isArray(raw.cards)) {
+    throw new Error(`${deckId}: game-art.config.json debe declarar cards como objeto.`);
+  }
+  const known = new Set(knownCardIds);
+  const cards = {};
+  for (const [cardId, entry] of Object.entries(raw.cards)) {
+    if (!known.has(cardId)) {
+      throw new Error(`${deckId}: game-art.config.json contiene la carta desconocida ${cardId}.`);
+    }
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`${deckId}/${cardId}: la entrada de game-art debe ser un objeto.`);
+    }
+    const unknown = Object.keys(entry).filter((key) => key !== "battlefieldArtFrame");
+    if (unknown.length > 0) {
+      throw new Error(`${deckId}/${cardId}: game-art no reconoce ${unknown.join(", ")}.`);
+    }
+    const frame = normalizeBattlefieldArtFrame(
+      `${deckId}/${cardId}`,
+      entry.battlefieldArtFrame,
+    );
+    if (frame) cards[cardId] = { battlefieldArtFrame: frame };
+  }
+  return { schemaVersion: "1.0.0", cards };
+}
+
 export function resolveStudioFullArt(label, presentation, fallback) {
   if (!Object.hasOwn(presentation, "fullArt")) return Boolean(fallback);
   if (typeof presentation.fullArt !== "boolean") {
@@ -269,6 +335,57 @@ export function loadStudioConfig(deckId) {
   }
   validatePresentationCards(deckId, config.cards);
   return { config, paths };
+}
+
+export function loadGameArtConfig(deckId) {
+  const paths = deckPaths(deckId);
+  const { config: studioConfig } = loadStudioConfig(deckId);
+  const config = normalizeGameArtConfig(
+    deckId,
+    readJson(paths.gameArtConfig),
+    studioConfig.cards.map((card) => card.id),
+  );
+  return { config, paths };
+}
+
+function publicArtUrl(deckId, cardId, artCrop, paths) {
+  if (!artCrop) throw new Error(`${deckId}/${cardId}: falta artCrop para el juego.`);
+  const artPath = path.resolve(paths.directory, artCrop);
+  const publicRoot = absolute("public");
+  if (artPath !== publicRoot && !artPath.startsWith(publicRoot + path.sep)) {
+    throw new Error(`${deckId}/${cardId}: artCrop debe vivir bajo public/.`);
+  }
+  if (!fs.existsSync(artPath)) {
+    throw new Error(`${deckId}/${cardId}: no existe el arte ${relative(artPath)}.`);
+  }
+  return `/${path.relative(publicRoot, artPath).replaceAll(path.sep, "/")}`;
+}
+
+export function studioGameArt(deckId) {
+  const { config: studioConfig, paths } = loadStudioConfig(deckId);
+  const { config: gameArtConfig } = loadGameArtConfig(deckId);
+  const gameEntries = gameArtConfig.cards;
+  return Object.fromEntries(studioConfig.cards.map((card) => {
+    const artCrop = card.artCrop ?? card.art_crop;
+    const frame = gameEntries[card.id]?.battlefieldArtFrame ?? null;
+    return [card.id, {
+      artUrl: publicArtUrl(deckId, card.id, artCrop, paths),
+      ...(frame ? { battlefieldArtFrame: frame } : {}),
+    }];
+  }));
+}
+
+export function generatedGameArtData() {
+  const cards = {};
+  for (const deckId of Object.keys(STUDIO_DECKS)) {
+    for (const [cardId, presentation] of Object.entries(studioGameArt(deckId))) {
+      if (Object.hasOwn(cards, cardId)) {
+        throw new Error(`El id ${cardId} está duplicado entre estudios.`);
+      }
+      cards[cardId] = presentation;
+    }
+  }
+  return `${JSON.stringify({ schemaVersion: "1.0.0", cards }, null, 2)}\n`;
 }
 
 export function buildStudioCards(deckId) {
@@ -398,6 +515,14 @@ export function syncStudioData({ check = false, deckIds = Object.keys(STUDIO_DEC
     if (current === expected) continue;
     stale.push(relative(paths.generatedData));
     if (!check) fs.writeFileSync(paths.generatedData, expected);
+  }
+  const expectedGameArt = generatedGameArtData();
+  const currentGameArt = fs.existsSync(GAME_ART_DATA_PATH)
+    ? fs.readFileSync(GAME_ART_DATA_PATH, "utf8")
+    : null;
+  if (currentGameArt !== expectedGameArt) {
+    stale.push(relative(GAME_ART_DATA_PATH));
+    if (!check) fs.writeFileSync(GAME_ART_DATA_PATH, expectedGameArt);
   }
   return stale;
 }

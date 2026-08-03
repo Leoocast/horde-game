@@ -206,6 +206,12 @@ stats más abajo. No crear variantes copiadas por deck.
 El fade superior de las cartas comunes se controla por carta con `headerFade`; no modifica las
 variantes *full art* ni su fade inferior.
 
+Los Ecos recortados del campo usan directamente el arte fuente cargado en Card Studio. Su encuadre
+independiente (`battlefieldArtFrame`) vive en `dev/tools/Decks/<deck>/game-art.config.json` y se
+proyecta a `src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. Este
+sidecar no forma parte de la huella de impresión: mano, hover, detalles, colección y animaciones
+siguen usando el PNG completo.
+
 Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
 continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
 carta. El renderer imprime un icono de ilustración seguido del nombre del artista dentro del marco.

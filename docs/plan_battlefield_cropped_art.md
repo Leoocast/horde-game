@@ -1,6 +1,6 @@
 # Plan para 2026-08-03: encuadre de arte en cartas recortadas
 
-Estado: propuesto, todavía no implementado.
+Estado: implementado el 2026-08-03. Los ajustes visuales por carta se realizan desde Card Studio.
 
 ## Objetivo
 
@@ -63,7 +63,7 @@ de la huella de los PNG imprimibles.
 Card Studio generará además una proyección comprobable para runtime, por ejemplo:
 
 ```text
-src/data/generated/card-studio-game-art.generated.json
+src/data/cardStudioGameArt.generated.json
 ```
 
 Esa proyección contendrá por carta la URL pública de `artCrop` y `battlefieldArtFrame`. El juego no
@@ -192,15 +192,13 @@ que hoy presenta la carta completa.
 - Guardar sólo un encuadre de juego no altera ni invalida la exportación imprimible.
 - Una carta sin configuración usa un default seguro; una carta sin arte usa el PNG completo.
 
-## Preguntas para confirmar antes de implementar
+## Decisiones confirmadas
 
-1. ¿El nuevo arte recortado debe aplicarse únicamente a los Ecos en el campo? Recomendación: sí;
-   Energías y otros permanentes conservan su presentación actual.
-2. ¿Mano, hover y ventana de detalles deben seguir mostrando el PNG completo? Recomendación: sí,
-   para conservar toda la información imprimible.
-3. ¿Está bien que los controles muestren píxeles sobre una referencia fija de `488 × 434` aunque
-   internamente el juego los convierta a proporciones? Recomendación: sí, porque mantiene la edición
-   precisa y el resultado responsive.
+1. El arte fuente recortado se aplica únicamente a los Ecos en el campo. Energías y otros
+   permanentes conservan su presentación actual.
+2. Mano, hover, detalles, colección y animaciones mantienen el PNG completo.
+3. Los controles usan píxeles sobre una referencia fija de `488 × 434`; runtime los convierte a
+   proporciones para conservar el encuadre al cambiar de tamaño.
 
 ## Sugerencias adicionales
 

@@ -10,6 +10,8 @@
     "use strict";
 
     const CARD_WIDTH = 976;
+    const GAME_ART_WIDTH = 488;
+    const GAME_ART_HEIGHT = 434;
     const DEFAULT_FRAME = Object.freeze({ zoom: 1, x: 0, y: 0 });
     const MOTIF_SLOTS = [
         { key: "head", label: "Cabecera" },
@@ -36,6 +38,13 @@
     const cardList = el("card-list");
     const preview = el("preview");
     const artControls = el("art-controls");
+    const gameArtSection = el("game-art-section");
+    const gameArtControls = el("game-art-controls");
+    const gamePreviewPanel = el("game-preview-panel");
+    const gamePreview = el("game-preview");
+    const gamePreviewImage = el("game-preview-image");
+    const gamePreviewTitle = el("game-preview-title");
+    const gamePreviewStats = el("game-preview-stats");
     const motifControls = el("motif-controls");
     const slotPicker = el("slot-picker");
     const artFile = el("art-file");
@@ -69,6 +78,7 @@
     let lastRegenerated = [];
     let supportsFullArtOverrides = false;
     let supportsHeaderFadeOverrides = false;
+    let supportsBattlefieldArtFrames = false;
 
     const deck = () => decks.find((entry) => entry.id === deckId) ?? null;
     const card = () => deck()?.cards.find((entry) => entry.id === cardId) ?? null;
@@ -90,6 +100,11 @@
                         (entry) => [entry.id, entry.headerFadeOverride ?? null]
                     )
                 ),
+                battlefieldArtFrames: new Map(
+                    (current?.cards ?? []).map(
+                        (entry) => [entry.id, entry.battlefieldArtFrame ?? null]
+                    )
+                ),
                 motif: structuredClone(current?.motif ?? null)
             });
         }
@@ -97,6 +112,10 @@
     }
 
     const frameOf = (id) => ({ ...DEFAULT_FRAME, ...(draft().artFrames.get(id) ?? {}) });
+    const battlefieldFrameOf = (id) => ({
+        ...DEFAULT_FRAME,
+        ...(draft().battlefieldArtFrames.get(id) ?? {})
+    });
     const isAdjusted = (frame) => frame.zoom !== 1 || frame.x !== 0 || frame.y !== 0;
 
     function fullArtOf(id) {
@@ -130,12 +149,35 @@
             (entry) => (local.headerFadeOverrides.get(entry.id) ?? null)
                 === (entry.headerFadeOverride ?? null)
         );
-        return !(sameMotif && sameFrames && sameFullArt && sameHeaderFade);
+        const sameBattlefieldFrames = current.cards.every(
+            (entry) => JSON.stringify(local.battlefieldArtFrames.get(entry.id) ?? null)
+                === JSON.stringify(entry.battlefieldArtFrame ?? null)
+        );
+        return !(
+            sameMotif
+            && sameFrames
+            && sameFullArt
+            && sameHeaderFade
+            && sameBattlefieldFrames
+        );
     }
 
     function setFrame(id, frame) {
         draft().artFrames.set(id, isAdjusted(frame) ? frame : null);
         applyFrameToPreview(id);
+        renderCardList();
+        renderDirty();
+    }
+
+    function setBattlefieldFrame(id, frame) {
+        if (!supportsBattlefieldArtFrames) return;
+        const next = {
+            zoom: Math.min(4, Math.max(0.2, Number(frame.zoom))),
+            x: Math.min(GAME_ART_WIDTH, Math.max(-GAME_ART_WIDTH, Math.round(frame.x))),
+            y: Math.min(GAME_ART_HEIGHT, Math.max(-GAME_ART_HEIGHT, Math.round(frame.y)))
+        };
+        draft().battlefieldArtFrames.set(id, isAdjusted(next) ? next : null);
+        renderGamePreview();
         renderCardList();
         renderDirty();
     }
@@ -217,6 +259,34 @@
         }
     }
 
+    function renderGamePreview() {
+        const current = card();
+        gamePreviewPanel.hidden = viewMode !== "focus"
+            || !current
+            || !current.battlefieldArtEligible;
+        if (!current) return;
+
+        const frame = battlefieldFrameOf(cardId);
+        gamePreview.style.setProperty(
+            "--game-art-x",
+            `${(frame.x / GAME_ART_WIDTH) * 100}cqw`
+        );
+        gamePreview.style.setProperty(
+            "--game-art-y",
+            `${(frame.y / GAME_ART_WIDTH) * 100}cqw`
+        );
+        gamePreview.style.setProperty("--game-art-zoom", frame.zoom);
+        gamePreview.dataset.deck = deckId;
+        if (current.battlefieldArtUrl) gamePreviewImage.src = current.battlefieldArtUrl;
+        else gamePreviewImage.removeAttribute("src");
+        gamePreviewImage.alt = current.nombre || current.id;
+        gamePreviewTitle.textContent = current.nombre || current.id;
+        const hasStats = current.atk !== null && current.atk !== undefined
+            && current.def !== null && current.def !== undefined;
+        gamePreviewStats.hidden = !hasStats;
+        gamePreviewStats.textContent = hasStats ? `${current.atk} / ${current.def}` : "";
+    }
+
     function applyMotifToPreview() {
         const doc = previewDocument();
         if (!doc) return;
@@ -250,6 +320,7 @@
         }
         const container = doc.getElementById("cards-container");
         if (container) container.className = `cards-grid scale-${scale}`;
+        renderGamePreview();
     }
 
     /* Factor real entre píxeles de pantalla y píxeles de la carta (la rejilla usa zoom). */
@@ -499,6 +570,57 @@
         artControls.append(clear);
     }
 
+    function renderGameArtControls() {
+        gameArtControls.replaceChildren();
+        const current = card();
+        gameArtSection.hidden = !current?.battlefieldArtEligible;
+        if (!current?.battlefieldArtEligible) return;
+        const frame = battlefieldFrameOf(cardId);
+
+        gameArtControls.append(
+            control({
+                label: "Zoom en juego", value: frame.zoom, min: 0.2, max: 4, step: 0.01,
+                unit: "\u00d7", isDefault: 1,
+                onInput: (value) => setBattlefieldFrame(
+                    cardId,
+                    { ...battlefieldFrameOf(cardId), zoom: value }
+                )
+            }),
+            control({
+                label: "Horizontal en juego", value: frame.x,
+                min: -GAME_ART_WIDTH, max: GAME_ART_WIDTH, step: 1,
+                unit: " px", isDefault: 0,
+                onInput: (value) => setBattlefieldFrame(
+                    cardId,
+                    { ...battlefieldFrameOf(cardId), x: value }
+                )
+            }),
+            control({
+                label: "Vertical en juego", value: frame.y,
+                min: -GAME_ART_HEIGHT, max: GAME_ART_HEIGHT, step: 1,
+                unit: " px", isDefault: 0,
+                onInput: (value) => setBattlefieldFrame(
+                    cardId,
+                    { ...battlefieldFrameOf(cardId), y: value }
+                )
+            })
+        );
+
+        for (const input of gameArtControls.querySelectorAll("input, button")) {
+            input.disabled = !supportsBattlefieldArtFrames;
+        }
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.style.width = "100%";
+        clear.disabled = !supportsBattlefieldArtFrames || !isAdjusted(frame);
+        clear.textContent = "Restablecer encuadre en juego";
+        clear.addEventListener("click", () => {
+            setBattlefieldFrame(cardId, { ...DEFAULT_FRAME });
+            renderGameArtControls();
+        });
+        gameArtControls.append(clear);
+    }
+
     /* Reescribe sólo los valores, para no perder el foco mientras se arrastra. */
     function syncArtInputs() {
         const frame = frameOf(cardId);
@@ -510,6 +632,27 @@
             field.querySelector(".field-value").textContent = `${entry[0]}${entry[1]}`;
             const reset = field.querySelector(".reset-dot");
             const atDefault = field.dataset.control === "Zoom" ? entry[0] === 1 : entry[0] === 0;
+            reset.disabled = atDefault;
+            reset.style.visibility = atDefault ? "hidden" : "visible";
+        }
+    }
+
+    function syncGameArtInputs() {
+        const frame = battlefieldFrameOf(cardId);
+        const values = {
+            "Zoom en juego": [frame.zoom, "\u00d7"],
+            "Horizontal en juego": [frame.x, " px"],
+            "Vertical en juego": [frame.y, " px"]
+        };
+        for (const field of gameArtControls.querySelectorAll(".field")) {
+            const entry = values[field.dataset.control];
+            if (!entry) continue;
+            for (const input of field.querySelectorAll("input")) input.value = entry[0];
+            field.querySelector(".field-value").textContent = `${entry[0]}${entry[1]}`;
+            const reset = field.querySelector(".reset-dot");
+            const atDefault = field.dataset.control === "Zoom en juego"
+                ? entry[0] === 1
+                : entry[0] === 0;
             reset.disabled = atDefault;
             reset.style.visibility = atDefault ? "hidden" : "visible";
         }
@@ -573,10 +716,11 @@
         const normalizedQuery = searchQuery.trim().toLocaleLowerCase("es");
         const visibleCards = cards.filter((entry) => {
             const frame = frameOf(entry.id);
+            const battlefieldFrame = battlefieldFrameOf(entry.id);
             const matchesFilter = listFilter === "missing"
                 ? !entry.artCrop
                 : listFilter === "adjusted"
-                    ? isAdjusted(frame)
+                    ? isAdjusted(frame) || isAdjusted(battlefieldFrame)
                     : true;
             const searchable = `${entry.nombre ?? ""} ${entry.id} ${entry.collectorId ?? ""} ${entry.tipo ?? ""}`
                 .toLocaleLowerCase("es");
@@ -585,6 +729,7 @@
 
         for (const entry of visibleCards) {
             const frame = frameOf(entry.id);
+            const battlefieldFrame = battlefieldFrameOf(entry.id);
             const cardNumber = cards.indexOf(entry) + 1;
             const button = document.createElement("button");
             button.type = "button";
@@ -623,6 +768,11 @@
             } else if (isAdjusted(frame)) {
                 badge.className = "badge badge-frame";
                 badge.textContent = `${frame.zoom}×`;
+            }
+
+            if (entry.artCrop && !isAdjusted(frame) && isAdjusted(battlefieldFrame)) {
+                badge.className = "badge badge-frame";
+                badge.textContent = "juego";
             }
 
             button.append(thumb, text, badge);
@@ -667,6 +817,8 @@
         renderCardList();
         renderSelectedHead();
         renderArtControls();
+        renderGameArtControls();
+        renderGamePreview();
         applyViewMode();
     }
 
@@ -693,6 +845,8 @@
         renderCardList();
         renderSelectedHead();
         renderArtControls();
+        renderGameArtControls();
+        renderGamePreview();
         renderSlotPicker();
         renderMotifControls();
         renderDirty();
@@ -713,6 +867,7 @@
         lastRegenerated = payload.regenerated ?? [];
         supportsFullArtOverrides = payload.capabilities?.fullArtOverrides === true;
         supportsHeaderFadeOverrides = payload.capabilities?.headerFadeOverrides === true;
+        supportsBattlefieldArtFrames = payload.capabilities?.battlefieldArtFrames === true;
 
         deckSelect.replaceChildren();
         for (const entry of decks) {
@@ -735,6 +890,9 @@
         }
         else if (!supportsHeaderFadeOverrides) {
             setStatus("Reinicia el servidor del taller para activar Fade superior.", "error");
+        }
+        else if (!supportsBattlefieldArtFrames) {
+            setStatus("Reinicia el servidor del taller para activar Encuadre en juego.", "error");
         }
     }
 
@@ -770,13 +928,14 @@
                     artFrames: Object.fromEntries(current.artFrames),
                     fullArtOverrides: Object.fromEntries(current.fullArtOverrides),
                     headerFadeOverrides: Object.fromEntries(current.headerFadeOverrides),
+                    battlefieldArtFrames: Object.fromEntries(current.battlefieldArtFrames),
                     motif: current.motif
                 })
             });
             pending.delete(deckId);
             await loadDecks(true);
             loadPreview();
-            setStatus("Guardado en studio.config.json.", "ok");
+            setStatus("Encuadres guardados.", "ok");
         } catch (error) {
             setStatus(error.message, "error");
         } finally {
@@ -884,6 +1043,50 @@
     headerFadeToggle.addEventListener("change", () => {
         if (cardId) setHeaderFade(cardId, headerFadeToggle.checked);
     });
+
+    gamePreview.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || !cardId || !supportsBattlefieldArtFrames) return;
+        event.preventDefault();
+        gamePreview.setPointerCapture(event.pointerId);
+        gamePreview.classList.add("is-dragging");
+        const start = battlefieldFrameOf(cardId);
+        const originX = event.clientX;
+        const originY = event.clientY;
+        const width = gamePreview.getBoundingClientRect().width || GAME_ART_WIDTH;
+        const factor = GAME_ART_WIDTH / width;
+
+        const move = (moveEvent) => {
+            setBattlefieldFrame(cardId, {
+                ...start,
+                x: start.x + (moveEvent.clientX - originX) * factor,
+                y: start.y + (moveEvent.clientY - originY) * factor
+            });
+            syncGameArtInputs();
+        };
+        const stop = () => {
+            gamePreview.removeEventListener("pointermove", move);
+            gamePreview.removeEventListener("pointerup", stop);
+            gamePreview.removeEventListener("pointercancel", stop);
+            gamePreview.classList.remove("is-dragging");
+            renderGameArtControls();
+        };
+
+        gamePreview.addEventListener("pointermove", move);
+        gamePreview.addEventListener("pointerup", stop);
+        gamePreview.addEventListener("pointercancel", stop);
+    });
+
+    gamePreview.addEventListener("wheel", (event) => {
+        if (!cardId || !supportsBattlefieldArtFrames) return;
+        event.preventDefault();
+        const current = battlefieldFrameOf(cardId);
+        const zoom = Math.round(Math.min(
+            4,
+            Math.max(0.2, current.zoom * (event.deltaY < 0 ? 1.04 : 1 / 1.04))
+        ) * 1000) / 1000;
+        setBattlefieldFrame(cardId, { ...current, zoom });
+        syncGameArtInputs();
+    }, { passive: false });
 
     for (const [event, handler] of [
         ["dragover", (e) => { e.preventDefault(); artDrop.classList.add("is-over"); }],

@@ -12,6 +12,12 @@
             font-display: swap;
         }
 
+        @font-face {
+            font-family: "Hostfall Card Lora";
+            src: url("../../../public/fonts/last-rain/lora-normal-latin.woff2") format("woff2");
+            font-display: swap;
+        }
+
         :root {
             --bg: #0a0908;
             --panel: #15130f;
@@ -441,10 +447,14 @@
 
         .stage {
             position: relative;
+            display: grid;
             flex: 1;
+            min-width: 0;
+            min-height: 0;
             overflow: hidden;
             background:
                 radial-gradient(ellipse at 50% 0%, #1a1712 0%, #0a0908 70%);
+            grid-template-columns: minmax(0, 1fr) clamp(220px, 28%, 300px);
         }
 
         .stage::before {
@@ -467,6 +477,169 @@
             width: 100%;
             height: 100%;
             border: 0;
+        }
+
+        .game-preview-panel {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 18px 18px 8px;
+        }
+
+        .game-preview-panel[hidden] {
+            display: none;
+        }
+
+        .game-preview-wrap {
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .game-preview-label {
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .game-preview {
+            --game-art-x: 0cqw;
+            --game-art-y: 0cqw;
+            --game-art-zoom: 1;
+            --game-title-start: #315b3a;
+            --game-title-end: #1d4228;
+            --game-stat-start: #305a38;
+            --game-stat-mid: #214329;
+            --game-stat-end: #0a1c0e;
+            position: relative;
+            isolation: isolate;
+            width: 100%;
+            aspect-ratio: 488 / 434;
+            overflow: hidden;
+            border: 1px solid rgba(184, 162, 107, 0.58);
+            border-radius: 8px;
+            background: #050605;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+            container-type: inline-size;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .game-preview.is-dragging {
+            cursor: grabbing;
+        }
+
+        .game-preview[data-deck="crimson_court"] {
+            --game-title-start: #77152f;
+            --game-title-end: #3b0d1d;
+            --game-stat-start: #8d1b3a;
+            --game-stat-mid: #77152f;
+            --game-stat-end: #260712;
+        }
+
+        .game-preview[data-deck="hollow_bell_procession"] {
+            --game-title-start: #315f55;
+            --game-title-end: #1d3f37;
+            --game-stat-start: #3f7569;
+            --game-stat-mid: #315f55;
+            --game-stat-end: #102822;
+        }
+
+        .game-preview[data-deck="broken_forge_mutiny"] {
+            --game-title-start: #a63216;
+            --game-title-end: #5e180d;
+            --game-stat-start: #a63216;
+            --game-stat-mid: #76220f;
+            --game-stat-end: #3a0e08;
+        }
+
+        .game-preview > img {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: cover;
+            object-position: center;
+            transform: translate3d(var(--game-art-x), var(--game-art-y), 0)
+                scale(var(--game-art-zoom));
+            transform-origin: center;
+            pointer-events: none;
+        }
+
+        .game-preview-title {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1;
+            display: flex;
+            height: clamp(26px, 13.4cqw, 29px);
+            overflow: hidden;
+            align-items: center;
+            padding: 1px 10px 0;
+            border-top: 1px solid rgba(184, 162, 107, 0.55);
+            border-bottom: 1px solid rgba(184, 162, 107, 0.55);
+            color: #f0ead7;
+            background: linear-gradient(90deg, var(--game-title-start), var(--game-title-end) 65%, transparent 98%);
+            font: 600 clamp(12px, 6.6cqw, 14px)/1 "Hostfall Card Lora", Georgia, serif;
+            letter-spacing: 0.008em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.92);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.42);
+            pointer-events: none;
+        }
+
+        .game-preview-title > span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .game-preview-stats {
+            position: absolute;
+            right: 1.4cqw;
+            bottom: 1.4cqw;
+            z-index: 1;
+            display: flex;
+            min-width: clamp(58px, 29.5cqw, 64px);
+            height: clamp(27px, 14.3cqw, 31px);
+            align-items: center;
+            justify-content: center;
+            padding: 0 9px 0 8px;
+            border: 1px solid rgba(201, 177, 111, 0.52);
+            border-radius: 11px 0 9px;
+            color: #f2f0e6;
+            background:
+                radial-gradient(ellipse at 24% 0%, rgba(204, 226, 179, 0.12), transparent 46%),
+                linear-gradient(180deg, var(--game-stat-start), var(--game-stat-mid) 54%, var(--game-stat-end));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 3px 7px rgba(0, 0, 0, 0.56);
+            font: 950 clamp(16px, 8.3cqw, 18px)/1 "Trebuchet MS", system-ui, sans-serif;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.86);
+            pointer-events: none;
+        }
+
+        .control-section-label {
+            margin: 17px 0 11px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .control-section-label:first-of-type {
+            margin-top: 16px;
         }
 
         /* ------------------------------------------------------------ derecha */
@@ -836,6 +1009,19 @@
                 padding-right: 8px;
                 padding-left: 8px;
             }
+
+            .stage {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1fr) auto;
+            }
+
+            .game-preview-panel {
+                padding: 8px 12px 10px;
+            }
+
+            .game-preview-wrap {
+                width: 190px;
+            }
         }
     </style>
 </head>
@@ -894,6 +1080,16 @@
         </div>
         <div class="stage">
             <iframe id="preview" title="Vista del deck"></iframe>
+            <aside class="game-preview-panel" id="game-preview-panel" hidden>
+                <div class="game-preview-wrap">
+                    <div class="game-preview-label">En juego · 488 × 434</div>
+                    <div class="game-preview" id="game-preview">
+                        <img id="game-preview-image" alt="">
+                        <div class="game-preview-title"><span id="game-preview-title"></span></div>
+                        <div class="game-preview-stats" id="game-preview-stats"></div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </main>
 
@@ -934,7 +1130,12 @@
                         <span class="full-art-track" aria-hidden="true"></span>
                     </span>
                 </label>
-                <div id="art-controls" style="margin-top: 16px;"></div>
+                <div class="control-section-label">Encuadre impreso</div>
+                <div id="art-controls"></div>
+                <div id="game-art-section">
+                    <div class="control-section-label">Encuadre en juego</div>
+                    <div id="game-art-controls"></div>
+                </div>
             </section>
 
             <section id="tab-motif" hidden>

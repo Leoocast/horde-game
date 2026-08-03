@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0.0",
+  "cards": {
+    "first_dew_gatherers": {
+      "battlefieldArtFrame": {
+        "zoom": 1.125,
+        "x": -4,
+        "y": 10
+      }
+    }
+  }
+}

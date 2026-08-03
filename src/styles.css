@@ -6347,10 +6347,21 @@
     transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), height 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-image-native-hd > img {
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-battlefield-art-fallback > img {
     width: 140%;
     height: 140%;
     transform: translate(calc(-20% + 18px), calc(-20% + 42px));
+  }
+
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-battlefield-cropped:not(.card-battlefield-art-fallback) > img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center;
+    transform: translate3d(var(--battlefield-art-x, 0cqw), var(--battlefield-art-y, 0cqw), 0)
+      scale(var(--battlefield-art-zoom, 1));
+    transform-origin: center;
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
