@@ -113,9 +113,9 @@ window.HostfallDeckData = [
     "showFlavorText": true,
     "cantidad": 2,
     "art_frame": {
-      "zoom": 0.731,
-      "x": -22,
-      "y": -149
+      "zoom": 0.703,
+      "x": 5,
+      "y": -141
     }
   },
   {
@@ -132,10 +132,11 @@ window.HostfallDeckData = [
     "lore": "No necesitaba alas. El cielo descendía cada vez que se alzaba.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
-      "zoom": 1.04,
-      "x": -12,
-      "y": -131
+      "zoom": 1.734,
+      "x": 349,
+      "y": 22
     }
   },
   {
@@ -152,10 +153,12 @@ window.HostfallDeckData = [
     "lore": "Iria no despertó a un sirviente. Le recordó al bosque su propio nombre.",
     "showFlavorText": true,
     "cantidad": 1,
+    "fullArt": true,
+    "headerFade": false,
     "art_frame": {
-      "zoom": 0.925,
-      "x": -4,
-      "y": -22
+      "zoom": 1.082,
+      "x": 37,
+      "y": 67
     }
   },
   {

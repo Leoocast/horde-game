@@ -1,4 +1,110 @@
 {
   "schemaVersion": "1.0.0",
-  "cards": {}
+  "cards": {
+    "last_knell_dead": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 86
+      }
+    },
+    "mass_grave_colossus": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 90
+      }
+    },
+    "five_knot_gallows": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 55
+      }
+    },
+    "last_thought_carrion": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 8,
+        "y": 84
+      }
+    },
+    "memory_shroud_bearer": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": 6,
+        "y": 86
+      }
+    },
+    "reinforced_gravewing": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -12,
+        "y": 27
+      }
+    },
+    "basted_wing": {
+      "battlefieldArtFrame": {
+        "zoom": 1.17,
+        "x": 11,
+        "y": 134
+      }
+    },
+    "crypt_rotwing": {
+      "battlefieldArtFrame": {
+        "zoom": 1.425,
+        "x": -10,
+        "y": 175
+      }
+    },
+    "archive_carrion_crow": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -13,
+        "y": 53
+      }
+    },
+    "last_march_marshal": {
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -2,
+        "y": 144
+      }
+    },
+    "fallen_gatherer": {
+      "battlefieldArtFrame": {
+        "zoom": 1.17,
+        "x": -2,
+        "y": 108
+      }
+    },
+    "silent_bite_rats": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -8,
+        "y": 36
+      }
+    },
+    "full_ossuary_mastiff": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -10,
+        "y": 73
+      }
+    },
+    "seventh_memory_hound": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 92
+      }
+    },
+    "horned_linebreaker": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 2,
+        "y": 92
+      }
+    }
+  }
 }

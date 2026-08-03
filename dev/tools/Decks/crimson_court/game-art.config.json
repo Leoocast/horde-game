@@ -1,4 +1,61 @@
 {
   "schemaVersion": "1.0.0",
-  "cards": {}
+  "cards": {
+    "blood_page": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -4,
+        "y": 60
+      }
+    },
+    "eternal_feast_countess": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 75
+      }
+    },
+    "black_vein_executioner": {
+      "battlefieldArtFrame": {
+        "zoom": 1.667,
+        "x": -139,
+        "y": 248
+      }
+    },
+    "court_duelist": {
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -57,
+        "y": 90
+      }
+    },
+    "tithe_acolyte": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -3,
+        "y": 90
+      }
+    },
+    "crypt_guardian": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 128
+      }
+    },
+    "crimson_bat": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 6,
+        "y": 84
+      }
+    },
+    "blood_sentinel": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 2,
+        "y": 80
+      }
+    }
+  }
 }

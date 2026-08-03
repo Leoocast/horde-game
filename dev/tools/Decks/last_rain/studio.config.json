@@ -55,30 +55,34 @@
       "artCrop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.jpg",
       "typeLineEs": "Eco — Vigía Arbóreo",
       "artFrame": {
-        "zoom": 0.731,
-        "x": -22,
-        "y": -149
-      }
+        "zoom": 0.703,
+        "x": 5,
+        "y": -141
+      },
+      "headerFade": true
     },
     {
       "id": "hollow_skybreaker",
       "artCrop": "../../../../public/cards/last_rain/art/hollow_skybreaker.jpg",
       "typeLineEs": "Eco — Bestia Primordial",
       "artFrame": {
-        "zoom": 1.04,
-        "x": -12,
-        "y": -131
-      }
+        "zoom": 1.734,
+        "x": 349,
+        "y": 22
+      },
+      "headerFade": false
     },
     {
       "id": "orun_waking_root",
       "artCrop": "../../../../public/cards/last_rain/art/orun_waking_root.jpg",
       "typeLineEs": "Eco — Guardián Ancestral",
       "artFrame": {
-        "zoom": 0.925,
-        "x": -4,
-        "y": -22
-      }
+        "zoom": 1.082,
+        "x": 37,
+        "y": 67
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "marked_prey",

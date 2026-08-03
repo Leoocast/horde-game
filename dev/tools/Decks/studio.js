@@ -67,6 +67,8 @@
 
     /** Ediciones sin guardar, por deck. */
     const pending = new Map();
+    /** Revisión local para invalidar imágenes reemplazadas sin modificar sus rutas guardadas. */
+    const uploadedArtRevisions = new Map();
     let decks = [];
     let deckId = "";
     let cardId = "";
@@ -82,6 +84,19 @@
 
     const deck = () => decks.find((entry) => entry.id === deckId) ?? null;
     const card = () => deck()?.cards.find((entry) => entry.id === cardId) ?? null;
+
+    function versionedArtUrl(url, id, targetDeckId = deckId) {
+        if (!url) return url;
+        const revision = uploadedArtRevisions.get(`${targetDeckId}:${id}`);
+        if (!revision) return url;
+        const separator = String(url).includes("?") ? "&" : "?";
+        return `${url}${separator}studioArt=${revision}`;
+    }
+
+    function markArtUploaded(targetDeckId, id) {
+        const key = `${targetDeckId}:${id}`;
+        uploadedArtRevisions.set(key, (uploadedArtRevisions.get(key) ?? 0) + 1);
+    }
 
     function draft() {
         if (!pending.has(deckId)) {
@@ -300,10 +315,11 @@
         gamePreview.style.setProperty("--game-art-zoom", frame.zoom);
         gamePreview.dataset.deck = deckId;
         if (current.battlefieldArtUrl) {
-            const nextUrl = new URL(current.battlefieldArtUrl, window.location.href).href;
+            const imageUrl = versionedArtUrl(current.battlefieldArtUrl, cardId);
+            const nextUrl = new URL(imageUrl, window.location.href).href;
             if (gamePreviewImage.src !== nextUrl) {
                 clearGameArtSourceSize();
-                gamePreviewImage.src = current.battlefieldArtUrl;
+                gamePreviewImage.src = imageUrl;
             } else {
                 applyGameArtSourceSize();
             }
@@ -447,6 +463,7 @@
         }
         const cards = sourceCards.map((entry) => ({
             ...entry,
+            art_crop: versionedArtUrl(entry.art_crop, entry.id),
             fullArt: fullArtOf(entry.id),
             headerFade: headerFadeOf(entry.id)
         }));
@@ -556,7 +573,7 @@
         const current = card();
 
         artThumb.style.backgroundImage = current?.artCrop
-            ? `url("/dev/tools/Decks/${deckId}/${current.artCrop}")`
+            ? `url("${versionedArtUrl(`/dev/tools/Decks/${deckId}/${current.artCrop}`, cardId)}")`
             : "";
         artThumb.classList.toggle("is-empty", !current?.artCrop);
         artThumb.textContent = current?.artCrop ? "" : "+";
@@ -774,7 +791,10 @@
             thumb.className = "thumb";
             thumb.setAttribute("aria-hidden", "true");
             if (entry.artCrop) {
-                thumb.style.backgroundImage = `url("/dev/tools/Decks/${deckId}/${entry.artCrop}")`;
+                thumb.style.backgroundImage = `url("${versionedArtUrl(
+                    `/dev/tools/Decks/${deckId}/${entry.artCrop}`,
+                    entry.id
+                )}")`;
             } else {
                 thumb.classList.add("is-empty");
                 thumb.textContent = "+";
@@ -929,14 +949,17 @@
     }
 
     async function uploadArt(file) {
+        const targetDeckId = deckId;
+        const targetCardId = cardId;
         const extension = (file.name.split(".").pop() || "").toLowerCase();
         setStatus(`Subiendo ${file.name}…`);
         try {
             const result = await api(
-                `/api/art?deck=${encodeURIComponent(deckId)}`
-                    + `&card=${encodeURIComponent(cardId)}&ext=${encodeURIComponent(extension)}`,
+                `/api/art?deck=${encodeURIComponent(targetDeckId)}`
+                    + `&card=${encodeURIComponent(targetCardId)}&ext=${encodeURIComponent(extension)}`,
                 { method: "POST", body: file }
             );
+            markArtUploaded(targetDeckId, targetCardId);
             await loadDecks(true);
             loadPreview();
             setStatus(`Arte guardado en ${result.artCrop}`, "ok");

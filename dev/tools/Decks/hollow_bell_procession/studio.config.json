@@ -5,88 +5,189 @@
   "cards": [
     {
       "id": "last_knell_dead",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.png",
-      "typeLineEs": "Eco · Ficha — Zombi"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.jpg",
+      "typeLineEs": "Eco · Ficha — Zombi",
+      "artFrame": {
+        "zoom": 1,
+        "x": 24,
+        "y": -12
+      }
     },
     {
       "id": "mass_grave_colossus",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
-      "typeLineEs": "Eco · Ficha — Zombi Gigante"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.jpg",
+      "typeLineEs": "Eco · Ficha — Zombi Gigante",
+      "artFrame": {
+        "zoom": 1,
+        "x": 64,
+        "y": 0
+      }
     },
     {
       "id": "hollow_bell",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.png",
-      "typeLineEs": "Apoyo"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": -7,
+        "y": -269
+      },
+      "headerFade": false
     },
     {
       "id": "five_knot_gallows",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.png",
-      "typeLineEs": "Eco — Zombi Nacido del cadalso"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.jpg",
+      "typeLineEs": "Eco — Zombi Nacido del cadalso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -14,
+        "y": -193
+      }
     },
     {
       "id": "last_thought_carrion",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.png",
-      "typeLineEs": "Eco — Zombi Carroña"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.jpg",
+      "typeLineEs": "Eco — Zombi Carroña",
+      "artFrame": {
+        "zoom": 0.676,
+        "x": -2,
+        "y": -152
+      }
     },
     {
       "id": "memory_shroud_bearer",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
-      "typeLineEs": "Eco — Zombi Portador de mortaja"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.jpg",
+      "typeLineEs": "Eco — Zombi Portador de mortaja",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -24,
+        "y": -172
+      },
+      "headerFade": false
     },
     {
       "id": "flesh_root_tithe",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
-      "typeLineEs": "Hechizo"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 0,
+        "y": -242
+      },
+      "headerFade": false
     },
     {
       "id": "crypt_rotwing",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.png",
-      "typeLineEs": "Eco — Zombi Murciélago"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.jpg",
+      "typeLineEs": "Eco — Zombi Murciélago",
+      "artFrame": {
+        "zoom": 0.962,
+        "x": -75,
+        "y": -5
+      },
+      "headerFade": false
     },
     {
       "id": "basted_wing",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.png",
-      "typeLineEs": "Eco — Zombi Constructo"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.jpg",
+      "typeLineEs": "Eco — Zombi Constructo",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -9,
+        "y": -136
+      },
+      "fullArt": false,
+      "headerFade": true
     },
     {
       "id": "reinforced_gravewing",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
-      "typeLineEs": "Eco — Zombi Constructo"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.jpg",
+      "typeLineEs": "Eco — Zombi Constructo",
+      "artFrame": {
+        "zoom": 1.125,
+        "x": -38,
+        "y": -232
+      },
+      "headerFade": false
     },
     {
       "id": "archive_carrion_crow",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
-      "typeLineEs": "Eco — Zombi Ave"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.jpg",
+      "typeLineEs": "Eco — Zombi Ave",
+      "artFrame": {
+        "zoom": 0.601,
+        "x": -19,
+        "y": -177
+      },
+      "headerFade": true
     },
     {
       "id": "horned_linebreaker",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.png",
-      "typeLineEs": "Eco — Zombi Minotauro"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.jpg",
+      "typeLineEs": "Eco — Zombi Minotauro",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 48,
+        "y": -147
+      },
+      "headerFade": false
     },
     {
       "id": "seventh_memory_hound",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
-      "typeLineEs": "Eco — Zombi Sabueso"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.jpg",
+      "typeLineEs": "Eco — Zombi Sabueso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -6,
+        "y": -97
+      },
+      "headerFade": false
     },
     {
       "id": "full_ossuary_mastiff",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
-      "typeLineEs": "Eco — Zombi Sabueso"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.jpg",
+      "typeLineEs": "Eco — Zombi Sabueso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 4,
+        "y": -175
+      },
+      "headerFade": false
     },
     {
       "id": "silent_bite_rats",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.png",
-      "typeLineEs": "Eco — Zombi Rata"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.jpg",
+      "typeLineEs": "Eco — Zombi Rata",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 8,
+        "y": -184
+      },
+      "headerFade": false
     },
     {
       "id": "fallen_gatherer",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.png",
-      "typeLineEs": "Eco — Zombi Recolector"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.jpg",
+      "typeLineEs": "Eco — Zombi Recolector",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -133
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "last_march_marshal",
-      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.png",
-      "typeLineEs": "Eco — Zombi Mariscal"
+      "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.jpg",
+      "typeLineEs": "Eco — Zombi Mariscal",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 23
+      },
+      "fullArt": true,
+      "headerFade": false
     }
   ]
 }

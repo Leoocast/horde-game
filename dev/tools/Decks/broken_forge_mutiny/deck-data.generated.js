@@ -4,7 +4,7 @@ window.HostfallDeckData = [
     "id": "ember_scrap_runner",
     "collectorId": "HFA1031",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.jpg",
     "nombre": "Corredor de Ascua y Chatarra",
     "tipo": "Eco · Ficha — Trasgo Corredor",
     "costo": 0,
@@ -15,13 +15,18 @@ window.HostfallDeckData = [
     "showFlavorText": true,
     "cantidad": 24,
     "isToken": true,
-    "fullArt": true
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1,
+      "x": -10,
+      "y": 2
+    }
   },
   {
     "id": "burning_tally_foreman",
     "collectorId": "HFA1032",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.jpg",
     "nombre": "Capataz del Recuento Ardiente",
     "tipo": "Eco — Trasgo Capataz",
     "costo": 3,
@@ -30,13 +35,20 @@ window.HostfallDeckData = [
     "desc": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno.",
     "lore": "No cuenta trabajadores; cuenta golpes que aún le debe al enemigo.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 63,
+      "y": -78
+    }
   },
   {
     "id": "next_crew_caller",
     "collectorId": "HFA1033",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.jpg",
     "nombre": "Llamador de la Próxima Cuadrilla",
     "tipo": "Eco — Trasgo Llamador",
     "costo": 2,
@@ -45,13 +57,14 @@ window.HostfallDeckData = [
     "desc": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo.",
     "lore": "Si uno cae, su placa de turno llama al siguiente.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false
   },
   {
     "id": "open_furnace_crier",
     "collectorId": "HFA1034",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.jpg",
     "nombre": "Pregonero del Horno Abierto",
     "tipo": "Eco — Trasgo Pregonero",
     "costo": 2,
@@ -60,13 +73,19 @@ window.HostfallDeckData = [
     "desc": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno.",
     "lore": "Abrió la compuerta antes de terminar el grito.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 0,
+      "y": -60
+    }
   },
   {
     "id": "shift_hammer",
     "collectorId": "HFA1035",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.jpg",
     "nombre": "El Martillo de Turno",
     "tipo": "Apoyo",
     "costo": 3,
@@ -75,13 +94,20 @@ window.HostfallDeckData = [
     "desc": "Los Trasgos aliados ganan Imponente.",
     "lore": "Cada golpe hace avanzar otra fila.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1,
+      "x": -32,
+      "y": -8
+    }
   },
   {
     "id": "rain_of_rivets",
     "collectorId": "HFA1036",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.jpg",
     "nombre": "Lluvia de Remaches",
     "tipo": "Apoyo",
     "costo": 3,
@@ -90,13 +116,19 @@ window.HostfallDeckData = [
     "desc": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
     "lore": "Lo que no sirve de armadura todavía sirve de proyectil.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1.17,
+      "x": 16,
+      "y": -16
+    }
   },
   {
     "id": "double_crew_boss",
     "collectorId": "HFA1037",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.jpg",
     "nombre": "Jefe de la Cuadrilla Doble",
     "tipo": "Eco — Trasgo Capataz",
     "costo": 4,
@@ -105,13 +137,19 @@ window.HostfallDeckData = [
     "desc": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1.",
     "lore": "Dos cargan las herramientas. El jefe carga el mérito.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": 9,
+      "y": -144
+    }
   },
   {
     "id": "three_furnaces_foreman",
     "collectorId": "HFA1038",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.jpg",
     "nombre": "Capataz de los Tres Hornos",
     "tipo": "Eco — Trasgo Capataz",
     "costo": 5,
@@ -120,13 +158,19 @@ window.HostfallDeckData = [
     "desc": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1.",
     "lore": "Tres hornos, tres cuadrillas, una orden mal entendida entre todos.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1.04,
+      "x": -6,
+      "y": -200
+    }
   },
   {
     "id": "first_siren_agitator",
     "collectorId": "HFA1039",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.jpg",
     "nombre": "Agitador de la Primera Sirena",
     "tipo": "Eco — Trasgo Agitador",
     "costo": 3,
@@ -135,13 +179,18 @@ window.HostfallDeckData = [
     "desc": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante.",
     "lore": "La primera sirena no anuncia peligro. Lo fabrica.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -6,
+      "y": -103
+    }
   },
   {
     "id": "open_another_gate",
     "collectorId": "HFA1040",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.jpg",
     "nombre": "¡Abran Otra Compuerta!",
     "tipo": "Hechizo · Rápido",
     "costo": 3,
@@ -150,13 +199,19 @@ window.HostfallDeckData = [
     "desc": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado.",
     "lore": "Tras cada compuerta hay refuerzos o suficiente fuego para fingirlos.",
     "showFlavorText": false,
-    "cantidad": 3
+    "cantidad": 3,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -2,
+      "y": -245
+    }
   },
   {
     "id": "three_under_one_anvil",
     "collectorId": "HFA1041",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.jpg",
     "nombre": "Tres Bajo el Mismo Yunque",
     "tipo": "Eco — Trasgo Cuadrilla",
     "costo": 3,
@@ -165,13 +220,19 @@ window.HostfallDeckData = [
     "desc": "Sin efecto adicional.",
     "lore": "Tres martillos, un yunque y ningún acuerdo sobre quién manda.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -2,
+      "y": -163
+    }
   },
   {
     "id": "slag_volley_master",
     "collectorId": "HFA1042",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.jpg",
     "nombre": "Maestro de la Salva de Escoria",
     "tipo": "Eco — Trasgo Artillero",
     "costo": 4,
@@ -180,13 +241,19 @@ window.HostfallDeckData = [
     "desc": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados.",
     "lore": "Mide la salva por las voces que responden.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -129,
+      "y": -190
+    }
   },
   {
     "id": "varka_revolt_axis",
     "collectorId": "HFA1043",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.jpg",
     "nombre": "Varka, Eje de la Revuelta",
     "tipo": "Eco de Crónica — Trasgo Giracadenas",
     "costo": 3,
@@ -197,13 +264,18 @@ window.HostfallDeckData = [
     "showFlavorText": true,
     "cantidad": 2,
     "isChronicle": true,
-    "fullArt": true
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 0.925,
+      "x": 5,
+      "y": -57
+    }
   },
   {
     "id": "salvaged_armor_master",
     "collectorId": "HFA1044",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.jpg",
     "nombre": "Maestro de la Armadura Recuperada",
     "tipo": "Eco — Trasgo Armero",
     "costo": 4,
@@ -212,13 +284,20 @@ window.HostfallDeckData = [
     "desc": "Los demás Trasgos aliados ganan +1/+1.",
     "lore": "Cada placa robada convierte a otro obrero en soldado.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.855,
+      "x": 14,
+      "y": -89
+    }
   },
   {
     "id": "repeating_blow_marshal",
     "collectorId": "HFA1045",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.jpg",
     "nombre": "Mariscal del Golpe Repetido",
     "tipo": "Eco — Trasgo Mariscal",
     "costo": 3,
@@ -227,13 +306,19 @@ window.HostfallDeckData = [
     "desc": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida.",
     "lore": "Cada nuevo martillo repite su orden sobre los huesos del Cronista.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": -14,
+      "y": -144
+    }
   },
   {
     "id": "brakka_growing_tally",
     "collectorId": "HFA1046",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.jpg",
     "nombre": "Brakka, la Cuenta Creciente",
     "tipo": "Eco — Trasgo Reclutador",
     "costo": 3,
@@ -242,13 +327,18 @@ window.HostfallDeckData = [
     "desc": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
     "lore": "Marca una victoria en su armadura y la cuadrilla aparece para cobrarla.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": 4,
+      "y": -109
+    }
   },
   {
     "id": "last_rivets_gunner",
     "collectorId": "HFA1047",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.jpg",
     "nombre": "Artillero de los Últimos Remaches",
     "tipo": "Eco — Trasgo Artillero",
     "costo": 3,
@@ -257,6 +347,11 @@ window.HostfallDeckData = [
     "desc": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio.",
     "lore": "Recoge el último remache antes de que el cuerpo toque el suelo.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 0,
+      "y": -133
+    }
   }
 ];

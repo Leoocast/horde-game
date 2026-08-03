@@ -7,7 +7,16 @@
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 421.594,
+            "bottom": 422.594,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "orun_waking_root": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 369.563,
             "width": 158,
             "height": 91
           }
@@ -23,7 +32,7 @@
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 164,
+            "bottom": 165,
             "width": 158,
             "height": 91
           }
@@ -32,7 +41,25 @@
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 164,
+            "bottom": 165,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "fallen_gatherer": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 374.328,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "last_march_marshal": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 433.188,
             "width": 158,
             "height": 91
           }
@@ -45,16 +72,40 @@
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 164,
+            "bottom": 165,
             "width": 158,
             "height": 91
           }
+        },
+        "burning_tally_foreman": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 419.156,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "shift_hammer": {
+          "fullArt": true
+        },
+        "rain_of_rivets": {
+          "fullArt": true
         },
         "varka_revolt_axis": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 440.391,
+            "bottom": 441.391,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "salvaged_armor_master": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 321.297,
             "width": 158,
             "height": 91
           }
@@ -66,14 +117,35 @@
         "crimson_energy": {
           "fullArt": true
         },
+        "crypt_guardian": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 441.391,
+            "width": 158,
+            "height": 91
+          }
+        },
         "eternal_feast_countess": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 379.156,
+            "bottom": 380.156,
             "width": 158,
             "height": 91
           }
+        },
+        "blood_pact": {
+          "fullArt": true
+        },
+        "crimson_impulse": {
+          "fullArt": true
+        },
+        "drain_essence": {
+          "fullArt": true
+        },
+        "final_banquet": {
+          "fullArt": true
         }
       }
     }

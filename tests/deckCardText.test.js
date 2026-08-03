@@ -304,6 +304,31 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
     /gamePreviewImage\.naturalWidth[\s\S]*--game-art-source-width/u,
     "the Studio crop must size the complete source image before applying its frame",
   );
+  assert.match(
+    studioApp,
+    /function versionedArtUrl\(url, id, targetDeckId = deckId\)/u,
+    "uploaded Studio art needs a temporary cache-busting URL",
+  );
+  assert.match(
+    studioApp,
+    /versionedArtUrl\(current\.battlefieldArtUrl, cardId\)/u,
+    "the cropped-card preview must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /art_crop: versionedArtUrl\(entry\.art_crop, entry\.id\)/u,
+    "the printable card preview must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /thumb\.style\.backgroundImage = `url\("\$\{versionedArtUrl\(/u,
+    "the card-list thumbnail must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /markArtUploaded\(targetDeckId, targetCardId\);\s*await loadDecks\(true\);/u,
+    "a successful upload must invalidate the previous image before repainting the Studio",
+  );
   assert.match(studioServer, /fullArtOverrides: true/u);
   assert.match(studioServer, /headerFadeOverrides: true/u);
   assert.match(studioServer, /battlefieldArtFrames: true/u);
@@ -391,6 +416,11 @@ test("the shared printed design keeps the approved compact geometry", () => {
     sharedCss,
     /\.tcg-effect strong,[\s\S]*?\.effect-stat\s*\{[^}]*font-weight:\s*600;/u,
     "highlighted rules terms must remain distinct without using bold text",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-art-credit-name\s*\{[^}]*font:\s*italic 500 24px\/1 "Lora", Georgia, serif;/u,
+    "the artist credit must remain slightly larger than its original 22px size",
   );
   assert.match(
     sharedCss,

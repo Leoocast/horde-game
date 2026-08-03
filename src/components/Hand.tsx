@@ -20,7 +20,7 @@ const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
-const HAND_HOVER_SCALE = 1.3 * (UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? 1.08 : 1);
+const HAND_HOVER_SCALE = 1.3 * (UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? 1.08 : 1) * 1.2;
 const handCardMotion: Variants = {
   initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
   animate: (custom: { index: number; stagger: boolean }) => ({

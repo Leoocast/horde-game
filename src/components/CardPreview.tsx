@@ -13,8 +13,8 @@ import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 
 const HOVER_PREVIEW_GAP = 14;
-const HOVER_PREVIEW_MIN_WIDTH = 230;
-const HOVER_PREVIEW_MAX_WIDTH = 350;
+const HOVER_PREVIEW_MIN_WIDTH = 276;
+const HOVER_PREVIEW_MAX_WIDTH = 420;
 const VIEWPORT_PADDING = 12;
 
 type HoverPreviewPosition = {
@@ -90,7 +90,7 @@ export function CardPreview() {
       }
       const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
       const unscaledCardWidth = placementAnchor.offsetWidth || rect.width;
-      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, unscaledCardWidth * 1.5));
+      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, unscaledCardWidth * 1.8));
       const height = width * (680 / 488);
       const effectActionOpen = Boolean(liftedSlot?.querySelector(".effect-action-button"));
 
@@ -182,7 +182,7 @@ export function CardPreview() {
             data-card-preview-locked="true"
             data-preview-renderer="image"
             className={[
-              "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
+              "card-preview-cropped-frame aspect-[488/680] w-[min(468px,34.8vw)] shadow-2xl shadow-black/65",
               showFullCardPresentation ? "card-preview-full-card-frame" : "",
               cardTheme ? `card-theme-${cardTheme}` : "",
               usesFullArtLayout ? "card-layout-full-art" : "",

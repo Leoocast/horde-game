@@ -18,22 +18,52 @@
       }
     },
     "keeper_sleeping_root": {
-      "artUrl": "/cards/last_rain/art/keeper_sleeping_root.jpg"
+      "artUrl": "/cards/last_rain/art/keeper_sleeping_root.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 88
+      }
     },
     "black_sap_stalker": {
-      "artUrl": "/cards/last_rain/art/black_sap_stalker.jpg"
+      "artUrl": "/cards/last_rain/art/black_sap_stalker.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 8,
+        "y": 69
+      }
     },
     "arven_first_pack": {
-      "artUrl": "/cards/last_rain/art/arven_first_pack.jpg"
+      "artUrl": "/cards/last_rain/art/arven_first_pack.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": 4,
+        "y": 92
+      }
     },
     "ancient_canopy_watchers": {
-      "artUrl": "/cards/last_rain/art/ancient_canopy_watchers.jpg"
+      "artUrl": "/cards/last_rain/art/ancient_canopy_watchers.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 1,
+        "y": 82
+      }
     },
     "hollow_skybreaker": {
-      "artUrl": "/cards/last_rain/art/hollow_skybreaker.jpg"
+      "artUrl": "/cards/last_rain/art/hollow_skybreaker.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.95,
+        "x": 193,
+        "y": 186
+      }
     },
     "orun_waking_root": {
-      "artUrl": "/cards/last_rain/art/orun_waking_root.jpg"
+      "artUrl": "/cards/last_rain/art/orun_waking_root.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 4,
+        "y": 94
+      }
     },
     "marked_prey": {
       "artUrl": "/cards/last_rain/art/marked_prey.jpg"
@@ -51,151 +81,336 @@
       "artUrl": "/cards/last_rain/art/deep_root_spring.jpg"
     },
     "last_knell_dead": {
-      "artUrl": "/cards/hollow_bell_procession/art/last_knell_dead.png"
+      "artUrl": "/cards/hollow_bell_procession/art/last_knell_dead.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 86
+      }
     },
     "mass_grave_colossus": {
-      "artUrl": "/cards/hollow_bell_procession/art/mass_grave_colossus.png"
+      "artUrl": "/cards/hollow_bell_procession/art/mass_grave_colossus.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 90
+      }
     },
     "hollow_bell": {
-      "artUrl": "/cards/hollow_bell_procession/art/hollow_bell.png"
+      "artUrl": "/cards/hollow_bell_procession/art/hollow_bell.jpg"
     },
     "five_knot_gallows": {
-      "artUrl": "/cards/hollow_bell_procession/art/five_knot_gallows.png"
+      "artUrl": "/cards/hollow_bell_procession/art/five_knot_gallows.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 55
+      }
     },
     "last_thought_carrion": {
-      "artUrl": "/cards/hollow_bell_procession/art/last_thought_carrion.png"
+      "artUrl": "/cards/hollow_bell_procession/art/last_thought_carrion.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 8,
+        "y": 84
+      }
     },
     "memory_shroud_bearer": {
-      "artUrl": "/cards/hollow_bell_procession/art/memory_shroud_bearer.png"
+      "artUrl": "/cards/hollow_bell_procession/art/memory_shroud_bearer.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": 6,
+        "y": 86
+      }
     },
     "flesh_root_tithe": {
-      "artUrl": "/cards/hollow_bell_procession/art/flesh_root_tithe.png"
+      "artUrl": "/cards/hollow_bell_procession/art/flesh_root_tithe.jpg"
     },
     "crypt_rotwing": {
-      "artUrl": "/cards/hollow_bell_procession/art/crypt_rotwing.png"
+      "artUrl": "/cards/hollow_bell_procession/art/crypt_rotwing.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.425,
+        "x": -10,
+        "y": 175
+      }
     },
     "basted_wing": {
-      "artUrl": "/cards/hollow_bell_procession/art/basted_wing.png"
+      "artUrl": "/cards/hollow_bell_procession/art/basted_wing.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.17,
+        "x": 11,
+        "y": 134
+      }
     },
     "reinforced_gravewing": {
-      "artUrl": "/cards/hollow_bell_procession/art/reinforced_gravewing.png"
+      "artUrl": "/cards/hollow_bell_procession/art/reinforced_gravewing.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -12,
+        "y": 27
+      }
     },
     "archive_carrion_crow": {
-      "artUrl": "/cards/hollow_bell_procession/art/archive_carrion_crow.png"
+      "artUrl": "/cards/hollow_bell_procession/art/archive_carrion_crow.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -13,
+        "y": 53
+      }
     },
     "horned_linebreaker": {
-      "artUrl": "/cards/hollow_bell_procession/art/horned_linebreaker.png"
+      "artUrl": "/cards/hollow_bell_procession/art/horned_linebreaker.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 2,
+        "y": 92
+      }
     },
     "seventh_memory_hound": {
-      "artUrl": "/cards/hollow_bell_procession/art/seventh_memory_hound.png"
+      "artUrl": "/cards/hollow_bell_procession/art/seventh_memory_hound.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 92
+      }
     },
     "full_ossuary_mastiff": {
-      "artUrl": "/cards/hollow_bell_procession/art/full_ossuary_mastiff.png"
+      "artUrl": "/cards/hollow_bell_procession/art/full_ossuary_mastiff.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -10,
+        "y": 73
+      }
     },
     "silent_bite_rats": {
-      "artUrl": "/cards/hollow_bell_procession/art/silent_bite_rats.png"
+      "artUrl": "/cards/hollow_bell_procession/art/silent_bite_rats.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -8,
+        "y": 36
+      }
     },
     "fallen_gatherer": {
-      "artUrl": "/cards/hollow_bell_procession/art/fallen_gatherer.png"
+      "artUrl": "/cards/hollow_bell_procession/art/fallen_gatherer.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.17,
+        "x": -2,
+        "y": 108
+      }
     },
     "last_march_marshal": {
-      "artUrl": "/cards/hollow_bell_procession/art/last_march_marshal.png"
+      "artUrl": "/cards/hollow_bell_procession/art/last_march_marshal.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -2,
+        "y": 144
+      }
     },
     "ember_scrap_runner": {
-      "artUrl": "/cards/broken_forge_mutiny/art/ember_scrap_runner.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/ember_scrap_runner.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 92
+      }
     },
     "burning_tally_foreman": {
-      "artUrl": "/cards/broken_forge_mutiny/art/burning_tally_foreman.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/burning_tally_foreman.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.482,
+        "x": 33,
+        "y": 175
+      }
     },
     "next_crew_caller": {
-      "artUrl": "/cards/broken_forge_mutiny/art/next_crew_caller.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/next_crew_caller.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.266,
+        "x": -4,
+        "y": 155
+      }
     },
     "open_furnace_crier": {
-      "artUrl": "/cards/broken_forge_mutiny/art/open_furnace_crier.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/open_furnace_crier.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 77
+      }
     },
     "shift_hammer": {
-      "artUrl": "/cards/broken_forge_mutiny/art/shift_hammer.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/shift_hammer.jpg"
     },
     "rain_of_rivets": {
-      "artUrl": "/cards/broken_forge_mutiny/art/rain_of_rivets.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/rain_of_rivets.jpg"
     },
     "double_crew_boss": {
-      "artUrl": "/cards/broken_forge_mutiny/art/double_crew_boss.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/double_crew_boss.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -2,
+        "y": 90
+      }
     },
     "three_furnaces_foreman": {
-      "artUrl": "/cards/broken_forge_mutiny/art/three_furnaces_foreman.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/three_furnaces_foreman.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": 0,
+        "y": 23
+      }
     },
     "first_siren_agitator": {
-      "artUrl": "/cards/broken_forge_mutiny/art/first_siren_agitator.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/first_siren_agitator.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.125,
+        "x": -6,
+        "y": 103
+      }
     },
     "open_another_gate": {
-      "artUrl": "/cards/broken_forge_mutiny/art/open_another_gate.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/open_another_gate.jpg"
     },
     "three_under_one_anvil": {
-      "artUrl": "/cards/broken_forge_mutiny/art/three_under_one_anvil.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/three_under_one_anvil.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 7,
+        "y": 96
+      }
     },
     "slag_volley_master": {
-      "artUrl": "/cards/broken_forge_mutiny/art/slag_volley_master.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/slag_volley_master.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.875,
+        "x": -75,
+        "y": 160
+      }
     },
     "varka_revolt_axis": {
-      "artUrl": "/cards/broken_forge_mutiny/art/varka_revolt_axis.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/varka_revolt_axis.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.266,
+        "x": -29,
+        "y": 138
+      }
     },
     "salvaged_armor_master": {
-      "artUrl": "/cards/broken_forge_mutiny/art/salvaged_armor_master.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/salvaged_armor_master.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -2,
+        "y": 95
+      }
     },
     "repeating_blow_marshal": {
-      "artUrl": "/cards/broken_forge_mutiny/art/repeating_blow_marshal.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/repeating_blow_marshal.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 2,
+        "y": 90
+      }
     },
     "brakka_growing_tally": {
-      "artUrl": "/cards/broken_forge_mutiny/art/brakka_growing_tally.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/brakka_growing_tally.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": -13,
+        "y": 97
+      }
     },
     "last_rivets_gunner": {
-      "artUrl": "/cards/broken_forge_mutiny/art/last_rivets_gunner.png"
+      "artUrl": "/cards/broken_forge_mutiny/art/last_rivets_gunner.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 2,
+        "y": 84
+      }
     },
     "crimson_energy": {
-      "artUrl": "/cards/crimson_court/art/crimson_energy.webp"
+      "artUrl": "/cards/crimson_court/art/crimson_energy.jpg"
     },
     "blood_page": {
-      "artUrl": "/cards/crimson_court/art/blood_page.jpg"
+      "artUrl": "/cards/crimson_court/art/blood_page.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -4,
+        "y": 60
+      }
     },
     "crimson_bat": {
-      "artUrl": "/cards/crimson_court/art/crimson_bat.webp"
+      "artUrl": "/cards/crimson_court/art/crimson_bat.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 6,
+        "y": 84
+      }
     },
     "tithe_acolyte": {
-      "artUrl": "/cards/crimson_court/art/tithe_acolyte.webp"
+      "artUrl": "/cards/crimson_court/art/tithe_acolyte.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -3,
+        "y": 90
+      }
     },
     "court_duelist": {
-      "artUrl": "/cards/crimson_court/art/court_duelist.webp"
+      "artUrl": "/cards/crimson_court/art/court_duelist.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -57,
+        "y": 90
+      }
     },
     "crypt_guardian": {
-      "artUrl": "/cards/crimson_court/art/crypt_guardian.webp"
+      "artUrl": "/cards/crimson_court/art/crypt_guardian.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 128
+      }
     },
     "black_vein_executioner": {
-      "artUrl": "/cards/crimson_court/art/black_vein_executioner.webp"
+      "artUrl": "/cards/crimson_court/art/black_vein_executioner.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.667,
+        "x": -139,
+        "y": 248
+      }
     },
     "blood_sentinel": {
-      "artUrl": "/cards/crimson_court/art/blood_sentinel.webp"
+      "artUrl": "/cards/crimson_court/art/blood_sentinel.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 2,
+        "y": 80
+      }
     },
     "eternal_feast_countess": {
-      "artUrl": "/cards/crimson_court/art/eternal_feast_countess.webp"
+      "artUrl": "/cards/crimson_court/art/eternal_feast_countess.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 75
+      }
     },
     "blood_pact": {
-      "artUrl": "/cards/crimson_court/art/blood_pact.webp"
+      "artUrl": "/cards/crimson_court/art/blood_pact.jpg"
     },
     "crimson_impulse": {
-      "artUrl": "/cards/crimson_court/art/crimson_impulse.webp"
+      "artUrl": "/cards/crimson_court/art/crimson_impulse.jpg"
     },
     "drain_essence": {
-      "artUrl": "/cards/crimson_court/art/drain_essence.webp"
+      "artUrl": "/cards/crimson_court/art/drain_essence.jpg"
     },
     "predatory_thirst": {
-      "artUrl": "/cards/crimson_court/art/predatory_thirst.webp"
+      "artUrl": "/cards/crimson_court/art/predatory_thirst.jpg"
     },
     "final_banquet": {
-      "artUrl": "/cards/crimson_court/art/final_banquet.webp"
+      "artUrl": "/cards/crimson_court/art/final_banquet.jpg"
     },
     "territorio_de_caza": {
-      "artUrl": "/cards/hunters/art/territorio_de_caza.webp"
+      "artUrl": "/cards/hunters/art/territorio_de_caza.jpg"
     },
     "trampa_de_mandibulas": {
       "artUrl": "/cards/hunters/art/trampa_de_mandibulas.webp"
@@ -204,28 +419,48 @@
       "artUrl": "/cards/hunters/art/red_de_garfios.webp"
     },
     "rastreadora_de_huellas": {
-      "artUrl": "/cards/hunters/art/rastreadora_de_huellas.webp"
+      "artUrl": "/cards/hunters/art/rastreadora_de_huellas.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 122
+      }
     },
     "trampero_de_acero": {
-      "artUrl": "/cards/hunters/art/trampero_de_acero.webp"
+      "artUrl": "/cards/hunters/art/trampero_de_acero.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 2.372,
+        "x": -469,
+        "y": -210
+      }
     },
     "lancero_de_la_marca": {
-      "artUrl": "/cards/hunters/art/lancero_de_la_marca.webp"
+      "artUrl": "/cards/hunters/art/lancero_de_la_marca.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -6,
+        "y": 76
+      }
     },
     "lyra_ojo_de_la_caceria": {
-      "artUrl": "/cards/hunters/art/lyra_ojo_de_la_caceria.webp"
+      "artUrl": "/cards/hunters/art/lyra_ojo_de_la_caceria.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 111
+      }
     },
     "flecha_sedante": {
-      "artUrl": "/cards/hunters/art/flecha_sedante.webp"
+      "artUrl": "/cards/hunters/art/flecha_sedante.jpg"
     },
     "contra_tu_manada": {
-      "artUrl": "/cards/hunters/art/contra_tu_manada.webp"
+      "artUrl": "/cards/hunters/art/contra_tu_manada.jpg"
     },
     "rodear_a_la_presa": {
-      "artUrl": "/cards/hunters/art/rodear_a_la_presa.webp"
+      "artUrl": "/cards/hunters/art/rodear_a_la_presa.jpg"
     },
     "trofeo_de_la_caceria": {
-      "artUrl": "/cards/hunters/art/trofeo_de_la_caceria.webp"
+      "artUrl": "/cards/hunters/art/trofeo_de_la_caceria.jpg"
     },
     "la_gran_batida": {
       "artUrl": "/cards/hunters/art/la_gran_batida.webp"
