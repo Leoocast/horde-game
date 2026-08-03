@@ -23,3 +23,28 @@ export function battlefieldArtCssVariables(
     "--battlefield-art-y": `${(resolved.y / referenceWidth) * 100}cqw`,
   };
 }
+
+export function battlefieldArtSourceCssVariables(
+  sourceWidth: number,
+  sourceHeight: number,
+): Record<string, string> {
+  if (!(sourceWidth > 0) || !(sourceHeight > 0)) {
+    return {
+      "--battlefield-art-source-width": "100%",
+      "--battlefield-art-source-height": "100%",
+    };
+  }
+
+  const viewportAspect = BATTLEFIELD_ART_VIEWPORT.width / BATTLEFIELD_ART_VIEWPORT.height;
+  const sourceAspect = sourceWidth / sourceHeight;
+  if (sourceAspect >= viewportAspect) {
+    return {
+      "--battlefield-art-source-width": `${(sourceAspect / viewportAspect) * 100}%`,
+      "--battlefield-art-source-height": "100%",
+    };
+  }
+  return {
+    "--battlefield-art-source-width": "100%",
+    "--battlefield-art-source-height": `${(viewportAspect / sourceAspect) * 100}%`,
+  };
+}

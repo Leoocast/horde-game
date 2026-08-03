@@ -10,6 +10,7 @@ import {
 import {
   BATTLEFIELD_ART_VIEWPORT,
   battlefieldArtCssVariables,
+  battlefieldArtSourceCssVariables,
 } from "../src/utils/battlefieldArtFrame";
 import {
   STUDIO_DECKS,
@@ -288,9 +289,19 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
     /\.game-preview-wrap\s*\{[^}]*width:\s*212px;[^}]*max-width:\s*100%;/u,
     "the Studio game preview must use the battlefield card's real display width",
   );
+  assert.match(
+    studioShell,
+    /\.game-preview-title\s*\{[^}]*background:\s*linear-gradient\(90deg, var\(--game-title-start\) 0%, var\(--game-title-end\) 65%, var\(--game-title-end\) 100%\);/u,
+    "the Studio cropped-card header must remain opaque across its full width",
+  );
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
   assert.match(studioApp, /battlefieldArtFrames/u);
+  assert.match(
+    studioApp,
+    /gamePreviewImage\.naturalWidth[\s\S]*--game-art-source-width/u,
+    "the Studio crop must size the complete source image before applying its frame",
+  );
   assert.match(studioServer, /fullArtOverrides: true/u);
   assert.match(studioServer, /headerFadeOverrides: true/u);
   assert.match(studioServer, /battlefieldArtFrames: true/u);
@@ -449,6 +460,22 @@ test("battlefield art framing is canonical, bounded and independent from print f
       "--battlefield-art-y": "-10cqw",
     },
   );
+  assert.deepEqual(
+    battlefieldArtSourceCssVariables(600, 600),
+    {
+      "--battlefield-art-source-width": "100%",
+      "--battlefield-art-source-height": `${(488 / 434) * 100}%`,
+    },
+    "zooming out a square battlefield image must reveal the complete source",
+  );
+  assert.deepEqual(
+    battlefieldArtSourceCssVariables(1448, 1086),
+    {
+      "--battlefield-art-source-width": `${((1448 / 1086) / (488 / 434)) * 100}%`,
+      "--battlefield-art-source-height": "100%",
+    },
+    "landscape battlefield art must start from a complete-image cover size",
+  );
 
   const runtimeCards = [
     "last_rain",
@@ -494,6 +521,17 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
   assert.match(cardSource, /usingBattlefieldArt\s*\? battlefieldArtUrl/u);
   assert.match(cardSource, /card-battlefield-art-fallback/u);
+  assert.match(cardSource, /battlefieldArtSourceCssVariables\(image\.naturalWidth, image\.naturalHeight\)/u);
+  assert.match(
+    cardSource,
+    /\.\.\.\(usingBattlefieldArt \? battlefieldArtSourceStyle : \{\}\)/u,
+    "the runtime crop must retain source geometry on the same container used by the Studio",
+  );
+  assert.doesNotMatch(
+    cardSource,
+    /image\.style\.setProperty/u,
+    "React must own the runtime source geometry instead of mutating the image node imperatively",
+  );
   assert.match(
     runtimeCss,
     /\.battlefield-row-overflow \.battlefield-card-slot\s*\{[^}]*height:\s*calc\(var\(--battlefield-card-width\) \* 0\.8893442623\);/u,
@@ -503,6 +541,16 @@ test("battlefield art framing is canonical, bounded and independent from print f
     runtimeCss,
     /\.card-battlefield-cropped:not\(\.card-battlefield-art-fallback\) > img\s*\{[^}]*clip-path:\s*none;/u,
     "the runtime crop must neutralize the full-card image clip used outside the battlefield",
+  );
+  assert.doesNotMatch(
+    runtimeCss,
+    /--card-cropped-title-gradient:[^;]*transparent/u,
+    "cropped-card theme headers must not fade to transparency",
+  );
+  assert.doesNotMatch(
+    runtimeCss,
+    /\.card-cropped-title::(?:before|after)\s*\{[^}]*mask-image:/u,
+    "the runtime cropped-card header layers must remain opaque across their full width",
   );
 });
 

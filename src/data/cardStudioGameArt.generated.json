@@ -4,13 +4,18 @@
     "first_dew_gatherers": {
       "artUrl": "/cards/last_rain/art/first_dew_gatherers.jpg",
       "battlefieldArtFrame": {
-        "zoom": 0.65,
-        "x": -4,
+        "zoom": 1,
+        "x": -2,
         "y": 10
       }
     },
     "iria_voice_last_rain": {
-      "artUrl": "/cards/last_rain/art/iria_voice_last_rain.jpg"
+      "artUrl": "/cards/last_rain/art/iria_voice_last_rain.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.875,
+        "x": 12,
+        "y": 267
+      }
     },
     "keeper_sleeping_root": {
       "artUrl": "/cards/last_rain/art/keeper_sleeping_root.jpg"

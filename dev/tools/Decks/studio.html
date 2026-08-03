@@ -512,6 +512,8 @@
             --game-art-x: 0cqw;
             --game-art-y: 0cqw;
             --game-art-zoom: 1;
+            --game-art-source-width: 100%;
+            --game-art-source-height: 100%;
             --game-title-start: #315b3a;
             --game-title-end: #1d4228;
             --game-stat-start: #305a38;
@@ -562,15 +564,21 @@
 
         .game-preview > img {
             position: absolute;
-            inset: 0;
+            inset: auto;
+            top: 50%;
+            left: 50%;
             z-index: 0;
             display: block;
-            width: 100%;
-            height: 100%;
+            width: var(--game-art-source-width);
+            height: var(--game-art-source-height);
             max-width: none;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
-            transform: translate3d(var(--game-art-x), var(--game-art-y), 0)
+            transform: translate3d(
+                calc(-50% + var(--game-art-x)),
+                calc(-50% + var(--game-art-y)),
+                0
+            )
                 scale(var(--game-art-zoom));
             transform-origin: center;
             pointer-events: none;
@@ -590,7 +598,7 @@
             border-top: 1px solid rgba(184, 162, 107, 0.55);
             border-bottom: 1px solid rgba(184, 162, 107, 0.55);
             color: #f0ead7;
-            background: linear-gradient(90deg, var(--game-title-start), var(--game-title-end) 65%, transparent 98%);
+            background: linear-gradient(90deg, var(--game-title-start) 0%, var(--game-title-end) 65%, var(--game-title-end) 100%);
             font: 600 clamp(12px, 6.6cqw, 14px)/1 "Hostfall Card Lora", Georgia, serif;
             letter-spacing: 0.008em;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.92);

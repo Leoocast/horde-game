@@ -1,10 +1,14 @@
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTraitLabel, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { STATE_VOCABULARY, vocabularyText } from "../i18n/gameVocabulary";
 import { useTranslation } from "../i18n/useTranslation";
 import { cardThemeForDefinition, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
-import { battlefieldArtCssVariables } from "../utils/battlefieldArtFrame";
+import {
+  battlefieldArtCssVariables,
+  battlefieldArtSourceCssVariables,
+} from "../utils/battlefieldArtFrame";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -86,6 +90,27 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : highRes
       ? highResImageUrl
       : imageUrl;
+  const battlefieldArtImageRef = useRef<HTMLImageElement>(null);
+  const [battlefieldArtSourceStyle, setBattlefieldArtSourceStyle] = useState<Record<string, string>>();
+  const syncBattlefieldArtSourceStyle = useCallback((image: HTMLImageElement) => {
+    if (image.naturalWidth <= 0 || image.naturalHeight <= 0) return;
+    setBattlefieldArtSourceStyle(
+      battlefieldArtSourceCssVariables(image.naturalWidth, image.naturalHeight),
+    );
+  }, []);
+  useLayoutEffect(() => {
+    if (!usingBattlefieldArt) {
+      setBattlefieldArtSourceStyle(undefined);
+      return;
+    }
+
+    const image = battlefieldArtImageRef.current;
+    if (image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+      syncBattlefieldArtSourceStyle(image);
+    } else {
+      setBattlefieldArtSourceStyle(undefined);
+    }
+  }, [displayImageUrl, syncBattlefieldArtSourceStyle, usingBattlefieldArt]);
   const stabilizing = !suppressStabilizing && card.zone === "field" && card.kinds.includes("ECHO") && card.stabilizing;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   const draggingGlow = dragging
@@ -120,6 +145,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     ? ({
         ...interactionStyle,
         ...(useBattlefieldArt ? battlefieldArtCssVariables(battlefieldArtFrame) : {}),
+        ...(usingBattlefieldArt ? battlefieldArtSourceStyle : {}),
       } as CSSProperties)
     : undefined;
   return (
@@ -183,7 +209,20 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       ].join(" ")}
     >
       {face ?? (displayImageUrl ? (
-        <img src={displayImageUrl} alt={localizedName} className="h-full w-full select-none object-cover" loading="eager" decoding="async" draggable={false} onDragStart={(event) => event.preventDefault()} />
+        <img
+          ref={usingBattlefieldArt ? battlefieldArtImageRef : undefined}
+          src={displayImageUrl}
+          alt={localizedName}
+          className="h-full w-full select-none object-cover"
+          loading="eager"
+          decoding="async"
+          draggable={false}
+          style={usingBattlefieldArt && !battlefieldArtSourceStyle ? { visibility: "hidden" } : undefined}
+          onLoad={usingBattlefieldArt
+            ? (event) => syncBattlefieldArtSourceStyle(event.currentTarget)
+            : undefined}
+          onDragStart={(event) => event.preventDefault()}
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
       ))}

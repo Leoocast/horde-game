@@ -6355,15 +6355,24 @@
   }
 
   .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-battlefield-cropped:not(.card-battlefield-art-fallback) > img {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: var(--battlefield-art-source-width, 100%);
+    height: var(--battlefield-art-source-height, 100%);
     max-width: none;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     clip-path: none;
-    transform: translate3d(var(--battlefield-art-x, 0cqw), var(--battlefield-art-y, 0cqw), 0)
+    transform: translate3d(
+      calc(-50% + var(--battlefield-art-x, 0cqw)),
+      calc(-50% + var(--battlefield-art-y, 0cqw)),
+      0
+    )
       scale(var(--battlefield-art-zoom, 1));
     transform-origin: center;
+    transition: none;
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
@@ -12290,7 +12299,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/last_rain/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, #1d4228 100%);
   position: absolute;
   top: 0;
   right: 0;
@@ -12336,8 +12345,6 @@
     0 2px 4px rgb(0 0 0 / 0.42);
   content: "";
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title::after {
@@ -12350,8 +12357,6 @@
   mix-blend-mode: multiply;
   opacity: 0.33;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title > span {
@@ -12498,7 +12503,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/hollow_bell_procession/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #1d3f37 100%);
   color: #f2f5e8;
 }
 
@@ -12539,7 +12544,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/broken_forge_mutiny/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, #5e180d 100%);
   color: #f8eedc;
 }
 
@@ -12581,7 +12586,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/crimson_court/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(246 221 227 / 0.018) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, #3b0d1d 100%);
   color: #f6ece7;
 }
 

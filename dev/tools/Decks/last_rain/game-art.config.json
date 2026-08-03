@@ -3,9 +3,16 @@
   "cards": {
     "first_dew_gatherers": {
       "battlefieldArtFrame": {
-        "zoom": 0.65,
-        "x": -4,
+        "zoom": 1,
+        "x": -2,
         "y": 10
+      }
+    },
+    "iria_voice_last_rain": {
+      "battlefieldArtFrame": {
+        "zoom": 1.875,
+        "x": 12,
+        "y": 267
       }
     }
   }

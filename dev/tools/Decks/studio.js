@@ -259,6 +259,28 @@
         }
     }
 
+    function clearGameArtSourceSize() {
+        gamePreview.style.removeProperty("--game-art-source-width");
+        gamePreview.style.removeProperty("--game-art-source-height");
+    }
+
+    function applyGameArtSourceSize() {
+        const sourceWidth = gamePreviewImage.naturalWidth;
+        const sourceHeight = gamePreviewImage.naturalHeight;
+        if (!(sourceWidth > 0) || !(sourceHeight > 0)) return;
+
+        const viewportAspect = GAME_ART_WIDTH / GAME_ART_HEIGHT;
+        const sourceAspect = sourceWidth / sourceHeight;
+        const width = sourceAspect >= viewportAspect
+            ? (sourceAspect / viewportAspect) * 100
+            : 100;
+        const height = sourceAspect >= viewportAspect
+            ? 100
+            : (viewportAspect / sourceAspect) * 100;
+        gamePreview.style.setProperty("--game-art-source-width", `${width}%`);
+        gamePreview.style.setProperty("--game-art-source-height", `${height}%`);
+    }
+
     function renderGamePreview() {
         const current = card();
         gamePreviewPanel.hidden = viewMode !== "focus"
@@ -277,8 +299,18 @@
         );
         gamePreview.style.setProperty("--game-art-zoom", frame.zoom);
         gamePreview.dataset.deck = deckId;
-        if (current.battlefieldArtUrl) gamePreviewImage.src = current.battlefieldArtUrl;
-        else gamePreviewImage.removeAttribute("src");
+        if (current.battlefieldArtUrl) {
+            const nextUrl = new URL(current.battlefieldArtUrl, window.location.href).href;
+            if (gamePreviewImage.src !== nextUrl) {
+                clearGameArtSourceSize();
+                gamePreviewImage.src = current.battlefieldArtUrl;
+            } else {
+                applyGameArtSourceSize();
+            }
+        } else {
+            gamePreviewImage.removeAttribute("src");
+            clearGameArtSourceSize();
+        }
         gamePreviewImage.alt = current.nombre || current.id;
         gamePreviewTitle.textContent = current.nombre || current.id;
         const hasStats = current.atk !== null && current.atk !== undefined
@@ -1043,6 +1075,8 @@
     headerFadeToggle.addEventListener("change", () => {
         if (cardId) setHeaderFade(cardId, headerFadeToggle.checked);
     });
+
+    gamePreviewImage.addEventListener("load", applyGameArtSourceSize);
 
     gamePreview.addEventListener("pointerdown", (event) => {
         if (event.button !== 0 || !cardId || !supportsBattlefieldArtFrames) return;
