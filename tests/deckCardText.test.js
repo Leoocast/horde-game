@@ -634,6 +634,11 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
   assert.match(
     runtimeCss,
+    /\.battlefield-row-overflow \.card-visual\.card-image-native-hd > \.card-stat-badge\s*\{[^}]*height:\s*31px;[^}]*min-width:\s*54px;[^}]*gap:\s*2\.4px;[^}]*padding:\s*0 5px;[^}]*linear-gradient\(180deg,\s*#305a38 0%,\s*#214329 54%,\s*#0a1c0e 100%\);/u,
+    "the cropped field badge must reuse the hover overlay proportions while retaining its field palette",
+  );
+  assert.match(
+    runtimeCss,
     /\.card-battlefield-cropped:not\(\.card-battlefield-art-fallback\) > img\s*\{[^}]*clip-path:\s*none;/u,
     "the runtime crop must neutralize the full-card image clip used outside the battlefield",
   );

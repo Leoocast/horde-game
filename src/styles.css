@@ -12375,12 +12375,12 @@
   display: flex;
   width: auto;
   height: 31px;
-  min-width: 64px;
+  min-width: 54px;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 0 9px 0 8px;
+  gap: 2.4px;
+  padding: 0 5px;
   border: 0;
   border-radius: 11px 0 9px;
   background:
