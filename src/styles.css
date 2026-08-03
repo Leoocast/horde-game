@@ -11990,37 +11990,39 @@
   box-shadow: inset 0 0 0 1px rgb(179 205 159 / 0.1), 0 0 8px rgb(111 157 94 / 0.28), 0 4px 12px rgb(0 0 0 / 0.68);
 }
 
-/* Full player cards already print a stats tab into the PNG/HTML face. This dynamic tab sits
-   exactly over it so counters, damage and buffs never disagree with the visible card. */
+/* Full player cards already print a stats tab into the PNG/HTML face. Common cards place it
+   above the type band, so the dynamic hand/hover values must cover that exact 976px geometry. */
 .card-visual.card-image-full > .card-stat-badge,
 .card-preview-full-card-frame > .card-stat-badge,
 .deck-card-dynamic-frame > .card-stat-badge {
   --card-stat-background:
     radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
     repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
-  --card-stat-border: rgb(201 177 111 / 0.48);
+    linear-gradient(180deg, #3f8163 0%, #3d765e 20%, #386251 44%, #2d493d 68%, #1d2926 100%);
+  --card-stat-border: rgb(191 166 106 / 0.62);
+  --card-stat-number: #f5eee0;
+  --card-stat-separator: #eadcad;
   isolation: isolate;
-  right: 0.2cqw;
-  bottom: 0.2cqw;
+  right: 3.28cqw;
+  bottom: 57.79cqw;
   z-index: 40;
   display: flex;
   width: auto;
-  height: 9.22cqw;
-  min-width: 20.3cqw;
+  height: 9.32cqw;
+  min-width: 16.19cqw;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 1.13cqw;
-  padding: 0 2.97cqw 0 2.56cqw;
+  gap: 0.72cqw;
+  padding: 0 1.43cqw;
   border: 0;
-  border-radius: 3.07cqw 0 2.56cqw 0;
+  border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
   background: var(--card-stat-background);
   color: var(--card-stat-number);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
-    0 0.31cqw 0.82cqw rgb(0 0 0 / 0.52);
+    inset 0 0.1cqw 0 rgb(255 255 255 / 0.14),
+    inset 0 -0.31cqw 0.61cqw rgb(0 0 0 / 0.18),
+    0 0.82cqw 2.05cqw rgb(0 0 0 / 0.62);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   clip-path: none;
 }
@@ -12029,10 +12031,10 @@
 .card-preview-full-card-frame > .card-stat-badge::after,
 .deck-card-dynamic-frame > .card-stat-badge::after {
   position: absolute;
-  inset: 0.2cqw;
+  inset: 0;
   z-index: 2;
-  border: 0.2cqw solid var(--card-stat-border);
-  border-radius: 2.87cqw 0 2.36cqw 0;
+  border: 0.31cqw solid var(--card-stat-border);
+  border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
   content: "";
   pointer-events: none;
 }
@@ -12045,16 +12047,17 @@
   align-self: center;
   width: auto;
   height: auto;
-  margin: 0 0.31cqw;
+  margin: 0;
   border: 0;
   background: none;
   box-shadow: none;
   color: var(--card-stat-separator);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
-  font-size: 3.9cqw;
+  font-size: 3.69cqw;
   font-style: normal;
   font-weight: 600;
   line-height: 1;
+  opacity: 0.82;
   transform: none;
 }
 
@@ -12073,7 +12076,7 @@
   padding: 0;
   color: var(--card-stat-number);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
-  font-size: 5.23cqw;
+  font-size: 5.53cqw;
   font-variant-numeric: tabular-nums;
   font-weight: 950;
   letter-spacing: 0;
@@ -12140,11 +12143,6 @@
   color: #bed4aa;
   font-size: 1.1cqw;
   text-shadow: 0 0 0.82cqw rgb(111 157 94 / 0.52);
-}
-
-.card-preview-full-card-frame > .card-stat-badge {
-  right: 0.2cqw;
-  bottom: 0.2cqw;
 }
 
 .card-preview-full-card-frame {
@@ -12593,7 +12591,6 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge,
 .card-visual.card-image-full.card-theme-vampire > .card-stat-badge,
 .card-preview-full-card-frame.card-theme-vampire > .card-stat-badge {
-  --card-stat-separator: #c88c9b;
   background:
     radial-gradient(ellipse at 24% 0%, rgb(228 147 158 / 0.16), transparent 46%),
     repeating-linear-gradient(112deg, rgb(246 221 227 / 0.02) 0 1px, transparent 1px 5px),
@@ -12602,6 +12599,7 @@
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge {
   --card-stat-motif-image: url("../dev/tools/Decks/crimson_court/motivo.avif");
+  --card-stat-separator: #c88c9b;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge > i,
@@ -12653,6 +12651,12 @@
 .card-preview-full-card-frame.card-layout-full-art > .card-stat-badge {
   right: 5.94cqw;
   bottom: 13.93cqw;
+  border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
+}
+
+.card-visual.card-image-full.card-layout-full-art > .card-stat-badge::after,
+.card-preview-full-card-frame.card-layout-full-art > .card-stat-badge::after {
+  border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */

@@ -334,6 +334,10 @@ test("the shared printed design keeps the approved compact geometry", () => {
     new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
     "utf8",
   );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
   const sharedStudio = fs.readFileSync(
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
@@ -366,6 +370,16 @@ test("the shared printed design keeps the approved compact geometry", () => {
   assert.match(sharedCss, /\.tcg-art-image\.tcg-art-image--positioned/u);
   assert.match(sharedCss, /\.tcg-card--common\.tcg-card--no-header-fade \.tcg-card-veil/u);
   assert.match(sharedStudio, /headerFadeClass/u);
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?right:\s*3\.28cqw;[\s\S]*?bottom:\s*57\.79cqw;[\s\S]*?height:\s*9\.32cqw;[\s\S]*?min-width:\s*16\.19cqw;/u,
+    "hand and hover stats must cover the new printed tab above the common-card type band",
+  );
+  assert.match(
+    runtimeCss,
+    /--card-stat-separator:\s*#eadcad;/u,
+    "the dynamic stat separator must use the printed card's gold palette",
+  );
 });
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
