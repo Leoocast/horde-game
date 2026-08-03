@@ -11928,6 +11928,10 @@
 }
 
 .card-stat-badge {
+  --card-stat-ramp-background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
   --card-stat-background: linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
   --card-stat-border: rgb(201 177 111 / 0.48);
   --card-stat-number: #f2f0e6;
@@ -11995,10 +11999,7 @@
 .card-visual.card-image-full > .card-stat-badge,
 .card-preview-full-card-frame > .card-stat-badge,
 .deck-card-dynamic-frame > .card-stat-badge {
-  --card-stat-background:
-    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #3f8163 0%, #3d765e 20%, #386251 44%, #2d493d 68%, #1d2926 100%);
+  --card-stat-background: var(--card-stat-ramp-background);
   --card-stat-border: rgb(191 166 106 / 0.62);
   --card-stat-number: #f5eee0;
   --card-stat-separator: #eadcad;
@@ -12383,10 +12384,7 @@
   padding: 0 5px;
   border: 0;
   border-radius: 11px 0 9px;
-  background:
-    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  background: var(--card-stat-ramp-background);
   color: #f2f0e6;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.1),

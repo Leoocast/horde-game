@@ -509,7 +509,7 @@ body {
 .effect-token,
 .effect-stat {
     color: var(--accent-ink);
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .effect-keyword-value {
@@ -859,7 +859,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--common .tcg-effect {
     color: var(--paper-ink);
-    font: 600 43px/1.35 "Lora", serif;
+    font: 500 43px/1.35 "Lora", serif;
 }
 
 .tcg-card--common .tcg-divider {
@@ -1079,7 +1079,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--full-art .tcg-effect {
     color: #f0ebdc;
-    font: 600 39px/1.36 "Lora", serif;
+    font: 500 39px/1.36 "Lora", serif;
     text-shadow:
         0 2px 4px rgba(0, 0, 0, 0.95),
         0 0 14px rgba(0, 0, 0, 0.8);

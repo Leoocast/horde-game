@@ -373,6 +373,21 @@ test("the shared printed design keeps the approved compact geometry", () => {
   assert.match(sharedCss, /\.tcg-card--common\.tcg-card--no-header-fade \.tcg-card-veil/u);
   assert.match(sharedStudio, /headerFadeClass/u);
   assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-effect\s*\{[^}]*font:\s*500 43px\/1\.35 "Lora", serif;/u,
+    "common-card rules text must use a medium weight",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-effect\s*\{[^}]*font:\s*500 39px\/1\.36 "Lora", serif;/u,
+    "full-art rules text must use a medium weight",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-effect strong,[\s\S]*?\.effect-stat\s*\{[^}]*font-weight:\s*700;/u,
+    "highlighted rules terms must remain distinct without using extra-bold text",
+  );
+  assert.match(
     runtimeCss,
     /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?right:\s*var\(--card-stat-right,\s*3\.28cqw\);[\s\S]*?bottom:\s*var\(--card-stat-bottom,\s*57\.79cqw\);[\s\S]*?height:\s*var\(--card-stat-height,\s*9\.32cqw\);[\s\S]*?min-width:\s*var\(--card-stat-width,\s*16\.19cqw\);/u,
     "hand and hover stats must cover the new printed tab above the common-card type band",
@@ -634,8 +649,18 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
   assert.match(
     runtimeCss,
-    /\.battlefield-row-overflow \.card-visual\.card-image-native-hd > \.card-stat-badge\s*\{[^}]*height:\s*31px;[^}]*min-width:\s*54px;[^}]*gap:\s*2\.4px;[^}]*padding:\s*0 5px;[^}]*linear-gradient\(180deg,\s*#305a38 0%,\s*#214329 54%,\s*#0a1c0e 100%\);/u,
+    /\.battlefield-row-overflow \.card-visual\.card-image-native-hd > \.card-stat-badge\s*\{[^}]*height:\s*31px;[^}]*min-width:\s*54px;[^}]*gap:\s*2\.4px;[^}]*padding:\s*0 5px;[^}]*background:\s*var\(--card-stat-ramp-background\);/u,
     "the cropped field badge must reuse the hover overlay proportions while retaining its field palette",
+  );
+  assert.match(
+    runtimeCss,
+    /--card-stat-ramp-background:[\s\S]*?linear-gradient\(180deg,\s*#305a38 0%,\s*#214329 54%,\s*#0a1c0e 100%\);/u,
+    "the shared ramp palette must preserve the field badge tone",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?--card-stat-background:\s*var\(--card-stat-ramp-background\);/u,
+    "hand and hover badges must inherit the field badge tone",
   );
   assert.match(
     runtimeCss,
