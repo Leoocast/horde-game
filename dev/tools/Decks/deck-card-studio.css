@@ -19,12 +19,14 @@
 
 @font-face {
     font-family: "Lora";
+    font-weight: 400 700;
     src: url("../../../public/fonts/last-rain/lora-normal-latin.woff2") format("woff2");
     font-display: block;
 }
 
 @font-face {
     font-family: "Lora";
+    font-weight: 400 700;
     src: url("../../../public/fonts/last-rain/lora-italic-latin.woff2") format("woff2");
     font-style: italic;
     font-display: block;
@@ -509,7 +511,7 @@ body {
 .effect-token,
 .effect-stat {
     color: var(--accent-ink);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .effect-keyword-value {
@@ -573,18 +575,24 @@ body {
 /* Carta común: medidas idénticas al prototipo aprobado                */
 /* ------------------------------------------------------------------ */
 
+.tcg-card--common {
+    border-radius: 48px;
+    background: #090a08;
+    box-shadow:
+        0 36px 80px rgba(0, 0, 0, 0.9),
+        0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
 .tcg-card--common .tcg-card-frame {
     position: absolute;
     inset: 0;
     z-index: 12;
-    padding: 19px;
+    padding: 18px;
     border-radius: inherit;
     background:
         var(--noise),
-        linear-gradient(145deg, var(--metal-top), var(--metal-mid) 45%, var(--metal-bottom));
-    box-shadow:
-        inset 0 0 18px rgba(0, 0, 0, 0.92),
-        inset 0 2px rgba(255, 255, 255, 0.1);
+        linear-gradient(180deg, #536174 0%, #414e60 42%, #2d3948 72%, #1b232e 100%);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
     -webkit-mask:
         linear-gradient(#000 0 0) content-box exclude,
         linear-gradient(#000 0 0);
@@ -596,41 +604,23 @@ body {
 
 .tcg-card--common .tcg-card-frame::before,
 .tcg-card--common .tcg-card-frame::after {
-    content: "";
-    position: absolute;
-    top: 23px;
-    width: 84px;
-    height: 84px;
-    border-top: 4px solid var(--gold);
-    opacity: 0.62;
-}
-
-.tcg-card--common .tcg-card-frame::before {
-    left: 28px;
-    border-left: 4px solid var(--gold);
-    border-radius: 18px 0 0;
-}
-
-.tcg-card--common .tcg-card-frame::after {
-    right: 28px;
-    border-right: 4px solid var(--gold);
-    border-radius: 0 18px 0 0;
+    content: none;
 }
 
 .tcg-card--common .tcg-card-rim {
     position: absolute;
-    inset: 19px;
+    inset: 18px;
     z-index: 13;
-    border-radius: 31px;
+    border-radius: 30px;
     box-shadow:
-        inset 0 0 0 3px rgba(191, 166, 106, 0.5),
-        inset 0 0 40px rgba(0, 0, 0, 0.7);
+        inset 0 0 0 2px rgba(184, 162, 107, 0.4),
+        inset 0 0 36px rgba(0, 0, 0, 0.7);
     pointer-events: none;
 }
 
 .tcg-card--common .tcg-art-frame {
-    border-radius: 31px;
-    clip-path: inset(19px round 31px);
+    border-radius: 30px;
+    clip-path: inset(18px round 30px);
 }
 
 .tcg-card--common .tcg-card-veil {
@@ -859,7 +849,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--common .tcg-effect {
     color: var(--paper-ink);
-    font: 500 43px/1.35 "Lora", serif;
+    font: 400 43px/1.35 "Lora", serif;
 }
 
 .tcg-card--common .tcg-divider {
@@ -1079,7 +1069,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--full-art .tcg-effect {
     color: #f0ebdc;
-    font: 500 39px/1.36 "Lora", serif;
+    font: 400 39px/1.36 "Lora", serif;
     text-shadow:
         0 2px 4px rgba(0, 0, 0, 0.95),
         0 0 14px rgba(0, 0, 0, 0.8);

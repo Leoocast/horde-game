@@ -374,18 +374,33 @@ test("the shared printed design keeps the approved compact geometry", () => {
   assert.match(sharedStudio, /headerFadeClass/u);
   assert.match(
     sharedCss,
-    /\.tcg-card--common \.tcg-effect\s*\{[^}]*font:\s*500 43px\/1\.35 "Lora", serif;/u,
-    "common-card rules text must use a medium weight",
+    /@font-face\s*\{[^}]*font-family:\s*"Lora";[^}]*font-weight:\s*400 700;[^}]*lora-normal-latin\.woff2/u,
+    "the Studio must expose Lora's real weight range instead of synthesizing bold text",
   );
   assert.match(
     sharedCss,
-    /\.tcg-card--full-art \.tcg-effect\s*\{[^}]*font:\s*500 39px\/1\.36 "Lora", serif;/u,
-    "full-art rules text must use a medium weight",
+    /\.tcg-card--common \.tcg-effect\s*\{[^}]*font:\s*400 43px\/1\.35 "Lora", serif;/u,
+    "common-card rules text must use the regular weight",
   );
   assert.match(
     sharedCss,
-    /\.tcg-effect strong,[\s\S]*?\.effect-stat\s*\{[^}]*font-weight:\s*700;/u,
-    "highlighted rules terms must remain distinct without using extra-bold text",
+    /\.tcg-card--full-art \.tcg-effect\s*\{[^}]*font:\s*400 39px\/1\.36 "Lora", serif;/u,
+    "full-art rules text must use the regular weight",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-effect strong,[\s\S]*?\.effect-stat\s*\{[^}]*font-weight:\s*600;/u,
+    "highlighted rules terms must remain distinct without using bold text",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-card-frame\s*\{[^}]*padding:\s*18px;[^}]*linear-gradient\(180deg,\s*#536174 0%,\s*#414e60 42%,\s*#2d3948 72%,\s*#1b232e 100%\);[^}]*inset 0 0 15px rgba\(0, 0, 0, 0\.9\);/u,
+    "common cards must keep the approved historical blue-steel frame",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-card-frame::before,[\s\S]*?\.tcg-card--common \.tcg-card-frame::after\s*\{[^}]*content:\s*none;/u,
+    "the blue-steel frame must not restore the later gold corner ornaments",
   );
   assert.match(
     runtimeCss,
