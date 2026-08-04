@@ -2888,7 +2888,7 @@
   .deck-card-count-badge {
     position: absolute;
     top: -9px;
-    left: -9px;
+    right: -9px;
     z-index: 20;
     display: grid;
     min-width: 30px;
