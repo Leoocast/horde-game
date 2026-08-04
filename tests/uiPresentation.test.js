@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { activeDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
@@ -9,4 +11,24 @@ test("the Host Archive counter counts attack discards down without displaying ze
   assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
   assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
   assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
+});
+
+test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {
+  const game = createTestGame();
+  const attacker = addCard(game, customCard("attacker", "host"));
+  const blocker = addCard(game, customCard("blocker", "player"));
+  game.combat.hostAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+
+  assert.deepEqual(activeDefenseArrowLinks(game), [{
+    attackerId: attacker.instanceId,
+    blockerId: blocker.instanceId,
+  }]);
+
+  game.player.field = [];
+  assert.deepEqual(activeDefenseArrowLinks(game), []);
+
+  game.player.field = [blocker];
+  game.host.field = [];
+  assert.deepEqual(activeDefenseArrowLinks(game), []);
 });

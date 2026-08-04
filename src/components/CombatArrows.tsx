@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
+import { activeDefenseArrowLinks } from "./battlefieldLayout";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
@@ -92,28 +93,26 @@ export function CombatArrows({ game }: { game: GameState }) {
     let trackUntil = performance.now() + 500;
     const measure = () => {
       const next: Arrow[] = [];
-      for (const [attackerId, blockerIds] of Object.entries(game.combat.blockers)) {
+      for (const { attackerId, blockerId } of activeDefenseArrowLinks(game)) {
         const attacker = document.querySelector<HTMLElement>(`[data-card-id="${attackerId}"]`);
         if (!attacker) continue;
         const attackerRect = attacker.getBoundingClientRect();
-        for (const blockerId of blockerIds) {
-          const arrowId = `${attackerId}-${blockerId}`;
-          if (hiddenArrowIds.has(arrowId)) continue;
-          const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
-          if (!blocker) continue;
-          const blockerRect = blocker.getBoundingClientRect();
-          const blockerIsBehindInStack = isCardBehindInStack(blocker);
-          const start = {
-            x: blockerIsBehindInStack ? blockerRect.left + STACKED_ARROW_LEFT_INSET_PX : blockerRect.left + blockerRect.width / 2,
-            y: blockerRect.top + blockerRect.height * 0.18,
-          };
-          const attackerIsBehindInStack = isCardBehindInStack(attacker);
-          const end = {
-            x: attackerIsBehindInStack ? attackerRect.left + STACKED_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
-            y: attackerRect.top + attackerRect.height * 0.82,
-          };
-          next.push(makeArrow(arrowId, start, end, DEFENSE_ARROW_COLOR));
-        }
+        const arrowId = `${attackerId}-${blockerId}`;
+        if (hiddenArrowIds.has(arrowId)) continue;
+        const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
+        if (!blocker) continue;
+        const blockerRect = blocker.getBoundingClientRect();
+        const blockerIsBehindInStack = isCardBehindInStack(blocker);
+        const start = {
+          x: blockerIsBehindInStack ? blockerRect.left + STACKED_ARROW_LEFT_INSET_PX : blockerRect.left + blockerRect.width / 2,
+          y: blockerRect.top + blockerRect.height * 0.18,
+        };
+        const attackerIsBehindInStack = isCardBehindInStack(attacker);
+        const end = {
+          x: attackerIsBehindInStack ? attackerRect.left + STACKED_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
+          y: attackerRect.top + attackerRect.height * 0.82,
+        };
+        next.push(makeArrow(arrowId, start, end, DEFENSE_ARROW_COLOR));
       }
       if (blockDrag) {
         const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockDrag.blockerId}"]`);
@@ -180,7 +179,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", restartTracking);
       window.removeEventListener("scroll", restartTracking, true);
     };
-  }, [game.combat.blockers, game.combat.hostAttackers, game.combat.playerAttackers, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
+  }, [game.combat.blockers, game.combat.hostAttackers, game.combat.playerAttackers, game.host.field, game.player.field, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">

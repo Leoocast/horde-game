@@ -15,6 +15,8 @@ export type GroupMeta = { order: number; suborder: number; anchorId: string };
 
 export type CardGroup = { key: string; cards: CardInstance[] };
 
+export type DefenseArrowLink = { attackerId: string; blockerId: string };
+
 /**
  * A mutable box, so callers can pass a React ref straight in. Deliberately structural: the tests
  * hand in plain `{ current: ... }` objects.
@@ -29,6 +31,27 @@ export function createBattlefieldArrivalRegistry(cards: CardInstance[]): Set<str
 /** Pure lookup used before the component claims an id after finding its rendered card slot. */
 export function unregisteredBattlefieldArrivals(cards: CardInstance[], registeredIds: Set<string>): CardInstance[] {
   return cards.filter((card) => !registeredIds.has(card.instanceId));
+}
+
+/**
+ * Combat assignments can outlive a permanent for a few presentation beats. The battlefield also
+ * keeps dead cards mounted as invisible layout ghosts, so DOM presence alone cannot decide
+ * whether an arrow is still valid. Both rules endpoints must still be live on their fields.
+ */
+export function activeDefenseArrowLinks(game: GameState): DefenseArrowLink[] {
+  const liveAttackers = new Set(game.host.field.map((card) => card.instanceId));
+  const declaredAttackers = new Set(game.combat.hostAttackers);
+  const liveBlockers = new Set(game.player.field.map((card) => card.instanceId));
+  const links: DefenseArrowLink[] = [];
+
+  for (const [attackerId, blockerIds] of Object.entries(game.combat.blockers)) {
+    if (!liveAttackers.has(attackerId) || !declaredAttackers.has(attackerId)) continue;
+    for (const blockerId of blockerIds) {
+      if (liveBlockers.has(blockerId)) links.push({ attackerId, blockerId });
+    }
+  }
+
+  return links;
 }
 
 export function isZombieToken(card: CardInstance): boolean {
