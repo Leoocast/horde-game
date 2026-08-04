@@ -1,5 +1,5 @@
 import { Archive, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -9,6 +9,7 @@ import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbo
 import { gameEffectDescription } from "../utils/cardText";
 import { cardTraits, cardStats } from "../utils/selectors";
 import { TraitPills } from "./CardPreview";
+import { memoryCardsNewestFirst } from "./memoryPresentation";
 
 type Props = {
   game: GameState;
@@ -21,10 +22,11 @@ type DetailsTransition = "idle" | "leave-next" | "leave-previous" | "enter-next"
 
 export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
   const t = useTranslation();
+  const displayCards = useMemo(() => memoryCardsNewestFirst(cards), [cards]);
   const [detailsCardId, setDetailsCardId] = useState<string | undefined>();
   const [detailsFontSize, setDetailsFontSize] = useState(20);
-  const detailsIndex = Math.max(0, cards.findIndex((card) => card.instanceId === detailsCardId));
-  const detailsCard = detailsCardId ? cards[detailsIndex] : undefined;
+  const detailsIndex = Math.max(0, displayCards.findIndex((card) => card.instanceId === detailsCardId));
+  const detailsCard = detailsCardId ? displayCards[detailsIndex] : undefined;
   const [closing, setClosing] = useState(false);
   const [detailsClosing, setDetailsClosing] = useState(false);
   const [detailsTransition, setDetailsTransition] = useState<DetailsTransition>("idle");
@@ -50,13 +52,13 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
   }
 
   function navigateDetails(direction: "next" | "previous") {
-    if (!detailsCardId || detailsClosing || cards.length < 2 || detailsTransition !== "idle") return;
+    if (!detailsCardId || detailsClosing || displayCards.length < 2 || detailsTransition !== "idle") return;
     setDetailsTransition(`leave-${direction}`);
     detailsTimers.current.push(window.setTimeout(() => {
       const nextIndex = direction === "next"
-        ? (detailsIndex + 1) % cards.length
-        : (detailsIndex - 1 + cards.length) % cards.length;
-      setDetailsCardId(cards[nextIndex]?.instanceId);
+        ? (detailsIndex + 1) % displayCards.length
+        : (detailsIndex - 1 + displayCards.length) % displayCards.length;
+      setDetailsCardId(displayCards[nextIndex]?.instanceId);
       setDetailsTransition(`enter-${direction}`);
       detailsTimers.current.push(window.setTimeout(() => setDetailsTransition("idle"), 160));
     }, 90));
@@ -70,13 +72,13 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
         else closeViewer();
         return;
       }
-      if (!detailsCardId || cards.length < 2) return;
+      if (!detailsCardId || displayCards.length < 2) return;
       if (event.key === "ArrowLeft") navigateDetails("previous");
       if (event.key === "ArrowRight") navigateDetails("next");
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [cards, closing, detailsCardId, detailsClosing, detailsIndex, detailsTransition]);
+  }, [closing, detailsCardId, detailsClosing, detailsIndex, detailsTransition, displayCards]);
 
   useEffect(() => () => {
     if (closeTimer.current !== undefined) window.clearTimeout(closeTimer.current);
@@ -110,7 +112,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
           </button>
         </header>
 
-        {cards.length === 0 ? (
+        {displayCards.length === 0 ? (
           <div className="graveyard-viewer-empty">
             <Archive size={34} strokeWidth={1.5} />
             {t("graveyard.empty")}
@@ -119,7 +121,7 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
           <div className="graveyard-viewer-collection">
             <div className="deck-detail-grid-scroll">
               <div className="deck-detail-grid graveyard-viewer-grid">
-              {cards.map((card, index) => (
+              {displayCards.map((card, index) => (
                 <GraveyardCardTile key={card.instanceId} card={card} index={index} onClick={() => setDetailsCardId(card.instanceId)} />
               ))}
               </div>
@@ -137,10 +139,10 @@ export function GraveyardViewerModal({ game, title, cards, onClose }: Props) {
           transition={detailsTransition}
           closing={detailsClosing}
           onClose={closeDetails}
-          onPrevious={cards.length > 1 ? () => navigateDetails("previous") : undefined}
-          onNext={cards.length > 1 ? () => navigateDetails("next") : undefined}
+          onPrevious={displayCards.length > 1 ? () => navigateDetails("previous") : undefined}
+          onNext={displayCards.length > 1 ? () => navigateDetails("next") : undefined}
           position={detailsIndex + 1}
-          total={cards.length}
+          total={displayCards.length}
         />
       )}
     </div>

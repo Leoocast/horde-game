@@ -13,24 +13,8 @@ import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import {
-  Eye,
-  Feather,
-  FlaskConical,
-  Ghost,
-  Heart,
-  HeartPulse,
-  Shield,
-  Skull,
-  Sparkles,
-  Sword,
-  Swords,
-  Users,
-  Waves,
-  Zap,
-  type LucideIcon,
-} from "lucide-react";
-import { cardTraitIconPresentation, type CardTraitIconKind } from "./cardTraitPresentation";
+import { Heart, Shield, Sword, Swords, Zap } from "lucide-react";
+import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
 
 type Props = {
@@ -283,6 +267,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         <div className={["card-keyword-stack", isZombie ? "card-keyword-stack-zombie" : ""].join(" ")}>
           {visibleTraits.map((keyword) => (
             <span key={keyword} className={["card-keyword-badge", keyword === "LETHAL" ? "card-keyword-deathtouch" : "", game.gameMode === "chaos" ? "card-keyword-chaos" : "", keywordToneClass].join(" ")}>
+              <CardTraitIcon keyword={keyword} />
               {renderBattlefieldTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}
             </span>
           ))}
@@ -320,21 +305,6 @@ export function CardDefenseBadge({
   );
 }
 
-const TRAIT_ICON_BY_KIND: Record<CardTraitIconKind, LucideIcon> = {
-  alert: Eye,
-  daunting: Users,
-  drain: HeartPulse,
-  fallback: Sparkles,
-  flying: Feather,
-  furtive: Ghost,
-  impetus: Sparkles,
-  lethal: Skull,
-  overflow: Waves,
-  poison: FlaskConical,
-  reflex: Zap,
-  skyguard: Shield,
-};
-
 export function CardTraitIconBadges({
   game,
   card,
@@ -362,8 +332,6 @@ export function CardTraitIconBadges({
         {visibleTraits.map((keyword) => {
           const label = naturalCaseTraitLabel(localizedTraitLabel(keyword, language));
           const reminder = localizedTraitTooltip(keyword, language);
-          const presentation = cardTraitIconPresentation(keyword);
-          const Icon = TRAIT_ICON_BY_KIND[presentation.kind];
 
           return (
             <GameTooltip
@@ -372,7 +340,10 @@ export function CardTraitIconBadges({
               side={variant === "host" ? "bottom" : "top"}
               content={(
                 <span className="card-trait-icon-tooltip-copy">
-                  <strong>{label}</strong>
+                  <strong className="keyword-pill card-trait-tooltip-keyword">
+                    <CardTraitIcon keyword={keyword} />
+                    {label}
+                  </strong>
                   <span>{reminder}</span>
                 </span>
               )}
@@ -386,10 +357,7 @@ export function CardTraitIconBadges({
                   keywordToneClass,
                 ].join(" ")}
               >
-                <Icon aria-hidden="true" />
-                {presentation.amount !== undefined && (
-                  <small aria-hidden="true">{presentation.amount}</small>
-                )}
+                <CardTraitIcon keyword={keyword} showAmount />
               </span>
             </GameTooltip>
           );
