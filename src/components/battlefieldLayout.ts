@@ -190,7 +190,7 @@ export function holdCombatCasualties(
       }
     }
     // New creatures keep their actual arrival order. In particular, a Goblin summoned by
-    // Summoner of the Ranks after another Goblin dies must not inherit the casualty's middle slot: combat
+    // Summoner of the Ranks after another allied Echo dies must not inherit the casualty's middle slot: combat
     // still resolves it last because the engine appended it to `host.field`. Keeping the
     // ghost until the sequence ends makes the visual row agree with that rules order.
   } else if (casualties.current.size > 0) {

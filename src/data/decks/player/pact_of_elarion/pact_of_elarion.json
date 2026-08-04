@@ -1,0 +1,727 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "pact_of_elarion",
+  "name": "El Pacto de Elarion",
+  "format": "casual",
+  "side": "CHRONICLER",
+  "deckSize": 39,
+  "archetype": "elarion-pact-ramp",
+  "gamePlan": "Reúne a los pueblos y criaturas del reino caído, recupera los antiguos juramentos de Elarion y culmina la Crónica con el regreso de Vaelor.",
+  "tokens": [],
+  "cards": [
+    {
+      "id": "veiled_dawn_flower",
+      "collectorId": "HFA1001",
+      "name": "Veiled-Dawn Flower",
+      "displayNameEs": "Flor del Alba Velada",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "When its petals opened, the old paths shone again.",
+        "es": "Cuando abrió sus pétalos, las viejas sendas volvieron a brillar."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Plant",
+        "Spirit"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "abilities": [
+        {
+          "id": "veiled_dawn_flower_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "aelyra_heir_of_elarion",
+      "collectorId": "HFA1002",
+      "name": "Aelyra, Heir of Elarion",
+      "displayNameEs": "Aelyra, Heredera de Elarion",
+      "gameText": {
+        "en": "When Invoked, put a +1/+1 counter on an ally and gain 3 Life.",
+        "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
+      },
+      "flavorText": {
+        "en": "She inherited no throne, only a broken pact and the name of a sleeping dragon.",
+        "es": "No heredó un trono, sólo un pacto roto y el nombre de un dragón dormido."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Elf",
+        "Heir"
+      ],
+      "power": 0,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "aelyra_heir_of_elarion_enter_counter_and_life",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_COUNTERS",
+              "target": "targetCreature",
+              "counter": "+1/+1",
+              "amount": 1
+            },
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": []
+    },
+    {
+      "id": "liora_keeper_of_the_grove",
+      "collectorId": "HFA1003",
+      "name": "Liora, Keeper of the Grove",
+      "displayNameEs": "Liora, Guardiana de la Arboleda",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "She guarded the last living branch until the heir returned.",
+        "es": "Custodió la última rama viva hasta el regreso de la heredera."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Elf",
+        "Keeper"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "liora_keeper_of_the_grove_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "hydra_of_the_black_bough",
+      "collectorId": "HFA1004",
+      "name": "Hydra of the Black Bough",
+      "displayNameEs": "Hidra de la Fronda Negra",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Elarion never asked its monsters to be gentle, only loyal.",
+        "es": "Elarion nunca pidió que sus monstruos fueran dóciles, sólo leales."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Hydra"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL",
+        "POISON_1"
+      ]
+    },
+    {
+      "id": "kaelor_stormcaller",
+      "collectorId": "HFA1005",
+      "name": "Kaelor, Stormcaller",
+      "displayNameEs": "Kaelor, Convocador de Tormentas",
+      "gameText": {
+        "en": "The first time another ally is Invoked during your turn, Kaelor gets +1/+1 until your next turn.",
+        "es": "La primera vez que otro aliado sea invocado durante tu turno, Kaelor gana +1/+1 hasta tu próximo turno."
+      },
+      "flavorText": {
+        "en": "Every voice that answered the pact kindled another bolt in his hands.",
+        "es": "Cada voz que respondía al pacto encendía otro relámpago en sus manos."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Elf",
+        "Stormcaller"
+      ],
+      "power": 3,
+      "endurance": 4,
+      "abilities": [
+        {
+          "id": "kaelor_stormcaller_other_creature_enters",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "ACTIVE_PLAYER_IS",
+              "player": "SELF"
+            },
+            {
+              "type": "EVENT_OBJECT_MATCHES",
+              "eventObject": "echo",
+              "controller": "SELF",
+              "excludeSource": true,
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "type": "SOURCE_ONCE_PER_TURN_UNUSED",
+              "key": "kaelor_stormcallermate"
+            }
+          ],
+          "effects": [
+            {
+              "type": "PUMP_UNTIL_NEXT_PLAYER_TURN",
+              "target": "SELF",
+              "power": 1,
+              "endurance": 1,
+              "oncePerTurnKey": "kaelor_stormcallermate"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "maela_watcher_of_the_heights",
+      "collectorId": "HFA1006",
+      "name": "Maela, Watcher of the Heights",
+      "displayNameEs": "Maela, Vigía de las Alturas",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "No shadow crosses the heights without passing before her bow.",
+        "es": "Ninguna sombra cruza las alturas sin pasar frente a su arco."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Human",
+        "Archer"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "echo_of_the_forgotten_city",
+      "collectorId": "HFA1007",
+      "name": "Echo of the Forgotten City",
+      "displayNameEs": "Eco de la Ciudad Olvidada",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The city had fallen, but its walls still remembered whom they were built to protect.",
+        "es": "La ciudad había caído, pero sus muros aún recordaban a quién debían proteger."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Spirit",
+        "Guardian"
+      ],
+      "power": 4,
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "vaelor_emerald_guardian",
+      "collectorId": "HFA1008",
+      "name": "Vaelor, Emerald Guardian",
+      "displayNameEs": "Vaelor, Guardián Esmeralda",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Aelyra did not command the dragon. She gave him a kingdom worth waking for.",
+        "es": "Aelyra no dio órdenes al dragón. Le devolvió un reino por el que valía la pena despertar."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 6
+      },
+      "subtypes": [
+        "Dragon",
+        "Guardian"
+      ],
+      "power": 6,
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "clash_of_echoes",
+      "collectorId": "HFA1009",
+      "name": "Clash of Echoes",
+      "displayNameEs": "Choque de Ecos",
+      "gameText": {
+        "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
+        "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
+      },
+      "flavorText": {
+        "en": "Only one answered Elarion's call.",
+        "es": "Sólo uno respondió al llamado de Elarion."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "clash_of_echoes_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "sourceCreature",
+              "zone": "FIELD",
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "id": "damageTarget",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "kinds": [
+                      "ECHO"
+                    ]
+                  }
+                ],
+                "excludeTargetIds": [
+                  "sourceCreature"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE",
+              "source": "sourceCreature",
+              "target": "damageTarget",
+              "amount": {
+                "type": "STAT",
+                "object": "sourceCreature",
+                "stat": "POWER"
+              },
+              "damageKind": "NON_COMBAT"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "shield_of_the_heir",
+      "collectorId": "HFA1010",
+      "name": "Shield of the Heir",
+      "displayNameEs": "Escudo de la Heredera",
+      "gameText": {
+        "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
+        "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
+      },
+      "flavorText": {
+        "en": "While Aelyra held the circle, no oath of Elarion fought alone.",
+        "es": "Mientras Aelyra mantuviera el círculo, ningún juramento de Elarion lucharía solo."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "shield_of_the_heir_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "MAIN",
+          "targets": [
+            {
+              "id": "yourCreature",
+              "zone": "FIELD",
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            },
+            {
+              "id": "opponentCreature",
+              "zone": "FIELD",
+              "controller": "OPPONENT",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "yourCreature",
+              "power": 1,
+              "endurance": 2,
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "SEQUENCE",
+              "simultaneous": true,
+              "customHandler": "fight_simultaneously",
+              "steps": [
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "yourCreature",
+                  "target": "opponentCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "yourCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                },
+                {
+                  "type": "DEAL_DAMAGE",
+                  "source": "opponentCreature",
+                  "target": "yourCreature",
+                  "amount": {
+                    "type": "STAT",
+                    "object": "opponentCreature",
+                    "stat": "POWER"
+                  },
+                  "damageKind": "NON_COMBAT"
+                }
+              ],
+              "implementationNote": "Las dos criaturas se hacen daño simultáneamente después de aplicar el +1/+2."
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
+    },
+    {
+      "id": "the_judgment_of_elarion",
+      "collectorId": "HFA1011",
+      "name": "The Judgment of Elarion",
+      "displayNameEs": "El Juicio de Elarion",
+      "gameText": {
+        "en": "Destroy a Support or an Echo with Flying.",
+        "es": "Destruye un Apoyo o un Eco con Volar."
+      },
+      "flavorText": {
+        "en": "Neither wing nor stone stood beyond the judgment of the ancient realm.",
+        "es": "Ni alas ni piedra quedaron fuera del juicio del antiguo reino."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "the_judgment_of_elarion_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetPermanent",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "anyOf": [
+                  {
+                    "kinds": [
+                      "SUPPORT"
+                    ]
+                  },
+                  {
+                    "kinds": [
+                      "ECHO"
+                    ],
+                    "traits": [
+                      "FLYING"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY",
+              "target": "targetPermanent"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "elixir_of_the_first_leaf",
+      "collectorId": "HFA1012",
+      "name": "Elixir of the First Leaf",
+      "displayNameEs": "Elixir de la Primera Hoja",
+      "gameText": {
+        "en": "The target Echo gains +3/+3 until the end of the turn.",
+        "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "A single drop restored the strength of Elarion's first guardians.",
+        "es": "Una sola gota devolvía la fuerza de los primeros guardianes de Elarion."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "elixir_of_the_first_leaf_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 3,
+              "endurance": 3,
+              "duration": "END_OF_TURN"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "river_of_elarion",
+      "collectorId": "HFA1013",
+      "name": "River of Elarion",
+      "displayNameEs": "Río de Elarion",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "The river knew the way to the dragon long after every road was lost.",
+        "es": "El río conocía el camino hacia el dragón mucho después de que se perdieran todos los senderos."
+      },
+      "showFlavorText": true,
+      "quantity": 15,
+      "energyCost": {
+        "amount": 0
+      },
+      "subtypes": [
+        "River"
+      ],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "river_of_elarion_gain_energy",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SOURCE"
+      ],
+      "traits": []
+    }
+  ],
+  "engineSupportNeeded": []
+}

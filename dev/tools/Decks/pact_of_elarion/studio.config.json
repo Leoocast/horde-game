@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
+  "defaultArtist": "Dean Spencer",
+  "cards": [
+    {
+      "id": "veiled_dawn_flower",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/veiled_dawn_flower.jpg",
+      "typeLineEs": "Eco — Espíritu vegetal",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -236
+      },
+      "fullArt": false,
+      "headerFade": false
+    },
+    {
+      "id": "aelyra_heir_of_elarion",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
+      "typeLineEs": "Eco de Crónica — Elfa Heredera"
+    },
+    {
+      "id": "liora_keeper_of_the_grove",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/liora_keeper_of_the_grove.jpg",
+      "typeLineEs": "Eco — Elfa Guardiana",
+      "artFrame": {
+        "zoom": 1.541,
+        "x": -51,
+        "y": 41
+      },
+      "headerFade": false,
+      "fullArt": false
+    },
+    {
+      "id": "hydra_of_the_black_bough",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/hydra_of_the_black_bough.jpg",
+      "typeLineEs": "Eco — Hidra",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 37,
+        "y": -145
+      },
+      "headerFade": false
+    },
+    {
+      "id": "kaelor_stormcaller",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/kaelor_stormcaller.jpg",
+      "typeLineEs": "Eco — Elfo Convocador",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -373,
+        "y": 17
+      },
+      "fullArt": true
+    },
+    {
+      "id": "maela_watcher_of_the_heights",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/maela_watcher_of_the_heights.jpg",
+      "typeLineEs": "Eco — Humana Arquera",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 5,
+        "y": -188
+      },
+      "headerFade": false
+    },
+    {
+      "id": "echo_of_the_forgotten_city",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/echo_of_the_forgotten_city.jpg",
+      "typeLineEs": "Eco — Espíritu Guardián",
+      "artFrame": {
+        "zoom": 1.734,
+        "x": 349,
+        "y": 22
+      },
+      "headerFade": false
+    },
+    {
+      "id": "vaelor_emerald_guardian",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/vaelor_emerald_guardian.jpg",
+      "typeLineEs": "Eco — Dragón Guardián",
+      "artFrame": {
+        "zoom": 1.082,
+        "x": 37,
+        "y": 67
+      },
+      "headerFade": false,
+      "fullArt": true
+    },
+    {
+      "id": "clash_of_echoes",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/clash_of_echoes.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -8,
+        "y": -132
+      }
+    },
+    {
+      "id": "shield_of_the_heir",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/shield_of_the_heir.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": -98,
+        "y": -84
+      },
+      "headerFade": false
+    },
+    {
+      "id": "the_judgment_of_elarion",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/the_judgment_of_elarion.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -451,
+        "y": 18
+      },
+      "fullArt": false,
+      "headerFade": false
+    },
+    {
+      "id": "elixir_of_the_first_leaf",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/elixir_of_the_first_leaf.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -11,
+        "y": -130
+      },
+      "fullArt": false,
+      "headerFade": true
+    },
+    {
+      "id": "river_of_elarion",
+      "artCrop": "../../../../public/cards/pact_of_elarion/art/river_of_elarion.jpg",
+      "typeLineEs": "Fuente — Río",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 1,
+        "y": -79
+      }
+    }
+  ],
+  "motif": {
+    "head": {
+      "x": 0,
+      "y": -160,
+      "zoom": 0.95
+    },
+    "band": {
+      "x": 112,
+      "y": 54
+    },
+    "stats": {
+      "x": 0,
+      "y": -122,
+      "zoom": 4
+    }
+  }
+}

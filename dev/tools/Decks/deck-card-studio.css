@@ -7,40 +7,40 @@
 
 @font-face {
     font-family: "Cinzel";
-    src: url("../../../public/fonts/last-rain/cinzel-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/cinzel-latin.woff2") format("woff2");
     font-display: block;
 }
 
 @font-face {
     font-family: "Cinzel Decorative";
-    src: url("../../../public/fonts/last-rain/cinzel-decorative-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2") format("woff2");
     font-display: block;
 }
 
 @font-face {
     font-family: "Lora";
     font-weight: 400 700;
-    src: url("../../../public/fonts/last-rain/lora-normal-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/lora-normal-latin.woff2") format("woff2");
     font-display: block;
 }
 
 @font-face {
     font-family: "Lora";
     font-weight: 400 700;
-    src: url("../../../public/fonts/last-rain/lora-italic-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/lora-italic-latin.woff2") format("woff2");
     font-style: italic;
     font-display: block;
 }
 
 @font-face {
     font-family: "Oswald";
-    src: url("../../../public/fonts/last-rain/oswald-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/oswald-latin.woff2") format("woff2");
     font-display: block;
 }
 
 @font-face {
     font-family: "Outfit";
-    src: url("../../../public/fonts/last-rain/outfit-latin.woff2") format("woff2");
+    src: url("../../../public/fonts/pact-of-elarion/outfit-latin.woff2") format("woff2");
     font-display: block;
 }
 
@@ -68,11 +68,11 @@
 
     --page: #05070a;
     --page-glow: rgba(29, 96, 70, 0.28);
-    --motif-image: url("./last_rain/motivo.avif");
+    --motif-image: url("./pact_of_elarion/motivo.avif");
     --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
 }
 
-body[data-theme="last_rain"] {
+body[data-theme="pact_of_elarion"] {
     --accent: #2f7d58;
     --accent-bright: #9ff0b2;
     --accent-deep: #0a1f18;
@@ -88,10 +88,10 @@ body[data-theme="last_rain"] {
     --paper-ink: #1f190f;
     --paper-muted: #4e412c;
     --page-glow: rgba(29, 96, 70, 0.28);
-    --motif-image: url("./last_rain/motivo.avif");
+    --motif-image: url("./pact_of_elarion/motivo.avif");
 }
 
-body[data-theme="crimson_court"] {
+body[data-theme="court_of_the_crimson_eclipse"] {
     --accent: #77152f;
     --accent-bright: #f0a1ad;
     --accent-deep: #260712;
@@ -107,10 +107,10 @@ body[data-theme="crimson_court"] {
     --paper-ink: #2b171e;
     --paper-muted: #60424a;
     --page-glow: rgba(119, 21, 47, 0.3);
-    --motif-image: url("./crimson_court/motivo.jpg");
+    --motif-image: url("./court_of_the_crimson_eclipse/motivo.jpg");
 }
 
-body[data-theme="hollow_bell_procession"] {
+body[data-theme="uprising_of_the_graveless"] {
     --accent: #315f55;
     --accent-bright: #b2d6b2;
     --accent-deep: #102822;
@@ -126,10 +126,10 @@ body[data-theme="hollow_bell_procession"] {
     --paper-ink: #202820;
     --paper-muted: #465044;
     --page-glow: rgba(49, 95, 85, 0.28);
-    --motif-image: url("./hollow_bell_procession/motivo.avif");
+    --motif-image: url("./uprising_of_the_graveless/motivo.avif");
 }
 
-body[data-theme="broken_forge_mutiny"] {
+body[data-theme="legion_of_varka"] {
     --accent: #a63216;
     --accent-bright: #ffad4c;
     --accent-deep: #3a0e08;
@@ -145,7 +145,7 @@ body[data-theme="broken_forge_mutiny"] {
     --paper-ink: #2d190d;
     --paper-muted: #5c3c22;
     --page-glow: rgba(166, 50, 22, 0.3);
-    --motif-image: url("./broken_forge_mutiny/motivo.avif");
+    --motif-image: url("./legion_of_varka/motivo.avif");
 }
 
 body[data-theme="hunters"] {
@@ -746,7 +746,7 @@ body {
     transform: none;
 }
 
-body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-faction-icon--headstone {
+body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-faction-icon--headstone {
     width: 86%;
     height: 86%;
     color: #b4c3ad;
@@ -754,19 +754,19 @@ body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-faction-icon--headstone
     transform: translateY(-1px);
 }
 
-body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-chip {
+body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-chip {
     fill: #15201c;
 }
 
-body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-crack,
-body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-soil {
+body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-crack,
+body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-soil {
     stroke: #15201c;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 3;
 }
 
-body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--eclipse {
+body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-icon--eclipse {
     width: 88%;
     height: 88%;
     color: #d8ccb2;
@@ -774,13 +774,13 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--eclipse {
     transform: translateY(-1px);
 }
 
-body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem {
+body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-gem {
     fill: #9f1837;
     stroke: #f3a5b4;
     stroke-width: 1.5;
 }
 
-body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem-glint {
+body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-gem-glint {
     stroke: rgba(255, 238, 240, 0.88);
     stroke-linecap: round;
     stroke-width: 1.5;

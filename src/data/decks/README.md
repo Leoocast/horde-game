@@ -26,7 +26,7 @@ The deck file describes gameplay data. Every active deck uses Hostfall schema `1
 Required top-level fields:
 
 - `schemaVersion`: `"1.0.0"` for Hostfall-authored decks.
-- `id`: stable deck id.
+- `id`: stable deck id aligned with the deck's current canonical identity.
 - `name`: display name.
 - `side`: `"CHRONICLER"` or `"HOST"`.
 - `deckSize`: total card count.
@@ -35,7 +35,10 @@ Required top-level fields:
 - `cards`: card definitions.
 - `tokens`: token definitions, if any.
 
-Card definitions should use stable ids and explicit structured data:
+Card definitions use canonical ids derived from their current English names plus explicit
+structured data. `cardIdFromName` removes apostrophes, lowercases and joins words with `_`; deck
+lint rejects divergence. After an identity is published, its id remains stable unless the canonical
+name itself is deliberately replaced and every consumer is migrated atomically.
 
 - `id`
 - `collectorId`: identificador impreso global; el Acto I usa la secuencia `HFA1xxx`.
@@ -80,7 +83,7 @@ Example:
 
 ```json
 {
-  "id": "first_dew_gatherers_gain_energy",
+  "id": "veiled_dawn_flower_gain_energy",
   "kind": "ACTIVATED",
   "zone": "FIELD",
   "cost": { "exhaust": true },
@@ -111,10 +114,10 @@ Each card entry should be keyed by card id:
 
 ```json
 {
-  "first_dew_gatherers": {
+  "veiled_dawn_flower": {
     "source": "local",
     "imageKind": "card",
-    "imageUrl": "/cards/last_rain/first_dew_gatherers.png"
+    "imageUrl": "/cards/pact_of_elarion/veiled_dawn_flower.png"
   }
 }
 ```
@@ -138,10 +141,10 @@ deck, presentation config, renderer, fonts, source art and every exported PNG. S
 
 Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo en el inspector:
 
-- `last_rain`
-- `crimson_court`
-- `hollow_bell_procession`
-- `broken_forge_mutiny`
+- `pact_of_elarion`
+- `court_of_the_crimson_eclipse`
+- `uprising_of_the_graveless`
+- `legion_of_varka`
 
 El Pacto de Elarion, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 

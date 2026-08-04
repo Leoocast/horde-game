@@ -122,7 +122,7 @@ function revealAndPlayOne(game: GameState, options: HostMainOptions): CardInstan
   // Bridge: Tribute of the Four Sorrows needs a bespoke, player-interactive multi-step resolution (Host sacrifices,
   // then the player chooses life/discard/creature/land) that can't run inside this synchronous
   // reveal. Park it unresolved; the store drives the sequence and moves it to Memory itself.
-  if (card.definitionId === "flesh_root_tithe") {
+  if (card.definitionId === "tribute_of_the_four_sorrows") {
     game.host.pendingCard = card;
     return card;
   }

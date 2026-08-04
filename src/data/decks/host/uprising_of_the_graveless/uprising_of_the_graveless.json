@@ -1,0 +1,980 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "uprising_of_the_graveless",
+  "name": "El Alzamiento de los Sinsepulcro",
+  "side": "HOST",
+  "deckSize": 50,
+  "rulesProfile": {
+    "revealCount": 3,
+    "stopOnNonToken": true,
+    "miniSurgeTurn": 6,
+    "miniSurgeExtraReveals": 1,
+    "surgeTurn": 10,
+    "surgeTurnChaos": 8,
+    "surgeExtraReveals": 2,
+    "surgeBonus": {
+      "power": 1,
+      "endurance": 0,
+      "subtypes": [
+        "Zombie",
+        "Soldier"
+      ]
+    },
+    "damagePerArchiveDiscard": 3,
+    "poisonPerArchiveDiscard": 3,
+    "hostEchosHaveImpetus": true,
+    "swarmTokenSubtypes": [
+      "Zombie"
+    ]
+  },
+  "cards": [
+    {
+      "id": "graveless_soldier",
+      "collectorId": "HFA1014",
+      "name": "Graveless Soldier",
+      "displayNameEs": "Soldado Sinsepulcro",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The broken stone denied him a grave, so he claimed the road instead.",
+        "es": "La piedra quebrada le negó una tumba, así que reclamó el camino."
+      },
+      "showFlavorText": true,
+      "quantity": 21,
+      "subtypes": [
+        "Zombie"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [],
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "energyCost": {
+        "amount": 2
+      },
+      "traits": []
+    },
+    {
+      "id": "graveless_titan",
+      "collectorId": "HFA1015",
+      "name": "Graveless Titan",
+      "displayNameEs": "Titán Sinsepulcro",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "It wears the weight of a cemetery that could no longer contain it.",
+        "es": "Carga el peso de un cementerio que ya no pudo contenerlo."
+      },
+      "showFlavorText": true,
+      "quantity": 4,
+      "subtypes": [
+        "Zombie",
+        "Giant"
+      ],
+      "power": 5,
+      "endurance": 5,
+      "abilities": [],
+      "kinds": [
+        "ECHO",
+        "TOKEN"
+      ],
+      "energyCost": {
+        "amount": 5
+      },
+      "traits": []
+    },
+    {
+      "id": "the_broken_headstone",
+      "collectorId": "HFA1016",
+      "name": "The Broken Headstone",
+      "displayNameEs": "La Lápida Quebrada",
+      "gameText": {
+        "en": "Allied Zombies gain Daunting.",
+        "es": "Los Zombis aliados ganan Imponente."
+      },
+      "flavorText": {
+        "en": "The crack did not mark an ending. It was the first order of the uprising.",
+        "es": "La grieta no marcó un final. Fue la primera orden del alzamiento."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "the_broken_headstone_grants_menace",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "scope": {
+                "controller": "HOST",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Zombie"
+                  ]
+                }
+              },
+              "keyword": "DAUNTING"
+            }
+          ]
+        },
+        {
+          "id": "the_broken_headstone_upkeep",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "BEGIN_READY"
+          },
+          "conditions": [
+            {
+              "type": "NOT",
+              "value": {
+                "type": "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
+                "controller": "HOST"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "SACRIFICE_SELF"
+            }
+          ],
+          "engineSupport": "pending",
+          "implementationNote": "The engine has no BEGIN_READY event yet; this trigger has never been active."
+        },
+        {
+          "id": "the_broken_headstone_activated",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "activationMode": "HOST_DIRECTIVE_ONLY",
+          "cost": {
+            "type": "EXHAUST_HOST_ECHOS_FOR_ENERGY",
+            "requiredEnergy": 4,
+            "sourceFilter": {
+              "controller": "HOST",
+              "kinds": [
+                "ECHO"
+              ],
+              "isToken": false
+            },
+            "selectionRule": "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY"
+          },
+          "effects": [
+            {
+              "type": "CREATE_TOKEN",
+              "controller": "HOST",
+              "tokenId": "graveless_soldier",
+              "amount": 1
+            }
+          ],
+          "engineSupport": "pending",
+          "additionalCost": {
+            "type": "BANISH_CARD_FROM_MEMORY",
+            "controller": "HOST",
+            "filter": {
+              "kinds": [
+                "ECHO"
+              ]
+            },
+            "selectionRule": "LOWEST_ENERGY_COST_THEN_RANDOM"
+          }
+        }
+      ],
+      "hostDirective": {
+        "type": "REPEAT_ACTIVATION_WHILE_POSSIBLE",
+        "description": "If The Broken Headstone is on the Field and the Host controls non-token Echoes with combined Energy cost at least 4, activate The Broken Headstone. Repeat while enough non-token Echoes and valid Memory targets exist."
+      },
+      "kinds": [
+        "SUPPORT"
+      ],
+      "traits": []
+    },
+    {
+      "id": "inexhaustible_ossuary",
+      "collectorId": "HFA1017",
+      "name": "Inexhaustible Ossuary",
+      "displayNameEs": "Osario Inagotable",
+      "gameText": {
+        "en": "Whenever a non-token card is played, remove a +1/+1 counter from this Echo and Invoke a 2/2 Zombie Echo Token.",
+        "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
+      },
+      "flavorText": {
+        "en": "Every empty place in the ossuary demands another body.",
+        "es": "Cada espacio vacío del osario reclama otro cuerpo."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 6
+      },
+      "subtypes": [
+        "Zombie",
+        "Ossuaryborn"
+      ],
+      "power": 0,
+      "endurance": 0,
+      "entersWithCounters": [
+        {
+          "counterType": "+1/+1",
+          "amount": 5
+        }
+      ],
+      "abilities": [
+        {
+          "id": "inexhaustible_ossuary_on_card_cast",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "CARD_PLAYED"
+          },
+          "conditions": [
+            {
+              "type": "PLAYED_CARD_IS_NON_TOKEN"
+            }
+          ],
+          "effects": [
+            {
+              "type": "REMOVE_COUNTER",
+              "counterType": "+1/+1",
+              "amount": 1,
+              "from": "SELF",
+              "required": true
+            },
+            {
+              "type": "CREATE_TOKEN",
+              "controller": "HOST",
+              "tokenId": "graveless_soldier",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "hostErrata": {
+        "triggerRestriction": "Only triggers from non-token spells."
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "devourer_of_the_last_memory",
+      "collectorId": "HFA1018",
+      "name": "Devourer of the Last Memory",
+      "displayNameEs": "Devorador del Último Recuerdo",
+      "gameText": {
+        "en": "When this card dies, the Chronicler discards a card.",
+        "es": "Cuando muera, el Cronista descarta una carta."
+      },
+      "flavorText": {
+        "en": "It dies with one final thought between its teeth, and yours follows it.",
+        "es": "Muere con un último recuerdo entre los dientes, y el tuyo lo sigue."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Zombie",
+        "Devourer"
+      ],
+      "power": 2,
+      "endurance": 4,
+      "abilities": [
+        {
+          "id": "devourer_of_the_last_memory_dies",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "THIS_DIES"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "hostErrata": {
+        "originalStyle": "target player discards",
+        "hostVersion": "each opponent discards"
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "memory_thief",
+      "collectorId": "HFA1019",
+      "name": "Memory Thief",
+      "displayNameEs": "Ladrón de Memorias",
+      "gameText": {
+        "en": "When Invoked, the Chronicler discards a card.",
+        "es": "Al ser invocada, el Cronista descarta una carta."
+      },
+      "flavorText": {
+        "en": "The red light in its hand is the thought you can no longer name.",
+        "es": "La luz roja de su mano es el pensamiento que ya no puedes nombrar."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Zombie",
+        "Thief"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "memory_thief_etb",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "hostErrata": {
+        "originalStyle": "each player discards",
+        "hostVersion": "each opponent discards"
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "tribute_of_the_four_sorrows",
+      "collectorId": "HFA1020",
+      "name": "Tribute of the Four Sorrows",
+      "displayNameEs": "Tributo de los Cuatro Pesares",
+      "gameText": {
+        "en": "The Chronicler loses 1 Life, discards a card, sacrifices an Echo, and sacrifices a Source.",
+        "es": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente."
+      },
+      "flavorText": {
+        "en": "Life, memory, flesh, and land: the grave demands one sorrow of each kind.",
+        "es": "Vida, memoria, carne y tierra: la tumba exige un pesar de cada clase."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "abilities": [
+        {
+          "id": "tribute_of_the_four_sorrows_spell",
+          "kind": "SPELL",
+          "targets": [],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_LOSES_LIFE",
+              "amount": 1
+            },
+            {
+              "type": "EACH_OPPONENT_DISCARDS",
+              "amount": 1
+            },
+            {
+              "type": "EACH_OPPONENT_SACRIFICES",
+              "permanentKind": "ECHO",
+              "amount": 1,
+              "selection": "CHRONICLER_CHOOSES"
+            },
+            {
+              "type": "EACH_OPPONENT_SACRIFICES",
+              "permanentKind": "SOURCE",
+              "amount": 1,
+              "selection": "CHRONICLER_CHOOSES"
+            }
+          ],
+          "engineSupport": "custom",
+          "implementationNote": "Resolved by the bespoke Host sequence in HostController/useGameStore (the internal host.pendingCard bridge), not by the generic resolver."
+        }
+      ],
+      "hostErrata": {
+        "originalStyle": "each player",
+        "hostVersion": "each opponent"
+      },
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
+    },
+    {
+      "id": "rider_of_the_empty_crypt",
+      "collectorId": "HFA1021",
+      "name": "Rider of the Empty Crypt",
+      "displayNameEs": "Jinete de la Cripta Vacía",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "Nothing remained in the crypt but a rider, a skeleton, and the sky.",
+        "es": "En la cripta no quedaron más que un jinete, un esqueleto y el cielo."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Zombie",
+        "Rider"
+      ],
+      "power": 2,
+      "endurance": 1,
+      "abilities": [
+        {
+          "id": "rider_of_the_empty_crypt_activated",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+              "target": "SELF",
+              "keyword": "IMPETUS"
+            }
+          ],
+          "engineSupport": "ignored"
+        }
+      ],
+      "implementationNote": "Host Echoes already have Impetus, so this activated ability can be ignored.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
+    },
+    {
+      "id": "stitched_wing_spawn",
+      "collectorId": "HFA1022",
+      "name": "Stitched-Wing Spawn",
+      "displayNameEs": "Engendro de Alas Cosidas",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The stitches need only hold until it reaches warm flesh.",
+        "es": "Las costuras sólo deben resistir hasta que alcance carne tibia."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Zombie",
+        "Spawn"
+      ],
+      "power": 3,
+      "endurance": 1,
+      "abilities": [
+        {
+          "id": "stitched_wing_spawn_activated",
+          "kind": "ACTIVATED",
+          "zone": "MEMORY",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
+          "cost": {
+            "energy": 2,
+            "discard": 2
+          },
+          "effects": [
+            {
+              "type": "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+              "exhausted": true
+            }
+          ],
+          "engineSupport": "ignored"
+        }
+      ],
+      "implementationNote": "Because the Host has no Hand, discard-cost recursion is ignored unless custom Host recursion rules are added.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
+    },
+    {
+      "id": "ossuary_rider",
+      "collectorId": "HFA1023",
+      "name": "Ossuary Rider",
+      "displayNameEs": "Jinete del Osario",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The mount remembers every bone added to its armor.",
+        "es": "La montura recuerda cada hueso añadido a su armadura."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 5
+      },
+      "subtypes": [
+        "Zombie",
+        "Rider"
+      ],
+      "power": 3,
+      "endurance": 4,
+      "abilities": [
+        {
+          "id": "ossuary_rider_activated",
+          "kind": "ACTIVATED",
+          "zone": "MEMORY",
+          "activationMode": "IGNORED_FOR_HOST_MVP",
+          "cost": {
+            "energy": 3,
+            "discard": 2
+          },
+          "effects": [
+            {
+              "type": "RETURN_SELF_FROM_MEMORY_TO_FIELD",
+              "exhausted": true
+            }
+          ],
+          "engineSupport": "ignored"
+        }
+      ],
+      "implementationNote": "Because the Host has no Hand, discard-cost recursion is ignored unless custom Host recursion rules are added.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING"
+      ]
+    },
+    {
+      "id": "return_to_memory",
+      "collectorId": "HFA1024",
+      "name": "Return to Memory",
+      "displayNameEs": "Retorno a la Memoria",
+      "gameText": {
+        "en": "When Invoked or when it dies, discard the top 2 cards of the Host Archive to its Memory.",
+        "es": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
+      },
+      "flavorText": {
+        "en": "Every return opens two graves: its own, and one the Host had forgotten.",
+        "es": "Cada retorno abre dos tumbas: la suya y una que la Hueste había olvidado."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Zombie",
+        "Returned"
+      ],
+      "power": 2,
+      "endurance": 1,
+      "triggerMessage": "Return to Memory triggers. Host discards 2 cards from its Archive to its Memory.",
+      "abilities": [
+        {
+          "id": "return_to_memory_etb",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+              "controller": "HOST",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "return_to_memory_dies",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "THIS_DIES"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DISCARD_OWN_ARCHIVE_TO_MEMORY",
+              "controller": "HOST",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "barrow_wallbreaker",
+      "collectorId": "HFA1025",
+      "name": "Barrow Wallbreaker",
+      "displayNameEs": "Rompemuros del Túmulo",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "One defender sees the horns. Two may survive them.",
+        "es": "Un defensor ve los cuernos. Dos quizá sobrevivan a ellos."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Zombie",
+        "Minotaur"
+      ],
+      "power": 3,
+      "endurance": 2,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "DAUNTING"
+      ]
+    },
+    {
+      "id": "hound_of_seven_memories",
+      "collectorId": "HFA1026",
+      "name": "Hound of Seven Memories",
+      "displayNameEs": "Sabueso de los Siete Recuerdos",
+      "gameText": {
+        "en": "While the Host has 7 or more cards in its Memory, this Echo gains +1/+1 and Daunting.",
+        "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
+      },
+      "flavorText": {
+        "en": "Six memories taught it hunger. The seventh taught it how to grow.",
+        "es": "Seis recuerdos le enseñaron hambre. El séptimo le enseñó a crecer."
+      },
+      "showFlavorText": false,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Zombie",
+        "Hound"
+      ],
+      "power": 3,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "hound_of_seven_memories_threshold_buff",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
+                "amount": 7
+              },
+              "power": 1,
+              "endurance": 1
+            }
+          ]
+        },
+        {
+          "id": "hound_of_seven_memories_threshold_menace",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
+                "amount": 7
+              },
+              "keyword": "DAUNTING"
+            }
+          ]
+        }
+      ],
+      "hostErrata": {
+        "keyword": "Threshold",
+        "condition": "Seven or more cards in the Host Memory."
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "mastiff_of_the_overflowing_ossuary",
+      "collectorId": "HFA1027",
+      "name": "Mastiff of the Overflowing Ossuary",
+      "displayNameEs": "Mastín del Osario Desbordado",
+      "gameText": {
+        "en": "While the Host has 7 or more cards in its Memory, this Echo gains Daunting.",
+        "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente."
+      },
+      "flavorText": {
+        "en": "When the seventh grave opened, the gate chain ceased to be a leash.",
+        "es": "Cuando se abrió la séptima tumba, la cadena del portón dejó de ser correa."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 5
+      },
+      "subtypes": [
+        "Zombie",
+        "Hound"
+      ],
+      "power": 5,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "mastiff_of_the_overflowing_ossuary_threshold_menace",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "MEMORY_COUNT_AT_LEAST",
+                "controller": "HOST",
+                "amount": 7
+              },
+              "keyword": "DAUNTING"
+            }
+          ]
+        }
+      ],
+      "hostErrata": {
+        "keyword": "Threshold",
+        "condition": "Seven or more cards in the Host Memory."
+      },
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "spore_infested",
+      "collectorId": "HFA1028",
+      "name": "Spore-Infested",
+      "displayNameEs": "Infestado de Esporas",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The spores beneath its skin wait for living breath.",
+        "es": "Las esporas bajo su piel esperan el aliento de los vivos."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Zombie",
+        "Infested"
+      ],
+      "power": 1,
+      "endurance": 1,
+      "abilities": [],
+      "implementationNote": "Furtive: cannot be defended by Echoes with greater Power.",
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL",
+        "FURTIVE"
+      ]
+    },
+    {
+      "id": "harvester_of_the_fallen",
+      "collectorId": "HFA1029",
+      "name": "Harvester of the Fallen",
+      "displayNameEs": "Cosechadora de los Caídos",
+      "gameText": {
+        "en": "Whenever another allied Zombie dies, put a +1/+1 counter on this card.",
+        "es": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta."
+      },
+      "flavorText": {
+        "en": "Each fallen Sinsepulcro leaves her something worth wearing.",
+        "es": "Cada Sinsepulcro caído le deja algo digno de llevar consigo."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Zombie",
+        "Harvester"
+      ],
+      "power": 2,
+      "endurance": 4,
+      "abilities": [
+        {
+          "id": "harvester_of_the_fallen_on_creature_died",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ECHO_DIED"
+          },
+          "conditions": [
+            {
+              "type": "ANOTHER_ALLIED_ECHO_DIED",
+              "controller": "HOST"
+            }
+          ],
+          "effects": [
+            {
+              "type": "PUT_COUNTER",
+              "target": "SELF",
+              "counterType": "+1/+1",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "nerezh_graveless_matriarch",
+      "collectorId": "HFA1030",
+      "name": "Nerezh, Graveless Matriarch",
+      "displayNameEs": "Nerezh, Matriarca Sinsepulcro",
+      "gameText": {
+        "en": "Other allied Zombies gain +1/+1. Whenever another allied Zombie dies, the Chronicler loses 1 Life.",
+        "es": "Los demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida."
+      },
+      "flavorText": {
+        "en": "Every fallen Graveless returns to the ranks when Nerezh speaks its name.",
+        "es": "Cada Sinsepulcro caído regresa a las filas cuando Nerezh pronuncia su nombre."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Zombie",
+        "Matriarch"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "nerezh_graveless_matriarch_static_buff",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "scope": {
+                "controller": "HOST",
+                "filters": {
+                  "kinds": [
+                    "ECHO"
+                  ],
+                  "subtypes": [
+                    "Zombie"
+                  ],
+                  "excludeSelf": true
+                }
+              },
+              "power": 1,
+              "endurance": 1
+            }
+          ]
+        },
+        {
+          "id": "nerezh_graveless_matriarch_on_creature_died",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "ECHO_DIED"
+          },
+          "conditions": [
+            {
+              "type": "ANOTHER_ALLIED_ECHO_DIED",
+              "controller": "HOST",
+              "filter": {
+                "subtypes": [
+                  "Zombie"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "type": "EACH_OPPONENT_LOSES_LIFE",
+              "amount": 1,
+              "animation": "OIL_BURN"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL"
+      ]
+    }
+  ]
+}

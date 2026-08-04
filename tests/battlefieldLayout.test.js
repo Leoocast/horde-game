@@ -66,7 +66,7 @@ test("a host death mid-sequence keeps its slot even with an other permanent on t
   const zombieA = addCard(game, customCard("zombie_a", "host", { subtypes: ["Zombie"], isToken: true }));
   const zombieB = addCard(game, customCard("zombie_b", "host", { subtypes: ["Zombie"], isToken: true }));
   // The Broken Headstone lives in the "other permanents" dock, so it never registers a creature-row order.
-  const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
+  const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
 
   renderFrame(board, [zombieA, zombieB, grafHarvest], true);
   const afterDeath = renderFrame(board, [zombieB, grafHarvest], true);
@@ -84,7 +84,7 @@ test("a player defender's death mid-sequence keeps its slot even with lands on t
   const blocker = addCard(game, customCard("blocker", "player"));
   const survivor = addCard(game, customCard("survivor", "player"));
   // Sources are drawn by the Energy core, never by the creature row, so they too look "unregistered".
-  const springs = Array.from({ length: 5 }, () => addCard(game, cardFromDeck("deep_root_spring", "player")));
+  const springs = Array.from({ length: 5 }, () => addCard(game, cardFromDeck("river_of_elarion", "player")));
 
   renderFrame(board, [blocker, survivor, ...springs], true);
   const afterDeath = renderFrame(board, [survivor, ...springs], true);
@@ -159,9 +159,9 @@ test("non-token Host copies stack only when they entered during the same Host tu
   const game = createTestGame();
   const cardOrder = new Map();
   const familyOrder = new Map();
-  const firstBat = addCard(game, cardFromDeck("crypt_rotwing", "host"));
+  const firstBat = addCard(game, cardFromDeck("rider_of_the_empty_crypt", "host"));
   const interveningZombie = addCard(game, customCard("intervening_zombie", "host", { subtypes: ["Zombie"] }));
-  const laterBat = addCard(game, cardFromDeck("crypt_rotwing", "host"));
+  const laterBat = addCard(game, cardFromDeck("rider_of_the_empty_crypt", "host"));
   firstBat.fieldEntryTurn = 1;
   interveningZombie.fieldEntryTurn = 1;
   laterBat.fieldEntryTurn = 2;

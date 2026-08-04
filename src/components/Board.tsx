@@ -22,7 +22,7 @@ import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { LandPlayAnimator } from "./LandPlayAnimator";
 import { EnergyRecycleAnimator } from "./EnergyRecycleAnimator";
-import { FleshRootTitheSelectionOverlay } from "./FleshRootTitheSelectionOverlay";
+import { TributeOfTheFourSorrowsSelectionOverlay } from "./TributeOfTheFourSorrowsSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
@@ -66,7 +66,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
-  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
+  const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
@@ -111,7 +111,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} />
       <CounterTargetingOverlay game={game} />
-      <FleshRootTitheSelectionOverlay game={game} />
+      <TributeOfTheFourSorrowsSelectionOverlay game={game} />
       <SpellTargetingOverlay game={game} />
       <HostAttackAnimator />
       <HostMillAnimator />
@@ -129,7 +129,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !fleshRootTitheSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !tributeOfTheFourSorrowsSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}

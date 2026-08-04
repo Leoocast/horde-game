@@ -135,8 +135,8 @@ test("deck card text consistently highlights gameplay terms and separates abilit
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
-  const indexUrl = new URL("../dev/tools/Decks/crimson_court/index.html", import.meta.url);
-  for (const card of buildStudioCards("crimson_court")) {
+  const indexUrl = new URL("../dev/tools/Decks/court_of_the_crimson_eclipse/index.html", import.meta.url);
+  for (const card of buildStudioCards("court_of_the_crimson_eclipse")) {
     assert.doesNotMatch(card.art_crop, /^https?:/iu, `${card.id} still uses remote art`);
     assert.ok(
       fs.existsSync(new URL(card.art_crop, indexUrl)),
@@ -165,7 +165,7 @@ test("card studios consume one generated projection instead of embedded or mirro
     );
     assert.doesNotMatch(
       indexHtml,
-      /(?:last-rain|hunters)\.css/u,
+      /(?:pact-of-elarion|hunters)\.css/u,
       `${deckId} must not load a per-deck card stylesheet`,
     );
     assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
@@ -206,27 +206,27 @@ test("card studios consume one generated projection instead of embedded or mirro
   );
   assert.match(sharedRenderer, /card\.showFlavorText !== false/u);
 
-  const hiddenFlavor = buildStudioCards("crimson_court").find((card) => card.id === "court_duelist");
+  const hiddenFlavor = buildStudioCards("court_of_the_crimson_eclipse").find((card) => card.id === "duelist_of_the_eclipse");
   assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
   assert.equal(hiddenFlavor.showFlavorText, false);
 
 });
 
 test("runtime deck studios use the same minimal header presentation", () => {
-  const lastRainIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
+  const pactOfElarionIndex = fs.readFileSync(
+    new URL("../dev/tools/Decks/pact_of_elarion/index.html", import.meta.url),
     "utf8",
   );
   const vampireIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/crimson_court/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/court_of_the_crimson_eclipse/index.html", import.meta.url),
     "utf8",
   );
   const zombieIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/hollow_bell_procession/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/uprising_of_the_graveless/index.html", import.meta.url),
     "utf8",
   );
   const goblinIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/broken_forge_mutiny/index.html", import.meta.url),
+    new URL("../dev/tools/Decks/legion_of_varka/index.html", import.meta.url),
     "utf8",
   );
   const hunterIndex = fs.readFileSync(
@@ -236,7 +236,7 @@ test("runtime deck studios use the same minimal header presentation", () => {
   const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360|Preview visual|antes de exportar)/iu;
 
   for (const [label, indexHtml] of [
-    ["El Pacto de Elarion", lastRainIndex],
+    ["El Pacto de Elarion", pactOfElarionIndex],
     ["Vampires", vampireIndex],
     ["Zombies", zombieIndex],
     ["Goblins", goblinIndex],
@@ -481,10 +481,10 @@ test("the shared printed design keeps the approved compact geometry", () => {
 
 test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
   const cards = [
-    "last_rain",
-    "hollow_bell_procession",
-    "broken_forge_mutiny",
-    "crimson_court",
+    "pact_of_elarion",
+    "uprising_of_the_graveless",
+    "legion_of_varka",
+    "court_of_the_crimson_eclipse",
   ].flatMap((deckId) => buildStudioCards(deckId));
 
   assert.equal(cards.length, 61);
@@ -496,35 +496,35 @@ test("Act I print metadata stays sequential and credits Dean Spencer as artist",
 });
 
 test("Card Studio defaults full art to Chronicles, Energy and selected tokens", () => {
-  const lastRain = new Map(buildStudioCards("last_rain").map((card) => [card.id, card]));
-  const crimsonCourt = new Map(buildStudioCards("crimson_court").map((card) => [card.id, card]));
-  const brokenForge = new Map(buildStudioCards("broken_forge_mutiny").map((card) => [card.id, card]));
-  const hollowBell = new Map(buildStudioCards("hollow_bell_procession").map((card) => [card.id, card]));
+  const pactOfElarion = new Map(buildStudioCards("pact_of_elarion").map((card) => [card.id, card]));
+  const courtOfTheCrimsonEclipse = new Map(buildStudioCards("court_of_the_crimson_eclipse").map((card) => [card.id, card]));
+  const brokenForge = new Map(buildStudioCards("legion_of_varka").map((card) => [card.id, card]));
+  const hollowBell = new Map(buildStudioCards("uprising_of_the_graveless").map((card) => [card.id, card]));
   const hunters = new Map(buildStudioCards("hunters").map((card) => [card.id, card]));
 
-  assert.equal(lastRain.get("iria_voice_last_rain")?.isChronicle, true);
-  assert.equal(lastRain.get("iria_voice_last_rain")?.fullArt, true);
-  assert.equal(crimsonCourt.get("eternal_feast_countess")?.isChronicle, true);
-  assert.equal(crimsonCourt.get("eternal_feast_countess")?.fullArt, true);
-  assert.equal(brokenForge.get("varka_revolt_axis")?.isChronicle, true);
-  assert.equal(brokenForge.get("varka_revolt_axis")?.fullArt, true);
+  assert.equal(pactOfElarion.get("aelyra_heir_of_elarion")?.isChronicle, true);
+  assert.equal(pactOfElarion.get("aelyra_heir_of_elarion")?.fullArt, true);
+  assert.equal(courtOfTheCrimsonEclipse.get("mirevna_countess_of_the_crimson_eclipse")?.isChronicle, true);
+  assert.equal(courtOfTheCrimsonEclipse.get("mirevna_countess_of_the_crimson_eclipse")?.fullArt, true);
+  assert.equal(brokenForge.get("varka_infernal_matriarch")?.isChronicle, true);
+  assert.equal(brokenForge.get("varka_infernal_matriarch")?.fullArt, true);
   assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.isChronicle, true);
   assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.fullArt, true);
 
-  assert.equal(lastRain.get("deep_root_spring")?.isEnergy, true);
-  assert.equal(lastRain.get("deep_root_spring")?.fullArt, true);
-  assert.equal(crimsonCourt.get("crimson_energy")?.isEnergy, true);
-  assert.equal(crimsonCourt.get("crimson_energy")?.fullArt, true);
+  assert.equal(pactOfElarion.get("river_of_elarion")?.isEnergy, true);
+  assert.equal(pactOfElarion.get("river_of_elarion")?.fullArt, true);
+  assert.equal(courtOfTheCrimsonEclipse.get("sanctuary_of_the_red_moon")?.isEnergy, true);
+  assert.equal(courtOfTheCrimsonEclipse.get("sanctuary_of_the_red_moon")?.fullArt, true);
   assert.equal(hunters.get("territorio_de_caza")?.isEnergy, true);
   assert.equal(hunters.get("territorio_de_caza")?.fullArt, true);
 
-  assert.equal(hollowBell.get("last_knell_dead")?.isToken, true);
-  assert.equal(hollowBell.get("last_knell_dead")?.fullArt, true);
-  assert.equal(hollowBell.get("mass_grave_colossus")?.fullArt, true);
-  assert.equal(brokenForge.get("ember_scrap_runner")?.isToken, true);
-  assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
+  assert.equal(hollowBell.get("graveless_soldier")?.isToken, true);
+  assert.equal(hollowBell.get("graveless_soldier")?.fullArt, true);
+  assert.equal(hollowBell.get("graveless_titan")?.fullArt, true);
+  assert.equal(brokenForge.get("varkas_minion")?.isToken, true);
+  assert.equal(brokenForge.get("varkas_minion")?.fullArt, true);
 
-  assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
+  assert.equal(brokenForge.get("corrupted_war_bear")?.fullArt, undefined);
 });
 
 test("runtime full-art stats use the measured frame of each exported card", () => {
@@ -533,10 +533,10 @@ test("runtime full-art stats use the measured frame of each exported card", () =
     "utf8",
   ));
   const exportedDecks = [
-    "last_rain",
-    "hollow_bell_procession",
-    "broken_forge_mutiny",
-    "crimson_court",
+    "pact_of_elarion",
+    "uprising_of_the_graveless",
+    "legion_of_varka",
+    "court_of_the_crimson_eclipse",
   ];
 
   for (const deckId of exportedDecks) {
@@ -553,14 +553,14 @@ test("runtime full-art stats use the measured frame of each exported card", () =
     }
   }
 
-  const iriaBottom = layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame.bottom;
-  const countessBottom = layout.decks.crimson_court.cards.eternal_feast_countess.statsFrame.bottom;
+  const iriaBottom = layout.decks.pact_of_elarion.cards.aelyra_heir_of_elarion.statsFrame.bottom;
+  const countessBottom = layout.decks.court_of_the_crimson_eclipse.cards.mirevna_countess_of_the_crimson_eclipse.statsFrame.bottom;
   assert.notEqual(iriaBottom, countessBottom, "full-art text flow must be allowed to place stats per card");
-  assert.equal(usesFullArtCardImage("iria_voice_last_rain"), true);
-  assert.equal(usesFullArtCardImage("eternal_feast_countess"), true);
+  assert.equal(usesFullArtCardImage("aelyra_heir_of_elarion"), true);
+  assert.equal(usesFullArtCardImage("mirevna_countess_of_the_crimson_eclipse"), true);
   assert.deepEqual(
-    useCardDetails("iria_voice_last_rain").statsFrame,
-    layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame,
+    useCardDetails("aelyra_heir_of_elarion").statsFrame,
+    layout.decks.pact_of_elarion.cards.aelyra_heir_of_elarion.statsFrame,
   );
   assert.deepEqual(
     cardStatFrameCssVariables({ right: 62, bottom: 421.594, width: 158, height: 91 }),
@@ -668,10 +668,10 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
 
   const runtimeCards = [
-    "last_rain",
-    "hollow_bell_procession",
-    "broken_forge_mutiny",
-    "crimson_court",
+    "pact_of_elarion",
+    "uprising_of_the_graveless",
+    "legion_of_varka",
+    "court_of_the_crimson_eclipse",
   ].flatMap((deckId) => buildStudioCards(deckId));
   assert.equal(runtimeCards.length, 61);
   for (const card of runtimeCards) {
@@ -682,7 +682,7 @@ test("battlefield art framing is canonical, bounded and independent from print f
 
   const generated = JSON.parse(generatedGameArtData());
   assert.equal(Object.keys(generated.cards).length, 74);
-  assert.match(studioGameArt("last_rain").first_dew_gatherers.artUrl, /\/art\//u);
+  assert.match(studioGameArt("pact_of_elarion").veiled_dawn_flower.artUrl, /\/art\//u);
 
   for (const deckId of Object.keys(STUDIO_DECKS)) {
     const printSources = studioSourceFiles(deckId).map((source) => source.replaceAll("\\", "/"));
@@ -709,7 +709,16 @@ test("battlefield art framing is canonical, bounded and independent from print f
     battlefieldSource,
     /useBattlefieldArt=\{!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\}/u,
   );
-  assert.match(cardSource, /usingBattlefieldArt\s*\? battlefieldArtUrl/u);
+  assert.match(
+    cardSource,
+    /requestedBattlefieldArtUrl\s*=\s*useBattlefieldArt\s*\? battlefieldArtUrl/u,
+  );
+  assert.match(
+    cardSource,
+    /requestedBattlefieldArtUrl && imageUrl && !failedImageUrls\.includes\(imageUrl\)/u,
+    "a failed battlefield crop must fall back to the printed card instead of exposing a broken image",
+  );
+  assert.match(cardSource, /onError=\{\(event\) => \{/u);
   assert.match(cardSource, /card-battlefield-art-fallback/u);
   assert.match(cardSource, /battlefieldArtSourceCssVariables\(image\.naturalWidth, image\.naturalHeight\)/u);
   assert.match(
@@ -762,12 +771,12 @@ test("battlefield art framing is canonical, bounded and independent from print f
 test("Vampire studio cards stay aligned with the runtime deck", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
-      new URL("../src/data/decks/player/crimson_court/crimson_court.json", import.meta.url),
+      new URL("../src/data/decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse.json", import.meta.url),
       "utf8",
     ),
   );
   const studioSources = [
-    { label: "generated studio projection", cards: buildStudioCards("crimson_court"), includesQuantity: true },
+    { label: "generated studio projection", cards: buildStudioCards("court_of_the_crimson_eclipse"), includesQuantity: true },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Vigilancia|vidas)\b|Robo de vida|Toque mortal|\{\{T\}\})/iu;
   const keywordLabels = {
@@ -783,7 +792,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
       ? []
       : [runtimeCard.gameText?.es];
     const keywordText = (runtimeCard.traits ?? []).map((keyword) => keywordLabels[keyword] ?? keyword);
-    const expected = runtimeCard.id === "eternal_feast_countess"
+    const expected = runtimeCard.id === "mirevna_countess_of_the_crimson_eclipse"
       ? [
           ...String(runtimeCard.gameText?.es ?? "").split("\n").slice(0, 1),
           `${keywordText.join(". ")}.`,
@@ -805,13 +814,13 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
       if (source.includesQuantity) {
         assert.equal(studioCard.cantidad, runtimeCard.quantity, `${source.label} has a stale quantity for ${runtimeCard.id}`);
       }
-      if (runtimeCard.id === "blood_pact") {
+      if (runtimeCard.id === "midnight_pact") {
         assert.equal(studioCard.tipo, "Hechizo", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
-      if (runtimeCard.id === "final_banquet") {
+      if (runtimeCard.id === "verdict_of_the_eclipse") {
         assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
-      if (runtimeCard.id === "eternal_feast_countess") {
+      if (runtimeCard.id === "mirevna_countess_of_the_crimson_eclipse") {
         assert.equal(studioCard.tipo, "Eco de Crónica — Vampiro Noble", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
       assert.equal(
@@ -827,14 +836,14 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../src/data/decks/player/last_rain/last_rain.json",
+        "../src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
         import.meta.url,
       ),
       "utf8",
     ),
   );
   const studioSources = [
-    { label: "generated studio projection", cards: buildStudioCards("last_rain") },
+    { label: "generated studio projection", cards: buildStudioCards("pact_of_elarion") },
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
@@ -898,8 +907,8 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
       }
 
       assert.equal(
-        normalizeLastRainEffect(studioCard.desc),
-        normalizeLastRainEffect(expectedRules),
+        normalizePactOfElarionEffect(studioCard.desc),
+        normalizePactOfElarionEffect(expectedRules),
         `${source.label} has stale rules for ${runtimeCard.id}`,
       );
     }
@@ -907,10 +916,10 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
 });
 
 test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and stay aligned", () => {
-  const studioCards = buildStudioCards("hollow_bell_procession");
+  const studioCards = buildStudioCards("uprising_of_the_graveless");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
-      new URL("../src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json", import.meta.url),
+      new URL("../src/data/decks/host/uprising_of_the_graveless/uprising_of_the_graveless.json", import.meta.url),
       "utf8",
     ),
   );
@@ -1011,11 +1020,11 @@ test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and 
 });
 
 test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned", () => {
-  const studioCards = buildStudioCards("broken_forge_mutiny");
+  const studioCards = buildStudioCards("legion_of_varka");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+        "../src/data/decks/host/legion_of_varka/legion_of_varka.json",
         import.meta.url,
       ),
       "utf8",
@@ -1023,6 +1032,7 @@ test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned"
   );
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Instantáneos?|Encantamientos?|Horda|Amenaza|jugador|entra|obtiene|Goblins?)\b|Daña primero|bola de fuego|\bcrea(?:r)?\b)/iu;
   const keywordLabels = {
+    FLYING: "Volar",
     REFLEX: "Reflejos",
   };
 
@@ -1166,10 +1176,10 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
   const studioDecks = [
-    ["El Pacto de Elarion", buildStudioCards("last_rain")],
-    ["Vampires", buildStudioCards("crimson_court")],
-    ["Zombies", buildStudioCards("hollow_bell_procession")],
-    ["Goblins", buildStudioCards("broken_forge_mutiny")],
+    ["El Pacto de Elarion", buildStudioCards("pact_of_elarion")],
+    ["Vampires", buildStudioCards("court_of_the_crimson_eclipse")],
+    ["Zombies", buildStudioCards("uprising_of_the_graveless")],
+    ["Goblins", buildStudioCards("legion_of_varka")],
     ["Hunters", buildStudioCards("hunters")],
   ];
   const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
@@ -1197,11 +1207,11 @@ test("authored rules use ally and enemy as compact Echo nouns", () => {
 
 test("Vampire gameplay cards use their full-image faction presentation", () => {
   for (const definitionId of [
-    "crimson_energy",
+    "sanctuary_of_the_red_moon",
     "blood_page",
-    "crimson_bat",
-    "eternal_feast_countess",
-    "blood_pact",
+    "herald_of_the_eclipse",
+    "mirevna_countess_of_the_crimson_eclipse",
+    "midnight_pact",
   ]) {
     assert.equal(shouldShowFullCardImage(definitionId), true);
     assert.equal(cardThemeForDefinition(definitionId), "vampire");
@@ -1217,7 +1227,7 @@ function normalizeVampireEffect(text) {
     .toLocaleLowerCase("es");
 }
 
-function normalizeLastRainEffect(text) {
+function normalizePactOfElarionEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
     .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)

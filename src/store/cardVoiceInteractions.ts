@@ -44,14 +44,14 @@ type CardVoiceRule = {
 export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
   {
     id: "countess-enters",
-    sourceDefinitionId: "eternal_feast_countess",
+    sourceDefinitionId: "mirevna_countess_of_the_crimson_eclipse",
     event: "INVOKED",
     subject: "SOURCE",
     cues: [{ sfx: "countessEnter" }],
   },
   {
     id: "countess-sees-human",
-    sourceDefinitionId: "eternal_feast_countess",
+    sourceDefinitionId: "mirevna_countess_of_the_crimson_eclipse",
     event: "INVOKED",
     subject: "ALLY",
     eventFilter: { kinds: ["ECHO"], subtypes: ["Human"] },
@@ -59,7 +59,7 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
   },
   {
     id: "countess-third-attack",
-    sourceDefinitionId: "eternal_feast_countess",
+    sourceDefinitionId: "mirevna_countess_of_the_crimson_eclipse",
     event: "ATTACKS",
     subject: "SOURCE",
     occurrence: 3,
@@ -68,7 +68,7 @@ export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
   },
   {
     id: "countess-defends",
-    sourceDefinitionId: "eternal_feast_countess",
+    sourceDefinitionId: "mirevna_countess_of_the_crimson_eclipse",
     event: "BLOCKS",
     subject: "SOURCE",
     speakChance: 0.5,

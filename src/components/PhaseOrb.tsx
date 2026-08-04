@@ -32,7 +32,7 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
-  const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.fleshRootTitheSelection));
+  const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.tributeOfTheFourSorrowsSelection));
   const attackAnimating = hostAttackAnimating || playerAttackAnimating || hostMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || energyFlowAnimating || resolvingHostCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
   const actionBlockedReason = defendBlockedReason ?? getPendingActionBlockedReason(

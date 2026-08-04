@@ -8,21 +8,21 @@ export const GAME_ART_DATA_PATH = path.join(ROOT, "src", "data", "cardStudioGame
 export const BATTLEFIELD_ART_VIEWPORT = Object.freeze({ width: 488, height: 434 });
 
 export const STUDIO_DECKS = Object.freeze({
-  last_rain: {
-    directory: "dev/tools/Decks/last_rain",
-    publicDirectory: "public/cards/last_rain",
+  pact_of_elarion: {
+    directory: "dev/tools/Decks/pact_of_elarion",
+    publicDirectory: "public/cards/pact_of_elarion",
   },
-  hollow_bell_procession: {
-    directory: "dev/tools/Decks/hollow_bell_procession",
-    publicDirectory: "public/cards/hollow_bell_procession",
+  uprising_of_the_graveless: {
+    directory: "dev/tools/Decks/uprising_of_the_graveless",
+    publicDirectory: "public/cards/uprising_of_the_graveless",
   },
-  broken_forge_mutiny: {
-    directory: "dev/tools/Decks/broken_forge_mutiny",
-    publicDirectory: "public/cards/broken_forge_mutiny",
+  legion_of_varka: {
+    directory: "dev/tools/Decks/legion_of_varka",
+    publicDirectory: "public/cards/legion_of_varka",
   },
-  crimson_court: {
-    directory: "dev/tools/Decks/crimson_court",
-    publicDirectory: "public/cards/crimson_court",
+  court_of_the_crimson_eclipse: {
+    directory: "dev/tools/Decks/court_of_the_crimson_eclipse",
+    publicDirectory: "public/cards/court_of_the_crimson_eclipse",
   },
   hunters: {
     directory: "dev/tools/Decks/hunters",
@@ -535,12 +535,12 @@ export function studioSourceFiles(deckId) {
     paths.index,
     absolute("dev/tools/Decks/export_cards.cjs"),
     absolute("scripts/card-studio-data.mjs"),
-    absolute("public/fonts/last-rain/cinzel-decorative-latin.woff2"),
-    absolute("public/fonts/last-rain/cinzel-latin.woff2"),
-    absolute("public/fonts/last-rain/lora-italic-latin.woff2"),
-    absolute("public/fonts/last-rain/lora-normal-latin.woff2"),
-    absolute("public/fonts/last-rain/oswald-latin.woff2"),
-    absolute("public/fonts/last-rain/outfit-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/cinzel-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/lora-italic-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/lora-normal-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/oswald-latin.woff2"),
+    absolute("public/fonts/pact-of-elarion/outfit-latin.woff2"),
   ];
   if (config.runtimeDeck) {
     const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
@@ -554,7 +554,7 @@ export function studioSourceFiles(deckId) {
     absolute("dev/tools/Decks/deck-card-studio.js"),
     absolute("dev/tools/Decks/deck-card-text.js"),
   );
-  const motif = deckId === "crimson_court"
+  const motif = deckId === "court_of_the_crimson_eclipse"
     ? "motivo.jpg"
     : deckId === "hunters"
       ? "motivo.webp"

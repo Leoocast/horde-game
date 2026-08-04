@@ -52,7 +52,7 @@
     const footerSeparator = "·";
 
     function deckSeal() {
-        return theme === "last_rain" ? LAST_RAIN_LEAF : factionSymbol();
+        return theme === "pact_of_elarion" ? LAST_RAIN_LEAF : factionSymbol();
     }
 
     function escapeHtml(value) {
@@ -76,7 +76,7 @@
     function typeSymbol(type) {
         const normalized = String(type || "").toLocaleLowerCase("es");
 
-        if (theme === "last_rain") {
+        if (theme === "pact_of_elarion") {
             if (normalized.includes("eco")) {
                 return `
                 <svg class="tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
@@ -100,9 +100,9 @@
         }
 
         if (
-            theme === "hollow_bell_procession"
-            || theme === "broken_forge_mutiny"
-            || theme === "crimson_court"
+            theme === "uprising_of_the_graveless"
+            || theme === "legion_of_varka"
+            || theme === "court_of_the_crimson_eclipse"
             || theme === "hunters"
         ) {
             if (theme === "hunters" && normalized.includes("trampa")) {
@@ -122,7 +122,7 @@
                 `;
             }
             if (
-                theme === "crimson_court"
+                theme === "court_of_the_crimson_eclipse"
                 && (
                     normalized.includes("fuente")
                     || normalized.includes("source")
@@ -169,7 +169,7 @@
     }
 
     function factionSymbol() {
-        if (theme === "hollow_bell_procession") {
+        if (theme === "uprising_of_the_graveless") {
             return `
                 <svg class="tcg-faction-icon tcg-faction-icon--headstone" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
                     <path fill="currentColor" d="M12 57v-7h6V25C18 13.4 23.7 7 32 7c8.3 0 14 6.4 14 18v25h6v7H12Z"></path>
@@ -180,7 +180,7 @@
             `;
         }
 
-        if (theme === "broken_forge_mutiny") {
+        if (theme === "legion_of_varka") {
             return `
                 <svg class="tcg-faction-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
                     <path fill="currentColor" fill-rule="evenodd" d="M15.362 5.214A8.252 8.252 0 0 1 12 21a8.25 8.25 0 0 1-5.962-13.953A8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3.001 2.48ZM12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-3.252 5.032A3.75 3.75 0 0 0 12 18Z" clip-rule="evenodd"></path>
@@ -188,7 +188,7 @@
             `;
         }
 
-        if (theme === "crimson_court") {
+        if (theme === "court_of_the_crimson_eclipse") {
             return `
                 <svg class="tcg-faction-icon tcg-faction-icon--eclipse" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
                     <path fill="currentColor" fill-rule="evenodd" d="M43.8 7.2A26 26 0 1 0 57 50.1 22 22 0 1 1 43.8 7.2Z" clip-rule="evenodd"></path>
@@ -327,7 +327,7 @@
             const isChronicle = Boolean(card.isChronicle);
             const isEnergy = Boolean(card.isEnergy);
             const isHordeDeck =
-                theme === "hollow_bell_procession" || theme === "broken_forge_mutiny";
+                theme === "uprising_of_the_graveless" || theme === "legion_of_varka";
             const showCost = !isHordeDeck
                 && card.costo !== null
                 && card.costo !== undefined

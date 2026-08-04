@@ -1,0 +1,725 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "court_of_the_crimson_eclipse",
+  "name": "La Corte del Eclipse Carmesí",
+  "format": "casual",
+  "side": "CHRONICLER",
+  "deckSize": 40,
+  "gameplayLandCount": 12,
+  "archetype": "life-payment-lifesteal",
+  "gamePlan": "Paga Vida para alimentar los ritos del Eclipse Carmesí, convierte el dolor en Fuerza y recupera lo entregado mediante Drenar bajo el dominio de Mirevna.",
+  "mechanics": {
+    "lifePayment": "Pagar Vida es un coste, no daño, y nunca puede reducir tu Vida por debajo de 1.",
+    "lifesteal": "Cuando un Eco con Drenar hace daño de Batalla, recuperas esa misma cantidad de Vida.",
+    "hostfallCombat": "Los Ecos del Cronista atacan a la Hueste, no a sus Ecos. Se enfrentan a ellos al defender o mediante Hechizos."
+  },
+  "tokens": [],
+  "cards": [
+    {
+      "id": "sanctuary_of_the_red_moon",
+      "collectorId": "HFA1048",
+      "name": "Sanctuary of the Red Moon",
+      "displayNameEs": "Santuario de la Luna Roja",
+      "gameText": {
+        "en": "Exhaust: Gain 1 Energy.",
+        "es": "Agota: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "During the eclipse, every tower casts a shadow pointing toward Mirevna's throne.",
+        "es": "Durante el eclipse, cada torre proyecta una sombra que apunta hacia el trono de Mirevna."
+      },
+      "showFlavorText": true,
+      "quantity": 12,
+      "energyCost": {
+        "amount": 0
+      },
+      "subtypes": [
+        "Sanctuary"
+      ],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "sanctuary_of_the_red_moon_generate",
+          "kind": "ACTIVATED",
+          "cost": {
+            "exhaust": true
+          },
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SOURCE"
+      ],
+      "traits": []
+    },
+    {
+      "id": "blood_page",
+      "collectorId": "HFA1049",
+      "name": "Blood Page",
+      "displayNameEs": "Paje de la Sed",
+      "gameText": {
+        "en": "The first time you lose Life each turn, this card gains +2/+0 until the end of the turn.",
+        "es": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "Her cup never empties; every wound in the court fills it again.",
+        "es": "Su copa nunca se vacía; cada herida de la corte vuelve a llenarla."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Vampire",
+        "Servant"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "blood_page_first_life_loss",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "LIFE_LOST"
+          },
+          "targets": [],
+          "conditions": [
+            {
+              "type": "FIRST_LIFE_LOSS_THIS_TURN"
+            },
+            {
+              "type": "SOURCE_IS_READY"
+            }
+          ],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "SELF",
+              "power": 2,
+              "endurance": 0,
+              "duration": "END_OF_TURN"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "herald_of_the_eclipse",
+      "collectorId": "HFA1050",
+      "name": "Herald of the Eclipse",
+      "displayNameEs": "Heraldo del Eclipse",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The first shadow of the eclipse always arrives on wings.",
+        "es": "La primera sombra del eclipse siempre llega con alas."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [
+        "Bat",
+        "Vampire"
+      ],
+      "power": 2,
+      "endurance": 2,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "FLYING",
+        "DRAIN"
+      ]
+    },
+    {
+      "id": "midnight_collector",
+      "collectorId": "HFA1051",
+      "name": "Midnight Collector",
+      "displayNameEs": "Recaudador de Medianoche",
+      "gameText": {
+        "en": "Exhaust and pay 5 Life: Gain 1 Energy.",
+        "es": "Agota y paga 5 de Vida: Gana 1 Energía."
+      },
+      "flavorText": {
+        "en": "Mirevna collects no gold. She collects the years you still thought you would live.",
+        "es": "Mirevna no cobra oro. Cobra los años que aún pensabas vivir."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [
+        "Vampire",
+        "Collector"
+      ],
+      "power": 1,
+      "endurance": 2,
+      "abilities": [
+        {
+          "id": "midnight_collector_generate",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "cost": {
+            "exhaust": true,
+            "life": 5
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_ENERGY",
+              "player": "SELF",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "duelist_of_the_eclipse",
+      "collectorId": "HFA1052",
+      "name": "Duelist of the Eclipse",
+      "displayNameEs": "Duelista del Eclipse",
+      "gameText": {
+        "en": "Once during your turn, you may pay 3 Life. If you do, this Echo gains +3/+1 until your next turn.",
+        "es": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno."
+      },
+      "flavorText": {
+        "en": "Beneath the crimson moon, every bow leaves the neck exposed.",
+        "es": "Bajo la luna carmesí, cada reverencia deja el cuello expuesto."
+      },
+      "showFlavorText": false,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Vampire",
+        "Warrior"
+      ],
+      "power": 3,
+      "endurance": 3,
+      "abilities": [
+        {
+          "id": "duelist_of_the_eclipse_blood_rush",
+          "kind": "ACTIVATED",
+          "zone": "FIELD",
+          "requiresStabilized": true,
+          "cost": {
+            "life": 3
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "PUMP_UNTIL_NEXT_PLAYER_TURN",
+              "target": "SELF",
+              "power": 3,
+              "endurance": 1
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": []
+    },
+    {
+      "id": "guardian_of_the_night_threshold",
+      "collectorId": "HFA1053",
+      "name": "Guardian of the Night Threshold",
+      "displayNameEs": "Guardiana del Umbral Nocturno",
+      "gameText": {
+        "en": "When this card is dealt damage and survives, gain 2 Life.",
+        "es": "Cuando reciba daño y sobreviva, ganas 2 de Vida."
+      },
+      "flavorText": {
+        "en": "Every blow that fails to fell her strengthens the pulse of the court.",
+        "es": "Cada golpe que no la derriba fortalece el pulso de la corte."
+      },
+      "showFlavorText": true,
+      "quantity": 3,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Vampire",
+        "Knight"
+      ],
+      "power": 2,
+      "endurance": 4,
+      "abilities": [
+        {
+          "id": "guardian_of_the_night_threshold_survives_damage",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "SURVIVED_DAMAGE",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "SKYGUARD"
+      ]
+    },
+    {
+      "id": "assassin_of_the_black_veil",
+      "collectorId": "HFA1054",
+      "name": "Assassin of the Black Veil",
+      "displayNameEs": "Asesina del Velo Negro",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "She does not spill blood; she teaches it to leave without a sound.",
+        "es": "No derrama sangre; le enseña a abandonar el cuerpo sin hacer ruido."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [
+        "Vampire",
+        "Assassin"
+      ],
+      "power": 1,
+      "endurance": 3,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "LETHAL"
+      ]
+    },
+    {
+      "id": "sentinel_of_the_lunar_eye",
+      "collectorId": "HFA1055",
+      "name": "Sentinel of the Lunar Eye",
+      "displayNameEs": "Centinela del Ojo Lunar",
+      "gameText": {
+        "en": "No additional effect.",
+        "es": "Sin efecto adicional."
+      },
+      "flavorText": {
+        "en": "The eye in his palm remains awake when the moon disappears.",
+        "es": "El ojo de su palma permanece despierto cuando la luna desaparece."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 4
+      },
+      "subtypes": [
+        "Human",
+        "Elf"
+      ],
+      "power": 3,
+      "endurance": 4,
+      "abilities": [],
+      "kinds": [
+        "ECHO"
+      ],
+      "traits": [
+        "ALERT"
+      ]
+    },
+    {
+      "id": "mirevna_countess_of_the_crimson_eclipse",
+      "collectorId": "HFA1056",
+      "name": "Mirevna, Countess of the Crimson Eclipse",
+      "displayNameEs": "Mirevna, Condesa del Eclipse Carmesí",
+      "gameText": {
+        "en": "Additional cost: Pay half your Life.\nDuring your turn, this Echo has Drain.",
+        "es": "Coste adicional: Paga la mitad de tu Vida.\nDurante tu turno, este Eco tiene Drenar."
+      },
+      "flavorText": {
+        "en": "When Mirevna opens her eyes, even the moon seems to hold its breath.",
+        "es": "Cuando Mirevna abre los ojos, hasta la luna parece contener el aliento."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 6
+      },
+      "subtypes": [
+        "Vampire",
+        "Noble"
+      ],
+      "power": 5,
+      "endurance": 5,
+      "abilities": [
+        {
+          "id": "mirevna_countess_of_the_crimson_eclipse_lifesteal",
+          "kind": "STATIC",
+          "zone": "FIELD",
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD",
+              "duration": "WHILE_SOURCE_ON_FIELD",
+              "target": "SELF",
+              "condition": {
+                "type": "ACTIVE_PLAYER_IS",
+                "player": "SELF"
+              },
+              "keyword": "DRAIN"
+            }
+          ]
+        },
+        {
+          "id": "mirevna_countess_of_the_crimson_eclipse_spell",
+          "kind": "SPELL",
+          "cost": {
+            "life": {
+              "type": "CURRENT_LIFE_FRACTION",
+              "numerator": 1,
+              "denominator": 2,
+              "rounding": "UP"
+            }
+          },
+          "targets": [],
+          "effects": []
+        }
+      ],
+      "kinds": [
+        "ECHO"
+      ],
+      "modifiers": [
+        "CHRONICLE"
+      ],
+      "traits": [
+        "FLYING",
+        "ALERT"
+      ]
+    },
+    {
+      "id": "midnight_pact",
+      "collectorId": "HFA1057",
+      "name": "Midnight Pact",
+      "displayNameEs": "Pacto de Medianoche",
+      "gameText": {
+        "en": "Additional cost: Pay 5 Life.\nDraw 2 cards.",
+        "es": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas."
+      },
+      "flavorText": {
+        "en": "Five heartbeats buy two secrets. Neither returns to its owner.",
+        "es": "Cinco latidos compran dos secretos. Ninguno regresa a su dueño."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "midnight_pact_spell",
+          "kind": "SPELL",
+          "cost": {
+            "life": 5
+          },
+          "targets": [],
+          "effects": [
+            {
+              "type": "DRAW_CARD",
+              "player": "SELF",
+              "amount": 2,
+              "animation": "BLOOD_PACT"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "traits": []
+    },
+    {
+      "id": "crimson_impulse",
+      "collectorId": "HFA1058",
+      "name": "Crimson Impulse",
+      "displayNameEs": "Impulso Carmesí",
+      "gameText": {
+        "en": "Additional cost: Pay 2 Life.\nAn ally gains +2/+2 and Flying until the end of the turn.",
+        "es": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno."
+      },
+      "flavorText": {
+        "en": "For an instant, the entire eclipse fits inside a single vein.",
+        "es": "Durante un instante, el eclipse cabe entero dentro de una sola vena."
+      },
+      "showFlavorText": false,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 1
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "crimson_impulse_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "cost": {
+            "life": 2
+          },
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "SELF",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "MODIFY_STATS",
+              "target": "targetCreature",
+              "power": 2,
+              "endurance": 2,
+              "duration": "END_OF_TURN"
+            },
+            {
+              "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+              "target": "targetCreature",
+              "keyword": "FLYING"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "drain_essence",
+      "collectorId": "HFA1059",
+      "name": "Drain Essence",
+      "displayNameEs": "Drenar la Esencia",
+      "gameText": {
+        "en": "Deal 3 damage to an Echo. Gain 2 Life.",
+        "es": "Haz 3 de daño a un Eco. Gana 2 de Vida."
+      },
+      "flavorText": {
+        "en": "The night takes three parts and returns only two.",
+        "es": "La noche toma tres partes y devuelve solamente dos."
+      },
+      "showFlavorText": true,
+      "quantity": 2,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "drain_essence_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "ANY",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DEAL_DAMAGE_TO_TARGET",
+              "target": "targetCreature",
+              "amount": 3,
+              "damageKind": "NON_COMBAT",
+              "animation": "DRAIN_ESSENCE"
+            },
+            {
+              "type": "GAIN_LIFE",
+              "player": "SELF",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "hunt_beneath_the_red_moon",
+      "collectorId": "HFA1060",
+      "name": "Hunt Beneath the Red Moon",
+      "displayNameEs": "Cacería Bajo la Luna Roja",
+      "gameText": {
+        "en": "All your allies gain Drain until the End.",
+        "es": "Todos tus aliados ganan Drenar hasta el Final."
+      },
+      "flavorText": {
+        "en": "When the moon turns red, the whole court remembers it has fangs.",
+        "es": "Cuando la luna enrojece, toda la corte recuerda que también tiene colmillos."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 2
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "hunt_beneath_the_red_moon_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "GRANT_KEYWORD_UNTIL_END_OF_TURN",
+              "target": {
+                "type": "ALL_ECHOS",
+                "controller": "SELF"
+              },
+              "keyword": "DRAIN"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    },
+    {
+      "id": "verdict_of_the_eclipse",
+      "collectorId": "HFA1061",
+      "name": "Verdict of the Eclipse",
+      "displayNameEs": "Veredicto del Eclipse",
+      "gameText": {
+        "en": "Destroy an enemy. Lose Life equal to its Power.",
+        "es": "Destruye un enemigo. Pierdes Vida igual a su Fuerza."
+      },
+      "flavorText": {
+        "en": "The eclipse passes no sentence. Mirevna simply points to who ceases to exist.",
+        "es": "El eclipse no dicta sentencia. Mirevna simplemente señala quién deja de existir."
+      },
+      "showFlavorText": true,
+      "quantity": 1,
+      "energyCost": {
+        "amount": 3
+      },
+      "subtypes": [],
+      "power": null,
+      "endurance": null,
+      "abilities": [
+        {
+          "id": "verdict_of_the_eclipse_spell",
+          "kind": "SPELL",
+          "zone": "HAND",
+          "speed": "QUICK",
+          "targets": [
+            {
+              "id": "targetCreature",
+              "zone": "FIELD",
+              "controller": "OPPONENT",
+              "filters": {
+                "kinds": [
+                  "ECHO"
+                ]
+              }
+            }
+          ],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "DESTROY_TARGET",
+              "target": "targetCreature",
+              "animation": "FINAL_BANQUET"
+            },
+            {
+              "type": "LOSE_LIFE",
+              "player": "SELF",
+              "amount": {
+                "type": "STAT",
+                "object": "targetCreature",
+                "stat": "POWER"
+              }
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "SPELL"
+      ],
+      "modifiers": [
+        "QUICK"
+      ],
+      "traits": []
+    }
+  ]
+}

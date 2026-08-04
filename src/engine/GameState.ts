@@ -8,9 +8,9 @@ const DEVELOPER_SEED = "developer";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
 const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
-const DEVELOPER_OPENING_HAND = ["roots_touched_sky", "roots_touched_sky"];
+const DEVELOPER_OPENING_HAND = ["the_judgment_of_elarion", "the_judgment_of_elarion"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
-const DEVELOPER_HOST_OPENING_ARCHIVE = ["ember_scrap_runner", "next_crew_caller"];
+const DEVELOPER_HOST_OPENING_ARCHIVE = ["varkas_minion", "summoner_of_the_ranks"];
 const DEVELOPER_HOST_PROTECTED_OPENING_SIZE = 2;
 const DEVELOPER_STARTING_LAND_COUNT = 4;
 
@@ -156,9 +156,9 @@ function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[])
   const { forced, remaining } = forceCardsToFront(archive, DEVELOPER_HOST_OPENING_ARCHIVE);
   const ordered = [...forced, ...remaining];
   for (let index = 0; index < Math.min(DEVELOPER_HOST_PROTECTED_OPENING_SIZE, ordered.length); index += 1) {
-    if (ordered[index].definitionId !== "hollow_bell") continue;
+    if (ordered[index].definitionId !== "the_broken_headstone") continue;
     const replacementIndex = ordered.findIndex(
-      (card, candidateIndex) => candidateIndex >= DEVELOPER_HOST_PROTECTED_OPENING_SIZE && card.definitionId !== "hollow_bell",
+      (card, candidateIndex) => candidateIndex >= DEVELOPER_HOST_PROTECTED_OPENING_SIZE && card.definitionId !== "the_broken_headstone",
     );
     if (replacementIndex < 0) break;
     [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];

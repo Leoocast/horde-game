@@ -35,30 +35,30 @@ choice /C 12340 /N /M "Elige el deck que quieres exportar: "
 
 if errorlevel 5 exit /b 0
 if errorlevel 4 (
-    set "DECK=crimson_court"
+    set "DECK=court_of_the_crimson_eclipse"
     goto validate_deck
 )
 if errorlevel 3 (
-    set "DECK=broken_forge_mutiny"
+    set "DECK=legion_of_varka"
     goto validate_deck
 )
 if errorlevel 2 (
-    set "DECK=hollow_bell_procession"
+    set "DECK=uprising_of_the_graveless"
     goto validate_deck
 )
 if errorlevel 1 (
-    set "DECK=last_rain"
+    set "DECK=pact_of_elarion"
     goto validate_deck
 )
 
 :validate_deck
-if /i "%DECK%"=="last_rain" goto export_deck
-if /i "%DECK%"=="hollow_bell_procession" goto export_deck
-if /i "%DECK%"=="broken_forge_mutiny" goto export_deck
-if /i "%DECK%"=="crimson_court" goto export_deck
+if /i "%DECK%"=="pact_of_elarion" goto export_deck
+if /i "%DECK%"=="uprising_of_the_graveless" goto export_deck
+if /i "%DECK%"=="legion_of_varka" goto export_deck
+if /i "%DECK%"=="court_of_the_crimson_eclipse" goto export_deck
 
 echo Deck invalido: %DECK%
-echo Opciones: last_rain, hollow_bell_procession, broken_forge_mutiny o crimson_court.
+echo Opciones: pact_of_elarion, uprising_of_the_graveless, legion_of_varka o court_of_the_crimson_eclipse.
 echo.
 pause
 exit /b 1

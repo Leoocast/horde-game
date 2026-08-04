@@ -1,5 +1,6 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
 import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
+import { cardIdFromName } from "./cardIdentity";
 import { normalizeDeck } from "./normalizeDeck";
 import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 import type { EffectDefinition } from "../engine/GameTypes";
@@ -477,6 +478,15 @@ function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
   }
 
   for (const card of [...deck.cards, ...(deck.tokens ?? [])]) {
+    const canonicalId = cardIdFromName(card.name);
+    if (card.id !== canonicalId) {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "id",
+        message: `Card id "${card.id}" must match its English name: expected "${canonicalId}".`,
+      });
+    }
     if (!Array.isArray(card.kinds) || card.kinds.length === 0) {
       errors.push({ deckId: deck.id, cardId: card.id, abilityId: "schema", message: "Hostfall cards must declare kinds[]." });
     }

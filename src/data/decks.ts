@@ -1,11 +1,11 @@
-import brokenForgeMutinyRaw from "./decks/host/broken_forge_mutiny/broken_forge_mutiny.json";
-import brokenForgeMutinyImagesRaw from "./decks/host/broken_forge_mutiny/broken_forge_mutiny_images.json";
-import hollowBellProcessionRaw from "./decks/host/hollow_bell_procession/hollow_bell_procession.json";
-import hollowBellProcessionImagesRaw from "./decks/host/hollow_bell_procession/hollow_bell_procession_images.json";
-import lastRainRaw from "./decks/player/last_rain/last_rain.json";
-import lastRainImagesRaw from "./decks/player/last_rain/last_rain_images.json";
-import crimsonCourtRaw from "./decks/player/crimson_court/crimson_court.json";
-import crimsonCourtImagesRaw from "./decks/player/crimson_court/crimson_court_images.json";
+import legionOfVarkaRaw from "./decks/host/legion_of_varka/legion_of_varka.json";
+import legionOfVarkaImagesRaw from "./decks/host/legion_of_varka/legion_of_varka_images.json";
+import uprisingOfTheGravelessRaw from "./decks/host/uprising_of_the_graveless/uprising_of_the_graveless.json";
+import uprisingOfTheGravelessImagesRaw from "./decks/host/uprising_of_the_graveless/uprising_of_the_graveless_images.json";
+import pactOfElarionRaw from "./decks/player/pact_of_elarion/pact_of_elarion.json";
+import pactOfElarionImagesRaw from "./decks/player/pact_of_elarion/pact_of_elarion_images.json";
+import courtOfTheCrimsonEclipseRaw from "./decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse.json";
+import courtOfTheCrimsonEclipseImagesRaw from "./decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse_images.json";
 import type { DeckImageManifest, DeckPresentation, NewDeckList } from "./deckCatalog";
 import { normalizeDeck } from "./normalizeDeck";
 import type { CardDefinition, DeckList } from "../engine/GameTypes";
@@ -20,39 +20,45 @@ export type DeckRegistryEntry = {
   deck: DeckList;
 };
 
-function register(label: string, raw: NewDeckList, images: DeckImageManifest, presentation: DeckPresentation): DeckRegistryEntry {
-  return { label, raw, images, presentation, deck: normalizeDeck(raw) };
+function register(raw: NewDeckList, images: DeckImageManifest, presentation: DeckPresentation): DeckRegistryEntry {
+  return {
+    label: `${raw.name} ${raw.deckSize}`,
+    raw,
+    images,
+    presentation,
+    deck: normalizeDeck(raw),
+  };
 }
 
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("El Pacto de Elarion 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
-    keyCardId: "iria_voice_last_rain",
+  register(pactOfElarionRaw as NewDeckList, pactOfElarionImagesRaw as DeckImageManifest, {
+    keyCardId: "aelyra_heir_of_elarion",
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",
   }),
-  register("La Corte del Eclipse Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
-    keyCardId: "eternal_feast_countess",
+  register(courtOfTheCrimsonEclipseRaw as NewDeckList, courtOfTheCrimsonEclipseImagesRaw as DeckImageManifest, {
+    keyCardId: "mirevna_countess_of_the_crimson_eclipse",
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("El Alzamiento de los Sinsepulcro 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
-    keyCardId: "last_knell_dead",
+  register(uprisingOfTheGravelessRaw as NewDeckList, uprisingOfTheGravelessImagesRaw as DeckImageManifest, {
+    keyCardId: "graveless_soldier",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("La Legión de Varka 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
-    keyCardId: "ember_scrap_runner",
+  register(legionOfVarkaRaw as unknown as NewDeckList, legionOfVarkaImagesRaw as DeckImageManifest, {
+    keyCardId: "varkas_minion",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
     encounterTone: "goblins",
   }),
 ];
 
-export const DEFAULT_PLAYER_DECK_ID = "last_rain";
-export const DEFAULT_HOST_DECK_ID = "hollow_bell_procession";
+export const DEFAULT_PLAYER_DECK_ID = "pact_of_elarion";
+export const DEFAULT_HOST_DECK_ID = "uprising_of_the_graveless";
 
 export const playerDeck = requireDeck(DEFAULT_PLAYER_DECK_ID);
 export const hostDeck = requireDeck(DEFAULT_HOST_DECK_ID);

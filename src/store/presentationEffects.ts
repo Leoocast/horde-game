@@ -14,7 +14,7 @@ import type { BuffAnimationVariant } from "./buffAnimation";
 
 export const BUFF_ANIMATION_MS = 1120;
 const AUTO_PAID_LAND_FLASH_MS = 900;
-const HEAVY_SUMMON_DEFINITION_IDS = new Set(["ancient_canopy_watchers"]);
+const HEAVY_SUMMON_DEFINITION_IDS = new Set(["maela_watcher_of_the_heights"]);
 
 let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
@@ -97,7 +97,7 @@ export function findTemporaryBuffedCardIds(previous: GameState, next: GameState)
 }
 
 export function discardPauseInProgress(state: GameStore): boolean {
-  return Boolean(state.handLimitDiscardActive || state.fleshRootTitheSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
+  return Boolean(state.handLimitDiscardActive || state.tributeOfTheFourSorrowsSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
 }
 
 export function resumeAfterDiscardPause(onReady: () => void): void {

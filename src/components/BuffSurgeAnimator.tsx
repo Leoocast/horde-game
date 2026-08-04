@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
-import type { BuffSurgeRenderMode } from "./buffSurgePolicy";
 
 export type BuffSurgePalette = "holy" | "nature";
 
@@ -8,7 +7,6 @@ type BuffSurgeAnimatorProps = {
   eventId: number;
   palette: BuffSurgePalette;
   seedKey: string;
-  renderMode?: BuffSurgeRenderMode;
 };
 
 type SurgePalette = {
@@ -188,14 +186,12 @@ export function BuffSurgeAnimator({
   eventId,
   palette: paletteName,
   seedKey,
-  renderMode = "webgl",
 }: BuffSurgeAnimatorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (renderMode === "css") return;
 
     const palette = SURGE_PALETTES[paletteName];
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -372,16 +368,12 @@ export function BuffSurgeAnimator({
       emberTexture.dispose();
       ringTexture.dispose();
       renderer.dispose();
-      renderer.forceContextLoss();
     };
-  }, [eventId, paletteName, renderMode, seedKey]);
+  }, [eventId, paletteName, seedKey]);
 
   return (
     <span className={`buff-surge-effect buff-surge-${paletteName}`} aria-hidden="true">
-      <canvas
-        ref={canvasRef}
-        className={["buff-surge-canvas", renderMode === "css" ? "buff-surge-three-unavailable" : ""].join(" ")}
-      />
+      <canvas ref={canvasRef} className="buff-surge-canvas" />
       <span className="buff-surge-fallback">
         <i />
         <i />

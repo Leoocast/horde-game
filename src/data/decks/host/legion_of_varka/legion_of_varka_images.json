@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "varkas_minion": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/legion_of_varka/varkas_minion.png"
+    },
+    "shaman_of_the_umbral_ember": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/shaman_of_the_umbral_ember.png"
+    },
+    "summoner_of_the_ranks": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/summoner_of_the_ranks.png"
+    },
+    "varkas_standard_bearer": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/varkas_standard_bearer.png"
+    },
+    "the_shift_hammer": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/the_shift_hammer.png"
+    },
+    "all_against_one": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/all_against_one.png"
+    },
+    "chief_of_the_double_guard": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/chief_of_the_double_guard.png"
+    },
+    "rider_of_the_third_charge": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/rider_of_the_third_charge.png"
+    },
+    "varkas_linebreaker": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/varkas_linebreaker.png"
+    },
+    "unleash_the_legion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/unleash_the_legion.png"
+    },
+    "corrupted_war_bear": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/legion_of_varka/corrupted_war_bear.png"
+    },
+    "rider_of_the_umbral_volley": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/rider_of_the_umbral_volley.png"
+    },
+    "varka_infernal_matriarch": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/varka_infernal_matriarch.png"
+    },
+    "varkas_forgemaster": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/varkas_forgemaster.png"
+    },
+    "marshal_of_the_wave": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/marshal_of_the_wave.png"
+    },
+    "vardek_scribe_of_the_legion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/vardek_scribe_of_the_legion.png"
+    },
+    "rear_guard_firebreather": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/legion_of_varka/rear_guard_firebreather.png"
+    }
+  }
+}

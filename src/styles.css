@@ -7,7 +7,7 @@
   font-style: normal;
   font-weight: 400 600;
   font-display: swap;
-  src: url("/fonts/last-rain/lora-normal-latin.woff2") format("woff2");
+  src: url("/fonts/pact-of-elarion/lora-normal-latin.woff2") format("woff2");
 }
 
 @layer base {
@@ -5512,7 +5512,7 @@
       linear-gradient(180deg, #3d6844 0%, #284d30 54%, #102417 100%);
     --buff-stat-border: rgb(184 216 151 / 0.76);
     --buff-stat-glow: rgb(129 176 103 / 0.38);
-    --buff-stat-motif: url("../dev/tools/Decks/last_rain/motivo.avif");
+    --buff-stat-motif: url("../dev/tools/Decks/pact_of_elarion/motivo.avif");
     --buff-stat-number: #e0f0cf;
     --buff-stat-separator: #9eb38e;
     position: absolute;
@@ -5594,7 +5594,7 @@
       linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
     --buff-stat-border: rgb(165 208 168 / 0.78);
     --buff-stat-glow: rgb(113 181 157 / 0.4);
-    --buff-stat-motif: url("../dev/tools/Decks/hollow_bell_procession/motivo.avif");
+    --buff-stat-motif: url("../dev/tools/Decks/uprising_of_the_graveless/motivo.avif");
     --buff-stat-number: #eff6e8;
     --buff-stat-separator: #a8c6b6;
   }
@@ -5606,7 +5606,7 @@
       linear-gradient(180deg, #bd4a1f 0%, #873018 54%, #401108 100%);
     --buff-stat-border: rgb(255 191 99 / 0.82);
     --buff-stat-glow: rgb(230 113 46 / 0.46);
-    --buff-stat-motif: url("../dev/tools/Decks/broken_forge_mutiny/motivo.avif");
+    --buff-stat-motif: url("../dev/tools/Decks/legion_of_varka/motivo.avif");
     --buff-stat-number: #fff1dc;
     --buff-stat-separator: #e4a06e;
   }
@@ -5618,7 +5618,7 @@
       linear-gradient(180deg, #a82748 0%, #801937 54%, #350813 100%);
     --buff-stat-border: rgb(225 190 119 / 0.78);
     --buff-stat-glow: rgb(172 43 77 / 0.44);
-    --buff-stat-motif: url("../dev/tools/Decks/crimson_court/motivo.avif");
+    --buff-stat-motif: url("../dev/tools/Decks/court_of_the_crimson_eclipse/motivo.avif");
     --buff-stat-number: #f9e8e9;
     --buff-stat-separator: #c88c9b;
   }
@@ -6095,7 +6095,7 @@
     white-space: nowrap;
   }
 
-  .flesh-root-tithe-selection-panel-inline {
+  .tribute-of-the-four-sorrows-selection-panel-inline {
     position: absolute;
     top: 50%;
     left: calc(50% + 9rem);
@@ -12411,7 +12411,7 @@
 /* Cropped battlefield cards use compact game chrome instead of the printed-card tab used by hand
    and previews. The title stays integrated into the card while the stats remain a readable HUD. */
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
-  --card-cropped-title-motif: url("../dev/tools/Decks/last_rain/motivo.avif");
+  --card-cropped-title-motif: url("../dev/tools/Decks/pact_of_elarion/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px);
   --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, #1d4228 100%);
   position: absolute;
@@ -12483,7 +12483,7 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge {
-  --card-stat-motif-image: url("../dev/tools/Decks/last_rain/motivo.avif");
+  --card-stat-motif-image: url("../dev/tools/Decks/pact_of_elarion/motivo.avif");
   --card-stat-border: rgb(201 177 111 / 0.52);
   isolation: isolate;
   right: 3px;
@@ -12609,10 +12609,10 @@
   text-shadow: 0 0 4px rgb(139 187 111 / 0.52);
 }
 
-/* Zombie chrome follows the palette authored in dev/tools/Decks/hollow_bell_procession/index.html. The damaged
+/* Zombie chrome follows the palette authored in dev/tools/Decks/uprising_of_the_graveless/index.html. The damaged
    state keeps that faction material and signals damage through its edge and life value. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
-  --card-cropped-title-motif: url("../dev/tools/Decks/hollow_bell_procession/motivo.avif");
+  --card-cropped-title-motif: url("../dev/tools/Decks/uprising_of_the_graveless/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px);
   --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #1d3f37 100%);
   color: #f2f5e8;
@@ -12628,7 +12628,7 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge {
-  --card-stat-motif-image: url("../dev/tools/Decks/hollow_bell_procession/motivo.avif");
+  --card-stat-motif-image: url("../dev/tools/Decks/uprising_of_the_graveless/motivo.avif");
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-damaged,
@@ -12651,9 +12651,9 @@
     linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
 }
 
-/* Goblin chrome mirrors the forged-red palette from dev/tools/Decks/broken_forge_mutiny/index.html. */
+/* Goblin chrome mirrors the forged-red palette from dev/tools/Decks/legion_of_varka/index.html. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-cropped-title {
-  --card-cropped-title-motif: url("../dev/tools/Decks/broken_forge_mutiny/motivo.avif");
+  --card-cropped-title-motif: url("../dev/tools/Decks/legion_of_varka/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px);
   --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, #5e180d 100%);
   color: #f8eedc;
@@ -12669,7 +12669,7 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge {
-  --card-stat-motif-image: url("../dev/tools/Decks/broken_forge_mutiny/motivo.avif");
+  --card-stat-motif-image: url("../dev/tools/Decks/legion_of_varka/motivo.avif");
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-damaged,
@@ -12692,10 +12692,10 @@
     linear-gradient(180deg, #bd4a1f 0%, #873018 54%, #401108 100%);
 }
 
-/* Vampire chrome comes from the authored Crimson Court generator. The cropped title uses the
-   same motif and lacquer palette as dev/tools/Decks/crimson_court/index.html. */
+/* Vampire chrome comes from the authored Court of the Crimson Eclipse generator. The cropped title uses the
+   same motif and lacquer palette as dev/tools/Decks/court_of_the_crimson_eclipse/index.html. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-cropped-title {
-  --card-cropped-title-motif: url("../dev/tools/Decks/crimson_court/motivo.avif");
+  --card-cropped-title-motif: url("../dev/tools/Decks/court_of_the_crimson_eclipse/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(246 221 227 / 0.018) 0 1px, transparent 1px 5px);
   --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, #3b0d1d 100%);
   color: #f6ece7;
@@ -12711,7 +12711,7 @@
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge {
-  --card-stat-motif-image: url("../dev/tools/Decks/crimson_court/motivo.avif");
+  --card-stat-motif-image: url("../dev/tools/Decks/court_of_the_crimson_eclipse/motivo.avif");
   --card-stat-separator: #c88c9b;
 }
 

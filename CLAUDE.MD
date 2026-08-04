@@ -112,10 +112,10 @@ Decks vigentes:
 
 | Bando | Id | Nombre | Estado |
 | --- | --- | --- | --- |
-| Cronista | `last_rain` | El Pacto de Elarion | Jugable |
-| Cronista | `crimson_court` | La Corte del Eclipse Carmesí | Jugable |
-| Hueste | `hollow_bell_procession` | El Alzamiento de los Sinsepulcro | Jugable y predeterminada |
-| Hueste | `broken_forge_mutiny` | La Legión de Varka | Jugable |
+| Cronista | `pact_of_elarion` | El Pacto de Elarion | Jugable |
+| Cronista | `court_of_the_crimson_eclipse` | La Corte del Eclipse Carmesí | Jugable |
+| Hueste | `uprising_of_the_graveless` | El Alzamiento de los Sinsepulcro | Jugable y predeterminada |
+| Hueste | `legion_of_varka` | La Legión de Varka | Jugable |
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
 
@@ -173,16 +173,16 @@ Las habilidades con `engineSupport: "pending"`, `"ignored"` o `"custom"` no se e
 El deck lint informa las pendientes y rechaza cualquier efecto o handler desconocido sin marcador.
 `EffectResolver` contiene el registro genérico de efectos y su metadata de presentación.
 
-No programar cartas por nombre. La excepción bespoke actual es `flesh_root_tithe`, declarada
-`engineSupport: "custom"`, cuya secuencia vive en `src/store/fleshRootTitheSequence.ts` y
-`src/components/FleshRootTitheSelectionOverlay.tsx`.
+No programar cartas por nombre. La excepción bespoke actual es `tribute_of_the_four_sorrows`, declarada
+`engineSupport: "custom"`, cuya secuencia vive en `src/store/tributeOfTheFourSorrowsSequence.ts` y
+`src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx`.
 
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
-- `docs/chronicle_last_rain.md`
-- `docs/chronicle_crimson_eclipse.md`
-- `docs/procession_hollow_bell.md`
-- `docs/mutiny_broken_forge.md`
+- `docs/chronicle_pact_of_elarion.md`
+- `docs/chronicle_court_of_the_crimson_eclipse.md`
+- `docs/host_uprising_of_the_graveless.md`
+- `docs/host_legion_of_varka.md`
 - `docs/goblin_cards.md`
 
 ## Arte y Card Studio

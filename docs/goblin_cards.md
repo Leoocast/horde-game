@@ -2,13 +2,13 @@
 
 Este documento registra el comportamiento PvE que usa el juego. El JSON de cartas es la fuente de
 verdad de reglas; este archivo explica las adaptaciones intencionales y la presentación esperada.
-Los ids heredados aparecen entre paréntesis únicamente como referencias técnicas.
+Los ids canónicos aparecen entre paréntesis como referencias técnicas.
 
 `engineSupport: "pending"` y «no se activa automáticamente en partidas» no son equivalentes. Una
 habilidad activada de Hueste puede normalizarse como efecto válido y aun así carecer de una política
 que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para los marcadores WIP.
 
-## Corredor de Ascua y Chatarra (`ember_scrap_runner`)
+## Esbirro de Varka (`varkas_minion`)
 
 - Las copias se apilan visualmente por definición y grupo de llegada.
 - Las criaturas de la Hueste nunca muestran badge de Agotada ni filtro gris: su agotamiento es una
@@ -16,34 +16,34 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Se inclinan con el chevrón de ataque desde que aterrizan durante el turno de la Hueste, antes de
   que los atacantes se declaren formalmente.
 
-## Capataz del Recuento Ardiente (`burning_tally_foreman`)
+## Chamán de la Brasa Sombría (`shaman_of_the_umbral_ember`)
 
-- Los otros Trasgos reciben +1/+1.
-- Adaptación PvE: al entrar, hace daño al mejor Eco enemigo por cada Trasgo invocado bajo control de
-  la Hueste durante el turno actual, incluido él mismo.
+- Los otros Ecos aliados reciben +1/+1.
+- Al entrar, hace daño al mejor Eco enemigo por cada Eco invocado bajo control de la Hueste durante
+  el turno actual, incluido él mismo.
 - El aura se resuelve primero. Si ya produjo el pulso de activación, el daño de entrada sigue como
   beat separado sin volver a iluminar la carta ni repetir el sonido.
 
-## Invocador de las Filas (`next_crew_caller`)
+## Invocador de las Filas (`summoner_of_the_ranks`)
 
-- Los otros Trasgos reciben +1/+1 y el aura anuncia su cobertura mediante el beat de activación
+- Los otros Ecos aliados reciben +1/+1 y el aura anuncia su cobertura mediante el beat de activación
   estática.
-- La muerte de un Trasgo inspecciona la primera carta del Archivo. Un Eco Trasgo se Invoca de
+- La muerte de un Eco aliado inspecciona la primera carta del Archivo. Cualquier Eco se Invoca de
   inmediato; cualquier otra carta se mueve al fondo.
-- El efecto nunca usa el Olvido. Toda muerte de Trasgo activa al Llamador; si él mismo muere, usa el
+- El efecto nunca usa el Olvido. Toda muerte de Eco aliado activa al Invocador; si él mismo muere, usa el
   beat de revelado de muerte junto a la Memoria antes de resolver la inspección.
 
-## Pregonero del Horno Abierto (`open_furnace_crier`)
+## Portaestandarte de Varka (`varkas_standard_bearer`)
 
-- Adaptación PvE: al entrar, los Trasgos de la Hueste reciben +1/+0 hasta el fin del turno.
+- Al entrar, los Ecos aliados de la Hueste reciben +1/+0 hasta el fin del turno.
 - Ímpetu y Pack tactics se omiten deliberadamente.
 - El trigger de entrada produce un pulso; el buff grupal sólo reproduce sus líneas azules.
 
-## El Martillo de Turno (`shift_hammer`)
+## El Martillo de Turno (`the_shift_hammer`)
 
 - Las criaturas de la Hueste tienen Imponente mientras este Apoyo permanece en el Campo.
 
-## Todos contra uno (`rain_of_rivets`)
+## Todos contra uno (`all_against_one`)
 
 - Cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño.
 - Los atacantes elegibles se capturan una sola vez al declararlos: varios bloqueadores no duplican
@@ -53,39 +53,39 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Se dibujan como máximo seis proyectiles para conservar legibilidad, pero el número de daño siempre
   muestra el total real.
 
-## Jefe de la Doble Guardia (`double_crew_boss`)
+## Jefe de la Doble Guardia (`chief_of_the_double_guard`)
 
-- Su efecto de entrada Invoca dos Corredores de Ascua y Chatarra.
+- Su efecto de entrada Invoca dos Esbirros de Varka.
 
-## Capataz de los Tres Hornos (`three_furnaces_foreman`)
+## Jinete de la Tercera Carga (`rider_of_the_third_charge`)
 
-- Su efecto de entrada Invoca tres Corredores de Ascua y Chatarra.
+- Su efecto de entrada Invoca tres Esbirros de Varka.
 - Su daño activado por sacrificio fue retirado del corte de la carta.
 
-## Rompefilas de Varka (`first_siren_agitator`)
+## Rompefilas de Varka (`varkas_linebreaker`)
 
-- Invoca un Corredor antes de declarar atacantes.
+- Invoca un Esbirro antes de declarar atacantes.
 - La obligación impresa anterior de atacar está marcada `engineSupport: "ignored"` porque la regla
   global de la Hueste ya hace atacar a toda criatura capaz.
 - Su bono cuenta los otros Trasgos atacantes cuando el trigger se resuelve.
 
-## ¡Liberen a la Legión! (`open_another_gate`)
+## ¡Liberen a la Legión! (`unleash_the_legion`)
 
 - Si la Hueste controla al menos una criatura, todas sus criaturas reciben +2/+0 hasta el fin del
   turno. El Hechizo se presenta junto al Archivo y el bono aterriza con el buff compartido.
 - Si no controla criaturas, ejecuta inmediatamente otra ronda normal de revelado dentro del mismo
   turno, sin sumar otra Mini Oleada u Oleada.
 
-## Tres Bajo el Mismo Yunque (`three_under_one_anvil`)
+## Oso de Guerra Corrompido (`corrupted_war_bear`)
 
-- Adaptación PvE: es solamente un Eco Trasgo vanilla 3/3.
+- Es un Eco Bestia/Oso vanilla 3/3.
 
-## Maestro de la Salva de Escoria (`slag_volley_master`)
+## Jinete de la Salva Umbría (`rider_of_the_umbral_volley`)
 
 - Su efecto de entrada usa la animación Burn reutilizable.
 - El objetivo de la Hueste se decide mediante la política declarada en JSON, no en componentes.
 
-## Varka, Eje de la Revuelta (`varka_revolt_axis`)
+## Varka, Matriarca Infernal (`varka_infernal_matriarch`)
 
 - Es el único Eco de Crónica del deck.
 - Reflejos se resuelve en un paso separado de daño de combate. Varka 3/3 mata a un bloqueador 4/3
@@ -95,26 +95,26 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Los impactos visuales se escalonan 90 ms, pero el daño de reglas se confirma para todos a la vez
   en el impacto final.
 
-## Forjador de Varka (`salvaged_armor_master`)
+## Forjador de Varka (`varkas_forgemaster`)
 
 - Los otros Trasgos reciben +1/+1.
 - La activación anterior de destrucción de artefactos fue retirada del corte de la carta.
 
-## Mariscal de la Oleada (`repeating_blow_marshal`)
+## Mariscal de la Oleada (`marshal_of_the_wave`)
 
-- Cuando uno o más Trasgos atacan, Invoca exactamente un Corredor agotado y atacando. El trigger
+- Cuando uno o más Trasgos atacan, Invoca exactamente un Esbirro agotado y atacando. El trigger
   ocurre una vez por declaración, no una vez por atacante.
 - Cada otra criatura de la Hueste que entra encola su propio daño de 1 a la Vida del Cronista; dos
   entradas producen dos Burns completos y ordenados.
-- El Corredor creado por el Mariscal activa naturalmente la segunda habilidad. Como el primer beat
+- El Esbirro creado por el Mariscal activa naturalmente la segunda habilidad. Como el primer beat
   ya lo iluminó, esa continuación no pulsa la misma carta otra vez.
 
-## Brakka, la Cuenta Creciente (`brakka_growing_tally`)
+## Vardek, Escriba de la Legión (`vardek_scribe_of_the_legion`)
 
-- Cuando Brakka ataca, recibe primero un contador +1/+1 y después Invoca esa cantidad de Corredores
+- Cuando Vardek ataca, recibe primero un contador +1/+1 y después Invoca esa cantidad de Esbirros
   agotados y atacando según su nueva Fuerza.
 
-## Escupefuego de la Retaguardia (`last_rivets_gunner`)
+## Escupefuego de la Retaguardia (`rear_guard_firebreather`)
 
 - Regla PvE: cuando muere un Trasgo de la Hueste, hace 1 de daño a un Eco enemigo aleatorio.
 - La selección es determinista con el RNG sembrado y se declara en JSON como `selection: "RANDOM"`.

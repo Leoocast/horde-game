@@ -88,7 +88,7 @@ test("stored energy respects the engine's cap instead of growing forever", () =>
 test("play free grants exactly the printed cost and the card then casts through the normal path", () => {
   // No Energy anywhere: the only way this cast can succeed is the explicit Playground grant.
   const start = buildScenarioGame(
-    scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "first_dew_gatherers" }] } }),
+    scenario({ player: { life: 50, energy: 0, storedEnergy: 0 }, zones: { playerHand: [{ definitionId: "veiled_dawn_flower" }] } }),
   );
   const handId = start.player.hand[0].instanceId;
 
@@ -100,23 +100,23 @@ test("play free grants exactly the printed cost and the card then casts through 
   assert.equal(granted.ok, true);
   const cast = castCard(granted.game, handId);
   assert.equal(cast.lastActionResult.ok, true);
-  assert.equal(cast.player.field.filter((card) => card.definitionId === "first_dew_gatherers").length, 1);
+  assert.equal(cast.player.field.filter((card) => card.definitionId === "veiled_dawn_flower").length, 1);
   // The grant is exact: casting spent all of it.
   assert.deepEqual(cast.player.energyPool, { available: 0, stored: 0 });
 });
 
 test("destroy runs death triggers and to-graveyard does not", () => {
   const definition = scenario({
-    hostDeckId: "broken_forge_mutiny",
+    hostDeckId: "legion_of_varka",
     // No energy sources: the only player permanent is the creature this test is watching die.
     player: { life: 50, energy: 0, storedEnergy: 0 },
     zones: {
-      hostField: [{ definitionId: "last_rivets_gunner" }, { definitionId: "ember_scrap_runner" }],
-      playerField: [{ definitionId: "first_dew_gatherers" }],
+      hostField: [{ definitionId: "rear_guard_firebreather" }, { definitionId: "varkas_minion" }],
+      playerField: [{ definitionId: "veiled_dawn_flower" }],
     },
   });
 
-  const token = (game) => game.host.field.find((card) => card.definitionId === "ember_scrap_runner").instanceId;
+  const token = (game) => game.host.field.find((card) => card.definitionId === "varkas_minion").instanceId;
 
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
@@ -126,7 +126,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
   assert.equal(destroyed.game.player.memory.length, 1);
 
   // The raw move puts the same token in the graveyard without any death ever happening.
-  assert.equal(moved.game.host.memory.at(-1).definitionId, "ember_scrap_runner");
+  assert.equal(moved.game.host.memory.at(-1).definitionId, "varkas_minion");
   assert.equal(moved.game.player.field.length, 1);
   assert.equal(moved.game.eventQueue.length, 0);
 });
@@ -136,11 +136,11 @@ test("wiping a board is silent: nothing dies, so nothing triggers", () => {
   // table has to leave that creature alone, or tidying up between tests would change the test.
   const game = buildScenarioGame(
     scenario({
-      hostDeckId: "broken_forge_mutiny",
+      hostDeckId: "legion_of_varka",
       player: { life: 50, energy: 0, storedEnergy: 0 },
       zones: {
-        hostField: [{ definitionId: "last_rivets_gunner" }, { definitionId: "ember_scrap_runner" }],
-        playerField: [{ definitionId: "first_dew_gatherers" }],
+        hostField: [{ definitionId: "rear_guard_firebreather" }, { definitionId: "varkas_minion" }],
+        playerField: [{ definitionId: "veiled_dawn_flower" }],
       },
     }),
   );
@@ -183,7 +183,7 @@ test("the same action sequence over two rebuilds lands on identical states", () 
   const definition = scenario({
     seed: "replayable",
     player: { life: 50, energy: 0, storedEnergy: 0 },
-    zones: { playerField: [{ definitionId: "deep_root_spring", amount: 3 }], hostField: [{ definitionId: "last_knell_dead" }] },
+    zones: { playerField: [{ definitionId: "river_of_elarion", amount: 3 }], hostField: [{ definitionId: "graveless_soldier" }] },
   });
 
   const run = () => {

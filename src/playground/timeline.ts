@@ -244,7 +244,7 @@ export function isWaitingForInput(): boolean {
   return (
     Boolean(state.spellTargeting) ||
     Boolean(state.counterTargeting) ||
-    Boolean(state.fleshRootTitheSelection) ||
+    Boolean(state.tributeOfTheFourSorrowsSelection) ||
     state.handLimitDiscardActive
   );
 }

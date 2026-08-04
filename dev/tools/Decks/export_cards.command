@@ -34,10 +34,10 @@ if [ -z "$DECK" ]; then
     read -r choice
 
     case "$choice" in
-        1) DECK="last_rain" ;;
-        2) DECK="hollow_bell_procession" ;;
-        3) DECK="broken_forge_mutiny" ;;
-        4) DECK="crimson_court" ;;
+        1) DECK="pact_of_elarion" ;;
+        2) DECK="uprising_of_the_graveless" ;;
+        3) DECK="legion_of_varka" ;;
+        4) DECK="court_of_the_crimson_eclipse" ;;
         0) exit 0 ;;
         *)
             echo
@@ -50,10 +50,10 @@ fi
 DECK=$(printf "%s" "$DECK" | tr "[:upper:]" "[:lower:]")
 
 case "$DECK" in
-    last_rain|hollow_bell_procession|broken_forge_mutiny|crimson_court) ;;
+    pact_of_elarion|uprising_of_the_graveless|legion_of_varka|court_of_the_crimson_eclipse) ;;
     *)
         echo "Deck invalido: $DECK"
-        echo "Opciones: last_rain, hollow_bell_procession, broken_forge_mutiny o crimson_court."
+        echo "Opciones: pact_of_elarion, uprising_of_the_graveless, legion_of_varka o court_of_the_crimson_eclipse."
         exit 1
         ;;
 esac

@@ -79,7 +79,7 @@ export function addCard(game, card, side = card.controller, zone = card.zone) {
 }
 
 export function addSources(game, amount) {
-  return Array.from({ length: amount }, () => addCard(game, cardFromDeck("deep_root_spring", "player")));
+  return Array.from({ length: amount }, () => addCard(game, cardFromDeck("river_of_elarion", "player")));
 }
 
 function cardFromDefinition(definition, side, zone) {

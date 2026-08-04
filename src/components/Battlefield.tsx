@@ -16,7 +16,6 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
-import { buffSurgeRenderMode } from "./buffSurgePolicy";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
@@ -49,9 +48,9 @@ const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 const HEAVY_MONO_GREEN_CREATURE_IDS = new Set([
-  "ancient_canopy_watchers",
-  "hollow_skybreaker",
-  "orun_waking_root",
+  "maela_watcher_of_the_heights",
+  "echo_of_the_forgotten_city",
+  "vaelor_emerald_guardian",
 ]);
 
 type EnergyChangeSource = "card" | "land" | "turn";
@@ -167,13 +166,13 @@ export function Battlefield({ game, side, cards }: Props) {
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   // Split into primitive/stable selectors so mousemove-driven x/y updates on these
-  // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/FleshRootTitheSelectionOverlay)
+  // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/TributeOfTheFourSorrowsSelectionOverlay)
   // don't force a full Battlefield re-render on every pointer event.
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
   const counterTargetingTargetId = useGameStore((state) => state.counterTargeting?.targetId);
-  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
-  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
-  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
+  const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
+  const tributeOfTheFourSorrowsSelectionKind = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.kind);
+  const tributeOfTheFourSorrowsSelectionTargetId = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.targetId);
   const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellTargetingStepIndex = useGameStore((state) => state.spellTargeting?.stepIndex);
@@ -201,7 +200,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const triggerEffectActivationPulse = useGameStore((state) => state.triggerEffectActivationPulse);
   const activateAbility = useGameStore((state) => state.activateAbility);
   const lockCounterTarget = useGameStore((state) => state.lockCounterTarget);
-  const lockFleshRootTitheSelectionTarget = useGameStore((state) => state.lockFleshRootTitheSelectionTarget);
+  const lockTributeOfTheFourSorrowsSelectionTarget = useGameStore((state) => state.lockTributeOfTheFourSorrowsSelectionTarget);
   const toggleAttacker = useGameStore((state) => state.toggleAttacker);
   const declareBlocker = useGameStore((state) => state.declareBlocker);
   const startBlockDrag = useGameStore((state) => state.startBlockDrag);
@@ -606,9 +605,9 @@ export function Battlefield({ game, side, cards }: Props) {
 
   function LandDock() {
     const landCount = lands.length;
-    const fleshRootTitheSourceSelectionActive = fleshRootTitheSelectionKind === "sacrifice-land";
-    const fleshRootTitheSourceTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
-    const canSelectEnergyCore = fleshRootTitheSourceSelectionActive && !fleshRootTitheSelectionTargetId && Boolean(fleshRootTitheSourceTarget);
+    const tributeOfTheFourSorrowsSourceSelectionActive = tributeOfTheFourSorrowsSelectionKind === "sacrifice-land";
+    const tributeOfTheFourSorrowsSourceTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
+    const canSelectEnergyCore = tributeOfTheFourSorrowsSourceSelectionActive && !tributeOfTheFourSorrowsSelectionTargetId && Boolean(tributeOfTheFourSorrowsSourceTarget);
     const availableEnergySlots = Array.from({ length: MAX_PLAYER_LANDS });
     const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
 
@@ -616,7 +615,7 @@ export function Battlefield({ game, side, cards }: Props) {
       <aside
         ref={landDockRef}
         data-player-mana-core="true"
-        data-flesh-root-tithe-mana-target={fleshRootTitheSourceSelectionActive ? "true" : undefined}
+        data-tribute-of-the-four-sorrows-mana-target={tributeOfTheFourSorrowsSourceSelectionActive ? "true" : undefined}
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
         role={canSelectEnergyCore ? "button" : undefined}
         tabIndex={canSelectEnergyCore ? 0 : undefined}
@@ -625,15 +624,15 @@ export function Battlefield({ game, side, cards }: Props) {
           "player-mana-core",
           "player-mana-corner",
           game.activeSide === "player" ? "is-player-turn" : "",
-          fleshRootTitheSourceSelectionActive ? "is-targeting" : "",
+          tributeOfTheFourSorrowsSourceSelectionActive ? "is-targeting" : "",
         ].join(" ")}
         onClick={() => {
-          if (canSelectEnergyCore && fleshRootTitheSourceTarget) lockFleshRootTitheSelectionTarget(fleshRootTitheSourceTarget.instanceId);
+          if (canSelectEnergyCore && tributeOfTheFourSorrowsSourceTarget) lockTributeOfTheFourSorrowsSelectionTarget(tributeOfTheFourSorrowsSourceTarget.instanceId);
         }}
         onKeyDown={(event) => {
-          if (canSelectEnergyCore && fleshRootTitheSourceTarget && (event.key === "Enter" || event.key === " ")) {
+          if (canSelectEnergyCore && tributeOfTheFourSorrowsSourceTarget && (event.key === "Enter" || event.key === " ")) {
             event.preventDefault();
-            lockFleshRootTitheSelectionTarget(fleshRootTitheSourceTarget.instanceId);
+            lockTributeOfTheFourSorrowsSelectionTarget(tributeOfTheFourSorrowsSourceTarget.instanceId);
           }
         }}
       >
@@ -703,7 +702,7 @@ export function Battlefield({ game, side, cards }: Props) {
             })}
           </div>
         </div>
-        {fleshRootTitheSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
+        {tributeOfTheFourSorrowsSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
     );
   }
@@ -814,14 +813,14 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.kinds.includes("SOURCE");
-    const fleshRootTitheTargetable = Boolean(
-      fleshRootTitheSelectionActive &&
-        !fleshRootTitheSelectionTargetId &&
+    const tributeOfTheFourSorrowsTargetable = Boolean(
+      tributeOfTheFourSorrowsSelectionActive &&
+        !tributeOfTheFourSorrowsSelectionTargetId &&
         side === "player" &&
-        ((fleshRootTitheSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
-          (fleshRootTitheSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
+        ((tributeOfTheFourSorrowsSelectionKind === "sacrifice-creature" && card.kinds.includes("ECHO")) ||
+          (tributeOfTheFourSorrowsSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
     );
-    const fleshRootTitheTargetLocked = fleshRootTitheSelectionTargetId === card.instanceId;
+    const tributeOfTheFourSorrowsTargetLocked = tributeOfTheFourSorrowsSelectionTargetId === card.instanceId;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -840,7 +839,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
-      (isLand && !fleshRootTitheTargetable && !fleshRootTitheTargetLocked) ||
+      (isLand && !tributeOfTheFourSorrowsTargetable && !tributeOfTheFourSorrowsTargetLocked) ||
       (playerCombat && side === "player" && !legalAttacker) ||
       (playerCombat && side === "host") ||
       (hostCombat && side === "player" && !selectableBlocker) ||
@@ -879,7 +878,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const isCombatGhost = casualtyIds.has(card.instanceId);
     const visuallyDead = isCombatGhost || hostCombatDeadCardIds.includes(card.instanceId);
     const speciallyDead = specialDeadCardIds.includes(card.instanceId);
-    const cardTargetable = counterTargetable || fleshRootTitheTargetable || spellTargetable;
+    const cardTargetable = counterTargetable || tributeOfTheFourSorrowsTargetable || spellTargetable;
     const cardActionable = actionable || cardTargetable;
     const isDraggedDefender = blockDragBlockerId === card.instanceId;
     const draggedDefender = blockDragActive ? game.player.field.find((item) => item.instanceId === blockDragBlockerId) : undefined;
@@ -901,7 +900,7 @@ export function Battlefield({ game, side, cards }: Props) {
     const showEffectAvailabilityBorder = Boolean(showActivatedAbilityChrome && !combatAvailabilityTone);
     const showActionGem =
       !counterTargetingActive &&
-      !fleshRootTitheSelectionActive &&
+      !tributeOfTheFourSorrowsSelectionActive &&
       !spellTargetingActive &&
       !combatAvailabilityTone &&
       !showEffectAvailabilityBorder &&
@@ -923,8 +922,8 @@ export function Battlefield({ game, side, cards }: Props) {
         effectActivating ||
         counterTargetable ||
         counterTargetLocked ||
-        fleshRootTitheTargetable ||
-        fleshRootTitheTargetLocked ||
+        tributeOfTheFourSorrowsTargetable ||
+        tributeOfTheFourSorrowsTargetLocked ||
         spellTargetable ||
         spellTargetLocked,
     );
@@ -996,8 +995,8 @@ export function Battlefield({ game, side, cards }: Props) {
           burnSourceCardId === card.instanceId ? "burn-source-casting" : "",
           counterTargetable ? "counter-targetable-card" : "",
           counterTargetLocked ? "counter-target-locked-card" : "",
-          fleshRootTitheTargetable ? "counter-targetable-card" : "",
-          fleshRootTitheTargetLocked ? "counter-target-locked-card" : "",
+          tributeOfTheFourSorrowsTargetable ? "counter-targetable-card" : "",
+          tributeOfTheFourSorrowsTargetLocked ? "counter-target-locked-card" : "",
           spellTargetable ? "spell-targetable-card" : "",
           spellTargetLocked ? (spellTargetLockedIsBuff ? "spell-target-locked-card spell-target-locked-buff" : "spell-target-locked-card spell-target-locked-attack") : "",
         ].join(" ")}
@@ -1028,7 +1027,6 @@ export function Battlefield({ game, side, cards }: Props) {
                 eventId={buffAnimationEventId!}
                 palette="holy"
                 seedKey={card.instanceId}
-                renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
               />
             )
           : (
@@ -1038,7 +1036,6 @@ export function Battlefield({ game, side, cards }: Props) {
                   eventId={buffAnimationEventId!}
                   palette="nature"
                   seedKey={card.instanceId}
-                  renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
                 />
                 <GrowthBuffAnimator
                   key={`growth-${buffAnimationEventId}`}
@@ -1072,8 +1069,8 @@ export function Battlefield({ game, side, cards }: Props) {
         linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
         muted={muted}
-        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || fleshRootTitheSelectionActive}
-        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || fleshRootTitheSelectionActive}
+        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
+        suppressHoverOverlay={counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
         visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
           if (legalAttacker && side === "player" && event.button === 0) {
@@ -1093,8 +1090,8 @@ export function Battlefield({ game, side, cards }: Props) {
           return true;
         }}
         onSelect={() => {
-          if (fleshRootTitheSelectionActive) {
-            if (fleshRootTitheTargetable) lockFleshRootTitheSelectionTarget(card.instanceId);
+          if (tributeOfTheFourSorrowsSelectionActive) {
+            if (tributeOfTheFourSorrowsTargetable) lockTributeOfTheFourSorrowsSelectionTarget(card.instanceId);
             return;
           }
           if (counterTargetingActive) {

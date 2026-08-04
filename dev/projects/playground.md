@@ -137,8 +137,8 @@ de juego y setup turns.
 en el lab desencadenaba el turno entero de la horda de zombies cargada: destapaba, revelaba tres
 cartas suyas y atacaba. `revealHordeCardFromTop` en `HordeController.ts` revela y juega **una** carta
 del tope por el mismo camino que usa el turno (`revealAndPlayOne`: ETB, triggers, parking de
-Tributo de los Cuatro Pesares / `flesh_root_tithe`) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
-que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de `flesh_root_tithe`) pero no arranca
+Tributo de los Cuatro Pesares / `tribute_of_the_four_sorrows`) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
+que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de `tribute_of_the_four_sorrows`) pero no arranca
 combate. Hay test que verifica que el turno de Horda no avanza, la fase no cambia y no se declaran
 atacantes.
 
@@ -257,7 +257,7 @@ React recibia keys duplicadas y dejaba nodos fantasma en la lista de resultados.
 - **Kill it**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
   reales. **Remove it** es otra cosa a proposito: movimiento crudo de zona, sin muerte y sin
   triggers. **Wipe** (`clearBattlefield`) es lo mismo por lado entero. Hay test que los distingue
-  con Escupefuego de la Retaguardia (`last_rivets_gunner`; destruir una ficha de Trasgo quema un Eco del jugador; moverla al
+  con Escupefuego de la Retaguardia (`rear_guard_firebreather`; destruir una ficha de Trasgo quema un Eco del jugador; moverla al
   cementerio o barrer el campo no).
 - **Jugar sin coste**: `grantManaForCard` sube el pool exactamente al coste impreso y despues corre
   el `castCard` normal. Si la carta pide targets se abre el `SpellTargetingOverlay` de verdad, la
@@ -286,7 +286,7 @@ Reproduccion **animada, paso a paso**:
 - `isPlaygroundBusy()` deriva de las colas que ya existen en el store (combate de Horda, summoning,
   triggers, mills, descartes, animaciones de ataque/quemado). El driver no avanza mientras siga en
   true. **No** se agregaron timers nuevos.
-- `isWaitingForInput()` detecta targeting/descarte/selección de `flesh_root_tithe` abiertos: el auto-play se **pausa** en vez
+- `isWaitingForInput()` detecta targeting/descarte/selección de `tribute_of_the_four_sorrows` abiertos: el auto-play se **pausa** en vez
   de contestar por el jugador.
 - Nada se graba mientras se reproduce (`replayCursor !== undefined`), o el replay se copiaria a si
   mismo.
@@ -350,7 +350,7 @@ El JSON exportado sirve tal cual como fixture para `tests/engine.test.js`.
       clickeandola en el tablero real, y de ahi salen **Kill it** (`destroyPermanent`, muerte real
       con sus triggers), **Remove it** (movimiento crudo de zona, sin muerte) y el wipe por lado
       (`clearBattlefield`, silencioso: limpiar la mesa entre pruebas no puede disparar doce
-      triggers). Hay test que distingue los tres con Escupefuego de la Retaguardia (`last_rivets_gunner`).
+      triggers). Hay test que distingue los tres con Escupefuego de la Retaguardia (`rear_guard_firebreather`).
 - [x] **Fase 5 — Timeline: grabar y reproducir.** `timeline.ts` (`TimelineStep`, `executeStep`,
       `describeStep`, `isPlaygroundBusy`, `isWaitingForInput`), `panels/TimelinePanel.tsx` (toggle de
       grabacion, lista de pasos con borrar, Step / Auto / Stop) y el driver de reproduccion en

@@ -50,12 +50,12 @@ export function Hand({ game }: { game: GameState }) {
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   // Primitive/stable selectors: avoids re-rendering the whole hand on every mousemove
-  // while a CounterTargetingOverlay/SpellTargetingOverlay/FleshRootTitheSelectionOverlay arrow
+  // while a CounterTargetingOverlay/SpellTargetingOverlay/TributeOfTheFourSorrowsSelectionOverlay arrow
   // is tracking the pointer (those only mutate x/y on the underlying object).
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
-  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
-  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
-  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
+  const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
+  const tributeOfTheFourSorrowsSelectionKind = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.kind);
+  const tributeOfTheFourSorrowsSelectionTargetId = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.targetId);
   const spellTargetingActive = useGameStore((state) => Boolean(state.spellTargeting));
   const spellTargetingHandId = useGameStore((state) => state.spellTargeting?.handId);
   const spellFightAnimation = useGameStore((state) => state.spellFightAnimation);
@@ -82,7 +82,7 @@ export function Hand({ game }: { game: GameState }) {
   const startEnergyRecycle = useGameStore((state) => state.startEnergyRecycle);
   const setEnergyRecycleDragActive = useGameStore((state) => state.setEnergyRecycleDragActive);
   const startSpellTargeting = useGameStore((state) => state.startSpellTargeting);
-  const lockFleshRootTitheSelectionTarget = useGameStore((state) => state.lockFleshRootTitheSelectionTarget);
+  const lockTributeOfTheFourSorrowsSelectionTarget = useGameStore((state) => state.lockTributeOfTheFourSorrowsSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
   const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
@@ -257,7 +257,7 @@ export function Hand({ game }: { game: GameState }) {
     }
   }
 
-  const flesh_root_titheDiscardMode = fleshRootTitheSelectionKind === "discard";
+  const tribute_of_the_four_sorrowsDiscardMode = tributeOfTheFourSorrowsSelectionKind === "discard";
   const handInteractionBlocked = Boolean(
     counterTargetingActive ||
       spellTargetingActive ||
@@ -272,7 +272,7 @@ export function Hand({ game }: { game: GameState }) {
       energyRecycleAnimation ||
       energyFlowAnimating ||
       unresolvedTriggerCount > 0 ||
-      (fleshRootTitheSelectionActive && !flesh_root_titheDiscardMode),
+      (tributeOfTheFourSorrowsSelectionActive && !tribute_of_the_four_sorrowsDiscardMode),
   );
   const hoverSuppressed = false;
 
@@ -308,7 +308,7 @@ export function Hand({ game }: { game: GameState }) {
       </div>
       <section className={[
         "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
-        draggingCardId ? "z-[150]" : flesh_root_titheDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
+        draggingCardId ? "z-[150]" : tribute_of_the_four_sorrowsDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
       ].join(" ")}>
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
@@ -328,16 +328,16 @@ export function Hand({ game }: { game: GameState }) {
             {visibleHand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, unresolvedTriggerCount);
             const energyRecyclable = isEnergyRecyclable(game, card, unresolvedTriggerCount);
-            const discardTargetable = fleshRootTitheSelectionKind === "discard" && !fleshRootTitheSelectionTargetId;
-            const discardTargetLocked = fleshRootTitheSelectionKind === "discard" && fleshRootTitheSelectionTargetId === card.instanceId;
+            const discardTargetable = tributeOfTheFourSorrowsSelectionKind === "discard" && !tributeOfTheFourSorrowsSelectionTargetId;
+            const discardTargetLocked = tributeOfTheFourSorrowsSelectionKind === "discard" && tributeOfTheFourSorrowsSelectionTargetId === card.instanceId;
             const handLimitTargetable = handLimitDiscardActive && !handLimitSelectionId;
             const handLimitTargetLocked = handLimitDiscardActive && handLimitSelectionId === card.instanceId;
             const cardAvailable =
               !handLimitDiscardActive &&
-              !fleshRootTitheSelectionActive &&
+              !tributeOfTheFourSorrowsSelectionActive &&
               (playable || energyRecyclable);
-            const cardActionable = handLimitDiscardActive ? handLimitTargetable : fleshRootTitheSelectionActive ? discardTargetable : cardAvailable;
-            const cardTargetable = Boolean(handLimitTargetable || (fleshRootTitheSelectionActive && discardTargetable));
+            const cardActionable = handLimitDiscardActive ? handLimitTargetable : tributeOfTheFourSorrowsSelectionActive ? discardTargetable : cardAvailable;
+            const cardTargetable = Boolean(handLimitTargetable || (tributeOfTheFourSorrowsSelectionActive && discardTargetable));
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
@@ -369,7 +369,7 @@ export function Hand({ game }: { game: GameState }) {
                 }}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!fleshRootTitheSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
+                drag={!tributeOfTheFourSorrowsSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
@@ -431,7 +431,7 @@ export function Hand({ game }: { game: GameState }) {
                       dragging={draggingCardId === card.instanceId}
                       actionable={cardActionable}
                       suppressActionableChrome={cardAvailable}
-                      suppressContextMenu={fleshRootTitheSelectionActive || handLimitDiscardActive}
+                      suppressContextMenu={tributeOfTheFourSorrowsSelectionActive || handLimitDiscardActive}
                       suppressHoverOverlay
                       darkenOnHover={false}
                       highRes={isHeld}
@@ -446,8 +446,8 @@ export function Hand({ game }: { game: GameState }) {
                           selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
                           return;
                         }
-                        if (fleshRootTitheSelectionActive) {
-                          if (discardTargetable) lockFleshRootTitheSelectionTarget(card.instanceId);
+                        if (tributeOfTheFourSorrowsSelectionActive) {
+                          if (discardTargetable) lockTributeOfTheFourSorrowsSelectionTarget(card.instanceId);
                           return;
                         }
                         selectHand(card.instanceId);
@@ -458,7 +458,7 @@ export function Hand({ game }: { game: GameState }) {
                     />
                   </div>
                   {UI_FEATURE_FLAGS.showPlayerHandActionableGems &&
-                    !fleshRootTitheSelectionActive &&
+                    !tributeOfTheFourSorrowsSelectionActive &&
                     cardActionable &&
                     draggingCardId !== card.instanceId && (
                       <span

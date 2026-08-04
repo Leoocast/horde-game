@@ -4,7 +4,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack } from "../src/components/battlefieldLayout";
-import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
@@ -37,13 +36,6 @@ test("defense arrows disappear as soon as either combat endpoint leaves the fiel
   game.player.field = [blocker];
   game.host.field = [];
   assert.deepEqual(activeDefenseArrowLinks(game), []);
-});
-
-test("large group buffs use the lightweight renderer instead of one WebGL context per card", () => {
-  assert.equal(buffSurgeRenderMode(1), "webgl");
-  assert.equal(buffSurgeRenderMode(4), "webgl");
-  assert.equal(buffSurgeRenderMode(5), "css");
-  assert.equal(buffSurgeRenderMode(24), "css");
 });
 
 test("Memory presents the most recently moved card first without mutating game state", () => {

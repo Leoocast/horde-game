@@ -44,7 +44,7 @@ import {
   startHostCombatSequence,
 } from "./hostBeats";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
-import { advanceFleshRootTitheSequence, runFleshRootTitheSequence } from "./fleshRootTitheSequence";
+import { advanceTributeOfTheFourSorrowsSequence, runTributeOfTheFourSorrowsSequence } from "./tributeOfTheFourSorrowsSequence";
 import {
   hasQueuedPlayerTriggers,
   resetPlayerTriggerSequence,
@@ -126,8 +126,8 @@ export type GameStore = {
   playerAttackDrag?: PlayerAttackDragState;
   cardContextMenu?: CardContextMenuState;
   counterTargeting?: CounterTargetingState;
-  fleshRootTitheCard?: CardInstance;
-  fleshRootTitheSelection?: FleshRootTitheSelectionState;
+  tributeOfTheFourSorrowsCard?: CardInstance;
+  tributeOfTheFourSorrowsSelection?: TributeOfTheFourSorrowsSelectionState;
   spellTargeting?: SpellTargetingState;
   spellFightAnimation?: SpellFightAnimationState;
   rootsTouchedSkyAnimation?: RootsTouchedSkyAnimationState;
@@ -163,10 +163,10 @@ export type GameStore = {
   deselectCounterTarget: () => void;
   cancelCounterTargeting: () => void;
   confirmCounterTargeting: () => void;
-  updateFleshRootTitheSelectionPointer: (x: number, y: number) => void;
-  lockFleshRootTitheSelectionTarget: (targetId: string) => void;
-  deselectFleshRootTitheSelectionTarget: () => void;
-  confirmFleshRootTitheSelection: () => void;
+  updateTributeOfTheFourSorrowsSelectionPointer: (x: number, y: number) => void;
+  lockTributeOfTheFourSorrowsSelectionTarget: (targetId: string) => void;
+  deselectTributeOfTheFourSorrowsSelectionTarget: () => void;
+  confirmTributeOfTheFourSorrowsSelection: () => void;
   selectHandLimitDiscard: (id?: string) => void;
   confirmHandLimitDiscard: () => void;
   startSpellTargeting: (handId: string, x: number, y: number) => void;
@@ -434,7 +434,7 @@ export type CounterTargetingState = {
   y: number;
 };
 
-export type FleshRootTitheSelectionState = {
+export type TributeOfTheFourSorrowsSelectionState = {
   kind: "discard" | "sacrifice-creature" | "sacrifice-land";
   targetId?: string;
   x: number;
@@ -517,8 +517,8 @@ function createCleanUiState(): Partial<GameStore> {
     playerAttackDrag: undefined,
     cardContextMenu: undefined,
     counterTargeting: undefined,
-    fleshRootTitheCard: undefined,
-    fleshRootTitheSelection: undefined,
+    tributeOfTheFourSorrowsCard: undefined,
+    tributeOfTheFourSorrowsSelection: undefined,
     spellTargeting: undefined,
     spellFightAnimation: undefined,
     rootsTouchedSkyAnimation: undefined,
@@ -576,8 +576,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAttackDrag: undefined,
   cardContextMenu: undefined,
   counterTargeting: undefined,
-  fleshRootTitheCard: undefined,
-  fleshRootTitheSelection: undefined,
+  tributeOfTheFourSorrowsCard: undefined,
+  tributeOfTheFourSorrowsSelection: undefined,
   spellTargeting: undefined,
   spellFightAnimation: undefined,
   rootsTouchedSkyAnimation: undefined,
@@ -733,33 +733,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
     }),
-  updateFleshRootTitheSelectionPointer: (x, y) =>
-    set(({ fleshRootTitheSelection }) => ({
-      fleshRootTitheSelection: fleshRootTitheSelection && !fleshRootTitheSelection.targetId ? { ...fleshRootTitheSelection, x, y } : fleshRootTitheSelection,
+  updateTributeOfTheFourSorrowsSelectionPointer: (x, y) =>
+    set(({ tributeOfTheFourSorrowsSelection }) => ({
+      tributeOfTheFourSorrowsSelection: tributeOfTheFourSorrowsSelection && !tributeOfTheFourSorrowsSelection.targetId ? { ...tributeOfTheFourSorrowsSelection, x, y } : tributeOfTheFourSorrowsSelection,
     })),
-  lockFleshRootTitheSelectionTarget: (targetId) =>
-    set(({ fleshRootTitheSelection }) => {
-      if (!fleshRootTitheSelection) return {};
+  lockTributeOfTheFourSorrowsSelectionTarget: (targetId) =>
+    set(({ tributeOfTheFourSorrowsSelection }) => {
+      if (!tributeOfTheFourSorrowsSelection) return {};
       useAudioStore.getState().playSfx("playLand");
-      return { fleshRootTitheSelection: { ...fleshRootTitheSelection, targetId } };
+      return { tributeOfTheFourSorrowsSelection: { ...tributeOfTheFourSorrowsSelection, targetId } };
     }),
-  deselectFleshRootTitheSelectionTarget: () =>
-    set(({ fleshRootTitheSelection }) => ({
-      fleshRootTitheSelection: fleshRootTitheSelection ? { ...fleshRootTitheSelection, targetId: undefined } : undefined,
+  deselectTributeOfTheFourSorrowsSelectionTarget: () =>
+    set(({ tributeOfTheFourSorrowsSelection }) => ({
+      tributeOfTheFourSorrowsSelection: tributeOfTheFourSorrowsSelection ? { ...tributeOfTheFourSorrowsSelection, targetId: undefined } : undefined,
     })),
-  confirmFleshRootTitheSelection: () => {
-    const { game, fleshRootTitheSelection } = get();
-    if (!fleshRootTitheSelection?.targetId) return;
-    const { kind, targetId } = fleshRootTitheSelection;
+  confirmTributeOfTheFourSorrowsSelection: () => {
+    const { game, tributeOfTheFourSorrowsSelection } = get();
+    if (!tributeOfTheFourSorrowsSelection?.targetId) return;
+    const { kind, targetId } = tributeOfTheFourSorrowsSelection;
     if (kind === "discard") {
       const next = structuredClone(game) as GameState;
       discardChosenCard(next, targetId);
       notifyDiscardEffects(game, next);
-      set({ game: next, fleshRootTitheSelection: undefined });
-      resumeAfterDiscardPause(() => advanceFleshRootTitheSequence("after-discard"));
+      set({ game: next, tributeOfTheFourSorrowsSelection: undefined });
+      resumeAfterDiscardPause(() => advanceTributeOfTheFourSorrowsSequence("after-discard"));
       return;
     }
-    set({ fleshRootTitheSelection: undefined, specialDeadCardIds: [targetId] });
+    set({ tributeOfTheFourSorrowsSelection: undefined, specialDeadCardIds: [targetId] });
     useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
       set((state) => {
@@ -768,7 +768,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
-      window.setTimeout(() => advanceFleshRootTitheSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
+      window.setTimeout(() => advanceTributeOfTheFourSorrowsSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
     }, 260);
   },
   selectHandLimitDiscard: (id) => {
@@ -1263,9 +1263,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         storedEnergyGained > 0 &&
         source &&
         (
-          source.definitionId === "first_dew_gatherers" ||
-          source.definitionId === "keeper_sleeping_root" ||
-          source.definitionId === "tithe_acolyte"
+          source.definitionId === "veiled_dawn_flower" ||
+          source.definitionId === "liora_keeper_of_the_grove" ||
+          source.definitionId === "midnight_collector"
         ),
       );
       if (usesEnergyFlowAnimation) {
@@ -1500,7 +1500,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
       });
       captureStaticAuraBeats();
-      scheduleHostArrivalEffects(enteredCards, () => runFleshRootTitheSequence(pendingCard));
+      scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
       return;
     }
     if (main.host.field.length > game.host.field.length) useAudioStore.getState().playSfx("draw");
@@ -1549,7 +1549,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
     if (pendingCard) {
-      scheduleHostArrivalEffects(entered, () => runFleshRootTitheSequence(pendingCard));
+      scheduleHostArrivalEffects(entered, () => runTributeOfTheFourSorrowsSequence(pendingCard));
       return;
     }
     scheduleHostArrivalEffects(entered, () => scheduleQueuedHostTriggers());
@@ -2343,7 +2343,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
   const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
   const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
-  const usesRootsTouchedSkyAnimation = card.definitionId === "roots_touched_sky";
+  const usesRootsTouchedSkyAnimation = card.definitionId === "the_judgment_of_elarion";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
   const resolveSpell = (
     latest: GameState,

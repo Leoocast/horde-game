@@ -9,7 +9,7 @@ function storedEntry(overrides = {}) {
     id: "scenario-1",
     name: "Zombie test",
     savedAt: "2026-07-24T10:00:00.000Z",
-    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hostField: [{ definitionId: "last_knell_dead", amount: 2 }] } },
+    definition: { ...BLANK_SCENARIO, name: "Zombie test", zones: { hostField: [{ definitionId: "graveless_soldier", amount: 2 }] } },
     steps: [{ kind: "draw" }, { kind: "addEnergySource" }],
     ...overrides,
   };
@@ -44,10 +44,10 @@ test("an exported board JSON round-trips as Hand and Fields only", () => {
     ...BLANK_SCENARIO,
     name: "Board JSON",
     zones: {
-      playerHand: [{ definitionId: "first_tree_sap" }],
-      playerField: [{ definitionId: "first_dew_gatherers" }],
-      hostField: [{ definitionId: "last_knell_dead" }],
-      playerMemory: [{ definitionId: "roots_touched_sky" }],
+      playerHand: [{ definitionId: "elixir_of_the_first_leaf" }],
+      playerField: [{ definitionId: "veiled_dawn_flower" }],
+      hostField: [{ definitionId: "graveless_soldier" }],
+      playerMemory: [{ definitionId: "the_judgment_of_elarion" }],
     },
   };
   const board = { id: "board-1", name: definition.name, savedAt: "2026-07-24T10:00:00.000Z", definition };

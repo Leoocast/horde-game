@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0.0",
+  "cards": {
+    "veiled_dawn_flower": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 10
+      }
+    },
+    "aelyra_heir_of_elarion": {
+      "battlefieldArtFrame": {
+        "zoom": 1.875,
+        "x": 12,
+        "y": 267
+      }
+    },
+    "hydra_of_the_black_bough": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 8,
+        "y": 69
+      }
+    },
+    "kaelor_stormcaller": {
+      "battlefieldArtFrame": {
+        "zoom": 1.734,
+        "x": -198,
+        "y": 175
+      }
+    },
+    "maela_watcher_of_the_heights": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 1,
+        "y": 82
+      }
+    },
+    "echo_of_the_forgotten_city": {
+      "battlefieldArtFrame": {
+        "zoom": 1.95,
+        "x": 193,
+        "y": 186
+      }
+    },
+    "vaelor_emerald_guardian": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 4,
+        "y": 94
+      }
+    },
+    "liora_keeper_of_the_grove": {
+      "battlefieldArtFrame": {
+        "zoom": 1.734,
+        "x": -39,
+        "y": 183
+      }
+    }
+  }
+}
