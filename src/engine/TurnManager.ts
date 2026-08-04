@@ -12,10 +12,15 @@ export function readySide(game: GameState, side: "player" | "host"): void {
   }
 }
 
-export function cleanupEndStep(game: GameState): void {
+export function cleanupEndStep(
+  game: GameState,
+  options: { preserveMarkedDamage?: boolean } = {},
+): void {
   for (const card of [...game.player.field, ...game.host.field]) {
-    card.damageMarked = 0;
-    card.lethalDamage = false;
+    if (!options.preserveMarkedDamage) {
+      card.damageMarked = 0;
+      card.lethalDamage = false;
+    }
     card.temporaryPower = 0;
     card.temporaryEndurance = 0;
     card.temporaryTraits = [];

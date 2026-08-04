@@ -48,7 +48,6 @@ const BATTLEFIELD_OVERFLOW_HYSTERESIS_PX = 24;
 // Feature flag: disable to show full creature cards whenever the row has enough room.
 const ALWAYS_CROP_BATTLEFIELD_CREATURE_CARDS = true;
 const HEAVY_MONO_GREEN_CREATURE_IDS = new Set([
-  "maela_watcher_of_the_heights",
   "echo_of_the_forgotten_city",
   "vaelor_emerald_guardian",
 ]);

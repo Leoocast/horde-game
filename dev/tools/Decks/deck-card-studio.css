@@ -712,7 +712,7 @@ body {
 
 .tcg-card--common .tcg-title {
     color: #f6f1e5;
-    font: 700 37px/1.08 "Cinzel", serif;
+    font: 700 37px/1.08 "Lora", serif;
     letter-spacing: 0.015em;
     text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.92);
 }
@@ -812,7 +812,7 @@ body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-gem-glint
     box-shadow:
         inset 0 1px rgba(255, 255, 255, 0.1),
         0 8px 18px rgba(0, 0, 0, 0.55);
-    font: 700 28px/1.1 "Cinzel", serif;
+    font: 700 28px/1.1 "Lora", serif;
     letter-spacing: 0.06em;
     text-transform: capitalize;
     text-shadow: 2px 3px 7px rgba(0, 0, 0, 0.86);
@@ -1011,7 +1011,7 @@ body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-gem-glint
 
 .tcg-card--full-art .tcg-title {
     color: #f7f0dc;
-    font: 700 42px/1.06 "Cinzel", serif;
+    font: 700 42px/1.06 "Lora", serif;
     letter-spacing: 0.02em;
     text-shadow:
         0 2px 0 rgba(0, 0, 0, 0.6),
@@ -1071,7 +1071,7 @@ body[data-theme="court_of_the_crimson_eclipse"] .tcg-seal .tcg-faction-gem-glint
     margin-bottom: 22px;
     border-bottom: 2px solid rgba(191, 166, 106, 0.42);
     color: var(--gold-bright);
-    font: 700 26px/1.1 "Cinzel", serif;
+    font: 700 26px/1.1 "Lora", serif;
     letter-spacing: 0.08em;
     text-transform: capitalize;
     text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);

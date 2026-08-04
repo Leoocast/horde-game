@@ -418,6 +418,26 @@ test("spent Sources do not become Stored Energy", () => {
   assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
+test("marked damage remains visible through the End phase and clears only when the turn passes", () => {
+  const game = createTestGame();
+  const playerEcho = addCard(game, customCard("end_phase_player_echo", "player", { endurance: 4 }));
+  const hostEcho = addCard(game, customCard("end_phase_host_echo", "host", { endurance: 4 }));
+  playerEcho.damageMarked = 2;
+  hostEcho.damageMarked = 1;
+  playerEcho.temporaryPower = 2;
+
+  const endPhase = advancePhase(game, "end");
+
+  assert.equal(endPhase.player.field[0].damageMarked, 2);
+  assert.equal(endPhase.host.field[0].damageMarked, 1);
+  assert.equal(endPhase.player.field[0].temporaryPower, 0);
+
+  const hostTurn = endPlayerTurn(endPhase);
+
+  assert.equal(hostTurn.player.field[0].damageMarked, 0);
+  assert.equal(hostTurn.host.field[0].damageMarked, 0);
+});
+
 test("unused Energy from an earlier setup turn does not refill Stored Energy", () => {
   const game = createInitialGame(playerDeck, hostDeck, "setup-reserve", 2);
   const lands = addSources(game, 3);
@@ -1666,7 +1686,10 @@ test("Escudo de la Heredera buffs first, then both creatures deal simultaneous d
   const cleaned = advancePhase(result, "end");
   const restoredFriendly = cleaned.player.field.find((card) => card.instanceId === friendly.instanceId);
   assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 2, endurance: 2 });
-  assert.equal(restoredFriendly.damageMarked, 0);
+  assert.equal(restoredFriendly.damageMarked, 3);
+
+  const hostTurn = endPlayerTurn(cleaned);
+  assert.equal(hostTurn.player.field.find((card) => card.instanceId === friendly.instanceId)?.damageMarked, 0);
 });
 
 test("Escudo de la Heredera can stage its buff before the deferred fight impact", () => {

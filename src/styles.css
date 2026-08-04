@@ -1116,34 +1116,39 @@
   .encounter-transition-matchup {
     position: relative;
     display: grid;
-    width: min(920px, 86vw);
+    width: min(1160px, 92vw);
     grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
     align-items: center;
-    gap: 28px;
+    gap: clamp(16px, 2.2vw, 28px);
   }
 
   .encounter-transition-matchup strong {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(28px, 4vw, 58px);
+    font-size: clamp(26px, 3.2vw, 48px);
     font-weight: 500;
     letter-spacing: 0.03em;
+    line-height: 1.04;
     text-align: right;
+    text-wrap: balance;
     text-shadow: 0 4px 20px #000;
     text-transform: uppercase;
     animation: encounter-name-left 720ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   .encounter-transition-name {
-    width: max-content;
-    white-space: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .encounter-transition-name-player {
-    justify-self: end;
+    justify-self: stretch;
   }
 
   .encounter-transition-name-host {
-    justify-self: start;
+    justify-self: stretch;
     color: #bfa897;
     text-align: left;
     animation-name: encounter-name-right;
@@ -12223,9 +12228,9 @@
     linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
 }
 
-.card-visual.card-image-full > .card-stat-badge.is-buffed,
-.card-preview-full-card-frame > .card-stat-badge.is-buffed,
-.deck-card-dynamic-frame > .card-stat-badge.is-buffed {
+.card-visual.card-image-full > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-preview-full-card-frame > .card-stat-badge.is-buffed:not(.is-damaged),
+.deck-card-dynamic-frame > .card-stat-badge.is-buffed:not(.is-damaged) {
   --card-stat-border: rgb(184 216 151 / 0.76);
   background:
     radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
@@ -12237,9 +12242,9 @@
     0 0 1.5cqw rgb(111 157 94 / 0.38);
 }
 
-.card-visual.card-image-full > .card-stat-badge.is-buffed .card-stat-segment b,
-.card-preview-full-card-frame > .card-stat-badge.is-buffed .card-stat-segment b,
-.deck-card-dynamic-frame > .card-stat-badge.is-buffed .card-stat-segment b {
+.card-visual.card-image-full > .card-stat-badge.is-buffed:not(.is-damaged) .card-stat-segment b,
+.card-preview-full-card-frame > .card-stat-badge.is-buffed:not(.is-damaged) .card-stat-segment b,
+.deck-card-dynamic-frame > .card-stat-badge.is-buffed:not(.is-damaged) .card-stat-segment b {
   color: var(--card-stat-buffed-number);
   text-shadow: 0.3cqw 0.3cqw 0.6cqw rgb(0 0 0 / 0.9), 0 0 1.3cqw rgb(137 227 94 / 0.72);
 }
@@ -12582,7 +12587,7 @@
     linear-gradient(180deg, #493135 0%, #302126 54%, #160d12 100%);
 }
 
-.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed {
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed:not(.is-damaged) {
   --card-stat-border: rgb(184 216 151 / 0.76);
   background:
     radial-gradient(ellipse at 24% 0%, rgb(218 240 190 / 0.2), transparent 46%),
@@ -12595,7 +12600,7 @@
     0 3px 7px rgb(0 0 0 / 0.56);
 }
 
-.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed .card-stat-segment b {
+.battlefield-row-overflow .card-visual.card-image-native-hd > .card-stat-badge.is-buffed:not(.is-damaged) .card-stat-segment b {
   color: #e0f0cf;
   text-shadow: 1px 1px 3px rgb(0 0 0 / 0.9), 0 0 5px rgb(151 195 122 / 0.56);
 }
@@ -12641,9 +12646,9 @@
     linear-gradient(180deg, #365f58 0%, #294a43 54%, #10211e 100%);
 }
 
-.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-buffed,
-.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-buffed,
-.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-buffed {
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged) {
   --card-stat-border: rgb(165 208 168 / 0.78);
   background:
     radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.2), transparent 46%),
@@ -12682,9 +12687,9 @@
     linear-gradient(180deg, #7b2417 0%, #50140d 54%, #250804 100%);
 }
 
-.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-buffed,
-.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-buffed,
-.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-buffed {
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-visual.card-image-full.card-theme-goblin > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-preview-full-card-frame.card-theme-goblin > .card-stat-badge.is-buffed:not(.is-damaged) {
   --card-stat-border: rgb(255 191 99 / 0.82);
   background:
     radial-gradient(ellipse at 24% 0%, rgb(255 204 126 / 0.22), transparent 46%),
@@ -12731,9 +12736,9 @@
     linear-gradient(180deg, #671329 0%, #400b1a 54%, #19040a 100%);
 }
 
-.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge.is-buffed,
-.card-visual.card-image-full.card-theme-vampire > .card-stat-badge.is-buffed,
-.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge.is-buffed {
+.battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-visual.card-image-full.card-theme-vampire > .card-stat-badge.is-buffed:not(.is-damaged),
+.card-preview-full-card-frame.card-theme-vampire > .card-stat-badge.is-buffed:not(.is-damaged) {
   --card-stat-border: rgb(225 190 119 / 0.78);
   background:
     radial-gradient(ellipse at 24% 0%, rgb(246 197 205 / 0.22), transparent 46%),

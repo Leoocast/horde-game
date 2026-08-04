@@ -407,13 +407,43 @@ test("the shared printed design keeps the approved compact geometry", () => {
   );
   assert.match(
     sharedCss,
+    /\.tcg-card--common \.tcg-title\s*\{[^}]*font:\s*700 37px\/1\.08 "Lora", serif;/u,
+    "common card names must use a mixed-case serif instead of Cinzel small caps",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-title\s*\{[^}]*font:\s*700 42px\/1\.06 "Lora", serif;/u,
+    "full-art card names must use the same mixed-case serif",
+  );
+  assert.match(
+    sharedCss,
     /\.tcg-card--common \.tcg-typeband\s*\{[^}]*text-transform:\s*capitalize;/u,
     "printed card types must use initial capitals per word",
   );
   assert.match(
     sharedCss,
+    /\.tcg-card--common \.tcg-typeband\s*\{[^}]*font:\s*700 28px\/1\.1 "Lora", serif;/u,
+    "common card types must render real lowercase glyphs",
+  );
+  assert.match(
+    sharedCss,
     /\.tcg-card--full-art \.tcg-typeband\s*\{[^}]*text-transform:\s*capitalize;/u,
     "full-art card types must use initial capitals per word",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-typeband\s*\{[^}]*font:\s*700 26px\/1\.1 "Lora", serif;/u,
+    "full-art card types must render real lowercase glyphs",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full > \.card-stat-badge\.is-buffed:not\(\.is-damaged\),/u,
+    "the full-card buff palette must not override the damaged palette",
+  );
+  assert.match(
+    runtimeCss,
+    /\.battlefield-row-overflow \.card-visual\.card-image-native-hd > \.card-stat-badge\.is-buffed:not\(\.is-damaged\)\s*\{/u,
+    "the cropped-card buff palette must not override the damaged palette",
   );
   assert.match(
     sharedCss,
