@@ -161,7 +161,11 @@
             || normalized.includes("apoyo")
             || normalized.includes("support")
         ) {
-            return '<span class="tcg-enchantment-icon">✦</span>';
+            return `
+                <svg class="tcg-support-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" d="M32 4C34 20 44 30 60 32 44 34 34 44 32 60 30 44 20 34 4 32 20 30 30 20 32 4Z"></path>
+                </svg>
+            `;
         }
 
         const entry = Object.entries(typeSymbols).find(([name]) => normalized.includes(name));

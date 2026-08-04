@@ -443,6 +443,11 @@ test("the shared printed design keeps the approved compact geometry", () => {
     "full-art card types must render real lowercase glyphs",
   );
   assert.match(
+    sharedStudio,
+    /<svg class="tcg-support-icon"[^>]*viewBox="0 0 64 64">[\s\S]*?M32 4C34 20 44 30 60 32/u,
+    "Support cards must use the centered scalable icon in common and full-art layouts",
+  );
+  assert.match(
     runtimeCss,
     /\.card-visual\.card-image-full > \.card-stat-badge\.is-buffed:not\(\.is-damaged\),/u,
     "the full-card buff palette must not override the damaged palette",
