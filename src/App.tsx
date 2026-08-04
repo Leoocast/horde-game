@@ -2,10 +2,10 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
-import { EncounterTransition } from "./components/EncounterTransition";
+import { ENCOUNTER_IMPACT_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
-import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
+import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -38,9 +38,8 @@ export default function App() {
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
-    playerName: string;
-    hostName: string;
-    encounterTone: EncounterTone;
+    chronicleDeckId: string;
+    hostDeckId: string;
     gameMode: GameMode;
   } | null>(null);
 
@@ -114,10 +113,10 @@ export default function App() {
     const revealTimeout = window.setTimeout(() => {
       startBattleMusic(true);
       setScreen("game");
-    }, reducedMotion ? 80 : 1050);
+    }, reducedMotion ? 80 : ENCOUNTER_IMPACT_MS);
     const finishTimeout = window.setTimeout(() => {
       setLaunchTransition(null);
-    }, reducedMotion ? 180 : 2450);
+    }, reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
     return () => {
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
@@ -128,9 +127,8 @@ export default function App() {
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
-      playerName={launchTransition.playerName}
-      hostName={launchTransition.hostName}
-      encounterTone={launchTransition.encounterTone}
+      chronicleDeckId={launchTransition.chronicleDeckId}
+      hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
     />
   ) : null;
@@ -247,11 +245,9 @@ export default function App() {
               options.mode,
               options.gameMode,
             );
-            const transitionHostDeck = hostInspectableDecks.find((deck) => deck.id === selectedHostDeckId);
             setLaunchTransition({
-              playerName: options.playerName,
-              hostName: transitionHostDeck?.deck.name ?? "The Host",
-              encounterTone: transitionHostDeck?.presentation.encounterTone ?? "undead",
+              chronicleDeckId: selectedDeckId,
+              hostDeckId: selectedHostDeckId,
               gameMode: options.gameMode,
             });
           }}

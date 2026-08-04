@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "veiled_dawn_flower": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/veiled_dawn_flower.png"
+    },
+    "aelyra_heir_of_elarion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/aelyra_heir_of_elarion.png"
+    },
+    "liora_keeper_of_the_grove": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/liora_keeper_of_the_grove.png"
+    },
+    "hydra_of_the_black_bough": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/hydra_of_the_black_bough.png"
+    },
+    "kaelor_stormcaller": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/kaelor_stormcaller.png"
+    },
+    "maela_watcher_of_the_heights": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/maela_watcher_of_the_heights.png"
+    },
+    "echo_of_the_forgotten_city": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/echo_of_the_forgotten_city.png"
+    },
+    "vaelor_emerald_guardian": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/vaelor_emerald_guardian.png"
+    },
+    "clash_of_echoes": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/clash_of_echoes.png"
+    },
+    "shield_of_the_heir": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/shield_of_the_heir.png"
+    },
+    "the_judgment_of_elarion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/the_judgment_of_elarion.png"
+    },
+    "elixir_of_the_first_leaf": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/elixir_of_the_first_leaf.png"
+    },
+    "river_of_elarion": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/pact_of_elarion/river_of_elarion.png"
+    }
+  }
+}

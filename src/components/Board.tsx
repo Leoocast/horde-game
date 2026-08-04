@@ -22,7 +22,7 @@ import { PlayerDiscardAnimator } from "./PlayerDiscardAnimator";
 import { PlayerAttackAnimator } from "./PlayerAttackAnimator";
 import { LandPlayAnimator } from "./LandPlayAnimator";
 import { EnergyRecycleAnimator } from "./EnergyRecycleAnimator";
-import { FleshRootTitheSelectionOverlay } from "./FleshRootTitheSelectionOverlay";
+import { TributeOfTheFourSorrowsSelectionOverlay } from "./TributeOfTheFourSorrowsSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { ToastStack } from "./ToastStack";
@@ -38,6 +38,7 @@ import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
+import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 
 type Props = {
   playerName: string;
@@ -66,7 +67,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
-  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
+  const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
@@ -78,6 +79,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
+  const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
 
   useEffect(() => {
     if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
@@ -109,9 +111,9 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <DuelHud game={game} />
       <PhaseBanner game={game} suspended={encounterEntering || !game.openingHandAccepted} />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
-      <CombatArrows game={game} />
+      <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />
-      <FleshRootTitheSelectionOverlay game={game} />
+      <TributeOfTheFourSorrowsSelectionOverlay game={game} />
       <SpellTargetingOverlay game={game} />
       <HostAttackAnimator />
       <HostMillAnimator />
@@ -129,7 +131,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !fleshRootTitheSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !tributeOfTheFourSorrowsSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
@@ -140,10 +142,10 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-host">
-            <Battlefield game={game} side="host" cards={game.host.field} />
+            <Battlefield game={game} side="host" cards={game.host.field} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
           </div>
           <div className="battlefield-side battlefield-side-player">
-            <Battlefield game={game} side="player" cards={game.player.field} />
+            <Battlefield game={game} side="player" cards={game.player.field} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
           </div>
         </section>
       </div>

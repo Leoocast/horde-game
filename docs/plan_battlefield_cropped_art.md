@@ -49,7 +49,7 @@ Ejemplo:
 {
   "schemaVersion": "1.0.0",
   "cards": {
-    "first_dew_gatherers": {
+    "veiled_dawn_flower": {
       "battlefieldArtFrame": { "zoom": 1, "x": 0, "y": 0 }
     }
   }

@@ -80,12 +80,21 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
-  const usingBattlefieldArt = Boolean(useBattlefieldArt && battlefieldArtUrl);
-  const displayImageUrl = usingBattlefieldArt
-    ? battlefieldArtUrl
+  const requestedBattlefieldArtUrl = useBattlefieldArt ? battlefieldArtUrl : undefined;
+  const primaryImageUrl = requestedBattlefieldArtUrl
+    ? requestedBattlefieldArtUrl
     : highRes
       ? highResImageUrl
       : imageUrl;
+  const [failedImageUrls, setFailedImageUrls] = useState<string[]>([]);
+  const displayImageUrl = primaryImageUrl && !failedImageUrls.includes(primaryImageUrl)
+    ? primaryImageUrl
+    : requestedBattlefieldArtUrl && imageUrl && !failedImageUrls.includes(imageUrl)
+      ? imageUrl
+      : undefined;
+  const usingBattlefieldArt = Boolean(
+    requestedBattlefieldArtUrl && displayImageUrl === requestedBattlefieldArtUrl,
+  );
   const battlefieldArtImageRef = useRef<HTMLImageElement>(null);
   const [battlefieldArtSourceStyle, setBattlefieldArtSourceStyle] = useState<Record<string, string>>();
   const syncBattlefieldArtSourceStyle = useCallback((image: HTMLImageElement) => {
@@ -207,6 +216,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     >
       {face ?? (displayImageUrl ? (
         <img
+          key={displayImageUrl}
           ref={usingBattlefieldArt ? battlefieldArtImageRef : undefined}
           src={displayImageUrl}
           alt={localizedName}
@@ -218,14 +228,39 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           onLoad={usingBattlefieldArt
             ? (event) => syncBattlefieldArtSourceStyle(event.currentTarget)
             : undefined}
+          onError={(event) => {
+            // Public assets can move while Vite hot-reloads a deck migration. Hide Chromium's
+            // broken-image placeholder immediately, then retry with the printed card (when the
+            // battlefield crop failed) or use the normal text fallback.
+            event.currentTarget.style.visibility = "hidden";
+            const failedUrl = displayImageUrl;
+            if (failedUrl) {
+              setFailedImageUrls((current) => current.includes(failedUrl)
+                ? current
+                : [...current, failedUrl]);
+            }
+          }}
           onDragStart={(event) => event.preventDefault()}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 text-center text-xs font-bold text-stone-600">{localizedName}</div>
       ))}
-      {!face && sharpImageOverlay && highResImageUrl && (
+      {!face && sharpImageOverlay && highResImageUrl && !failedImageUrls.includes(highResImageUrl) && (
         <div className="card-sharp-image-overlay" aria-hidden="true">
-          <img src={highResImageUrl} alt="" loading="eager" decoding="async" draggable={false} />
+          <img
+            src={highResImageUrl}
+            alt=""
+            loading="eager"
+            decoding="async"
+            draggable={false}
+            onError={(event) => {
+              event.currentTarget.style.visibility = "hidden";
+              const failedUrl = highResImageUrl;
+              setFailedImageUrls((current) => current.includes(failedUrl)
+                ? current
+                : [...current, failedUrl]);
+            }}
+          />
         </div>
       )}
       {showCroppedTitle && (
@@ -340,10 +375,12 @@ export function CardTraitIconBadges({
               side={variant === "host" ? "bottom" : "top"}
               content={(
                 <span className="card-trait-icon-tooltip-copy">
-                  <strong className="keyword-pill card-trait-tooltip-keyword">
-                    <CardTraitIcon keyword={keyword} />
-                    {label}
-                  </strong>
+                  <CardTraitTooltipBadge
+                    keyword={keyword}
+                    label={label}
+                    toneClass={keywordToneClass}
+                    chaos={game.gameMode === "chaos"}
+                  />
                   <span>{reminder}</span>
                 </span>
               )}
@@ -364,6 +401,33 @@ export function CardTraitIconBadges({
         })}
       </span>
     </span>
+  );
+}
+
+export function CardTraitTooltipBadge({
+  keyword,
+  label,
+  toneClass,
+  chaos = false,
+}: {
+  keyword: string;
+  label: string;
+  toneClass: string;
+  chaos?: boolean;
+}) {
+  return (
+    <strong
+      className={[
+        "card-keyword-badge",
+        "card-trait-tooltip-keyword",
+        keyword === "LETHAL" ? "card-keyword-deathtouch" : "",
+        chaos ? "card-keyword-chaos" : "",
+        toneClass,
+      ].join(" ")}
+    >
+      <CardTraitIcon keyword={keyword} />
+      {label}
+    </strong>
   );
 }
 

@@ -1,0 +1,357 @@
+/* Generado por scripts/card-studio-data.mjs. No editar a mano. */
+window.HostfallDeckData = [
+  {
+    "id": "varkas_minion",
+    "collectorId": "HFA1031",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/varkas_minion.jpg",
+    "nombre": "Esbirro de Varka",
+    "tipo": "Eco · Ficha — Trasgo Esbirro",
+    "costo": 0,
+    "atk": 1,
+    "def": 1,
+    "desc": "Sin efecto adicional.",
+    "lore": "Varka los llama chispas. La Legión los llama la primera oleada.",
+    "showFlavorText": true,
+    "cantidad": 24,
+    "isToken": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1,
+      "x": -10,
+      "y": 2
+    }
+  },
+  {
+    "id": "shaman_of_the_umbral_ember",
+    "collectorId": "HFA1032",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/shaman_of_the_umbral_ember.jpg",
+    "nombre": "Chamán de la Brasa Sombría",
+    "tipo": "Eco — Orco Chamán",
+    "costo": 3,
+    "atk": 2,
+    "def": 3,
+    "desc": "Los demás aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Ecos invocados este turno.",
+    "lore": "No contaba a quienes llegaban, sino cuántos podía gastar todavía Varka.",
+    "showFlavorText": false,
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 63,
+      "y": -78
+    }
+  },
+  {
+    "id": "summoner_of_the_ranks",
+    "collectorId": "HFA1033",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/summoner_of_the_ranks.jpg",
+    "nombre": "Invocador de las Filas",
+    "tipo": "Eco — Trasgo Invocador",
+    "costo": 2,
+    "atk": 1,
+    "def": 1,
+    "desc": "Los demás aliados ganan +1/+1. Cada vez que un aliado muera, mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo.",
+    "lore": "En la Legión, caer no dejaba un hueco. Abría el lugar del siguiente.",
+    "showFlavorText": false,
+    "cantidad": 2,
+    "headerFade": false
+  },
+  {
+    "id": "varkas_standard_bearer",
+    "collectorId": "HFA1034",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/varkas_standard_bearer.jpg",
+    "nombre": "Portaestandarte de Varka",
+    "tipo": "Eco — Trasgo Portaestandarte",
+    "costo": 2,
+    "atk": 2,
+    "def": 2,
+    "desc": "Al ser invocado, los aliados ganan +1/+0 hasta el final del turno.",
+    "lore": "Donde alzaba el estandarte, hasta los cobardes encontraban una razón para avanzar.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 0,
+      "y": -60
+    }
+  },
+  {
+    "id": "the_daunting_front",
+    "collectorId": "HFA1035",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/the_daunting_front.jpg",
+    "nombre": "El Frente Imponente",
+    "tipo": "Apoyo",
+    "costo": 3,
+    "atk": null,
+    "def": null,
+    "desc": "Los aliados ganan Imponente.",
+    "lore": "La Legión no necesitaba oír a Varka; bastaba con sentir el hierro temblar.",
+    "showFlavorText": true,
+    "cantidad": 1,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1,
+      "x": -32,
+      "y": -8
+    }
+  },
+  {
+    "id": "all_against_one",
+    "collectorId": "HFA1036",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/all_against_one.jpg",
+    "nombre": "Todos contra uno",
+    "tipo": "Apoyo",
+    "costo": 3,
+    "atk": null,
+    "def": null,
+    "desc": "Después de resolver el ataque de la Hueste, cada Eco atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
+    "lore": "Ninguno tenía fuerza suficiente. Por eso atacaban todos a la vez.",
+    "showFlavorText": false,
+    "cantidad": 1,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1.17,
+      "x": 16,
+      "y": -16
+    }
+  },
+  {
+    "id": "chief_of_the_double_guard",
+    "collectorId": "HFA1037",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/chief_of_the_double_guard.jpg",
+    "nombre": "Jefe de la Doble Guardia",
+    "tipo": "Eco — Trasgo Jefe",
+    "costo": 4,
+    "atk": 2,
+    "def": 2,
+    "desc": "Al ser invocado, Invoca dos Esbirros de Varka.",
+    "lore": "Dos cargan las herramientas. El jefe carga el mérito.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": 9,
+      "y": -144
+    }
+  },
+  {
+    "id": "rider_of_the_third_charge",
+    "collectorId": "HFA1038",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/rider_of_the_third_charge.jpg",
+    "nombre": "Jinete de la Tercera Carga",
+    "tipo": "Eco — Trasgo Jinete",
+    "costo": 5,
+    "atk": 2,
+    "def": 2,
+    "desc": "Al ser invocado, Invoca tres Esbirros de Varka.",
+    "lore": "El tercer toque abrió la compuerta y tres nuevas cuadrillas inundaron la calle.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1.04,
+      "x": -6,
+      "y": -200
+    }
+  },
+  {
+    "id": "varkas_linebreaker",
+    "collectorId": "HFA1039",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/varkas_linebreaker.jpg",
+    "nombre": "Rompefilas de Varka",
+    "tipo": "Eco — Orco Rompefilas",
+    "costo": 3,
+    "atk": 2,
+    "def": 2,
+    "desc": "Al comienzo de la Batalla de la Hueste, Invoca un Esbirro de Varka. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante.",
+    "lore": "Corría al frente para que cada Trasgo detrás de él pareciera parte del mismo golpe.",
+    "showFlavorText": false,
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -6,
+      "y": -103
+    }
+  },
+  {
+    "id": "unleash_the_legion",
+    "collectorId": "HFA1040",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/unleash_the_legion.jpg",
+    "nombre": "¡Liberen a la Legión!",
+    "tipo": "Hechizo · Rápido",
+    "costo": 3,
+    "atk": null,
+    "def": null,
+    "desc": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado.",
+    "lore": "Tras cada compuerta hay refuerzos o suficiente fuego para fingirlos.",
+    "showFlavorText": false,
+    "cantidad": 3,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -2,
+      "y": -245
+    }
+  },
+  {
+    "id": "corrupted_war_bear",
+    "collectorId": "HFA1041",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/corrupted_war_bear.jpg",
+    "nombre": "Oso de Guerra Corrompido",
+    "tipo": "Eco — Bestia Oso",
+    "costo": 3,
+    "atk": 3,
+    "def": 3,
+    "desc": "Sin efecto adicional.",
+    "lore": "No obedecía a Varka. Obedecía al ruido, al fuego y a quien sostuviera la cadena.",
+    "showFlavorText": true,
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -2,
+      "y": -163
+    }
+  },
+  {
+    "id": "rider_of_the_umbral_volley",
+    "collectorId": "HFA1042",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/rider_of_the_umbral_volley.jpg",
+    "nombre": "Jinete de la Salva Umbría",
+    "tipo": "Eco — Orco Jinete",
+    "costo": 4,
+    "atk": 4,
+    "def": 2,
+    "desc": "Volar\nAl ser invocado, inflige al mejor enemigo tanto daño como la cantidad de aliados en el Campo.",
+    "lore": "Contaba las voces de la Legión y convertía cada una en otro proyectil.",
+    "showFlavorText": true,
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -129,
+      "y": -190
+    }
+  },
+  {
+    "id": "varka_infernal_matriarch",
+    "collectorId": "HFA1043",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/varka_infernal_matriarch.jpg",
+    "nombre": "Varka, Matriarca Infernal",
+    "tipo": "Eco de Crónica — Diablesa Matriarca",
+    "costo": 3,
+    "atk": 3,
+    "def": 3,
+    "desc": "Reflejos\nTodos los aliados ganan +1/+1. Al ser invocada, inflige 2 de daño al Cronista y a cada enemigo.",
+    "lore": "Varka llegó desde el Infierno. La Legión fue la primera de sus obras.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "isChronicle": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 0.925,
+      "x": 5,
+      "y": -57
+    }
+  },
+  {
+    "id": "varkas_forgemaster",
+    "collectorId": "HFA1044",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/varkas_forgemaster.jpg",
+    "nombre": "Forjador de Varka",
+    "tipo": "Eco — Orco Forjador",
+    "costo": 4,
+    "atk": 3,
+    "def": 3,
+    "desc": "Los demás Trasgos aliados ganan +1/+1.",
+    "lore": "Cada placa robada convierte a otro obrero en soldado.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.855,
+      "x": 14,
+      "y": -89
+    }
+  },
+  {
+    "id": "marshal_of_the_wave",
+    "collectorId": "HFA1045",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/marshal_of_the_wave.jpg",
+    "nombre": "Mariscal de la Oleada",
+    "tipo": "Eco — Orco Mariscal",
+    "costo": 3,
+    "atk": 2,
+    "def": 2,
+    "desc": "Cuando los Trasgos aliados atacan, Invoca un Esbirro de Varka atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida.",
+    "lore": "No medía la oleada por quienes llegaban, sino por cuántos golpes podía hacer sonar a la vez.",
+    "showFlavorText": false,
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": -14,
+      "y": -144
+    }
+  },
+  {
+    "id": "vardek_scribe_of_the_legion",
+    "collectorId": "HFA1046",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/vardek_scribe_of_the_legion.jpg",
+    "nombre": "Vardek, Escriba de la Legión",
+    "tipo": "Eco — Trasgo Escriba",
+    "costo": 3,
+    "atk": 1,
+    "def": 2,
+    "desc": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca esa cantidad de Esbirros de Varka atacando.",
+    "lore": "Cada marca hacía más grande su leyenda y más numerosa la escolta que exigía.",
+    "showFlavorText": false,
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": 4,
+      "y": -109
+    }
+  },
+  {
+    "id": "rear_guard_firebreather",
+    "collectorId": "HFA1047",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/rear_guard_firebreather.jpg",
+    "nombre": "Escupefuego de la Retaguardia",
+    "tipo": "Eco — Orco Escupefuego",
+    "costo": 3,
+    "atk": 2,
+    "def": 2,
+    "desc": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio.",
+    "lore": "Para él, cada Trasgo muerto dejaba dos cosas: un hueco en la fila y munición.",
+    "showFlavorText": true,
+    "cantidad": 2,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 0,
+      "y": -133
+    }
+  }
+];

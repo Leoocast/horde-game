@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "graveless_soldier": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/uprising_of_the_graveless/graveless_soldier.png"
+    },
+    "graveless_titan": {
+      "source": "local",
+      "imageKind": "card",
+      "fullArt": true,
+      "imageUrl": "/cards/uprising_of_the_graveless/graveless_titan.png"
+    },
+    "the_broken_headstone": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/the_broken_headstone.png"
+    },
+    "inexhaustible_ossuary": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/inexhaustible_ossuary.png"
+    },
+    "devourer_of_the_last_memory": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/devourer_of_the_last_memory.png"
+    },
+    "memory_thief": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/memory_thief.png"
+    },
+    "tribute_of_the_four_sorrows": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/tribute_of_the_four_sorrows.png"
+    },
+    "winged_stalker_of_the_crypt": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/winged_stalker_of_the_crypt.png"
+    },
+    "stitched_wing_spawn": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/stitched_wing_spawn.png"
+    },
+    "ossuary_rider": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/ossuary_rider.png"
+    },
+    "return_to_memory": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/return_to_memory.png"
+    },
+    "barrow_wallbreaker": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/barrow_wallbreaker.png"
+    },
+    "hound_of_seven_memories": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/hound_of_seven_memories.png"
+    },
+    "mastiff_of_the_overflowing_ossuary": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/mastiff_of_the_overflowing_ossuary.png"
+    },
+    "spore_infested": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/spore_infested.png"
+    },
+    "harvester_of_the_fallen": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/harvester_of_the_fallen.png"
+    },
+    "nerezh_graveless_matriarch": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png"
+    }
+  }
+}

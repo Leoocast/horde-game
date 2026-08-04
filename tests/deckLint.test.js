@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { lintDecks, lintHostfallDeckSchema } from "../src/data/deckLint";
 import { DECK_REGISTRY } from "../src/data/decks";
+import { cardIdFromName } from "../src/data/cardIdentity";
 import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "../src/data/authoredDeckNormalizer";
 
 const RETIRED_HOSTFALL_KEYS = new Set([
@@ -50,6 +51,11 @@ test("every active card authors print metadata, bilingual flavor and an explicit
 
   for (const entry of DECK_REGISTRY) {
     for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.equal(
+        card.id,
+        cardIdFromName(card.name),
+        `${entry.raw.id}/${card.id} does not match its current English name`,
+      );
       assert.match(
         card.collectorId,
         /^HFA1\d{3}$/u,
@@ -78,6 +84,31 @@ test("every active card authors print metadata, bilingual flavor and an explicit
     Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
     "Act I collector IDs must remain continuous from HFA1001 through HFA1061",
   );
+});
+
+test("active deck ids match their current canonical identities", () => {
+  assert.deepEqual(
+    DECK_REGISTRY.map((entry) => [entry.raw.id, entry.raw.name]),
+    [
+      ["pact_of_elarion", "El Pacto de Elarion"],
+      ["court_of_the_crimson_eclipse", "La Corte del Eclipse Carmesí"],
+      ["uprising_of_the_graveless", "El Alzamiento de los Sinsepulcro"],
+      ["legion_of_varka", "La Legión de Varka"],
+    ],
+  );
+});
+
+test("Host deck covers feature their matriarchs", () => {
+  const hostKeyCards = Object.fromEntries(
+    DECK_REGISTRY
+      .filter((entry) => entry.deck.side === "host")
+      .map((entry) => [entry.deck.id, entry.presentation.keyCardId]),
+  );
+
+  assert.deepEqual(hostKeyCards, {
+    uprising_of_the_graveless: "nerezh_graveless_matriarch",
+    legion_of_varka: "varka_infernal_matriarch",
+  });
 });
 
 test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {
@@ -182,7 +213,7 @@ test("Host rules reject unknown keys, unsafe divisors and malformed profiles", (
 });
 
 test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored normalization", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "last_rain");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "pact_of_elarion");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "CHRONICLER");
@@ -196,32 +227,32 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
   assert.equal(normalizedAuthoring.name, "El Pacto de Elarion");
-  assert.deepEqual(byId.arven_first_pack.energyCost, { amount: 4 });
-  assert.equal(byId.arven_first_pack.power, 3);
-  assert.equal(byId.arven_first_pack.endurance, 4);
-  assert.deepEqual(byId.ancient_canopy_watchers.energyCost, { amount: 3 });
-  assert.equal(byId.ancient_canopy_watchers.power, 3);
-  assert.equal(byId.ancient_canopy_watchers.endurance, 3);
-  assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
-  assert.deepEqual(byId.iria_voice_last_rain.modifiers, ["CHRONICLE"]);
-  assert.equal(byId.iria_voice_last_rain.abilities[0].effects[1].amount, 3);
-  assert.deepEqual(byId.arven_first_pack.traits, []);
-  assert.deepEqual(byId.hollow_skybreaker.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.orun_waking_root.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.marked_prey.kinds, ["SPELL"]);
-  assert.deepEqual(byId.marked_prey.modifiers, ["QUICK"]);
-  assert.deepEqual(byId.oath_clearing.kinds, ["SPELL"]);
-  assert.deepEqual(byId.oath_clearing.modifiers, []);
-  assert.deepEqual(byId.deep_root_spring.kinds, ["SOURCE"]);
-  assert.deepEqual(byId.hollow_skybreaker.energyCost, { amount: 4 });
-  assert.equal(byId.hollow_skybreaker.endurance, 5);
+  assert.deepEqual(byId.kaelor_stormcaller.energyCost, { amount: 4 });
+  assert.equal(byId.kaelor_stormcaller.power, 3);
+  assert.equal(byId.kaelor_stormcaller.endurance, 4);
+  assert.deepEqual(byId.maela_watcher_of_the_heights.energyCost, { amount: 3 });
+  assert.equal(byId.maela_watcher_of_the_heights.power, 3);
+  assert.equal(byId.maela_watcher_of_the_heights.endurance, 3);
+  assert.deepEqual(byId.hydra_of_the_black_bough.traits, ["LETHAL", "POISON_1"]);
+  assert.deepEqual(byId.aelyra_heir_of_elarion.modifiers, ["CHRONICLE"]);
+  assert.equal(byId.aelyra_heir_of_elarion.abilities[0].effects[1].amount, 3);
+  assert.deepEqual(byId.kaelor_stormcaller.traits, []);
+  assert.deepEqual(byId.echo_of_the_forgotten_city.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.clash_of_echoes.kinds, ["SPELL"]);
+  assert.deepEqual(byId.clash_of_echoes.modifiers, ["QUICK"]);
+  assert.deepEqual(byId.shield_of_the_heir.kinds, ["SPELL"]);
+  assert.deepEqual(byId.shield_of_the_heir.modifiers, []);
+  assert.deepEqual(byId.river_of_elarion.kinds, ["SOURCE"]);
+  assert.deepEqual(byId.echo_of_the_forgotten_city.energyCost, { amount: 4 });
+  assert.equal(byId.echo_of_the_forgotten_city.endurance, 5);
 
-  const energyAction = byId.first_dew_gatherers.abilities[0];
+  const energyAction = byId.veiled_dawn_flower.abilities[0];
   assert.equal(energyAction.zone, "field");
   assert.deepEqual(energyAction.cost, { exhaust: true });
   assert.deepEqual(energyAction.effects[0], { type: "GAIN_ENERGY", player: "SELF", amount: 1 });
 
-  const rootsTouchedSkyFilter = byId.roots_touched_sky.abilities[0].targets[0].filters;
+  const rootsTouchedSkyFilter = byId.the_judgment_of_elarion.abilities[0].targets[0].filters;
   assert.deepEqual(rootsTouchedSkyFilter.anyOf, [
     { kinds: ["SUPPORT"] },
     { kinds: ["ECHO"], traits: ["FLYING"] },
@@ -229,7 +260,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
 });
 
 test("Vampires keep Hostfall card kinds, modifiers and traits through authored normalization", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "crimson_court");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "court_of_the_crimson_eclipse");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "CHRONICLER");
@@ -240,26 +271,26 @@ test("Vampires keep Hostfall card kinds, modifiers and traits through authored n
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
-  assert.deepEqual(rawById.eternal_feast_countess.modifiers, ["CHRONICLE"]);
-  assert.deepEqual(rawById.eternal_feast_countess.traits, ["FLYING", "ALERT"]);
-  assert.equal(rawById.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
+  assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.traits, ["FLYING", "ALERT"]);
+  assert.equal(rawById.mirevna_countess_of_the_crimson_eclipse.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(rawById.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
-  assert.deepEqual(byId.eternal_feast_countess.kinds, ["ECHO"]);
-  assert.deepEqual(byId.eternal_feast_countess.modifiers, ["CHRONICLE"]);
-  assert.deepEqual(byId.eternal_feast_countess.traits, ["FLYING", "ALERT"]);
-  assert.equal(byId.eternal_feast_countess.abilities[0].effects[0].keyword, "DRAIN");
+  assert.deepEqual(byId.mirevna_countess_of_the_crimson_eclipse.kinds, ["ECHO"]);
+  assert.deepEqual(byId.mirevna_countess_of_the_crimson_eclipse.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(byId.mirevna_countess_of_the_crimson_eclipse.traits, ["FLYING", "ALERT"]);
+  assert.equal(byId.mirevna_countess_of_the_crimson_eclipse.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(byId.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
   assert.deepEqual(byId.crimson_impulse.kinds, ["SPELL"]);
   assert.deepEqual(byId.crimson_impulse.modifiers, ["QUICK"]);
-  assert.deepEqual(byId.blood_pact.kinds, ["SPELL"]);
-  assert.deepEqual(byId.crimson_energy.kinds, ["SOURCE"]);
-  assert.equal(byId.court_duelist.requiresStabilized, undefined);
-  assert.equal(byId.court_duelist.abilities[0].requiresStabilized, true);
-  assert.deepEqual(byId.tithe_acolyte.abilities[0].cost, { exhaust: true, life: 5 });
-  assert.deepEqual(byId.tithe_acolyte.abilities[0].effects[0], {
+  assert.deepEqual(byId.midnight_pact.kinds, ["SPELL"]);
+  assert.deepEqual(byId.sanctuary_of_the_red_moon.kinds, ["SOURCE"]);
+  assert.equal(byId.duelist_of_the_eclipse.requiresStabilized, undefined);
+  assert.equal(byId.duelist_of_the_eclipse.abilities[0].requiresStabilized, true);
+  assert.deepEqual(byId.midnight_collector.abilities[0].cost, { exhaust: true, life: 5 });
+  assert.deepEqual(byId.midnight_collector.abilities[0].effects[0], {
     type: "GAIN_ENERGY",
     player: "SELF",
     amount: 1,
@@ -267,7 +298,7 @@ test("Vampires keep Hostfall card kinds, modifiers and traits through authored n
 });
 
 test("Zombies keep Hostfall card kinds and traits through authored normalization", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "hollow_bell_procession");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "uprising_of_the_graveless");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "HOST");
@@ -279,17 +310,17 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
-  assert.deepEqual(rawById.last_knell_dead.kinds, ["ECHO", "TOKEN"]);
-  assert.deepEqual(rawById.last_knell_dead.energyCost, { amount: 2 });
-  assert.deepEqual(rawById.hollow_bell.kinds, ["SUPPORT"]);
-  assert.equal(rawById.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
-  assert.deepEqual(rawById.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
-  assert.deepEqual(rawById.archive_carrion_crow.traits, []);
-  assert.equal(rawById.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
-  assert.equal(rawById.last_march_marshal.power, 3);
-  assert.equal(rawById.last_march_marshal.endurance, 3);
-  assert.equal(rawById.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
+  assert.deepEqual(rawById.graveless_soldier.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.graveless_soldier.energyCost, { amount: 2 });
+  assert.deepEqual(rawById.the_broken_headstone.kinds, ["SUPPORT"]);
+  assert.equal(rawById.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
+  assert.deepEqual(rawById.spore_infested.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(rawById.return_to_memory.traits, []);
+  assert.equal(rawById.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(rawById.nerezh_graveless_matriarch.power, 3);
+  assert.equal(rawById.nerezh_graveless_matriarch.endurance, 3);
+  assert.equal(rawById.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
@@ -302,25 +333,25 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(normalizedAuthoring.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(normalizedAuthoring.rulesProfile.hostEchosHaveImpetus, true);
   assert.equal(normalizedAuthoring.rulesProfile.surgeBonus.endurance, 0);
-  assert.deepEqual(byId.last_knell_dead.kinds, ["ECHO", "TOKEN"]);
-  assert.equal(byId.last_knell_dead.isToken, true);
-  assert.deepEqual(byId.last_knell_dead.energyCost, { amount: 2 });
-  assert.deepEqual(byId.hollow_bell.kinds, ["SUPPORT"]);
-  assert.equal(byId.hollow_bell.abilities[0].effects[0].scope.controller, "HOST");
-  assert.deepEqual(byId.hollow_bell.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
-  assert.equal(byId.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
-  assert.deepEqual(byId.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
-  assert.deepEqual(byId.archive_carrion_crow.traits, []);
-  assert.equal(byId.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
-  assert.equal(byId.last_march_marshal.power, 3);
-  assert.equal(byId.last_march_marshal.endurance, 3);
-  assert.equal(byId.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
-  assert.equal(byId.last_march_marshal.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
+  assert.deepEqual(byId.graveless_soldier.kinds, ["ECHO", "TOKEN"]);
+  assert.equal(byId.graveless_soldier.isToken, true);
+  assert.deepEqual(byId.graveless_soldier.energyCost, { amount: 2 });
+  assert.deepEqual(byId.the_broken_headstone.kinds, ["SUPPORT"]);
+  assert.equal(byId.the_broken_headstone.abilities[0].effects[0].scope.controller, "HOST");
+  assert.deepEqual(byId.the_broken_headstone.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
+  assert.equal(byId.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(byId.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
+  assert.deepEqual(byId.spore_infested.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(byId.return_to_memory.traits, []);
+  assert.equal(byId.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
+  assert.equal(byId.nerezh_graveless_matriarch.power, 3);
+  assert.equal(byId.nerezh_graveless_matriarch.endurance, 3);
+  assert.equal(byId.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
+  assert.equal(byId.nerezh_graveless_matriarch.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
 });
 
 test("Goblins keep Hostfall card kinds, modifiers and traits through authored normalization", () => {
-  const entry = DECK_REGISTRY.find((item) => item.deck.id === "broken_forge_mutiny");
+  const entry = DECK_REGISTRY.find((item) => item.deck.id === "legion_of_varka");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
   assert.equal(entry.raw.side, "HOST");
@@ -332,20 +363,27 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
-  assert.deepEqual(rawById.ember_scrap_runner.kinds, ["ECHO", "TOKEN"]);
-  assert.deepEqual(rawById.shift_hammer.kinds, ["SUPPORT"]);
-  assert.equal(rawById.shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.first_siren_agitator.abilities[1].trigger.event, "BEGIN_BATTLE");
-  assert.equal(rawById.open_another_gate.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
-  assert.equal(rawById.burning_tally_foreman.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
-  assert.equal(rawById.burning_tally_foreman.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
-  assert.deepEqual(rawById.varka_revolt_axis.traits, ["REFLEX"]);
-  assert.deepEqual(rawById.varka_revolt_axis.modifiers, ["CHRONICLE"]);
-  assert.equal(rawById.repeating_blow_marshal.modifiers, undefined);
-  assert.equal(rawById.brakka_growing_tally.modifiers, undefined);
-  assert.equal(rawById.last_rivets_gunner.modifiers, undefined);
-  assert.equal(rawById.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
-  assert.equal(rawById.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(rawById.varkas_minion.kinds, ["ECHO", "TOKEN"]);
+  assert.deepEqual(rawById.the_daunting_front.kinds, ["SUPPORT"]);
+  assert.equal(rawById.the_daunting_front.name, "The Daunting Front");
+  assert.equal(rawById.the_daunting_front.displayNameEs, "El Frente Imponente");
+  assert.equal(rawById.the_daunting_front.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(rawById.varkas_linebreaker.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(rawById.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(rawById.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(rawById.shaman_of_the_umbral_ember.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.equal(rawById.rider_of_the_umbral_volley.abilities[0].effects[0].amount.type, "COUNT_ECHOS");
+  assert.equal(rawById.rider_of_the_umbral_volley.abilities[0].effects[0].amount.filters.subtypes, undefined);
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].kind, "STATIC");
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].type, "MODIFY_STATS");
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
+  assert.deepEqual(rawById.varka_infernal_matriarch.traits, ["REFLEX"]);
+  assert.deepEqual(rawById.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.marshal_of_the_wave.modifiers, undefined);
+  assert.equal(rawById.vardek_scribe_of_the_legion.modifiers, undefined);
+  assert.equal(rawById.rear_guard_firebreather.modifiers, undefined);
+  assert.equal(rawById.rear_guard_firebreather.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(rawById.rear_guard_firebreather.abilities[0].conditions[0].eventObject, "echo");
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
@@ -353,20 +391,25 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(normalizedAuthoring.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(normalizedAuthoring.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(normalizedAuthoring.rulesProfile.hostEchosHaveImpetus, true);
-  assert.deepEqual(byId.ember_scrap_runner.kinds, ["ECHO", "TOKEN"]);
-  assert.equal(byId.ember_scrap_runner.isToken, true);
-  assert.deepEqual(byId.shift_hammer.kinds, ["SUPPORT"]);
-  assert.equal(byId.shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.first_siren_agitator.abilities[1].trigger.event, "BEGIN_BATTLE");
-  assert.equal(byId.open_another_gate.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
-  assert.equal(byId.burning_tally_foreman.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
-  assert.equal(byId.burning_tally_foreman.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
-  assert.deepEqual(byId.varka_revolt_axis.traits, ["REFLEX"]);
-  assert.deepEqual(byId.varka_revolt_axis.modifiers, ["CHRONICLE"]);
-  assert.deepEqual(byId.repeating_blow_marshal.kinds, ["ECHO"]);
-  assert.deepEqual(byId.repeating_blow_marshal.modifiers, []);
-  assert.deepEqual(byId.brakka_growing_tally.modifiers, []);
-  assert.deepEqual(byId.last_rivets_gunner.modifiers, []);
-  assert.equal(byId.last_rivets_gunner.abilities[0].trigger.event, "ECHO_DIED");
-  assert.equal(byId.last_rivets_gunner.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(byId.varkas_minion.kinds, ["ECHO", "TOKEN"]);
+  assert.equal(byId.varkas_minion.isToken, true);
+  assert.deepEqual(byId.the_daunting_front.kinds, ["SUPPORT"]);
+  assert.equal(byId.the_daunting_front.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.equal(byId.varkas_linebreaker.abilities[1].trigger.event, "BEGIN_BATTLE");
+  assert.equal(byId.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
+  assert.equal(byId.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
+  assert.equal(byId.shaman_of_the_umbral_ember.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.equal(byId.rider_of_the_umbral_volley.abilities[0].effects[0].amount.type, "COUNT_ECHOS");
+  assert.equal(byId.rider_of_the_umbral_volley.abilities[0].effects[0].amount.filters.subtypes, undefined);
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].kind, "STATIC");
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].effects[0].type, "MODIFY_STATS");
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
+  assert.deepEqual(byId.varka_infernal_matriarch.traits, ["REFLEX"]);
+  assert.deepEqual(byId.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
+  assert.deepEqual(byId.marshal_of_the_wave.kinds, ["ECHO"]);
+  assert.deepEqual(byId.marshal_of_the_wave.modifiers, []);
+  assert.deepEqual(byId.vardek_scribe_of_the_legion.modifiers, []);
+  assert.deepEqual(byId.rear_guard_firebreather.modifiers, []);
+  assert.equal(byId.rear_guard_firebreather.abilities[0].trigger.event, "ECHO_DIED");
+  assert.equal(byId.rear_guard_firebreather.abilities[0].conditions[0].eventObject, "echo");
 });

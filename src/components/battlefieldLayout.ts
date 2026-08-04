@@ -63,6 +63,14 @@ export function activeDefenseArrowLinks(game: GameState): DefenseArrowLink[] {
   return links;
 }
 
+/** One visibility source for arrows and their endpoint badges. Assignments intentionally remain in
+ * combat state until cleanup, but presentation links can finish earlier during an impact. */
+export function visibleDefenseArrowLinks(game: GameState, hiddenLinkIds: ReadonlySet<string>): DefenseArrowLink[] {
+  return activeDefenseArrowLinks(game).filter(
+    ({ attackerId, blockerId }) => !hiddenLinkIds.has(`${attackerId}-${blockerId}`),
+  );
+}
+
 export function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
@@ -190,7 +198,7 @@ export function holdCombatCasualties(
       }
     }
     // New creatures keep their actual arrival order. In particular, a Goblin summoned by
-    // Summoner of the Ranks after another Goblin dies must not inherit the casualty's middle slot: combat
+    // Summoner of the Ranks after another allied Echo dies must not inherit the casualty's middle slot: combat
     // still resolves it last because the engine appended it to `host.field`. Keeping the
     // ghost until the sequence ends makes the visual row agree with that rules order.
   } else if (casualties.current.size > 0) {

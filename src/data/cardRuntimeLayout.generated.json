@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "decks": {
-    "last_rain": {
+    "pact_of_elarion": {
       "cards": {
-        "iria_voice_last_rain": {
+        "aelyra_heir_of_elarion": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -12,7 +12,7 @@
             "height": 91
           }
         },
-        "arven_first_pack": {
+        "kaelor_stormcaller": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -21,7 +21,7 @@
             "height": 91
           }
         },
-        "orun_waking_root": {
+        "vaelor_emerald_guardian": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -30,14 +30,14 @@
             "height": 91
           }
         },
-        "deep_root_spring": {
+        "river_of_elarion": {
           "fullArt": true
         }
       }
     },
-    "hollow_bell_procession": {
+    "uprising_of_the_graveless": {
       "cards": {
-        "last_knell_dead": {
+        "graveless_soldier": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -46,7 +46,7 @@
             "height": 91
           }
         },
-        "mass_grave_colossus": {
+        "graveless_titan": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -55,7 +55,7 @@
             "height": 91
           }
         },
-        "fallen_gatherer": {
+        "harvester_of_the_fallen": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -64,20 +64,20 @@
             "height": 91
           }
         },
-        "last_march_marshal": {
+        "nerezh_graveless_matriarch": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 433.188,
+            "bottom": 556.719,
             "width": 158,
             "height": 91
           }
         }
       }
     },
-    "broken_forge_mutiny": {
+    "legion_of_varka": {
       "cards": {
-        "ember_scrap_runner": {
+        "varkas_minion": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -86,7 +86,7 @@
             "height": 91
           }
         },
-        "burning_tally_foreman": {
+        "shaman_of_the_umbral_ember": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -95,22 +95,22 @@
             "height": 91
           }
         },
-        "shift_hammer": {
+        "the_daunting_front": {
           "fullArt": true
         },
-        "rain_of_rivets": {
+        "all_against_one": {
           "fullArt": true
         },
-        "varka_revolt_axis": {
+        "varka_infernal_matriarch": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 441.391,
+            "bottom": 556.719,
             "width": 158,
             "height": 91
           }
         },
-        "salvaged_armor_master": {
+        "varkas_forgemaster": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
@@ -121,27 +121,27 @@
         }
       }
     },
-    "crimson_court": {
+    "court_of_the_crimson_eclipse": {
       "cards": {
-        "crimson_energy": {
+        "sanctuary_of_the_red_moon": {
           "fullArt": true
         },
-        "eternal_feast_countess": {
+        "mirevna_countess_of_the_crimson_eclipse": {
           "fullArt": true,
           "statsFrame": {
             "right": 62,
-            "bottom": 380.156,
+            "bottom": 551.953,
             "width": 158,
             "height": 91
           }
         },
-        "blood_pact": {
+        "midnight_pact": {
           "fullArt": true
         },
         "drain_essence": {
           "fullArt": true
         },
-        "final_banquet": {
+        "verdict_of_the_eclipse": {
           "fullArt": true
         }
       }

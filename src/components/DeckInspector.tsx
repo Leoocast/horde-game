@@ -9,7 +9,7 @@ import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbo
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { TraitPills } from "./CardPreview";
+import { PreviewStatsBadge, TraitPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -213,8 +213,8 @@ function DeckCardTile({
     >
       <div className="deck-detail-card-frame">
         {quantity > 1 && (
-          <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
-            x{quantity}
+          <span className="deck-card-count-badge pointer-events-none" aria-hidden="true">
+            &times;{quantity}
           </span>
         )}
         <div className={["deck-detail-card-image", showFullCardImage ? "is-full-card" : ""].join(" ")}>
@@ -247,6 +247,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const text = deckCardDescription(card, language);
   const hasText = text.length > 0;
   const showFullCardImage = usesFullCardImage(deck, card);
+  const cardStats = stats(card);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -275,8 +276,8 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           <MissingCardArt card={card} />
         )}
         <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
-          {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
-          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact />}
+          {cardStats && <PreviewStatsBadge stats={cardStats} cardTheme={deck.presentation.theme} />}
+          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact cardTheme={deck.presentation.theme} />}
         </div>
         {hasText && (
           <div className="deck-detail-rules">
@@ -409,8 +410,8 @@ function DeckInspectorDetailsModal({
 
             {(traits || cardStats) && (
               <div className="deck-collection-modal-badges">
-                {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
-                {traits && <TraitPills traits={traits} />}
+                {cardStats && <PreviewStatsBadge stats={cardStats} cardTheme={deck.presentation.theme} />}
+                {traits && <TraitPills traits={traits} cardTheme={deck.presentation.theme} />}
               </div>
             )}
 

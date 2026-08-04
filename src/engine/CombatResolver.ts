@@ -365,6 +365,16 @@ export function resolvePlayerAttackerDrain(game: GameState, attackerId: string):
   return next;
 }
 
+/** Life the currently selected player attackers will recover if combat resolves now. Keeping this
+ * beside combat resolution makes the HUD preview follow conditional Traits and effective Power. */
+export function previewPlayerAttackDrain(game: GameState): number {
+  return game.combat.playerAttackers.reduce((total, attackerId) => {
+    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
+    if (!attacker || !hasTrait(game, attacker, "DRAIN")) return total;
+    return total + Math.max(0, getPowerEndurance(game, attacker).power);
+  }, 0);
+}
+
 /** Commits one animated player's poison counters at that attacker's impact frame.
  *  The batch resolver can skip poison afterwards so the same counters are not applied twice. */
 export function resolvePlayerAttackerPoison(game: GameState, attackerId: string): GameState {

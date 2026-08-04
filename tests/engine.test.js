@@ -8,7 +8,7 @@ import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
@@ -20,12 +20,14 @@ import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
-import { sortTraitsForDisplay } from "../src/utils/selectors";
+import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import {
   fitHoverCardDisplay,
   HAND_CARD_DISPLAY_HEIGHT,
   HAND_CARD_DISPLAY_WIDTH,
+  HAND_HOVER_CARD_DISPLAY_HEIGHT,
+  HAND_HOVER_CARD_DISPLAY_WIDTH,
   HOVER_CARD_DISPLAY_HEIGHT,
   HOVER_CARD_DISPLAY_WIDTH,
   LARGE_CARD_DISPLAY_HEIGHT,
@@ -67,7 +69,7 @@ test("game state exposes only canonical Hostfall zones", () => {
 });
 
 test("the registered Vampire chronicle starts as its complete playable deck", () => {
-  const vampireDeck = getPlayerDeck("crimson_court");
+  const vampireDeck = getPlayerDeck("court_of_the_crimson_eclipse");
   const game = createInitialGame(vampireDeck, hostDeck, "vampire-integration", 3);
   const card = (definitionId) => {
     const definition = vampireDeck.cards.find((candidate) => candidate.id === definitionId);
@@ -82,63 +84,63 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
     ...game.player.oblivion,
   ];
 
-  assert.equal(vampireDeck.id, "crimson_court");
+  assert.equal(vampireDeck.id, "court_of_the_crimson_eclipse");
   assert.equal(vampireDeck.name, "La Corte del Eclipse Carmesí");
   assert.equal(playerCards.length, 40);
   assert.equal(game.player.hand.length, 7);
-  assert.equal(playerCards.filter((candidate) => candidate.definitionId === "crimson_energy").length, 12);
+  assert.equal(playerCards.filter((candidate) => candidate.definitionId === "sanctuary_of_the_red_moon").length, 12);
   assert.deepEqual(
-    ["crimson_energy", "tithe_acolyte", "eternal_feast_countess", "blood_pact", "crimson_impulse", "predatory_thirst"].map(
+    ["sanctuary_of_the_red_moon", "midnight_collector", "mirevna_countess_of_the_crimson_eclipse", "midnight_pact", "crimson_impulse", "hunt_beneath_the_red_moon"].map(
       (definitionId) => [definitionId, card(definitionId).quantity],
     ),
     [
-      ["crimson_energy", 12],
-      ["tithe_acolyte", 2],
-      ["eternal_feast_countess", 2],
-      ["blood_pact", 2],
+      ["sanctuary_of_the_red_moon", 12],
+      ["midnight_collector", 2],
+      ["mirevna_countess_of_the_crimson_eclipse", 2],
+      ["midnight_pact", 2],
       ["crimson_impulse", 2],
-      ["predatory_thirst", 1],
+      ["hunt_beneath_the_red_moon", 1],
     ],
   );
   assert.deepEqual(
-    ["tithe_acolyte", "crimson_impulse", "drain_essence"].map(
+    ["midnight_collector", "crimson_impulse", "drain_essence"].map(
       (definitionId) => [definitionId, card(definitionId).energyCost],
     ),
     [
-      ["tithe_acolyte", 1],
+      ["midnight_collector", 1],
       ["crimson_impulse", 1],
       ["drain_essence", 2],
     ],
   );
-  assert.deepEqual(card("crypt_guardian").traits, ["SKYGUARD"]);
+  assert.deepEqual(card("guardian_of_the_night_threshold").traits, ["SKYGUARD"]);
   assert.deepEqual(
-    ["blood_page", "crimson_bat", "court_duelist", "blood_sentinel", "eternal_feast_countess"].map(
+    ["blood_page", "herald_of_the_eclipse", "duelist_of_the_eclipse", "sentinel_of_the_lunar_eye", "mirevna_countess_of_the_crimson_eclipse"].map(
       (definitionId) => [definitionId, card(definitionId).power, card(definitionId).endurance],
     ),
     [
       ["blood_page", 1, 3],
-      ["crimson_bat", 2, 2],
-      ["court_duelist", 3, 3],
-      ["blood_sentinel", 3, 4],
-      ["eternal_feast_countess", 5, 5],
+      ["herald_of_the_eclipse", 2, 2],
+      ["duelist_of_the_eclipse", 3, 3],
+      ["sentinel_of_the_lunar_eye", 3, 4],
+      ["mirevna_countess_of_the_crimson_eclipse", 5, 5],
     ],
   );
-  assert.deepEqual(card("blood_sentinel").traits, ["ALERT"]);
-  assert.deepEqual(card("eternal_feast_countess").traits, ["FLYING", "ALERT"]);
+  assert.deepEqual(card("sentinel_of_the_lunar_eye").traits, ["ALERT"]);
+  assert.deepEqual(card("mirevna_countess_of_the_crimson_eclipse").traits, ["FLYING", "ALERT"]);
 });
 
 test("Developer Mode uses the selected player deck's own Energy cards", () => {
-  const vampireDeck = getPlayerDeck("crimson_court");
+  const vampireDeck = getPlayerDeck("court_of_the_crimson_eclipse");
   const game = createInitialGame(vampireDeck, hostDeck, "developer", 3);
 
   assert.deepEqual(
     game.player.field.map((card) => card.definitionId),
-    ["crimson_energy", "crimson_energy", "crimson_energy", "crimson_energy"],
+    ["sanctuary_of_the_red_moon", "sanctuary_of_the_red_moon", "sanctuary_of_the_red_moon", "sanctuary_of_the_red_moon"],
   );
   assert.equal(game.player.hand.length, 7);
   assert.equal(
     [...game.player.hand, ...game.player.archive, ...game.player.field]
-      .some((card) => card.definitionId === "deep_root_spring" || card.definitionId === "roots_touched_sky"),
+      .some((card) => card.definitionId === "river_of_elarion" || card.definitionId === "the_judgment_of_elarion"),
     false,
   );
 });
@@ -297,23 +299,23 @@ test("First strike mutations deal combat damage before a normal blocker can answ
   assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("Varka, Axis of the Revolt survives a 4/3 blocker but dies to a 4/4 after first strike", () => {
+test("Varka's own aura makes her survive a 5/4 blocker but die to a 5/5 after first strike", () => {
   const resolveDuel = (endurance) => {
     const game = createTestGame(`chainwhirler-first-strike-${endurance}`);
-    const chainwhirler = addCard(game, cardFromDeck("varka_revolt_axis", "host"));
-    const blocker = addCard(game, customCard(`blocker_4_${endurance}`, "player", { power: 4, endurance }));
+    const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    const blocker = addCard(game, customCard(`blocker_5_${endurance}`, "player", { power: 5, endurance }));
     game.combat.hostAttackers = [chainwhirler.instanceId];
     game.combat.blockers = { [chainwhirler.instanceId]: [blocker.instanceId] };
     return { result: resolveHostCombat(game), chainwhirler, blocker };
   };
 
-  const versusFourThree = resolveDuel(3);
-  assert.equal(versusFourThree.result.host.field.some((card) => card.instanceId === versusFourThree.chainwhirler.instanceId), true);
-  assert.equal(versusFourThree.result.player.memory.some((card) => card.instanceId === versusFourThree.blocker.instanceId), true);
+  const versusFiveFour = resolveDuel(4);
+  assert.equal(versusFiveFour.result.host.field.some((card) => card.instanceId === versusFiveFour.chainwhirler.instanceId), true);
+  assert.equal(versusFiveFour.result.player.memory.some((card) => card.instanceId === versusFiveFour.blocker.instanceId), true);
 
-  const versusFourFour = resolveDuel(4);
-  assert.equal(versusFourFour.result.host.memory.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
-  assert.equal(versusFourFour.result.player.field.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
+  const versusFiveFive = resolveDuel(5);
+  assert.equal(versusFiveFive.result.host.memory.some((card) => card.instanceId === versusFiveFive.chainwhirler.instanceId), true);
+  assert.equal(versusFiveFive.result.player.field.some((card) => card.instanceId === versusFiveFive.blocker.instanceId), true);
 });
 
 test("Hostfall traits render with localized names", () => {
@@ -360,6 +362,10 @@ test("previews and raised hand cards use exact card-image geometry", () => {
     [244, 340],
   );
   assert.deepEqual(
+    [HAND_HOVER_CARD_DISPLAY_WIDTH, HAND_HOVER_CARD_DISPLAY_HEIGHT],
+    [305, 425],
+  );
+  assert.deepEqual(
     [LARGE_CARD_DISPLAY_WIDTH, LARGE_CARD_DISPLAY_HEIGHT],
     [488, 680],
   );
@@ -376,7 +382,7 @@ test("previews and raised hand cards use exact card-image geometry", () => {
 
 test("cropped battlefield traits map to stable icon presentations", () => {
   assert.deepEqual(cardTraitIconPresentation("FLYING"), { kind: "flying", amount: undefined });
-  assert.deepEqual(cardTraitIconPresentation("DEATHTOUCH"), { kind: "lethal", amount: undefined });
+  assert.deepEqual(cardTraitIconPresentation("LETHAL"), { kind: "lethal", amount: undefined });
   assert.deepEqual(cardTraitIconPresentation("POISON_3"), { kind: "poison", amount: 3 });
   assert.deepEqual(cardTraitIconPresentation("UNKNOWN_TRAIT"), { kind: "fallback", amount: undefined });
 });
@@ -418,6 +424,42 @@ test("spent Sources do not become Stored Energy", () => {
   assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
+test("marked damage remains visible through the End phase and clears only when the turn passes", () => {
+  const game = createTestGame();
+  const playerEcho = addCard(game, customCard("end_phase_player_echo", "player", { power: 1, endurance: 1 }));
+  const hostEcho = addCard(game, customCard("end_phase_host_echo", "host", { endurance: 4 }));
+  playerEcho.damageMarked = 3;
+  hostEcho.damageMarked = 1;
+  playerEcho.temporaryPower = 3;
+  playerEcho.temporaryEndurance = 3;
+
+  const endPhase = advancePhase(game, "end");
+  const endPhasePlayerEcho = endPhase.player.field[0];
+
+  assert.equal(endPhasePlayerEcho.damageMarked, 3);
+  assert.equal(endPhase.host.field[0].damageMarked, 1);
+  assert.deepEqual(cardStatState(endPhase, endPhasePlayerEcho), {
+    text: "4/1",
+    power: 4,
+    endurance: 1,
+    damaged: true,
+    buffed: true,
+  });
+
+  const hostTurn = endPlayerTurn(endPhase);
+  const passedPlayerEcho = hostTurn.player.field[0];
+
+  assert.equal(passedPlayerEcho.damageMarked, 0);
+  assert.equal(hostTurn.host.field[0].damageMarked, 0);
+  assert.deepEqual(cardStatState(hostTurn, passedPlayerEcho), {
+    text: "1/1",
+    power: 1,
+    endurance: 1,
+    damaged: false,
+    buffed: false,
+  });
+});
+
 test("unused Energy from an earlier setup turn does not refill Stored Energy", () => {
   const game = createInitialGame(playerDeck, hostDeck, "setup-reserve", 2);
   const lands = addSources(game, 3);
@@ -438,13 +480,13 @@ test("unused Energy from an earlier setup turn does not refill Stored Energy", (
   assert.equal(nextPlayerTurn.player.energyPool.stored, 0);
 });
 
-test("First-Dew Gatherers and Keeper of the Sleeping Root fill Stored Energy immediately, then pending Source Energy appears after the Host", () => {
+test("Veiled-Dawn Flower and Liora, Keeper of the Grove fill Stored Energy immediately, then pending Source Energy appears after the Host", () => {
   const game = createTestGame();
   addSources(game, 1);
-  const gatherer = addCard(game, cardFromDeck("first_dew_gatherers", "player"));
-  const keeper = addCard(game, cardFromDeck("keeper_sleeping_root", "player"));
-  const afterGatherer = activateAbility(game, gatherer.instanceId, "first_dew_gatherers_gain_energy");
-  const afterAbilities = activateAbility(afterGatherer, keeper.instanceId, "keeper_sleeping_root_gain_energy");
+  const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player"));
+  const keeper = addCard(game, cardFromDeck("liora_keeper_of_the_grove", "player"));
+  const afterGatherer = activateAbility(game, gatherer.instanceId, "veiled_dawn_flower_gain_energy");
+  const afterAbilities = activateAbility(afterGatherer, keeper.instanceId, "liora_keeper_of_the_grove_gain_energy");
 
   const hostTurn = endPlayerTurn(afterAbilities);
   const nextPlayerTurn = finishHostTurn(hostTurn);
@@ -461,7 +503,7 @@ test("First-Dew Gatherers and Keeper of the Sleeping Root fill Stored Energy imm
 test("Stored Energy can pay a creature cost", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
-  const gatherer = addCard(game, cardFromDeck("first_dew_gatherers", "player", "hand"), "player", "hand");
+  const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player", "hand"), "player", "hand");
 
   const result = castCard(game, gatherer.instanceId);
 
@@ -473,10 +515,10 @@ test("Stored Energy can pay a creature cost", () => {
 test("Stored Energy is spent before manually generated Source Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
-  const spring = addCard(game, cardFromDeck("deep_root_spring", "player"));
-  const gatherer = addCard(game, cardFromDeck("first_dew_gatherers", "player", "hand"), "player", "hand");
+  const spring = addCard(game, cardFromDeck("river_of_elarion", "player"));
+  const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player", "hand"), "player", "hand");
 
-  const generated = activateAbility(game, spring.instanceId, "deep_root_spring_gain_energy");
+  const generated = activateAbility(game, spring.instanceId, "river_of_elarion_gain_energy");
   assert.deepEqual(generated.player.energyPool, { available: 1, stored: 1 });
 
   const result = castCard(generated, gatherer.instanceId);
@@ -538,7 +580,7 @@ test("an empty hand still draws only one during setup", () => {
 
 test("recycling puts an energy on the bottom, draws one, and uses the Energy action", () => {
   const game = createTestGame();
-  const energy = addCard(game, cardFromDeck("deep_root_spring", "player", "hand"), "player", "hand");
+  const energy = addCard(game, cardFromDeck("river_of_elarion", "player", "hand"), "player", "hand");
   const nextDraw = addCard(game, customCard("recycle_draw", "player", { zone: "archive" }), "player", "archive");
 
   const result = recycleEnergy(game, energy.instanceId);
@@ -551,8 +593,8 @@ test("recycling puts an energy on the bottom, draws one, and uses the Energy act
 
 test("playing or recycling an energy consumes the same once-per-turn action", () => {
   const game = createTestGame();
-  const playedEnergy = addCard(game, cardFromDeck("deep_root_spring", "player", "hand"), "player", "hand");
-  const blockedRecycle = addCard(game, cardFromDeck("deep_root_spring", "player", "hand"), "player", "hand");
+  const playedEnergy = addCard(game, cardFromDeck("river_of_elarion", "player", "hand"), "player", "hand");
+  const blockedRecycle = addCard(game, cardFromDeck("river_of_elarion", "player", "hand"), "player", "hand");
   addCard(game, customCard("would_be_drawn", "player", { zone: "archive" }), "player", "archive");
 
   const afterPlay = playLand(game, playedEnergy.instanceId);
@@ -566,14 +608,14 @@ test("playing or recycling an energy consumes the same once-per-turn action", ()
 test("energy cannot be recycled during setup and no more than four can be in play", () => {
   const setupGame = createTestGame();
   setupGame.setupTurnsRemaining = 1;
-  const setupEnergy = addCard(setupGame, cardFromDeck("deep_root_spring", "player", "hand"), "player", "hand");
+  const setupEnergy = addCard(setupGame, cardFromDeck("river_of_elarion", "player", "hand"), "player", "hand");
   const blockedDuringSetup = recycleEnergy(setupGame, setupEnergy.instanceId);
 
   assert.equal(blockedDuringSetup.player.hand.some((card) => card.instanceId === setupEnergy.instanceId), true);
 
   const cappedGame = createTestGame();
   addSources(cappedGame, 4);
-  const fifthEnergy = addCard(cappedGame, cardFromDeck("deep_root_spring", "player", "hand"), "player", "hand");
+  const fifthEnergy = addCard(cappedGame, cardFromDeck("river_of_elarion", "player", "hand"), "player", "hand");
   const blockedAtCap = playLand(cappedGame, fifthEnergy.instanceId);
 
   assert.equal(blockedAtCap.player.field.filter((card) => card.kinds.includes("SOURCE")).length, 4);
@@ -584,7 +626,7 @@ test("automatic payment spends Stored Energy first and preserves unused Sources 
   const game = createTestGame();
   game.player.energyPool.stored = 2;
   const lands = addSources(game, 3);
-  const energyEcho = addCard(game, cardFromDeck("first_dew_gatherers", "player"));
+  const energyEcho = addCard(game, cardFromDeck("veiled_dawn_flower", "player"));
   const spell = addCard(
     game,
     customCard("three_energy_spell", "player", {
@@ -614,8 +656,8 @@ test("automatic payment spends Stored Energy first and preserves unused Sources 
 test("Sanctuary of the Red Moon pays only the generic cost left after Stored Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
-  const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
-  const secondEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
+  const firstEnergy = addCard(game, cardFromDeck("sanctuary_of_the_red_moon", "player"));
+  const secondEnergy = addCard(game, cardFromDeck("sanctuary_of_the_red_moon", "player"));
   const spell = addCard(
     game,
     customCard("crimson_two_energy_spell", "player", {
@@ -689,7 +731,7 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   game.player.life = 11;
   addSources(game, 6);
   const page = addCard(game, cardFromDeck("blood_page", "player"));
-  const countess = addCard(game, cardFromDeck("eternal_feast_countess", "player", "hand"), "player", "hand");
+  const countess = addCard(game, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player", "hand"), "player", "hand");
 
   const result = castCard(game, countess.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === countess.instanceId);
@@ -708,7 +750,7 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
   addSources(lethal, 6);
   const blockedCountess = addCard(
     lethal,
-    cardFromDeck("eternal_feast_countess", "player", "hand"),
+    cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player", "hand"),
     "player",
     "hand",
   );
@@ -725,7 +767,7 @@ test("Countess pays half the player's life rounded up as an additional cost", ()
 test("Countess has Lifesteal while attacking but not while blocking", () => {
   const attack = createTestGame("countess-turn-lifesteal-attack");
   attack.player.life = 10;
-  const attackingCountess = addCard(attack, cardFromDeck("eternal_feast_countess", "player"));
+  const attackingCountess = addCard(attack, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
   attack.combat.playerAttackers = [attackingCountess.instanceId];
 
   assert.equal(hasTrait(attack, attackingCountess, "DRAIN"), true);
@@ -739,7 +781,7 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
     power: 2,
     endurance: 6,
   }));
-  const blockingCountess = addCard(defense, cardFromDeck("eternal_feast_countess", "player"));
+  const blockingCountess = addCard(defense, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
   defense.combat.hostAttackers = [attacker.instanceId];
   defense.combat.blockers = { [attacker.instanceId]: [blockingCountess.instanceId] };
 
@@ -754,10 +796,10 @@ test("Midnight Pact pays five life as an additional cost, draws two cards, and t
   game.player.life = 10;
   addSources(game, 1);
   const page = addCard(game, cardFromDeck("blood_page", "player"));
-  const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
-  addCard(game, customCard("blood_pact_draw_one", "player", { zone: "archive" }), "player", "archive");
-  addCard(game, customCard("blood_pact_draw_two", "player", { zone: "archive" }), "player", "archive");
-  addCard(game, customCard("blood_pact_library_tail", "player", { zone: "archive" }), "player", "archive");
+  const pact = addCard(game, cardFromDeck("midnight_pact", "player", "hand"), "player", "hand");
+  addCard(game, customCard("midnight_pact_draw_one", "player", { zone: "archive" }), "player", "archive");
+  addCard(game, customCard("midnight_pact_draw_two", "player", { zone: "archive" }), "player", "archive");
+  addCard(game, customCard("midnight_pact_library_tail", "player", { zone: "archive" }), "player", "archive");
 
   const result = castCard(game, pact.instanceId);
 
@@ -770,9 +812,9 @@ test("Midnight Pact pays five life as an additional cost, draws two cards, and t
   );
   assert.deepEqual(
     result.player.hand.map((card) => card.definitionId),
-    ["blood_pact_draw_one", "blood_pact_draw_two"],
+    ["midnight_pact_draw_one", "midnight_pact_draw_two"],
   );
-  assert.deepEqual(result.player.archive.map((card) => card.definitionId), ["blood_pact_library_tail"]);
+  assert.deepEqual(result.player.archive.map((card) => card.definitionId), ["midnight_pact_library_tail"]);
   assert.equal(result.player.memory.some((card) => card.instanceId === pact.instanceId), true);
 });
 
@@ -780,9 +822,9 @@ test("Midnight Pact cannot be cast when paying five life would reduce the player
   const game = createTestGame("blood-pact-lethal");
   game.player.life = 5;
   addSources(game, 1);
-  const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
-  addCard(game, customCard("blood_pact_lethal_draw_one", "player", { zone: "archive" }), "player", "archive");
-  addCard(game, customCard("blood_pact_lethal_draw_two", "player", { zone: "archive" }), "player", "archive");
+  const pact = addCard(game, cardFromDeck("midnight_pact", "player", "hand"), "player", "hand");
+  addCard(game, customCard("midnight_pact_lethal_draw_one", "player", { zone: "archive" }), "player", "archive");
+  addCard(game, customCard("midnight_pact_lethal_draw_two", "player", { zone: "archive" }), "player", "archive");
 
   const result = castCard(game, pact.instanceId);
 
@@ -833,9 +875,16 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   const cleaned = advancePhase(cast, "end");
   assert.deepEqual(
     getPowerEndurance(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId)),
+    { power: 4, endurance: 5 },
+  );
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), true);
+
+  const passed = endPlayerTurn(cleaned);
+  assert.deepEqual(
+    getPowerEndurance(passed, passed.player.field.find((card) => card.instanceId === ally.instanceId)),
     { power: 2, endurance: 3 },
   );
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
 });
 
 test("Crimson Impulse rejects an enemy target before spending Energy or life", () => {
@@ -862,7 +911,7 @@ test("Drain Essence can damage either side and always recovers two life", () => 
   const game = createTestGame("drain-essence-any-creature");
   game.player.life = 10;
   addSources(game, 2);
-  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
   const enemy = addCard(game, customCard("drain_essence_enemy", "host", { endurance: 3 }));
   const land = game.player.field.find((card) => card.kinds.includes("SOURCE"));
   const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
@@ -997,17 +1046,17 @@ test("Hunt Beneath the Red Moon grants temporary Lifesteal to every allied creat
   const game = createTestGame("predatory-thirst-attack");
   game.player.life = 10;
   addSources(game, 2);
-  const firstAlly = addCard(game, customCard("predatory_thirst_attacker_one", "player", {
+  const firstAlly = addCard(game, customCard("hunt_beneath_the_red_moon_attacker_one", "player", {
     power: 2,
     endurance: 3,
   }));
-  const secondAlly = addCard(game, customCard("predatory_thirst_attacker_two", "player", {
+  const secondAlly = addCard(game, customCard("hunt_beneath_the_red_moon_attacker_two", "player", {
     power: 1,
     endurance: 2,
   }));
-  const alliedSupport = addCard(game, customCard("predatory_thirst_support", "player", { kinds: ["SUPPORT"] }));
-  const enemy = addCard(game, customCard("predatory_thirst_enemy", "host"));
-  const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
+  const alliedSupport = addCard(game, customCard("hunt_beneath_the_red_moon_support", "player", { kinds: ["SUPPORT"] }));
+  const enemy = addCard(game, customCard("hunt_beneath_the_red_moon_enemy", "host"));
+  const thirst = addCard(game, cardFromDeck("hunt_beneath_the_red_moon", "player", "hand"), "player", "hand");
 
   assert.deepEqual(thirst.requiresTargets, []);
   const cast = castCard(game, thirst.instanceId);
@@ -1028,23 +1077,27 @@ test("Hunt Beneath the Red Moon grants temporary Lifesteal to every allied creat
   assert.equal(combat.player.life, 13);
 
   const cleaned = advancePhase(combat, "end");
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), true);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), true);
+
+  const passed = endPlayerTurn(cleaned);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
 });
 
 test("Hunt Beneath the Red Moon grants defensive Lifesteal without requiring a target", () => {
   const game = createTestGame("predatory-thirst-defense");
   game.player.life = 10;
   addSources(game, 2);
-  const ally = addCard(game, customCard("predatory_thirst_blocker", "player", {
+  const ally = addCard(game, customCard("hunt_beneath_the_red_moon_blocker", "player", {
     power: 2,
     endurance: 4,
   }));
-  const attacker = addCard(game, customCard("predatory_thirst_host_attacker", "host", {
+  const attacker = addCard(game, customCard("hunt_beneath_the_red_moon_host_attacker", "host", {
     power: 2,
     endurance: 4,
   }));
-  const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
+  const thirst = addCard(game, cardFromDeck("hunt_beneath_the_red_moon", "player", "hand"), "player", "hand");
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1065,19 +1118,19 @@ test("Verdict of the Eclipse destroys only a Host creature and loses its last kn
   game.player.life = 20;
   addSources(game, 3);
   const page = addCard(game, cardFromDeck("blood_page", "player"));
-  const ally = addCard(game, customCard("final_banquet_ally", "player"));
-  const target = addCard(game, customCard("final_banquet_target", "host", {
+  const ally = addCard(game, customCard("verdict_of_the_eclipse_ally", "player"));
+  const target = addCard(game, customCard("verdict_of_the_eclipse_target", "host", {
     power: 2,
     endurance: 5,
   }));
   target.counters["+1/+1"] = 1;
   target.temporaryPower = 2;
-  const nonCreature = addCard(game, customCard("final_banquet_enchantment", "host", {
+  const nonCreature = addCard(game, customCard("verdict_of_the_eclipse_enchantment", "host", {
     kinds: ["SUPPORT"],
     power: 0,
     endurance: 0,
   }));
-  const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+  const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
   const requirement = banquet.requiresTargets[0];
 
   assert.ok(requirement);
@@ -1105,8 +1158,8 @@ test("Verdict of the Eclipse rejects allied targets before paying Energy", () =>
   const game = createTestGame("final-banquet-invalid-target");
   game.player.life = 20;
   addSources(game, 3);
-  const ally = addCard(game, customCard("final_banquet_invalid_ally", "player"));
-  const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+  const ally = addCard(game, customCard("verdict_of_the_eclipse_invalid_ally", "player"));
+  const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
 
   const result = castCard(game, banquet.instanceId, {
     targets: { targetCreature: ally.instanceId },
@@ -1122,11 +1175,11 @@ test("Verdict of the Eclipse can be cast during Host combat as an Instant", () =
   const game = createTestGame("final-banquet-instant");
   game.player.life = 20;
   addSources(game, 3);
-  const attacker = addCard(game, customCard("final_banquet_attacker", "host", {
+  const attacker = addCard(game, customCard("verdict_of_the_eclipse_attacker", "host", {
     power: 2,
     endurance: 4,
   }));
-  const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+  const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1145,11 +1198,11 @@ test("Verdict of the Eclipse can cause a lethal life loss after destroying its t
   const game = createTestGame("final-banquet-lethal-loss");
   game.player.life = 4;
   addSources(game, 3);
-  const target = addCard(game, customCard("final_banquet_lethal_target", "host", {
+  const target = addCard(game, customCard("verdict_of_the_eclipse_lethal_target", "host", {
     power: 4,
     endurance: 4,
   }));
-  const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+  const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
 
   const result = castCard(game, banquet.instanceId, {
     targets: { targetCreature: target.instanceId },
@@ -1164,9 +1217,9 @@ test("Verdict of the Eclipse preserves Host death triggers after the destruction
   const game = createTestGame("final-banquet-death-trigger");
   game.player.life = 20;
   addSources(game, 3);
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
 
   const result = castCard(game, banquet.instanceId, {
     targets: { targetCreature: caller.instanceId },
@@ -1174,7 +1227,7 @@ test("Verdict of the Eclipse preserves Host death triggers after the destruction
 
   assert.equal(result.player.life, 19);
   assert.equal(result.host.memory.some((card) => card.instanceId === caller.instanceId), true);
-  assert.equal(result.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
+  assert.equal(result.host.field.filter((card) => card.definitionId === "varkas_minion").length, 1);
   assert.equal(result.host.archive.length, 0);
 });
 
@@ -1281,9 +1334,9 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
 test("Midnight Collector exhausts and pays five life to generate one stored Energy", () => {
   const game = createTestGame();
   game.player.life = 10;
-  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+  const acolyte = addCard(game, cardFromDeck("midnight_collector", "player"));
 
-  const result = activateAbility(game, acolyte.instanceId, "tithe_acolyte_generate");
+  const result = activateAbility(game, acolyte.instanceId, "midnight_collector_generate");
   const activated = result.player.field.find((card) => card.instanceId === acolyte.instanceId);
 
   assert.equal(result.lastActionResult?.ok, true);
@@ -1296,9 +1349,9 @@ test("Midnight Collector exhausts and pays five life to generate one stored Ener
   const fullReserve = createTestGame();
   fullReserve.player.life = 10;
   fullReserve.player.energyPool.stored = 3;
-  const blockedAcolyte = addCard(fullReserve, cardFromDeck("tithe_acolyte", "player"));
+  const blockedAcolyte = addCard(fullReserve, cardFromDeck("midnight_collector", "player"));
 
-  const blocked = activateAbility(fullReserve, blockedAcolyte.instanceId, "tithe_acolyte_generate");
+  const blocked = activateAbility(fullReserve, blockedAcolyte.instanceId, "midnight_collector_generate");
   const unchanged = blocked.player.field.find((card) => card.instanceId === blockedAcolyte.instanceId);
 
   assert.equal(blocked.lastActionResult?.ok, false);
@@ -1312,10 +1365,10 @@ test("Midnight Collector exhausts and pays five life to generate one stored Ener
 test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the next player turn", () => {
   const freshGame = createTestGame();
   freshGame.player.life = 10;
-  const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
+  const freshDuelist = addCard(freshGame, cardFromDeck("duelist_of_the_eclipse", "player"));
   freshDuelist.stabilizing = true;
 
-  const blockedBySickness = activateAbility(freshGame, freshDuelist.instanceId, "court_duelist_blood_rush");
+  const blockedBySickness = activateAbility(freshGame, freshDuelist.instanceId, "duelist_of_the_eclipse_blood_rush");
   const unchangedFreshDuelist = blockedBySickness.player.field.find((card) => card.instanceId === freshDuelist.instanceId);
 
   assert.equal(blockedBySickness.lastActionResult?.ok, false);
@@ -1326,9 +1379,9 @@ test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the
 
   const game = createTestGame();
   game.player.life = 10;
-  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+  const duelist = addCard(game, cardFromDeck("duelist_of_the_eclipse", "player"));
 
-  const buffed = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+  const buffed = activateAbility(game, duelist.instanceId, "duelist_of_the_eclipse_blood_rush");
   const activeDuelist = buffed.player.field.find((card) => card.instanceId === duelist.instanceId);
 
   assert.equal(buffed.lastActionResult?.ok, true);
@@ -1338,7 +1391,7 @@ test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the
   assert.equal(activeDuelist?.activatedThisTurn, true);
   assert.deepEqual(getPowerEndurance(buffed, activeDuelist), { power: 6, endurance: 4 });
 
-  const repeated = activateAbility(buffed, duelist.instanceId, "court_duelist_blood_rush");
+  const repeated = activateAbility(buffed, duelist.instanceId, "duelist_of_the_eclipse_blood_rush");
   assert.equal(repeated.lastActionResult?.ok, false);
   assert.equal(repeated.player.life, 7);
   assert.equal(repeated.player.lifePaidThisTurn, 3);
@@ -1352,7 +1405,7 @@ test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the
     getPowerEndurance(hostTurn, hostTurn.player.field.find((card) => card.instanceId === duelist.instanceId)),
     { power: 6, endurance: 4 },
   );
-  const attacker = addCard(hostTurn, customCard("court_duelist_defended_attacker", "host", {
+  const attacker = addCard(hostTurn, customCard("duelist_of_the_eclipse_defended_attacker", "host", {
     power: 1,
     endurance: 6,
   }));
@@ -1369,7 +1422,7 @@ test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the
   assert.equal(readyDuelist?.activatedThisTurn, false);
   assert.deepEqual(getPowerEndurance(nextTurn, readyDuelist), { power: 3, endurance: 3 });
 
-  const usedAgain = activateAbility(nextTurn, duelist.instanceId, "court_duelist_blood_rush");
+  const usedAgain = activateAbility(nextTurn, duelist.instanceId, "duelist_of_the_eclipse_blood_rush");
   assert.equal(usedAgain.lastActionResult?.ok, true);
   assert.equal(usedAgain.player.life, 4);
   assert.equal(usedAgain.player.lifePaidThisTurn, 3);
@@ -1377,7 +1430,7 @@ test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the
 
 test("Kaelor grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
   const game = createTestGame("arven-first-packmate");
-  const kaelor = addCard(game, cardFromDeck("arven_first_pack", "player"));
+  const kaelor = addCard(game, cardFromDeck("kaelor_stormcaller", "player"));
 
   const invokeAlly = (definitionId) => {
     const ally = addCard(game, customCard(definitionId, "player"));
@@ -1412,10 +1465,10 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   game.player.life = 20;
   const firstPage = addCard(game, cardFromDeck("blood_page", "player"));
   const secondPage = addCard(game, cardFromDeck("blood_page", "player"));
-  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
-  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+  const duelist = addCard(game, cardFromDeck("duelist_of_the_eclipse", "player"));
+  const acolyte = addCard(game, cardFromDeck("midnight_collector", "player"));
 
-  const firstPayment = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+  const firstPayment = activateAbility(game, duelist.instanceId, "duelist_of_the_eclipse_blood_rush");
 
   for (const page of [firstPage, secondPage]) {
     const current = firstPayment.player.field.find((card) => card.instanceId === page.instanceId);
@@ -1424,7 +1477,7 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   }
 
   const latePage = addCard(firstPayment, cardFromDeck("blood_page", "player"));
-  const secondPayment = activateAbility(firstPayment, acolyte.instanceId, "tithe_acolyte_generate");
+  const secondPayment = activateAbility(firstPayment, acolyte.instanceId, "midnight_collector_generate");
 
   assert.equal(secondPayment.player.life, 12);
   assert.equal(secondPayment.player.lifePaidThisTurn, 8);
@@ -1434,8 +1487,12 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   assert.equal(secondPayment.player.field.find((card) => card.instanceId === latePage.instanceId)?.temporaryPower, 0);
 
   const cleaned = advancePhase(secondPayment, "end");
-  assert.equal(cleaned.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
-  assert.equal(cleaned.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
+  assert.equal(cleaned.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 2);
+  assert.equal(cleaned.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 2);
+
+  const passedTurn = endPlayerTurn(cleaned);
+  assert.equal(passedTurn.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
+  assert.equal(passedTurn.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
 
   const defense = createTestGame();
   defense.player.life = 10;
@@ -1474,10 +1531,10 @@ test("Blood Page does not trigger from the first life loss while exhausted", () 
   game.player.life = 20;
   const exhaustedPage = addCard(game, cardFromDeck("blood_page", "player"));
   const readyPage = addCard(game, cardFromDeck("blood_page", "player"));
-  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+  const duelist = addCard(game, cardFromDeck("duelist_of_the_eclipse", "player"));
   exhaustedPage.exhausted = true;
 
-  const result = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush");
+  const result = activateAbility(game, duelist.instanceId, "duelist_of_the_eclipse_blood_rush");
 
   assert.equal(result.lastActionResult?.ok, true);
   assert.equal(
@@ -1533,9 +1590,9 @@ test("player triggers can stay queued and resolve one source at a time for prese
   game.player.life = 20;
   const firstPage = addCard(game, cardFromDeck("blood_page", "player"));
   const secondPage = addCard(game, cardFromDeck("blood_page", "player"));
-  const duelist = addCard(game, cardFromDeck("court_duelist", "player"));
+  const duelist = addCard(game, cardFromDeck("duelist_of_the_eclipse", "player"));
 
-  const deferred = activateAbility(game, duelist.instanceId, "court_duelist_blood_rush", {
+  const deferred = activateAbility(game, duelist.instanceId, "duelist_of_the_eclipse_blood_rush", {
     deferReactiveTriggers: true,
   });
   const queuedLifeLoss = deferred.eventQueue.find((event) => event.type === "LIFE_LOST");
@@ -1589,11 +1646,11 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
-test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary buff", () => {
+test("Elixir de la Primera Hoja keeps +3/+3 through End and loses it when the turn passes", () => {
   const game = createTestGame();
   addSources(game, 1);
   const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
-  const spell = addCard(game, cardFromDeck("first_tree_sap", "player", "hand"), "player", "hand");
+  const spell = addCard(game, cardFromDeck("elixir_of_the_first_leaf", "player", "hand"), "player", "hand");
 
   const cast = castCard(game, spell.instanceId, { targets: { targetCreature: creature.instanceId } });
   const buffed = cast.player.field.find((card) => card.instanceId === creature.instanceId);
@@ -1602,17 +1659,21 @@ test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary 
   assert.equal(cast.player.memory.some((card) => card.instanceId === spell.instanceId), true);
 
   const cleaned = advancePhase(cast, "end");
-  const restored = cleaned.player.field.find((card) => card.instanceId === creature.instanceId);
-  assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
+  const endPhaseCreature = cleaned.player.field.find((card) => card.instanceId === creature.instanceId);
+  assert.deepEqual(getPowerEndurance(cleaned, endPhaseCreature), { power: 5, endurance: 5 });
+
+  const passed = endPlayerTurn(cleaned);
+  const restored = passed.player.field.find((card) => card.instanceId === creature.instanceId);
+  assert.deepEqual(getPowerEndurance(passed, restored), { power: 2, endurance: 2 });
 });
 
 test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
   const game = createTestGame();
   addSources(game, 3);
-  const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
+  const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
   const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
-  const spell = addCard(game, cardFromDeck("roots_touched_sky", "player", "hand"), "player", "hand");
+  const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
   const candidateIds = targetCandidates(game, "player", requirement).map((card) => card.instanceId);
@@ -1630,7 +1691,7 @@ test("Choque de Ecos deals source power and preserves deathtouch for death clean
   addSources(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
   const target = addCard(game, customCard("large_target", "host", { power: 0, endurance: 8 }));
-  const spell = addCard(game, cardFromDeck("marked_prey", "player", "hand"), "player", "hand");
+  const spell = addCard(game, cardFromDeck("clash_of_echoes", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
     targets: { sourceCreature: source.instanceId, damageTarget: target.instanceId },
@@ -1648,7 +1709,7 @@ test("Escudo de la Heredera buffs first, then both creatures deal simultaneous d
   addSources(game, 2);
   const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
   const enemy = addCard(game, customCard("enemy_fighter", "host", { power: 3, endurance: 3 }));
-  const spell = addCard(game, cardFromDeck("oath_clearing", "player", "hand"), "player", "hand");
+  const spell = addCard(game, cardFromDeck("shield_of_the_heir", "player", "hand"), "player", "hand");
 
   const result = castCard(game, spell.instanceId, {
     targets: { yourCreature: friendly.instanceId, opponentCreature: enemy.instanceId },
@@ -1665,8 +1726,13 @@ test("Escudo de la Heredera buffs first, then both creatures deal simultaneous d
 
   const cleaned = advancePhase(result, "end");
   const restoredFriendly = cleaned.player.field.find((card) => card.instanceId === friendly.instanceId);
-  assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 2, endurance: 2 });
-  assert.equal(restoredFriendly.damageMarked, 0);
+  assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 3, endurance: 4 });
+  assert.equal(restoredFriendly.damageMarked, 3);
+
+  const hostTurn = endPlayerTurn(cleaned);
+  const passedFriendly = hostTurn.player.field.find((card) => card.instanceId === friendly.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, passedFriendly), { power: 2, endurance: 2 });
+  assert.equal(passedFriendly?.damageMarked, 0);
 });
 
 test("Escudo de la Heredera can stage its buff before the deferred fight impact", () => {
@@ -1674,7 +1740,7 @@ test("Escudo de la Heredera can stage its buff before the deferred fight impact"
   addSources(game, 2);
   const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
   const enemy = addCard(game, customCard("staged_enemy_fighter", "host", { power: 1, endurance: 5 }));
-  const spell = addCard(game, cardFromDeck("oath_clearing", "player", "hand"), "player", "hand");
+  const spell = addCard(game, cardFromDeck("shield_of_the_heir", "player", "hand"), "player", "hand");
   const targets = {
     yourCreature: friendly.instanceId,
     opponentCreature: enemy.instanceId,
@@ -1704,7 +1770,7 @@ test("Escudo de la Heredera can stage its buff before the deferred fight impact"
 test("Aelyra can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addSources(game, 1);
-  const iria = addCard(game, cardFromDeck("iria_voice_last_rain", "player", "hand"), "player", "hand");
+  const iria = addCard(game, cardFromDeck("aelyra_heir_of_elarion", "player", "hand"), "player", "hand");
 
   const result = castCard(game, iria.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === iria.instanceId);
@@ -1718,13 +1784,13 @@ test("Aelyra can target herself, adds one counter, and gains three Life", () => 
 
   assert.equal(permanent.counters["+1/+1"], 1);
   assert.equal(result.player.life, 33);
-  assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(result, permanent), { power: 2, endurance: 3 });
 });
 
 test("The Broken Headstone grants Menace only while it remains on the battlefield", () => {
   const game = createTestGame();
-  const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
-  const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));
+  const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const zombie = addCard(game, cardFromDeck("graveless_soldier", "host"));
   const nonZombie = addCard(game, customCard("host_non_zombie", "host"));
 
   assert.equal(hasTrait(game, zombie, "DAUNTING"), true);
@@ -1736,7 +1802,7 @@ test("The Broken Headstone grants Menace only while it remains on the battlefiel
 
 test("Toxic adds poison on player combat and every three poison mills one card", () => {
   const game = createTestGame();
-  const basilisk = addCard(game, cardFromDeck("black_sap_stalker", "player"));
+  const basilisk = addCard(game, cardFromDeck("hydra_of_the_black_bough", "player"));
   for (let index = 0; index < 3; index += 1) {
     addCard(game, customCard(`host_library_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
@@ -1754,23 +1820,23 @@ test("Toxic adds poison on player combat and every three poison mills one card",
 });
 
 test("El Pacto de Elarion growth cards select the intended presentation intensity", () => {
-  assert.equal(buffAnimationVariantForCard("iria_voice_last_rain"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("arven_first_pack"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("first_tree_sap"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("oath_clearing"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("oath_clearing", true), "growth-preview");
-  assert.equal(buffAnimationVariantForCard("predatory_thirst"), "default");
+  assert.equal(buffAnimationVariantForCard("aelyra_heir_of_elarion"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("elixir_of_the_first_leaf"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("shield_of_the_heir"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("shield_of_the_heir", true), "growth-preview");
+  assert.equal(buffAnimationVariantForCard("hunt_beneath_the_red_moon"), "default");
 });
 
 test("only organic branch buffs replace the player's default buff audio", () => {
-  assert.equal(playerBuffSfxForAnimation("growth-strong"), "lastRainBuff");
-  assert.equal(playerBuffSfxForAnimation("growth-soft"), "lastRainBuff");
+  assert.equal(playerBuffSfxForAnimation("growth-strong"), "pactOfElarionBuff");
+  assert.equal(playerBuffSfxForAnimation("growth-soft"), "pactOfElarionBuff");
   assert.equal(playerBuffSfxForAnimation("default"), "buff");
 });
 
 test("animated Toxic lands at its attack impact and is not applied twice at combat cleanup", () => {
   const game = createTestGame("toxic-player-impact");
-  const basilisk = addCard(game, cardFromDeck("black_sap_stalker", "player"));
+  const basilisk = addCard(game, cardFromDeck("hydra_of_the_black_bough", "player"));
   game.combat.playerAttackers = [basilisk.instanceId];
 
   const animatedImpact = resolvePlayerAttackerPoison(game, basilisk.instanceId);
@@ -1785,7 +1851,7 @@ test("animated Toxic lands at its attack impact and is not applied twice at comb
 test("Lifesteal restores the combat damage a player attacker deals to the Host", () => {
   const game = createTestGame("lifesteal-player-attack");
   game.player.life = 10;
-  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
   bat.temporaryPower = 2;
   game.combat.playerAttackers = [bat.instanceId];
 
@@ -1800,6 +1866,20 @@ test("Lifesteal restores the combat damage a player attacker deals to the Host",
   assert.equal(animatedResult.combat.playerAttackers.length, 0);
 });
 
+test("selected player attackers preview only the Drain life they will recover", () => {
+  const game = createTestGame("lifesteal-player-preview");
+  const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
+  const countess = addCard(game, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
+  const ordinaryAttacker = addCard(game, customCard("ordinary_preview_attacker", "player", { power: 7 }));
+  bat.temporaryPower = 2;
+  game.combat.playerAttackers = [bat.instanceId, countess.instanceId, ordinaryAttacker.instanceId];
+
+  assert.equal(previewPlayerAttackDrain(game), 9);
+
+  game.combat.playerAttackers = [ordinaryAttacker.instanceId];
+  assert.equal(previewPlayerAttackDrain(game), 0);
+});
+
 test("Lifesteal resolves on a blocking impact, including simultaneous lethal combat", () => {
   const game = createTestGame("lifesteal-blocking");
   game.player.life = 10;
@@ -1807,7 +1887,7 @@ test("Lifesteal resolves on a blocking impact, including simultaneous lethal com
     power: 2,
     endurance: 2,
   }));
-  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1831,7 +1911,7 @@ test("Lifesteal gains nothing when first strike kills the blocker before it deal
     power: 2,
     endurance: 2,
   }));
-  const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+  const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1853,8 +1933,8 @@ test("Guardian of the Night Threshold reacts only when that Guardian survives co
     power: 1,
     endurance: 2,
   }));
-  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  const idleGuardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
+  const idleGuardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1890,7 +1970,7 @@ test("Guardian of the Night Threshold does not react when the damage event kills
     power: 4,
     endurance: 4,
   }));
-  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+  const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
   game.activeSide = "host";
   game.phase = "combat";
   game.combat.hostAttackers = [attacker.instanceId];
@@ -1912,8 +1992,8 @@ test("Guardian of the Night Threshold does not react when the damage event kills
 test("Guardian of the Night Threshold reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
   const game = createTestGame("crypt-guardian-unlimited-goblin-damage");
   game.player.life = 10;
-  const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
-  const goblin = addCard(game, customCard("crypt_guardian_burn_goblin", "host", {
+  const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
+  const goblin = addCard(game, customCard("guardian_of_the_night_threshold_burn_goblin", "host", {
     subtypes: ["Goblin"],
   }));
   for (let index = 0; index < 2; index += 1) {
@@ -1963,55 +2043,60 @@ test("Host reveal stops at a non-token and Surge adds exactly two reveals", () =
   assert.equal(surgeResult.host.archive.length, 0);
 });
 
-test("Goblin static lords and War Drums apply only to the intended Host creatures", () => {
+test("Legion static buffs and the Daunting Front apply to their authored Host Echoes", () => {
   const game = createTestGame("goblin-static-effects");
-  const foreman = addCard(game, cardFromDeck("burning_tally_foreman", "host"));
-  const warDrums = addCard(game, cardFromDeck("shift_hammer", "host"));
-  const goblin = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  const foreman = addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host"));
+  const dauntingFront = addCard(game, cardFromDeck("the_daunting_front", "host"));
+  const goblin = addCard(game, cardFromDeck("varkas_minion", "host"));
   const nonGoblin = addCard(game, customCard("not_a_goblin", "host", { power: 2, endurance: 2 }));
+  const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
 
-  assert.deepEqual(getPowerEndurance(game, foreman), { power: 2, endurance: 3 });
-  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
-  assert.deepEqual(getPowerEndurance(game, nonGoblin), { power: 2, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(game, foreman), { power: 3, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 3, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(game, nonGoblin), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, varka), { power: 5, endurance: 5 });
   assert.equal(hasTrait(game, goblin, "DAUNTING"), true);
   assert.equal(hasTrait(game, nonGoblin, "DAUNTING"), true);
 
-  destroyPermanent(game, warDrums);
+  destroyPermanent(game, varka);
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
+
+  destroyPermanent(game, dauntingFront);
   assert.equal(hasTrait(game, goblin, "DAUNTING"), false);
 });
 
-test("Foreman of the Burning Tally burns for Goblins that entered this Host turn", () => {
+test("Shaman of the Umbral Ember burns for every Echo Invoked this Host turn", () => {
   const game = createTestGame("foreman-entered-goblins");
   const target = addCard(game, customCard("foreman_burn_target", "player", { endurance: 8 }));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  addCard(game, cardFromDeck("burning_tally_foreman", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host", "archive"), "host", "archive");
 
   const firstTurn = runHostMain(game);
   assert.equal(firstTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 3);
 
-  addCard(firstTurn, cardFromDeck("burning_tally_foreman", "host", "archive"), "host", "archive");
+  addCard(firstTurn, cardFromDeck("shaman_of_the_umbral_ember", "host", "archive"), "host", "archive");
   const secondTurn = runHostMain(firstTurn);
   assert.equal(secondTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 4);
 });
 
-test("Chief of the Double Guard and Foreman of Three Furnaces create their Goblin tokens on entry", () => {
+test("Chief of the Double Guard and Rider of the Third Charge create their Goblin tokens on entry", () => {
   const doubleCrewBossGame = createTestGame("doubleCrewBoss-entry");
-  const doubleCrewBoss = addCard(doubleCrewBossGame, cardFromDeck("double_crew_boss", "host"));
+  const doubleCrewBoss = addCard(doubleCrewBossGame, cardFromDeck("chief_of_the_double_guard", "host"));
   runInvokedTriggers(doubleCrewBossGame, doubleCrewBoss);
   drainEventQueue(doubleCrewBossGame);
-  assert.equal(doubleCrewBossGame.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 2);
+  assert.equal(doubleCrewBossGame.host.field.filter((card) => card.definitionId === "varkas_minion").length, 2);
 
   const threeFurnacesGame = createTestGame("three-furnaces-entry");
-  const threeFurnacesForeman = addCard(threeFurnacesGame, cardFromDeck("three_furnaces_foreman", "host"));
+  const threeFurnacesForeman = addCard(threeFurnacesGame, cardFromDeck("rider_of_the_third_charge", "host"));
   runInvokedTriggers(threeFurnacesGame, threeFurnacesForeman);
   drainEventQueue(threeFurnacesGame);
-  assert.equal(threeFurnacesGame.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 3);
+  assert.equal(threeFurnacesGame.host.field.filter((card) => card.definitionId === "varkas_minion").length, 3);
 });
 
 test("Inexhaustible Ossuary reacts once to each non-token card played and ignores tokens", () => {
   const game = createTestGame("gallows-card-played");
-  const mob = addCard(game, cardFromDeck("five_knot_gallows", "host"));
+  const mob = addCard(game, cardFromDeck("inexhaustible_ossuary", "host"));
 
   for (const sourceId of ["player-non-token", "host-non-token"]) {
     enqueue(game, { type: "CARD_PLAYED", sourceId, payload: { nonToken: true } });
@@ -2021,30 +2106,30 @@ test("Inexhaustible Ossuary reacts once to each non-token card played and ignore
   drainEventQueue(game);
 
   assert.equal(mob.counters["+1/+1"], 3);
-  assert.equal(game.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "graveless_soldier").length, 2);
 });
 
 test("Inexhaustible Ossuary observes real Chronicler plays and Host reveals exactly once", () => {
   const game = createTestGame("gallows-real-play-paths");
-  addCard(game, cardFromDeck("five_knot_gallows", "host"));
+  addCard(game, cardFromDeck("inexhaustible_ossuary", "host"));
   const spell = addCard(game, customCard("gallows_test_spell", "player", {
     zone: "hand",
     kinds: ["SPELL"],
   }), "player", "hand");
 
   const afterSpell = castCard(game, spell.instanceId);
-  assert.equal(afterSpell.host.field.find((card) => card.definitionId === "five_knot_gallows")?.counters["+1/+1"], 4);
-  assert.equal(afterSpell.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 1);
+  assert.equal(afterSpell.host.field.find((card) => card.definitionId === "inexhaustible_ossuary")?.counters["+1/+1"], 4);
+  assert.equal(afterSpell.host.field.filter((card) => card.definitionId === "graveless_soldier").length, 1);
 
   addCard(afterSpell, customCard("gallows_host_reveal", "host", { zone: "archive" }), "host", "archive");
   const afterReveal = revealHostCardFromTop(afterSpell);
-  assert.equal(afterReveal.host.field.find((card) => card.definitionId === "five_knot_gallows")?.counters["+1/+1"], 3);
-  assert.equal(afterReveal.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
+  assert.equal(afterReveal.host.field.find((card) => card.definitionId === "inexhaustible_ossuary")?.counters["+1/+1"], 3);
+  assert.equal(afterReveal.host.field.filter((card) => card.definitionId === "graveless_soldier").length, 2);
 });
 
 test("Return to Memory discards two Host Archive cards when Invoked and two more when it dies", () => {
   const game = createTestGame("crow-archive-discard");
-  const crow = addCard(game, cardFromDeck("archive_carrion_crow", "host"));
+  const crow = addCard(game, cardFromDeck("return_to_memory", "host"));
   for (let index = 0; index < 4; index += 1) {
     addCard(game, customCard(`crow_archive_${index}`, "host", { zone: "archive" }), "host", "archive");
   }
@@ -2072,7 +2157,7 @@ test("destroying a Support does not emit Echo death events", () => {
 
 test("Memory threshold effects turn on exactly at seven Host cards", () => {
   const game = createTestGame("memory-threshold");
-  const seventhMemoryHound = addCard(game, cardFromDeck("seventh_memory_hound", "host"));
+  const seventhMemoryHound = addCard(game, cardFromDeck("hound_of_seven_memories", "host"));
   for (let index = 0; index < 6; index += 1) {
     addCard(game, customCard(`memory_card_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
@@ -2085,9 +2170,9 @@ test("Memory threshold effects turn on exactly at seven Host cards", () => {
   assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), true);
 });
 
-test("Foreman of Three Furnaces and Rear-Guard Firebreather omit their sacrifice modes", () => {
-  const threeFurnacesForeman = cardFromDeck("three_furnaces_foreman", "host");
-  const gunner = cardFromDeck("last_rivets_gunner", "host");
+test("Rider of the Third Charge and Rear-Guard Firebreather omit their sacrifice modes", () => {
+  const threeFurnacesForeman = cardFromDeck("rider_of_the_third_charge", "host");
+  const gunner = cardFromDeck("rear_guard_firebreather", "host");
 
   assert.deepEqual(threeFurnacesForeman.activatedAbilities, []);
   assert.deepEqual(gunner.activatedAbilities, []);
@@ -2095,17 +2180,17 @@ test("Foreman of Three Furnaces and Rear-Guard Firebreather omit their sacrifice
 
 test("Unleash the Legion! pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
-  const firstGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
-  const secondGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
-  addCard(pumpGame, cardFromDeck("open_another_gate", "host", "archive"), "host", "archive");
+  const firstGoblin = addCard(pumpGame, cardFromDeck("varkas_minion", "host"));
+  const secondGoblin = addCard(pumpGame, cardFromDeck("varkas_minion", "host"));
+  addCard(pumpGame, cardFromDeck("unleash_the_legion", "host", "archive"), "host", "archive");
 
   const pumped = runHostMain(pumpGame);
   assert.equal(pumped.host.field.find((card) => card.instanceId === firstGoblin.instanceId)?.temporaryPower, 2);
   assert.equal(pumped.host.field.find((card) => card.instanceId === secondGoblin.instanceId)?.temporaryPower, 2);
 
   const animatedPumpGame = createTestGame("goblin-surprise-animated-pump");
-  const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("ember_scrap_runner", "host"));
-  addCard(animatedPumpGame, cardFromDeck("open_another_gate", "host", "archive"), "host", "archive");
+  const animatedGoblin = addCard(animatedPumpGame, cardFromDeck("varkas_minion", "host"));
+  addCard(animatedPumpGame, cardFromDeck("unleash_the_legion", "host", "archive"), "host", "archive");
 
   const pendingPump = runHostMain(animatedPumpGame, { deferInvokedTriggers: true });
   assert.equal(pendingPump.host.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 0);
@@ -2117,23 +2202,24 @@ test("Unleash the Legion! pumps an existing army or starts another normal reveal
   assert.equal(pendingPump.host.field.find((card) => card.instanceId === animatedGoblin.instanceId)?.temporaryPower, 2);
 
   const revealGame = createTestGame("goblin-surprise-reveal");
-  addCard(revealGame, cardFromDeck("open_another_gate", "host", "archive"), "host", "archive");
+  addCard(revealGame, cardFromDeck("unleash_the_legion", "host", "archive"), "host", "archive");
   for (let index = 0; index < 4; index += 1) {
-    addCard(revealGame, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
+    addCard(revealGame, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
   }
 
   const revealResult = runHostMain(revealGame);
-  assert.equal(revealResult.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 3);
-  assert.equal(revealResult.host.archive.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
+  assert.equal(revealResult.host.field.filter((card) => card.definitionId === "varkas_minion").length, 3);
+  assert.equal(revealResult.host.archive.filter((card) => card.definitionId === "varkas_minion").length, 1);
   assert.equal(revealResult.hostTurnNumber, 1, "the extra reveal is part of the same Host turn");
 });
 
-test("Master of the Slag Volley damages a chosen opposing creature equal to the Host's Goblin count", () => {
+test("Rider of the Umbral Volley counts every allied Echo on the Field, including itself", () => {
   const game = createTestGame("volley-veteran-entry");
-  const fragile = addCard(game, customCard("volley_target", "player", { endurance: 2 }));
+  const fragile = addCard(game, customCard("volley_target", "player", { endurance: 3 }));
   const sturdy = addCard(game, customCard("volley_survivor", "player", { endurance: 4 }));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host"));
-  const veteran = addCard(game, cardFromDeck("slag_volley_master", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host"));
+  addCard(game, cardFromDeck("corrupted_war_bear", "host"));
+  const veteran = addCard(game, cardFromDeck("rider_of_the_umbral_volley", "host"));
 
   runInvokedTriggers(game, veteran);
   drainEventQueue(game);
@@ -2144,10 +2230,10 @@ test("Master of the Slag Volley damages a chosen opposing creature equal to the 
 
 test("Varka's Linebreaker creates its combat token before Host attackers are declared", () => {
   const game = createTestGame("rabblemaster-combat-token");
-  const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
+  const rabblemaster = addCard(game, cardFromDeck("varkas_linebreaker", "host"));
 
   const result = prepareHostAttackers(game);
-  const tokens = result.host.field.filter((card) => card.definitionId === "ember_scrap_runner");
+  const tokens = result.host.field.filter((card) => card.definitionId === "varkas_minion");
 
   assert.equal(tokens.length, 1);
   assert.deepEqual(new Set(result.combat.hostAttackers), new Set([rabblemaster.instanceId, tokens[0].instanceId]));
@@ -2158,12 +2244,12 @@ test("Goblin token waves attack in chronological visual order", () => {
   const game = createTestGame("goblin-wave-attack-order");
   const firstWave = Array.from(
     { length: 4 },
-    () => addCard(game, cardFromDeck("ember_scrap_runner", "host")),
+    () => addCard(game, cardFromDeck("varkas_minion", "host")),
   );
-  const creatureBetweenWaves = addCard(game, cardFromDeck("burning_tally_foreman", "host"));
+  const creatureBetweenWaves = addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host"));
   const secondWave = Array.from(
     { length: 2 },
-    () => addCard(game, cardFromDeck("ember_scrap_runner", "host")),
+    () => addCard(game, cardFromDeck("varkas_minion", "host")),
   );
 
   const result = prepareHostAttackers(game);
@@ -2178,7 +2264,7 @@ test("Goblin token waves attack in chronological visual order", () => {
 test("Host attackers follow summon order instead of regrouping identical definitions", () => {
   const game = createTestGame("host-summon-order");
   const firstCopy = addCard(game, customCard("repeated_raider", "host", { subtypes: ["Goblin"] }));
-  const summonedBetween = addCard(game, cardFromDeck("burning_tally_foreman", "host"));
+  const summonedBetween = addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host"));
   const secondCopy = addCard(game, customCard("repeated_raider", "host", { subtypes: ["Goblin"] }));
 
   const result = prepareHostAttackers(game);
@@ -2192,41 +2278,41 @@ test("Host attackers follow summon order instead of regrouping identical definit
 
 test("Varka's Linebreaker counts every other attacking Goblin after attack tokens enter", () => {
   const game = createTestGame("rabblemaster-attack-buff");
-  const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
-  addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  const rabblemaster = addCard(game, cardFromDeck("varkas_linebreaker", "host"));
+  addCard(game, cardFromDeck("marshal_of_the_wave", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host"));
 
   const result = prepareHostAttackers(game);
   const currentRabblemaster = result.host.field.find((card) => card.instanceId === rabblemaster.instanceId);
 
   assert.ok(currentRabblemaster);
   assert.equal(result.combat.hostAttackers.length, 5);
-  assert.deepEqual(getPowerEndurance(result, currentRabblemaster), { power: 6, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(result, currentRabblemaster), { power: 5, endurance: 2 });
 });
 
-test("Open-Furnace Crier gives Host Goblins +1/+0 until end of turn on entry", () => {
+test("Varka's Standard-Bearer gives allied Host Echoes +1/+0 until end of turn on entry", () => {
   const game = createTestGame("battle-cry-entry-pump");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  addCard(game, cardFromDeck("open_furnace_crier", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_standard_bearer", "host", "archive"), "host", "archive");
 
   const result = runHostMain(game);
-  const battleCry = result.host.field.find((card) => card.definitionId === "open_furnace_crier");
-  const token = result.host.field.find((card) => card.definitionId === "ember_scrap_runner");
+  const battleCry = result.host.field.find((card) => card.definitionId === "varkas_standard_bearer");
+  const token = result.host.field.find((card) => card.definitionId === "varkas_minion");
 
   assert.equal(battleCry?.temporaryPower, 1);
   assert.equal(battleCry?.temporaryEndurance, 0);
   assert.equal(token?.temporaryPower, 1);
   assert.equal(token?.temporaryEndurance, 0);
-  assert.equal(result.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
+  assert.equal(result.host.field.filter((card) => card.definitionId === "varkas_minion").length, 1);
 });
 
 test("Marshal of the Wave creates one attacking token and damages the player when it enters", () => {
   const game = createTestGame("general-kreat-attack");
-  addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("marshal_of_the_wave", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host"));
 
   const result = prepareHostAttackers(game);
-  const goblinTokens = result.host.field.filter((card) => card.definitionId === "ember_scrap_runner");
+  const goblinTokens = result.host.field.filter((card) => card.definitionId === "varkas_minion");
 
   assert.equal(goblinTokens.length, 2);
   assert.equal(result.combat.hostAttackers.length, 3);
@@ -2235,7 +2321,7 @@ test("Marshal of the Wave creates one attacking token and damages the player whe
 
 test("Marshal of the Wave queues a separate player Burn for each other creature entering", () => {
   const game = createTestGame("general-kreat-separate-burns");
-  addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
+  addCard(game, cardFromDeck("marshal_of_the_wave", "host"));
 
   const resolveCreatureEntry = (definitionId) => {
     const creature = addCard(game, customCard(definitionId, "host", { subtypes: ["Goblin"] }));
@@ -2246,7 +2332,7 @@ test("Marshal of the Wave queues a separate player Burn for each other creature 
     return game.eventQueue.shift();
   };
 
-  const firstBurn = resolveCreatureEntry("repeating_blow_marshal_first_arrival");
+  const firstBurn = resolveCreatureEntry("marshal_of_the_wave_first_arrival");
   assert.equal(game.player.life, 30);
   assert.equal(firstBurn?.type, "BURN_VOLLEY_DAMAGE");
   assert.equal(firstBurn?.payload?.targetPlayer, true);
@@ -2254,7 +2340,7 @@ test("Marshal of the Wave queues a separate player Burn for each other creature 
   assert.equal(game.player.life, 29);
   drainEventQueue(game);
 
-  const secondBurn = resolveCreatureEntry("repeating_blow_marshal_second_arrival");
+  const secondBurn = resolveCreatureEntry("marshal_of_the_wave_second_arrival");
   assert.equal(game.player.life, 29);
   assert.equal(secondBurn?.type, "BURN_VOLLEY_DAMAGE");
   resolveTriggeredEvent(game, secondBurn);
@@ -2273,7 +2359,7 @@ test("only Echo invocations broadcast ECHO_INVOKED", () => {
 
 test("All Against One defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
-  const raid = addCard(game, cardFromDeck("rain_of_rivets", "host"));
+  const raid = addCard(game, cardFromDeck("all_against_one", "host"));
   const smallGoblin = addCard(game, customCard("small_goblin", "host", { subtypes: ["Goblin"], power: 1 }));
   const mediumGoblin = addCard(game, customCard("medium_goblin", "host", { subtypes: ["Goblin"], power: 2 }));
   addCard(game, customCard("large_goblin", "host", { subtypes: ["Goblin"], power: 3 }));
@@ -2293,25 +2379,25 @@ test("All Against One defers one damage per small Goblin attacker until combat e
   assert.deepEqual(result.combat.pendingDamageVolleys, []);
 });
 
-test("Brakka grows before creating tokens equal to its new power", () => {
+test("Vardek grows before creating tokens equal to its new power", () => {
   const game = createTestGame("brakka-attack");
-  const brakka = addCard(game, cardFromDeck("brakka_growing_tally", "host"));
+  const vardek = addCard(game, cardFromDeck("vardek_scribe_of_the_legion", "host"));
 
   const result = prepareHostAttackers(game);
-  const currentBrakka = result.host.field.find((card) => card.instanceId === brakka.instanceId);
-  const tokens = result.host.field.filter((card) => card.definitionId === "ember_scrap_runner");
+  const currentVardek = result.host.field.find((card) => card.instanceId === vardek.instanceId);
+  const tokens = result.host.field.filter((card) => card.definitionId === "varkas_minion");
 
-  assert.equal(currentBrakka?.counters["+1/+1"], 1);
-  assert.deepEqual(getPowerEndurance(result, currentBrakka), { power: 2, endurance: 3 });
+  assert.equal(currentVardek?.counters["+1/+1"], 1);
+  assert.deepEqual(getPowerEndurance(result, currentVardek), { power: 2, endurance: 3 });
   assert.equal(tokens.length, 2);
   assert.equal(tokens.every((card) => card.exhausted && result.combat.hostAttackers.includes(card.instanceId)), true);
 });
 
-test("Varka, Axis of the Revolt queues one simultaneous Burn volley to the player and opposing creatures", () => {
+test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the player and opposing creatures", () => {
   const game = createTestGame("chainwhirler-entry");
   const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
-  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
-  const chainwhirler = addCard(game, cardFromDeck("varka_revolt_axis", "host"));
+  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 3 }));
+  const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
 
   runInvokedTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
   const enterEvent = game.eventQueue.shift();
@@ -2325,18 +2411,19 @@ test("Varka, Axis of the Revolt queues one simultaneous Burn volley to the playe
   assert.ok(volleyEvent);
   assert.equal(volleyEvent.payload?.targetPlayer, true);
   assert.deepEqual(volleyEvent.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
+  assert.equal(volleyEvent.payload?.amount, 2);
 
   drainEventQueue(game);
 
-  assert.equal(game.player.life, 29);
+  assert.equal(game.player.life, 28);
   assert.equal(game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
-  assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+  assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
 });
 
 test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {
   const game = createTestGame("lastMarchMarshal-captain-oil-burn");
-  const captain = addCard(game, cardFromDeck("last_march_marshal", "host"));
-  const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));
+  const captain = addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));
+  const zombie = addCard(game, cardFromDeck("graveless_soldier", "host"));
 
   destroyPermanent(game, zombie);
   const deathIndex = game.eventQueue.findIndex((event) => event.type === "ECHO_DIED");
@@ -2359,10 +2446,10 @@ test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses lif
 
 test("Rear-Guard Firebreather burns a random opposing creature separately for each Goblin death", () => {
   const anotherGoblinDies = createTestGame("gunner-other-dies");
-  addCard(anotherGoblinDies, cardFromDeck("last_rivets_gunner", "host"));
+  addCard(anotherGoblinDies, cardFromDeck("rear_guard_firebreather", "host"));
   const burnTarget = addCard(anotherGoblinDies, customCard("gunner_burn_target", "player", { endurance: 5 }));
-  const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("ember_scrap_runner", "host"));
-  const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("ember_scrap_runner", "host"));
+  const firstGoblin = addCard(anotherGoblinDies, cardFromDeck("varkas_minion", "host"));
+  const secondGoblin = addCard(anotherGoblinDies, cardFromDeck("varkas_minion", "host"));
   destroyPermanent(anotherGoblinDies, firstGoblin);
   drainEventQueue(anotherGoblinDies);
   assert.equal(burnTarget.damageMarked, 1);
@@ -2379,8 +2466,8 @@ test("Rear-Guard Firebreather burns a random opposing creature separately for ea
 
 test("Rear-Guard Firebreather resolves a combat death before the next Host combat event", () => {
   const game = createTestGame("gunner-combat-timing");
-  addCard(game, cardFromDeck("last_rivets_gunner", "host"));
-  const goblin = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("rear_guard_firebreather", "host"));
+  const goblin = addCard(game, cardFromDeck("varkas_minion", "host"));
   const blocker = addCard(game, customCard("gunner_combat_blocker", "player", { power: 3, endurance: 5 }));
   game.activeSide = "host";
   game.phase = "combat";
@@ -2417,24 +2504,24 @@ test("a blocker removed between Host impacts cannot deal ghost combat damage", (
 
 test("Summoner of the Ranks resolves exactly once when it dies", () => {
   const game = createTestGame("caller-self-dies");
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
 
   destroyPermanent(game, caller);
   drainEventQueue(game);
 
-  assert.equal(game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "varkas_minion").length, 1);
   assert.equal(game.host.archive.length, 1);
   assert.equal(game.host.oblivion.length, 0);
 });
 
-test("Summoner of the Ranks moves a non-Goblin inspection to the bottom of the Archive", () => {
+test("Summoner of the Ranks moves a non-Echo inspection to the bottom of the Archive", () => {
   const game = createTestGame("caller-non-goblin-bottom");
-  addCard(game, cardFromDeck("next_crew_caller", "host"));
-  const support = addCard(game, cardFromDeck("shift_hammer", "host", "archive"), "host", "archive");
-  const futureGoblin = addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  const support = addCard(game, cardFromDeck("the_daunting_front", "host", "archive"), "host", "archive");
+  const futureGoblin = addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   drainEventQueue(game);
@@ -2450,11 +2537,11 @@ test("Summoner of the Ranks moves a non-Goblin inspection to the bottom of the A
 
 test("one Goblin death gives Summoner of the Ranks and Rear-Guard Firebreather a separate resolution each", () => {
   const game = createTestGame("goblin-death-two-reactors");
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-  const gunner = addCard(game, cardFromDeck("last_rivets_gunner", "host"));
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  const gunner = addCard(game, cardFromDeck("rear_guard_firebreather", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2476,12 +2563,13 @@ test("one Goblin death gives Summoner of the Ranks and Rear-Guard Firebreather a
 
 test("a creature that enters because of a death does not react to that death", () => {
   const game = createTestGame("no-reaction-to-own-summon");
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
-  // Summoner of the Ranks inspects the top card on a Goblin death; that card is Rear-Guard Firebreather, who also reacts to
-  // Goblin deaths. Rear-Guard Firebreather was not in play when the Goblin died, so it must never react to it.
-  addCard(game, cardFromDeck("last_rivets_gunner", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  // Summoner of the Ranks inspects the top card on an allied Echo death; that card is Rear-Guard
+  // Firebreather, who also reacts to Goblin deaths. It was not in play when the Goblin died, so it
+  // must never react to that event.
+  addCard(game, cardFromDeck("rear_guard_firebreather", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2489,7 +2577,7 @@ test("a creature that enters because of a death does not react to that death", (
   // Mirrors the animated beat loop, which re-derives the reactors after every beat. A plain
   // drain collects its sources up front and would hide this.
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
-  const gunner = game.host.field.find((card) => card.definitionId === "last_rivets_gunner");
+  const gunner = game.host.field.find((card) => card.definitionId === "rear_guard_firebreather");
   assert.ok(gunner, "Summoner of the Ranks must have Invoked Rear-Guard Firebreather onto the battlefield");
   assert.deepEqual(
     pendingTriggerSources(game, death).map((source) => source.definitionId),
@@ -2503,19 +2591,19 @@ test("a creature that enters because of a death does not react to that death", (
 
 test("a creature summoned by an effect still announces its own enter trigger", () => {
   const game = createTestGame("effect-summon-enter-trigger");
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-  addCard(game, cardFromDeck("double_crew_boss", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  addCard(game, cardFromDeck("chief_of_the_double_guard", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
 
-  const chief = game.host.field.find((card) => card.definitionId === "double_crew_boss");
+  const chief = game.host.field.find((card) => card.definitionId === "chief_of_the_double_guard");
   assert.ok(chief, "Summoner of the Ranks must have Invoked Chief of the Double Guard onto the battlefield");
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
   // would arriving through the normal Host reveal.
-  assert.equal(game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 0);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "varkas_minion").length, 0);
   const entered = game.eventQueue.find((event) => event.type === "INVOKED" && event.sourceId === chief.instanceId);
   assert.ok(entered, "the Chief's enter trigger must be queued for its own beat");
   assert.deepEqual(
@@ -2525,16 +2613,16 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   );
 
   drainEventQueue(game);
-  assert.equal(game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 2);
+  assert.equal(game.host.field.filter((card) => card.definitionId === "varkas_minion").length, 2);
 });
 
 test("an effect that queues a follow-up keeps it ahead of the other reactors", () => {
   const game = createTestGame("spawned-event-priority");
-  const gunner = addCard(game, cardFromDeck("last_rivets_gunner", "host"));
-  addCard(game, cardFromDeck("next_crew_caller", "host"));
+  const gunner = addCard(game, cardFromDeck("rear_guard_firebreather", "host"));
+  addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
   addCard(game, customCard("burn_target", "player", { power: 1, endurance: 4 }), "player");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2552,10 +2640,10 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
 
 test("a resolved trigger source is never resolved a second time by a bulk drain", () => {
   const game = createTestGame("trigger-source-resolved-once");
-  const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-  const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+  const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   destroyPermanent(game, victim);
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
@@ -2567,8 +2655,8 @@ test("a resolved trigger source is never resolved a second time by a bulk drain"
 
 test("static auras only announce the creatures that newly fell under them", () => {
   const game = createTestGame("static-aura-coverage");
-  addCard(game, cardFromDeck("next_crew_caller", "host"));
-  const first = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  const first = addCard(game, cardFromDeck("varkas_minion", "host"));
 
   const before = collectStaticAuras(game, "host");
   const buff = before.find((aura) => aura.power === 1 && aura.endurance === 1);
@@ -2579,7 +2667,7 @@ test("static auras only announce the creatures that newly fell under them", () =
   const snapshot = snapshotStaticAuras(before);
   assert.equal(newlyCoveredAuras(collectStaticAuras(game, "host"), snapshot).length, 0);
 
-  const second = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  const second = addCard(game, cardFromDeck("varkas_minion", "host"));
   const announced = newlyCoveredAuras(collectStaticAuras(game, "host"), snapshot);
   assert.deepEqual(
     announced.map((aura) => aura.affectedIds),
@@ -2590,9 +2678,9 @@ test("static auras only announce the creatures that newly fell under them", () =
 
 test("a static aura losing a creature is not announced again", () => {
   const game = createTestGame("static-aura-shrinks");
-  addCard(game, cardFromDeck("next_crew_caller", "host"));
-  const first = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
-  addCard(game, cardFromDeck("ember_scrap_runner", "host"));
+  addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+  const first = addCard(game, cardFromDeck("varkas_minion", "host"));
+  addCard(game, cardFromDeck("varkas_minion", "host"));
   const snapshot = snapshotStaticAuras(collectStaticAuras(game, "host"));
 
   destroyPermanent(game, first);
@@ -2722,7 +2810,7 @@ test("Host Zombies gain +1/+0 continuously from Surge onward", () => {
 
 test("the surge stat bonus is per-deck: the goblin host gets none", () => {
   const game = createTestGame("surge-goblin-power");
-  game.hostRules = buildHostRules(getHostDeck("broken_forge_mutiny").rulesProfile);
+  game.hostRules = buildHostRules(getHostDeck("legion_of_varka").rulesProfile);
   const goblin = addCard(game, customCard("surge_goblin", "host", { subtypes: ["Goblin"], power: 2, endurance: 2 }));
 
   game.hostTurnNumber = 10;

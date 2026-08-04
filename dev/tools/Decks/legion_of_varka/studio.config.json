@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/host/legion_of_varka/legion_of_varka.json",
+  "defaultArtist": "Dean Spencer",
+  "cards": [
+    {
+      "id": "varkas_minion",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/varkas_minion.jpg",
+      "typeLineEs": "Eco · Ficha — Trasgo Esbirro",
+      "artFrame": {
+        "zoom": 1,
+        "x": -10,
+        "y": 2
+      }
+    },
+    {
+      "id": "shaman_of_the_umbral_ember",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/shaman_of_the_umbral_ember.jpg",
+      "typeLineEs": "Eco — Orco Chamán",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": 63,
+        "y": -78
+      },
+      "headerFade": false,
+      "fullArt": true
+    },
+    {
+      "id": "summoner_of_the_ranks",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/summoner_of_the_ranks.jpg",
+      "typeLineEs": "Eco — Trasgo Invocador",
+      "headerFade": false
+    },
+    {
+      "id": "varkas_standard_bearer",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/varkas_standard_bearer.jpg",
+      "typeLineEs": "Eco — Trasgo Portaestandarte",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": 0,
+        "y": -60
+      },
+      "headerFade": false
+    },
+    {
+      "id": "the_daunting_front",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/the_daunting_front.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 1,
+        "x": -32,
+        "y": -8
+      },
+      "headerFade": false,
+      "fullArt": true
+    },
+    {
+      "id": "all_against_one",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/all_against_one.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 1.17,
+        "x": 16,
+        "y": -16
+      },
+      "fullArt": true
+    },
+    {
+      "id": "chief_of_the_double_guard",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/chief_of_the_double_guard.jpg",
+      "typeLineEs": "Eco — Trasgo Jefe",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 9,
+        "y": -144
+      },
+      "headerFade": false
+    },
+    {
+      "id": "rider_of_the_third_charge",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/rider_of_the_third_charge.jpg",
+      "typeLineEs": "Eco — Trasgo Jinete",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -6,
+        "y": -200
+      },
+      "headerFade": false
+    },
+    {
+      "id": "varkas_linebreaker",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/varkas_linebreaker.jpg",
+      "typeLineEs": "Eco — Orco Rompefilas",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -6,
+        "y": -103
+      },
+      "headerFade": true
+    },
+    {
+      "id": "unleash_the_legion",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/unleash_the_legion.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -2,
+        "y": -245
+      },
+      "headerFade": false
+    },
+    {
+      "id": "corrupted_war_bear",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/corrupted_war_bear.jpg",
+      "typeLineEs": "Eco — Bestia Oso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -2,
+        "y": -163
+      },
+      "headerFade": false
+    },
+    {
+      "id": "rider_of_the_umbral_volley",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/rider_of_the_umbral_volley.jpg",
+      "typeLineEs": "Eco — Orco Jinete",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -129,
+        "y": -190
+      },
+      "headerFade": false
+    },
+    {
+      "id": "varka_infernal_matriarch",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/varka_infernal_matriarch.jpg",
+      "typeLineEs": "Eco de Crónica — Diablesa Matriarca",
+      "artFrame": {
+        "zoom": 0.925,
+        "x": 5,
+        "y": -57
+      }
+    },
+    {
+      "id": "varkas_forgemaster",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/varkas_forgemaster.jpg",
+      "typeLineEs": "Eco — Orco Forjador",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": 14,
+        "y": -89
+      },
+      "headerFade": false,
+      "fullArt": true
+    },
+    {
+      "id": "marshal_of_the_wave",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/marshal_of_the_wave.jpg",
+      "typeLineEs": "Eco — Orco Mariscal",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": -14,
+        "y": -144
+      },
+      "fullArt": false,
+      "headerFade": false
+    },
+    {
+      "id": "vardek_scribe_of_the_legion",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/vardek_scribe_of_the_legion.jpg",
+      "typeLineEs": "Eco — Trasgo Escriba",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 4,
+        "y": -109
+      },
+      "headerFade": true
+    },
+    {
+      "id": "rear_guard_firebreather",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/rear_guard_firebreather.jpg",
+      "typeLineEs": "Eco — Orco Escupefuego",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 0,
+        "y": -133
+      },
+      "headerFade": true
+    }
+  ]
+}

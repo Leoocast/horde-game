@@ -9,16 +9,16 @@ const JSON_OUTPUT = process.argv.includes("--json");
 const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".svg", ".ts", ".tsx", ".txt"]);
 
 const ACTIVE_DECK_FILES = [
-  "src/data/decks/player/last_rain/last_rain.json",
-  "src/data/decks/player/crimson_court/crimson_court.json",
-  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
-  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+  "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
+  "src/data/decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse.json",
+  "src/data/decks/host/uprising_of_the_graveless/uprising_of_the_graveless.json",
+  "src/data/decks/host/legion_of_varka/legion_of_varka.json",
 ];
 
 const DERIVED_DECK_FILES = [
-  "src/data/decks/player/last_rain/last_rain.json",
-  "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
-  "src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+  "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
+  "src/data/decks/host/uprising_of_the_graveless/uprising_of_the_graveless.json",
+  "src/data/decks/host/legion_of_varka/legion_of_varka.json",
 ];
 
 // This list is intentionally fixed. It must shrink as authored identities are replaced; deriving it
@@ -344,7 +344,7 @@ const l41LegacyPatterns = [
 const l42LegacyPatterns = [
   {
     label: "legacy GameState zone member",
-    pattern: /\.(?:library|battlefield|graveyard|exile)\b/u,
+    pattern: /(?:(?<=[A-Za-z0-9_$)\]])\.|\?\.)(?:library|battlefield|graveyard|exile)\b/u,
   },
   {
     label: "legacy CardInstance zone value",
@@ -461,11 +461,21 @@ const legacyAssetRoots = [
   "public/cards/mono_green_ramp",
   "public/cards/zombies",
   "public/cards/goblins",
+  "public/cards/last_rain",
+  "public/cards/crimson_court",
+  "public/cards/hollow_bell_procession",
+  "public/cards/broken_forge_mutiny",
+  "public/fonts/last-rain",
 ];
 const legacyDistAssetRoots = [
   "dist/cards/mono_green_ramp",
   "dist/cards/zombies",
   "dist/cards/goblins",
+  "dist/cards/last_rain",
+  "dist/cards/crimson_court",
+  "dist/cards/hollow_bell_procession",
+  "dist/cards/broken_forge_mutiny",
+  "dist/fonts/last-rain",
 ];
 const cardAssetFreshness = verifyGenerationManifest();
 const checks = [

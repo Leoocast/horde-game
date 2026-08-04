@@ -55,6 +55,7 @@ Verifica por tipos y tests.
   activation, death reveal, y por que el campo debe quedarse quieto entre beats.
 - [`docs/game_modes.md`](docs/game_modes.md) — modos de juego.
 - [`docs/goblin_cards.md`](docs/goblin_cards.md) — estado del deck de goblins.
-- [`docs/chronicle_last_rain.md`](docs/chronicle_last_rain.md) — identidad de La Última Lluvia.
-- [`docs/procession_hollow_bell.md`](docs/procession_hollow_bell.md) — identidad de la Procesión.
-- [`docs/mutiny_broken_forge.md`](docs/mutiny_broken_forge.md) — identidad del Motín.
+- [`docs/chronicle_pact_of_elarion.md`](docs/chronicle_pact_of_elarion.md) — identidad de El Pacto de Elarion.
+- [`docs/chronicle_court_of_the_crimson_eclipse.md`](docs/chronicle_court_of_the_crimson_eclipse.md) — identidad de La Corte del Eclipse Carmesí.
+- [`docs/host_uprising_of_the_graveless.md`](docs/host_uprising_of_the_graveless.md) — identidad de El Alzamiento de los Sinsepulcro.
+- [`docs/host_legion_of_varka.md`](docs/host_legion_of_varka.md) — identidad de La Legión de Varka.

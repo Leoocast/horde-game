@@ -16,7 +16,12 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
     next.log.unshift("Player readies their Field.");
   }
   if (nextPhase === "draw") performPlayerDraw(next);
-  if (nextPhase === "end") cleanupEndStep(next);
+  if (nextPhase === "end") {
+    cleanupEndStep(next, {
+      preserveMarkedDamage: true,
+      preserveTemporaryModifiers: true,
+    });
+  }
   return next;
 }
 

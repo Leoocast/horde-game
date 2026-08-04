@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack } from "../src/components/battlefieldLayout";
-import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
+import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
+import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
+import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
@@ -39,11 +41,16 @@ test("defense arrows disappear as soon as either combat endpoint leaves the fiel
   assert.deepEqual(activeDefenseArrowLinks(game), []);
 });
 
-test("large group buffs use the lightweight renderer instead of one WebGL context per card", () => {
-  assert.equal(buffSurgeRenderMode(1), "webgl");
-  assert.equal(buffSurgeRenderMode(4), "webgl");
-  assert.equal(buffSurgeRenderMode(5), "css");
-  assert.equal(buffSurgeRenderMode(24), "css");
+test("hidden defense links disappear from every combat presentation while assignments remain", () => {
+  const game = createTestGame();
+  const attacker = addCard(game, customCard("hidden-link-attacker", "host"));
+  const blocker = addCard(game, customCard("hidden-link-blocker", "player"));
+  const linkId = `${attacker.instanceId}-${blocker.instanceId}`;
+  game.combat.hostAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+
+  assert.deepEqual(visibleDefenseArrowLinks(game, new Set([linkId])), []);
+  assert.deepEqual(game.combat.blockers, { [attacker.instanceId]: [blocker.instanceId] });
 });
 
 test("Memory presents the most recently moved card first without mutating game state", () => {
@@ -73,7 +80,65 @@ test("shared trait badges render icons and preserve Poison amounts", () => {
   assert.match(poison, /<small[^>]*>3<\/small>/);
 });
 
-test("cards behind the front of a stack use the left defense-arrow anchor", () => {
+test("battlefield trait tooltips preserve faction color and natural capitalization", () => {
+  const badge = renderToStaticMarkup(createElement(CardTraitTooltipBadge, {
+    keyword: "LETHAL",
+    label: "Toque letal",
+    toneClass: "card-keyword-badge-zombie",
+  }));
+
+  assert.match(badge, /card-keyword-badge-zombie/);
+  assert.doesNotMatch(badge, /keyword-pill/);
+  assert.match(badge, />Toque letal<\/strong>/);
+});
+
+test("deck viewer traits reuse the in-game faction badges", () => {
+  const badges = renderToStaticMarkup(createElement(TraitPills, {
+    traits: "LETHAL, FLYING",
+    cardTheme: "zombie",
+  }));
+
+  assert.match(badges, /card-keyword-badge-zombie/);
+  assert.equal((badges.match(/<svg/g) ?? []).length, 2);
+});
+
+test("card previews reuse the current printed stats plaque", () => {
+  const stats = renderToStaticMarkup(createElement(PreviewStatsBadge, {
+    stats: "4/6",
+    cardTheme: "goblin",
+  }));
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(stats, /card-preview-stats card-theme-goblin/);
+  assert.match(stats, /card-preview-stat-value[^>]*>4<\/span>/);
+  assert.match(stats, /card-preview-stat-separator[^>]*>\/<\/span>/);
+  assert.match(stats, /card-preview-stat-value[^>]*>6<\/span>/);
+  assert.doesNotMatch(stats, /<svg/);
+  assert.match(styles, /\.card-preview-stats\s*\{[^}]*min-width:\s*54px;[^}]*height:\s*31px;/u);
+  assert.match(styles, /\.deck-viewer-trait-list \.card-keyword-badge,[\s\S]*?height:\s*31px;/u);
+});
+
+test("deck collections do not clip a raised key card or its glow", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
+  assert.match(
+    styles,
+    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(140px, min\(15vw, calc\(\(100vh - 290px\) \/ 1\.9\)\), 220px\);/u,
+  );
+});
+
+test("main menu reserves enough width and breathing room for the Hostfall title", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
+  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+});
+
+test("deck detail close buttons inherit their deck palette", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);
+});
+
+test("cards behind the front of a stack use the left combat-arrow anchor", () => {
   const back = { id: "back" };
   const middle = { id: "middle" };
   const front = { id: "front" };

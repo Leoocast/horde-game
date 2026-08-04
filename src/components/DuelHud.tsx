@@ -2,6 +2,7 @@ import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
+import { previewPlayerAttackDrain } from "../engine/CombatResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -18,16 +19,16 @@ export function DuelHud({ game }: { game: GameState }) {
   const language = useLanguageStore((state) => state.language);
   const hostMillQueue = useGameStore((state) => state.hostMillAnimationQueue);
   const hostMillPreviewCards = useGameStore((state) => state.hostMillPreviewCards);
-  const fleshRootTitheCard = useGameStore((state) => state.fleshRootTitheCard);
+  const tributeOfTheFourSorrowsCard = useGameStore((state) => state.tributeOfTheFourSorrowsCard);
   const deathRevealCard = useGameStore((state) => state.deathRevealCard);
   const hostSpellCard = useGameStore((state) => state.hostSpellCard);
-  // Primitive selectors: fleshRootTitheSelection.x/y update on every mousemove while the
-  // FleshRootTitheSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
-  const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
-  const fleshRootTitheSelectionKind = useGameStore((state) => state.fleshRootTitheSelection?.kind);
-  const fleshRootTitheSelectionTargetId = useGameStore((state) => state.fleshRootTitheSelection?.targetId);
-  const deselectFleshRootTitheSelectionTarget = useGameStore((state) => state.deselectFleshRootTitheSelectionTarget);
-  const confirmFleshRootTitheSelection = useGameStore((state) => state.confirmFleshRootTitheSelection);
+  // Primitive selectors: tributeOfTheFourSorrowsSelection.x/y update on every mousemove while the
+  // TributeOfTheFourSorrowsSelectionOverlay arrow is tracking the pointer; avoid re-rendering this HUD then.
+  const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
+  const tributeOfTheFourSorrowsSelectionKind = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.kind);
+  const tributeOfTheFourSorrowsSelectionTargetId = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.targetId);
+  const deselectTributeOfTheFourSorrowsSelectionTarget = useGameStore((state) => state.deselectTributeOfTheFourSorrowsSelectionTarget);
+  const confirmTributeOfTheFourSorrowsSelection = useGameStore((state) => state.confirmTributeOfTheFourSorrowsSelection);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const lifestealAttackAnimations = useGameStore((state) => state.lifestealAttackAnimations);
@@ -38,7 +39,7 @@ export function DuelHud({ game }: { game: GameState }) {
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [hostTakingDamage, setHostTakingDamage] = useState(false);
   const lastPlayerAttackEvent = useRef<string | undefined>(undefined);
-  const fleshRootTitheTarget = fleshRootTitheSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === fleshRootTitheSelectionTargetId) : undefined;
+  const tributeOfTheFourSorrowsTarget = tributeOfTheFourSorrowsSelectionTargetId ? [...game.player.hand, ...game.player.field].find((card) => card.instanceId === tributeOfTheFourSorrowsSelectionTargetId) : undefined;
   const normalMillQueueLength = hostMillQueue.filter((item) => !item.preview).length;
   const hostLibraryIds = new Set(game.host.archive.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hostMillPreviewCards.filter((card) => hostLibraryIds.has(card.instanceId)).length;
@@ -77,7 +78,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : fleshRootTitheCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : tributeOfTheFourSorrowsCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -161,9 +162,9 @@ export function DuelHud({ game }: { game: GameState }) {
             </div>
           </motion.div>
         )}
-        {fleshRootTitheCard && (
+        {tributeOfTheFourSorrowsCard && (
           <motion.div
-            key={fleshRootTitheCard.instanceId}
+            key={tributeOfTheFourSorrowsCard.instanceId}
             className="host-special-card-host flex flex-col items-center gap-2"
             initial={false}
             exit={{
@@ -176,46 +177,46 @@ export function DuelHud({ game }: { game: GameState }) {
             }}
           >
             <div
-              data-card-id={fleshRootTitheCard.instanceId}
+              data-card-id={tributeOfTheFourSorrowsCard.instanceId}
               className={[
                 "host-special-card",
-                fleshRootTitheSelectionActive ? "host-special-card-targeting" : "",
-                !fleshRootTitheSelectionActive ? "host-special-card-resolving" : "",
-                activatingEffectCardId === fleshRootTitheCard.instanceId ? "effect-card-activating" : "",
+                tributeOfTheFourSorrowsSelectionActive ? "host-special-card-targeting" : "",
+                !tributeOfTheFourSorrowsSelectionActive ? "host-special-card-resolving" : "",
+                activatingEffectCardId === tributeOfTheFourSorrowsCard.instanceId ? "effect-card-activating" : "",
               ].join(" ")}
             >
               <Card
                 game={game}
-                card={fleshRootTitheCard}
+                card={tributeOfTheFourSorrowsCard}
                 selectionDisabled
                 suppressContextMenu
                 suppressCardId
                 suppressStabilizing
-                showFullImage={shouldShowFullCardImage(fleshRootTitheCard.definitionId)}
-                preferNativeImageRendering={shouldShowFullCardImage(fleshRootTitheCard.definitionId)}
+                showFullImage={shouldShowFullCardImage(tributeOfTheFourSorrowsCard.definitionId)}
+                preferNativeImageRendering={shouldShowFullCardImage(tributeOfTheFourSorrowsCard.definitionId)}
               />
             </div>
-            {fleshRootTitheSelectionActive && (
-              <div className="flesh-root-tithe-selection-panel-inline old-panel-soft">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(fleshRootTitheSelectionKind === "discard" ? "target.discardCard" : fleshRootTitheSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
+            {tributeOfTheFourSorrowsSelectionActive && (
+              <div className="tribute-of-the-four-sorrows-selection-panel-inline old-panel-soft">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(tributeOfTheFourSorrowsSelectionKind === "discard" ? "target.discardCard" : tributeOfTheFourSorrowsSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
                 <span className="text-sm text-[#d6b879]">
-                  {fleshRootTitheSelectionKind === "sacrifice-land" && fleshRootTitheSelectionTargetId
+                  {tributeOfTheFourSorrowsSelectionKind === "sacrifice-land" && tributeOfTheFourSorrowsSelectionTargetId
                     ? t("target.energySelected")
-                    : fleshRootTitheTarget
-                      ? localizedCardName(fleshRootTitheTarget, language)
+                    : tributeOfTheFourSorrowsTarget
+                      ? localizedCardName(tributeOfTheFourSorrowsTarget, language)
                       : t("target.noSelection")}
                 </span>
                 <div className="counter-target-actions">
-                  {fleshRootTitheSelectionTargetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectFleshRootTitheSelectionTarget} title={t("common.cancel")}>
+                  {tributeOfTheFourSorrowsSelectionTargetId && (
+                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectTributeOfTheFourSorrowsSelectionTarget} title={t("common.cancel")}>
                       {t("common.cancel")}
                     </button>
                   )}
                   <button
-                    data-audio-click={fleshRootTitheSelectionTargetId ? "valid" : undefined}
+                    data-audio-click={tributeOfTheFourSorrowsSelectionTargetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
-                    disabled={!fleshRootTitheSelectionTargetId}
-                    onClick={confirmFleshRootTitheSelection}
+                    disabled={!tributeOfTheFourSorrowsSelectionTargetId}
+                    onClick={confirmTributeOfTheFourSorrowsSelection}
                     title={t("common.confirm")}
                   >
                     <Check size={22} />
@@ -368,6 +369,9 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const finalBanquetLifeId = useRef<string | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const pendingDrain = game.activeSide === "player" && game.phase === "combat"
+    ? previewPlayerAttackDrain(game)
+    : 0;
 
   useEffect(() => {
     setVisualLife(bloodPactAnimation?.lifeBefore ?? game.player.life);
@@ -508,6 +512,21 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               />
               <div className="player-life-values flex items-end gap-2 leading-none">
                 <div className="player-life-count">{visualLife}</div>
+                <AnimatePresence initial={false} mode="popLayout">
+                  {pendingDrain > 0 && (
+                    <motion.strong
+                      key={pendingDrain}
+                      className="player-life-drain-preview"
+                      aria-label={t("game.drainPreview", { amount: pendingDrain })}
+                      initial={{ opacity: 0, y: 7, scale: 0.82 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.86 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      +{pendingDrain}
+                    </motion.strong>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <div data-player-discard-origin="true" data-player-life-emblem="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">

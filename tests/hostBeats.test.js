@@ -113,8 +113,8 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
     resetHostSequence();
     const game = createTestGame("chainwhirler-throttled-beat");
     const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
-    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
-    const chainwhirler = addCard(game, cardFromDeck("varka_revolt_axis", "host"));
+    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 3 }));
+    const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
     enqueue(game, {
       type: "BURN_VOLLEY_DAMAGE",
       sourceId: chainwhirler.instanceId,
@@ -122,7 +122,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
         sourceSide: "host",
         targetPlayer: true,
         targetIds: [fragile.instanceId, sturdy.instanceId],
-        amount: 1,
+        amount: 2,
       },
     });
 
@@ -147,7 +147,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
     const afterStall = useGameStore.getState();
     assert.equal(afterStall.game.eventQueue.some((event) => event.type === "BURN_VOLLEY_DAMAGE"), false);
     assert.equal(afterStall.game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
-    assert.equal(afterStall.game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+    assert.equal(afterStall.game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
 
     // The board-settle handoff is scheduled relative to the resumed clock.
     timers.releaseExpiredAt(11_000);
@@ -203,7 +203,7 @@ test("the shared reaction runner hands surviving damage to the player and animat
       power: 1,
       endurance: 2,
     }));
-    const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+    const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
     game.activeSide = "host";
     game.phase = "combat";
     game.combat.hostAttackers = [attacker.instanceId];
@@ -284,7 +284,7 @@ test("a Lifesteal attacker bites the Host life panel at its combat impact", asyn
     game.activeSide = "player";
     game.phase = "combat";
     game.setupTurnsRemaining = 0;
-    const bat = addCard(game, cardFromDeck("crimson_bat", "player"));
+    const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
     game.combat.playerAttackers = [bat.instanceId];
 
     useGameStore.setState({
@@ -352,7 +352,7 @@ test("a Toxic attacker poisons the Host HUD at its combat impact without doublin
     game.activeSide = "player";
     game.phase = "combat";
     game.setupTurnsRemaining = 0;
-    const basilisk = addCard(game, cardFromDeck("black_sap_stalker", "player"));
+    const basilisk = addCard(game, cardFromDeck("hydra_of_the_black_bough", "player"));
     game.combat.playerAttackers = [basilisk.instanceId];
 
     useGameStore.setState({
@@ -424,13 +424,13 @@ test("three poison counters animate their consumption before the Host card is mi
     game.host.poisonCounters = 3;
     const milledCard = addCard(
       game,
-      cardFromDeck("last_knell_dead", "host", "archive"),
+      cardFromDeck("graveless_soldier", "host", "archive"),
       "host",
       "archive",
     );
     addCard(
       game,
-      cardFromDeck("last_knell_dead", "host", "archive"),
+      cardFromDeck("graveless_soldier", "host", "archive"),
       "host",
       "archive",
     );
@@ -499,9 +499,9 @@ test("Midnight Pact presents its life payment, two-card draw, and queued Blood P
     game.player.life = 10;
     addSources(game, 1);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
-    const pact = addCard(game, cardFromDeck("blood_pact", "player", "hand"), "player", "hand");
-    addCard(game, customCard("blood_pact_store_draw_one", "player", { zone: "archive" }), "player", "archive");
-    addCard(game, customCard("blood_pact_store_draw_two", "player", { zone: "archive" }), "player", "archive");
+    const pact = addCard(game, cardFromDeck("midnight_pact", "player", "hand"), "player", "hand");
+    addCard(game, customCard("midnight_pact_store_draw_one", "player", { zone: "archive" }), "player", "archive");
+    addCard(game, customCard("midnight_pact_store_draw_two", "player", { zone: "archive" }), "player", "archive");
     useGameStore.setState({
       game,
       lifeDamageAnimationId: undefined,
@@ -664,7 +664,7 @@ test("Midnight Collector presents its life payment while carrying stored Energy 
 
   const game = createTestGame("activated-life-payment-presentation");
   game.player.life = 10;
-  const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
+  const acolyte = addCard(game, cardFromDeck("midnight_collector", "player"));
   useGameStore.setState({
     game,
     lifeDamageAnimationId: undefined,
@@ -674,7 +674,7 @@ test("Midnight Collector presents its life payment while carrying stored Energy 
     playerAutoTriggerCount: 0,
   });
 
-  useGameStore.getState().activateAbility(acolyte.instanceId, "tithe_acolyte_generate");
+  useGameStore.getState().activateAbility(acolyte.instanceId, "midnight_collector_generate");
 
   const afterActivation = useGameStore.getState();
   assert.equal(afterActivation.game.player.life, 5);
@@ -740,16 +740,16 @@ test("Hunt Beneath the Red Moon presents its temporary Lifesteal on every allied
   try {
     const game = createTestGame("predatory-thirst-store");
     addSources(game, 2);
-    const firstAlly = addCard(game, customCard("predatory_thirst_store_ally_one", "player", {
+    const firstAlly = addCard(game, customCard("hunt_beneath_the_red_moon_store_ally_one", "player", {
       power: 2,
       endurance: 3,
     }));
-    const secondAlly = addCard(game, customCard("predatory_thirst_store_ally_two", "player", {
+    const secondAlly = addCard(game, customCard("hunt_beneath_the_red_moon_store_ally_two", "player", {
       power: 1,
       endurance: 2,
     }));
-    const enemy = addCard(game, customCard("predatory_thirst_store_enemy", "host"));
-    const thirst = addCard(game, cardFromDeck("predatory_thirst", "player", "hand"), "player", "hand");
+    const enemy = addCard(game, customCard("hunt_beneath_the_red_moon_store_enemy", "host"));
+    const thirst = addCard(game, cardFromDeck("hunt_beneath_the_red_moon", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
       spellTargeting: undefined,
@@ -806,7 +806,7 @@ test("Kaelor uses the shared growth animation when the first allied Echo is Invo
 
   try {
     const game = createTestGame("beast-kin-growth-presentation");
-    const ranger = addCard(game, cardFromDeck("arven_first_pack", "player"));
+    const ranger = addCard(game, cardFromDeck("kaelor_stormcaller", "player"));
     const entrant = addCard(
       game,
       customCard("free_growth_entrant", "player", { zone: "hand" }),
@@ -878,10 +878,10 @@ test("growth spells animate only after confirm, and Oath of the Clearing fights 
       power: 1,
       endurance: 5,
     }));
-    const spell = addCard(game, cardFromDeck("oath_clearing", "player", "hand"), "player", "hand");
+    const spell = addCard(game, cardFromDeck("shield_of_the_heir", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
-      playerDeckId: "last_rain",
+      playerDeckId: "pact_of_elarion",
       spellTargeting: undefined,
       spellFightAnimation: undefined,
       pendingSpellHandId: undefined,
@@ -907,7 +907,7 @@ test("growth spells animate only after confirm, and Oath of the Clearing fights 
     assert.equal(afterConfirm.buffAnimationVariant, "growth-strong");
     assert.equal(afterConfirm.spellFightAnimation, undefined);
     assert.equal(afterConfirm.pendingSpellHandId, spell.instanceId);
-    assert.equal(playedSfx.filter((id) => id === "lastRainBuff").length, 1);
+    assert.equal(playedSfx.filter((id) => id === "pactOfElarionBuff").length, 1);
 
     timers.releaseExpiredAt(1039);
     assert.equal(useGameStore.getState().spellFightAnimation, undefined);
@@ -969,11 +969,11 @@ test("El Juicio de Elarion cuts the target before its normal destruction fade", 
   try {
     const game = createTestGame("roots-touched-sky-presentation");
     addSources(game, 3);
-    const target = addCard(game, cardFromDeck("hollow_bell", "host"));
-    const spell = addCard(game, cardFromDeck("roots_touched_sky", "player", "hand"), "player", "hand");
+    const target = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+    const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
-      playerDeckId: "last_rain",
+      playerDeckId: "pact_of_elarion",
       spellTargeting: {
         handId: spell.instanceId,
         stepIndex: 0,
@@ -1049,16 +1049,16 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
 
   try {
     const game = createTestGame("energy-flow-presentation");
-    const gatherer = addCard(game, cardFromDeck("first_dew_gatherers", "player"));
-    const spring = addCard(game, cardFromDeck("deep_root_spring", "player"));
+    const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player"));
+    const spring = addCard(game, cardFromDeck("river_of_elarion", "player"));
     useGameStore.setState({
       game,
-      playerDeckId: "last_rain",
+      playerDeckId: "pact_of_elarion",
       energyFlowAnimation: undefined,
       playerAutoTriggerCount: 0,
     });
 
-    useGameStore.getState().activateAbility(gatherer.instanceId, "first_dew_gatherers_gain_energy");
+    useGameStore.getState().activateAbility(gatherer.instanceId, "veiled_dawn_flower_gain_energy");
 
     const duringTravel = useGameStore.getState();
     assert.equal(duringTravel.energyFlowAnimation?.sourceId, gatherer.instanceId);
@@ -1081,7 +1081,7 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
     assert.equal(useGameStore.getState().energyFlowAnimation, undefined);
     assert.equal(useGameStore.getState().game.player.energyPool.stored, 1);
 
-    useGameStore.getState().activateAbility(spring.instanceId, "deep_root_spring_gain_energy");
+    useGameStore.getState().activateAbility(spring.instanceId, "river_of_elarion_gain_energy");
     assert.equal(useGameStore.getState().energyFlowAnimation, undefined);
     assert.equal(useGameStore.getState().game.player.energyPool.available, 1);
   } finally {
@@ -1129,9 +1129,9 @@ test("Verdict of the Eclipse siphons first, waits for its smoke strike, then pre
     game.player.life = 10;
     addSources(game, 3);
     const page = addCard(game, cardFromDeck("blood_page", "player"));
-    const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
-    addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
-    const banquet = addCard(game, cardFromDeck("final_banquet", "player", "hand"), "player", "hand");
+    const caller = addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
+    addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
+    const banquet = addCard(game, cardFromDeck("verdict_of_the_eclipse", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
       spellTargeting: {
@@ -1193,7 +1193,7 @@ test("Verdict of the Eclipse siphons first, waits for its smoke strike, then pre
 
     timers.releaseExpiredAt(1_080);
     const afterDeathTrigger = useGameStore.getState();
-    assert.equal(afterDeathTrigger.game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
+    assert.equal(afterDeathTrigger.game.host.field.filter((card) => card.definitionId === "varkas_minion").length, 1);
     assert.equal(afterDeathTrigger.game.host.archive.length, 0);
     assert.equal(afterDeathTrigger.game.player.field.find((card) => card.instanceId === page.instanceId)?.temporaryPower, 0);
     // Battlefield is not mounted in this store test, so release the summoned token's entry hold
@@ -1261,7 +1261,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
-      playerDeckId: "crimson_court",
+      playerDeckId: "court_of_the_crimson_eclipse",
       spellTargeting: {
         handId: drain.instanceId,
         stepIndex: 0,
@@ -1360,7 +1360,7 @@ test("Drain Essence presents the Guardian trigger after its own recovery", async
     const game = createTestGame("drain-essence-guardian-trigger");
     game.player.life = 10;
     addSources(game, 3);
-    const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
+    const guardian = addCard(game, cardFromDeck("guardian_of_the_night_threshold", "player"));
     const drain = addCard(game, cardFromDeck("drain_essence", "player", "hand"), "player", "hand");
     useGameStore.setState({
       game,
@@ -1450,7 +1450,7 @@ test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", as
   try {
     resetHostSequence();
     const game = createTestGame("deferred-vanilla-echo-invoked");
-    addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
+    addCard(game, cardFromDeck("marshal_of_the_wave", "host"));
     addCard(game, customCard("deferred_vanilla_echo", "host", {
       zone: "archive",
       power: 0,

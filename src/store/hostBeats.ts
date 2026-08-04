@@ -43,7 +43,7 @@ const SPECIAL_DEATH_ANIMATION_MS = 260;
 const STATIC_AURA_LEAD_IN_MS = 80;
 const STATIC_AURA_PULSE_MS = STATIC_AURA_LEAD_IN_MS + 420;
 // Once the buff lands, its rising lines can finish underneath the next queued effect. Holding
-// the queue for the full tail made a lord with a second ETB (Foreman of the Burning Tally) feel like it
+// the queue for the full tail made a lord with a second ETB (Shaman of the Umbral Ember) feel like it
 // stalled every card behind it.
 const STATIC_AURA_BEAT_MS = STATIC_AURA_PULSE_MS + 360;
 // The reveal mounts on the same frame the combat impact commits and the row reflows; a short
@@ -166,7 +166,7 @@ export function scheduleHostInvokedTriggers(
           hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
         };
       });
-      // Enter triggers can create creatures (Chief of the Double Guard, Foreman of Three Furnaces). Hold their aura
+      // Enter triggers can create creatures (Chief of the Double Guard, Rider of the Third Charge). Hold their aura
       // buffs in the same tick they appear, so they are never drawn already buffed either.
       captureStaticAuraBeats();
       window.setTimeout(() => {
@@ -219,7 +219,7 @@ export function startHostCombatSequence(): void {
   scheduleQueuedHostTriggers(() => {
     const declared = declareHostAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
     useGameStore.setState({ game: declared });
-    // Attack triggers can add creatures (Brakka, Marshal of the Wave), so re-check aura coverage
+    // Attack triggers can add creatures (Vardek, Marshal of the Wave), so re-check aura coverage
     // once they settled instead of before they existed.
     scheduleQueuedHostTriggers(() => {
       captureStaticAuraBeats();

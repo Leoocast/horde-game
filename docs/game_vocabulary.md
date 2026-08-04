@@ -197,7 +197,8 @@ engine. Trampa también es un subtipo preview de Eco, no un tipo de carta adicio
 Plantillas preferidas:
 
 - `Al ser invocada, ...`
-- `Invoca dos Ecos Ficha Trasgo 1/1.`
+- `Invoca dos Esbirros de Varka.` cuando la Ficha tenga una identidad visible propia.
+- `Invoca un Eco Ficha Zombi 2/2.` cuando la Ficha no tenga un nombre propio.
 - `Agota: Gana {E}.`
 - `Un aliado gana +2/+3 hasta el final del turno.`
 - `Destierra una carta de la Memoria al Olvido.`

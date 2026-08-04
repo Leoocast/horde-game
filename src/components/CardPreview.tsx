@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
+import type { DeckTheme } from "../data/deckCatalog";
 import type { CardInstance } from "../engine/GameTypes";
 import { cardLabelCamelCase, localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -265,6 +266,7 @@ export function CardDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
+  const cardTheme = cardThemeForDefinition(card.definitionId);
   const localizedName = cardLabelCamelCase(
     language === "es"
       ? card.displayNameEs || displayName || localizedCardName(card, language)
@@ -305,7 +307,7 @@ export function CardDetailsModal({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {traits && <TraitPills traits={traits} />}
-            {stats && <span className="preview-stat-pill scale-110">{stats}</span>}
+            {stats && <PreviewStatsBadge stats={stats} cardTheme={cardTheme} />}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="old-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
                 aA
@@ -330,16 +332,40 @@ export function CardDetailsModal({
   );
 }
 
-export function TraitPills({ traits, compact = false }: { traits: string; compact?: boolean }) {
+export function PreviewStatsBadge({ stats, cardTheme }: { stats: string; cardTheme?: DeckTheme }) {
   const language = useLanguageStore((state) => state.language);
+  const parsed = stats.match(/^(-?\d+)\s*\/\s*(-?\d+)$/u);
+  if (!parsed) return null;
+
+  const power = Number(parsed[1]);
+  const endurance = Number(parsed[2]);
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div
+      className={["card-preview-stats", cardTheme ? `card-theme-${cardTheme}` : ""].join(" ")}
+      aria-label={language === "es" ? `${power} de Fuerza, ${endurance} de Aguante` : `${power} Power, ${endurance} Endurance`}
+    >
+      <span className="card-preview-stat-value">{power}</span>
+      <span className="card-preview-stat-separator" aria-hidden="true">/</span>
+      <span className="card-preview-stat-value">{endurance}</span>
+    </div>
+  );
+}
+
+export function TraitPills({ traits, compact = false, cardTheme }: { traits: string; compact?: boolean; cardTheme?: DeckTheme }) {
+  const language = useLanguageStore((state) => state.language);
+  const cardTone = cardTheme === "ramp" ? "ally" : cardTheme;
+  return (
+    <div className={cardTheme ? "deck-viewer-trait-list flex flex-wrap gap-1.5" : "flex flex-wrap gap-2"}>
       {traits.split(",").map((keyword) => {
         const clean = keyword.trim();
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedTraitTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>
+            <span className={cardTheme
+              ? ["card-keyword-badge", `card-keyword-badge-${cardTone}`, compact ? "deck-viewer-trait-badge-compact" : ""].join(" ")
+              : ["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}
+            >
               <CardTraitIcon keyword={clean} />
               {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}
             </span>

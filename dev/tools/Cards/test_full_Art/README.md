@@ -26,7 +26,7 @@ En los dos, los stats viven en la franja de arte y la línea de tipo separa el a
   `36px/1.42`), un `.effect-paragraph` por regla con `0.36em` entre ellas, y el separador con su
   ◆ exactamente como `.tcg-divider` (`margin: 23px 0 20px`, línea al 56 %, rombo al 72 %).
 - **H de Hostfall:** en las dos, `700 350px "Cinzel Decorative"` centrada y casi transparente,
-  igual que en `broken_forge_mutiny` y `hollow_bell_procession`.
+  igual que en `legion_of_varka` y `uprising_of_the_graveless`.
 - **Cabecera de la común:** la banda del nombre empieza a la derecha del orbe y su borde lo
   rodea. El orbe (90 px, centro en `(84, 83)`) queda por fuera; la banda lleva una máscara
   radial concéntrica de radio 54 que se come el relleno y el borde recto, y el arco de oro lo
@@ -65,6 +65,6 @@ donde el coste nunca se recolorea por tema.
 ## Si termina gustando
 
 Portarlo al estudio es añadir un perfil en `LAYOUT_PROFILES` (`deck-card-studio.js`) más su
-bloque en `deck-card-studio.css`, igual que ya hacen `crimson_court` y `broken_forge_mutiny`. Ojo
+bloque en `deck-card-studio.css`, igual que ya hacen `court_of_the_crimson_eclipse` y `legion_of_varka`. Ojo
 con el contrato de exportación: hashear `public/cards/**/*.png` antes, re-exportar después y
 exigir cero diferencias en los decks que no se tocaron.

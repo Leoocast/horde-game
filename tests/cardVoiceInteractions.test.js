@@ -7,7 +7,7 @@ import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestU
 
 test("Countess entry interactions use card types instead of card names", () => {
   const beforeCountess = createTestGame("countess-voice-entry");
-  const countess = cardFromDeck("eternal_feast_countess", "player");
+  const countess = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");
   const enterCue = resolveCardVoiceCue({
     type: "INVOKED",
     card: countess,
@@ -16,8 +16,8 @@ test("Countess entry interactions use card types instead of card names", () => {
   assert.equal(enterCue?.sfx, "countessEnter");
 
   const countessInPlay = createTestGame("countess-voice-human");
-  addCard(countessInPlay, cardFromDeck("eternal_feast_countess", "player"));
-  const sentinel = cardFromDeck("blood_sentinel", "player");
+  addCard(countessInPlay, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
+  const sentinel = cardFromDeck("sentinel_of_the_lunar_eye", "player");
   assert.equal(sentinel.subtypes.includes("Human"), true);
   assert.equal(
     resolveCardVoiceCue({
@@ -28,7 +28,7 @@ test("Countess entry interactions use card types instead of card names", () => {
     "countessHumans",
   );
 
-  const nonHuman = cardFromDeck("crypt_guardian", "player");
+  const nonHuman = cardFromDeck("guardian_of_the_night_threshold", "player");
   assert.equal(
     resolveCardVoiceCue({
       type: "INVOKED",
@@ -40,7 +40,7 @@ test("Countess entry interactions use card types instead of card names", () => {
 });
 
 test("Countess speaks exactly on her third confirmed attack", () => {
-  const countess = cardFromDeck("eternal_feast_countess", "player");
+  const countess = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");
   assert.equal(resolveCardVoiceCue({ type: "ATTACKS", card: countess, attackNumber: 2 }), undefined);
   const thirdAttackCue = resolveCardVoiceCue({ type: "ATTACKS", card: countess, attackNumber: 3 });
   assert.equal(thirdAttackCue?.sfx, "countessThirdAttack");
@@ -48,8 +48,8 @@ test("Countess speaks exactly on her third confirmed attack", () => {
 });
 
 test("only one Countess claims the third-attack line in the same combat", () => {
-  const first = cardFromDeck("eternal_feast_countess", "player");
-  const second = cardFromDeck("eternal_feast_countess", "player");
+  const first = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");
+  const second = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");
   const matches = resolveCardVoiceCueBatch([
     { type: "ATTACKS", card: first, attackNumber: 3 },
     { type: "ATTACKS", card: second, attackNumber: 3 },
@@ -61,7 +61,7 @@ test("only one Countess claims the third-attack line in the same combat", () => 
 });
 
 test("Countess defense has half silence and evenly split spoken variants", () => {
-  const countess = cardFromDeck("eternal_feast_countess", "player");
+  const countess = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");
   assert.equal(
     resolveCardVoiceCue({ type: "BLOCKS", card: countess }, randomSequence(0.75)),
     undefined,
@@ -79,7 +79,7 @@ test("Countess defense has half silence and evenly split spoken variants", () =>
 
 test("player combat persists confirmed attack counts on each creature", () => {
   let game = createTestGame("countess-confirmed-attacks");
-  const countess = addCard(game, cardFromDeck("eternal_feast_countess", "player"));
+  const countess = addCard(game, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
   addCard(game, customCard("countess_attack_observer", "host", { endurance: 99 }));
 
   for (let expected = 1; expected <= 3; expected += 1) {

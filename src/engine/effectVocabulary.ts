@@ -79,13 +79,13 @@ export const AMOUNT_TYPES = new Set([
 /** Mirrors the switch in normalizeDeck.normalizeCustomTriggeredEffect, including the
  *  `fight_simultaneously` effect-level handler. */
 export const CUSTOM_HANDLERS = new Set([
-  "next_crew_caller_inspect_top_if_goblin",
-  "rain_of_rivets_small_attacker_damage",
-  "first_siren_agitator_begin_combat_token",
-  "first_siren_agitator_attack_buff",
-  "repeating_blow_marshal_goblins_attack_token",
-  "repeating_blow_marshal_damage_each_opponent",
-  "varka_revolt_axis_enter_damage_all",
+  "summoner_of_the_ranks_inspect_top_if_echo",
+  "all_against_one_small_attacker_damage",
+  "varkas_linebreaker_begin_combat_token",
+  "varkas_linebreaker_attack_buff",
+  "marshal_of_the_wave_goblins_attack_token",
+  "marshal_of_the_wave_damage_each_opponent",
+  "varka_infernal_matriarch_enter_damage_all",
   "fight_simultaneously",
 ]);
 

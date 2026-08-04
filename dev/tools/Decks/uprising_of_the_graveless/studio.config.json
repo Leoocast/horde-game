@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/host/uprising_of_the_graveless/uprising_of_the_graveless.json",
+  "defaultArtist": "Dean Spencer",
+  "cards": [
+    {
+      "id": "graveless_soldier",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/graveless_soldier.jpg",
+      "typeLineEs": "Eco · Ficha — Zombi Soldado",
+      "artFrame": {
+        "zoom": 1,
+        "x": 24,
+        "y": -12
+      }
+    },
+    {
+      "id": "graveless_titan",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/graveless_titan.jpg",
+      "typeLineEs": "Eco · Ficha — Zombi Gigante",
+      "artFrame": {
+        "zoom": 1,
+        "x": 64,
+        "y": 0
+      }
+    },
+    {
+      "id": "the_broken_headstone",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": -7,
+        "y": -269
+      },
+      "headerFade": false
+    },
+    {
+      "id": "inexhaustible_ossuary",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/inexhaustible_ossuary.jpg",
+      "typeLineEs": "Eco — Zombi del Osario",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -14,
+        "y": -193
+      }
+    },
+    {
+      "id": "devourer_of_the_last_memory",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/devourer_of_the_last_memory.jpg",
+      "typeLineEs": "Eco — Zombi Devorador",
+      "artFrame": {
+        "zoom": 0.676,
+        "x": -2,
+        "y": -152
+      }
+    },
+    {
+      "id": "memory_thief",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/memory_thief.jpg",
+      "typeLineEs": "Eco — Zombi Ladrón",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -24,
+        "y": -172
+      },
+      "headerFade": false
+    },
+    {
+      "id": "tribute_of_the_four_sorrows",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/tribute_of_the_four_sorrows.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 0,
+        "y": -242
+      },
+      "headerFade": false
+    },
+    {
+      "id": "winged_stalker_of_the_crypt",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.jpg",
+      "typeLineEs": "Eco — Zombi Acechador",
+      "artFrame": {
+        "zoom": 0.962,
+        "x": -75,
+        "y": -5
+      },
+      "headerFade": false
+    },
+    {
+      "id": "stitched_wing_spawn",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/stitched_wing_spawn.jpg",
+      "typeLineEs": "Eco — Zombi Engendro",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -9,
+        "y": -136
+      },
+      "fullArt": false,
+      "headerFade": true
+    },
+    {
+      "id": "ossuary_rider",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/ossuary_rider.jpg",
+      "typeLineEs": "Eco — Zombi Jinete",
+      "artFrame": {
+        "zoom": 1.125,
+        "x": -38,
+        "y": -232
+      },
+      "headerFade": false
+    },
+    {
+      "id": "return_to_memory",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/return_to_memory.jpg",
+      "typeLineEs": "Eco — Zombi Retornado",
+      "artFrame": {
+        "zoom": 0.601,
+        "x": -19,
+        "y": -177
+      },
+      "headerFade": true
+    },
+    {
+      "id": "barrow_wallbreaker",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/barrow_wallbreaker.jpg",
+      "typeLineEs": "Eco — Zombi Minotauro",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 48,
+        "y": -147
+      },
+      "headerFade": false
+    },
+    {
+      "id": "hound_of_seven_memories",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
+      "typeLineEs": "Eco — Zombi Sabueso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -6,
+        "y": -97
+      },
+      "headerFade": false
+    },
+    {
+      "id": "mastiff_of_the_overflowing_ossuary",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/mastiff_of_the_overflowing_ossuary.jpg",
+      "typeLineEs": "Eco — Zombi Sabueso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 4,
+        "y": -175
+      },
+      "headerFade": false
+    },
+    {
+      "id": "spore_infested",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/spore_infested.jpg",
+      "typeLineEs": "Eco — Zombi Infestado",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 8,
+        "y": -184
+      },
+      "headerFade": false
+    },
+    {
+      "id": "harvester_of_the_fallen",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/harvester_of_the_fallen.jpg",
+      "typeLineEs": "Eco — Zombi Cosechadora",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -133
+      },
+      "headerFade": false,
+      "fullArt": true
+    },
+    {
+      "id": "nerezh_graveless_matriarch",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/nerezh_graveless_matriarch.jpg",
+      "typeLineEs": "Eco — Zombi Matriarca",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 23
+      },
+      "fullArt": true,
+      "headerFade": false
+    }
+  ],
+  "motif": {
+    "stats": {
+      "x": -69,
+      "y": 0,
+      "zoom": 4,
+      "rotation": 0
+    }
+  }
+}

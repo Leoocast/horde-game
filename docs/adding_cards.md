@@ -40,15 +40,15 @@ Archivos autoritativos:
 
 Ejemplos útiles:
 
-- Efecto activado de maná: `first_dew_gatherers`.
-- Trigger de entrada con target manual: `iria_voice_last_rain`.
-- Trigger al entrar otra criatura: `arven_first_pack`.
-- Spell con un target: `first_tree_sap` o `roots_touched_sky`.
-- Spell con dos targets: `marked_prey` o `oath_clearing`.
-- Aura estática: `hollow_bell`, `last_march_marshal` o `shift_hammer`.
-- Trigger de muerte: `last_thought_carrion`, `next_crew_caller` o `last_rivets_gunner`.
-- Trigger de ataque: `brakka_growing_tally`.
-- Efecto de Horda con presentación Burn: `slag_volley_master` o `last_rivets_gunner`.
+- Efecto activado de maná: `veiled_dawn_flower`.
+- Trigger de entrada con target manual: `aelyra_heir_of_elarion`.
+- Trigger al entrar otra criatura: `kaelor_stormcaller`.
+- Spell con un target: `elixir_of_the_first_leaf` o `the_judgment_of_elarion`.
+- Spell con dos targets: `clash_of_echoes` o `shield_of_the_heir`.
+- Aura estática: `the_broken_headstone`, `nerezh_graveless_matriarch` o `the_daunting_front`.
+- Trigger de muerte: `devourer_of_the_last_memory`, `summoner_of_the_ranks` o `rear_guard_firebreather`.
+- Trigger de ataque: `vardek_scribe_of_the_legion`.
+- Efecto de Horda con presentación Burn: `rider_of_the_umbral_volley` o `rear_guard_firebreather`.
 
 ## 1. Añadir la definición al deck
 
@@ -85,9 +85,12 @@ El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un 
 
 Reglas:
 
-- `id` debe ser estable y en `snake_case`. Los lookups runtime son globales a `DECK_REGISTRY`, así
-  que no reutilizar el mismo id para cartas distintas de decks diferentes. La excepción existente
-  es una misma definición de token repetida de forma idéntica en `cards` y `tokens`.
+- `id` se deriva del `name` inglés: minúsculas, sin apóstrofos y con palabras separadas por `_`.
+  `cardIdFromName` y el deck lint hacen cumplir ese contrato. Una vez publicada la identidad, el id
+  es estable; si se reemplaza el nombre canónico de una carta, todos sus consumidores se migran en
+  el mismo cambio. Los lookups runtime son globales a `DECK_REGISTRY`, así que no se reutiliza el
+  mismo id para cartas distintas. La excepción es una misma definición de token repetida de forma
+  idéntica en `cards` y `tokens`.
 - `collectorId` es el identificador impreso y también debe ser globalmente único. El Acto I usa
   `HFA1xxx`: `HF` = Hostfall, `A1` = Acto I y los últimos tres dígitos son la secuencia continua.
   Una misma definición repetida en `cards` y `tokens` conserva el mismo `collectorId`.
@@ -331,7 +334,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-Tributo de los Cuatro Pesares (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Tributo de los Cuatro Pesares (`tribute_of_the_four_sorrows`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones
@@ -484,7 +487,7 @@ el tablero alrededor de la prueba.
 
 ## Checklist de terminado
 
-- [ ] La carta está en el JSON correcto con id estable y cantidad correcta.
+- [ ] La carta está en el JSON correcto, su id coincide con `cardIdFromName(name)` y la cantidad es correcta.
 - [ ] `deckSize` sigue coincidiendo con la suma de cartas del deck.
 - [ ] Tiene entrada en el manifest de imágenes.
 - [ ] Tiene presentación y arte fuente separados en el estudio correspondiente.

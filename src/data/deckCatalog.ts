@@ -137,3 +137,9 @@ export const inspectableDecks: InspectableDeck[] = [
 export function findInspectableDeck(id: string): InspectableDeck {
   return inspectableDecks.find((deck) => deck.id === id) ?? inspectableDecks[0];
 }
+
+/** The card that represents a deck across setup, the collection and the encounter transition. */
+export function findDeckKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
+  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
+  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
+}

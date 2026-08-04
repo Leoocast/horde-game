@@ -1,6 +1,7 @@
-import { AlertTriangle, ArrowLeft, AudioLines, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -11,7 +12,7 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
 import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
-import { DecksView } from "./DecksView";
+import { DeckKeyCard, DecksView } from "./DecksView";
 import { LanguageSelector } from "./LanguageSelector";
 import { ToastStack } from "./ToastStack";
 
@@ -71,17 +72,19 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
+  const preserveMusicOnInitialMount = useRef(preserveMusicOnMount);
 
   useEffect(() => {
-    if (!preserveMusicOnMount) startMenuMusic();
-  }, [preserveMusicOnMount, startMenuMusic]);
+    if (!preserveMusicOnInitialMount.current) startMenuMusic();
+  }, [startMenuMusic]);
 
   useEffect(() => {
     if (!setupClosing) return;
+    // Must outlast the reverse stagger: last piece leaves at 330ms, backdrop fades until 340ms.
     const timeout = window.setTimeout(() => {
       setMenuScreen("home");
       setSetupClosing(false);
-    }, 330);
+    }, 345);
     return () => window.clearTimeout(timeout);
   }, [setupClosing]);
 
@@ -104,9 +107,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       }
       if (showDeveloperWarning) return;
       if (menuScreen === "home") return;
+      // The setup screen owns Escape itself: an open deck drawer has to swallow it before we leave.
+      if (menuScreen === "setup" || menuScreen === "chaos") return;
       event.preventDefault();
-      if (menuScreen === "setup" || menuScreen === "chaos") setSetupClosing(true);
-      else closeMenuPanel();
+      closeMenuPanel();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -231,7 +235,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         <div className="main-menu-layout">
           <div className="main-menu-brand">
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
-            <h1 className="main-menu-title">Hostfall</h1>
+            <h1 className="main-menu-title hostfall-wordmark">HOstfAll</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
             {(onOpenPlayground || onOpenAudioLab) && (
               <div className="main-menu-developer-tools">
@@ -386,6 +390,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onStart={startGame}
           launching={launching}
           closing={setupClosing}
+          overlayOpen={showDeveloperWarning || showNameEditor}
         />
       )}
 
@@ -497,6 +502,31 @@ function fireflyStyle(index: number): React.CSSProperties {
   } as React.CSSProperties;
 }
 
+/** Ambient motes that rise inside the setup screen; the menu fireflies stay behind its blur. */
+function SetupEmbers() {
+  return (
+    <div className="expedition-embers" aria-hidden="true">
+      {Array.from({ length: 20 }, (_, index) => <span key={index} style={emberStyle(index)} />)}
+    </div>
+  );
+}
+
+function emberStyle(index: number): React.CSSProperties {
+  const random = (salt: number) => {
+    const value = Math.sin((index + 1) * (9.317 + salt * 23.71)) * 24634.6345;
+    return value - Math.floor(value);
+  };
+  return {
+    "--ember-left": `${2 + random(1) * 96}%`,
+    "--ember-size": `${1.2 + random(2) * 2.3}px`,
+    "--ember-duration": `${12 + random(3) * 11}s`,
+    "--ember-delay": `${-random(4) * 22}s`,
+    "--ember-drift": `${-40 + random(5) * 80}px`,
+    "--ember-rise": `${-58 - random(6) * 30}vh`,
+    "--ember-peak": `${0.22 + random(7) * 0.38}`,
+  } as React.CSSProperties;
+}
+
 type ExpeditionSetupProps = {
   chaos: boolean;
   playerDeck?: InspectableDeck;
@@ -524,14 +554,40 @@ type ExpeditionSetupProps = {
   onStart: () => void;
   launching: boolean;
   closing: boolean;
+  /** A modal is stacked above the screen, so it owns Escape instead. */
+  overlayOpen: boolean;
 };
 
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
+  const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
+
+  const closeDeckDrawer = () => {
+    const closingSide = openDeckSide;
+    setOpenDeckSide(null);
+    if (closingSide) {
+      window.requestAnimationFrame(() => document.getElementById(`expedition-${closingSide}-change-deck`)?.focus());
+    }
+  };
+
+  // Escape peels one layer at a time: the deck drawer first, only then the screen itself.
+  useEffect(() => {
+    if (props.overlayOpen) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (openDeckSide) closeDeckDrawer();
+      else props.onBack();
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [openDeckSide, props.overlayOpen, props.onBack]);
+
   return (
     <section className={`expedition-setup ${props.chaos ? "chaos-setup" : ""} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
       {props.chaos && <ChaosSigils />}
-      <header className="expedition-header">
+      <SetupEmbers />
+      <header className="expedition-header" inert={openDeckSide !== null}>
         <button className="expedition-back" type="button" onClick={props.onBack}>
           <ArrowLeft size={17} /> {t("common.mainMenu")}
         </button>
@@ -541,16 +597,15 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         </div>
       </header>
 
-      <div className="expedition-body">
+      <div className="expedition-body" inert={openDeckSide !== null}>
         <div className="expedition-combatants">
           <SetupCombatant
             eyebrow={t("setup.playerSide")}
             side="player"
             deck={props.playerDeck}
-            decks={props.playerDecks}
-            selectedDeckId={props.selectedPlayerDeckId}
-            onSelectDeck={props.onSelectPlayerDeck}
             onInspect={props.onInspectPlayerDeck}
+            drawerOpen={openDeckSide === "player"}
+            onChangeDeck={() => setOpenDeckSide("player")}
           />
 
           <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
@@ -559,10 +614,10 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
             eyebrow={t("setup.hostSide")}
             side="host"
             deck={props.hostDeck}
-            decks={props.hostDecks}
-            selectedDeckId={props.selectedHostDeckId}
-            onSelectDeck={props.onSelectHostDeck}
             onInspect={props.onInspectHostDeck}
+            drawerOpen={openDeckSide === "host"}
+            onChangeDeck={() => setOpenDeckSide("host")}
+            accessory={props.chaos ? undefined : <HostAwakening turns={props.selectedMode.setupTurns} />}
           />
         </div>
 
@@ -572,7 +627,6 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
             <div className="expedition-section-heading">
               <div><p>{t("setup.chooseFate")}</p><h2 id="difficulty-heading">{t("setup.difficulty")}</h2></div>
-              <HostAwakening turns={props.selectedMode.setupTurns} />
             </div>
             <div className="expedition-mode-grid">
               {modes.map((item) => (
@@ -608,11 +662,52 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         </section>
       </div>
 
-      <footer className="expedition-footer">
+      <footer className="expedition-footer" inert={openDeckSide !== null}>
+        <div className="expedition-footer-summary">
+          <span>{t("setup.playerSide")}</span>
+          <strong>{props.playerDeck?.deck.name ?? "—"}</strong>
+          <i aria-hidden="true">◆</i>
+          <span>{t("setup.hostSide")}</span>
+          <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
+          {!props.chaos && (
+            <>
+              <i aria-hidden="true">◆</i>
+              <span>{t("setup.difficulty")}</span>
+              <strong>{t(props.mode === "easy" ? "setup.adventurer" : props.mode === "normal" ? "setup.veteran" : "setup.doomed")}</strong>
+            </>
+          )}
+        </div>
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          <span><small>{props.chaos ? t("setup.shatterRules") : t("setup.beginThe")}</small>{props.chaos ? t("setup.unleashChaos") : t("setup.expedition")}</span>{props.chaos ? <Dices size={29} /> : <Play size={29} />}
+          <span>{props.chaos ? t("setup.unleashChaos") : t("setup.beginChronicle")}</span>
+          {props.chaos ? <Dices size={22} /> : <Play size={22} />}
         </button>
       </footer>
+
+      <AnimatePresence>
+        {openDeckSide && (
+          <motion.div key={openDeckSide} className="expedition-deck-drawer-layer" initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0.999 }} transition={{ duration: 0.4 }}>
+            <motion.button
+              className="expedition-deck-drawer-scrim"
+              type="button"
+              tabIndex={-1}
+              aria-hidden="true"
+              onClick={closeDeckDrawer}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22 }}
+            />
+            <SetupDeckDrawer
+              side={openDeckSide}
+              eyebrow={t(openDeckSide === "player" ? "setup.playerSide" : "setup.hostSide")}
+              decks={openDeckSide === "player" ? props.playerDecks : props.hostDecks}
+              selectedDeckId={openDeckSide === "player" ? props.selectedPlayerDeckId : props.selectedHostDeckId}
+              onSelectDeck={openDeckSide === "player" ? props.onSelectPlayerDeck : props.onSelectHostDeck}
+              onClose={closeDeckDrawer}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </section>
   );
@@ -675,43 +770,106 @@ function HostAwakening({ turns }: { turns: number }) {
   );
 }
 
-function SetupCombatant({ eyebrow, side, deck, decks, selectedDeckId, onSelectDeck, onInspect }: {
+function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck, accessory }: {
   eyebrow: string;
   side: "player" | "host";
   deck?: InspectableDeck;
-  decks: InspectableDeck[];
-  selectedDeckId: string;
-  onSelectDeck: (deckId: string) => void;
   onInspect: () => void;
+  drawerOpen: boolean;
+  onChangeDeck: () => void;
+  /** Rendered as a strip at the foot of the panel; the Host uses it for its awakening clock. */
+  accessory?: React.ReactNode;
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const keyCard = deck ? findSetupKeyCard(deck) : undefined;
+  const keyCard = deck ? findDeckKeyCard(deck) : undefined;
   const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
   const keyCardName = localizedCardName(keyCard, language);
+  const deckTheme = deck?.presentation.theme ?? "ramp";
   return (
-    <article className={`expedition-combatant ${side === "host" ? "expedition-combatant-host" : "expedition-combatant-player"}`}>
-      <div className="expedition-combatant-heading"><span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span><button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button></div>
+    <article
+      className={`expedition-combatant expedition-combatant-${side} deck-theme-${deckTheme}`}
+      // Anywhere on the panel opens the drawer; the heading's own buttons keep their meaning.
+      onClick={(event) => {
+        if (!(event.target instanceof Element) || event.target.closest("button")) return;
+        onChangeDeck();
+      }}
+    >
+      <div className="expedition-combatant-heading">
+        <span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span>
+        <div className="expedition-combatant-actions">
+          <button type="button" onClick={onInspect}><Eye size={14} /> {t("common.inspectDeck")}</button>
+          <button id={`expedition-${side}-change-deck`} className={drawerOpen ? "is-active" : ""} type="button" onClick={onChangeDeck} aria-expanded={drawerOpen} aria-controls={`expedition-${side}-deck-drawer`}>
+            {side === "player" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}{t("common.change")}
+          </button>
+        </div>
+      </div>
       <div className="expedition-deck-feature">
-        <div className="expedition-deck-art">
+        <div className="expedition-deck-art" key={`setup-art-${deck?.id ?? "empty"}`}>
           {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
         </div>
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>
-          <h2>{deck?.deck.name ?? t("common.chooseDeck")}</h2>
-          <p>{deck ? t(deck.presentation.descriptionKey) : ""}</p>
+          <div className="expedition-deck-current" key={`setup-copy-${deck?.id ?? "empty"}`} aria-live="polite">
+            <h2>{deck?.deck.name ?? t("common.chooseDeck")}</h2>
+            <p>{deck ? t(deck.presentation.descriptionKey) : ""}</p>
+          </div>
         </div>
       </div>
-      <div className="expedition-deck-options" role="listbox" aria-label={`${eyebrow} deck`}>
-        {decks.map((item) => <button key={item.id} className={item.id === selectedDeckId ? "is-selected" : ""} type="button" role="option" aria-selected={item.id === selectedDeckId} onClick={() => onSelectDeck(item.id)}>{item.deck.name}</button>)}
-      </div>
+      {accessory}
     </article>
   );
 }
 
-function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
-  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
+function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, onClose }: {
+  side: "player" | "host";
+  eyebrow: string;
+  decks: InspectableDeck[];
+  selectedDeckId: string;
+  onSelectDeck: (deckId: string) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslation();
+  const isPresent = useIsPresent();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const titleId = `expedition-${side}-deck-drawer-title`;
+  const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
+  const deckTheme = selectedDeck?.presentation.theme ?? "ramp";
+
+  useEffect(() => {
+    const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true }), 460);
+    return () => window.clearTimeout(focusTimer);
+  }, []);
+
+  return (
+    <aside
+      id={`expedition-${side}-deck-drawer`}
+      className={`expedition-deck-drawer expedition-deck-drawer-${side} deck-theme-${deckTheme} ${isPresent ? "is-entering" : "is-leaving"}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      style={side === "player" ? { left: 0, right: "auto" } : { left: "auto", right: 0 }}
+    >
+      <header>
+        <div><small>{eyebrow}</small><h2 id={titleId}>{t(side === "player" ? "menu.chronicles" : "menu.hosts")}</h2></div>
+        <button ref={closeButtonRef} type="button" aria-label={t("common.close")} onClick={onClose}><X size={20} /></button>
+      </header>
+      <div className="expedition-deck-drawer-cards" role="group" aria-label={`${eyebrow}: ${t("common.chooseDeck")}`}>
+        {decks.map((item) => (
+          <DeckKeyCard
+            key={item.id}
+            deck={item}
+            selected={item.id === selectedDeckId}
+            actionLabel={`${t("common.chooseDeck")}: ${item.deck.name}`}
+            onOpen={() => {
+              onSelectDeck(item.id);
+              onClose();
+            }}
+          />
+        ))}
+      </div>
+    </aside>
+  );
 }
 
 function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {

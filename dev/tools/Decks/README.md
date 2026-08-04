@@ -127,7 +127,7 @@ node scripts/check-card-assets.mjs
 Exportar un deck:
 
 ```powershell
-node dev/tools/Decks/export_cards.cjs last_rain
+node dev/tools/Decks/export_cards.cjs pact_of_elarion
 ```
 
 El exportador actualiza tanto `exported-png/` como `public/cards/` y registra la huella del lote.

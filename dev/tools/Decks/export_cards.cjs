@@ -4,16 +4,16 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const DECKS = new Set([
-    'last_rain',
-    'hollow_bell_procession',
-    'broken_forge_mutiny',
-    'crimson_court'
+    'pact_of_elarion',
+    'uprising_of_the_graveless',
+    'legion_of_varka',
+    'court_of_the_crimson_eclipse'
 ]);
 const PUBLIC_CARD_FOLDERS = {
-    last_rain: 'last_rain',
-    hollow_bell_procession: 'hollow_bell_procession',
-    broken_forge_mutiny: 'broken_forge_mutiny',
-    crimson_court: 'crimson_court'
+    pact_of_elarion: 'pact_of_elarion',
+    uprising_of_the_graveless: 'uprising_of_the_graveless',
+    legion_of_varka: 'legion_of_varka',
+    court_of_the_crimson_eclipse: 'court_of_the_crimson_eclipse'
 };
 
 function requireExporterDependency(name) {

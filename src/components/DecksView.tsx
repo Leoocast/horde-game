@@ -1,5 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { ArrowLeft, Check } from "lucide-react";
+import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
@@ -38,10 +38,10 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
   );
 }
 
-function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => void }) {
+export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { deck: InspectableDeck; onOpen: () => void; selected?: boolean; actionLabel?: string }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const keyCard = findKeyCard(deck);
+  const keyCard = findDeckKeyCard(deck);
   const details = useDeckCardDetails(keyCard, deck.images);
   const cardName = localizedCardName(keyCard, language);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -50,14 +50,15 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
 
   return (
     <button
-      className={`deck-key-card deck-theme-${deck.presentation.theme}`}
+      className={`deck-key-card deck-theme-${deck.presentation.theme} ${selected ? "is-selected" : ""}`}
       type="button"
       onClick={onOpen}
       onMouseEnter={playHoverSound}
       onFocus={(event) => {
         if (!event.currentTarget.matches(":hover")) playHoverSound();
       }}
-      aria-label={t("decks.open", { deck: deck.label })}
+      aria-label={actionLabel ?? t("decks.open", { deck: deck.label })}
+      aria-pressed={selected || undefined}
     >
       <span className="deck-key-card-stage">
         <span className="deck-key-card-depth deck-key-card-depth-back" aria-hidden="true" />
@@ -73,6 +74,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
           )}
           <span className="deck-key-card-sheen" aria-hidden="true" />
         </span>
+        {selected && <span className="deck-key-card-selection" aria-hidden="true"><Check size={14} /></span>}
       </span>
       <span className="deck-key-card-copy">
         <strong>{deck.deck.name}</strong>
@@ -81,7 +83,3 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
   );
 }
 
-function findKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
-  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
-}

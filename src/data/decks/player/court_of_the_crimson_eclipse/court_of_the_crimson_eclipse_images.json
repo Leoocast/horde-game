@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0.0",
+  "provider": "local",
+  "defaults": {
+    "showFullCardImage": true
+  },
+  "cards": {
+    "sanctuary_of_the_red_moon": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/sanctuary_of_the_red_moon.png"
+    },
+    "blood_page": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/blood_page.png"
+    },
+    "herald_of_the_eclipse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/herald_of_the_eclipse.png"
+    },
+    "midnight_collector": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/midnight_collector.png"
+    },
+    "duelist_of_the_eclipse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/duelist_of_the_eclipse.png"
+    },
+    "guardian_of_the_night_threshold": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/guardian_of_the_night_threshold.png"
+    },
+    "assassin_of_the_black_veil": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/assassin_of_the_black_veil.png"
+    },
+    "sentinel_of_the_lunar_eye": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/sentinel_of_the_lunar_eye.png"
+    },
+    "mirevna_countess_of_the_crimson_eclipse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png"
+    },
+    "midnight_pact": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/midnight_pact.png"
+    },
+    "crimson_impulse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/crimson_impulse.png"
+    },
+    "drain_essence": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/drain_essence.png"
+    },
+    "hunt_beneath_the_red_moon": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/hunt_beneath_the_red_moon.png"
+    },
+    "verdict_of_the_eclipse": {
+      "source": "local",
+      "imageKind": "card",
+      "imageUrl": "/cards/court_of_the_crimson_eclipse/verdict_of_the_eclipse.png"
+    }
+  }
+}

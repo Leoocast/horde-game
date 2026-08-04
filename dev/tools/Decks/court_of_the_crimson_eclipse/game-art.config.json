@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0.0",
+  "cards": {
+    "blood_page": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -4,
+        "y": 60
+      }
+    },
+    "mirevna_countess_of_the_crimson_eclipse": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 75
+      }
+    },
+    "assassin_of_the_black_veil": {
+      "battlefieldArtFrame": {
+        "zoom": 1.667,
+        "x": -139,
+        "y": 248
+      }
+    },
+    "duelist_of_the_eclipse": {
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -57,
+        "y": 90
+      }
+    },
+    "midnight_collector": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -3,
+        "y": 90
+      }
+    },
+    "guardian_of_the_night_threshold": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 128
+      }
+    },
+    "herald_of_the_eclipse": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 6,
+        "y": 84
+      }
+    },
+    "sentinel_of_the_lunar_eye": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 2,
+        "y": 80
+      }
+    }
+  }
+}

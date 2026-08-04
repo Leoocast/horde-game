@@ -170,9 +170,9 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
 
 function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefinition | undefined {
   switch (ability.customHandler) {
-    case "next_crew_caller_inspect_top_if_goblin":
-      return { type: "HOST_INSPECT_TOP_GOBLIN" };
-    case "rain_of_rivets_small_attacker_damage":
+    case "summoner_of_the_ranks_inspect_top_if_echo":
+      return { type: "HOST_INSPECT_TOP_ECHO" };
+    case "all_against_one_small_attacker_damage":
       return {
         type: "DAMAGE_OPPONENT_FOR_EACH_DECLARED_ATTACKER_MATCHING",
         filter: { kinds: ["ECHO"], subtypes: ["Goblin"], maxPower: 2 },
@@ -180,31 +180,31 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
         deferUntil: "HOST_ATTACK_SEQUENCE_END",
         animation: "BURN_VOLLEY_TO_PLAYER",
       };
-    case "first_siren_agitator_begin_combat_token":
-      return { type: "CREATE_TOKEN", tokenId: "ember_scrap_runner", amount: 1 };
-    case "first_siren_agitator_attack_buff":
+    case "varkas_linebreaker_begin_combat_token":
+      return { type: "CREATE_TOKEN", tokenId: "varkas_minion", amount: 1 };
+    case "varkas_linebreaker_attack_buff":
       return {
         type: "PUMP_SELF_PER_ATTACKER_MATCHING",
         filter: { subtypes: ["Goblin"], excludeSelf: true },
         power: 1,
         endurance: 0,
       };
-    case "repeating_blow_marshal_goblins_attack_token":
+    case "marshal_of_the_wave_goblins_attack_token":
       return {
         type: "CONDITIONAL",
         condition: { type: "DECLARED_ATTACKER_MATCHES", filters: { subtypes: ["Goblin"] } },
         effect: {
           type: "CREATE_TOKEN",
-          tokenId: "ember_scrap_runner",
+          tokenId: "varkas_minion",
           amount: 1,
           exhausted: true,
           attacking: true,
         },
       };
-    case "repeating_blow_marshal_damage_each_opponent":
+    case "marshal_of_the_wave_damage_each_opponent":
       return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
-    case "varka_revolt_axis_enter_damage_all":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 1, animation: "BURN_VOLLEY" };
+    case "varka_infernal_matriarch_enter_damage_all":
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 2, animation: "BURN_VOLLEY" };
     default:
       return undefined;
   }

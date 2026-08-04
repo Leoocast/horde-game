@@ -6,7 +6,7 @@
     const STATE_PATTERN =
         /\b(?:Marcado|Marcada|Marcados|Marcadas|Aturdido|Aturdida|Aturdidos|Aturdidas|Atado|Atada|Atados|Atadas)\b/gu;
     const TOKEN_CREATION_PATTERN =
-        /\b(?:crea|crear|invoca|invocar)\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|tantos|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?/giu;
+        /\b(?:crea|crear|invoca|invocar)\s+(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|tantos|\d+)\s+Esbirros? de Varka(?:\s+atacando)?|(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|tantos|\d+)\s+)[^.!?;:\r\n]*?\d+\/\d+(?:\s+atacando)?)/giu;
     const COUNTER_PATTERN =
         /\b(?:(?:un(?:a)?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|esa cantidad de|\d+)\s+)?contador(?:es)?(?:\s+(?:de\s+[\p{L}\p{M}-]+|[+-]\d+\/[+-]\d+))?/giu;
     const STAT_PATTERN = /[+-]\d+\/[+-]\d+/g;

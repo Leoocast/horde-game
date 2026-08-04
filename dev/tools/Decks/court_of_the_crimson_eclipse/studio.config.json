@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0.0",
+  "runtimeDeck": "../../../../src/data/decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse.json",
+  "defaultArtist": "Dean Spencer",
+  "cards": [
+    {
+      "id": "sanctuary_of_the_red_moon",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/sanctuary_of_the_red_moon.jpg",
+      "typeLineEs": "Fuente — Santuario",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "blood_page",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/blood_page.jpg",
+      "typeLineEs": "Eco — Vampira Sirviente",
+      "artFrame": {
+        "zoom": 0.962,
+        "x": -6,
+        "y": -69
+      }
+    },
+    {
+      "id": "herald_of_the_eclipse",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/herald_of_the_eclipse.jpg",
+      "typeLineEs": "Eco — Murciélago Vampiro",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 10,
+        "y": -125
+      },
+      "headerFade": true
+    },
+    {
+      "id": "midnight_collector",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/midnight_collector.jpg",
+      "typeLineEs": "Eco — Vampiro Recaudador",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -121
+      },
+      "headerFade": true
+    },
+    {
+      "id": "duelist_of_the_eclipse",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/duelist_of_the_eclipse.jpg",
+      "typeLineEs": "Eco — Vampiro Duelista",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -16,
+        "y": -207
+      },
+      "headerFade": false
+    },
+    {
+      "id": "guardian_of_the_night_threshold",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/guardian_of_the_night_threshold.jpg",
+      "typeLineEs": "Eco — Vampira Caballera",
+      "artFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": -42
+      },
+      "headerFade": false,
+      "fullArt": false
+    },
+    {
+      "id": "assassin_of_the_black_veil",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/assassin_of_the_black_veil.jpg",
+      "typeLineEs": "Eco — Vampira Asesina",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": 45,
+        "y": -24
+      },
+      "headerFade": true,
+      "fullArt": false
+    },
+    {
+      "id": "sentinel_of_the_lunar_eye",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/sentinel_of_the_lunar_eye.jpg",
+      "typeLineEs": "Eco — Humano/Elfo",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 25,
+        "y": 31
+      },
+      "headerFade": false,
+      "fullArt": false
+    },
+    {
+      "id": "mirevna_countess_of_the_crimson_eclipse",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/mirevna_countess_of_the_crimson_eclipse.jpg",
+      "typeLineEs": "Eco de Crónica — Vampiro Noble",
+      "traitPlacement": "after-first-rule",
+      "groupTraits": true,
+      "artFrame": {
+        "zoom": 0.79,
+        "x": 6,
+        "y": -138
+      }
+    },
+    {
+      "id": "midnight_pact",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/midnight_pact.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 1,
+        "x": 16,
+        "y": 8
+      },
+      "fullArt": true,
+      "headerFade": false
+    },
+    {
+      "id": "crimson_impulse",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/crimson_impulse.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -4,
+        "y": -220
+      },
+      "fullArt": false,
+      "headerFade": false
+    },
+    {
+      "id": "drain_essence",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/drain_essence.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1.603,
+        "x": -1,
+        "y": 132
+      },
+      "fullArt": true
+    },
+    {
+      "id": "hunt_beneath_the_red_moon",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/hunt_beneath_the_red_moon.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": 18,
+        "y": -107
+      },
+      "headerFade": false
+    },
+    {
+      "id": "verdict_of_the_eclipse",
+      "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/verdict_of_the_eclipse.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "fullArt": true,
+      "artFrame": {
+        "zoom": 1,
+        "x": 41,
+        "y": 12
+      }
+    }
+  ],
+  "motif": {
+    "stats": {
+      "x": 120,
+      "y": 0,
+      "zoom": 4,
+      "rotation": 0
+    }
+  }
+}

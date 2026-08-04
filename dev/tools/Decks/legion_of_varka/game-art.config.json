@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "1.0.0",
+  "cards": {
+    "varkas_minion": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 92
+      }
+    },
+    "shaman_of_the_umbral_ember": {
+      "battlefieldArtFrame": {
+        "zoom": 1.482,
+        "x": 33,
+        "y": 175
+      }
+    },
+    "summoner_of_the_ranks": {
+      "battlefieldArtFrame": {
+        "zoom": 1.266,
+        "x": -4,
+        "y": 155
+      }
+    },
+    "varkas_standard_bearer": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 77
+      }
+    },
+    "chief_of_the_double_guard": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -2,
+        "y": 90
+      }
+    },
+    "rider_of_the_third_charge": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": 0,
+        "y": 23
+      }
+    },
+    "varkas_linebreaker": {
+      "battlefieldArtFrame": {
+        "zoom": 1.125,
+        "x": -6,
+        "y": 103
+      }
+    },
+    "corrupted_war_bear": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 7,
+        "y": 96
+      }
+    },
+    "varka_infernal_matriarch": {
+      "battlefieldArtFrame": {
+        "zoom": 1.266,
+        "x": -29,
+        "y": 138
+      }
+    },
+    "varkas_forgemaster": {
+      "battlefieldArtFrame": {
+        "zoom": 1.082,
+        "x": -2,
+        "y": 95
+      }
+    },
+    "rider_of_the_umbral_volley": {
+      "battlefieldArtFrame": {
+        "zoom": 1.875,
+        "x": -75,
+        "y": 160
+      }
+    },
+    "marshal_of_the_wave": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": 2,
+        "y": 90
+      }
+    },
+    "vardek_scribe_of_the_legion": {
+      "battlefieldArtFrame": {
+        "zoom": 1.04,
+        "x": -13,
+        "y": 97
+      }
+    },
+    "rear_guard_firebreather": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 2,
+        "y": 84
+      }
+    }
+  }
+}

@@ -70,7 +70,7 @@ test("lands listed in a zone count against the energy field instead of stacking 
   const game = buildScenarioGame(
     scenario({
       player: { life: 50, energy: MAX_PLAYER_LANDS, storedEnergy: 0 },
-      zones: { playerField: [{ definitionId: "deep_root_spring", amount: 2, exhausted: true }] },
+      zones: { playerField: [{ definitionId: "river_of_elarion", amount: 2, exhausted: true }] },
     }),
   );
 
@@ -86,11 +86,11 @@ test("zone entries become real card instances in the right zone", () => {
       player: { life: 12, energy: 0, storedEnergy: 3 },
       host: { poisonCounters: 2 },
       zones: {
-        playerHand: [{ definitionId: "first_tree_sap" }],
-        playerField: [{ definitionId: "deep_root_spring", amount: 3, exhausted: true }],
-        playerMemory: [{ definitionId: "first_dew_gatherers" }],
-        hostField: [{ definitionId: "last_knell_dead", amount: 2 }],
-        hostArchiveTop: [{ definitionId: "hollow_bell" }],
+        playerHand: [{ definitionId: "elixir_of_the_first_leaf" }],
+        playerField: [{ definitionId: "river_of_elarion", amount: 3, exhausted: true }],
+        playerMemory: [{ definitionId: "veiled_dawn_flower" }],
+        hostField: [{ definitionId: "graveless_soldier", amount: 2 }],
+        hostArchiveTop: [{ definitionId: "the_broken_headstone" }],
       },
     }),
   );
@@ -99,31 +99,31 @@ test("zone entries become real card instances in the right zone", () => {
   assert.equal(game.player.energyPool.stored, 3);
   assert.equal(game.host.poisonCounters, 2);
 
-  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["first_tree_sap"]);
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["elixir_of_the_first_leaf"]);
   assert.equal(game.player.hand[0].zone, "hand");
 
   const lands = game.player.field;
   assert.equal(lands.length, 3);
-  assert.ok(lands.every((card) => card.definitionId === "deep_root_spring" && card.zone === "field" && card.exhausted));
+  assert.ok(lands.every((card) => card.definitionId === "river_of_elarion" && card.zone === "field" && card.exhausted));
 
-  assert.deepEqual(game.player.memory.map((card) => card.definitionId), ["first_dew_gatherers"]);
+  assert.deepEqual(game.player.memory.map((card) => card.definitionId), ["veiled_dawn_flower"]);
   assert.equal(game.player.memory[0].zone, "memory");
 
   assert.equal(game.host.field.length, 2);
-  assert.ok(game.host.field.every((card) => card.definitionId === "last_knell_dead" && card.controller === "host"));
+  assert.ok(game.host.field.every((card) => card.definitionId === "graveless_soldier" && card.controller === "host"));
   // Scenario cards are assumed to be already in play, so they can act immediately.
   assert.ok(game.host.field.every((card) => !card.stabilizing));
 
-  assert.equal(game.host.archive[0].definitionId, "hollow_bell");
+  assert.equal(game.host.archive[0].definitionId, "the_broken_headstone");
 });
 
 test("instance ids are unique across every zone", () => {
   const game = buildScenarioGame(
     scenario({
       zones: {
-        playerHand: [{ definitionId: "deep_root_spring", amount: 2 }],
-        playerField: [{ definitionId: "deep_root_spring", amount: 4 }],
-        playerMemory: [{ definitionId: "deep_root_spring", amount: 2 }],
+        playerHand: [{ definitionId: "river_of_elarion", amount: 2 }],
+        playerField: [{ definitionId: "river_of_elarion", amount: 4 }],
+        playerMemory: [{ definitionId: "river_of_elarion", amount: 2 }],
       },
     }),
   );
@@ -142,7 +142,7 @@ test("instance ids are unique across every zone", () => {
 
 test("copies beyond the deck's count are minted instead of silently dropped", () => {
   // The Zombie deck holds two copies of The Broken Headstone; a scenario may still want three on the board.
-  const game = buildScenarioGame(scenario({ zones: { hostField: [{ definitionId: "hollow_bell", amount: 3 }] } }));
+  const game = buildScenarioGame(scenario({ zones: { hostField: [{ definitionId: "the_broken_headstone", amount: 3 }] } }));
 
   assert.equal(game.host.field.length, 3);
   assert.equal(new Set(game.host.field.map((card) => card.instanceId)).size, 3);
@@ -152,8 +152,8 @@ test("rebuilding a scenario reproduces the exact same state, RNG included", () =
   const definition = scenario({
     seed: "repeatable",
     zones: {
-      playerField: [{ definitionId: "deep_root_spring", amount: 4 }],
-      hostField: [{ definitionId: "last_knell_dead" }],
+      playerField: [{ definitionId: "river_of_elarion", amount: 4 }],
+      hostField: [{ definitionId: "graveless_soldier" }],
     },
   });
 
@@ -183,8 +183,8 @@ test("placing cards into a live game keeps instance ids unique across repeated a
   // Deep-Root Spring is in the deck, so the first copies come out of the library; The Broken Headstone belongs to the
   // Host deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {
-    game = addScenarioCard(game, "playerField", { definitionId: "deep_root_spring", amount: 2 });
-    game = addScenarioCard(game, "hostField", { definitionId: "hollow_bell" });
+    game = addScenarioCard(game, "playerField", { definitionId: "river_of_elarion", amount: 2 });
+    game = addScenarioCard(game, "hostField", { definitionId: "the_broken_headstone" });
   }
 
   assert.equal(game.player.field.length, 6);
@@ -206,9 +206,9 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
   // This is what Save relies on: the thing stored is the board you are looking at, so placing a
   // card and saving can never disagree the way a separate draft did.
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
-  game = addScenarioCard(game, "playerHand", { definitionId: "first_tree_sap", amount: 2 });
-  game = addScenarioCard(game, "hostField", { definitionId: "last_knell_dead", amount: 3 });
-  game = addScenarioCard(game, "playerMemory", { definitionId: "first_dew_gatherers" });
+  game = addScenarioCard(game, "playerHand", { definitionId: "elixir_of_the_first_leaf", amount: 2 });
+  game = addScenarioCard(game, "hostField", { definitionId: "graveless_soldier", amount: 3 });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "veiled_dawn_flower" });
   game.player.life = 31;
   game.host.poisonCounters = 4;
 
@@ -229,15 +229,15 @@ test("snapshotting a live board and rebuilding it reproduces the same zones", ()
 
 test("saved boards preserve separate token waves around another summon", () => {
   let game = buildScenarioGame(scenario());
-  game = addScenarioCard(game, "hostField", { definitionId: "ember_scrap_runner", amount: 4 });
-  game = addScenarioCard(game, "hostField", { definitionId: "burning_tally_foreman" });
-  game = addScenarioCard(game, "hostField", { definitionId: "ember_scrap_runner", amount: 2 });
+  game = addScenarioCard(game, "hostField", { definitionId: "varkas_minion", amount: 4 });
+  game = addScenarioCard(game, "hostField", { definitionId: "shaman_of_the_umbral_ember" });
+  game = addScenarioCard(game, "hostField", { definitionId: "varkas_minion", amount: 2 });
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
   assert.deepEqual(saved.zones.hostField, [
-    { definitionId: "ember_scrap_runner", amount: 4 },
-    { definitionId: "burning_tally_foreman", amount: 1 },
-    { definitionId: "ember_scrap_runner", amount: 2 },
+    { definitionId: "varkas_minion", amount: 4 },
+    { definitionId: "shaman_of_the_umbral_ember", amount: 1 },
+    { definitionId: "varkas_minion", amount: 2 },
   ]);
 
   const rebuilt = buildScenarioGame(saved);
@@ -249,16 +249,16 @@ test("saved boards preserve separate token waves around another summon", () => {
 
 test("saved boards keep only the hand and battlefields", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 2, storedEnergy: 1 } }));
-  game = addScenarioCard(game, "playerHand", { definitionId: "first_tree_sap" });
-  game = addScenarioCard(game, "hostField", { definitionId: "last_knell_dead" });
-  game = addScenarioCard(game, "playerMemory", { definitionId: "first_dew_gatherers" });
+  game = addScenarioCard(game, "playerHand", { definitionId: "elixir_of_the_first_leaf" });
+  game = addScenarioCard(game, "hostField", { definitionId: "graveless_soldier" });
+  game = addScenarioCard(game, "playerMemory", { definitionId: "veiled_dawn_flower" });
   game.player.life = 12;
 
   const saved = snapshotBoard(game, BLANK_SCENARIO);
   const rebuilt = buildScenarioGame(saved);
 
-  assert.equal(rebuilt.player.hand.some((card) => card.definitionId === "first_tree_sap"), true);
-  assert.equal(rebuilt.host.field.some((card) => card.definitionId === "last_knell_dead"), true);
+  assert.equal(rebuilt.player.hand.some((card) => card.definitionId === "elixir_of_the_first_leaf"), true);
+  assert.equal(rebuilt.host.field.some((card) => card.definitionId === "graveless_soldier"), true);
   assert.equal(rebuilt.player.memory.length, 0);
   assert.equal(rebuilt.player.life, BLANK_SCENARIO.player.life);
   assert.equal(rebuilt.player.energyPool.stored, 0);
@@ -268,21 +268,21 @@ test("Host library queues preserve their authored top-to-bottom order", () => {
   const game = buildScenarioGame(scenario({
     zones: {
       hostArchiveTop: [
-        { definitionId: "hollow_bell" },
-        { definitionId: "last_knell_dead" },
+        { definitionId: "the_broken_headstone" },
+        { definitionId: "graveless_soldier" },
       ],
     },
   }));
 
-  assert.deepEqual(game.host.archive.slice(0, 2).map((card) => card.definitionId), ["hollow_bell", "last_knell_dead"]);
+  assert.deepEqual(game.host.archive.slice(0, 2).map((card) => card.definitionId), ["the_broken_headstone", "graveless_soldier"]);
 });
 
 test("an exact queued Host turn reveals duplicates and no extra deck card", () => {
   const queued = buildScenarioGame(scenario({
     zones: {
       hostArchiveTop: [
-        { definitionId: "hollow_bell" },
-        { definitionId: "hollow_bell" },
+        { definitionId: "the_broken_headstone" },
+        { definitionId: "the_broken_headstone" },
       ],
     },
   }));
@@ -291,9 +291,9 @@ test("an exact queued Host turn reveals duplicates and no extra deck card", () =
   const resolved = runHostMain(configureExactHostTurn(queued, 2));
 
   assert.equal(resolved.host.archive.length, libraryBefore - 2);
-  assert.equal(resolved.host.field.filter((card) => card.definitionId === "hollow_bell").length, 2);
+  assert.equal(resolved.host.field.filter((card) => card.definitionId === "the_broken_headstone").length, 2);
 });
 
 test("a valid scenario reports no problems", () => {
-  assert.deepEqual(validateScenario(scenario({ zones: { playerHand: [{ definitionId: "first_tree_sap" }] } })), []);
+  assert.deepEqual(validateScenario(scenario({ zones: { playerHand: [{ definitionId: "elixir_of_the_first_leaf" }] } })), []);
 });
