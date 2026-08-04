@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { DECK_REGISTRY } from "../src/data/decks";
 import { localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
-import { translationValues } from "../src/i18n/translations";
+import { translate, translationValues } from "../src/i18n/translations";
 
 const LEGACY_VISIBLE_TERM = /(?:\b(?:horde|mana|lands?|creatures?|artifacts?|enchantments?|sorcer(?:y|ies)|instants?|librar(?:y|ies)|battlefields?|graveyards?|exile[ds]?|untap(?:ped|s|ping)?|tap(?:ped|s|ping)?|menace|reach|vigilance|deathtouch|first strike|skulk|trample|haste|lifesteal|toxic|endurance|mill(?:ed|s|ing)?|creates?)\b|\b(?:horda|maná|tierras?|criaturas?|artefactos?|encantamientos?|conjuros?|instantáneos?|bibliotecas?|cementerios?|exilio|amenaza|alcance|vigilancia|escurridizo|arrollar|prisa|tóxico|resistencia|crea|crear)\b|campo de batalla|toque mortal|dañar primero|robo de vida|mareo de invocación)/iu;
 
@@ -20,6 +20,11 @@ test("localized interface copy contains no retired public vocabulary", () => {
       assertUsesHostfallVocabulary(value, `${language} translation`);
     }
   }
+});
+
+test("the in-game Host counter uses the compact side label", () => {
+  assert.equal(translate("en", "game.hostDeck"), "Host");
+  assert.equal(translate("es", "game.hostDeck"), "Hueste");
 });
 
 test("every authored card rule and type line has a clean Hostfall presentation", () => {

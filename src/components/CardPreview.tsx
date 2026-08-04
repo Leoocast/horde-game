@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
-import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
+import { cardLabelCamelCase, localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -10,6 +10,7 @@ import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
+import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
 import {
   fitHoverCardDisplay,
@@ -264,7 +265,13 @@ export function CardDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : displayName ?? localizedCardName(card, language);
+  const localizedName = cardLabelCamelCase(
+    language === "es"
+      ? card.displayNameEs || displayName || localizedCardName(card, language)
+      : displayName ?? localizedCardName(card, language),
+    language,
+  );
+  const localizedType = cardLabelCamelCase(typeLineText ?? localizedTypeLine(card, language), language);
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
       <div className="relative flex w-[min(1320px,calc(100vw-48px))] items-center justify-center">
@@ -290,7 +297,7 @@ export function CardDetailsModal({
           <div className="flex items-start justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
             <div>
               <h2 className="old-title text-3xl font-black leading-tight">{localizedName}</h2>
-              <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLineText ?? localizedTypeLine(card, language)}</p>
+              <p className="mt-2 text-sm font-bold tracking-wide text-[#d6b879]">{localizedType}</p>
             </div>
             <button className="icon-button h-9 w-9" title={t("common.closeDetails")} onClick={onClose}>
               <X size={18} />
@@ -332,7 +339,10 @@ export function TraitPills({ traits, compact = false }: { traits: string; compac
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedTraitTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}</span>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>
+              <CardTraitIcon keyword={clean} />
+              {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}
+            </span>
           </GameTooltip>
         );
       })}
@@ -361,7 +371,10 @@ function TraitExplanations({
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill card-preview-keyword-badge">{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}</div>
+          <div className="keyword-pill card-preview-keyword-badge">
+            <CardTraitIcon keyword={keyword} />
+            {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}
+          </div>
           <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedTraitTooltip(keyword, language)}</p>
         </div>
       ))}

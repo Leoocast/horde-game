@@ -16,6 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
+import { buffSurgeRenderMode } from "./buffSurgePolicy";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
@@ -25,6 +26,7 @@ import {
   createBattlefieldArrivalRegistry,
   groupBattlefieldCopies,
   holdCombatCasualties,
+  isFrontOfCardStack,
   isSwarmToken,
   unregisteredBattlefieldArrivals,
   type GroupMeta,
@@ -774,7 +776,7 @@ export function Battlefield({ game, side, cards }: Props) {
             inside each stack leaves an exiting duplicate behind while the same card's new
             reflow/buff animation is already running. The battlefield's FLIP layer owns that
             movement; death effects are staged before the card is removed from game state. */}
-        {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex))}
+        {group.cards.map((card, stackIndex) => renderCard(card, compact, keyPrefix, stackIndex, group.cards.length))}
       </div>
     ));
   }
@@ -792,7 +794,7 @@ export function Battlefield({ game, side, cards }: Props) {
     ));
   }
 
-  function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0) {
+  function renderCard(card: CardInstance, compact = false, keyPrefix = "card", stackIndex = 0, stackSize = 1) {
     const useNewSummoning = side !== "host";
     const newlyArrived = !seenCardIds.current.has(card.instanceId);
     const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
@@ -1026,6 +1028,7 @@ export function Battlefield({ game, side, cards }: Props) {
                 eventId={buffAnimationEventId!}
                 palette="holy"
                 seedKey={card.instanceId}
+                renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
               />
             )
           : (
@@ -1035,6 +1038,7 @@ export function Battlefield({ game, side, cards }: Props) {
                   eventId={buffAnimationEventId!}
                   palette="nature"
                   seedKey={card.instanceId}
+                  renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
                 />
                 <GrowthBuffAnimator
                   key={`growth-${buffAnimationEventId}`}
@@ -1134,7 +1138,7 @@ export function Battlefield({ game, side, cards }: Props) {
           variant={side === "host" ? "host" : "player"}
         />
       )}
-      {!compact && card.kinds.includes("ECHO") && cropCreatureCards && (
+      {!compact && card.kinds.includes("ECHO") && cropCreatureCards && isFrontOfCardStack(stackIndex, stackSize) && (
         <CardTraitIconBadges
           game={game}
           card={card}

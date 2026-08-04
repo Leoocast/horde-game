@@ -402,6 +402,21 @@ test("the shared printed design keeps the approved compact geometry", () => {
   );
   assert.match(
     sharedCss,
+    /\.tcg-title\s*\{[^}]*text-transform:\s*capitalize;/u,
+    "printed card names must use initial capitals per word",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-typeband\s*\{[^}]*text-transform:\s*capitalize;/u,
+    "printed card types must use initial capitals per word",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-typeband\s*\{[^}]*text-transform:\s*capitalize;/u,
+    "full-art card types must use initial capitals per word",
+  );
+  assert.match(
+    sharedCss,
     /\.tcg-card--common \.tcg-copy\s*\{[^}]*justify-content:\s*center;/u,
     "common card copy must remain vertically centered",
   );

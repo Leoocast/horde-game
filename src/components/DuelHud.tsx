@@ -11,6 +11,7 @@ import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
+import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -51,6 +52,10 @@ export function DuelHud({ game }: { game: GameState }) {
   const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
   const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
   const pendingArchiveDiscards = Math.floor(pendingDamage / archiveDiscardThreshold);
+  const remainingArchiveDiscards = remainingArchiveDiscardPreview(
+    pendingArchiveDiscards,
+    previewMillPendingInLibrary,
+  );
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
@@ -274,16 +279,16 @@ export function DuelHud({ game }: { game: GameState }) {
               <div className="host-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
-                  {attackCountVisible && (
+                  {attackCountVisible && remainingArchiveDiscards !== undefined && (
                     <motion.span
-                      key={pendingArchiveDiscards}
+                      key={remainingArchiveDiscards}
                       className="host-deck-pending-mill"
                       initial={{ opacity: 0, x: -8, scale: 0.8 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -6, scale: 0.86 }}
                       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      - {pendingArchiveDiscards}
+                      - {remainingArchiveDiscards}
                     </motion.span>
                   )}
                 </AnimatePresence>

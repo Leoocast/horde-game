@@ -914,8 +914,8 @@
         "Zombie",
         "Matriarch"
       ],
-      "power": 2,
-      "endurance": 2,
+      "power": 3,
+      "endurance": 3,
       "abilities": [
         {
           "id": "last_march_marshal_static_buff",
