@@ -107,12 +107,15 @@ test("card previews reuse the current printed stats plaque", () => {
     stats: "4/6",
     cardTheme: "goblin",
   }));
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(stats, /card-preview-stats card-theme-goblin/);
   assert.match(stats, /card-preview-stat-value[^>]*>4<\/span>/);
   assert.match(stats, /card-preview-stat-separator[^>]*>\/<\/span>/);
   assert.match(stats, /card-preview-stat-value[^>]*>6<\/span>/);
   assert.doesNotMatch(stats, /<svg/);
+  assert.match(styles, /\.card-preview-stats\s*\{[^}]*min-width:\s*54px;[^}]*height:\s*31px;/u);
+  assert.match(styles, /\.deck-viewer-trait-list \.card-keyword-badge,[\s\S]*?height:\s*31px;/u);
 });
 
 test("deck collections do not clip a raised key card or its glow", () => {
