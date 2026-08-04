@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { activeDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { activeDefenseArrowLinks, isFrontOfCardStack } from "../src/components/battlefieldLayout";
 import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
@@ -51,4 +51,11 @@ test("Memory presents the most recently moved card first without mutating game s
   assert.deepEqual(memoryCardsNewestFirst(memory), [newest, middle, oldest]);
   assert.equal(newestMemoryCard(memory), newest);
   assert.deepEqual(memory, [oldest, middle, newest]);
+});
+
+test("only the front card in a visual stack owns the shared trait badges", () => {
+  assert.equal(isFrontOfCardStack(0, 1), true);
+  assert.equal(isFrontOfCardStack(0, 3), false);
+  assert.equal(isFrontOfCardStack(1, 3), false);
+  assert.equal(isFrontOfCardStack(2, 3), true);
 });

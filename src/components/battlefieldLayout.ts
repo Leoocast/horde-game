@@ -33,6 +33,11 @@ export function unregisteredBattlefieldArrivals(cards: CardInstance[], registere
   return cards.filter((card) => !registeredIds.has(card.instanceId));
 }
 
+/** Cards in one visual stack share stats, so only its foremost copy needs trait overlays. */
+export function isFrontOfCardStack(stackIndex: number, stackSize: number): boolean {
+  return stackSize <= 1 || stackIndex === stackSize - 1;
+}
+
 /**
  * Combat assignments can outlive a permanent for a few presentation beats. The battlefield also
  * keeps dead cards mounted as invisible layout ghosts, so DOM presence alone cannot decide
