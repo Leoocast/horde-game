@@ -44,13 +44,13 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     descriptionKey: "setup.descriptionVampires",
   }),
   register(uprisingOfTheGravelessRaw as NewDeckList, uprisingOfTheGravelessImagesRaw as DeckImageManifest, {
-    keyCardId: "graveless_soldier",
+    keyCardId: "nerezh_graveless_matriarch",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
   register(legionOfVarkaRaw as unknown as NewDeckList, legionOfVarkaImagesRaw as DeckImageManifest, {
-    keyCardId: "varkas_minion",
+    keyCardId: "varka_infernal_matriarch",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",
     encounterTone: "goblins",

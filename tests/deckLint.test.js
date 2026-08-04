@@ -98,6 +98,19 @@ test("active deck ids match their current canonical identities", () => {
   );
 });
 
+test("Host deck covers feature their matriarchs", () => {
+  const hostKeyCards = Object.fromEntries(
+    DECK_REGISTRY
+      .filter((entry) => entry.deck.side === "host")
+      .map((entry) => [entry.deck.id, entry.presentation.keyCardId]),
+  );
+
+  assert.deepEqual(hostKeyCards, {
+    uprising_of_the_graveless: "nerezh_graveless_matriarch",
+    legion_of_varka: "varka_infernal_matriarch",
+  });
+});
+
 test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {
   const invalid = {
     schemaVersion: "1.0.1",
