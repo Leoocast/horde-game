@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { activeDefenseArrowLinks, isFrontOfCardStack } from "../src/components/battlefieldLayout";
 import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
+import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -58,4 +61,13 @@ test("only the front card in a visual stack owns the shared trait badges", () =>
   assert.equal(isFrontOfCardStack(0, 3), false);
   assert.equal(isFrontOfCardStack(1, 3), false);
   assert.equal(isFrontOfCardStack(2, 3), true);
+});
+
+test("shared trait badges render icons and preserve Poison amounts", () => {
+  const flying = renderToStaticMarkup(createElement(CardTraitIcon, { keyword: "FLYING" }));
+  const poison = renderToStaticMarkup(createElement(CardTraitIcon, { keyword: "POISON {3}", showAmount: true }));
+
+  assert.match(flying, /<svg/);
+  assert.match(poison, /<svg/);
+  assert.match(poison, /<small[^>]*>3<\/small>/);
 });

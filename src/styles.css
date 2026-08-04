@@ -12012,6 +12012,14 @@
   font-size: 1rem;
 }
 
+.card-trait-icon-tooltip-copy > .card-trait-tooltip-keyword {
+  justify-self: start;
+  min-height: 1.7rem;
+  padding: 0.28rem 0.65rem;
+  color: #f0ead7;
+  font-size: 0.78rem;
+}
+
 .card-trait-icon-tooltip-copy > span {
   color: #f4dfb0;
   font-size: 0.9rem;
@@ -14898,8 +14906,11 @@
 
 /* Trait explanations outside the card retain their compact UI plaque. */
 .keyword-pill {
+  display: inline-flex;
   min-height: 1.55rem;
   height: auto;
+  align-items: center;
+  gap: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--deck-accent, #78956e) 62%, #283632);
   border-radius: 1px;
   background:
@@ -14913,6 +14924,15 @@
   text-transform: uppercase;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 5px 12px rgb(0 0 0 / 0.28), 0 0 10px var(--deck-accent-soft, rgb(91 142 84 / 0.15));
   clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.keyword-pill > .card-trait-label-icon,
+.card-keyword-badge:not(.card-trait-icon-badge) > .card-trait-label-icon {
+  width: 0.95em;
+  height: 0.95em;
+  flex: 0 0 0.95em;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.66));
+  stroke-width: 2.45;
 }
 
 .card-preview-keyword-explanations.is-chaos {

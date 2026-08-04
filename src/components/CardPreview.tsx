@@ -10,6 +10,7 @@ import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
+import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
 import {
   fitHoverCardDisplay,
@@ -332,7 +333,10 @@ export function TraitPills({ traits, compact = false }: { traits: string; compac
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedTraitTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}</span>
+            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>
+              <CardTraitIcon keyword={clean} />
+              {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}
+            </span>
           </GameTooltip>
         );
       })}
@@ -361,7 +365,10 @@ function TraitExplanations({
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
         <div key={keyword} className="old-panel-soft p-2.5">
-          <div className="keyword-pill card-preview-keyword-badge">{renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}</div>
+          <div className="keyword-pill card-preview-keyword-badge">
+            <CardTraitIcon keyword={keyword} />
+            {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}
+          </div>
           <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedTraitTooltip(keyword, language)}</p>
         </div>
       ))}
