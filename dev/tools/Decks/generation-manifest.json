@@ -2,11 +2,11 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "pact_of_elarion": {
-      "inputHash": "4bf0dd010a646a373bfbf16374610ad1e17d0ed9fd65e4c7f7078628de274f3b",
+      "inputHash": "299b9580c7bc06516369c7cd5a08c8d695dcc7ad4ee742a43186031e45f4bd99",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "29f5776eeca4c0eee3b2303b341c0189e9fc8fd123058f7357969ea3574022e1"
+          "sha256": "f98ddd30f00f37a1017453161f7138e7dba2bdba5d2c27151976ae219aa466e2"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
@@ -143,14 +143,14 @@
         {
           "id": "liora_keeper_of_the_grove",
           "path": "public/cards/pact_of_elarion/liora_keeper_of_the_grove.png",
-          "sha256": "33a658a1b670f07950325a7edb6ce4b4e3a433fa7d2b730278e6a6cc3ab1bc71",
+          "sha256": "54dff0b253cdae25b455d0d82b41a7aac121c98321f06fed40dc964602baa884",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hydra_of_the_black_bough",
           "path": "public/cards/pact_of_elarion/hydra_of_the_black_bough.png",
-          "sha256": "206557de3b3cdfd19d64e7038abe0e2c63839a2bd8ae984473e6b9fb52024244",
+          "sha256": "e7470057193a332df2f831abbae8b2a6083fa75243de9b118c91e6a51aa2814c",
           "width": 976,
           "height": 1360
         },
@@ -185,7 +185,7 @@
         {
           "id": "clash_of_echoes",
           "path": "public/cards/pact_of_elarion/clash_of_echoes.png",
-          "sha256": "2656ac1b1eb699a174c5da3e004212885ed74bc85d4f9097b3c689e53108c45d",
+          "sha256": "0710a75665ec41fe4b3c0ac8f6c2f2e5bbb0331ea8e328a52bb4d023bdd743a3",
           "width": 976,
           "height": 1360
         },
@@ -213,18 +213,18 @@
         {
           "id": "river_of_elarion",
           "path": "public/cards/pact_of_elarion/river_of_elarion.png",
-          "sha256": "6bdbd6a0b8c0331903579b462d47d0b41ab3065ddf9a3e67fa5467f5f1391cd2",
+          "sha256": "49295f055f5e108b337296591840baf0f3ab327cf5a8c8a1840720cbb1b0e0aa",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "uprising_of_the_graveless": {
-      "inputHash": "291d49973a953e272396a6585ff7d36dd0f6a36f461e5ad8db2bfabd6e9dde02",
+      "inputHash": "e6251b2d6c4a4fcf8c385c0294e7630c91193e30f7e28ee62b05bf83e0752a4a",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "29f5776eeca4c0eee3b2303b341c0189e9fc8fd123058f7357969ea3574022e1"
+          "sha256": "f98ddd30f00f37a1017453161f7138e7dba2bdba5d2c27151976ae219aa466e2"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
@@ -363,130 +363,130 @@
         {
           "id": "graveless_soldier",
           "path": "public/cards/uprising_of_the_graveless/graveless_soldier.png",
-          "sha256": "f41ed670e3399f42689e0cabe4ae2ab23dc9fe361f8623264fe31eaaf1c1c8c1",
+          "sha256": "b346d5539956366da1a94c979fc40ddc43574165188c6a87c94565c8458dff1c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "graveless_titan",
           "path": "public/cards/uprising_of_the_graveless/graveless_titan.png",
-          "sha256": "17d9937979f7ae3f8fb1a07c3383f082cadbbf4736464c2268a3aae988645a7f",
+          "sha256": "b254cd595696e0771a0c6db9b6dd97d5eb67c233292c6c19a451485a61ff167c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "the_broken_headstone",
           "path": "public/cards/uprising_of_the_graveless/the_broken_headstone.png",
-          "sha256": "3086a5dbbe9994b46246453535833dfb8001e640661ce310a385c628297912f2",
+          "sha256": "9211d6ff2d204f8d6c5ca0f5f8c43596bab960b63da5e1d0a8a6067c14019b70",
           "width": 976,
           "height": 1360
         },
         {
           "id": "inexhaustible_ossuary",
           "path": "public/cards/uprising_of_the_graveless/inexhaustible_ossuary.png",
-          "sha256": "1fcbb13c2893f5fcb195de081a4a5dc2c36a51924f30f89bcb841ee63087e271",
+          "sha256": "12e54e4ce61ce04c17ce752acbc8675a6f09c9ee134f69468d2211912dd51730",
           "width": 976,
           "height": 1360
         },
         {
           "id": "devourer_of_the_last_memory",
           "path": "public/cards/uprising_of_the_graveless/devourer_of_the_last_memory.png",
-          "sha256": "caaccbf23e2914cde14e706d22ec6eda62f5805c9a7c29a0e9514b1c4a71dde4",
+          "sha256": "9c08a8347489abf6c67abc61b1d691dbca3cd735246c2627a9f3fa55aa20238a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "memory_thief",
           "path": "public/cards/uprising_of_the_graveless/memory_thief.png",
-          "sha256": "9e35557df4d11354759c1eeb079920eb98a166157a90233bc212a435532fd095",
+          "sha256": "ed361f27feed4fd363830fc745134e2d845db91ecb9888359e296cfe6ba50f8c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "tribute_of_the_four_sorrows",
           "path": "public/cards/uprising_of_the_graveless/tribute_of_the_four_sorrows.png",
-          "sha256": "c5488bb788550da5fe66f947f8779816cc57d50ca6a8510df29b8ab5f43f9d0b",
+          "sha256": "3c483479b7d4bfeb4123d76640f7a9afa68e1bbf80be987c0c68c03ed394c084",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rider_of_the_empty_crypt",
           "path": "public/cards/uprising_of_the_graveless/rider_of_the_empty_crypt.png",
-          "sha256": "b36c28cb32a9b6db758af22785bc4018b4ff11d9204050bbe4a42231059f3713",
+          "sha256": "bc92aa79509e2d099acce059d2b7127d9a113a3c8251fa52ebbc139b7423a326",
           "width": 976,
           "height": 1360
         },
         {
           "id": "stitched_wing_spawn",
           "path": "public/cards/uprising_of_the_graveless/stitched_wing_spawn.png",
-          "sha256": "327a2894b0fd71991220b9831ed058dc201a282cb121f183bad1acf9224443fd",
+          "sha256": "3f64848d7362ce48b642ef25af80034d5f6f58af7b0154d2105f18c249d17b07",
           "width": 976,
           "height": 1360
         },
         {
           "id": "ossuary_rider",
           "path": "public/cards/uprising_of_the_graveless/ossuary_rider.png",
-          "sha256": "fb5c5829e65a05fff13ff1abe34e28779a8277b0c285c76c28433bb1052f8bbd",
+          "sha256": "b97fdb1571a2d89b595cada25f636b25957a8ad664d30d0763d551c77d7ca90e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "return_to_memory",
           "path": "public/cards/uprising_of_the_graveless/return_to_memory.png",
-          "sha256": "689e913e60737604f6e1949de14a3be167e4927c937e593db4b08f051eda8d9f",
+          "sha256": "0811cac4c7655a502735a75f451f43a8144894748c93b3afb8ca03dc627cd111",
           "width": 976,
           "height": 1360
         },
         {
           "id": "barrow_wallbreaker",
           "path": "public/cards/uprising_of_the_graveless/barrow_wallbreaker.png",
-          "sha256": "864f4b82d62025f695df1f227c4beb32dcb9050867f1499ef1970c90bc07ddf7",
+          "sha256": "2c6b294b9f04fe38d3f3adfa6ca547034578b15da47c2eb787e160de434a4b00",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hound_of_seven_memories",
           "path": "public/cards/uprising_of_the_graveless/hound_of_seven_memories.png",
-          "sha256": "8288a80c63bb8ce923035443b50ae6a208df196d6cd2118789f276324af606b3",
+          "sha256": "9c1bfd558e768f5db1aa04cc7dd59c680dca730a3ee54c26547f40aa1adf496e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "mastiff_of_the_overflowing_ossuary",
           "path": "public/cards/uprising_of_the_graveless/mastiff_of_the_overflowing_ossuary.png",
-          "sha256": "c46183134c253776c1a87dfd777232e0d811fa5400bc7dbb1bd91ca5589139d1",
+          "sha256": "66cb109ee88ab27eab00c1e1f2599120f60f0baa9a4b4dde274ee4455e7ef074",
           "width": 976,
           "height": 1360
         },
         {
           "id": "spore_infested",
           "path": "public/cards/uprising_of_the_graveless/spore_infested.png",
-          "sha256": "487533363e6a9b55469da9bdb36052d3ed7e1df48205ea690fb5c72c6c343bbf",
+          "sha256": "c5ea541df0d455f54befd9ebff44c9a0a27b7d0bf27afb0a644aa761a28998a4",
           "width": 976,
           "height": 1360
         },
         {
           "id": "harvester_of_the_fallen",
           "path": "public/cards/uprising_of_the_graveless/harvester_of_the_fallen.png",
-          "sha256": "38981798ddb24a2416a9e8a1ce0d73e720379f4063b5d826c4172adff8f3674e",
+          "sha256": "75bbff103ae16b3ebcd8768d5f6ff1ab9addd30951c14b273a6d0f61df649757",
           "width": 976,
           "height": 1360
         },
         {
           "id": "nerezh_graveless_matriarch",
           "path": "public/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png",
-          "sha256": "a9d5459017e8a22064795f36cf6687fac51a38a8c4d5bc3a72a3ddcdb71f4776",
+          "sha256": "9f3d046a4b0c5cf76919939c8763ac44be363ca99f87b3fab42dae5d28248233",
           "width": 976,
           "height": 1360
         }
       ]
     },
     "legion_of_varka": {
-      "inputHash": "a13152079b335e8aefbbd482c9175f3af87a711b91471e8849e5fc6f880559df",
+      "inputHash": "493d703a13403713dc8468cfa1d676086c054663e16fb77ce9345bee9ebbe243",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "29f5776eeca4c0eee3b2303b341c0189e9fc8fd123058f7357969ea3574022e1"
+          "sha256": "f98ddd30f00f37a1017453161f7138e7dba2bdba5d2c27151976ae219aa466e2"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
@@ -625,28 +625,28 @@
         {
           "id": "varkas_minion",
           "path": "public/cards/legion_of_varka/varkas_minion.png",
-          "sha256": "67ccc10e83aac759edaf73724b712ed0ed04edef817f55c024a78b5fe1ecec3c",
+          "sha256": "e8091dd0eff2f720b02b228e92b66b1f98eb6a717a398538179a62a174ff9b9a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "shaman_of_the_umbral_ember",
           "path": "public/cards/legion_of_varka/shaman_of_the_umbral_ember.png",
-          "sha256": "c8164cf7f8312fcbfa9b708aa160ad95aa3be7d4d27c1c8913f3fafee1163d91",
+          "sha256": "b4c08cd44ed735d2f2da8f44cf3463beb41ed802acb0022029f2c99c39ed4882",
           "width": 976,
           "height": 1360
         },
         {
           "id": "summoner_of_the_ranks",
           "path": "public/cards/legion_of_varka/summoner_of_the_ranks.png",
-          "sha256": "79d1261c919425422a64887fdd7ce413f220747ea36f66b780823990fe63692c",
+          "sha256": "e01e84d0ad08890a152f3e0c841a496d95fc28553d81f0cbaf2c5d4dfc5e715d",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_standard_bearer",
           "path": "public/cards/legion_of_varka/varkas_standard_bearer.png",
-          "sha256": "a3f338212d9fe1d230a37d7af53b0a6b2938b7835b42758c10486a63538eb758",
+          "sha256": "8073a9903430c86b7d9ba21083c6eb2010f31b393ab98f8ace30a5ba9a9fed4a",
           "width": 976,
           "height": 1360
         },
@@ -660,7 +660,7 @@
         {
           "id": "all_against_one",
           "path": "public/cards/legion_of_varka/all_against_one.png",
-          "sha256": "3c0d33bade27799fd8d043ce6d61c80d25ddc5b9882118cfe4bd0c21d1998e78",
+          "sha256": "6c2b47e8900707e69bcba42d936b7174aa0f40a019a613f9df853609678f55c9",
           "width": 976,
           "height": 1360
         },
@@ -674,14 +674,14 @@
         {
           "id": "rider_of_the_third_charge",
           "path": "public/cards/legion_of_varka/rider_of_the_third_charge.png",
-          "sha256": "8e1cbe922098597b8ec0d2ce56c8a6562465f7356091ceff7ac0460d1f07fd01",
+          "sha256": "1dccd3bcb3059a319c10628abe8a593f757e2d83d9647a616b1dc60753f857cd",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_linebreaker",
           "path": "public/cards/legion_of_varka/varkas_linebreaker.png",
-          "sha256": "d35ed3fbe41c848bc66c14b7d153afe62014bcabd846c231614d220f834eee27",
+          "sha256": "e30cd993d066c9e6cbb69532d0bda1851ac3276139c030d974e9aba01059c752",
           "width": 976,
           "height": 1360
         },
@@ -695,14 +695,14 @@
         {
           "id": "corrupted_war_bear",
           "path": "public/cards/legion_of_varka/corrupted_war_bear.png",
-          "sha256": "e585fe2221c0f12b11ef2baa94382872b841c50e7de276a26188b8401b46f46c",
+          "sha256": "c4f3b3b71731e8272b7e70f1120d1f8d497140ac476736a772f8acfc8f4098d9",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rider_of_the_umbral_volley",
           "path": "public/cards/legion_of_varka/rider_of_the_umbral_volley.png",
-          "sha256": "7b640698620d75b83bc921976fec8cf689d73410ffe3180474f0f8b503e80e82",
+          "sha256": "e86b94346429a50b740757c989eaf5b9a25104c2c8354bec94c7e4491b495213",
           "width": 976,
           "height": 1360
         },
@@ -730,7 +730,7 @@
         {
           "id": "vardek_scribe_of_the_legion",
           "path": "public/cards/legion_of_varka/vardek_scribe_of_the_legion.png",
-          "sha256": "90748422556132ffb0fdc24db289e322ca617655e8fe22c5219b99b8f263bf3b",
+          "sha256": "6f1dab5bf8d5746175ee3ae1df25eba369bcd3def347fc04f5f0100d2a8b6743",
           "width": 976,
           "height": 1360
         },
@@ -744,7 +744,7 @@
       ]
     },
     "court_of_the_crimson_eclipse": {
-      "inputHash": "6468e2f2e6ff4f8171813d4f913404af5ba70e3c7c1a467a2502f7b7f7a08221",
+      "inputHash": "330e5d68db6d255b4281b4f773c83d9191a8619f4f2c4806eddf0c45181a0864",
       "sources": [
         {
           "path": "dev/tools/Decks/court_of_the_crimson_eclipse/deck-data.generated.js",
@@ -764,7 +764,7 @@
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
-          "sha256": "29f5776eeca4c0eee3b2303b341c0189e9fc8fd123058f7357969ea3574022e1"
+          "sha256": "f98ddd30f00f37a1017453161f7138e7dba2bdba5d2c27151976ae219aa466e2"
         },
         {
           "path": "dev/tools/Decks/deck-card-studio.js",
@@ -882,7 +882,7 @@
         {
           "id": "blood_page",
           "path": "public/cards/court_of_the_crimson_eclipse/blood_page.png",
-          "sha256": "f62dffddd3e277d40f9f83e9ecc816561bb21fb4486fc92003b31e4db617ea28",
+          "sha256": "35ce29661c3d58106f12f19b3a89ff4b283caba554141b07c80d533e85c948a4",
           "width": 976,
           "height": 1360
         },
@@ -896,7 +896,7 @@
         {
           "id": "midnight_collector",
           "path": "public/cards/court_of_the_crimson_eclipse/midnight_collector.png",
-          "sha256": "ad237ba66eb5ffcf1104b1d6f66a305745a905e5c9abad26113e06f7b6909415",
+          "sha256": "2f335460f2041b1f640d0b1e12fe6fbbc902cacf802823411ffa0c02d374860c",
           "width": 976,
           "height": 1360
         },
@@ -924,7 +924,7 @@
         {
           "id": "sentinel_of_the_lunar_eye",
           "path": "public/cards/court_of_the_crimson_eclipse/sentinel_of_the_lunar_eye.png",
-          "sha256": "784ccc6b2b821e102560f8ee278ada85e314aed4be8dcf0c92511bb9faf038dc",
+          "sha256": "447233394c619cedc315344d99132a682f696babd6d024fb6f036996d965070f",
           "width": 976,
           "height": 1360
         },
@@ -952,7 +952,7 @@
         {
           "id": "drain_essence",
           "path": "public/cards/court_of_the_crimson_eclipse/drain_essence.png",
-          "sha256": "037b5ec76c44f808dc1b7930f21903ef0b74d53777706554f96e3b6252fff141",
+          "sha256": "036babb443d5486c2b0163d8a955bb8119337f38ac84257ce80a1521c26bcce1",
           "width": 976,
           "height": 1360
         },
@@ -966,7 +966,7 @@
         {
           "id": "verdict_of_the_eclipse",
           "path": "public/cards/court_of_the_crimson_eclipse/verdict_of_the_eclipse.png",
-          "sha256": "ffa72cb1750b32ec9f920c8040f54a4270522ef9784e2022bd449021b4f9ae16",
+          "sha256": "3b51ed0ffeb837daf9008c008bec10f9d76a6d46b39d622c0f71a7124003528d",
           "width": 976,
           "height": 1360
         }

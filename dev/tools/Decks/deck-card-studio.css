@@ -111,21 +111,21 @@ body[data-theme="court_of_the_crimson_eclipse"] {
 }
 
 body[data-theme="uprising_of_the_graveless"] {
-    --accent: #315f55;
-    --accent-bright: #b2d6b2;
-    --accent-deep: #102822;
-    --accent-ink: #214a40;
-    --accent-rgb: 62, 112, 95;
-    --full-art-stats-mid: rgba(16, 40, 34, 0.93);
-    --full-art-stats-bottom: rgba(25, 30, 27, 0.97);
-    --metal-top: #767b6d;
-    --metal-mid: #434940;
-    --metal-bottom: #191e1b;
-    --paper-top: #d2d0b5;
-    --paper-bottom: #b4b394;
-    --paper-ink: #202820;
-    --paper-muted: #465044;
-    --page-glow: rgba(49, 95, 85, 0.28);
+    --accent: #625d6b;
+    --accent-bright: #d3ceda;
+    --accent-deep: #211e28;
+    --accent-ink: #494451;
+    --accent-rgb: 98, 93, 107;
+    --full-art-stats-mid: rgba(36, 33, 42, 0.94);
+    --full-art-stats-bottom: rgba(14, 13, 17, 0.98);
+    --metal-top: #77737d;
+    --metal-mid: #48434e;
+    --metal-bottom: #1b1820;
+    --paper-top: #d0ccd1;
+    --paper-bottom: #afaab2;
+    --paper-ink: #26222b;
+    --paper-muted: #514b58;
+    --page-glow: rgba(98, 93, 107, 0.3);
     --motif-image: url("./uprising_of_the_graveless/motivo.avif");
 }
 
@@ -747,20 +747,32 @@ body {
 }
 
 body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-faction-icon--headstone {
-    width: 86%;
-    height: 86%;
-    color: #b4c3ad;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
+    width: 100%;
+    height: 100%;
+    color: #eeeaf2;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.96)) drop-shadow(0 0 5px rgba(211, 206, 218, 0.38));
     transform: translateY(-1px);
 }
 
+body[data-theme="uprising_of_the_graveless"] .tcg-card--common .tcg-seal {
+    padding: 7px;
+    border-color: rgba(218, 210, 225, 0.68);
+    background:
+        var(--noise),
+        radial-gradient(circle at 42% 32%, #57515f, #17141c 76%);
+    box-shadow:
+        inset 0 0 14px rgba(211, 206, 218, 0.26),
+        0 4px 10px rgba(0, 0, 0, 0.62),
+        0 0 8px rgba(211, 206, 218, 0.16);
+}
+
 body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-chip {
-    fill: #15201c;
+    fill: #29252f;
 }
 
 body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-crack,
 body[data-theme="uprising_of_the_graveless"] .tcg-seal .tcg-headstone-soil {
-    stroke: #15201c;
+    stroke: #29252f;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 3;

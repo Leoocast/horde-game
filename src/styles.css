@@ -6573,14 +6573,14 @@
 
   .counter-target-stat-preview.card-theme-zombie {
     --buff-stat-background:
-      radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.2), transparent 46%),
-      repeating-linear-gradient(112deg, rgb(226 241 230 / 0.02) 0 1px, transparent 1px 5px),
-      linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
-    --buff-stat-border: rgb(165 208 168 / 0.78);
-    --buff-stat-glow: rgb(113 181 157 / 0.4);
+      radial-gradient(ellipse at 24% 0%, rgb(224 218 231 / 0.18), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(233 228 237 / 0.018) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #857d91 0%, #655e70 54%, #2a2631 100%);
+    --buff-stat-border: rgb(183 175 193 / 0.78);
+    --buff-stat-glow: rgb(134 122 151 / 0.42);
     --buff-stat-motif: url("../dev/tools/Decks/uprising_of_the_graveless/motivo.avif");
-    --buff-stat-number: #eff6e8;
-    --buff-stat-separator: #a8c6b6;
+    --buff-stat-number: #f3eff5;
+    --buff-stat-separator: #c5bdcc;
   }
 
   .counter-target-stat-preview.card-theme-goblin {
@@ -13610,18 +13610,18 @@
    state keeps that faction material and signals damage through its edge and life value. */
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/uprising_of_the_graveless/motivo.avif");
-  --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #1d3f37 100%);
-  color: #f2f5e8;
+  --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(232 227 235 / 0.014) 0 1px, transparent 1px 5px);
+  --card-cropped-title-gradient: linear-gradient(90deg, #625d6b 0%, #37323f 65%, #37323f 100%);
+  color: #f1edf2;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge,
 .card-visual.card-image-full.card-theme-zombie > .card-stat-badge,
 .card-preview-full-card-frame.card-theme-zombie > .card-stat-badge {
   background:
-    radial-gradient(ellipse at 24% 0%, rgb(165 208 168 / 0.13), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #3f7569 0%, #315f55 54%, #102822 100%);
+    radial-gradient(ellipse at 24% 0%, rgb(211 206 218 / 0.14), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(232 227 235 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #777081 0%, #56515e 54%, #211e28 100%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge {
@@ -13634,18 +13634,18 @@
   --card-stat-border: rgb(232 137 112 / 0.68);
   background:
     radial-gradient(ellipse at 82% 46%, rgb(190 79 61 / 0.16), transparent 52%),
-    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #365f58 0%, #294a43 54%, #10211e 100%);
+    repeating-linear-gradient(112deg, rgb(232 227 235 / 0.014) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #5c535f 0%, #403b46 54%, #1c1920 100%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged),
 .card-visual.card-image-full.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged),
 .card-preview-full-card-frame.card-theme-zombie > .card-stat-badge.is-buffed:not(.is-damaged) {
-  --card-stat-border: rgb(165 208 168 / 0.78);
+  --card-stat-border: rgb(183 175 193 / 0.78);
   background:
-    radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.2), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(226 241 230 / 0.02) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #4b8275 0%, #37685d 54%, #16332b 100%);
+    radial-gradient(ellipse at 24% 0%, rgb(224 218 231 / 0.18), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(233 228 237 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #857d91 0%, #655e70 54%, #2a2631 100%);
 }
 
 /* Goblin chrome mirrors the forged-red palette from dev/tools/Decks/legion_of_varka/index.html. */
@@ -13778,7 +13778,7 @@
 
 .card-visual.card-image-full.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed),
 .card-preview-full-card-frame.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
-  background: linear-gradient(180deg, #182a28 0%, #192824 20%, #131d15 68%, #0c1312 100%);
+  background: linear-gradient(180deg, #28242e 0%, #221f28 20%, #17151c 68%, #0e0d11 100%);
 }
 
 .card-visual.card-image-full.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed),
@@ -16027,15 +16027,15 @@
 
 .card-keyword-badge-zombie,
 .card-preview-keyword-explanations.is-zombie:not(.is-chaos) .card-preview-keyword-badge {
-  border-color: rgb(165 208 168 / 0.68);
+  border-color: rgb(183 175 193 / 0.7);
   background:
-    radial-gradient(ellipse at 24% 0%, rgb(214 239 219 / 0.17), transparent 47%),
+    radial-gradient(ellipse at 24% 0%, rgb(224 218 231 / 0.16), transparent 47%),
     radial-gradient(circle at 80% 68%, rgb(0 0 0 / 0.13) 0 2px, transparent 3px),
-    repeating-linear-gradient(112deg, rgb(220 235 224 / 0.015) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, rgb(63 117 105 / 0.99), rgb(49 95 85 / 0.99) 54%, rgb(16 40 34 / 1));
-  color: #f2f5e8;
+    repeating-linear-gradient(112deg, rgb(232 227 235 / 0.015) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgb(111 105 120 / 0.99), rgb(80 75 88 / 0.99) 54%, rgb(32 29 39 / 1));
+  color: #f1edf2;
   box-shadow:
-    inset 0 1px 0 rgb(235 245 226 / 0.13),
+    inset 0 1px 0 rgb(238 234 241 / 0.13),
     inset 0 -2px 3px rgb(0 0 0 / 0.36),
     0 2px 5px rgb(0 0 0 / 0.44);
 }
