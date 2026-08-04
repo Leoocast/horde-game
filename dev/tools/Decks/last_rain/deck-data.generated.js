@@ -52,10 +52,11 @@ window.HostfallDeckData = [
     "lore": "Esperó bajo las raíces hasta que el agua volvió a hablar.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
-      "zoom": 0.676,
-      "x": -4,
-      "y": -159
+      "zoom": 1.541,
+      "x": -51,
+      "y": 41
     }
   },
   {
@@ -72,10 +73,11 @@ window.HostfallDeckData = [
     "lore": "La enfermedad permaneció. Iria sólo le enseñó dónde morder.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
       "zoom": 0.76,
-      "x": 39,
-      "y": -132
+      "x": 37,
+      "y": -145
     }
   },
   {
@@ -92,10 +94,11 @@ window.HostfallDeckData = [
     "lore": "Cuando la primera llamada respondió a la suya, todo el bosque corrió a su lado.",
     "showFlavorText": false,
     "cantidad": 3,
+    "fullArt": true,
     "art_frame": {
-      "zoom": 0.703,
-      "x": -2,
-      "y": -141
+      "zoom": 1.04,
+      "x": -373,
+      "y": 17
     }
   },
   {
@@ -112,10 +115,11 @@ window.HostfallDeckData = [
     "lore": "El dosel llevaba una era indefenso. Entonces se alzaron las lanzas.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
       "zoom": 0.703,
       "x": 5,
-      "y": -141
+      "y": -188
     }
   },
   {
@@ -195,6 +199,7 @@ window.HostfallDeckData = [
     "lore": "Las raíces y los huesos cedieron, pero el claro no.",
     "showFlavorText": true,
     "cantidad": 1,
+    "headerFade": false,
     "art_frame": {
       "zoom": 0.855,
       "x": -98,
@@ -215,10 +220,11 @@ window.HostfallDeckData = [
     "lore": "Cuando la tierra recordó su alcance, nada quedó fuera de él.",
     "showFlavorText": true,
     "cantidad": 2,
+    "headerFade": false,
     "art_frame": {
-      "zoom": 1.04,
-      "x": -16,
-      "y": -112
+      "zoom": 1,
+      "x": -451,
+      "y": 18
     }
   },
   {

@@ -12,6 +12,15 @@
             "height": 91
           }
         },
+        "arven_first_pack": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 352.094,
+            "width": 158,
+            "height": 91
+          }
+        },
         "orun_waking_root": {
           "fullArt": true,
           "statsFrame": {
@@ -117,15 +126,6 @@
         "crimson_energy": {
           "fullArt": true
         },
-        "crypt_guardian": {
-          "fullArt": true,
-          "statsFrame": {
-            "right": 62,
-            "bottom": 441.391,
-            "width": 158,
-            "height": 91
-          }
-        },
         "eternal_feast_countess": {
           "fullArt": true,
           "statsFrame": {
@@ -136,9 +136,6 @@
           }
         },
         "blood_pact": {
-          "fullArt": true
-        },
-        "crimson_impulse": {
           "fullArt": true
         },
         "drain_essence": {

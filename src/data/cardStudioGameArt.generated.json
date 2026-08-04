@@ -20,9 +20,9 @@
     "keeper_sleeping_root": {
       "artUrl": "/cards/last_rain/art/keeper_sleeping_root.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 0,
-        "y": 88
+        "zoom": 1.734,
+        "x": -39,
+        "y": 183
       }
     },
     "black_sap_stalker": {
@@ -36,9 +36,9 @@
     "arven_first_pack": {
       "artUrl": "/cards/last_rain/art/arven_first_pack.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1.082,
-        "x": 4,
-        "y": 92
+        "zoom": 1.734,
+        "x": -198,
+        "y": 175
       }
     },
     "ancient_canopy_watchers": {

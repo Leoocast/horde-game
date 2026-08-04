@@ -55,6 +55,8 @@
     --accent-deep: #0a1f18;
     --accent-ink: #123a2b;
     --accent-rgb: 47, 125, 88;
+    --full-art-stats-mid: rgba(12, 25, 19, 0.93);
+    --full-art-stats-bottom: rgba(3, 8, 7, 0.97);
 
     --metal-top: #6f6a5b;
     --metal-mid: #3c3a33;
@@ -76,6 +78,8 @@ body[data-theme="last_rain"] {
     --accent-deep: #0a1f18;
     --accent-ink: #123a2b;
     --accent-rgb: 47, 125, 88;
+    --full-art-stats-mid: rgba(12, 25, 19, 0.93);
+    --full-art-stats-bottom: rgba(3, 8, 7, 0.97);
     --metal-top: #6f6a5b;
     --metal-mid: #3c3a33;
     --metal-bottom: #161513;
@@ -93,6 +97,8 @@ body[data-theme="crimson_court"] {
     --accent-deep: #260712;
     --accent-ink: #5c1026;
     --accent-rgb: 128, 20, 48;
+    --full-art-stats-mid: rgba(38, 7, 18, 0.93);
+    --full-art-stats-bottom: rgba(17, 12, 15, 0.97);
     --metal-top: #50454a;
     --metal-mid: #2d2429;
     --metal-bottom: #110c0f;
@@ -110,6 +116,8 @@ body[data-theme="hollow_bell_procession"] {
     --accent-deep: #102822;
     --accent-ink: #214a40;
     --accent-rgb: 62, 112, 95;
+    --full-art-stats-mid: rgba(16, 40, 34, 0.93);
+    --full-art-stats-bottom: rgba(25, 30, 27, 0.97);
     --metal-top: #767b6d;
     --metal-mid: #434940;
     --metal-bottom: #191e1b;
@@ -127,6 +135,8 @@ body[data-theme="broken_forge_mutiny"] {
     --accent-deep: #3a0e08;
     --accent-ink: #6f210f;
     --accent-rgb: 196, 61, 21;
+    --full-art-stats-mid: rgba(58, 14, 8, 0.93);
+    --full-art-stats-bottom: rgba(33, 24, 19, 0.97);
     --metal-top: #7b6a55;
     --metal-mid: #4c4033;
     --metal-bottom: #211813;
@@ -144,6 +154,8 @@ body[data-theme="hunters"] {
     --accent-deep: #32130b;
     --accent-ink: #6d2d17;
     --accent-rgb: 158, 69, 34;
+    --full-art-stats-mid: rgba(50, 19, 11, 0.93);
+    --full-art-stats-bottom: rgba(23, 22, 21, 0.97);
     --metal-top: #766a5d;
     --metal-mid: #3f3933;
     --metal-bottom: #171615;
@@ -1045,7 +1057,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
     border-radius: 24px 8px 24px 8px;
     background:
         var(--noise),
-        linear-gradient(180deg, rgba(var(--accent-rgb), 0.28), rgba(12, 25, 19, 0.93) 58%, rgba(3, 8, 7, 0.97));
+        linear-gradient(180deg, rgba(var(--accent-rgb), 0.28), var(--full-art-stats-mid) 58%, var(--full-art-stats-bottom));
     box-shadow:
         inset 0 1px rgba(255, 255, 255, 0.1),
         inset 0 0 18px rgba(var(--accent-rgb), 0.12),

@@ -24,9 +24,9 @@
     },
     "arven_first_pack": {
       "battlefieldArtFrame": {
-        "zoom": 1.082,
-        "x": 4,
-        "y": 92
+        "zoom": 1.734,
+        "x": -198,
+        "y": 175
       }
     },
     "ancient_canopy_watchers": {
@@ -52,9 +52,9 @@
     },
     "keeper_sleeping_root": {
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 0,
-        "y": 88
+        "zoom": 1.734,
+        "x": -39,
+        "y": 183
       }
     }
   }

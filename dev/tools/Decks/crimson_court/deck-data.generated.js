@@ -294,3 +294,10 @@ window.HostfallDeckData = [
     }
   }
 ];
+window.HostfallDeckMotif = {
+  "stats": {
+    "x": 120,
+    "y": 0,
+    "zoom": 4
+  }
+};
