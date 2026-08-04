@@ -6,7 +6,7 @@
     {
       "id": "first_dew_gatherers",
       "artCrop": "../../../../public/cards/last_rain/art/first_dew_gatherers.jpg",
-      "typeLineEs": "Eco — Recolector",
+      "typeLineEs": "Eco — Espíritu vegetal",
       "artFrame": {
         "zoom": 0.703,
         "x": 2,
@@ -18,12 +18,12 @@
     {
       "id": "iria_voice_last_rain",
       "artCrop": "../../../../public/cards/last_rain/art/iria_voice_last_rain.jpg",
-      "typeLineEs": "Eco de Crónica — Humana Restauradora"
+      "typeLineEs": "Eco de Crónica — Elfa Heredera"
     },
     {
       "id": "keeper_sleeping_root",
       "artCrop": "../../../../public/cards/last_rain/art/keeper_sleeping_root.jpg",
-      "typeLineEs": "Eco — Custodio",
+      "typeLineEs": "Eco — Elfa Guardiana",
       "artFrame": {
         "zoom": 1.541,
         "x": -51,
@@ -35,7 +35,7 @@
     {
       "id": "black_sap_stalker",
       "artCrop": "../../../../public/cards/last_rain/art/black_sap_stalker.jpg",
-      "typeLineEs": "Eco — Basilisco",
+      "typeLineEs": "Eco — Hidra",
       "artFrame": {
         "zoom": 0.76,
         "x": 37,
@@ -46,7 +46,7 @@
     {
       "id": "arven_first_pack",
       "artCrop": "../../../../public/cards/last_rain/art/arven_first_pack.jpg",
-      "typeLineEs": "Eco — Líder Lupino",
+      "typeLineEs": "Eco — Elfo Convocador",
       "artFrame": {
         "zoom": 1.04,
         "x": -373,
@@ -57,7 +57,7 @@
     {
       "id": "ancient_canopy_watchers",
       "artCrop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.jpg",
-      "typeLineEs": "Eco — Vigía Arbóreo",
+      "typeLineEs": "Eco — Humana Arquera",
       "artFrame": {
         "zoom": 0.703,
         "x": 5,
@@ -68,7 +68,7 @@
     {
       "id": "hollow_skybreaker",
       "artCrop": "../../../../public/cards/last_rain/art/hollow_skybreaker.jpg",
-      "typeLineEs": "Eco — Bestia Primordial",
+      "typeLineEs": "Eco — Espíritu Guardián",
       "artFrame": {
         "zoom": 1.734,
         "x": 349,
@@ -79,7 +79,7 @@
     {
       "id": "orun_waking_root",
       "artCrop": "../../../../public/cards/last_rain/art/orun_waking_root.jpg",
-      "typeLineEs": "Eco — Guardián Ancestral",
+      "typeLineEs": "Eco — Dragón Guardián",
       "artFrame": {
         "zoom": 1.082,
         "x": 37,
@@ -136,7 +136,7 @@
     {
       "id": "deep_root_spring",
       "artCrop": "../../../../public/cards/last_rain/art/deep_root_spring.jpg",
-      "typeLineEs": "Fuente — Manantial",
+      "typeLineEs": "Fuente — Río",
       "artFrame": {
         "zoom": 1.04,
         "x": 1,

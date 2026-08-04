@@ -24,7 +24,7 @@ if [ -z "$DECK" ]; then
     echo "             EXPORTADOR DE CARTAS"
     echo "=================================================="
     echo
-    echo "  1. La Última Lluvia"
+    echo "  1. El Pacto de Elarion"
     echo "  2. Zombies"
     echo "  3. Goblins"
     echo "  4. Vampires"

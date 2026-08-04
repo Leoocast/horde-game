@@ -1375,9 +1375,9 @@ test("Court Duelist keeps +3/+1 through Host combat and loses it at the next pla
   assert.equal(usedAgain.player.lifePaidThisTurn, 3);
 });
 
-test("Arven grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
+test("Kaelor grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
   const game = createTestGame("arven-first-packmate");
-  const arven = addCard(game, cardFromDeck("arven_first_pack", "player"));
+  const kaelor = addCard(game, cardFromDeck("arven_first_pack", "player"));
 
   const invokeAlly = (definitionId) => {
     const ally = addCard(game, customCard(definitionId, "player"));
@@ -1387,24 +1387,24 @@ test("Arven grows only for the first allied Invocation each turn and keeps the b
   };
 
   invokeAlly("arven_first_ally");
-  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, kaelor), { power: 4, endurance: 5 });
 
   invokeAlly("arven_second_ally");
-  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, kaelor), { power: 4, endurance: 5 });
 
   const hostTurn = endPlayerTurn(game);
-  const defendingArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
-  assert.deepEqual(getPowerEndurance(hostTurn, defendingArven), { power: 4, endurance: 4 });
+  const defendingKaelor = hostTurn.player.field.find((card) => card.instanceId === kaelor.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, defendingKaelor), { power: 4, endurance: 5 });
 
   startPlayerTurnReady(hostTurn);
-  const readyArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
-  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 3, endurance: 3 });
+  const readyKaelor = hostTurn.player.field.find((card) => card.instanceId === kaelor.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, readyKaelor), { power: 3, endurance: 4 });
 
   const nextAlly = addCard(hostTurn, customCard("arven_next_turn_ally", "player"));
   recordFieldEntry(hostTurn, nextAlly);
   runInvokedTriggers(hostTurn, nextAlly);
   drainEventQueue(hostTurn);
-  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(hostTurn, readyKaelor), { power: 4, endurance: 5 });
 });
 
 test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
@@ -1589,7 +1589,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
-test("Savia del Primer Árbol applies +3/+3 and cleanup removes the temporary buff", () => {
+test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary buff", () => {
   const game = createTestGame();
   addSources(game, 1);
   const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
@@ -1606,7 +1606,7 @@ test("Savia del Primer Árbol applies +3/+3 and cleanup removes the temporary bu
   assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
 });
 
-test("Cuando las Raíces Tocaron el Cielo only offers legal permanent types and destroys The Hollow Bell", () => {
+test("El Juicio de Elarion only offers legal permanent types and destroys The Hollow Bell", () => {
   const game = createTestGame();
   addSources(game, 3);
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
@@ -1625,7 +1625,7 @@ test("Cuando las Raíces Tocaron el Cielo only offers legal permanent types and 
   assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
 });
 
-test("La Presa Señalada deals source power and preserves deathtouch for death cleanup", () => {
+test("Choque de Ecos deals source power and preserves deathtouch for death cleanup", () => {
   const game = createTestGame();
   addSources(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
@@ -1643,7 +1643,7 @@ test("La Presa Señalada deals source power and preserves deathtouch for death c
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("El Juramento del Claro buffs first, then both creatures deal simultaneous damage", () => {
+test("Escudo de la Heredera buffs first, then both creatures deal simultaneous damage", () => {
   const game = createTestGame();
   addSources(game, 2);
   const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1669,7 +1669,7 @@ test("El Juramento del Claro buffs first, then both creatures deal simultaneous 
   assert.equal(restoredFriendly.damageMarked, 0);
 });
 
-test("El Juramento del Claro can stage its buff before the deferred fight impact", () => {
+test("Escudo de la Heredera can stage its buff before the deferred fight impact", () => {
   const game = createTestGame();
   addSources(game, 2);
   const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1701,7 +1701,7 @@ test("El Juramento del Claro can stage its buff before the deferred fight impact
   assert.equal(untouchedEnemy.damageMarked, 3);
 });
 
-test("Iria can target herself, adds one counter, and gains three Life", () => {
+test("Aelyra can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addSources(game, 1);
   const iria = addCard(game, cardFromDeck("iria_voice_last_rain", "player", "hand"), "player", "hand");
@@ -1709,7 +1709,7 @@ test("Iria can target herself, adds one counter, and gains three Life", () => {
   const result = castCard(game, iria.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === iria.instanceId);
   const manualTrigger = findManualInvokedTargetTrigger(permanent);
-  assert.ok(manualTrigger, "Iria should expose her manual Invoked trigger");
+  assert.ok(manualTrigger, "Aelyra should expose her manual Invoked trigger");
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
     side: "player",
@@ -1753,7 +1753,7 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.host.archive.length, 2);
 });
 
-test("La Última Lluvia growth cards select the intended presentation intensity", () => {
+test("El Pacto de Elarion growth cards select the intended presentation intensity", () => {
   assert.equal(buffAnimationVariantForCard("iria_voice_last_rain"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("arven_first_pack"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("first_tree_sap"), "growth-strong");

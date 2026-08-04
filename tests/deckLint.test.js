@@ -181,7 +181,7 @@ test("Host rules reject unknown keys, unsafe divisors and malformed profiles", (
   assert.match(messages, /surgeBonus must be an object/u);
 });
 
-test("La Última Lluvia keeps Hostfall card kinds and traits through authored normalization", () => {
+test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "last_rain");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -195,7 +195,13 @@ test("La Última Lluvia keeps Hostfall card kinds and traits through authored no
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
-  assert.equal(normalizedAuthoring.name, "La Última Lluvia");
+  assert.equal(normalizedAuthoring.name, "El Pacto de Elarion");
+  assert.deepEqual(byId.arven_first_pack.energyCost, { amount: 4 });
+  assert.equal(byId.arven_first_pack.power, 3);
+  assert.equal(byId.arven_first_pack.endurance, 4);
+  assert.deepEqual(byId.ancient_canopy_watchers.energyCost, { amount: 3 });
+  assert.equal(byId.ancient_canopy_watchers.power, 3);
+  assert.equal(byId.ancient_canopy_watchers.endurance, 3);
   assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
   assert.deepEqual(byId.iria_voice_last_rain.modifiers, ["CHRONICLE"]);
   assert.equal(byId.iria_voice_last_rain.abilities[0].effects[1].amount, 3);

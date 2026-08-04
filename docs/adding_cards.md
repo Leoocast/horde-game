@@ -361,7 +361,7 @@ y los triggers de muerte tampoco necesitan ramas por carta.
 ## 6. Target manual al entrar
 
 Existe un camino genérico para triggers obligatorios de entrada que necesitan un target, usado por
-Iria, Voz de la Última Lluvia:
+Aelyra, Heredera de Elarion:
 
 - `findManualEnterTargetTrigger` detecta el wrapper;
 - el store bloquea nuevas invocaciones;

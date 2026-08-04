@@ -113,7 +113,7 @@ Decks vigentes:
 
 | Bando | Id | Nombre | Estado |
 | --- | --- | --- | --- |
-| Cronista | `last_rain` | La Última Lluvia | Jugable |
+| Cronista | `last_rain` | El Pacto de Elarion | Jugable |
 | Cronista | `crimson_court` | La Corte Carmesí | Jugable |
 | Hueste | `hollow_bell_procession` | La Procesión de la Campana Hueca | Jugable y predeterminada |
 | Hueste | `broken_forge_mutiny` | El Motín de la Forja Rota | Jugable |
@@ -228,7 +228,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   una secuencia de la Hueste. Sólo Ecos sostienen o heredan slots.
 - `battlefieldCardOrder`, `battlefieldGroupKeys` y `battlefieldGroupMeta` protegen el orden visual.
 - Los targets válidos deben ser claros sin bordes finales exagerados.
-- Una Reacción manual de Invocación con target es obligatoria; no depende del id de Iria.
+- Una Reacción manual de Invocación con target es obligatoria; no depende del id de Aelyra.
 - El ataque del Cronista y la defensa contra la Hueste usan overlays y estados explícitos. No
   resolver reglas de combate dentro de animadores.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado

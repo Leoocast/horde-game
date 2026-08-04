@@ -27,7 +27,7 @@ function register(label: string, raw: NewDeckList, images: DeckImageManifest, pr
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("La Última Lluvia 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
+  register("El Pacto de Elarion 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
     keyCardId: "iria_voice_last_rain",
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",

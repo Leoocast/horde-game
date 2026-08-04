@@ -143,7 +143,7 @@ Los cuatro decks registrados pasan por este mismo pipeline en partida, no sólo 
 - `hollow_bell_procession`
 - `broken_forge_mutiny`
 
-La Última Lluvia, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
+El Pacto de Elarion, Vampiros, Zombies y Trasgos están authored en `1.0.0`.
 
 `authoredDeckNormalizer` convierte el casing de las zonas authored a su representación runtime;
 `kinds`, `traits`, `endurance`, eventos, Acciones y reglas pasan sin degradación. `normalizeDeck`

@@ -236,7 +236,7 @@ test("runtime deck studios use the same minimal header presentation", () => {
   const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360|Preview visual|antes de exportar)/iu;
 
   for (const [label, indexHtml] of [
-    ["La Última Lluvia", lastRainIndex],
+    ["El Pacto de Elarion", lastRainIndex],
     ["Vampires", vampireIndex],
     ["Zombies", zombieIndex],
     ["Goblins", goblinIndex],
@@ -808,7 +808,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
   }
 });
 
-test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", () => {
+test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -831,7 +831,7 @@ test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", 
     assert.equal(
       source.cards.length,
       runtimeDeck.cards.length,
-      `${source.label} has a stale La Última Lluvia card count`,
+      `${source.label} has a stale El Pacto de Elarion card count`,
     );
   }
 
@@ -1151,7 +1151,7 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
   const studioDecks = [
-    ["La Última Lluvia", buildStudioCards("last_rain")],
+    ["El Pacto de Elarion", buildStudioCards("last_rain")],
     ["Vampires", buildStudioCards("crimson_court")],
     ["Zombies", buildStudioCards("hollow_bell_procession")],
     ["Goblins", buildStudioCards("broken_forge_mutiny")],

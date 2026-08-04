@@ -776,7 +776,7 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
   }
 });
 
-test("Arven uses the shared growth animation when the first allied Echo is Invoked", async () => {
+test("Kaelor uses the shared growth animation when the first allied Echo is Invoked", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -825,9 +825,9 @@ test("Arven uses the shared growth animation when the first allied Echo is Invok
     useGameStore.getState().castCard(entrant.instanceId);
 
     const result = useGameStore.getState();
-    const buffedArven = result.game.player.field.find((card) => card.instanceId === ranger.instanceId);
-    assert.equal(buffedArven?.untilNextPlayerTurnPower, 1);
-    assert.equal(buffedArven?.untilNextPlayerTurnEndurance, 1);
+    const buffedKaelor = result.game.player.field.find((card) => card.instanceId === ranger.instanceId);
+    assert.equal(buffedKaelor?.untilNextPlayerTurnPower, 1);
+    assert.equal(buffedKaelor?.untilNextPlayerTurnEndurance, 1);
     assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
     assert.equal(result.buffAnimationVariant, "growth-strong");
   } finally {
@@ -937,7 +937,7 @@ test("growth spells animate only after confirm, and Oath of the Clearing fights 
   }
 });
 
-test("Cuando las Raíces Tocaron el Cielo cuts the target before its normal destruction fade", async () => {
+test("El Juicio de Elarion cuts the target before its normal destruction fade", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();

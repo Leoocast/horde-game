@@ -1,26 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "id": "last_rain",
-  "name": "La Última Lluvia",
+  "name": "El Pacto de Elarion",
   "format": "casual",
   "side": "CHRONICLER",
   "deckSize": 39,
-  "archetype": "restoration-ramp",
-  "gamePlan": "Restaura el flujo de Energía con Recolectores y Custodios, reúne a los guardianes del bosque y culmina la Crónica con el despertar de Orun.",
+  "archetype": "elarion-pact-ramp",
+  "gamePlan": "Reúne a los pueblos y criaturas del reino caído, recupera los antiguos juramentos de Elarion y culmina la Crónica con el regreso de Vaelor.",
   "tokens": [],
   "cards": [
     {
       "id": "first_dew_gatherers",
       "collectorId": "HFA1001",
-      "name": "First-Dew Gatherers",
-      "displayNameEs": "Recolectores del Primer Rocío",
+      "name": "Veiled-Dawn Flower",
+      "displayNameEs": "Flor del Alba Velada",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "The grove remembered rain one stone cup at a time.",
-        "es": "El bosque recordó la lluvia, un cuenco de piedra a la vez."
+        "en": "When its petals opened, the old paths shone again.",
+        "es": "Cuando abrió sus pétalos, las viejas sendas volvieron a brillar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -28,8 +28,8 @@
         "amount": 1
       },
       "subtypes": [
-        "Rootfolk",
-        "Gatherer"
+        "Plant",
+        "Spirit"
       ],
       "power": 1,
       "endurance": 1,
@@ -60,15 +60,15 @@
     {
       "id": "iria_voice_last_rain",
       "collectorId": "HFA1002",
-      "name": "Iria, Voice of the Last Rain",
-      "displayNameEs": "Iria, Voz de la Última Lluvia",
+      "name": "Aelyra, Heir of Elarion",
+      "displayNameEs": "Aelyra, Heredera de Elarion",
       "gameText": {
         "en": "When Invoked, put a +1/+1 counter on an ally and gain 3 Life.",
         "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
       },
       "flavorText": {
-        "en": "She did not bring the storm. She carried what it had forgotten.",
-        "es": "No trajo la tormenta. Cargó con aquello que había olvidado."
+        "en": "She inherited no throne, only a broken pact and the name of a sleeping dragon.",
+        "es": "No heredó un trono, sólo un pacto roto y el nombre de un dragón dormido."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -76,8 +76,8 @@
         "amount": 1
       },
       "subtypes": [
-        "Human",
-        "Restorer"
+        "Elf",
+        "Heir"
       ],
       "power": 0,
       "endurance": 2,
@@ -129,15 +129,15 @@
     {
       "id": "keeper_sleeping_root",
       "collectorId": "HFA1003",
-      "name": "Keeper of the Sleeping Root",
-      "displayNameEs": "Custodio de la Raíz Dormida",
+      "name": "Liora, Keeper of the Grove",
+      "displayNameEs": "Liora, Guardiana de la Arboleda",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "He waited beneath the roots until the water spoke again.",
-        "es": "Esperó bajo las raíces hasta que el agua volvió a hablar."
+        "en": "She guarded the last living branch until the heir returned.",
+        "es": "Custodió la última rama viva hasta el regreso de la heredera."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -145,7 +145,7 @@
         "amount": 2
       },
       "subtypes": [
-        "Rootfolk",
+        "Elf",
         "Keeper"
       ],
       "power": 1,
@@ -177,15 +177,15 @@
     {
       "id": "black_sap_stalker",
       "collectorId": "HFA1004",
-      "name": "Black-Sap Stalker",
-      "displayNameEs": "Acechador de Savia Negra",
+      "name": "Hydra of the Black Bough",
+      "displayNameEs": "Hidra de la Fronda Negra",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The sickness remained. Iria merely taught it where to bite.",
-        "es": "La enfermedad permaneció. Iria sólo le enseñó dónde morder."
+        "en": "Elarion never asked its monsters to be gentle, only loyal.",
+        "es": "Elarion nunca pidió que sus monstruos fueran dóciles, sólo leales."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -193,7 +193,7 @@
         "amount": 3
       },
       "subtypes": [
-        "Basilisk"
+        "Hydra"
       ],
       "power": 1,
       "endurance": 3,
@@ -209,27 +209,27 @@
     {
       "id": "arven_first_pack",
       "collectorId": "HFA1005",
-      "name": "Arven, First of the Pack",
-      "displayNameEs": "Arven, Primero de la Manada",
+      "name": "Kaelor, Stormcaller",
+      "displayNameEs": "Kaelor, Convocador de Tormentas",
       "gameText": {
-        "en": "The first time another ally is Invoked during your turn, Arven gets +1/+1 until your next turn.",
-        "es": "La primera vez que otro aliado sea invocado durante tu turno, Arven gana +1/+1 hasta tu próximo turno."
+        "en": "The first time another ally is Invoked during your turn, Kaelor gets +1/+1 until your next turn.",
+        "es": "La primera vez que otro aliado sea invocado durante tu turno, Kaelor gana +1/+1 hasta tu próximo turno."
       },
       "flavorText": {
-        "en": "When the first call answered his own, the whole forest ran beside him.",
-        "es": "Cuando la primera llamada respondió a la suya, todo el bosque corrió a su lado."
+        "en": "Every voice that answered the pact kindled another bolt in his hands.",
+        "es": "Cada voz que respondía al pacto encendía otro relámpago en sus manos."
       },
-      "showFlavorText": false,
+      "showFlavorText": true,
       "quantity": 3,
       "energyCost": {
-        "amount": 3
+        "amount": 4
       },
       "subtypes": [
-        "Wolfkin",
-        "Packleader"
+        "Elf",
+        "Stormcaller"
       ],
       "power": 3,
-      "endurance": 3,
+      "endurance": 4,
       "abilities": [
         {
           "id": "arven_first_pack_other_creature_enters",
@@ -279,27 +279,27 @@
     {
       "id": "ancient_canopy_watchers",
       "collectorId": "HFA1006",
-      "name": "Watchers of the Ancient Canopy",
-      "displayNameEs": "Vigías del Dosel Antiguo",
+      "name": "Maela, Watcher of the Heights",
+      "displayNameEs": "Maela, Vigía de las Alturas",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The canopy had been undefended for an age. Then the spears rose.",
-        "es": "El dosel llevaba una era indefenso. Entonces se alzaron las lanzas."
+        "en": "No shadow crosses the heights without passing before her bow.",
+        "es": "Ninguna sombra cruza las alturas sin pasar frente a su arco."
       },
       "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
-        "amount": 4
+        "amount": 3
       },
       "subtypes": [
-        "Arboreal",
-        "Sentinel"
+        "Human",
+        "Archer"
       ],
-      "power": 4,
-      "endurance": 4,
+      "power": 3,
+      "endurance": 3,
       "abilities": [],
       "kinds": [
         "ECHO"
@@ -311,15 +311,15 @@
     {
       "id": "hollow_skybreaker",
       "collectorId": "HFA1007",
-      "name": "Skybreaker of the Hollow",
-      "displayNameEs": "Quebracielos de la Hondonada",
+      "name": "Echo of the Forgotten City",
+      "displayNameEs": "Eco de la Ciudad Olvidada",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "It needed no wings. The sky descended whenever it stood.",
-        "es": "No necesitaba alas. El cielo descendía cada vez que se alzaba."
+        "en": "The city had fallen, but its walls still remembered whom they were built to protect.",
+        "es": "La ciudad había caído, pero sus muros aún recordaban a quién debían proteger."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -327,8 +327,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Primordial",
-        "Beast"
+        "Spirit",
+        "Guardian"
       ],
       "power": 4,
       "endurance": 5,
@@ -343,15 +343,15 @@
     {
       "id": "orun_waking_root",
       "collectorId": "HFA1008",
-      "name": "Orun, the Waking Root",
-      "displayNameEs": "Orun, la Raíz Despierta",
+      "name": "Vaelor, Emerald Guardian",
+      "displayNameEs": "Vaelor, Guardián Esmeralda",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Iria awakened no servant. She reminded the grove of its own name.",
-        "es": "Iria no despertó a un sirviente. Le recordó al bosque su propio nombre."
+        "en": "Aelyra did not command the dragon. She gave him a kingdom worth waking for.",
+        "es": "Aelyra no dio órdenes al dragón. Le devolvió un reino por el que valía la pena despertar."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -359,7 +359,7 @@
         "amount": 6
       },
       "subtypes": [
-        "Ancient",
+        "Dragon",
         "Guardian"
       ],
       "power": 6,
@@ -375,15 +375,15 @@
     {
       "id": "marked_prey",
       "collectorId": "HFA1009",
-      "name": "The Marked Prey",
-      "displayNameEs": "La Presa Señalada",
+      "name": "Clash of Echoes",
+      "displayNameEs": "Choque de Ecos",
       "gameText": {
         "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "flavorText": {
-        "en": "Arven's hand fell. The grove struck before the prey could turn.",
-        "es": "La mano de Arven descendió. El bosque golpeó antes de que la presa pudiera girarse."
+        "en": "Only one answered Elarion's call.",
+        "es": "Sólo uno respondió al llamado de Elarion."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -455,15 +455,15 @@
     {
       "id": "oath_clearing",
       "collectorId": "HFA1010",
-      "name": "Oath of the Clearing",
-      "displayNameEs": "El Juramento del Claro",
+      "name": "Shield of the Heir",
+      "displayNameEs": "Escudo de la Heredera",
       "gameText": {
         "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "flavorText": {
-        "en": "Root and bone yielded together, but the clearing did not.",
-        "es": "Las raíces y los huesos cedieron, pero el claro no."
+        "en": "While Aelyra held the circle, no oath of Elarion fought alone.",
+        "es": "Mientras Aelyra mantuviera el círculo, ningún juramento de Elarion lucharía solo."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -551,15 +551,15 @@
     {
       "id": "roots_touched_sky",
       "collectorId": "HFA1011",
-      "name": "When the Roots Touched the Sky",
-      "displayNameEs": "Cuando las Raíces Tocaron el Cielo",
+      "name": "The Judgment of Elarion",
+      "displayNameEs": "El Juicio de Elarion",
       "gameText": {
         "en": "Destroy a Support or an Echo with Flying.",
         "es": "Destruye un Apoyo o un Eco con Volar."
       },
       "flavorText": {
-        "en": "When the earth remembered its reach, nothing remained beyond it.",
-        "es": "Cuando la tierra recordó su alcance, nada quedó fuera de él."
+        "en": "Neither wing nor stone stood beyond the judgment of the ancient realm.",
+        "es": "Ni alas ni piedra quedaron fuera del juicio del antiguo reino."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -619,15 +619,15 @@
     {
       "id": "first_tree_sap",
       "collectorId": "HFA1012",
-      "name": "Sap of the First Tree",
-      "displayNameEs": "Savia del Primer Árbol",
+      "name": "Elixir of the First Leaf",
+      "displayNameEs": "Elixir de la Primera Hoja",
       "gameText": {
         "en": "The target Echo gains +3/+3 until the end of the turn.",
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "flavorText": {
-        "en": "For one heartbeat, the smallest among them carried the strength of the first tree.",
-        "es": "Durante un latido, el más pequeño llevó la fuerza del primer árbol."
+        "en": "A single drop restored the strength of Elarion's first guardians.",
+        "es": "Una sola gota devolvía la fuerza de los primeros guardianes de Elarion."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -678,15 +678,15 @@
     {
       "id": "deep_root_spring",
       "collectorId": "HFA1013",
-      "name": "Deep-Root Spring",
-      "displayNameEs": "Manantial de Raízhonda",
+      "name": "River of Elarion",
+      "displayNameEs": "Río de Elarion",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "The first drop did not break the silence. It taught the roots to answer.",
-        "es": "La primera gota no rompió el silencio. Enseñó a las raíces a responder."
+        "en": "The river knew the way to the dragon long after every road was lost.",
+        "es": "El río conocía el camino hacia el dragón mucho después de que se perdieran todos los senderos."
       },
       "showFlavorText": true,
       "quantity": 15,
@@ -694,7 +694,7 @@
         "amount": 0
       },
       "subtypes": [
-        "Spring"
+        "River"
       ],
       "power": null,
       "endurance": null,

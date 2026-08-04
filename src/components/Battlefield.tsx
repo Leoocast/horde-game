@@ -442,7 +442,7 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.filter = "";
           endSummoningAnimation();
           // fill:"both" is only needed through the entrance delay. Release the finished
-          // WAAPI effect so later CSS effects (for example Iria's activation pulse)
+          // WAAPI effect so later CSS effects (for example Aelyra's activation pulse)
           // can own transform/filter on this slot again.
           animation.cancel();
           entranceAnimatingIds.current.delete(card.instanceId);
@@ -503,7 +503,7 @@ export function Battlefield({ game, side, cards }: Props) {
       animation.onfinish = () => {
         // Do not leave the final fill frame attached to this stable DOM node: a retained
         // WAAPI transform/filter outranks the CSS activation and targeting animations that
-        // run immediately after an enters-the-battlefield trigger such as Iria.
+        // run immediately after an enters-the-battlefield trigger such as Aelyra.
         animation.cancel();
         if (side === "player") endSummoningAnimation();
         if (id) entranceAnimatingIds.current.delete(id);
