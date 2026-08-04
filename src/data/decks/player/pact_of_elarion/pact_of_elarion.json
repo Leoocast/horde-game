@@ -67,8 +67,8 @@
         "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
       },
       "flavorText": {
-        "en": "She inherited no throne, only a broken pact and the name of a sleeping dragon.",
-        "es": "No heredó un trono, sólo un pacto roto y el nombre de un dragón dormido."
+        "en": "She claimed no throne. She gathered the voices that still remembered the oath.",
+        "es": "No reclamó un trono. Reunió las voces que aún recordaban el juramento."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -184,8 +184,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Elarion never asked its monsters to be gentle, only loyal.",
-        "es": "Elarion nunca pidió que sus monstruos fueran dóciles, sólo leales."
+        "en": "Kings called it a monster. The ancient oath called it an ally.",
+        "es": "Los reyes la llamaron monstruo. El antiguo juramento la llamó aliada."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -216,8 +216,8 @@
         "es": "La primera vez que otro aliado sea invocado durante tu turno, Kaelor gana +1/+1 hasta tu próximo turno."
       },
       "flavorText": {
-        "en": "Every voice that answered the pact kindled another bolt in his hands.",
-        "es": "Cada voz que respondía al pacto encendía otro relámpago en sus manos."
+        "en": "For every ally who returned, a new storm answered over Elarion.",
+        "es": "Por cada aliado que regresaba, una nueva tormenta respondía sobre Elarion."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -318,8 +318,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The city had fallen, but its walls still remembered whom they were built to protect.",
-        "es": "La ciudad había caído, pero sus muros aún recordaban a quién debían proteger."
+        "en": "When Aelyra crossed the ruins, the city rose to recognize its heir.",
+        "es": "Cuando Aelyra cruzó las ruinas, la ciudad se alzó para reconocer a su heredera."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -382,8 +382,8 @@
         "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
       },
       "flavorText": {
-        "en": "Only one answered Elarion's call.",
-        "es": "Sólo uno respondió al llamado de Elarion."
+        "en": "At the pact's call, each Echo revealed what it still fought for.",
+        "es": "Ante el llamado del pacto, cada Eco reveló aquello por lo que aún luchaba."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -462,8 +462,8 @@
         "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
       },
       "flavorText": {
-        "en": "While Aelyra held the circle, no oath of Elarion fought alone.",
-        "es": "Mientras Aelyra mantuviera el círculo, ningún juramento de Elarion lucharía solo."
+        "en": "Within the heiress's circle, no ally bore their oath alone.",
+        "es": "Dentro del círculo de la heredera, ningún aliado cargaba solo con su juramento."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -626,8 +626,8 @@
         "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
       },
       "flavorText": {
-        "en": "A single drop restored the strength of Elarion's first guardians.",
-        "es": "Una sola gota devolvía la fuerza de los primeros guardianes de Elarion."
+        "en": "Distilled from the first leaf born after the pact, it preserved the strength of its founders.",
+        "es": "Destilado de la primera hoja nacida tras el pacto, conservaba la fuerza de sus fundadores."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -685,8 +685,8 @@
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "The river knew the way to the dragon long after every road was lost.",
-        "es": "El río conocía el camino hacia el dragón mucho después de que se perdieran todos los senderos."
+        "en": "The river was the only path the fall of Elarion could not erase.",
+        "es": "El río fue el único camino que la caída de Elarion no pudo borrar."
       },
       "showFlavorText": true,
       "quantity": 15,
