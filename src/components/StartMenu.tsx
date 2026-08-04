@@ -658,7 +658,8 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
 
       <footer className="expedition-footer" inert={openDeckSide !== null}>
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          <span><small>{props.chaos ? t("setup.shatterRules") : t("setup.beginThe")}</small>{props.chaos ? t("setup.unleashChaos") : t("setup.expedition")}</span>{props.chaos ? <Dices size={29} /> : <Play size={29} />}
+          {props.chaos ? <Dices size={22} /> : <Play size={22} />}
+          <span>{props.chaos ? t("setup.unleashChaos") : t("setup.beginChronicle")}</span>
         </button>
       </footer>
 
