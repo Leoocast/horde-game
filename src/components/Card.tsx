@@ -375,10 +375,12 @@ export function CardTraitIconBadges({
               side={variant === "host" ? "bottom" : "top"}
               content={(
                 <span className="card-trait-icon-tooltip-copy">
-                  <strong className="keyword-pill card-trait-tooltip-keyword">
-                    <CardTraitIcon keyword={keyword} />
-                    {label}
-                  </strong>
+                  <CardTraitTooltipBadge
+                    keyword={keyword}
+                    label={label}
+                    toneClass={keywordToneClass}
+                    chaos={game.gameMode === "chaos"}
+                  />
                   <span>{reminder}</span>
                 </span>
               )}
@@ -399,6 +401,33 @@ export function CardTraitIconBadges({
         })}
       </span>
     </span>
+  );
+}
+
+export function CardTraitTooltipBadge({
+  keyword,
+  label,
+  toneClass,
+  chaos = false,
+}: {
+  keyword: string;
+  label: string;
+  toneClass: string;
+  chaos?: boolean;
+}) {
+  return (
+    <strong
+      className={[
+        "card-keyword-badge",
+        "card-trait-tooltip-keyword",
+        keyword === "LETHAL" ? "card-keyword-deathtouch" : "",
+        chaos ? "card-keyword-chaos" : "",
+        toneClass,
+      ].join(" ")}
+    >
+      <CardTraitIcon keyword={keyword} />
+      {label}
+    </strong>
   );
 }
 

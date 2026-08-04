@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
+import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
@@ -76,6 +77,18 @@ test("shared trait badges render icons and preserve Poison amounts", () => {
   assert.match(flying, /<svg/);
   assert.match(poison, /<svg/);
   assert.match(poison, /<small[^>]*>3<\/small>/);
+});
+
+test("battlefield trait tooltips preserve faction color and natural capitalization", () => {
+  const badge = renderToStaticMarkup(createElement(CardTraitTooltipBadge, {
+    keyword: "LETHAL",
+    label: "Toque letal",
+    toneClass: "card-keyword-badge-zombie",
+  }));
+
+  assert.match(badge, /card-keyword-badge-zombie/);
+  assert.doesNotMatch(badge, /keyword-pill/);
+  assert.match(badge, />Toque letal<\/strong>/);
 });
 
 test("deck viewer traits reuse the in-game faction badges", () => {
