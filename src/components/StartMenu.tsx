@@ -106,9 +106,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       }
       if (showDeveloperWarning) return;
       if (menuScreen === "home") return;
+      // The setup screen owns Escape itself: an open deck drawer has to swallow it before we leave.
+      if (menuScreen === "setup" || menuScreen === "chaos") return;
       event.preventDefault();
-      if (menuScreen === "setup" || menuScreen === "chaos") setSetupClosing(true);
-      else closeMenuPanel();
+      closeMenuPanel();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -388,6 +389,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onStart={startGame}
           launching={launching}
           closing={setupClosing}
+          overlayOpen={showDeveloperWarning || showNameEditor}
         />
       )}
 
@@ -551,6 +553,8 @@ type ExpeditionSetupProps = {
   onStart: () => void;
   launching: boolean;
   closing: boolean;
+  /** A modal is stacked above the screen, so it owns Escape instead. */
+  overlayOpen: boolean;
 };
 
 function ExpeditionSetup(props: ExpeditionSetupProps) {
@@ -565,14 +569,18 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
     }
   };
 
+  // Escape peels one layer at a time: the deck drawer first, only then the screen itself.
   useEffect(() => {
-    if (!openDeckSide) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeDeckDrawer();
+    if (props.overlayOpen) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (openDeckSide) closeDeckDrawer();
+      else props.onBack();
     };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [openDeckSide]);
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [openDeckSide, props.overlayOpen, props.onBack]);
 
   return (
     <section className={`expedition-setup ${props.chaos ? "chaos-setup" : ""} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
@@ -789,9 +797,17 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
         </div>
       </div>
       <div className="expedition-deck-feature">
-        <div className="expedition-deck-art" key={`setup-art-${deck?.id ?? "empty"}`}>
+        <button
+          className="expedition-deck-art"
+          key={`setup-art-${deck?.id ?? "empty"}`}
+          type="button"
+          onClick={onChangeDeck}
+          aria-expanded={drawerOpen}
+          aria-controls={`expedition-${side}-deck-drawer`}
+          aria-label={`${t("common.change")}: ${deck?.deck.name ?? t("common.chooseDeck")}`}
+        >
           {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
-        </div>
+        </button>
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>
           <div className="expedition-deck-current" key={`setup-copy-${deck?.id ?? "empty"}`} aria-live="polite">

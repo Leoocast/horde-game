@@ -1,16 +1,18 @@
-import { Swords } from "lucide-react";
+import { Shield, Skull, Swords } from "lucide-react";
 import type { EncounterTone } from "../data/deckCatalog";
 import type { GameMode } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 
 type Props = {
-  playerName: string;
+  chronicleName: string;
+  chronicleTheme: string;
   hostName: string;
+  hostTheme: string;
   encounterTone: EncounterTone;
   gameMode: GameMode;
 };
 
-export function EncounterTransition({ playerName, hostName, encounterTone, gameMode }: Props) {
+export function EncounterTransition({ chronicleName, chronicleTheme, hostName, hostTheme, encounterTone, gameMode }: Props) {
   const t = useTranslation();
   const tone = gameMode === "chaos" ? "chaos" : encounterTone;
 
@@ -21,9 +23,15 @@ export function EncounterTransition({ playerName, hostName, encounterTone, gameM
       <div className="encounter-transition-content">
         <p>{gameMode === "chaos" ? t("encounter.chaos") : t("encounter.standard")}</p>
         <div className="encounter-transition-matchup">
-          <strong className="encounter-transition-name encounter-transition-name-player">{playerName}</strong>
+          <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleTheme}`}>
+            <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
+            <strong className="encounter-transition-name encounter-transition-name-player">{chronicleName}</strong>
+          </div>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
-          <strong className="encounter-transition-name encounter-transition-name-host">{hostName}</strong>
+          <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostTheme}`}>
+            <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
+            <strong className="encounter-transition-name encounter-transition-name-host">{hostName}</strong>
+          </div>
         </div>
       </div>
     </div>

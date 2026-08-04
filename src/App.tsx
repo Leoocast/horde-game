@@ -38,8 +38,10 @@ export default function App() {
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
-    playerName: string;
+    chronicleName: string;
+    chronicleTheme: string;
     hostName: string;
+    hostTheme: string;
     encounterTone: EncounterTone;
     gameMode: GameMode;
   } | null>(null);
@@ -128,8 +130,10 @@ export default function App() {
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
-      playerName={launchTransition.playerName}
+      chronicleName={launchTransition.chronicleName}
+      chronicleTheme={launchTransition.chronicleTheme}
       hostName={launchTransition.hostName}
+      hostTheme={launchTransition.hostTheme}
       encounterTone={launchTransition.encounterTone}
       gameMode={launchTransition.gameMode}
     />
@@ -248,9 +252,12 @@ export default function App() {
               options.gameMode,
             );
             const transitionHostDeck = hostInspectableDecks.find((deck) => deck.id === selectedHostDeckId);
+            const transitionPlayerDeck = playerInspectableDecks.find((deck) => deck.id === selectedDeckId);
             setLaunchTransition({
-              playerName: options.playerName,
+              chronicleName: transitionPlayerDeck?.deck.name ?? "The Chronicle",
+              chronicleTheme: transitionPlayerDeck?.presentation.theme ?? "ramp",
               hostName: transitionHostDeck?.deck.name ?? "The Host",
+              hostTheme: transitionHostDeck?.presentation.theme ?? "zombie",
               encounterTone: transitionHostDeck?.presentation.encounterTone ?? "undead",
               gameMode: options.gameMode,
             });
