@@ -608,6 +608,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
             onInspect={props.onInspectHostDeck}
             drawerOpen={openDeckSide === "host"}
             onChangeDeck={() => setOpenDeckSide("host")}
+            accessory={props.chaos ? undefined : <HostAwakening turns={props.selectedMode.setupTurns} />}
           />
         </div>
 
@@ -617,16 +618,12 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
             <div className="expedition-section-heading">
               <div><p>{t("setup.chooseFate")}</p><h2 id="difficulty-heading">{t("setup.difficulty")}</h2></div>
-              <HostAwakening turns={props.selectedMode.setupTurns} />
             </div>
             <div className="expedition-mode-grid">
               {modes.map((item) => (
                 <button key={item.id} data-difficulty={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
                   <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
-                  <span>
-                    <strong>{t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}</strong>
-                    <small>{t(item.id === "easy" ? "setup.adventurerDetail" : item.id === "normal" ? "setup.veteranDetail" : "setup.doomedDetail")}</small>
-                  </span>
+                  <span><strong>{t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}</strong></span>
                 </button>
               ))}
             </div>
@@ -657,6 +654,20 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
       </div>
 
       <footer className="expedition-footer" inert={openDeckSide !== null}>
+        <div className="expedition-footer-summary">
+          <span>{t("setup.playerSide")}</span>
+          <strong>{props.playerDeck?.deck.name ?? "—"}</strong>
+          <i aria-hidden="true">◆</i>
+          <span>{t("setup.hostSide")}</span>
+          <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
+          {!props.chaos && (
+            <>
+              <i aria-hidden="true">◆</i>
+              <span>{t("setup.difficulty")}</span>
+              <strong>{t(props.mode === "easy" ? "setup.adventurer" : props.mode === "normal" ? "setup.veteran" : "setup.doomed")}</strong>
+            </>
+          )}
+        </div>
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
           {props.chaos ? <Dices size={22} /> : <Play size={22} />}
           <span>{props.chaos ? t("setup.unleashChaos") : t("setup.beginChronicle")}</span>
@@ -750,13 +761,15 @@ function HostAwakening({ turns }: { turns: number }) {
   );
 }
 
-function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck }: {
+function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck, accessory }: {
   eyebrow: string;
   side: "player" | "host";
   deck?: InspectableDeck;
   onInspect: () => void;
   drawerOpen: boolean;
   onChangeDeck: () => void;
+  /** Rendered as a strip at the foot of the panel; the Host uses it for its awakening clock. */
+  accessory?: React.ReactNode;
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -787,6 +800,7 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
           </div>
         </div>
       </div>
+      {accessory}
     </article>
   );
 }
