@@ -121,6 +121,10 @@ test("card previews reuse the current printed stats plaque", () => {
 test("deck collections do not clip a raised key card or its glow", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
+  assert.match(
+    styles,
+    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(140px, min\(15vw, calc\(\(100vh - 290px\) \/ 1\.9\)\), 220px\);/u,
+  );
 });
 
 test("main menu reserves enough width and breathing room for the Hostfall title", () => {

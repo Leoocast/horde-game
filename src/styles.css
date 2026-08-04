@@ -2305,7 +2305,7 @@
   }
 
   .decks-panel {
-    --deck-key-card-width: clamp(110px, min(11vw, calc((100vh - 360px) / 2.786)), 170px);
+    --deck-key-card-width: clamp(140px, min(15vw, calc((100vh - 290px) / 1.9)), 220px);
     isolation: isolate;
     overflow: hidden;
     padding-right: 0;
@@ -2544,7 +2544,7 @@
     }
 
     .decks-panel {
-      --deck-key-card-width: clamp(96px, min(10vw, calc((100vh - 320px) / 2.786)), 140px);
+      --deck-key-card-width: clamp(132px, min(14vw, calc((100vh - 260px) / 2)), 190px);
       padding-top: 36px;
       padding-bottom: 24px;
     }
