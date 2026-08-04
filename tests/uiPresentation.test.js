@@ -8,7 +8,7 @@ import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCou
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
-import { TraitPills } from "../src/components/CardPreview";
+import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
@@ -99,6 +99,18 @@ test("deck viewer traits reuse the in-game faction badges", () => {
 
   assert.match(badges, /card-keyword-badge-zombie/);
   assert.equal((badges.match(/<svg/g) ?? []).length, 2);
+});
+
+test("card previews reuse the illustrated card stats badge", () => {
+  const stats = renderToStaticMarkup(createElement(PreviewStatsBadge, {
+    stats: "4/6",
+    cardTheme: "goblin",
+  }));
+
+  assert.match(stats, /card-preview-stats card-theme-goblin/);
+  assert.match(stats, /card-stat-attack/);
+  assert.match(stats, /card-stat-life/);
+  assert.equal((stats.match(/<svg/g) ?? []).length, 2);
 });
 
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {

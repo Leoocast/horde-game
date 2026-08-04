@@ -4,11 +4,11 @@ import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { useCardDetails } from "../utils/cardImages";
+import { cardThemeForDefinition, useCardDetails } from "../utils/cardImages";
 import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbols";
 import { gameEffectDescription } from "../utils/cardText";
 import { cardTraits, cardStats } from "../utils/selectors";
-import { TraitPills } from "./CardPreview";
+import { PreviewStatsBadge, TraitPills } from "./CardPreview";
 import { memoryCardsNewestFirst } from "./memoryPresentation";
 
 type Props = {
@@ -211,6 +211,7 @@ export function GraveyardDetailsModal({
   const displayName = localizedCardName(displayCard, language);
   const traits = cardTraits(game, displayCard);
   const stats = cardStats(game, displayCard);
+  const cardTheme = cardThemeForDefinition(displayCard.definitionId);
   const text = cleanCardDescriptionText(undefined, undefined, traits, gameEffectDescription(displayCard, language));
 
   return (
@@ -253,7 +254,7 @@ export function GraveyardDetailsModal({
 
             {(traits || stats) && (
               <div className="deck-collection-modal-badges">
-                {stats && <span className="deck-collection-modal-stats">{stats}</span>}
+                {stats && <PreviewStatsBadge stats={stats} cardTheme={cardTheme} />}
                 {traits && <TraitPills traits={traits} />}
               </div>
             )}

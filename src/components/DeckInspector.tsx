@@ -9,7 +9,7 @@ import { cleanCardDescriptionText, renderCardText } from "../utils/cardTextSymbo
 import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { TraitPills } from "./CardPreview";
+import { PreviewStatsBadge, TraitPills } from "./CardPreview";
 
 type Props = {
   deck: InspectableDeck;
@@ -247,6 +247,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   const text = deckCardDescription(card, language);
   const hasText = text.length > 0;
   const showFullCardImage = usesFullCardImage(deck, card);
+  const cardStats = stats(card);
 
   return (
     <aside className="deck-detail-info relative z-[90] flex min-h-0 flex-col overflow-hidden text-[#f6e6b8]">
@@ -275,7 +276,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
           <MissingCardArt card={card} />
         )}
         <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
-          {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
+          {cardStats && <PreviewStatsBadge stats={cardStats} cardTheme={deck.presentation.theme} />}
           {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact cardTheme={deck.presentation.theme} />}
         </div>
         {hasText && (
@@ -409,7 +410,7 @@ function DeckInspectorDetailsModal({
 
             {(traits || cardStats) && (
               <div className="deck-collection-modal-badges">
-                {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
+                {cardStats && <PreviewStatsBadge stats={cardStats} cardTheme={deck.presentation.theme} />}
                 {traits && <TraitPills traits={traits} cardTheme={deck.presentation.theme} />}
               </div>
             )}

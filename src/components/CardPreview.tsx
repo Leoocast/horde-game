@@ -266,6 +266,7 @@ export function CardDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
+  const cardTheme = cardThemeForDefinition(card.definitionId);
   const localizedName = cardLabelCamelCase(
     language === "es"
       ? card.displayNameEs || displayName || localizedCardName(card, language)
@@ -306,7 +307,7 @@ export function CardDetailsModal({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {traits && <TraitPills traits={traits} />}
-            {stats && <span className="preview-stat-pill scale-110">{stats}</span>}
+            {stats && <PreviewStatsBadge stats={stats} cardTheme={cardTheme} />}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="old-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
                 aA
@@ -327,6 +328,26 @@ export function CardDetailsModal({
         </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+export function PreviewStatsBadge({ stats, cardTheme }: { stats: string; cardTheme?: DeckTheme }) {
+  const parsed = stats.match(/^(-?\d+)\s*\/\s*(-?\d+)$/u);
+  if (!parsed) return null;
+
+  return (
+    <div className={["card-preview-stats", cardTheme ? `card-theme-${cardTheme}` : ""].join(" ")}>
+      <CardStatsBadge
+        stats={{
+          text: stats,
+          power: Number(parsed[1]),
+          endurance: Number(parsed[2]),
+          damaged: false,
+          buffed: false,
+        }}
+        preferSingleSword
+      />
     </div>
   );
 }

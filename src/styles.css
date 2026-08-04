@@ -3406,19 +3406,6 @@
     font-size: 0.75rem;
   }
 
-  .deck-collection-modal-stats {
-    display: inline-flex;
-    min-width: 48px;
-    height: 27px;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #6b715b;
-    background: linear-gradient(180deg, #c5c4a8, #818b73);
-    color: #121a15;
-    font-size: 14px;
-    font-weight: 950;
-  }
-
   .deck-collection-modal-rules {
     min-height: 0;
     flex: 1;
@@ -6903,8 +6890,7 @@
     display: none;
   }
 
-  .keyword-pill,
-  .preview-stat-pill {
+  .keyword-pill {
     display: inline-flex;
     min-width: 2.6rem;
     height: 1.42rem;
@@ -6927,12 +6913,6 @@
     background: linear-gradient(to bottom, #e9ffd9, #9aca82 52%, #4f7743);
     color: #142f10;
     gap: 0.22rem;
-  }
-
-  .preview-stat-pill {
-    border: 1px solid #485356;
-    background: linear-gradient(to bottom, #edf4ed, #b9c5bf 52%, #7f8b87);
-    color: #18201f;
   }
 
   .toxic-keyword-badge {
@@ -9784,12 +9764,6 @@
     border-color: #59696c;
     background: linear-gradient(180deg, #b8c0ba, #778682 56%, #4a5958);
     color: #101719;
-  }
-
-  .graveyard-card-details .deck-collection-modal-stats {
-    border-color: #687274;
-    background: linear-gradient(180deg, #d0d0bd, #89918a);
-    color: #11191b;
   }
 
   .player-hand-region {
@@ -12671,12 +12645,6 @@
 .graveyard-card-details .keyword-pill {
   border-color: rgb(139 137 94 / 0.52);
   background: linear-gradient(180deg, #b5aa7f, #756e50 56%, #474535);
-  color: #111714;
-}
-
-.graveyard-card-details .deck-collection-modal-stats {
-  border-color: #817957;
-  background: linear-gradient(180deg, #d2c8a1, #8b8363);
   color: #111714;
 }
 
@@ -16065,6 +16033,49 @@
   min-height: 19px;
   padding: 3px 7px;
   font-size: 11px;
+}
+
+.card-preview-stats {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.card-preview-stats > .card-stat-badge {
+  position: relative;
+  inset: auto;
+  width: auto;
+  height: 31px;
+  min-width: 76px;
+}
+
+.card-preview-stats.card-theme-ramp > .card-stat-badge {
+  --card-stat-border: rgb(191 166 106 / 0.62);
+  background: var(--card-stat-ramp-background);
+}
+
+.card-preview-stats.card-theme-zombie > .card-stat-badge {
+  --card-stat-border: rgb(183 175 193 / 0.7);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(211 206 218 / 0.14), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(232 227 235 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #777081 0%, #56515e 54%, #211e28 100%);
+}
+
+.card-preview-stats.card-theme-goblin > .card-stat-badge {
+  --card-stat-border: rgb(255 173 76 / 0.72);
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(255 173 76 / 0.15), transparent 46%),
+    repeating-linear-gradient(133deg, rgb(255 187 91 / 0.02) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #a63216 0%, #76220f 54%, #3a0e08 100%);
+}
+
+.card-preview-stats.card-theme-vampire > .card-stat-badge {
+  --card-stat-border: rgb(225 190 119 / 0.7);
+  --card-stat-separator: #c88c9b;
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(228 147 158 / 0.16), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(246 221 227 / 0.02) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #8d1b3a 0%, #77152f 54%, #260712 100%);
 }
 
 .card-keyword-stack {
