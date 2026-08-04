@@ -7,6 +7,7 @@ import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visi
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
+import { TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
@@ -75,6 +76,16 @@ test("shared trait badges render icons and preserve Poison amounts", () => {
   assert.match(flying, /<svg/);
   assert.match(poison, /<svg/);
   assert.match(poison, /<small[^>]*>3<\/small>/);
+});
+
+test("deck viewer traits reuse the in-game faction badges", () => {
+  const badges = renderToStaticMarkup(createElement(TraitPills, {
+    traits: "LETHAL, FLYING",
+    cardTheme: "zombie",
+  }));
+
+  assert.match(badges, /card-keyword-badge-zombie/);
+  assert.equal((badges.match(/<svg/g) ?? []).length, 2);
 });
 
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {

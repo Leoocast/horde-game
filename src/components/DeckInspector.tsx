@@ -213,8 +213,8 @@ function DeckCardTile({
     >
       <div className="deck-detail-card-frame">
         {quantity > 1 && (
-          <span className="deck-quantity-badge pointer-events-none absolute -right-2 -top-2 z-20">
-            x{quantity}
+          <span className="deck-card-count-badge pointer-events-none" aria-hidden="true">
+            &times;{quantity}
           </span>
         )}
         <div className={["deck-detail-card-image", showFullCardImage ? "is-full-card" : ""].join(" ")}>
@@ -276,7 +276,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
         )}
         <div className="relative z-[120] flex items-center justify-start gap-2 overflow-visible">
           {stats(card) && <span className="preview-stat-pill">{stats(card)}</span>}
-          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact />}
+          {deckTraits(card) && <TraitPills traits={deckTraits(card)} compact cardTheme={deck.presentation.theme} />}
         </div>
         {hasText && (
           <div className="deck-detail-rules">
@@ -410,7 +410,7 @@ function DeckInspectorDetailsModal({
             {(traits || cardStats) && (
               <div className="deck-collection-modal-badges">
                 {cardStats && <span className="deck-collection-modal-stats">{cardStats}</span>}
-                {traits && <TraitPills traits={traits} />}
+                {traits && <TraitPills traits={traits} cardTheme={deck.presentation.theme} />}
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
+import type { DeckTheme } from "../data/deckCatalog";
 import type { CardInstance } from "../engine/GameTypes";
 import { cardLabelCamelCase, localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -330,16 +331,20 @@ export function CardDetailsModal({
   );
 }
 
-export function TraitPills({ traits, compact = false }: { traits: string; compact?: boolean }) {
+export function TraitPills({ traits, compact = false, cardTheme }: { traits: string; compact?: boolean; cardTheme?: DeckTheme }) {
   const language = useLanguageStore((state) => state.language);
+  const cardTone = cardTheme === "ramp" ? "ally" : cardTheme;
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={cardTheme ? "deck-viewer-trait-list flex flex-wrap gap-1.5" : "flex flex-wrap gap-2"}>
       {traits.split(",").map((keyword) => {
         const clean = keyword.trim();
         if (!clean) return null;
         return (
           <GameTooltip key={clean} content={localizedTraitTooltip(clean, language)}>
-            <span className={["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}>
+            <span className={cardTheme
+              ? ["card-keyword-badge", `card-keyword-badge-${cardTone}`, compact ? "deck-viewer-trait-badge-compact" : ""].join(" ")
+              : ["keyword-pill", compact ? "h-[1.08rem] px-2 text-[0.68rem]" : ""].join(" ")}
+            >
               <CardTraitIcon keyword={clean} />
               {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(clean, language)))}
             </span>
