@@ -129,6 +129,11 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 
+test("deck detail close buttons inherit their deck palette", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);
+});
+
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {
   const back = { id: "back" };
   const middle = { id: "middle" };
