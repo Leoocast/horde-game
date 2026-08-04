@@ -96,8 +96,8 @@
         "es": "Los demás aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Ecos invocados este turno."
       },
       "flavorText": {
-        "en": "His tally records only how many soldiers Varka can still spend.",
-        "es": "Su recuento sólo registra cuántos soldados puede gastar todavía Varka."
+        "en": "He counted not those who arrived, but how many Varka could still spend.",
+        "es": "No contaba a quienes llegaban, sino cuántos podía gastar todavía Varka."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -180,8 +180,8 @@
         "es": "Los demás aliados ganan +1/+1. Cada vez que un aliado muera, mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo."
       },
       "flavorText": {
-        "en": "When one falls, Varka's mark calls the next creature into line.",
-        "es": "Cuando uno cae, la marca de Varka llama a la siguiente criatura a las filas."
+        "en": "In the Legion, falling left no gap. It made room for the next.",
+        "es": "En la Legión, caer no dejaba un hueco. Abría el lugar del siguiente."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -261,8 +261,8 @@
         "es": "Al ser invocado, los aliados ganan +1/+0 hasta el final del turno."
       },
       "flavorText": {
-        "en": "He does not announce the assault. He repeats Varka's command.",
-        "es": "No anuncia el asalto. Repite la orden de Varka."
+        "en": "Where he raised the standard, even cowards found a reason to advance.",
+        "es": "Donde alzaba el estandarte, hasta los cobardes encontraban una razón para avanzar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -321,8 +321,8 @@
         "es": "Los aliados ganan Imponente."
       },
       "flavorText": {
-        "en": "Every blow carries the Matriarch's order across the ranks.",
-        "es": "Cada golpe lleva la orden de la Matriarca a través de las filas."
+        "en": "The Legion did not need to hear Varka; it was enough to feel the iron tremble.",
+        "es": "La Legión no necesitaba oír a Varka; bastaba con sentir el hierro temblar."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -371,8 +371,8 @@
         "es": "Después de resolver el ataque de la Hueste, cada Eco atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
       "flavorText": {
-        "en": "Under Varka, even discarded metal becomes a weapon.",
-        "es": "Bajo el mando de Varka, hasta el metal descartado se convierte en arma."
+        "en": "None of them was strong enough. That was why they all attacked at once.",
+        "es": "Ninguno tenía fuerza suficiente. Por eso atacaban todos a la vez."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -462,8 +462,8 @@
         "es": "Al ser invocado, Invoca tres Esbirros de Varka."
       },
       "flavorText": {
-        "en": "Three furnaces, three crews, one order misunderstood together.",
-        "es": "Tres hornos, tres cuadrillas, una orden mal entendida entre todos."
+        "en": "The third toll opened the gate, and three new crews flooded the street.",
+        "es": "El tercer toque abrió la compuerta y tres nuevas cuadrillas inundaron la calle."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -512,8 +512,8 @@
         "es": "Al comienzo de la Batalla de la Hueste, Invoca un Esbirro de Varka. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
       },
       "flavorText": {
-        "en": "The first siren does not warn of danger. It makes it.",
-        "es": "La primera sirena no anuncia peligro. Lo fabrica."
+        "en": "He ran at the front so every Goblin behind him seemed part of the same blow.",
+        "es": "Corría al frente para que cada Trasgo detrás de él pareciera parte del mismo golpe."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -663,8 +663,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Three hammers, one anvil, and no agreement on who leads.",
-        "es": "Tres martillos, un yunque y ningún acuerdo sobre quién manda."
+        "en": "It did not obey Varka. It obeyed noise, fire, and whoever held the chain.",
+        "es": "No obedecía a Varka. Obedecía al ruido, al fuego y a quien sostuviera la cadena."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -693,8 +693,8 @@
         "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de aliados en el Campo."
       },
       "flavorText": {
-        "en": "He measures the volley by the voices that answer.",
-        "es": "Mide la salva por las voces que responden."
+        "en": "He counted the Legion's voices and turned each one into another projectile.",
+        "es": "Contaba las voces de la Legión y convertía cada una en otro proyectil."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -755,8 +755,8 @@
         "es": "Todos los aliados ganan +1/+1. Al ser invocada, inflige 2 de daño al Cronista y a cada enemigo."
       },
       "flavorText": {
-        "en": "She did not break the chains. She learned to make them turn.",
-        "es": "No rompió las cadenas. Aprendió a hacerlas girar."
+        "en": "Varka came from Hell. The Legion was the first of her creations.",
+        "es": "Varka llegó desde el Infierno. La Legión fue la primera de sus obras."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -923,8 +923,8 @@
         "es": "Cuando los Trasgos aliados atacan, Invoca un Esbirro de Varka atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
       },
       "flavorText": {
-        "en": "Every new hammer repeats his order against the Chronicler's bones.",
-        "es": "Cada nuevo martillo repite su orden sobre los huesos del Cronista."
+        "en": "He measured the wave not by those who arrived, but by how many blows he could make ring at once.",
+        "es": "No medía la oleada por quienes llegaban, sino por cuántos golpes podía hacer sonar a la vez."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -992,8 +992,8 @@
         "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca esa cantidad de Esbirros de Varka atacando."
       },
       "flavorText": {
-        "en": "She marks one victory on her armor, and the crew arrives to collect it.",
-        "es": "Marca una victoria en su armadura y la cuadrilla aparece para cobrarla."
+        "en": "Each mark made her legend greater and the escort she demanded more numerous.",
+        "es": "Cada marca hacía más grande su leyenda y más numerosa la escolta que exigía."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -1059,8 +1059,8 @@
         "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
       },
       "flavorText": {
-        "en": "He catches the last rivet before the body reaches the floor.",
-        "es": "Recoge el último remache antes de que el cuerpo toque el suelo."
+        "en": "To him, every dead Goblin left two things: a gap in the line and ammunition.",
+        "es": "Para él, cada Trasgo muerto dejaba dos cosas: un hueco en la fila y munición."
       },
       "showFlavorText": true,
       "quantity": 2,
