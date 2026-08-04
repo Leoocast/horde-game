@@ -10,11 +10,15 @@ type Props = {
   gameMode: GameMode;
 };
 
+/** Shared with App so the board reveal and impact sound land on the CSS clash beat. */
+export const ENCOUNTER_IMPACT_MS = 1050;
+export const ENCOUNTER_TRANSITION_MS = 2450;
+
 export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: Props) {
   const t = useTranslation();
   const chronicleDeck = findInspectableDeck(chronicleDeckId);
   const hostDeck = findInspectableDeck(hostDeckId);
-  const tone = gameMode === "chaos" ? "chaos" : hostDeck.presentation.encounterTone;
+  const tone = gameMode === "chaos" ? "chaos" : hostDeck.presentation.encounterTone ?? "undead";
 
   return (
     <div className={`encounter-transition is-${tone}`} role="status" aria-live="polite" data-audio-click="off">

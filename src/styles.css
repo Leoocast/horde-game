@@ -1502,6 +1502,63 @@
     color: #d9a3c7;
   }
 
+  /* The selected key cards enter from opposite edges and stop short of the rift. Their lower
+     contrast keeps the matchup copy in command while still making this feel like this battle. */
+  .encounter-transition-art {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    width: clamp(180px, min(27vw, 56vh), 410px);
+    aspect-ratio: 488 / 680;
+    pointer-events: none;
+    transform-origin: center;
+    will-change: opacity, transform;
+  }
+
+  .encounter-transition-art::before {
+    position: absolute;
+    z-index: -1;
+    inset: -18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--deck-accent-soft), transparent 66%);
+    content: "";
+    filter: blur(18px);
+  }
+
+  .encounter-transition-art::after {
+    position: absolute;
+    inset: 0;
+    border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 38%, transparent);
+    border-radius: 9px;
+    background:
+      linear-gradient(90deg, rgb(1 5 4 / 0.08), transparent 42%, rgb(1 5 4 / 0.38)),
+      linear-gradient(180deg, transparent 58%, rgb(1 5 4 / 0.82));
+    box-shadow:
+      inset 0 0 42px rgb(0 0 0 / 0.34),
+      0 24px 54px rgb(0 0 0 / 0.62),
+      0 0 40px var(--deck-accent-soft);
+    content: "";
+  }
+
+  .encounter-transition-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 9px;
+    filter: saturate(0.82) brightness(0.74) contrast(1.08);
+    object-fit: cover;
+  }
+
+  .encounter-transition-art-player {
+    left: clamp(-52px, 2.5vw, 40px);
+    animation: encounter-art-left 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
+  }
+
+  .encounter-transition-art-host {
+    right: clamp(-52px, 2.5vw, 40px);
+    animation: encounter-art-right 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
+  }
+
   .encounter-transition-content {
     position: absolute;
     z-index: 4;
@@ -1662,6 +1719,84 @@
     opacity: 0;
     transform: translateX(-50%) scaleY(0.04);
     animation: encounter-rift 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
+  }
+
+  /* A horizontal flash and expanding ring give the two arrivals one unmistakable impact beat. */
+  .encounter-transition-rift::before,
+  .encounter-transition-rift::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    content: "";
+    pointer-events: none;
+  }
+
+  .encounter-transition-rift::before {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #fffbd9;
+    border-radius: 50%;
+    box-shadow:
+      0 0 18px #fffbd9,
+      0 0 46px var(--encounter-accent-bright),
+      0 0 90px var(--encounter-accent);
+    animation: encounter-impact-ring 2450ms ease-out both;
+  }
+
+  .encounter-transition-rift::after {
+    width: min(78vw, 980px);
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--encounter-accent-bright) 34%, #fffbd9 50%, var(--encounter-accent-bright) 66%, transparent);
+    box-shadow: 0 0 18px var(--encounter-accent-bright), 0 0 44px var(--encounter-accent);
+    animation: encounter-impact-flare 2450ms ease-out both;
+  }
+
+  @media (max-width: 720px) {
+    .encounter-transition-content > p {
+      width: min(520px, 88vw);
+      min-height: 62px;
+      margin-bottom: 18px;
+      padding: 12px 24px;
+      font-size: clamp(19px, 6vw, 28px);
+      letter-spacing: 0.07em;
+    }
+
+    .encounter-transition-matchup {
+      width: 96vw;
+      grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr);
+      gap: 7px;
+    }
+
+    .encounter-transition-side {
+      gap: 7px;
+    }
+
+    .encounter-transition-eyebrow {
+      gap: 5px;
+      font-size: 8px;
+      letter-spacing: 0.14em;
+    }
+
+    .encounter-transition-eyebrow::after {
+      display: none;
+    }
+
+    .encounter-transition-matchup strong {
+      font-size: clamp(16px, 5vw, 27px);
+      line-height: 1.08;
+    }
+
+    .encounter-transition-versus {
+      gap: 3px;
+    }
+
+    .encounter-transition-versus svg {
+      width: 27px;
+      height: 27px;
+    }
+
+    .encounter-transition-art-player { left: -18vw; }
+    .encounter-transition-art-host { right: -18vw; }
   }
 
   @keyframes expedition-screen-enter {
@@ -1940,6 +2075,36 @@
     47% { opacity: 1; transform: translateX(-50%) scaleY(1); }
     63% { opacity: 0.9; transform: translateX(-50%) scaleY(1); }
     82%, 100% { opacity: 0; transform: translateX(-50%) scaleX(110) scaleY(1); }
+  }
+
+  @keyframes encounter-art-left {
+    0% { opacity: 0; transform: translate(-58vw, -50%) rotate(-13deg) scale(0.88); }
+    14% { opacity: 0.18; }
+    35% { opacity: 0.62; transform: translate(0, -50%) rotate(-4deg) scale(1); }
+    43% { opacity: 0.78; transform: translate(1.2vw, -50%) rotate(-3deg) scale(1.025); }
+    64% { opacity: 0.62; transform: translate(0, -50%) rotate(-4deg) scale(1); }
+    82%, 100% { opacity: 0; transform: translate(-10vw, -50%) rotate(-7deg) scale(1.06); }
+  }
+
+  @keyframes encounter-art-right {
+    0% { opacity: 0; transform: translate(58vw, -50%) rotate(13deg) scale(0.88); }
+    14% { opacity: 0.18; }
+    35% { opacity: 0.62; transform: translate(0, -50%) rotate(4deg) scale(1); }
+    43% { opacity: 0.78; transform: translate(-1.2vw, -50%) rotate(3deg) scale(1.025); }
+    64% { opacity: 0.62; transform: translate(0, -50%) rotate(4deg) scale(1); }
+    82%, 100% { opacity: 0; transform: translate(10vw, -50%) rotate(7deg) scale(1.06); }
+  }
+
+  @keyframes encounter-impact-ring {
+    0%, 39% { opacity: 0; transform: translate(-50%, -50%) scale(0.08); }
+    43% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+    58%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(9); }
+  }
+
+  @keyframes encounter-impact-flare {
+    0%, 40% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.04); }
+    44% { opacity: 0.95; transform: translate(-50%, -50%) scaleX(1); }
+    55%, 100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1.18); }
   }
 
   @keyframes encounter-name-left {

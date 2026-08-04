@@ -2,10 +2,10 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
-import { EncounterTransition } from "./components/EncounterTransition";
+import { ENCOUNTER_IMPACT_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
-import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks, type EncounterTone } from "./data/deckCatalog";
+import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -110,28 +110,29 @@ export default function App() {
   useEffect(() => {
     if (!launchTransition) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const impactTimeout = window.setTimeout(() => {
+      playSfx("playMonsterHeavy", { rate: 0.92 });
+    }, reducedMotion ? 60 : ENCOUNTER_IMPACT_MS);
     const revealTimeout = window.setTimeout(() => {
       startBattleMusic(true);
       setScreen("game");
-    }, reducedMotion ? 80 : 1050);
+    }, reducedMotion ? 80 : ENCOUNTER_IMPACT_MS);
     const finishTimeout = window.setTimeout(() => {
       setLaunchTransition(null);
-    }, reducedMotion ? 180 : 2450);
+    }, reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
     return () => {
+      window.clearTimeout(impactTimeout);
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
-  }, [launchTransition, startBattleMusic]);
+  }, [launchTransition, playSfx, startBattleMusic]);
 
   if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
-      chronicleName={launchTransition.chronicleName}
-      chronicleTheme={launchTransition.chronicleTheme}
-      hostName={launchTransition.hostName}
-      hostTheme={launchTransition.hostTheme}
-      encounterTone={launchTransition.encounterTone}
+      chronicleDeckId={launchTransition.chronicleDeckId}
+      hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
     />
   ) : null;
@@ -239,7 +240,6 @@ export default function App() {
             setSetupTurns(options.setupTurns);
             stopMusic();
             playSfx("draw");
-            playSfx("playMonsterHeavy", { rate: 0.92 });
             reset(
               options.seed,
               options.setupTurns,
@@ -248,14 +248,9 @@ export default function App() {
               options.mode,
               options.gameMode,
             );
-            const transitionHostDeck = hostInspectableDecks.find((deck) => deck.id === selectedHostDeckId);
-            const transitionPlayerDeck = playerInspectableDecks.find((deck) => deck.id === selectedDeckId);
             setLaunchTransition({
-              chronicleName: transitionPlayerDeck?.deck.name ?? "The Chronicle",
-              chronicleTheme: transitionPlayerDeck?.presentation.theme ?? "ramp",
-              hostName: transitionHostDeck?.deck.name ?? "The Host",
-              hostTheme: transitionHostDeck?.presentation.theme ?? "zombie",
-              encounterTone: transitionHostDeck?.presentation.encounterTone ?? "undead",
+              chronicleDeckId: selectedDeckId,
+              hostDeckId: selectedHostDeckId,
               gameMode: options.gameMode,
             });
           }}
