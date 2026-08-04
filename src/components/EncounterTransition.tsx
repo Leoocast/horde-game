@@ -23,7 +23,6 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
   return (
     <div className={`encounter-transition is-${tone}`} role="status" aria-live="polite" data-audio-click="off">
       <div className="encounter-transition-vignette" />
-      <div className="encounter-transition-rift" />
       <div className="encounter-transition-content">
         <p>{gameMode === "chaos" ? t("encounter.chaos") : t("encounter.standard")}</p>
         <div className="encounter-transition-matchup">
@@ -36,6 +35,7 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
           </div>
           <span className="encounter-transition-versus">
             <span className="encounter-transition-versus-mark" aria-hidden="true">
+              <span className="encounter-transition-rift" />
               <span className="encounter-transition-impact" />
               <Swords size={34} />
             </span>
