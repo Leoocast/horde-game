@@ -10,7 +10,7 @@ type Props = {
   gameMode: GameMode;
 };
 
-/** Shared with App so the board reveal and impact sound land on the CSS clash beat. */
+/** Shared with App so the board begins revealing under the CSS clash beat. */
 export const ENCOUNTER_IMPACT_MS = 1050;
 export const ENCOUNTER_TRANSITION_MS = 2450;
 
@@ -33,7 +33,13 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
             <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
             <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
           </div>
-          <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
+          <span className="encounter-transition-versus">
+            <span className="encounter-transition-versus-mark" aria-hidden="true">
+              <span className="encounter-transition-impact" />
+              <Swords size={34} />
+            </span>
+            <b>VS</b>
+          </span>
           <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostDeck.presentation.theme}`}>
             <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
             <strong className="encounter-transition-name encounter-transition-name-host">{hostDeck.deck.name}</strong>

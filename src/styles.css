@@ -1439,6 +1439,7 @@
   .encounter-transition {
     --encounter-accent: #8da96a;
     --encounter-accent-bright: #d4dfa1;
+    --encounter-art-center: clamp(170px, 14vw, 290px);
     position: fixed;
     z-index: 1000;
     inset: 0;
@@ -1545,17 +1546,17 @@
     width: 100%;
     height: 100%;
     border-radius: 9px;
-    filter: saturate(0.82) brightness(0.74) contrast(1.08);
+    filter: saturate(0.94) brightness(0.9) contrast(1.06);
     object-fit: cover;
   }
 
   .encounter-transition-art-player {
-    left: clamp(-52px, 2.5vw, 40px);
+    left: var(--encounter-art-center);
     animation: encounter-art-left 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
   }
 
   .encounter-transition-art-host {
-    right: clamp(-52px, 2.5vw, 40px);
+    left: calc(100% - var(--encounter-art-center));
     animation: encounter-art-right 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
   }
 
@@ -1563,10 +1564,6 @@
     position: absolute;
     z-index: 4;
     inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     animation: encounter-content-life 2450ms ease-in-out both;
   }
 
@@ -1575,14 +1572,16 @@
   }
 
   .encounter-transition-content > p {
-    position: relative;
+    position: absolute;
     z-index: 4;
+    top: clamp(62px, 16vh, 170px);
+    left: 50%;
     display: grid;
     box-sizing: border-box;
-    width: min(570px, 78vw);
-    min-height: 86px;
-    margin: 0 0 28px;
-    padding: 18px clamp(34px, 5vw, 68px);
+    width: min(900px, 88vw);
+    min-height: 68px;
+    margin: 0;
+    padding: 14px clamp(42px, 7vw, 94px);
     place-items: center;
     border-top: 1px solid color-mix(in srgb, var(--encounter-accent) 28%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--encounter-accent) 20%, transparent);
@@ -1592,7 +1591,7 @@
     color: #e4dcc0;
     clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(24px, 3vw, 38px);
+    font-size: clamp(18px, 2.4vw, 36px);
     font-weight: 500;
     letter-spacing: 0.1em;
     line-height: 1;
@@ -1601,16 +1600,20 @@
       0 2px 0 rgb(0 0 0 / 0.92),
       0 0 14px color-mix(in srgb, var(--encounter-accent) 32%, transparent);
     text-transform: uppercase;
-    transform: translateY(-18px);
+    transform: translateX(-50%);
+    white-space: nowrap;
   }
 
   .encounter-transition-matchup {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     display: grid;
     width: min(1160px, 92vw);
     grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
     align-items: center;
     gap: clamp(16px, 2.2vw, 28px);
+    transform: translate(-50%, -50%);
   }
 
   /* Each side declares who it is and wears its own deck colour, so the clash reads at a glance. */
@@ -1687,6 +1690,8 @@
   }
 
   .encounter-transition-versus {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1698,6 +1703,18 @@
     letter-spacing: 0.2em;
     filter: drop-shadow(0 0 15px color-mix(in srgb, var(--encounter-accent) 55%, transparent));
     animation: encounter-versus-impact 760ms 300ms cubic-bezier(0.18, 0.9, 0.25, 1.2) both;
+  }
+
+  .encounter-transition-versus-mark {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+    place-items: center;
+  }
+
+  .encounter-transition-versus-mark > svg {
+    position: relative;
+    z-index: 1;
   }
 
   .encounter-transition-versus b {
@@ -1721,17 +1738,28 @@
     animation: encounter-rift 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
   }
 
-  /* A horizontal flash and expanding ring give the two arrivals one unmistakable impact beat. */
-  .encounter-transition-rift::before,
-  .encounter-transition-rift::after {
+  /* The shock wave belongs to the swords, so its origin follows their exact visual center. */
+  .encounter-transition-impact,
+  .encounter-transition-impact::before,
+  .encounter-transition-impact::after {
     position: absolute;
     top: 50%;
     left: 50%;
-    content: "";
     pointer-events: none;
   }
 
-  .encounter-transition-rift::before {
+  .encounter-transition-impact {
+    z-index: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .encounter-transition-impact::before,
+  .encounter-transition-impact::after {
+    content: "";
+  }
+
+  .encounter-transition-impact::before {
     width: 24px;
     height: 24px;
     border: 2px solid #fffbd9;
@@ -1743,7 +1771,7 @@
     animation: encounter-impact-ring 2450ms ease-out both;
   }
 
-  .encounter-transition-rift::after {
+  .encounter-transition-impact::after {
     width: min(78vw, 980px);
     height: 3px;
     background: linear-gradient(90deg, transparent, var(--encounter-accent-bright) 34%, #fffbd9 50%, var(--encounter-accent-bright) 66%, transparent);
@@ -1752,13 +1780,21 @@
   }
 
   @media (max-width: 720px) {
+    .encounter-transition {
+      --encounter-art-center: clamp(68px, 19vw, 118px);
+    }
+
+    .encounter-transition-art {
+      width: clamp(160px, 48vw, 230px);
+    }
+
     .encounter-transition-content > p {
-      width: min(520px, 88vw);
-      min-height: 62px;
-      margin-bottom: 18px;
-      padding: 12px 24px;
-      font-size: clamp(19px, 6vw, 28px);
-      letter-spacing: 0.07em;
+      top: clamp(44px, 12vh, 92px);
+      width: 92vw;
+      min-height: 52px;
+      padding: 10px 20px;
+      font-size: clamp(16px, 5vw, 23px);
+      letter-spacing: 0.045em;
     }
 
     .encounter-transition-matchup {
@@ -1795,8 +1831,6 @@
       height: 27px;
     }
 
-    .encounter-transition-art-player { left: -18vw; }
-    .encounter-transition-art-host { right: -18vw; }
   }
 
   @keyframes expedition-screen-enter {
@@ -2078,21 +2112,21 @@
   }
 
   @keyframes encounter-art-left {
-    0% { opacity: 0; transform: translate(-58vw, -50%) rotate(-13deg) scale(0.88); }
+    0% { opacity: 0; transform: translate(calc(-50% - 58vw), -50%) rotate(-13deg) scale(0.88); }
     14% { opacity: 0.18; }
-    35% { opacity: 0.62; transform: translate(0, -50%) rotate(-4deg) scale(1); }
-    43% { opacity: 0.78; transform: translate(1.2vw, -50%) rotate(-3deg) scale(1.025); }
-    64% { opacity: 0.62; transform: translate(0, -50%) rotate(-4deg) scale(1); }
-    82%, 100% { opacity: 0; transform: translate(-10vw, -50%) rotate(-7deg) scale(1.06); }
+    35% { opacity: 0.78; transform: translate(-50%, -50%) rotate(-4deg) scale(1); }
+    43% { opacity: 0.94; transform: translate(calc(-50% + 1.2vw), -50%) rotate(-3deg) scale(1.025); }
+    64% { opacity: 0.8; transform: translate(-50%, -50%) rotate(-4deg) scale(1); }
+    82%, 100% { opacity: 0; transform: translate(calc(-50% - 10vw), -50%) rotate(-7deg) scale(1.06); }
   }
 
   @keyframes encounter-art-right {
-    0% { opacity: 0; transform: translate(58vw, -50%) rotate(13deg) scale(0.88); }
+    0% { opacity: 0; transform: translate(calc(-50% + 58vw), -50%) rotate(13deg) scale(0.88); }
     14% { opacity: 0.18; }
-    35% { opacity: 0.62; transform: translate(0, -50%) rotate(4deg) scale(1); }
-    43% { opacity: 0.78; transform: translate(-1.2vw, -50%) rotate(3deg) scale(1.025); }
-    64% { opacity: 0.62; transform: translate(0, -50%) rotate(4deg) scale(1); }
-    82%, 100% { opacity: 0; transform: translate(10vw, -50%) rotate(7deg) scale(1.06); }
+    35% { opacity: 0.78; transform: translate(-50%, -50%) rotate(4deg) scale(1); }
+    43% { opacity: 0.94; transform: translate(calc(-50% - 1.2vw), -50%) rotate(3deg) scale(1.025); }
+    64% { opacity: 0.8; transform: translate(-50%, -50%) rotate(4deg) scale(1); }
+    82%, 100% { opacity: 0; transform: translate(calc(-50% + 10vw), -50%) rotate(7deg) scale(1.06); }
   }
 
   @keyframes encounter-impact-ring {

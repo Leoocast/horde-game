@@ -110,9 +110,6 @@ export default function App() {
   useEffect(() => {
     if (!launchTransition) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const impactTimeout = window.setTimeout(() => {
-      playSfx("playMonsterHeavy", { rate: 0.92 });
-    }, reducedMotion ? 60 : ENCOUNTER_IMPACT_MS);
     const revealTimeout = window.setTimeout(() => {
       startBattleMusic(true);
       setScreen("game");
@@ -121,11 +118,10 @@ export default function App() {
       setLaunchTransition(null);
     }, reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
     return () => {
-      window.clearTimeout(impactTimeout);
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
-  }, [launchTransition, playSfx, startBattleMusic]);
+  }, [launchTransition, startBattleMusic]);
 
   if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
 
@@ -240,6 +236,7 @@ export default function App() {
             setSetupTurns(options.setupTurns);
             stopMusic();
             playSfx("draw");
+            playSfx("playMonsterHeavy", { rate: 0.92 });
             reset(
               options.seed,
               options.setupTurns,

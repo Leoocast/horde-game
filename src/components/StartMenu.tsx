@@ -72,10 +72,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
   const effectiveSeed = developerMode ? "developer" : seed;
+  const preserveMusicOnInitialMount = useRef(preserveMusicOnMount);
 
   useEffect(() => {
-    if (!preserveMusicOnMount) startMenuMusic();
-  }, [preserveMusicOnMount, startMenuMusic]);
+    if (!preserveMusicOnInitialMount.current) startMenuMusic();
+  }, [startMenuMusic]);
 
   useEffect(() => {
     if (!setupClosing) return;
