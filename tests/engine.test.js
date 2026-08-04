@@ -83,7 +83,7 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
   ];
 
   assert.equal(vampireDeck.id, "crimson_court");
-  assert.equal(vampireDeck.name, "La Corte Carmesí");
+  assert.equal(vampireDeck.name, "La Corte del Eclipse Carmesí");
   assert.equal(playerCards.length, 40);
   assert.equal(game.player.hand.length, 7);
   assert.equal(playerCards.filter((candidate) => candidate.definitionId === "crimson_energy").length, 12);
@@ -611,7 +611,7 @@ test("automatic payment spends Stored Energy first and preserves unused Sources 
   assert.equal(nextPlayerTurn.player.energyPool.stored, 2);
 });
 
-test("Crimson Energy pays only the generic cost left after Stored Energy", () => {
+test("Sanctuary of the Red Moon pays only the generic cost left after Stored Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
   const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
@@ -749,7 +749,7 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
   assert.equal(applyHostAttackEvent(defense, impact).player.life, 10);
 });
 
-test("Blood Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
+test("Midnight Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
   const game = createTestGame("blood-pact-resolution");
   game.player.life = 10;
   addSources(game, 1);
@@ -776,7 +776,7 @@ test("Blood Pact pays five life as an additional cost, draws two cards, and trig
   assert.equal(result.player.memory.some((card) => card.instanceId === pact.instanceId), true);
 });
 
-test("Blood Pact cannot be cast when paying five life would reduce the player to zero", () => {
+test("Midnight Pact cannot be cast when paying five life would reduce the player to zero", () => {
   const game = createTestGame("blood-pact-lethal");
   game.player.life = 5;
   addSources(game, 1);
@@ -993,7 +993,7 @@ test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
   assert.equal(burn?.payload?.amount, 1);
 });
 
-test("Predatory Thirst grants temporary Lifesteal to every allied creature", () => {
+test("Hunt Beneath the Red Moon grants temporary Lifesteal to every allied creature", () => {
   const game = createTestGame("predatory-thirst-attack");
   game.player.life = 10;
   addSources(game, 2);
@@ -1032,7 +1032,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
 });
 
-test("Predatory Thirst grants defensive Lifesteal without requiring a target", () => {
+test("Hunt Beneath the Red Moon grants defensive Lifesteal without requiring a target", () => {
   const game = createTestGame("predatory-thirst-defense");
   game.player.life = 10;
   addSources(game, 2);
@@ -1060,7 +1060,7 @@ test("Predatory Thirst grants defensive Lifesteal without requiring a target", (
   assert.equal(afterImpact.player.field.some((card) => card.instanceId === ally.instanceId), true);
 });
 
-test("Final Banquet destroys only a Host creature and loses its last known effective power", () => {
+test("Verdict of the Eclipse destroys only a Host creature and loses its last known effective power", () => {
   const game = createTestGame("final-banquet-effective-power");
   game.player.life = 20;
   addSources(game, 3);
@@ -1101,7 +1101,7 @@ test("Final Banquet destroys only a Host creature and loses its last known effec
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet rejects allied targets before paying Energy", () => {
+test("Verdict of the Eclipse rejects allied targets before paying Energy", () => {
   const game = createTestGame("final-banquet-invalid-target");
   game.player.life = 20;
   addSources(game, 3);
@@ -1118,7 +1118,7 @@ test("Final Banquet rejects allied targets before paying Energy", () => {
   assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
-test("Final Banquet can be cast during Host combat as an Instant", () => {
+test("Verdict of the Eclipse can be cast during Host combat as an Instant", () => {
   const game = createTestGame("final-banquet-instant");
   game.player.life = 20;
   addSources(game, 3);
@@ -1141,7 +1141,7 @@ test("Final Banquet can be cast during Host combat as an Instant", () => {
   assert.equal(result.host.memory.some((card) => card.instanceId === attacker.instanceId), true);
 });
 
-test("Final Banquet can cause a lethal life loss after destroying its target", () => {
+test("Verdict of the Eclipse can cause a lethal life loss after destroying its target", () => {
   const game = createTestGame("final-banquet-lethal-loss");
   game.player.life = 4;
   addSources(game, 3);
@@ -1160,7 +1160,7 @@ test("Final Banquet can cause a lethal life loss after destroying its target", (
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet preserves Host death triggers after the destruction", () => {
+test("Verdict of the Eclipse preserves Host death triggers after the destruction", () => {
   const game = createTestGame("final-banquet-death-trigger");
   game.player.life = 20;
   addSources(game, 3);
@@ -1278,7 +1278,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(activated?.temporaryPower, 1);
 });
 
-test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", () => {
+test("Midnight Collector exhausts and pays five life to generate one stored Energy", () => {
   const game = createTestGame();
   game.player.life = 10;
   const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
@@ -1309,7 +1309,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(unchanged?.activatedThisTurn, false);
 });
 
-test("Court Duelist keeps +3/+1 through Host combat and loses it at the next player turn", () => {
+test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the next player turn", () => {
   const freshGame = createTestGame();
   freshGame.player.life = 10;
   const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
@@ -1846,7 +1846,7 @@ test("Lifesteal gains nothing when first strike kills the blocker before it deal
   assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("Crypt Guardian reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
+test("Guardian of the Night Threshold reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
   const game = createTestGame("crypt-guardian-survives-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_attacker", "host", {
@@ -1883,7 +1883,7 @@ test("Crypt Guardian reacts only when that Guardian survives combat damage, befo
   );
 });
 
-test("Crypt Guardian does not react when the damage event kills it", () => {
+test("Guardian of the Night Threshold does not react when the damage event kills it", () => {
   const game = createTestGame("crypt-guardian-dies-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_lethal_attacker", "host", {
@@ -1909,7 +1909,7 @@ test("Crypt Guardian does not react when the damage event kills it", () => {
   assert.equal(afterImpact.player.field.some((card) => card.instanceId === guardian.instanceId), false);
 });
 
-test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
+test("Guardian of the Night Threshold reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
   const game = createTestGame("crypt-guardian-unlimited-goblin-damage");
   game.player.life = 10;
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));

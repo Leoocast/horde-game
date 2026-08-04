@@ -187,8 +187,10 @@
 
         if (theme === "crimson_court") {
             return `
-                <svg class="tcg-faction-icon tcg-faction-icon--blood" aria-hidden="true" focusable="false" viewBox="0 0 384 512">
-                    <path fill="currentColor" d="M192 0C79.9 95.2 0 213.9 0 320c0 106 86 192 192 192s192-86 192-192C384 213.9 304.1 95.2 192 0Z"></path>
+                <svg class="tcg-faction-icon tcg-faction-icon--eclipse" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" fill-rule="evenodd" d="M43.8 7.2A26 26 0 1 0 57 50.1 22 22 0 1 1 43.8 7.2Z" clip-rule="evenodd"></path>
+                    <circle class="tcg-faction-gem" cx="18" cy="37" r="6.5"></circle>
+                    <path class="tcg-faction-gem-glint" d="M15.2 34.2a4 4 0 0 1 3.5-1.2" fill="none"></path>
                 </svg>
             `;
         }

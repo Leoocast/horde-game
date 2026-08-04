@@ -102,8 +102,7 @@ Contratos principales:
 - Estados: `exhausted`, `stabilizing`, attacking y defending según el contexto.
 
 La UI española no muestra nombres ingleses de identidad. No agregar proveedores remotos de cartas,
-metadata externa ni arte no local. `Blood Pact / Pacto de Sangre` está aprobado: una coincidencia
-con un nombre genérico no convierte por sí sola el nombre en identidad ajena.
+metadata externa ni arte no local.
 
 `scripts/audit-independence.mjs` es una guarda permanente contra regresiones, no un migrador.
 
@@ -114,7 +113,7 @@ Decks vigentes:
 | Bando | Id | Nombre | Estado |
 | --- | --- | --- | --- |
 | Cronista | `last_rain` | El Pacto de Elarion | Jugable |
-| Cronista | `crimson_court` | La Corte Carmesí | Jugable |
+| Cronista | `crimson_court` | La Corte del Eclipse Carmesí | Jugable |
 | Hueste | `hollow_bell_procession` | La Procesión de la Campana Hueca | Jugable y predeterminada |
 | Hueste | `broken_forge_mutiny` | El Motín de la Forja Rota | Jugable |
 
@@ -181,6 +180,7 @@ No programar cartas por nombre. La excepción bespoke actual es `flesh_root_tith
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
 - `docs/chronicle_last_rain.md`
+- `docs/chronicle_crimson_eclipse.md`
 - `docs/procession_hollow_bell.md`
 - `docs/mutiny_broken_forge.md`
 - `docs/goblin_cards.md`

@@ -465,7 +465,7 @@ test("three poison counters animate their consumption before the Host card is mi
   }
 });
 
-test("Blood Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
+test("Midnight Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -653,7 +653,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
   }
 });
 
-test("Tithe Acolyte presents its life payment while carrying stored Energy to the HUD", async () => {
+test("Midnight Collector presents its life payment while carrying stored Energy to the HUD", async () => {
   const [
     { useGameStore },
     { addCard, cardFromDeck, createTestGame },
@@ -707,7 +707,7 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
   assert.equal(useGameStore.getState().game.player.energyPool.stored, 1);
 });
 
-test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {
+test("Hunt Beneath the Red Moon presents its temporary Lifesteal on every allied creature", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1090,7 +1090,7 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
   }
 });
 
-test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
+test("Verdict of the Eclipse siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();

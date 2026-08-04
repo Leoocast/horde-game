@@ -32,7 +32,7 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",
   }),
-  register("La Corte Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
+  register("La Corte del Eclipse Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
     keyCardId: "eternal_feast_countess",
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",

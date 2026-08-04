@@ -745,10 +745,24 @@ body {
     transform: none;
 }
 
-body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
-    width: 82%;
-    height: 82%;
+body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--eclipse {
+    width: 88%;
+    height: 88%;
+    color: #d8ccb2;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.85));
     transform: translateY(-1px);
+}
+
+body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem {
+    fill: #9f1837;
+    stroke: #f3a5b4;
+    stroke-width: 1.5;
+}
+
+body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem-glint {
+    stroke: rgba(255, 238, 240, 0.88);
+    stroke-linecap: round;
+    stroke-width: 1.5;
 }
 
 .tcg-card--common .tcg-lower {

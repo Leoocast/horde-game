@@ -16,7 +16,7 @@
     {
       "id": "blood_page",
       "artCrop": "../../../../public/cards/crimson_court/art/blood_page.jpg",
-      "typeLineEs": "Eco — Vampiro Sirviente",
+      "typeLineEs": "Eco — Vampira Sirviente",
       "artFrame": {
         "zoom": 0.962,
         "x": -6,
@@ -37,7 +37,7 @@
     {
       "id": "tithe_acolyte",
       "artCrop": "../../../../public/cards/crimson_court/art/tithe_acolyte.jpg",
-      "typeLineEs": "Eco — Vampiro Clérigo",
+      "typeLineEs": "Eco — Vampiro Recaudador",
       "artFrame": {
         "zoom": 0.703,
         "x": 2,
@@ -48,7 +48,7 @@
     {
       "id": "court_duelist",
       "artCrop": "../../../../public/cards/crimson_court/art/court_duelist.jpg",
-      "typeLineEs": "Eco — Vampiro Guerrero",
+      "typeLineEs": "Eco — Vampiro Duelista",
       "artFrame": {
         "zoom": 1.04,
         "x": -16,
@@ -59,7 +59,7 @@
     {
       "id": "crypt_guardian",
       "artCrop": "../../../../public/cards/crimson_court/art/crypt_guardian.jpg",
-      "typeLineEs": "Eco — Vampiro Caballero",
+      "typeLineEs": "Eco — Vampira Caballera",
       "artFrame": {
         "zoom": 1,
         "x": 0,
@@ -71,7 +71,7 @@
     {
       "id": "black_vein_executioner",
       "artCrop": "../../../../public/cards/crimson_court/art/black_vein_executioner.jpg",
-      "typeLineEs": "Eco — Vampiro Asesino",
+      "typeLineEs": "Eco — Vampira Asesina",
       "artFrame": {
         "zoom": 0.855,
         "x": 45,
@@ -83,7 +83,7 @@
     {
       "id": "blood_sentinel",
       "artCrop": "../../../../public/cards/crimson_court/art/blood_sentinel.jpg",
-      "typeLineEs": "Eco — Vampiro Caballero",
+      "typeLineEs": "Eco — Humano/Elfo",
       "artFrame": {
         "zoom": 1.04,
         "x": 25,

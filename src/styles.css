@@ -17738,7 +17738,7 @@ body.playground-active .phase-banner-shell {
   font-size: 13px;
 }
 
-/* Blood Pact uses the real hand card and player HUD; only its cast VFX lives in this portal. */
+/* Midnight Pact uses the real hand card and player HUD; only its cast VFX lives in this portal. */
 .blood-pact-animation-layer {
   position: fixed;
   inset: 0;

@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
       code: 'HFV #010',
       type: 'Conjuro',
       cost: 1,
-      tagLabel: '3D VFX Preview · Pacto de Sangre',
+      tagLabel: '3D VFX Preview · Pacto de Medianoche',
       drawArt: drawCardArtwork,
       playAnimation: executePactoDeSangreAnimation
     }
