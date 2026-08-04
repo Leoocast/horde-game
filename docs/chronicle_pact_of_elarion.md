@@ -44,7 +44,7 @@ jugadora que reconstruye la Crónica.
 
 ## Decisiones mecánicas aprobadas
 
-1. **Aelyra, Heredera de Elarion** es un Eco de Crónica 0/2 de coste 1. Al ser invocada, coloca un
+1. **Aelyra, Heredera de Elarion** es un Eco de Crónica 1/2 de coste 1. Al ser invocada, coloca un
    contador +1/+1 sobre un aliado y recupera 3 de Vida.
 2. **Kaelor, Convocador de Tormentas** es 3/4 de coste 4. La primera vez que otro aliado sea
    invocado durante el turno del Cronista, Kaelor gana +1/+1 hasta el próximo turno del Cronista.
@@ -56,8 +56,8 @@ jugadora que reconstruye la Crónica.
 
 | Id técnico | Identidad Beta | Mecánica | Papel narrativo |
 | --- | --- | --- | --- |
-| `veiled_dawn_flower` | **Flor del Alba Velada** | Coste 1, 1/1; se Agota para ganar 1 Energía. | Primera señal de que las sendas mágicas de Elarion vuelven a abrirse. |
-| `aelyra_heir_of_elarion` | **Aelyra, Heredera de Elarion** | Coste 1, 0/2; Eco de Crónica; contador +1/+1 y 3 de Vida al ser invocada. | Heredera sin trono que reconstruye el pacto y busca a Vaelor. |
+| `veiled_dawn_flower` | **Flor del Alba Velada** | Coste 1, 0/1; se Agota para ganar 1 Energía. | Primera señal de que las sendas mágicas de Elarion vuelven a abrirse. |
+| `aelyra_heir_of_elarion` | **Aelyra, Heredera de Elarion** | Coste 1, 1/2; Eco de Crónica; contador +1/+1 y 3 de Vida al ser invocada. | Heredera sin trono que reconstruye el pacto y busca a Vaelor. |
 | `liora_keeper_of_the_grove` | **Liora, Guardiana de la Arboleda** | Coste 2, 1/3; se Agota para ganar 1 Energía. | Elfa que mantuvo viva la última rama del reino. |
 | `hydra_of_the_black_bough` | **Hidra de la Fronda Negra** | Coste 3, 1/3; Letal y Veneno 1. | Monstruo territorial cuya lealtad demuestra que el pacto incluye más que elfos. |
 | `kaelor_stormcaller` | **Kaelor, Convocador de Tormentas** | Coste 4, 3/4; primera invocación aliada del turno: +1/+1 hasta el próximo turno. | Mago élfico cuya tormenta crece con cada voz que responde al pacto. |

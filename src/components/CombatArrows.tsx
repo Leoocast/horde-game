@@ -135,7 +135,11 @@ export function CombatArrows({ game }: { game: GameState }) {
           const attacker = document.querySelector<HTMLElement>(`[data-card-id="${attackerId}"]`);
           if (!attacker) continue;
           const attackerRect = attacker.getBoundingClientRect();
-          const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.18 };
+          const attackerIsBehindInStack = isCardBehindInStack(attacker);
+          const start = {
+            x: attackerIsBehindInStack ? attackerRect.left + STACKED_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
+            y: attackerRect.top + attackerRect.height * 0.18,
+          };
           next.push(makeArrow(arrowId, start, playerAttackTarget, PLAYER_ATTACK_ARROW_COLOR));
         }
       }
@@ -143,7 +147,11 @@ export function CombatArrows({ game }: { game: GameState }) {
         const attacker = document.querySelector<HTMLElement>(`[data-card-id="${playerAttackDrag.attackerId}"]`);
         if (attacker) {
           const attackerRect = attacker.getBoundingClientRect();
-          const start = { x: attackerRect.left + attackerRect.width / 2, y: attackerRect.top + attackerRect.height * 0.18 };
+          const attackerIsBehindInStack = isCardBehindInStack(attacker);
+          const start = {
+            x: attackerIsBehindInStack ? attackerRect.left + STACKED_ARROW_LEFT_INSET_PX : attackerRect.left + attackerRect.width / 2,
+            y: attackerRect.top + attackerRect.height * 0.18,
+          };
           const end = { x: playerAttackDrag.x, y: playerAttackDrag.y };
           next.push(makeArrow(`player-attack-drag-${playerAttackDrag.attackerId}`, start, end, PLAYER_ATTACK_ARROW_COLOR));
         }

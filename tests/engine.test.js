@@ -1784,7 +1784,7 @@ test("Aelyra can target herself, adds one counter, and gains three Life", () => 
 
   assert.equal(permanent.counters["+1/+1"], 1);
   assert.equal(result.player.life, 33);
-  assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(result, permanent), { power: 2, endurance: 3 });
 });
 
 test("The Broken Headstone grants Menace only while it remains on the battlefield", () => {
@@ -2377,7 +2377,7 @@ test("Vardek grows before creating tokens equal to its new power", () => {
 test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the player and opposing creatures", () => {
   const game = createTestGame("chainwhirler-entry");
   const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
-  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
+  const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 3 }));
   const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
 
   runInvokedTriggers(game, chainwhirler, undefined, { deferSelfTriggers: true });
@@ -2392,12 +2392,13 @@ test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the playe
   assert.ok(volleyEvent);
   assert.equal(volleyEvent.payload?.targetPlayer, true);
   assert.deepEqual(volleyEvent.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
+  assert.equal(volleyEvent.payload?.amount, 2);
 
   drainEventQueue(game);
 
-  assert.equal(game.player.life, 29);
+  assert.equal(game.player.life, 28);
   assert.equal(game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
-  assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+  assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
 });
 
 test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {

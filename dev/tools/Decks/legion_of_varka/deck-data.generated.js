@@ -259,7 +259,7 @@ window.HostfallDeckData = [
     "costo": 3,
     "atk": 3,
     "def": 3,
-    "desc": "Reflejos\nAl ser invocado, inflige 1 de daño al Cronista y a cada enemigo.",
+    "desc": "Reflejos\nAl ser invocado, inflige 2 de daño al Cronista y a cada enemigo.",
     "lore": "No rompió las cadenas. Aprendió a hacerlas girar.",
     "showFlavorText": true,
     "cantidad": 2,

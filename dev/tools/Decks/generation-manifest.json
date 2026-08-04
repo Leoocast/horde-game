@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "pact_of_elarion": {
-      "inputHash": "8ddcab38039fcbaea7a67a1fb663afd0508b052109622d236e1e62749d0d7ca7",
+      "inputHash": "1450cc3af50c2c2215b1646128d86097623a18ebe32a0289c3285b0fad67c38e",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -22,7 +22,7 @@
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/deck-data.generated.js",
-          "sha256": "8d2314874ff66d40dbb464ddff3197932bedcd8778133e3e40c861fd64e375d3"
+          "sha256": "6fa56c34b381c364691b4a6e182d4115bd18b0aa992b1ab2413fe656b926c192"
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/index.html",
@@ -118,7 +118,7 @@
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
-          "sha256": "e3d5da991d4c7c86dba826330511f85257396b73d928965fac166a67aa98abbe"
+          "sha256": "b16097e4351439a1d72f9e2faa9e421b251bf1e76e079a6d26fcc5360e45962a"
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion_images.json",
@@ -129,28 +129,28 @@
         {
           "id": "veiled_dawn_flower",
           "path": "public/cards/pact_of_elarion/veiled_dawn_flower.png",
-          "sha256": "0321f1d8531ef50aa7f6c45c787b0bd6f470027ceb87a3fea6ace619e174d004",
+          "sha256": "84c7ceae6bfb2587461a7e85fd6b43c98af57cb6b4f21b95bd2ee51355ce317d",
           "width": 976,
           "height": 1360
         },
         {
           "id": "aelyra_heir_of_elarion",
           "path": "public/cards/pact_of_elarion/aelyra_heir_of_elarion.png",
-          "sha256": "dd957de25b64de7bb11ea9905e0b3fc9fdb847b00f0bf23f48f6876b3fb53dff",
+          "sha256": "1ef6243fd094c440a90b1a1e3c913228e4fdf0623fc54e117ab72438a3262840",
           "width": 976,
           "height": 1360
         },
         {
           "id": "liora_keeper_of_the_grove",
           "path": "public/cards/pact_of_elarion/liora_keeper_of_the_grove.png",
-          "sha256": "33a658a1b670f07950325a7edb6ce4b4e3a433fa7d2b730278e6a6cc3ab1bc71",
+          "sha256": "54dff0b253cdae25b455d0d82b41a7aac121c98321f06fed40dc964602baa884",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hydra_of_the_black_bough",
           "path": "public/cards/pact_of_elarion/hydra_of_the_black_bough.png",
-          "sha256": "e7470057193a332df2f831abbae8b2a6083fa75243de9b118c91e6a51aa2814c",
+          "sha256": "206557de3b3cdfd19d64e7038abe0e2c63839a2bd8ae984473e6b9fb52024244",
           "width": 976,
           "height": 1360
         },
@@ -199,7 +199,7 @@
         {
           "id": "the_judgment_of_elarion",
           "path": "public/cards/pact_of_elarion/the_judgment_of_elarion.png",
-          "sha256": "e27b62fe45b9177f5f3d54a2ba9616a90ac4cad1de93c9f7525d5925b1d04371",
+          "sha256": "a067e093d53ad4ab6bd515b53df96cc3710b538f7438559a340e059804f55e0e",
           "width": 976,
           "height": 1360
         },
@@ -213,7 +213,7 @@
         {
           "id": "river_of_elarion",
           "path": "public/cards/pact_of_elarion/river_of_elarion.png",
-          "sha256": "6bdbd6a0b8c0331903579b462d47d0b41ab3065ddf9a3e67fa5467f5f1391cd2",
+          "sha256": "49295f055f5e108b337296591840baf0f3ab327cf5a8c8a1840720cbb1b0e0aa",
           "width": 976,
           "height": 1360
         }
@@ -482,7 +482,7 @@
       ]
     },
     "legion_of_varka": {
-      "inputHash": "96dbddcb8ea3353fecf1ad48ad8c522957d6bca5977df08dfb5f40ae7bf4281a",
+      "inputHash": "d4a454ee49a7481add3f1b22ce562d8a019e1fb0ffba80bce9ee3fa3ce33297e",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -502,7 +502,7 @@
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/deck-data.generated.js",
-          "sha256": "151d0f3ba149483985b77f22e1f5d2739480f3d86daaea5097ffc60051992cee"
+          "sha256": "f11b20976d72370ea8e9ef0684cb65125c51acb2e78ddd36b3b5ad584e73a35e"
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/index.html",
@@ -614,7 +614,7 @@
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka.json",
-          "sha256": "35f39cec5a0b729021aef3676fd1049c488daae69edcac2adc81ada28327f7f3"
+          "sha256": "52828a4cc7326584037e7a3ca069fd6a44cacd7da5b0e58360e11c8d9df58603"
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka_images.json",
@@ -632,28 +632,28 @@
         {
           "id": "shaman_of_the_umbral_ember",
           "path": "public/cards/legion_of_varka/shaman_of_the_umbral_ember.png",
-          "sha256": "b4c08cd44ed735d2f2da8f44cf3463beb41ed802acb0022029f2c99c39ed4882",
+          "sha256": "c8164cf7f8312fcbfa9b708aa160ad95aa3be7d4d27c1c8913f3fafee1163d91",
           "width": 976,
           "height": 1360
         },
         {
           "id": "summoner_of_the_ranks",
           "path": "public/cards/legion_of_varka/summoner_of_the_ranks.png",
-          "sha256": "e01e84d0ad08890a152f3e0c841a496d95fc28553d81f0cbaf2c5d4dfc5e715d",
+          "sha256": "79d1261c919425422a64887fdd7ce413f220747ea36f66b780823990fe63692c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_standard_bearer",
           "path": "public/cards/legion_of_varka/varkas_standard_bearer.png",
-          "sha256": "a3f338212d9fe1d230a37d7af53b0a6b2938b7835b42758c10486a63538eb758",
+          "sha256": "8073a9903430c86b7d9ba21083c6eb2010f31b393ab98f8ace30a5ba9a9fed4a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "the_shift_hammer",
           "path": "public/cards/legion_of_varka/the_shift_hammer.png",
-          "sha256": "eb437bf8121c2b6b9b4635ba213601515f566523f300ad19bf49290d55963039",
+          "sha256": "89ff31abfb80b83a281181351f9fa739b0247fb587789598bcfaea52c57ce643",
           "width": 976,
           "height": 1360
         },
@@ -667,21 +667,21 @@
         {
           "id": "chief_of_the_double_guard",
           "path": "public/cards/legion_of_varka/chief_of_the_double_guard.png",
-          "sha256": "14bde500c2504f3cf855108c92d56e85642d99df6d81104056f8defefc927e96",
+          "sha256": "de45e6802525213adf0aee2326cf077d1396535e31b08b11668906f80e0f16f0",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rider_of_the_third_charge",
           "path": "public/cards/legion_of_varka/rider_of_the_third_charge.png",
-          "sha256": "bcae07766e3ed6d7dab8a5c0270054675fd8a5d65fbdd5793fc5e1819f721daf",
+          "sha256": "596ced7cf6690f5755cdebe51bd4c03bfbc4426e01830d803923276cd29dcf64",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_linebreaker",
           "path": "public/cards/legion_of_varka/varkas_linebreaker.png",
-          "sha256": "88bb7cb31898875cd03218e3b558e4ed97510ec73b019d4f782b37f461aa592a",
+          "sha256": "69872376b9366f46eb4ae250f1f9b56386b74356f9b7290c60ceba13832a0b89",
           "width": 976,
           "height": 1360
         },
@@ -695,7 +695,7 @@
         {
           "id": "corrupted_war_bear",
           "path": "public/cards/legion_of_varka/corrupted_war_bear.png",
-          "sha256": "c4f3b3b71731e8272b7e70f1120d1f8d497140ac476736a772f8acfc8f4098d9",
+          "sha256": "e585fe2221c0f12b11ef2baa94382872b841c50e7de276a26188b8401b46f46c",
           "width": 976,
           "height": 1360
         },
@@ -709,7 +709,7 @@
         {
           "id": "varka_infernal_matriarch",
           "path": "public/cards/legion_of_varka/varka_infernal_matriarch.png",
-          "sha256": "321efb0fc3aed9f8df587caeb6d3ede21cadeb4912aeacb3d19a954ac16af6b3",
+          "sha256": "d5dfadca88f2879511a98db74222b9260178f48c1bed4a55924cfdfe10bd0cec",
           "width": 976,
           "height": 1360
         },
@@ -737,7 +737,7 @@
         {
           "id": "rear_guard_firebreather",
           "path": "public/cards/legion_of_varka/rear_guard_firebreather.png",
-          "sha256": "d4758e78b90da2117483d37430c91160fb527c4e8e90eae950e9ab612e5c4132",
+          "sha256": "bb0d11384b1921496e750198b36460cae83b0e85071c4a32c23b3df1b7579e31",
           "width": 976,
           "height": 1360
         }

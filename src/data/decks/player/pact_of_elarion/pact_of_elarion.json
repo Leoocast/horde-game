@@ -31,7 +31,7 @@
         "Plant",
         "Spirit"
       ],
-      "power": 1,
+      "power": 0,
       "endurance": 1,
       "abilities": [
         {
@@ -79,7 +79,7 @@
         "Elf",
         "Heir"
       ],
-      "power": 0,
+      "power": 1,
       "endurance": 2,
       "abilities": [
         {

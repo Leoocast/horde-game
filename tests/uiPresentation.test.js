@@ -65,7 +65,7 @@ test("shared trait badges render icons and preserve Poison amounts", () => {
   assert.match(poison, /<small[^>]*>3<\/small>/);
 });
 
-test("cards behind the front of a stack use the left defense-arrow anchor", () => {
+test("cards behind the front of a stack use the left combat-arrow anchor", () => {
   const back = { id: "back" };
   const middle = { id: "middle" };
   const front = { id: "front" };

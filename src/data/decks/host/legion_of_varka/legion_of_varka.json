@@ -754,8 +754,8 @@
       "name": "Varka, Infernal Matriarch",
       "displayNameEs": "Varka, Matriarca Infernal",
       "gameText": {
-        "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
-        "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
+        "en": "When Invoked, this card deals 2 damage to the Chronicler and each enemy.",
+        "es": "Al ser invocado, inflige 2 de daño al Cronista y a cada enemigo."
       },
       "flavorText": {
         "en": "She did not break the chains. She learned to make them turn.",
@@ -785,7 +785,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "varka_infernal_matriarch_enter_damage_all",
-          "implementationNote": "Deal 1 damage to the Chronicler and each enemy Echo."
+          "implementationNote": "Deal 2 damage to the Chronicler and each enemy Echo."
         }
       ],
       "kinds": [

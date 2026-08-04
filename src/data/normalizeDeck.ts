@@ -204,7 +204,7 @@ function normalizeCustomTriggeredEffect(ability: NewDeckAbility): EffectDefiniti
     case "marshal_of_the_wave_damage_each_opponent":
       return { type: "DEAL_DAMAGE_TO_OPPONENT", amount: 1, animation: "BURN_TO_PLAYER" };
     case "varka_infernal_matriarch_enter_damage_all":
-      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 1, animation: "BURN_VOLLEY" };
+      return { type: "DEAL_DAMAGE_TO_OPPONENT_AND_ECHOS", amount: 2, animation: "BURN_VOLLEY" };
     default:
       return undefined;
   }

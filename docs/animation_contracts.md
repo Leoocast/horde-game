@@ -121,7 +121,7 @@ Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses the same compact vol
 - The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
   receives that target list and calculates one source-to-target geometry for each projectile.
 - Projectiles launch 90ms apart. Each one plays a singular cast sound at launch and the canonical
-  singular hit sound at its own impact; every target gets its own impact effect and `-1` number.
+  singular hit sound at its own impact; every target gets its own impact effect and `-2` number.
 - The stagger is presentation only. Player life and all still-present creatures take damage
   simultaneously when the final projectile lands, followed by one marked-damage cleanup.
 - All hit creature ids are flashed together at resolution, and surviving creatures keep the

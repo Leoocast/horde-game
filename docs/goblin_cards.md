@@ -90,7 +90,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Es el único Eco de Crónica del deck.
 - Reflejos se resuelve en un paso separado de daño de combate. Varka 3/3 mata a un bloqueador 4/3
   antes de que responda y sobrevive; un 4/4 sobrevive a Reflejos y la mata en el paso normal.
-- Su entrada encola un único evento simultáneo de daño para el Cronista y todos sus Ecos. El trigger
+- Su entrada encola un único evento simultáneo de 2 de daño para el Cronista y todos sus Ecos. El trigger
   produce el único pulso y una salva compacta envía un proyectil por una ruta distinta a cada blanco.
 - Los impactos visuales se escalonan 90 ms, pero el daño de reglas se confirma para todos a la vez
   en el impacto final.

@@ -113,7 +113,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
     resetHostSequence();
     const game = createTestGame("chainwhirler-throttled-beat");
     const fragile = addCard(game, customCard("fragile_player_creature", "player", { endurance: 1 }));
-    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 2 }));
+    const sturdy = addCard(game, customCard("sturdy_player_creature", "player", { endurance: 3 }));
     const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
     enqueue(game, {
       type: "BURN_VOLLEY_DAMAGE",
@@ -122,7 +122,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
         sourceSide: "host",
         targetPlayer: true,
         targetIds: [fragile.instanceId, sturdy.instanceId],
-        amount: 1,
+        amount: 2,
       },
     });
 
@@ -147,7 +147,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
     const afterStall = useGameStore.getState();
     assert.equal(afterStall.game.eventQueue.some((event) => event.type === "BURN_VOLLEY_DAMAGE"), false);
     assert.equal(afterStall.game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
-    assert.equal(afterStall.game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
+    assert.equal(afterStall.game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
 
     // The board-settle handoff is scheduled relative to the resumed clock.
     timers.releaseExpiredAt(11_000);
