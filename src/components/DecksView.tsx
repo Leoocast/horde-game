@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -38,7 +38,7 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
   );
 }
 
-function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => void }) {
+export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { deck: InspectableDeck; onOpen: () => void; selected?: boolean; actionLabel?: string }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = findKeyCard(deck);
@@ -50,14 +50,15 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
 
   return (
     <button
-      className={`deck-key-card deck-theme-${deck.presentation.theme}`}
+      className={`deck-key-card deck-theme-${deck.presentation.theme} ${selected ? "is-selected" : ""}`}
       type="button"
       onClick={onOpen}
       onMouseEnter={playHoverSound}
       onFocus={(event) => {
         if (!event.currentTarget.matches(":hover")) playHoverSound();
       }}
-      aria-label={t("decks.open", { deck: deck.label })}
+      aria-label={actionLabel ?? t("decks.open", { deck: deck.label })}
+      aria-pressed={selected || undefined}
     >
       <span className="deck-key-card-stage">
         <span className="deck-key-card-depth deck-key-card-depth-back" aria-hidden="true" />
@@ -73,6 +74,7 @@ function DeckKeyCard({ deck, onOpen }: { deck: InspectableDeck; onOpen: () => vo
           )}
           <span className="deck-key-card-sheen" aria-hidden="true" />
         </span>
+        {selected && <span className="deck-key-card-selection" aria-hidden="true"><Check size={14} /></span>}
       </span>
       <span className="deck-key-card-copy">
         <strong>{deck.deck.name}</strong>
