@@ -117,12 +117,11 @@ window.HostfallDeckData = [
     "lore": "Nada abandona la cripta sin su permiso.",
     "showFlavorText": true,
     "cantidad": 3,
-    "fullArt": true,
     "headerFade": false,
     "art_frame": {
       "zoom": 1,
       "x": 0,
-      "y": -53
+      "y": -42
     }
   },
   {
@@ -224,12 +223,11 @@ window.HostfallDeckData = [
     "lore": "El dolor sólo es fuerza esperando una dirección.",
     "showFlavorText": false,
     "cantidad": 2,
-    "fullArt": true,
     "headerFade": false,
     "art_frame": {
-      "zoom": 0.79,
-      "x": -10,
-      "y": -135
+      "zoom": 0.703,
+      "x": -4,
+      "y": -220
     }
   },
   {
@@ -248,9 +246,9 @@ window.HostfallDeckData = [
     "cantidad": 2,
     "fullArt": true,
     "art_frame": {
-      "zoom": 1.425,
+      "zoom": 1.603,
       "x": -1,
-      "y": 185
+      "y": 132
     }
   },
   {

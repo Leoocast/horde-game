@@ -306,10 +306,12 @@ body {
 
 .tcg-cost-gem {
     position: absolute;
+    top: 30.5px;
+    left: 31px;
     z-index: 10;
     display: flex;
-    width: 90px;
-    height: 90px;
+    width: 77px;
+    height: 77px;
     align-items: center;
     justify-content: center;
     isolation: isolate;
@@ -337,7 +339,7 @@ body {
     height: 100%;
     place-items: center;
     color: #f6f3df;
-    font: 900 60px/1 "Trebuchet MS", "Outfit", sans-serif;
+    font: 900 49px/1 "Trebuchet MS", "Outfit", sans-serif;
     font-feature-settings: "tnum" 1;
     font-variant-numeric: tabular-nums;
     text-shadow:
@@ -408,6 +410,10 @@ body {
     color: inherit;
     font: italic 500 24px/1 "Lora", Georgia, serif;
     letter-spacing: 0.2px;
+}
+
+.tcg-cost-gem span[data-cost="4"] {
+    transform: translateX(-3px);
 }
 
 .tcg-stats-badge {
@@ -691,21 +697,6 @@ body {
     z-index: 2;
 }
 
-.tcg-card--common .tcg-cost-gem {
-    top: 30.5px;
-    left: 31px;
-    width: 77px;
-    height: 77px;
-}
-
-.tcg-card--common .tcg-cost-gem span {
-    font-size: 49px;
-}
-
-.tcg-card--common .tcg-cost-gem span[data-cost="4"] {
-    transform: translateX(-3px);
-}
-
 .tcg-card--common .tcg-title {
     color: #f6f1e5;
     font: 700 37px/1.08 "Cinzel", serif;
@@ -957,23 +948,18 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--full-art .tcg-head {
     position: absolute;
-    top: 46px;
-    right: 46px;
-    left: 46px;
+    top: 30.5px;
+    right: 31px;
+    left: 31px;
     z-index: 9;
     display: flex;
     align-items: center;
     gap: 22px;
-    padding-left: 112px;
+    padding-left: 96px;
 }
 
 .tcg-card--full-art.tcg-card--no-cost .tcg-head {
     padding-left: 0;
-}
-
-.tcg-card--full-art .tcg-cost-gem {
-    top: 46px;
-    left: 46px;
 }
 
 .tcg-card--full-art .tcg-title {
@@ -1006,9 +992,9 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--blood {
 
 .tcg-card--full-art .tcg-seal {
     display: grid;
-    width: 76px;
-    height: 76px;
-    flex: 0 0 76px;
+    width: 77px;
+    height: 77px;
+    flex: 0 0 77px;
     padding: 14px;
     place-items: center;
     border: 2px solid rgba(191, 166, 106, 0.45);

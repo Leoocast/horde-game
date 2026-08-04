@@ -63,10 +63,10 @@
       "artFrame": {
         "zoom": 1,
         "x": 0,
-        "y": -53
+        "y": -42
       },
       "headerFade": false,
-      "fullArt": true
+      "fullArt": false
     },
     {
       "id": "black_vein_executioner",
@@ -121,11 +121,11 @@
       "artCrop": "../../../../public/cards/crimson_court/art/crimson_impulse.jpg",
       "typeLineEs": "Hechizo · Rápido",
       "artFrame": {
-        "zoom": 0.79,
-        "x": -10,
-        "y": -135
+        "zoom": 0.703,
+        "x": -4,
+        "y": -220
       },
-      "fullArt": true,
+      "fullArt": false,
       "headerFade": false
     },
     {
@@ -133,9 +133,9 @@
       "artCrop": "../../../../public/cards/crimson_court/art/drain_essence.jpg",
       "typeLineEs": "Hechizo · Rápido",
       "artFrame": {
-        "zoom": 1.425,
+        "zoom": 1.603,
         "x": -1,
-        "y": 185
+        "y": 132
       },
       "fullArt": true
     },

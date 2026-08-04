@@ -377,6 +377,26 @@ test("the shared printed design keeps the approved compact geometry", () => {
   );
   assert.match(
     sharedCss,
+    /\.tcg-cost-gem\s*\{[^}]*top:\s*30\.5px;[^}]*left:\s*31px;[^}]*width:\s*77px;[^}]*height:\s*77px;/u,
+    "common and full-art cards must share one printed cost position and size",
+  );
+  assert.doesNotMatch(
+    sharedCss,
+    /\.tcg-card--(?:common|full-art) \.tcg-cost-gem\s*\{/u,
+    "card variants must not override the shared printed cost geometry",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-head\s*\{[^}]*top:\s*30\.5px;[^}]*right:\s*31px;[^}]*left:\s*31px;[^}]*padding-left:\s*96px;/u,
+    "the full-art title row must align with the shared cost geometry",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-seal\s*\{[^}]*width:\s*77px;[^}]*height:\s*77px;[^}]*flex:\s*0 0 77px;/u,
+    "the full-art top-right seal must mirror the cost orb",
+  );
+  assert.match(
+    sharedCss,
     /\.tcg-card--common \.tcg-typeband\s*\{[^}]*min-height:\s*74px;/u,
     "the common type band must match the header height",
   );
