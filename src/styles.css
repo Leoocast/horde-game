@@ -1090,6 +1090,7 @@
 
   .encounter-transition-content {
     position: absolute;
+    z-index: 4;
     inset: 0;
     display: flex;
     flex-direction: column;
@@ -1103,14 +1104,33 @@
   }
 
   .encounter-transition-content > p {
-    margin: 0 0 32px;
-    color: var(--encounter-accent-bright);
-    font-size: clamp(15px, 1.5vw, 21px);
-    font-weight: 900;
-    letter-spacing: 0.38em;
-    text-shadow: 0 0 18px color-mix(in srgb, var(--encounter-accent) 52%, transparent), 0 3px 12px #000;
+    position: relative;
+    z-index: 4;
+    display: grid;
+    box-sizing: border-box;
+    width: min(570px, 78vw);
+    min-height: 86px;
+    margin: 0 0 28px;
+    padding: 18px clamp(34px, 5vw, 68px);
+    place-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--encounter-accent) 28%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--encounter-accent) 20%, transparent);
+    background:
+      radial-gradient(ellipse at center, color-mix(in srgb, var(--encounter-accent) 16%, transparent), transparent 68%),
+      linear-gradient(90deg, transparent, rgb(5 13 11 / 0.82) 16%, rgb(5 13 11 / 0.97) 50%, rgb(5 13 11 / 0.82) 84%, transparent);
+    color: #e4dcc0;
+    clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-align: center;
+    text-shadow:
+      0 2px 0 rgb(0 0 0 / 0.92),
+      0 0 14px color-mix(in srgb, var(--encounter-accent) 32%, transparent);
     text-transform: uppercase;
-    transform: translateY(-27px);
+    transform: translateY(-18px);
   }
 
   .encounter-transition-matchup {
@@ -1128,7 +1148,6 @@
     font-weight: 500;
     letter-spacing: 0.03em;
     line-height: 1.04;
-    text-align: right;
     text-wrap: balance;
     text-shadow: 0 4px 20px #000;
     text-transform: uppercase;
@@ -1145,12 +1164,14 @@
 
   .encounter-transition-name-player {
     justify-self: stretch;
+    text-align: right;
   }
 
   .encounter-transition-name-host {
     justify-self: stretch;
     color: #bfa897;
     text-align: left;
+    transform-origin: left center;
     animation-name: encounter-name-right;
   }
 
