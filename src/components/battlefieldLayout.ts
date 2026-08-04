@@ -38,6 +38,10 @@ export function isFrontOfCardStack(stackIndex: number, stackSize: number): boole
   return stackSize <= 1 || stackIndex === stackSize - 1;
 }
 
+export function isBehindInStackOrder<T>(slot: T, stackedSlots: readonly T[]): boolean {
+  return stackedSlots.length > 1 && slot !== stackedSlots[stackedSlots.length - 1];
+}
+
 /**
  * Combat assignments can outlive a permanent for a few presentation beats. The battlefield also
  * keeps dead cards mounted as invisible layout ghosts, so DOM presence alone cannot decide

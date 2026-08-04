@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
-import { activeDefenseArrowLinks } from "./battlefieldLayout";
+import { activeDefenseArrowLinks, isBehindInStackOrder } from "./battlefieldLayout";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
@@ -259,11 +259,11 @@ function getPlayerAttackTargetPoint(): { x: number; y: number } | undefined {
 
 function isCardBehindInStack(card: HTMLElement): boolean {
   const stack = card.closest<HTMLElement>('[data-stacked="true"]');
-  const slot = card.closest<HTMLElement>(".field-layout-slot");
+  const slot = card.closest<HTMLElement>(".battlefield-layout-slot");
   if (!stack || !slot) return false;
 
   const stackedSlots = Array.from(stack.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains("battlefield-layout-slot"));
-  return stackedSlots.length > 1 && slot !== stackedSlots[stackedSlots.length - 1];
+  return isBehindInStackOrder(slot, stackedSlots);
 }
 
 function queueExitingArrows(removed: Arrow[], setExitingArrows: (updater: (current: Arrow[]) => Arrow[]) => void, timers: Map<string, number>): void {

@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { activeDefenseArrowLinks, isFrontOfCardStack } from "../src/components/battlefieldLayout";
+import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack } from "../src/components/battlefieldLayout";
 import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
@@ -70,4 +70,16 @@ test("shared trait badges render icons and preserve Poison amounts", () => {
   assert.match(flying, /<svg/);
   assert.match(poison, /<svg/);
   assert.match(poison, /<small[^>]*>3<\/small>/);
+});
+
+test("cards behind the front of a stack use the left defense-arrow anchor", () => {
+  const back = { id: "back" };
+  const middle = { id: "middle" };
+  const front = { id: "front" };
+  const slots = [back, middle, front];
+
+  assert.equal(isBehindInStackOrder(back, slots), true);
+  assert.equal(isBehindInStackOrder(middle, slots), true);
+  assert.equal(isBehindInStackOrder(front, slots), false);
+  assert.equal(isBehindInStackOrder(front, [front]), false);
 });
