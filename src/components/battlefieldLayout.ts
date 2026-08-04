@@ -63,6 +63,14 @@ export function activeDefenseArrowLinks(game: GameState): DefenseArrowLink[] {
   return links;
 }
 
+/** One visibility source for arrows and their endpoint badges. Assignments intentionally remain in
+ * combat state until cleanup, but presentation links can finish earlier during an impact. */
+export function visibleDefenseArrowLinks(game: GameState, hiddenLinkIds: ReadonlySet<string>): DefenseArrowLink[] {
+  return activeDefenseArrowLinks(game).filter(
+    ({ attackerId, blockerId }) => !hiddenLinkIds.has(`${attackerId}-${blockerId}`),
+  );
+}
+
 export function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }

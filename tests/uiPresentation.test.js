@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack } from "../src/components/battlefieldLayout";
+import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
@@ -36,6 +36,18 @@ test("defense arrows disappear as soon as either combat endpoint leaves the fiel
   game.player.field = [blocker];
   game.host.field = [];
   assert.deepEqual(activeDefenseArrowLinks(game), []);
+});
+
+test("hidden defense links disappear from every combat presentation while assignments remain", () => {
+  const game = createTestGame();
+  const attacker = addCard(game, customCard("hidden-link-attacker", "host"));
+  const blocker = addCard(game, customCard("hidden-link-blocker", "player"));
+  const linkId = `${attacker.instanceId}-${blocker.instanceId}`;
+  game.combat.hostAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+
+  assert.deepEqual(visibleDefenseArrowLinks(game, new Set([linkId])), []);
+  assert.deepEqual(game.combat.blockers, { [attacker.instanceId]: [blocker.instanceId] });
 });
 
 test("Memory presents the most recently moved card first without mutating game state", () => {

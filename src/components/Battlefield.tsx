@@ -28,6 +28,7 @@ import {
   isFrontOfCardStack,
   isSwarmToken,
   unregisteredBattlefieldArrivals,
+  visibleDefenseArrowLinks,
   type GroupMeta,
 } from "./battlefieldLayout";
 import { AnimatePresence, motion } from "framer-motion";
@@ -38,6 +39,7 @@ type Props = {
   game: GameState;
   side: Side;
   cards: CardInstance[];
+  hiddenDefenseLinkIds: ReadonlySet<string>;
 };
 
 const blockColors = ["#60a5fa", "#fb7185", "#4ade80", "#c084fc", "#fbbf24", "#22d3ee", "#f472b6", "#818cf8"];
@@ -120,7 +122,7 @@ function BattlefieldRowSurface({
   );
 }
 
-export function Battlefield({ game, side, cards }: Props) {
+export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) {
   const t = useTranslation();
   const seenCardIds = useRef<Set<string>>(new Set(cards.map((card) => card.instanceId)));
   // Cards already present when this Battlefield mounts belong to the loaded board, not to the
@@ -153,6 +155,7 @@ export function Battlefield({ game, side, cards }: Props) {
   const [creatureRowOverflowing, setCreatureRowOverflowing] = useState(false);
   const [heavyLandingEvents, setHeavyLandingEvents] = useState<Record<string, number>>({});
   const nextHeavyLandingEventId = useRef(0);
+  const visibleDefenseLinks = visibleDefenseArrowLinks(game, hiddenDefenseLinkIds);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
   const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
@@ -801,14 +804,15 @@ export function Battlefield({ game, side, cards }: Props) {
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHostCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
-    const blockerOrderLabel = assignedAttackerId ? getBlockerOrderLabel(card.instanceId, assignedAttackerId) : undefined;
+    const visibleAssignedAttackerId = visibleDefenseLinks.find(({ blockerId }) => blockerId === card.instanceId)?.attackerId;
+    const blockerOrderLabel = visibleAssignedAttackerId ? getBlockerOrderLabel(card.instanceId, visibleAssignedAttackerId) : undefined;
     const attacking =
       game.combat.playerAttackers.includes(card.instanceId) ||
       game.combat.hostAttackers.includes(card.instanceId) ||
       (hostAttackPending && canAttack(game, card));
     const attackerColor = getAttackerColor(card.instanceId);
     const assignedColor = assignedAttackerId ? getAttackerColor(assignedAttackerId) : undefined;
-    const blockersAssigned = game.combat.blockers[card.instanceId]?.length ?? 0;
+    const blockersAssigned = visibleDefenseLinks.filter(({ attackerId }) => attackerId === card.instanceId).length;
     const selectedBlocker = selectedPlayerCreatureId ? game.player.field.find((item) => item.instanceId === selectedPlayerCreatureId) : undefined;
     const selectedBlockerAssigned = selectedBlocker ? Boolean(findAssignedAttacker(selectedBlocker.instanceId)) : false;
     const isLand = card.kinds.includes("SOURCE");

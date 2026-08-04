@@ -38,6 +38,7 @@ import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
+import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 
 type Props = {
   playerName: string;
@@ -78,6 +79,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
+  const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
 
   useEffect(() => {
     if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
@@ -109,7 +111,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <DuelHud game={game} />
       <PhaseBanner game={game} suspended={encounterEntering || !game.openingHandAccepted} />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
-      <CombatArrows game={game} />
+      <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />
       <TributeOfTheFourSorrowsSelectionOverlay game={game} />
       <SpellTargetingOverlay game={game} />
@@ -140,10 +142,10 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">
         <section className="battlefield-board-grid">
           <div className="battlefield-side battlefield-side-host">
-            <Battlefield game={game} side="host" cards={game.host.field} />
+            <Battlefield game={game} side="host" cards={game.host.field} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
           </div>
           <div className="battlefield-side battlefield-side-player">
-            <Battlefield game={game} side="player" cards={game.player.field} />
+            <Battlefield game={game} side="player" cards={game.player.field} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
           </div>
         </section>
       </div>

@@ -2,12 +2,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
-import { activeDefenseArrowLinks, isBehindInStackOrder } from "./battlefieldLayout";
+import { isBehindInStackOrder, visibleDefenseArrowLinks } from "./battlefieldLayout";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
 const PLAYER_ATTACK_ARROW_COLOR = "#f28a35";
-const HOST_ATTACK_ARROW_CLEAR_MS = 470;
 const ARROW_FADE_OUT_MS = 280;
 const STACKED_ARROW_LEFT_INSET_PX = 24;
 
@@ -23,13 +22,11 @@ type Arrow = {
   tipY: number;
 };
 
-export function CombatArrows({ game }: { game: GameState }) {
+export function CombatArrows({ game, hiddenDefenseLinkIds }: { game: GameState; hiddenDefenseLinkIds: ReadonlySet<string> }) {
   const [arrows, setArrows] = useState<Arrow[]>([]);
   const [exitingArrows, setExitingArrows] = useState<Arrow[]>([]);
   const exitTimers = useRef<Map<string, number>>(new Map());
-  const [hiddenArrowIds, setHiddenArrowIds] = useState<Set<string>>(() => new Set());
   const [hiddenPlayerAttackArrowIds, setHiddenPlayerAttackArrowIds] = useState<Set<string>>(() => new Set());
-  const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
   const playerAttackAnimation = useGameStore((state) => state.playerAttackAnimation);
   const blockDrag = useGameStore((state) => state.blockDrag);
   const playerAttackDrag = useGameStore((state) => state.playerAttackDrag);
@@ -46,12 +43,6 @@ export function CombatArrows({ game }: { game: GameState }) {
   }, []);
 
   useEffect(() => {
-    if (Object.keys(game.combat.blockers).length === 0) {
-      setHiddenArrowIds(new Set());
-    }
-  }, [game.combat.blockers]);
-
-  useEffect(() => {
     if (game.combat.playerAttackers.length === 0) {
       setHiddenPlayerAttackArrowIds(new Set());
     }
@@ -63,42 +54,16 @@ export function CombatArrows({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   useEffect(() => {
-    if (!hostAttackAnimation) return;
-    const arrowIds = new Set<string>();
-    if (hostAttackAnimation.blockerDies && hostAttackAnimation.blockerId) {
-      arrowIds.add(`${hostAttackAnimation.attackerId}-${hostAttackAnimation.blockerId}`);
-    }
-    if (hostAttackAnimation.attackerDies) {
-      for (const blockerId of game.combat.blockers[hostAttackAnimation.attackerId] ?? []) {
-        arrowIds.add(`${hostAttackAnimation.attackerId}-${blockerId}`);
-      }
-    }
-    if (arrowIds.size === 0) return;
-    hideArrowIds(arrowIds, setHiddenArrowIds);
-  }, [game.combat.blockers, hostAttackAnimation]);
-
-  useEffect(() => {
-    if (!hostAttackAnimation?.blockerId) return;
-    const arrowId = `${hostAttackAnimation.attackerId}-${hostAttackAnimation.blockerId}`;
-    if (hostAttackAnimation.attackerDies || hostAttackAnimation.blockerDies) return;
-    const timeout = window.setTimeout(() => {
-      hideArrowIds(new Set([arrowId]), setHiddenArrowIds);
-    }, HOST_ATTACK_ARROW_CLEAR_MS);
-    return () => window.clearTimeout(timeout);
-  }, [hostAttackAnimation]);
-
-  useEffect(() => {
     let frame = 0;
     let active = true;
     let trackUntil = performance.now() + 500;
     const measure = () => {
       const next: Arrow[] = [];
-      for (const { attackerId, blockerId } of activeDefenseArrowLinks(game)) {
+      for (const { attackerId, blockerId } of visibleDefenseArrowLinks(game, hiddenDefenseLinkIds)) {
         const attacker = document.querySelector<HTMLElement>(`[data-card-id="${attackerId}"]`);
         if (!attacker) continue;
         const attackerRect = attacker.getBoundingClientRect();
         const arrowId = `${attackerId}-${blockerId}`;
-        if (hiddenArrowIds.has(arrowId)) continue;
         const blocker = document.querySelector<HTMLElement>(`[data-card-id="${blockerId}"]`);
         if (!blocker) continue;
         const blockerRect = blocker.getBoundingClientRect();
@@ -187,7 +152,7 @@ export function CombatArrows({ game }: { game: GameState }) {
       window.removeEventListener("resize", restartTracking);
       window.removeEventListener("scroll", restartTracking, true);
     };
-  }, [game.combat.blockers, game.combat.hostAttackers, game.combat.playerAttackers, game.host.field, game.player.field, hiddenArrowIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
+  }, [game.combat.blockers, game.combat.hostAttackers, game.combat.playerAttackers, game.host.field, game.player.field, hiddenDefenseLinkIds, hiddenPlayerAttackArrowIds, blockDrag, playerAttackDrag]);
 
   return (
     <svg className="pointer-events-none fixed inset-0 z-[65] h-screen w-screen overflow-visible">
