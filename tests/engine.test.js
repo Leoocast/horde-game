@@ -1606,7 +1606,7 @@ test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary 
   assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
 });
 
-test("El Juicio de Elarion only offers legal permanent types and destroys The Hollow Bell", () => {
+test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
   const game = createTestGame();
   addSources(game, 3);
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
@@ -1721,7 +1721,7 @@ test("Aelyra can target herself, adds one counter, and gains three Life", () => 
   assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
 });
 
-test("The Hollow Bell grants Menace only while it remains on the battlefield", () => {
+test("The Broken Headstone grants Menace only while it remains on the battlefield", () => {
   const game = createTestGame();
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
   const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));
@@ -2009,7 +2009,7 @@ test("Boss of the Double Crew and Foreman of Three Furnaces create their Goblin 
   assert.equal(threeFurnacesGame.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 3);
 });
 
-test("The Five-Knot Gallows reacts once to each non-token card played and ignores tokens", () => {
+test("Inexhaustible Ossuary reacts once to each non-token card played and ignores tokens", () => {
   const game = createTestGame("gallows-card-played");
   const mob = addCard(game, cardFromDeck("five_knot_gallows", "host"));
 
@@ -2024,7 +2024,7 @@ test("The Five-Knot Gallows reacts once to each non-token card played and ignore
   assert.equal(game.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
 });
 
-test("The Five-Knot Gallows observes real Chronicler plays and Host reveals exactly once", () => {
+test("Inexhaustible Ossuary observes real Chronicler plays and Host reveals exactly once", () => {
   const game = createTestGame("gallows-real-play-paths");
   addCard(game, cardFromDeck("five_knot_gallows", "host"));
   const spell = addCard(game, customCard("gallows_test_spell", "player", {
@@ -2042,7 +2042,7 @@ test("The Five-Knot Gallows observes real Chronicler plays and Host reveals exac
   assert.equal(afterReveal.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
 });
 
-test("Crow discards two Host Archive cards when Invoked and two more when it dies", () => {
+test("Return to Memory discards two Host Archive cards when Invoked and two more when it dies", () => {
   const game = createTestGame("crow-archive-discard");
   const crow = addCard(game, cardFromDeck("archive_carrion_crow", "host"));
   for (let index = 0; index < 4; index += 1) {
@@ -2333,7 +2333,7 @@ test("Varka, Axis of the Revolt queues one simultaneous Burn volley to the playe
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
 });
 
-test("Marshal of the Last March queues an oil Burn before the player loses life", () => {
+test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {
   const game = createTestGame("lastMarchMarshal-captain-oil-burn");
   const captain = addCard(game, cardFromDeck("last_march_marshal", "host"));
   const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));

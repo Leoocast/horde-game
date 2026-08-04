@@ -65,7 +65,7 @@ test("a host death mid-sequence keeps its slot even with an other permanent on t
   const board = makeBoard();
   const zombieA = addCard(game, customCard("zombie_a", "host", { subtypes: ["Zombie"], isToken: true }));
   const zombieB = addCard(game, customCard("zombie_b", "host", { subtypes: ["Zombie"], isToken: true }));
-  // The Hollow Bell lives in the "other permanents" dock, so it never registers a creature-row order.
+  // The Broken Headstone lives in the "other permanents" dock, so it never registers a creature-row order.
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
 
   renderFrame(board, [zombieA, zombieB, grafHarvest], true);
@@ -181,7 +181,7 @@ test("non-token Host copies stack only when they entered during the same Host tu
   assert.deepEqual(
     separateTurns.map((group) => group.cards.map((card) => card.instanceId)),
     [[firstBat.instanceId], [interveningZombie.instanceId], [laterBat.instanceId]],
-    "the later Crypt Rotwing keeps its summon position instead of joining the old stack",
+    "the later Rider of the Empty Crypt keeps its summon position instead of joining the old stack",
   );
 
   laterBat.fieldEntryTurn = 1;

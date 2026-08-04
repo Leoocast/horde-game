@@ -137,7 +137,7 @@ function queuedCardCount(step: Extract<TimelineStep, { kind: "hostTurnExact" }>)
  * "Play this card", routed by whose card it is. Neither branch invents a path: the player's card
  * lands in Hand and goes through the same cast the Hand does, and the Host's card goes on top of
  * its Archive and is revealed by the Host's own turn — which is the only way a Host card ever
- * enters play in this game. That is why a Spell like Tithe of Flesh and Root cannot be "placed" on the
+ * enters play in this game. That is why a Spell like Tribute of the Four Sorrows cannot be "placed" on the
  * Field: nothing in the game does that, so the playground doesn't offer it.
  */
 function playFromCatalog(step: Extract<TimelineStep, { kind: "playCard" }>): StepOutcome {

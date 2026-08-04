@@ -141,7 +141,7 @@ test("instance ids are unique across every zone", () => {
 });
 
 test("copies beyond the deck's count are minted instead of silently dropped", () => {
-  // The Zombie deck holds a single The Hollow Bell; a scenario may still want three on the board.
+  // The Zombie deck holds two copies of The Broken Headstone; a scenario may still want three on the board.
   const game = buildScenarioGame(scenario({ zones: { hostField: [{ definitionId: "hollow_bell", amount: 3 }] } }));
 
   assert.equal(game.host.field.length, 3);
@@ -180,7 +180,7 @@ test("unknown cards are reported by validateScenario, not half-loaded", () => {
 
 test("placing cards into a live game keeps instance ids unique across repeated adds", () => {
   let game = buildScenarioGame(scenario({ player: { life: 50, energy: 0, storedEnergy: 0 } }));
-  // Deep-Root Spring is in the deck, so the first copies come out of the library; The Hollow Bell belongs to the
+  // Deep-Root Spring is in the deck, so the first copies come out of the library; The Broken Headstone belongs to the
   // Host deck only once, so the later copies have to be minted — both paths in one run.
   for (let round = 0; round < 3; round += 1) {
     game = addScenarioCard(game, "playerField", { definitionId: "deep_root_spring", amount: 2 });

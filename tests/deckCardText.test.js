@@ -891,7 +891,7 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
   }
 });
 
-test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and stay aligned", () => {
+test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("hollow_bell_procession");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(

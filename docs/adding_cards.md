@@ -331,7 +331,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-Diezmo de Carne y Raíz (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Tributo de los Cuatro Pesares (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones

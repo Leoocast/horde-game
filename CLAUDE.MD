@@ -114,7 +114,7 @@ Decks vigentes:
 | --- | --- | --- | --- |
 | Cronista | `last_rain` | El Pacto de Elarion | Jugable |
 | Cronista | `crimson_court` | La Corte del Eclipse Carmesí | Jugable |
-| Hueste | `hollow_bell_procession` | La Procesión de la Campana Hueca | Jugable y predeterminada |
+| Hueste | `hollow_bell_procession` | El Alzamiento de los Sinsepulcro | Jugable y predeterminada |
 | Hueste | `broken_forge_mutiny` | El Motín de la Forja Rota | Jugable |
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.

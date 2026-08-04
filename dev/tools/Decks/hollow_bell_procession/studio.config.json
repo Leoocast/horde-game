@@ -6,7 +6,7 @@
     {
       "id": "last_knell_dead",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.jpg",
-      "typeLineEs": "Eco · Ficha — Zombi",
+      "typeLineEs": "Eco · Ficha — Zombi Soldado",
       "artFrame": {
         "zoom": 1,
         "x": 24,
@@ -37,7 +37,7 @@
     {
       "id": "five_knot_gallows",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.jpg",
-      "typeLineEs": "Eco — Zombi Nacido del cadalso",
+      "typeLineEs": "Eco — Zombi del Osario",
       "artFrame": {
         "zoom": 0.731,
         "x": -14,
@@ -47,7 +47,7 @@
     {
       "id": "last_thought_carrion",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.jpg",
-      "typeLineEs": "Eco — Zombi Carroña",
+      "typeLineEs": "Eco — Zombi Devorador",
       "artFrame": {
         "zoom": 0.676,
         "x": -2,
@@ -57,7 +57,7 @@
     {
       "id": "memory_shroud_bearer",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.jpg",
-      "typeLineEs": "Eco — Zombi Portador de mortaja",
+      "typeLineEs": "Eco — Zombi Ladrón",
       "artFrame": {
         "zoom": 0.731,
         "x": -24,
@@ -79,7 +79,7 @@
     {
       "id": "crypt_rotwing",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.jpg",
-      "typeLineEs": "Eco — Zombi Murciélago",
+      "typeLineEs": "Eco — Zombi Jinete",
       "artFrame": {
         "zoom": 0.962,
         "x": -75,
@@ -90,7 +90,7 @@
     {
       "id": "basted_wing",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.jpg",
-      "typeLineEs": "Eco — Zombi Constructo",
+      "typeLineEs": "Eco — Zombi Engendro",
       "artFrame": {
         "zoom": 0.703,
         "x": -9,
@@ -102,7 +102,7 @@
     {
       "id": "reinforced_gravewing",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.jpg",
-      "typeLineEs": "Eco — Zombi Constructo",
+      "typeLineEs": "Eco — Zombi Jinete",
       "artFrame": {
         "zoom": 1.125,
         "x": -38,
@@ -113,7 +113,7 @@
     {
       "id": "archive_carrion_crow",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.jpg",
-      "typeLineEs": "Eco — Zombi Ave",
+      "typeLineEs": "Eco — Zombi Retornado",
       "artFrame": {
         "zoom": 0.601,
         "x": -19,
@@ -157,7 +157,7 @@
     {
       "id": "silent_bite_rats",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.jpg",
-      "typeLineEs": "Eco — Zombi Rata",
+      "typeLineEs": "Eco — Zombi Infestado",
       "artFrame": {
         "zoom": 0.703,
         "x": 8,
@@ -168,7 +168,7 @@
     {
       "id": "fallen_gatherer",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.jpg",
-      "typeLineEs": "Eco — Zombi Recolector",
+      "typeLineEs": "Eco — Zombi Cosechadora",
       "artFrame": {
         "zoom": 0.703,
         "x": 2,
@@ -180,7 +180,7 @@
     {
       "id": "last_march_marshal",
       "artCrop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.jpg",
-      "typeLineEs": "Eco — Zombi Mariscal",
+      "typeLineEs": "Eco — Zombi Matriarca",
       "artFrame": {
         "zoom": 1.04,
         "x": 0,

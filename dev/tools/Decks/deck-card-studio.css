@@ -745,6 +745,26 @@ body {
     transform: none;
 }
 
+body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-faction-icon--headstone {
+    width: 86%;
+    height: 86%;
+    color: #b4c3ad;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
+    transform: translateY(-1px);
+}
+
+body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-chip {
+    fill: #15201c;
+}
+
+body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-crack,
+body[data-theme="hollow_bell_procession"] .tcg-seal .tcg-headstone-soil {
+    stroke: #15201c;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 3;
+}
+
 body[data-theme="crimson_court"] .tcg-seal .tcg-faction-icon--eclipse {
     width: 88%;
     height: 88%;

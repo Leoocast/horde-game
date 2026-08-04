@@ -62,9 +62,9 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const energyFlowAnimationActive = useGameStore((state) => Boolean(state.energyFlowAnimation));
   const poisonConsumeAnimationActive = useGameStore((state) => Boolean(state.poisonConsumeAnimation));
   const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
-  // Tithe of Flesh and Root turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
+  // Tribute of the Four Sorrows turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
-  // blocker below would swallow those clicks, so drop it while a Tithe of Flesh and Root selection is pending — the
+  // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
   const fleshRootTitheSelectionActive = useGameStore((state) => Boolean(state.fleshRootTitheSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);

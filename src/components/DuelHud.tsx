@@ -83,7 +83,7 @@ export function DuelHud({ game }: { game: GameState }) {
             // store commits a combat impact and the whole battlefield re-renders, and a
             // main-thread JS animation loses that race every time. A CSS keyframe on
             // transform/opacity is handed to the compositor and is immune to it. Only the exit
-            // stays here, because AnimatePresence has to own unmount. Tithe of Flesh and Root dodges this by
+            // stays here, because AnimatePresence has to own unmount. Tribute of the Four Sorrows dodges this by
             // mounting with initial={false} and having no entrance at all.
             initial={false}
             // Exits into the Host graveyard button, which sits up and to the right of this host.

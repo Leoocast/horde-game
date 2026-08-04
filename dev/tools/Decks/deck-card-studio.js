@@ -171,8 +171,11 @@
     function factionSymbol() {
         if (theme === "hollow_bell_procession") {
             return `
-                <svg class="tcg-faction-icon tcg-faction-icon--bell" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
-                    <path fill="currentColor" d="M32 6c-4 0-7 3-7 7v2C15 18 10 27 10 39v5l-5 7h54l-5-7v-5c0-12-5-21-15-24v-2c0-4-3-7-7-7Zm0 52c5 0 9-3 10-7H22c1 4 5 7 10 7Z"></path>
+                <svg class="tcg-faction-icon tcg-faction-icon--headstone" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" d="M12 57v-7h6V25C18 13.4 23.7 7 32 7c8.3 0 14 6.4 14 18v25h6v7H12Z"></path>
+                    <path class="tcg-headstone-chip" d="m38 10 9 10-8 6-5-10 4-6Z"></path>
+                    <path class="tcg-headstone-crack" d="m31 9-3 14 7 5-7 10 5 12" fill="none"></path>
+                    <path class="tcg-headstone-soil" d="M7 57h50M15 61h34" fill="none"></path>
                 </svg>
             `;
         }

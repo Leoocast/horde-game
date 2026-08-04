@@ -37,7 +37,7 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("La Procesión de la Campana Hueca 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
+  register("El Alzamiento de los Sinsepulcro 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
     keyCardId: "last_knell_dead",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",

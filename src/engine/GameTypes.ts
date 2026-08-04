@@ -210,7 +210,7 @@ export type HostState = {
   memory: CardInstance[];
   oblivion: CardInstance[];
   poisonCounters: number;
-  /** Bridge for cards (e.g. Tithe of Flesh and Root) whose reveal needs a bespoke, player-interactive
+  /** Bridge for cards (e.g. Tribute of the Four Sorrows) whose reveal needs a bespoke, player-interactive
    * multi-step resolution the store drives — parked here instead of resolved inline. */
   pendingCard?: CardInstance;
   /** Extra normal reveal rounds requested by a Host spell. HostController consumes these

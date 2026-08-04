@@ -6818,7 +6818,7 @@
     animation: burn-damage-pop 620ms 640ms linear both;
   }
 
-  /* Marshal of the Last March variant: the same Burn timing and audio, rendered as a dense,
+  /* Nerezh, Graveless Matriarch variant: the same Burn timing and audio, rendered as a dense,
      iridescent pitch projectile instead of ordinary flame. */
   .burn-animation-layer-oil {
     --burn-flight-impact-filter:
@@ -10105,7 +10105,7 @@
   width: 190px;
 }
 
-/* Right of the Host panel is for spells and reveals still resolving (Tithe of Flesh and Root). Left is the
+/* Right of the Host panel is for spells and reveals still resolving (Tribute of the Four Sorrows). Left is the
    graveyard side — that is where the deck's graveyard button lives, so cards presented while a
    dies-trigger resolves belong here and exit into it. */
 .host-death-reveal-host {

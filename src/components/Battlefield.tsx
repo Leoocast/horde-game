@@ -214,7 +214,7 @@ export function Battlefield({ game, side, cards }: Props) {
   // resolve in sequence. Removing them from the row right then would re-center every survivor
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
   // let them all leave at once. This covers both animated Host combat and the Host's own
-  // auto-triggers (e.g. Tithe of Flesh and Root sacrificing its weakest creature), which also kill mid-sequence.
+  // auto-triggers (e.g. Tribute of the Four Sorrows sacrificing its weakest creature), which also kill mid-sequence.
   const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
@@ -761,7 +761,7 @@ export function Battlefield({ game, side, cards }: Props) {
       battlefieldGroupKeys.current,
       battlefieldGroupMeta.current,
       // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
-      // The aura beat window (e.g. The Hollow Bell announcing Menace before attackers declare)
+      // The aura beat window (e.g. The Broken Headstone announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
       holdCasualties,
     ).map((group) => (

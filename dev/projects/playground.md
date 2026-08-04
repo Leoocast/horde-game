@@ -137,7 +137,7 @@ de juego y setup turns.
 en el lab desencadenaba el turno entero de la horda de zombies cargada: destapaba, revelaba tres
 cartas suyas y atacaba. `revealHordeCardFromTop` en `HordeController.ts` revela y juega **una** carta
 del tope por el mismo camino que usa el turno (`revealAndPlayOne`: ETB, triggers, parking de
-Diezmo de Carne y Raíz / `flesh_root_tithe`) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
+Tributo de los Cuatro Pesares / `flesh_root_tithe`) y nada mas; el store lo envuelve en `resolveHordeCardFromTop`, que reusa los mismos beats
 que `runHordeMain` (aura estatica, triggers de entrada, mills, hand-off de `flesh_root_tithe`) pero no arranca
 combate. Hay test que verifica que el turno de Horda no avanza, la fase no cambia y no se declaran
 atacantes.
@@ -183,7 +183,7 @@ La pestana Cards tiene un boton **Play** que hace lo que dice, ruteado por lado:
 
 Debajo, separado, queda el "ponlo directo en" para armar tableros: silencioso, sin coste ni
 triggers. Las zonas ofrecidas dependen de la carta (`destinationsFor`): un sorcery no ofrece
-battlefield y la Horda no ofrece mano. Antes se podia dejar Diezmo de Carne y Raíz en el campo de la Horda, un
+battlefield y la Horda no ofrece mano. Antes se podia dejar Tributo de los Cuatro Pesares en el campo de la Horda, un
 estado al que el juego no puede llegar nunca.
 
 ### loadScenario

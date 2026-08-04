@@ -1519,7 +1519,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   /**
    * Playground only. Same beats as `runHostMain` — enter triggers, static aura capture, mill
-   * animations, the Tithe of Flesh and Root hand-off — but for exactly one card and without starting combat.
+   * animations, the Tribute of the Four Sorrows hand-off — but for exactly one card and without starting combat.
    * Playing a single Goblin token in the lab used to run a whole Zombie Host turn, which is not
    * what "play this card" means anywhere.
    */
@@ -2193,7 +2193,7 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
 }
 
 // Card already entered play (or resolved) synchronously with `deferReactiveTriggers`; this only
-// resolves the Host's reaction to that cast (e.g. The Five-Knot Gallows), so it can glow and finish
+// resolves the Host's reaction to that cast (e.g. Inexhaustible Ossuary), so it can glow and finish
 // *after* the card is already visible, without delaying the cast itself. Host resolves before
 // any manual trigger on the just-cast card (APNAP: non-active player's trigger goes on top of the stack).
 function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {

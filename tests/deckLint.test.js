@@ -285,6 +285,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(rawById.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(rawById.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(rawById.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(rawById.archive_carrion_crow.traits, []);
   assert.equal(rawById.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(rawById.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
@@ -308,6 +309,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(byId.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(byId.archive_carrion_crow.traits, []);
   assert.equal(byId.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(byId.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(byId.last_march_marshal.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
