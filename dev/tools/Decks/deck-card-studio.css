@@ -550,9 +550,17 @@ body {
     vertical-align: 0.08em;
 }
 
-.tcg-effect strong.effect-danger,
+.tcg-effect strong.effect-danger {
+    color: #a61b12 !important;
+}
+
 .tcg-effect strong.effect-life-cost {
     color: #a61b12 !important;
+}
+
+body[data-theme="court_of_the_crimson_eclipse"] .tcg-card--full-art .tcg-effect strong.effect-life-cost,
+body[data-theme="court_of_the_crimson_eclipse"] .tcg-card--full-art .tcg-effect strong.effect-danger {
+    color: var(--accent-bright) !important;
 }
 
 .symbol-badge {

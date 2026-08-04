@@ -159,9 +159,9 @@ test("non-token Host copies stack only when they entered during the same Host tu
   const game = createTestGame();
   const cardOrder = new Map();
   const familyOrder = new Map();
-  const firstBat = addCard(game, cardFromDeck("rider_of_the_empty_crypt", "host"));
+  const firstBat = addCard(game, cardFromDeck("winged_stalker_of_the_crypt", "host"));
   const interveningZombie = addCard(game, customCard("intervening_zombie", "host", { subtypes: ["Zombie"] }));
-  const laterBat = addCard(game, cardFromDeck("rider_of_the_empty_crypt", "host"));
+  const laterBat = addCard(game, cardFromDeck("winged_stalker_of_the_crypt", "host"));
   firstBat.fieldEntryTurn = 1;
   interveningZombie.fieldEntryTurn = 1;
   laterBat.fieldEntryTurn = 2;
@@ -181,7 +181,7 @@ test("non-token Host copies stack only when they entered during the same Host tu
   assert.deepEqual(
     separateTurns.map((group) => group.cards.map((card) => card.instanceId)),
     [[firstBat.instanceId], [interveningZombie.instanceId], [laterBat.instanceId]],
-    "the later Rider of the Empty Crypt keeps its summon position instead of joining the old stack",
+    "the later Winged Stalker of the Crypt keeps its summon position instead of joining the old stack",
   );
 
   laterBat.fieldEntryTurn = 1;

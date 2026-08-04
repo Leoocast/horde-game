@@ -42,10 +42,10 @@
       "imageKind": "card",
       "imageUrl": "/cards/uprising_of_the_graveless/tribute_of_the_four_sorrows.png"
     },
-    "rider_of_the_empty_crypt": {
+    "winged_stalker_of_the_crypt": {
       "source": "local",
       "imageKind": "card",
-      "imageUrl": "/cards/uprising_of_the_graveless/rider_of_the_empty_crypt.png"
+      "imageUrl": "/cards/uprising_of_the_graveless/winged_stalker_of_the_crypt.png"
     },
     "stitched_wing_spawn": {
       "source": "local",

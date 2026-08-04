@@ -37,9 +37,9 @@
       "prompt": "A reinforced funerary flying construct with doubled seams, bronze ribs and broad durable wings, clearly built to endure as a 3/4."
     },
     {
-      "id": "rider_of_the_empty_crypt",
-      "workingNameEs": "Jinete de la Cripta Vacía",
-      "file": "../public/cards/uprising_of_the_graveless/art/rider_of_the_empty_crypt.png",
+      "id": "winged_stalker_of_the_crypt",
+      "workingNameEs": "Acechador Alado de la Cripta",
+      "file": "../public/cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.png",
       "width": 1448,
       "height": 1086,
       "sha256": "0b6a823fcaad3f305f84ebe74c60b13e7528ee9c58fd63029ca4186d956d7d60",

@@ -69,8 +69,8 @@
         "es": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno."
       },
       "flavorText": {
-        "en": "Her cup never empties; every wound in the court fills it again.",
-        "es": "Su copa nunca se vacía; cada herida de la corte vuelve a llenarla."
+        "en": "Every drop spilled before the Court filled her cup without ever reaching the floor.",
+        "es": "Cada gota derramada ante la Corte llenaba su copa antes de tocar el suelo."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -126,8 +126,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The first shadow of the eclipse always arrives on wings.",
-        "es": "La primera sombra del eclipse siempre llega con alas."
+        "en": "Its wings heralded the eclipse long before the sky began to darken.",
+        "es": "Sus alas anunciaban el eclipse mucho antes de que el cielo comenzara a oscurecer."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -258,8 +258,8 @@
         "es": "Cuando reciba daño y sobreviva, ganas 2 de Vida."
       },
       "flavorText": {
-        "en": "Every blow that fails to fell her strengthens the pulse of the court.",
-        "es": "Cada golpe que no la derriba fortalece el pulso de la corte."
+        "en": "She guarded the threshold with one certainty: all blood spilled would eventually return to the Court.",
+        "es": "Custodiaba el umbral con una certeza: toda sangre derramada terminaría regresando a la Corte."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -341,8 +341,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The eye in his palm remains awake when the moon disappears.",
-        "es": "El ojo de su palma permanece despierto cuando la luna desaparece."
+        "en": "Even when the eclipse hid the moon, the eye in his palm never ceased its vigil.",
+        "es": "Aunque el eclipse ocultara la luna, el ojo de su palma jamás dejaba de vigilar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -373,10 +373,10 @@
         "es": "Coste adicional: Paga la mitad de tu Vida.\nDurante tu turno, este Eco tiene Drenar."
       },
       "flavorText": {
-        "en": "When Mirevna opens her eyes, even the moon seems to hold its breath.",
-        "es": "Cuando Mirevna abre los ojos, hasta la luna parece contener el aliento."
+        "en": "Mirevna always returns the blood you have given her, though it never comes from the same veins.",
+        "es": "Mirevna siempre devuelve la sangre que le has entregado, aunque nunca provenga de las mismas venas."
       },
-      "showFlavorText": false,
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 6
@@ -485,8 +485,8 @@
         "es": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno."
       },
       "flavorText": {
-        "en": "For an instant, the entire eclipse fits inside a single vein.",
-        "es": "Durante un instante, el eclipse cabe entero dentro de una sola vena."
+        "en": "The blood touched the eclipse and, for an instant, remembered it once had wings.",
+        "es": "La sangre tocó el eclipse y, por un instante, recordó que alguna vez tuvo alas."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -552,8 +552,8 @@
         "es": "Haz 3 de daño a un Eco. Gana 2 de Vida."
       },
       "flavorText": {
-        "en": "The night takes three parts and returns only two.",
-        "es": "La noche toma tres partes y devuelve solamente dos."
+        "en": "The Court let no pain go to waste: even a final breath could become sustenance.",
+        "es": "La Corte no desperdiciaba el dolor: hasta el último aliento podía convertirse en sustento."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -616,8 +616,8 @@
         "es": "Todos tus aliados ganan Drenar hasta el Final."
       },
       "flavorText": {
-        "en": "When the moon turns red, the whole court remembers it has fangs.",
-        "es": "Cuando la luna enrojece, toda la corte recuerda que también tiene colmillos."
+        "en": "Mirevna gave no order. The moon only had to turn red for the entire Court to hunt.",
+        "es": "Mirevna no dio la orden. Bastó con que la luna se volviera roja para que toda la Corte saliera a cazar."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -665,8 +665,8 @@
         "es": "Destruye un enemigo. Pierdes Vida igual a su Fuerza."
       },
       "flavorText": {
-        "en": "The eclipse passes no sentence. Mirevna simply points to who ceases to exist.",
-        "es": "El eclipse no dicta sentencia. Mirevna simplemente señala quién deja de existir."
+        "en": "The greater the threat, the more blood the eclipse demanded to erase it.",
+        "es": "Cuanto mayor era la amenaza, más sangre exigía el eclipse para borrarla."
       },
       "showFlavorText": true,
       "quantity": 1,

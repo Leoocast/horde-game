@@ -40,7 +40,7 @@ cartas del Archivo a la Memoria— acerca a la Hueste a sus umbrales de siete ca
 | `devourer_of_the_last_memory` | **Devorador del Último Recuerdo** | Al morir, el Cronista descarta una carta. | Su muerte arrastra consigo un pensamiento enemigo. |
 | `memory_thief` | **Ladrón de Memorias** | Al ser invocado, el Cronista descarta una carta. | La luz de su mano es un recuerdo robado. |
 | `tribute_of_the_four_sorrows` | **Tributo de los Cuatro Pesares** | Vida, descarte, sacrificio de Eco y de Fuente. | Cuatro pagos para una tumba que no perdona ninguno. |
-| `rider_of_the_empty_crypt` | **Jinete de la Cripta Vacía** | 2/1, Volar. | Jinete y montura esquelética abandonan una cripta vacía. |
+| `winged_stalker_of_the_crypt` | **Acechador Alado de la Cripta** | 2/1, Volar. | El último guardián esquelético de la cripta lleva su cacería hasta el cielo. |
 | `stitched_wing_spawn` | **Engendro de Alas Cosidas** | 3/1, Volar. | Un cuerpo apenas sostenido por sus costuras. |
 | `ossuary_rider` | **Jinete del Osario** | 3/4, Volar. | Montura reforzada con los huesos de cada caída. |
 | `return_to_memory` | **Retorno a la Memoria** | 2/1, sin Volar; al entrar o morir mueve dos cartas del Archivo a la Memoria. | No es un cuervo: representa el regreso que alimenta la Memoria de la Hueste. |

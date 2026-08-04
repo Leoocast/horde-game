@@ -48,7 +48,7 @@ Non-token Host copies also preserve summon chronology. Identical copies may shar
 only when `recordBattlefieldEntry` recorded the same Host turn for both. A later copy starts a new
 stack at its real arrival position instead of jumping back into an older family stack. If entry
 history is unavailable, layout keeps the copies separate rather than guessing that they arrived
-together. `tests/battlefieldLayout.test.js` covers the Jinete de la Cripta Vacía (`rider_of_the_empty_crypt`) regression.
+together. `tests/battlefieldLayout.test.js` covers the Acechador Alado de la Cripta (`winged_stalker_of_the_crypt`) regression.
 
 Current handlers:
 

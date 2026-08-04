@@ -303,7 +303,7 @@
           "sha256": "5132e5c5caba652a0bcf9de17483ae843f7dfbceba3cdfd6a7b8b00e155a47b7"
         },
         {
-          "path": "public/cards/uprising_of_the_graveless/art/rider_of_the_empty_crypt.jpg",
+          "path": "public/cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.jpg",
           "sha256": "93a4a5f76688130afaaaecf7ffba876d95577c4691e812d6cf8520dce246023d"
         },
         {
@@ -410,8 +410,8 @@
           "height": 1360
         },
         {
-          "id": "rider_of_the_empty_crypt",
-          "path": "public/cards/uprising_of_the_graveless/rider_of_the_empty_crypt.png",
+          "id": "winged_stalker_of_the_crypt",
+          "path": "public/cards/uprising_of_the_graveless/winged_stalker_of_the_crypt.png",
           "sha256": "62daf686581da30c1bddb6febf935cd936580d71f04d97deb679a5cb7ef32444",
           "width": 976,
           "height": 1360

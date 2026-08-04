@@ -77,9 +77,9 @@
       "headerFade": false
     },
     {
-      "id": "rider_of_the_empty_crypt",
-      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/rider_of_the_empty_crypt.jpg",
-      "typeLineEs": "Eco — Zombi Jinete",
+      "id": "winged_stalker_of_the_crypt",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.jpg",
+      "typeLineEs": "Eco — Zombi Acechador",
       "artFrame": {
         "zoom": 0.962,
         "x": -75,

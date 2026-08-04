@@ -815,6 +815,17 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
 });
 
+test("full-art Vampire life costs and damage use the same pink as their keywords", () => {
+  const css = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    css,
+    /body\[data-theme="court_of_the_crimson_eclipse"\]\s+\.tcg-card--full-art\s+\.tcg-effect strong\.effect-life-cost,[\s\S]*?body\[data-theme="court_of_the_crimson_eclipse"\]\s+\.tcg-card--full-art\s+\.tcg-effect strong\.effect-danger\s*\{[^}]*color:\s*var\(--accent-bright\)\s*!important;/u,
+  );
+});
+
 test("Vampire studio cards stay aligned with the runtime deck", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(

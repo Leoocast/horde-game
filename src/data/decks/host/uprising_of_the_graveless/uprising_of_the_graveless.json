@@ -38,8 +38,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The broken stone denied him a grave, so he claimed the road instead.",
-        "es": "La piedra quebrada le negó una tumba, así que reclamó el camino."
+        "en": "It remembered neither its name nor its death. Only the order to march.",
+        "es": "No recordaba su nombre ni su muerte. Sólo la orden de marchar."
       },
       "showFlavorText": true,
       "quantity": 21,
@@ -68,8 +68,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "It wears the weight of a cemetery that could no longer contain it.",
-        "es": "Carga el peso de un cementerio que ya no pudo contenerlo."
+        "en": "Nerezh did not raise a giant, but every grave that had tried to contain it.",
+        "es": "Nerezh no levantó a un gigante, sino a todas las tumbas que habían intentado contenerlo."
       },
       "showFlavorText": true,
       "quantity": 4,
@@ -99,8 +99,8 @@
         "es": "Los Zombis aliados ganan Imponente."
       },
       "flavorText": {
-        "en": "The crack did not mark an ending. It was the first order of the uprising.",
-        "es": "La grieta no marcó un final. Fue la primera orden del alzamiento."
+        "en": "When the stone split, all the dead heard the same command: rise.",
+        "es": "Cuando la piedra se partió, todos los muertos oyeron la misma orden: levantarse."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -215,8 +215,8 @@
         "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
       },
       "flavorText": {
-        "en": "Every empty place in the ossuary demands another body.",
-        "es": "Cada espacio vacío del osario reclama otro cuerpo."
+        "en": "It was never empty: every absence was another corpse waiting to be called.",
+        "es": "Nunca estuvo vacío: cada ausencia era otro muerto esperando ser llamado."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -283,8 +283,8 @@
         "es": "Cuando muera, el Cronista descarta una carta."
       },
       "flavorText": {
-        "en": "It dies with one final thought between its teeth, and yours follows it.",
-        "es": "Muere con un último recuerdo entre los dientes, y el tuyo lo sigue."
+        "en": "The last memory it devoured was not its own. Neither would the next be.",
+        "es": "El último recuerdo que devoró no era suyo. El siguiente tampoco lo sería."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -333,8 +333,8 @@
         "es": "Al ser invocada, el Cronista descarta una carta."
       },
       "flavorText": {
-        "en": "The red light in its hand is the thought you can no longer name.",
-        "es": "La luz roja de su mano es el pensamiento que ya no puedes nombrar."
+        "en": "It stole neither names nor faces, but what made losing them painful.",
+        "es": "No robaba nombres ni rostros, sino aquello que hacía doloroso perderlos."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -434,17 +434,17 @@
       "traits": []
     },
     {
-      "id": "rider_of_the_empty_crypt",
+      "id": "winged_stalker_of_the_crypt",
       "collectorId": "HFA1021",
-      "name": "Rider of the Empty Crypt",
-      "displayNameEs": "Jinete de la Cripta Vacía",
+      "name": "Winged Stalker of the Crypt",
+      "displayNameEs": "Acechador Alado de la Cripta",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Nothing remained in the crypt but a rider, a skeleton, and the sky.",
-        "es": "En la cripta no quedaron más que un jinete, un esqueleto y el cielo."
+        "en": "The crypt stood empty when its last guardian carried the hunt into the sky.",
+        "es": "La cripta quedó vacía cuando su último guardián llevó la cacería hasta el cielo."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -453,13 +453,13 @@
       },
       "subtypes": [
         "Zombie",
-        "Rider"
+        "Stalker"
       ],
       "power": 2,
       "endurance": 1,
       "abilities": [
         {
-          "id": "rider_of_the_empty_crypt_activated",
+          "id": "winged_stalker_of_the_crypt_activated",
           "kind": "ACTIVATED",
           "zone": "FIELD",
           "activationMode": "IGNORED_FOR_HOST_MVP",
@@ -593,8 +593,8 @@
         "es": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
       },
       "flavorText": {
-        "en": "Every return opens two graves: its own, and one the Host had forgotten.",
-        "es": "Cada retorno abre dos tumbas: la suya y una que la Hueste había olvidado."
+        "en": "The Host did not bury its memories. It surrendered them to Memory so something new could rise.",
+        "es": "La Hueste no enterraba sus recuerdos. Los entregaba a la Memoria para que algo nuevo pudiera levantarse."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -658,8 +658,8 @@
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "One defender sees the horns. Two may survive them.",
-        "es": "Un defensor ve los cuernos. Dos quizá sobrevivan a ellos."
+        "en": "The barrows taught it that every wall was merely another grave waiting to open.",
+        "es": "Los túmulos le enseñaron que toda muralla era sólo otra tumba esperando abrirse."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -690,8 +690,8 @@
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
       },
       "flavorText": {
-        "en": "Six memories taught it hunger. The seventh taught it how to grow.",
-        "es": "Seis recuerdos le enseñaron hambre. El séptimo le enseñó a crecer."
+        "en": "Nerezh fed it forgotten names. With the seventh, it ceased to obey the chain.",
+        "es": "Nerezh lo alimentó con nombres olvidados. Con el séptimo, dejó de obedecer a la cadena."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -849,8 +849,8 @@
         "es": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta."
       },
       "flavorText": {
-        "en": "Each fallen Sinsepulcro leaves her something worth wearing.",
-        "es": "Cada Sinsepulcro caído le deja algo digno de llevar consigo."
+        "en": "Nerezh counted the dead by their names. The Harvester, by the pieces they left behind.",
+        "es": "Nerezh contaba a los muertos por sus nombres. La Cosechadora, por las piezas que dejaban atrás."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -902,10 +902,10 @@
         "es": "Los demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida."
       },
       "flavorText": {
-        "en": "Every fallen Graveless returns to the ranks when Nerezh speaks its name.",
-        "es": "Cada Sinsepulcro caído regresa a las filas cuando Nerezh pronuncia su nombre."
+        "en": "Every death was a name on Nerezh's lips and a new wound among the living.",
+        "es": "Cada muerte era un nombre en labios de Nerezh y una nueva herida entre los vivos."
       },
-      "showFlavorText": false,
+      "showFlavorText": true,
       "quantity": 2,
       "energyCost": {
         "amount": 3
