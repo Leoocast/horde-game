@@ -1,1 +1,1 @@
-export const APP_VERSION = "ALPHA 16.0-VAMPIRES-UPDATE";
+export const APP_VERSION = "BETA 0.0.1";
