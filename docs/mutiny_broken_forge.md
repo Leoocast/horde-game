@@ -1,11 +1,11 @@
-# Hueste: El Motín de la Forja Rota
+# Hueste: La Legión de Varka
 
 Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
-Deck actual: `broken_forge_mutiny` / `El Motín de la Forja Rota`
+Deck actual: `broken_forge_mutiny` / `La Legión de Varka`
 Última actualización: 2026-08-01
 
 Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual del
-Motín. Los 17 nombres y sus flavor bilingües viven en
+la Legión. Los 17 nombres y sus flavor bilingües viven en
 `src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json`; el Card Studio sólo proyecta esos datos.
 Los 17 artes fuente viven en `public/cards/broken_forge_mutiny/art/` y sus cartas completas exportadas en
 `public/cards/broken_forge_mutiny/`. La procedencia, prompts resumidos, dimensiones y hashes del lote viven en
@@ -20,7 +20,7 @@ En una ciudad construida alrededor de hornos que nunca se apagan, las cuadrillas
 por turnos contados con placas de hierro. Cuando los capataces ordenaron fundir también los nombres
 de los caídos, Varka hizo girar las cadenas de la forja contra sus dueños. Desde entonces cada
 sirena abre otra compuerta, cada baja llama al siguiente relevo y todo objeto —herramienta, armadura
-o cadáver de máquina— termina convertido en un proyectil para el Motín.
+o cadáver de máquina— termina convertido en un proyectil para la Legión.
 
 La Hueste no avanza como un ejército disciplinado: se propaga como un cambio de turno que nadie
 consigue detener. Sus piezas débiles importan por cantidad, por llegada y por muerte; las figuras de
@@ -48,21 +48,21 @@ mando convierten esa presión colectiva en crecimiento, refuerzos o daño direct
 | --- | --- | --- | --- |
 | `ember_scrap_runner` | **Corredor de Ascua y Chatarra** | Ficha 1/1, x24 en el Archivo. | Relevo básico con tenazas de brasa y escudo de descarte. Retrato vertical de cuerpo completo y jerarquía modesta. |
 | `burning_tally_foreman` | **Capataz del Recuento Ardiente** | 2/3; +1/+1 a otros Trasgos y daño al entrar según los Trasgos invocados ese turno. | Capataz robusto que equipa a los recién llegados y convierte el recuento del turno en un disparo de brasa. |
-| `next_crew_caller` | **Llamador de la Próxima Cuadrilla** | 1/1; +1/+1 a otros Trasgos; una muerte inspecciona la primera carta e Invoca el siguiente Eco Trasgo. | Señalero frágil que entrega la placa del caído a una cadena de relevo para llamar al próximo trabajador. |
+| `next_crew_caller` | **Invocador de las Filas** | 1/1; +1/+1 a otros Trasgos; una muerte inspecciona la primera carta e Invoca el siguiente Eco Trasgo. | Señalero frágil que entrega la placa del caído a una cadena de relevo para llamar al próximo trabajador. |
 | `open_furnace_crier` | **Pregonero del Horno Abierto** | 2/2; al entrar da +1/+0 a los Trasgos hasta el fin del turno. | Abre una compuerta y grita por un cuerno mientras la presión caliente impulsa a toda la cuadrilla. |
 | `shift_hammer` | **El Martillo de Turno** | Apoyo; da Imponente a las criaturas de la Hueste. | Martillo suspendido que golpea el yunque central; sus ondas obligan a afrontar la formación de dos en dos. |
-| `rain_of_rivets` | **Lluvia de Remaches** | Apoyo; cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño. | Muchas manos débiles lanzan remaches que por separado son insignificantes y juntos forman una salva. |
-| `double_crew_boss` | **Jefe de la Cuadrilla Doble** | 2/2; al entrar Invoca exactamente dos Fichas. | Un jefe llega con dos ayudantes y un cajón de herramientas compartido. |
+| `rain_of_rivets` | **Todos contra uno** | Apoyo; cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño. | Muchas manos débiles lanzan remaches que por separado son insignificantes y juntos forman una salva. |
+| `double_crew_boss` | **Jefe de la Doble Guardia** | 2/2; al entrar Invoca exactamente dos Fichas. | Un jefe llega con dos ayudantes y un cajón de herramientas compartido. |
 | `three_furnaces_foreman` | **Capataz de los Tres Hornos** | 2/2; al entrar Invoca exactamente tres Fichas. | Un capataz acciona tres hornos, cada uno liberando a un corredor distinto. |
-| `first_siren_agitator` | **Agitador de la Primera Sirena** | 2/2; antes de atacar Invoca una Ficha y crece por los otros Trasgos atacantes. | La primera sirena abre un portón para un corredor nuevo; la multitud que responde agranda al agitador. |
-| `open_another_gate` | **¡Abran Otra Compuerta!** | Hechizo rápido; da +2/+0 al ejército existente o inicia otra ronda de revelado si no hay criaturas. | Una compuerta explota hacia afuera: detrás puede haber refuerzos o una oleada de presión ofensiva. |
+| `first_siren_agitator` | **Rompefilas de Varka** | 2/2; antes de atacar Invoca una Ficha y crece por los otros Trasgos atacantes. | La primera sirena abre un portón para un corredor nuevo; la multitud que responde agranda al agitador. |
+| `open_another_gate` | **¡Liberen a la Legión!** | Hechizo rápido; da +2/+0 al ejército existente o inicia otra ronda de revelado si no hay criaturas. | Una compuerta explota hacia afuera: detrás puede haber refuerzos o una oleada de presión ofensiva. |
 | `three_under_one_anvil` | **Tres Bajo el Mismo Yunque** | Eco Trasgo vanilla 3/3. | Exactamente tres trabajadores cargan un solo yunque: masa conjunta sin habilidad adicional. |
 | `slag_volley_master` | **Maestro de la Salva de Escoria** | 4/2; al entrar daña un Eco enemigo según la cantidad de Trasgos aliados. | Artillero potente pero expuesto maneja un lanzador de escoria alimentado por toda la cuadrilla. |
 | `varka_revolt_axis` | **Varka, Eje de la Revuelta** | Eco de Crónica 3/3, Reflejos; al entrar hace 1 de daño al Cronista y a cada Eco que controla. | Varka, con la oreja izquierda rota, gira dos cadenas en un solo círculo de fuego que alcanza a todos. |
-| `salvaged_armor_master` | **Maestro de la Armadura Recuperada** | 3/3; da +1/+1 a otros Trasgos. | Armero que remacha placas rescatadas sobre los demás y deja su propia silueta sin el beneficio del aura. |
-| `repeating_blow_marshal` | **Mariscal del Golpe Repetido** | 2/2; una declaración de ataque crea una Ficha y cada otra llegada causa 1 de daño al Cronista. | Mariscal que abre una salida lateral para un atacante y sincroniza cada nuevo martillo con un golpe de ariete. |
+| `salvaged_armor_master` | **Forjador de Varka** | 3/3; da +1/+1 a otros Trasgos. | Armero que remacha placas rescatadas sobre los demás y deja su propia silueta sin el beneficio del aura. |
+| `repeating_blow_marshal` | **Mariscal de la Oleada** | 2/2; una declaración de ataque crea una Ficha y cada otra llegada causa 1 de daño al Cronista. | Mariscal que abre una salida lateral para un atacante y sincroniza cada nuevo martillo con un golpe de ariete. |
 | `brakka_growing_tally` | **Brakka, la Cuenta Creciente** | 1/2; al atacar gana un contador +1/+1 e Invoca Fichas igual a su nueva Fuerza. | Brakka fija una placa de victoria a su armadura; el recuento creciente atrae una formación cada vez mayor. |
-| `last_rivets_gunner` | **Artillero de los Últimos Remaches** | 2/2; cada muerte de un Trasgo hace 1 de daño a un Eco enemigo aleatorio. | Recoge el último remache de cada aliado caído y lo dispara de inmediato contra una silueta enemiga. |
+| `last_rivets_gunner` | **Escupefuego de la Retaguardia** | 2/2; cada muerte de un Trasgo hace 1 de daño a un Eco enemigo aleatorio. | Recoge el último remache de cada aliado caído y lo dispara de inmediato contra una silueta enemiga. |
 
 ## Eco de Crónica
 
@@ -80,4 +80,4 @@ modificador. El cambio resuelve la decisión narrativa pendiente sin introducir 
   `public/cards/broken_forge_mutiny/art/*.png`.
 - `scripts/card-studio-data.mjs --write` genera la proyección del taller y
   `dev/tools/Decks/export_cards.cjs broken_forge_mutiny` regenera las 17 cartas completas.
-- Los ids y nombres de archivo usan la identidad final del Motín.
+- Los ids y nombres de archivo conservan la identidad técnica `broken_forge_mutiny` por estabilidad.

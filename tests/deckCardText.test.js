@@ -995,7 +995,7 @@ test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and 
   }
 });
 
-test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay aligned", () => {
+test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("broken_forge_mutiny");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(

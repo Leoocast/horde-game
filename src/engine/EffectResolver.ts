@@ -570,7 +570,7 @@ export function triggeredSourcesForEvent(game: GameState, event: EventItem): Car
 
 // `deferSelfTriggers` queues the card's own invoked ability instead of resolving
 // it inline, so a creature that arrives as the RESULT of another effect still gets its own beat.
-// Without it, Boss of the Double Crew Invoked from the Archive by Caller of the Next Crew simply spat out its tokens
+// Without it, Chief of the Double Guard Invoked from the Archive by Summoner of the Ranks simply spat out its tokens
 // with no activation of its own, while the same card arriving through the normal Host reveal
 // (which defers via HostController) announced itself properly.
 export function runInvokedTriggers(

@@ -1995,7 +1995,7 @@ test("Foreman of the Burning Tally burns for Goblins that entered this Host turn
   assert.equal(secondTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 4);
 });
 
-test("Boss of the Double Crew and Foreman of Three Furnaces create their Goblin tokens on entry", () => {
+test("Chief of the Double Guard and Foreman of Three Furnaces create their Goblin tokens on entry", () => {
   const doubleCrewBossGame = createTestGame("doubleCrewBoss-entry");
   const doubleCrewBoss = addCard(doubleCrewBossGame, cardFromDeck("double_crew_boss", "host"));
   runInvokedTriggers(doubleCrewBossGame, doubleCrewBoss);
@@ -2085,7 +2085,7 @@ test("Memory threshold effects turn on exactly at seven Host cards", () => {
   assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), true);
 });
 
-test("Foreman of Three Furnaces and Gunner of the Last Rivets omit their sacrifice modes", () => {
+test("Foreman of Three Furnaces and Rear-Guard Firebreather omit their sacrifice modes", () => {
   const threeFurnacesForeman = cardFromDeck("three_furnaces_foreman", "host");
   const gunner = cardFromDeck("last_rivets_gunner", "host");
 
@@ -2093,7 +2093,7 @@ test("Foreman of Three Furnaces and Gunner of the Last Rivets omit their sacrifi
   assert.deepEqual(gunner.activatedAbilities, []);
 });
 
-test("Open Another Gate! pumps an existing army or starts another normal reveal round", () => {
+test("Unleash the Legion! pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
   const firstGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
   const secondGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
@@ -2142,7 +2142,7 @@ test("Master of the Slag Volley damages a chosen opposing creature equal to the 
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 0);
 });
 
-test("Agitator of the First Siren creates its combat token before Host attackers are declared", () => {
+test("Varka's Linebreaker creates its combat token before Host attackers are declared", () => {
   const game = createTestGame("rabblemaster-combat-token");
   const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
 
@@ -2190,7 +2190,7 @@ test("Host attackers follow summon order instead of regrouping identical definit
   ]);
 });
 
-test("Agitator of the First Siren counts every other attacking Goblin after attack tokens enter", () => {
+test("Varka's Linebreaker counts every other attacking Goblin after attack tokens enter", () => {
   const game = createTestGame("rabblemaster-attack-buff");
   const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
@@ -2220,7 +2220,7 @@ test("Open-Furnace Crier gives Host Goblins +1/+0 until end of turn on entry", (
   assert.equal(result.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
 });
 
-test("Marshal of the Repeating Blow creates one attacking token and damages the player when it enters", () => {
+test("Marshal of the Wave creates one attacking token and damages the player when it enters", () => {
   const game = createTestGame("general-kreat-attack");
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
   addCard(game, cardFromDeck("ember_scrap_runner", "host"));
@@ -2233,7 +2233,7 @@ test("Marshal of the Repeating Blow creates one attacking token and damages the 
   assert.equal(result.player.life, 29);
 });
 
-test("Marshal of the Repeating Blow queues a separate player Burn for each other creature entering", () => {
+test("Marshal of the Wave queues a separate player Burn for each other creature entering", () => {
   const game = createTestGame("general-kreat-separate-burns");
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
 
@@ -2271,7 +2271,7 @@ test("only Echo invocations broadcast ECHO_INVOKED", () => {
   assert.equal(game.eventQueue.some((event) => event.type === "ECHO_INVOKED"), false);
 });
 
-test("Rain of Rivets defers one damage per small Goblin attacker until combat ends", () => {
+test("All Against One defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
   const raid = addCard(game, cardFromDeck("rain_of_rivets", "host"));
   const smallGoblin = addCard(game, customCard("small_goblin", "host", { subtypes: ["Goblin"], power: 1 }));
@@ -2357,7 +2357,7 @@ test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses lif
   assert.equal(game.player.life, 29);
 });
 
-test("Gunner of the Last Rivets burns a random opposing creature separately for each Goblin death", () => {
+test("Rear-Guard Firebreather burns a random opposing creature separately for each Goblin death", () => {
   const anotherGoblinDies = createTestGame("gunner-other-dies");
   addCard(anotherGoblinDies, cardFromDeck("last_rivets_gunner", "host"));
   const burnTarget = addCard(anotherGoblinDies, customCard("gunner_burn_target", "player", { endurance: 5 }));
@@ -2377,7 +2377,7 @@ test("Gunner of the Last Rivets burns a random opposing creature separately for 
   assert.equal(cleaned.player.field.find((card) => card.instanceId === burnTarget.instanceId)?.flags.burnSmoke, undefined);
 });
 
-test("Gunner of the Last Rivets resolves a combat death before the next Host combat event", () => {
+test("Rear-Guard Firebreather resolves a combat death before the next Host combat event", () => {
   const game = createTestGame("gunner-combat-timing");
   addCard(game, cardFromDeck("last_rivets_gunner", "host"));
   const goblin = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
@@ -2415,7 +2415,7 @@ test("a blocker removed between Host impacts cannot deal ghost combat damage", (
   assert.equal(resolved.player.life, 30);
 });
 
-test("Caller of the Next Crew resolves exactly once when it dies", () => {
+test("Summoner of the Ranks resolves exactly once when it dies", () => {
   const game = createTestGame("caller-self-dies");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
@@ -2429,7 +2429,7 @@ test("Caller of the Next Crew resolves exactly once when it dies", () => {
   assert.equal(game.host.oblivion.length, 0);
 });
 
-test("Caller of the Next Crew moves a non-Goblin inspection to the bottom of the Archive", () => {
+test("Summoner of the Ranks moves a non-Goblin inspection to the bottom of the Archive", () => {
   const game = createTestGame("caller-non-goblin-bottom");
   addCard(game, cardFromDeck("next_crew_caller", "host"));
   const support = addCard(game, cardFromDeck("shift_hammer", "host", "archive"), "host", "archive");
@@ -2448,7 +2448,7 @@ test("Caller of the Next Crew moves a non-Goblin inspection to the bottom of the
   assert.equal(game.host.field.some((card) => card.instanceId === support.instanceId), false);
 });
 
-test("one Goblin death gives Caller of the Next Crew and Gunner of the Last Rivets a separate resolution each", () => {
+test("one Goblin death gives Summoner of the Ranks and Rear-Guard Firebreather a separate resolution each", () => {
   const game = createTestGame("goblin-death-two-reactors");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   const gunner = addCard(game, cardFromDeck("last_rivets_gunner", "host"));
@@ -2467,7 +2467,7 @@ test("one Goblin death gives Caller of the Next Crew and Gunner of the Last Rive
     pendingTriggerSources(game, death).map((source) => source.instanceId),
     [caller.instanceId],
   );
-  assert.equal(game.host.archive.length, 1, "Caller of the Next Crew must not inspect before its own beat");
+  assert.equal(game.host.archive.length, 1, "Summoner of the Ranks must not inspect before its own beat");
 
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
   assert.equal(pendingTriggerSources(game, death).length, 0);
@@ -2478,8 +2478,8 @@ test("a creature that enters because of a death does not react to that death", (
   const game = createTestGame("no-reaction-to-own-summon");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
-  // Caller of the Next Crew inspects the top card on a Goblin death; that card is Gunner of the Last Rivets, who also reacts to
-  // Goblin deaths. Gunner of the Last Rivets was not in play when the Goblin died, so it must never react to it.
+  // Summoner of the Ranks inspects the top card on a Goblin death; that card is Rear-Guard Firebreather, who also reacts to
+  // Goblin deaths. Rear-Guard Firebreather was not in play when the Goblin died, so it must never react to it.
   addCard(game, cardFromDeck("last_rivets_gunner", "host", "archive"), "host", "archive");
   const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
 
@@ -2490,15 +2490,15 @@ test("a creature that enters because of a death does not react to that death", (
   // drain collects its sources up front and would hide this.
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
   const gunner = game.host.field.find((card) => card.definitionId === "last_rivets_gunner");
-  assert.ok(gunner, "Caller of the Next Crew must have Invoked Gunner of the Last Rivets onto the battlefield");
+  assert.ok(gunner, "Summoner of the Ranks must have Invoked Rear-Guard Firebreather onto the battlefield");
   assert.deepEqual(
     pendingTriggerSources(game, death).map((source) => source.definitionId),
     [],
-    "Gunner of the Last Rivets entered after the death and must not be queued as a reactor",
+    "Rear-Guard Firebreather entered after the death and must not be queued as a reactor",
   );
 
   drainEventQueue(game);
-  assert.equal(game.player.field[0].damageMarked, 0, "Gunner of the Last Rivets must not burn for the death that summoned it");
+  assert.equal(game.player.field[0].damageMarked, 0, "Rear-Guard Firebreather must not burn for the death that summoned it");
 });
 
 test("a creature summoned by an effect still announces its own enter trigger", () => {
@@ -2512,7 +2512,7 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
 
   const chief = game.host.field.find((card) => card.definitionId === "double_crew_boss");
-  assert.ok(chief, "Caller of the Next Crew must have Invoked Boss of the Double Crew onto the battlefield");
+  assert.ok(chief, "Summoner of the Ranks must have Invoked Chief of the Double Guard onto the battlefield");
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
   // would arriving through the normal Host reveal.
   assert.equal(game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 0);
@@ -2540,14 +2540,14 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   const queuedBefore = new Set(game.eventQueue.map((event) => event.id));
 
-  // Gunner of the Last Rivets's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
+  // Rear-Guard Firebreather's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
   // runner puts anything a beat spawned ahead of the reactors still waiting on the parent, so
   // one card's effect never splits in half around another card's.
   resolveTriggeredEvent(game, death, undefined, gunner.instanceId);
   const spawned = game.eventQueue.filter((event) => !queuedBefore.has(event.id));
 
   assert.deepEqual(spawned.map((event) => event.type), ["BURN_DAMAGE"]);
-  assert.equal(pendingTriggerSources(game, death).length, 1, "Caller of the Next Crew still owes its own beat");
+  assert.equal(pendingTriggerSources(game, death).length, 1, "Summoner of the Ranks still owes its own beat");
 });
 
 test("a resolved trigger source is never resolved a second time by a bulk drain", () => {
@@ -2572,7 +2572,7 @@ test("static auras only announce the creatures that newly fell under them", () =
 
   const before = collectStaticAuras(game, "host");
   const buff = before.find((aura) => aura.power === 1 && aura.endurance === 1);
-  assert.ok(buff, "Caller of the Next Crew's +1/+1 must be visible as a static aura");
+  assert.ok(buff, "Summoner of the Ranks' +1/+1 must be visible as a static aura");
   assert.deepEqual(buff.affectedIds, [first.instanceId]);
   assert.equal(buff.controller, "host");
 

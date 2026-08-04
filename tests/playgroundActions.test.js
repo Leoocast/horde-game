@@ -121,7 +121,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
   const destroyed = destroyCard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
   const moved = sendCardToGraveyard(buildScenarioGame(definition), token(buildScenarioGame(definition)));
 
-  // Gunner of the Last Rivets burns an opposing creature for each Goblin death; a 1/1 Recolector dies to it.
+  // Rear-Guard Firebreather burns an opposing creature for each Goblin death; a 1/1 Recolector dies to it.
   assert.equal(destroyed.game.player.field.length, 0);
   assert.equal(destroyed.game.player.memory.length, 1);
 
@@ -132,7 +132,7 @@ test("destroy runs death triggers and to-graveyard does not", () => {
 });
 
 test("wiping a board is silent: nothing dies, so nothing triggers", () => {
-  // Same Gunner of the Last Rivets setup as above. Destroying a Goblin burns a player creature; clearing the
+  // Same Rear-Guard Firebreather setup as above. Destroying a Goblin burns a player creature; clearing the
   // table has to leave that creature alone, or tidying up between tests would change the test.
   const game = buildScenarioGame(
     scenario({

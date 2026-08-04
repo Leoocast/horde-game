@@ -114,7 +114,7 @@ export function scheduleHostInvokedTriggers(
     }
     // Every Echo arrival broadcasts ECHO_INVOKED, even when it has no self INVOKED ability.
     // Resolve that silent broadcast before moving to the next visible arrival beat so observers
-    // such as Marshal of the Repeating Blow react in the same order as they do in the synchronous engine path.
+    // such as Marshal of the Wave react in the same order as they do in the synchronous engine path.
     if (!hasInvokedTrigger(card)) {
       useGameStore.setState((state) => {
         const previous = state.game;
@@ -166,7 +166,7 @@ export function scheduleHostInvokedTriggers(
           hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
         };
       });
-      // Enter triggers can create creatures (Boss of the Double Crew, Foreman of Three Furnaces). Hold their aura
+      // Enter triggers can create creatures (Chief of the Double Guard, Foreman of Three Furnaces). Hold their aura
       // buffs in the same tick they appear, so they are never drawn already buffed either.
       captureStaticAuraBeats();
       window.setTimeout(() => {
@@ -219,7 +219,7 @@ export function startHostCombatSequence(): void {
   scheduleQueuedHostTriggers(() => {
     const declared = declareHostAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
     useGameStore.setState({ game: declared });
-    // Attack triggers can add creatures (Brakka, Marshal of the Repeating Blow), so re-check aura coverage
+    // Attack triggers can add creatures (Brakka, Marshal of the Wave), so re-check aura coverage
     // once they settled instead of before they existed.
     scheduleQueuedHostTriggers(() => {
       captureStaticAuraBeats();
@@ -300,7 +300,7 @@ function releaseStaticAura(auraKey: string): void {
 // the handler calls `done()` when its animation is over and the queue moves on.
 //
 // Adding a new Host effect = push a handler here. The runner never learns a card name, and two
-// effects reacting to the same death (Caller of the Next Crew + Gunner of the Last Rivets) get one beat EACH instead of firing
+// effects reacting to the same death (Summoner of the Ranks + Rear-Guard Firebreather) get one beat EACH instead of firing
 // on top of each other, because a claimed event resolves one source per beat.
 // ---------------------------------------------------------------------------
 
@@ -428,9 +428,9 @@ function resolveBeatEvent(event: EventItem, sourceId?: string): boolean {
       next.eventQueue = next.eventQueue.filter((item) => item.id !== event.id);
       resolveTriggeredEvent(next, queued);
     }
-    // A beat finishes what it started before the queue moves on. Gunner of the Last Rivets's trigger does not
+    // A beat finishes what it started before the queue moves on. Rear-Guard Firebreather's trigger does not
     // deal damage directly, it queues a BURN_DAMAGE event; appended at the tail, that fireball
-    // played AFTER Caller of the Next Crew's reveal had already resolved, so one card's effect was split in
+    // played AFTER Summoner of the Ranks' reveal had already resolved, so one card's effect was split in
     // half around another card's. Anything a beat spawned jumps ahead of the reactors still
     // waiting on the parent event.
     const spawned = next.eventQueue.filter((item) => !knownEventIds.has(item.id));

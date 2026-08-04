@@ -173,8 +173,8 @@
     {
       "id": "next_crew_caller",
       "collectorId": "HFA1033",
-      "name": "Caller of the Next Crew",
-      "displayNameEs": "Llamador de la Próxima Cuadrilla",
+      "name": "Summoner of the Ranks",
+      "displayNameEs": "Invocador de las Filas",
       "gameText": {
         "en": "Other allied Echoes gain +1/+1. Whenever an allied Echo dies, look at the top card of the Archive. If it is an Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
         "es": "Los demás Ecos aliados ganan +1/+1. Cada vez que un Eco aliado muere, mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo."
@@ -190,11 +190,11 @@
       },
       "subtypes": [
         "Goblin",
-        "Caller"
+        "Summoner"
       ],
       "power": 1,
       "endurance": 1,
-      "triggerMessage": "Caller of the Next Crew inspects the top plate of the Archive.",
+      "triggerMessage": "Summoner of the Ranks inspects the top plate of the Archive.",
       "abilities": [
         {
           "id": "next_crew_caller_other_goblins_buff",
@@ -364,8 +364,8 @@
     {
       "id": "rain_of_rivets",
       "collectorId": "HFA1036",
-      "name": "Rain of Rivets",
-      "displayNameEs": "Lluvia de Remaches",
+      "name": "All Against One",
+      "displayNameEs": "Todos contra uno",
       "gameText": {
         "en": "After the Host attack resolves, each attacking Echo with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
         "es": "Después de resolver el ataque de la Hueste, cada Eco atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
@@ -405,8 +405,8 @@
     {
       "id": "double_crew_boss",
       "collectorId": "HFA1037",
-      "name": "Boss of the Double Crew",
-      "displayNameEs": "Jefe de la Cuadrilla Doble",
+      "name": "Chief of the Double Guard",
+      "displayNameEs": "Jefe de la Doble Guardia",
       "gameText": {
         "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
@@ -505,8 +505,8 @@
     {
       "id": "first_siren_agitator",
       "collectorId": "HFA1039",
-      "name": "Agitator of the First Siren",
-      "displayNameEs": "Agitador de la Primera Sirena",
+      "name": "Varka's Linebreaker",
+      "displayNameEs": "Rompefilas de Varka",
       "gameText": {
         "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
         "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
@@ -521,8 +521,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Agitator"
+        "Orc",
+        "Linebreaker"
       ],
       "power": 2,
       "endurance": 2,
@@ -579,8 +579,8 @@
     {
       "id": "open_another_gate",
       "collectorId": "HFA1040",
-      "name": "Open Another Gate!",
-      "displayNameEs": "¡Abran Otra Compuerta!",
+      "name": "Unleash the Legion!",
+      "displayNameEs": "¡Liberen a la Legión!",
       "gameText": {
         "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
         "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
@@ -801,8 +801,8 @@
     {
       "id": "salvaged_armor_master",
       "collectorId": "HFA1044",
-      "name": "Master of Salvaged Armor",
-      "displayNameEs": "Maestro de la Armadura Recuperada",
+      "name": "Varka's Forgemaster",
+      "displayNameEs": "Forjador de Varka",
       "gameText": {
         "en": "Other allied Goblins gain +1/+1.",
         "es": "Los demás Trasgos aliados ganan +1/+1."
@@ -817,8 +817,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Goblin",
-        "Armorer"
+        "Orc",
+        "Forgemaster"
       ],
       "power": 3,
       "endurance": 3,
@@ -896,8 +896,8 @@
     {
       "id": "repeating_blow_marshal",
       "collectorId": "HFA1045",
-      "name": "Marshal of the Repeating Blow",
-      "displayNameEs": "Mariscal del Golpe Repetido",
+      "name": "Marshal of the Wave",
+      "displayNameEs": "Mariscal de la Oleada",
       "gameText": {
         "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
         "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
@@ -912,7 +912,7 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
+        "Orc",
         "Marshal"
       ],
       "power": 2,
@@ -1032,8 +1032,8 @@
     {
       "id": "last_rivets_gunner",
       "collectorId": "HFA1047",
-      "name": "Gunner of the Last Rivets",
-      "displayNameEs": "Artillero de los Últimos Remaches",
+      "name": "Rear-Guard Firebreather",
+      "displayNameEs": "Escupefuego de la Retaguardia",
       "gameText": {
         "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
         "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
@@ -1048,8 +1048,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Gunner"
+        "Orc",
+        "Firebreather"
       ],
       "power": 2,
       "endurance": 2,

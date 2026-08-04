@@ -28,7 +28,7 @@
     {
       "id": "next_crew_caller",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.jpg",
-      "typeLineEs": "Eco — Trasgo Llamador",
+      "typeLineEs": "Eco — Trasgo Invocador",
       "headerFade": false
     },
     {
@@ -68,7 +68,7 @@
     {
       "id": "double_crew_boss",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.jpg",
-      "typeLineEs": "Eco — Trasgo Capataz",
+      "typeLineEs": "Eco — Trasgo Jefe",
       "artFrame": {
         "zoom": 0.76,
         "x": 9,
@@ -90,7 +90,7 @@
     {
       "id": "first_siren_agitator",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.jpg",
-      "typeLineEs": "Eco — Trasgo Agitador",
+      "typeLineEs": "Eco — Orco Rompefilas",
       "artFrame": {
         "zoom": 0.731,
         "x": -6,
@@ -144,7 +144,7 @@
     {
       "id": "salvaged_armor_master",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.jpg",
-      "typeLineEs": "Eco — Trasgo Armero",
+      "typeLineEs": "Eco — Orco Forjador",
       "artFrame": {
         "zoom": 0.855,
         "x": 14,
@@ -156,7 +156,7 @@
     {
       "id": "repeating_blow_marshal",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.jpg",
-      "typeLineEs": "Eco — Trasgo Mariscal",
+      "typeLineEs": "Eco — Orco Mariscal",
       "artFrame": {
         "zoom": 0.76,
         "x": -14,
@@ -179,7 +179,7 @@
     {
       "id": "last_rivets_gunner",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.jpg",
-      "typeLineEs": "Eco — Trasgo Artillero",
+      "typeLineEs": "Eco — Orco Escupefuego",
       "artFrame": {
         "zoom": 0.703,
         "x": 0,

@@ -43,7 +43,7 @@ export const DECK_REGISTRY: DeckRegistryEntry[] = [
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("El Motín de la Forja Rota 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
+  register("La Legión de Varka 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
     keyCardId: "ember_scrap_runner",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",

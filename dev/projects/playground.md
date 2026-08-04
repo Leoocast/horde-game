@@ -257,7 +257,7 @@ React recibia keys duplicadas y dejaba nodos fantasma en la lista de resultados.
 - **Kill it**: `destroyPermanent` + `drainEventQueue` del engine, con sus triggers de muerte
   reales. **Remove it** es otra cosa a proposito: movimiento crudo de zona, sin muerte y sin
   triggers. **Wipe** (`clearBattlefield`) es lo mismo por lado entero. Hay test que los distingue
-  con Artillero de los Últimos Remaches (`last_rivets_gunner`; destruir una ficha de Trasgo quema un Eco del jugador; moverla al
+  con Escupefuego de la Retaguardia (`last_rivets_gunner`; destruir una ficha de Trasgo quema un Eco del jugador; moverla al
   cementerio o barrer el campo no).
 - **Jugar sin coste**: `grantManaForCard` sube el pool exactamente al coste impreso y despues corre
   el `castCard` normal. Si la carta pide targets se abre el `SpellTargetingOverlay` de verdad, la
@@ -350,7 +350,7 @@ El JSON exportado sirve tal cual como fixture para `tests/engine.test.js`.
       clickeandola en el tablero real, y de ahi salen **Kill it** (`destroyPermanent`, muerte real
       con sus triggers), **Remove it** (movimiento crudo de zona, sin muerte) y el wipe por lado
       (`clearBattlefield`, silencioso: limpiar la mesa entre pruebas no puede disparar doce
-      triggers). Hay test que distingue los tres con Artillero de los Últimos Remaches (`last_rivets_gunner`).
+      triggers). Hay test que distingue los tres con Escupefuego de la Retaguardia (`last_rivets_gunner`).
 - [x] **Fase 5 — Timeline: grabar y reproducir.** `timeline.ts` (`TimelineStep`, `executeStep`,
       `describeStep`, `isPlaygroundBusy`, `isWaitingForInput`), `panels/TimelinePanel.tsx` (toggle de
       grabacion, lista de pasos con borrar, Step / Auto / Stop) y el driver de reproduccion en

@@ -92,12 +92,12 @@ The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `d
 5. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
 6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
-Use this contract for Artillero de los Últimos Remaches (`last_rivets_gunner`), Maestro de la Salva de
+Use this contract for Escupefuego de la Retaguardia (`last_rivets_gunner`), Maestro de la Salva de
 Escoria (`slag_volley_master`), and future Goblin burn effects.
 
 ### Burn volley to player life
 
-Lluvia de Remaches (`rain_of_rivets`) reuses Burn with a different target and timing:
+Todos contra uno (`rain_of_rivets`) reuses Burn with a different target and timing:
 
 - Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
   powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
@@ -129,7 +129,7 @@ Varka, Eje de la Revuelta (`varka_revolt_axis`) uses the same compact volley clo
 
 ### Repeated single Burns to player life
 
-Mariscal del Golpe Repetido (`repeating_blow_marshal`) does not aggregate its creature-entry triggers. Every other creature entering queues
+Mariscal de la Oleada (`repeating_blow_marshal`) does not aggregate its creature-entry triggers. Every other creature entering queues
 one independent Burn toward `[data-player-life-panel]`; each has its own projectile, cast sound,
 hit sound, impact, life reaction, and 1-damage engine resolution before the next trigger begins.
 When the Mariscal itself created the entering token, `causeSourceId` marks that causal chain so
