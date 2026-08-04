@@ -38,11 +38,8 @@ export default function App() {
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<{
-    chronicleName: string;
-    chronicleTheme: string;
-    hostName: string;
-    hostTheme: string;
-    encounterTone: EncounterTone;
+    chronicleDeckId: string;
+    hostDeckId: string;
     gameMode: GameMode;
   } | null>(null);
 

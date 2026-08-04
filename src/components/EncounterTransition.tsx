@@ -1,39 +1,52 @@
 import { Shield, Skull, Swords } from "lucide-react";
-import type { EncounterTone } from "../data/deckCatalog";
+import { findDeckKeyCard, findInspectableDeck, type InspectableDeck } from "../data/deckCatalog";
 import type { GameMode } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
+import { useDeckCardDetails } from "../utils/deckCardImages";
 
 type Props = {
-  chronicleName: string;
-  chronicleTheme: string;
-  hostName: string;
-  hostTheme: string;
-  encounterTone: EncounterTone;
+  chronicleDeckId: string;
+  hostDeckId: string;
   gameMode: GameMode;
 };
 
-export function EncounterTransition({ chronicleName, chronicleTheme, hostName, hostTheme, encounterTone, gameMode }: Props) {
+export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: Props) {
   const t = useTranslation();
-  const tone = gameMode === "chaos" ? "chaos" : encounterTone;
+  const chronicleDeck = findInspectableDeck(chronicleDeckId);
+  const hostDeck = findInspectableDeck(hostDeckId);
+  const tone = gameMode === "chaos" ? "chaos" : hostDeck.presentation.encounterTone;
 
   return (
     <div className={`encounter-transition is-${tone}`} role="status" aria-live="polite" data-audio-click="off">
       <div className="encounter-transition-vignette" />
+      <EncounterArt deck={chronicleDeck} side="player" />
+      <EncounterArt deck={hostDeck} side="host" />
       <div className="encounter-transition-rift" />
       <div className="encounter-transition-content">
         <p>{gameMode === "chaos" ? t("encounter.chaos") : t("encounter.standard")}</p>
         <div className="encounter-transition-matchup">
-          <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleTheme}`}>
+          <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleDeck.presentation.theme}`}>
             <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
-            <strong className="encounter-transition-name encounter-transition-name-player">{chronicleName}</strong>
+            <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
           </div>
           <span className="encounter-transition-versus"><Swords size={34} /><b>VS</b></span>
-          <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostTheme}`}>
+          <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostDeck.presentation.theme}`}>
             <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
-            <strong className="encounter-transition-name encounter-transition-name-host">{hostName}</strong>
+            <strong className="encounter-transition-name encounter-transition-name-host">{hostDeck.deck.name}</strong>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The deck's key card looming in from its own edge, behind the names. */
+function EncounterArt({ deck, side }: { deck: InspectableDeck; side: "player" | "host" }) {
+  const details = useDeckCardDetails(findDeckKeyCard(deck), deck.images);
+  if (!details.imageUrl) return null;
+  return (
+    <div className={`encounter-transition-art encounter-transition-art-${side} deck-theme-${deck.presentation.theme}`} aria-hidden="true">
+      <img src={details.imageUrl} alt="" draggable={false} />
     </div>
   );
 }

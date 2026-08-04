@@ -1,7 +1,7 @@
 import { AlertTriangle, ArrowLeft, AudioLines, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -677,8 +677,8 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           )}
         </div>
         <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          {props.chaos ? <Dices size={22} /> : <Play size={22} />}
           <span>{props.chaos ? t("setup.unleashChaos") : t("setup.beginChronicle")}</span>
+          {props.chaos ? <Dices size={22} /> : <Play size={22} />}
         </button>
       </footer>
 
@@ -781,12 +781,19 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const keyCard = deck ? findSetupKeyCard(deck) : undefined;
+  const keyCard = deck ? findDeckKeyCard(deck) : undefined;
   const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
   const keyCardName = localizedCardName(keyCard, language);
   const deckTheme = deck?.presentation.theme ?? "ramp";
   return (
-    <article className={`expedition-combatant expedition-combatant-${side} deck-theme-${deckTheme}`}>
+    <article
+      className={`expedition-combatant expedition-combatant-${side} deck-theme-${deckTheme}`}
+      // Anywhere on the panel opens the drawer; the heading's own buttons keep their meaning.
+      onClick={(event) => {
+        if (!(event.target instanceof Element) || event.target.closest("button")) return;
+        onChangeDeck();
+      }}
+    >
       <div className="expedition-combatant-heading">
         <span>{side === "player" ? <Shield size={14} /> : <Skull size={14} />}{eyebrow}</span>
         <div className="expedition-combatant-actions">
@@ -797,17 +804,9 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
         </div>
       </div>
       <div className="expedition-deck-feature">
-        <button
-          className="expedition-deck-art"
-          key={`setup-art-${deck?.id ?? "empty"}`}
-          type="button"
-          onClick={onChangeDeck}
-          aria-expanded={drawerOpen}
-          aria-controls={`expedition-${side}-deck-drawer`}
-          aria-label={`${t("common.change")}: ${deck?.deck.name ?? t("common.chooseDeck")}`}
-        >
+        <div className="expedition-deck-art" key={`setup-art-${deck?.id ?? "empty"}`}>
           {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
-        </button>
+        </div>
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>
           <div className="expedition-deck-current" key={`setup-copy-${deck?.id ?? "empty"}`} aria-live="polite">
@@ -870,11 +869,6 @@ function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, o
       </div>
     </aside>
   );
-}
-
-function findSetupKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
-  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
 }
 
 function DeveloperWarningModal({ onClose, onEnable }: { onClose: () => void; onEnable: () => void }) {

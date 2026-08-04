@@ -1,5 +1,5 @@
 import { ArrowLeft, Check } from "lucide-react";
-import type { InspectableDeck, NewDeckCard } from "../data/deckCatalog";
+import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
@@ -41,7 +41,7 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
 export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { deck: InspectableDeck; onOpen: () => void; selected?: boolean; actionLabel?: string }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const keyCard = findKeyCard(deck);
+  const keyCard = findDeckKeyCard(deck);
   const details = useDeckCardDetails(keyCard, deck.images);
   const cardName = localizedCardName(keyCard, language);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -83,7 +83,3 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
   );
 }
 
-function findKeyCard(deck: InspectableDeck): NewDeckCard | undefined {
-  const cards = [...(deck.deck.tokens ?? []), ...deck.deck.cards];
-  return cards.find((card) => card.id === deck.presentation.keyCardId) ?? cards[0];
-}
