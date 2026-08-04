@@ -220,7 +220,7 @@
       ]
     },
     "hollow_bell_procession": {
-      "inputHash": "25c7172f60e9931bff813e2694a89342f161b3da59439f6e39ee64b8e1ae5376",
+      "inputHash": "be4be17e2e1490e993acf21bf7734d5ecd779e84522e1acfc80be0eeee29bc7f",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -240,7 +240,7 @@
         },
         {
           "path": "dev/tools/Decks/hollow_bell_procession/deck-data.generated.js",
-          "sha256": "11673c2fc65ea9a429d863acde46bf04d83741e399eb34819601f7ed0a8ed4aa"
+          "sha256": "285debc1746a4aac8a0bd8c1bb36dffce568161100220850a808877fae629da2"
         },
         {
           "path": "dev/tools/Decks/hollow_bell_procession/index.html",
@@ -352,7 +352,7 @@
         },
         {
           "path": "src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json",
-          "sha256": "ff2c851f836c3c3096e47cd691c2931a22a9f6572fd7b58599f20091df888b5c"
+          "sha256": "d949f0969aac39b8976eb5f23be33d92b4b8f8c50b90b4edac4ccf8adb753e82"
         },
         {
           "path": "src/data/decks/host/hollow_bell_procession/hollow_bell_procession_images.json",
@@ -363,14 +363,14 @@
         {
           "id": "last_knell_dead",
           "path": "public/cards/hollow_bell_procession/last_knell_dead.png",
-          "sha256": "a817dc342f9490aff2b6414fe30cebafc1c517d3669c246affbcf669eef1b0ee",
+          "sha256": "b49672749341bbc3ebaac1e5d332a8c644c7d1785c90fd123621be6b0d997812",
           "width": 976,
           "height": 1360
         },
         {
           "id": "mass_grave_colossus",
           "path": "public/cards/hollow_bell_procession/mass_grave_colossus.png",
-          "sha256": "09b1fd4542b81d1feac0813d9ff1539c5a9e5206af11634aaa0f06efd9fbdaa2",
+          "sha256": "8f3954a4ddac239d20c638e8b6005f7c2721ddf2531c170315434e6fc2c0ee60",
           "width": 976,
           "height": 1360
         },
@@ -398,7 +398,7 @@
         {
           "id": "memory_shroud_bearer",
           "path": "public/cards/hollow_bell_procession/memory_shroud_bearer.png",
-          "sha256": "a8a0f5dee712235d9bccee69950acbce16f533ce5f3fdd9e5c1301c0eaad113a",
+          "sha256": "250466d8c9458f0abd07bd4e290e9137bd4d461f60d1d0afe23bd1ce1e6a3cb4",
           "width": 976,
           "height": 1360
         },
@@ -412,21 +412,21 @@
         {
           "id": "crypt_rotwing",
           "path": "public/cards/hollow_bell_procession/crypt_rotwing.png",
-          "sha256": "a394a3023ee21ff1565d9ffb778545bacebb441d7260282cdd527ec596592aa7",
+          "sha256": "ece1559f81f87f083e74807759c55c1c67874ddaa5e17279f8e8e17bb359eb70",
           "width": 976,
           "height": 1360
         },
         {
           "id": "basted_wing",
           "path": "public/cards/hollow_bell_procession/basted_wing.png",
-          "sha256": "00019578559c7b762668b2a678d432a591d2d622c52ff96d5880359ad8ee5910",
+          "sha256": "d9fab4b498ad719fb29fa24c09b032edf8f4994ffdec7cb9a1f2351f1d55d995",
           "width": 976,
           "height": 1360
         },
         {
           "id": "reinforced_gravewing",
           "path": "public/cards/hollow_bell_procession/reinforced_gravewing.png",
-          "sha256": "55dee44d924abbfc3f536814d0d8d661f7c5476b4527c9a00bd36cf1e8f9431e",
+          "sha256": "ea6749be109064b2b79f36ead94f1c244a3d9a2a96d8b2d66aa61b0b89c1c21f",
           "width": 976,
           "height": 1360
         },
@@ -440,21 +440,21 @@
         {
           "id": "horned_linebreaker",
           "path": "public/cards/hollow_bell_procession/horned_linebreaker.png",
-          "sha256": "8e41ffad045906fc8fac6f89a1bea284b7e1dc84b5d9471361e3305f89755c66",
+          "sha256": "65a43777f0831590f0686dd2243d30c400a77b223dbe9d0d9ebdbd586f1fd585",
           "width": 976,
           "height": 1360
         },
         {
           "id": "seventh_memory_hound",
           "path": "public/cards/hollow_bell_procession/seventh_memory_hound.png",
-          "sha256": "5146e5674a38bf753dba23413da3eb1b020d60351a97cf717683feba1584da54",
+          "sha256": "8723212cd6dfe88f98754842e1130fdd1dee18d68e0be6aea712366ac0cbeb8e",
           "width": 976,
           "height": 1360
         },
         {
           "id": "full_ossuary_mastiff",
           "path": "public/cards/hollow_bell_procession/full_ossuary_mastiff.png",
-          "sha256": "7c5a6fbeeadbbb04a73a1e82193092dbf104c70d456bdc48c5edfd8d7140eb42",
+          "sha256": "14de68b960195e1285ea4fba1d9bb680c0f16504aa8028cc17bd61c5194c685a",
           "width": 976,
           "height": 1360
         },
@@ -468,14 +468,14 @@
         {
           "id": "fallen_gatherer",
           "path": "public/cards/hollow_bell_procession/fallen_gatherer.png",
-          "sha256": "c493cfd25ee1a67818a6535454520ae91342e3c31155d8d339caf37475b89a98",
+          "sha256": "2c0c0af8f1a10db1bf996970254bbbaac6bf5054082915f9bf93a32c66b2f077",
           "width": 976,
           "height": 1360
         },
         {
           "id": "last_march_marshal",
           "path": "public/cards/hollow_bell_procession/last_march_marshal.png",
-          "sha256": "3e323109cf4d5f937c9593286eb7251eca5515ce448a3074b6caf3528458fd0c",
+          "sha256": "46695255cb3c4a5cc907958672fabbe1def5b0930be01fd2ad092e8861378cd3",
           "width": 976,
           "height": 1360
         }
