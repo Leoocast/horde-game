@@ -1443,10 +1443,9 @@
     z-index: 1000;
     inset: 0;
     overflow: hidden;
-    background: rgb(1 5 4 / 0.98);
+    background: transparent;
     color: #d9cfac;
     cursor: wait;
-    animation: encounter-backdrop 2450ms cubic-bezier(0.55, 0, 0.18, 1) both;
     isolation: isolate;
   }
 
@@ -1458,17 +1457,12 @@
   .encounter-transition.is-chaos {
     --encounter-accent: #a94f8c;
     --encounter-accent-bright: #f0b9df;
-    background: rgb(13 3 12 / 0.99);
   }
 
   .encounter-transition-vignette {
     position: absolute;
-    z-index: -1;
+    z-index: 1;
     inset: 0;
-    background:
-      radial-gradient(circle at center, color-mix(in srgb, var(--encounter-accent) 28%, transparent), transparent 29%),
-      radial-gradient(ellipse at center, transparent 10%, rgb(0 0 0 / 0.8) 76%);
-    animation: encounter-vignette-pulse 2450ms ease-in-out both;
   }
 
   .encounter-transition-vignette::before,
@@ -1598,6 +1592,7 @@
     text-transform: uppercase;
     transform: translateX(-50%);
     white-space: nowrap;
+    animation: encounter-static-exit 686ms 1764ms ease-in forwards;
   }
 
   .encounter-transition-matchup {
@@ -1622,12 +1617,16 @@
 
   .encounter-transition-combatant-player {
     justify-content: flex-end;
-    animation: encounter-combatant-left 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation:
+      encounter-combatant-left 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
+      encounter-combatant-left-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards;
   }
 
   .encounter-transition-combatant-host {
     justify-content: flex-start;
-    animation: encounter-combatant-right 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation:
+      encounter-combatant-right 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
+      encounter-combatant-right-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards;
   }
 
   /* Each side declares who it is and wears its own deck colour, so the clash reads at a glance. */
@@ -1715,7 +1714,9 @@
     font-weight: 700;
     letter-spacing: 0.2em;
     filter: drop-shadow(0 0 15px color-mix(in srgb, var(--encounter-accent) 55%, transparent));
-    animation: encounter-versus-impact 760ms 300ms cubic-bezier(0.18, 0.9, 0.25, 1.2) both;
+    animation:
+      encounter-versus-impact 760ms 300ms cubic-bezier(0.18, 0.9, 0.25, 1.2) both,
+      encounter-static-exit 686ms 1764ms ease-in forwards;
   }
 
   .encounter-transition-versus-mark {
@@ -2074,18 +2075,6 @@
     78% { transform: translateX(0); }
   }
 
-  @keyframes encounter-backdrop {
-    0% { background-color: rgb(1 5 4 / 0); }
-    14%, 66% { background-color: rgb(1 5 4 / 0.98); }
-    100% { background-color: rgb(1 5 4 / 0); }
-  }
-
-  @keyframes encounter-vignette-pulse {
-    0% { opacity: 0; transform: scale(1.04); }
-    18%, 65% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.08); }
-  }
-
   @keyframes encounter-curtain-left {
     0% { transform: translateX(-102%); }
     17%, 68% { transform: translateX(0); }
@@ -2100,8 +2089,12 @@
 
   @keyframes encounter-content-life {
     0%, 7% { opacity: 0; }
-    18%, 72% { opacity: 1; }
-    82%, 100% { opacity: 0; }
+    18%, 100% { opacity: 1; }
+  }
+
+  @keyframes encounter-static-exit {
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   @keyframes encounter-flare {
@@ -2132,6 +2125,16 @@
   @keyframes encounter-combatant-right {
     from { opacity: 0; transform: translateX(34px); }
     to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes encounter-combatant-left-exit {
+    from { transform: translateX(0); }
+    to { transform: translateX(-52vw); }
+  }
+
+  @keyframes encounter-combatant-right-exit {
+    from { transform: translateX(0); }
+    to { transform: translateX(52vw); }
   }
 
   @keyframes encounter-impact-ring {
