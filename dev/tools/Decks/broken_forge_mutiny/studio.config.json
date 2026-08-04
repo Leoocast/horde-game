@@ -6,7 +6,7 @@
     {
       "id": "ember_scrap_runner",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.jpg",
-      "typeLineEs": "Eco · Ficha — Trasgo Corredor",
+      "typeLineEs": "Eco · Ficha — Trasgo Esbirro",
       "artFrame": {
         "zoom": 1,
         "x": -10,
@@ -16,7 +16,7 @@
     {
       "id": "burning_tally_foreman",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.jpg",
-      "typeLineEs": "Eco — Trasgo Capataz",
+      "typeLineEs": "Eco — Orco Chamán",
       "artFrame": {
         "zoom": 0.889,
         "x": 63,
@@ -34,7 +34,7 @@
     {
       "id": "open_furnace_crier",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.jpg",
-      "typeLineEs": "Eco — Trasgo Pregonero",
+      "typeLineEs": "Eco — Trasgo Portaestandarte",
       "artFrame": {
         "zoom": 0.889,
         "x": 0,
@@ -79,7 +79,7 @@
     {
       "id": "three_furnaces_foreman",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.jpg",
-      "typeLineEs": "Eco — Trasgo Capataz",
+      "typeLineEs": "Eco — Trasgo Jinete",
       "artFrame": {
         "zoom": 1.04,
         "x": -6,
@@ -112,7 +112,7 @@
     {
       "id": "three_under_one_anvil",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.jpg",
-      "typeLineEs": "Eco — Trasgo Cuadrilla",
+      "typeLineEs": "Eco — Bestia Oso",
       "artFrame": {
         "zoom": 0.731,
         "x": -2,
@@ -123,7 +123,7 @@
     {
       "id": "slag_volley_master",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.jpg",
-      "typeLineEs": "Eco — Trasgo Artillero",
+      "typeLineEs": "Eco — Orco Jinete",
       "artFrame": {
         "zoom": 0.703,
         "x": -129,
@@ -134,7 +134,7 @@
     {
       "id": "varka_revolt_axis",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.jpg",
-      "typeLineEs": "Eco de Crónica — Trasgo Giracadenas",
+      "typeLineEs": "Eco de Crónica — Diablesa Matriarca",
       "artFrame": {
         "zoom": 0.925,
         "x": 5,
@@ -168,7 +168,7 @@
     {
       "id": "brakka_growing_tally",
       "artCrop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.jpg",
-      "typeLineEs": "Eco — Trasgo Reclutador",
+      "typeLineEs": "Eco — Trasgo Escriba",
       "artFrame": {
         "zoom": 0.731,
         "x": 4,
