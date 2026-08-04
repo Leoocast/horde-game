@@ -4724,10 +4724,12 @@
   }
 
   .card-preview-cropped-image {
+    display: block;
     width: 100%;
     height: 100%;
     max-width: none;
     object-fit: cover;
+    image-rendering: auto;
     clip-path: none;
     transform: none;
   }
@@ -8830,12 +8832,7 @@
   .player-hand-cards {
     gap: 0;
     isolation: isolate;
-    transform: translateY(84px);
-    --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
-  }
-
-  .player-hand-cards.player-hand-cards-larger {
-    --hand-card-width: clamp(162.1px, min(13.53vw, calc((100cqw - 48px) / 5.06)), 261.2px);
+    transform: translateY(94px);
   }
 
   .player-hand-cards > * + * {
@@ -8850,7 +8847,7 @@
     position: relative;
     flex: 0 0 auto;
     width: var(--hand-card-width);
-    height: calc(var(--hand-card-width) * 1.393);
+    height: var(--hand-card-height);
   }
 
   .hand-card {
@@ -8858,12 +8855,22 @@
     left: 50%;
     bottom: 0;
     width: var(--hand-card-width);
-    height: calc(var(--hand-card-width) * 1.393);
+    height: var(--hand-card-height);
     z-index: var(--hand-z);
     transform-origin: 50% 100%;
     backface-visibility: hidden;
     will-change: transform;
-    transition: z-index 0ms;
+    transition:
+      width 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      z-index 0ms;
+  }
+
+  .hand-card.hand-card-held {
+    width: var(--hand-card-held-width);
+    height: var(--hand-card-held-height);
+    transition-duration: 180ms, 180ms, 0ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.16, 1, 0.3, 1), linear;
   }
 
   .hand-card-native-hd,
@@ -11922,6 +11929,100 @@
   font: inherit;
 }
 
+.card-trait-icon-badges-anchor {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+}
+
+.card-trait-icon-badges {
+  position: absolute;
+  top: -24px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.card-trait-icon-badges-host {
+  right: 7px;
+}
+
+.card-trait-icon-badges-player {
+  right: 0;
+}
+
+.card-trait-icon-tooltip-host {
+  flex: 0 0 24px;
+  pointer-events: auto;
+}
+
+.card-keyword-badge.card-trait-icon-badge {
+  position: relative;
+  display: inline-grid;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  place-items: center;
+  border-radius: 7px 7px 0 7px;
+  padding: 0;
+  cursor: help;
+}
+
+.card-trait-icon-badge > svg {
+  width: 13px;
+  height: 13px;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.7));
+  stroke-width: 2.35;
+}
+
+.card-trait-icon-badge > small {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  min-width: 12px;
+  height: 12px;
+  place-items: center;
+  border: 1px solid rgb(220 190 230 / 0.76);
+  border-radius: 999px;
+  background: #322039;
+  color: #fff4ff;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.72);
+}
+
+.card-trait-icon-tooltip-copy {
+  display: grid;
+  max-width: 19rem;
+  gap: 0.3rem;
+  text-align: left;
+}
+
+.card-trait-icon-tooltip-copy > strong {
+  color: #fff4cc;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 1rem;
+}
+
+.card-trait-icon-tooltip-copy > span {
+  color: #f4dfb0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .card-trait-icon-badges-anchor {
+  transform: rotate(4deg);
+  transform-origin: center;
+}
+
 /* Shared stats palette: matches the printed La Última Lluvia card generator. */
 .card-stat-motif {
   display: none;
@@ -12169,9 +12270,9 @@
 
 .card-cost-badge {
   position: absolute;
-  top: -1.7cqw;
+  top: calc(-1.7cqw - 2px);
   right: auto;
-  left: -1.25cqw;
+  left: calc(-1.25cqw - 7px);
   z-index: 45;
   isolation: isolate;
   display: grid;
@@ -12190,6 +12291,12 @@
   line-height: 1;
   pointer-events: none;
   text-shadow: none;
+}
+
+.hand-card-held .card-cost-badge,
+.card-preview-full-card-frame > .card-cost-badge {
+  top: calc(-1.7cqw - 3px);
+  left: calc(-1.25cqw - 10px);
 }
 
 .card-cost-energy-orb {

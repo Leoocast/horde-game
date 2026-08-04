@@ -22,6 +22,16 @@ import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engi
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import {
+  fitHoverCardDisplay,
+  HAND_CARD_DISPLAY_HEIGHT,
+  HAND_CARD_DISPLAY_WIDTH,
+  HOVER_CARD_DISPLAY_HEIGHT,
+  HOVER_CARD_DISPLAY_WIDTH,
+  LARGE_CARD_DISPLAY_HEIGHT,
+  LARGE_CARD_DISPLAY_WIDTH,
+} from "../src/components/cardDisplayGeometry";
+import { cardTraitIconPresentation } from "../src/components/cardTraitPresentation";
 import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
 import { playerBuffSfxForAnimation } from "../src/store/playerAudioPolicy";
 import { addCard, addSources, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
@@ -342,6 +352,33 @@ test("discard selection stays raised while the hovered hand card layers above it
     getHandCardPresentationState({ index: 4, hovered: false, selectedForDiscard: false, dragging: false }),
     { raised: false, zIndex: 5 },
   );
+});
+
+test("previews and raised hand cards use exact card-image geometry", () => {
+  assert.deepEqual(
+    [HAND_CARD_DISPLAY_WIDTH, HAND_CARD_DISPLAY_HEIGHT],
+    [244, 340],
+  );
+  assert.deepEqual(
+    [LARGE_CARD_DISPLAY_WIDTH, LARGE_CARD_DISPLAY_HEIGHT],
+    [488, 680],
+  );
+  assert.deepEqual(
+    [HOVER_CARD_DISPLAY_WIDTH, HOVER_CARD_DISPLAY_HEIGHT],
+    [366, 510],
+  );
+  assert.deepEqual(fitHoverCardDisplay(900), { width: 366, height: 510 });
+
+  const constrained = fitHoverCardDisplay(420);
+  assert.equal(constrained.width * 85, constrained.height * 61);
+  assert.ok(constrained.width <= 420);
+});
+
+test("cropped battlefield traits map to stable icon presentations", () => {
+  assert.deepEqual(cardTraitIconPresentation("FLYING"), { kind: "flying", amount: undefined });
+  assert.deepEqual(cardTraitIconPresentation("DEATHTOUCH"), { kind: "lethal", amount: undefined });
+  assert.deepEqual(cardTraitIconPresentation("POISON_3"), { kind: "poison", amount: 3 });
+  assert.deepEqual(cardTraitIconPresentation("UNKNOWN_TRAIT"), { kind: "fallback", amount: undefined });
 });
 
 test("standard games keep nine energy cards in the player deck", () => {

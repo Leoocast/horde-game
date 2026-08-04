@@ -16,7 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
-import { Card, CardDefenseBadge } from "./Card";
+import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
@@ -1131,6 +1131,13 @@ export function Battlefield({ game, side, cards }: Props) {
       {defenseBadgeCount && (
         <CardDefenseBadge
           count={defenseBadgeCount}
+          variant={side === "host" ? "host" : "player"}
+        />
+      )}
+      {!compact && card.kinds.includes("ECHO") && cropCreatureCards && (
+        <CardTraitIconBadges
+          game={game}
+          card={card}
           variant={side === "host" ? "host" : "player"}
         />
       )}
