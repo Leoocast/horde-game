@@ -1439,7 +1439,6 @@
   .encounter-transition {
     --encounter-accent: #8da96a;
     --encounter-accent-bright: #d4dfa1;
-    --encounter-art-center: clamp(170px, 14vw, 290px);
     position: fixed;
     z-index: 1000;
     inset: 0;
@@ -1503,17 +1502,24 @@
     color: #d9a3c7;
   }
 
-  /* The selected key cards enter from opposite edges and stop short of the rift. Their lower
-     contrast keeps the matchup copy in command while still making this feel like this battle. */
+  /* Cards live inside their combatant instead of against the viewport. This keeps each identity
+     attached to its name and makes the two card faces themselves perform the central collision. */
   .encounter-transition-art {
-    position: absolute;
+    position: relative;
     z-index: 1;
-    top: 50%;
-    width: clamp(180px, min(27vw, 56vh), 410px);
+    width: clamp(150px, min(16vw, 43vh), 260px);
+    flex: 0 0 auto;
     aspect-ratio: 488 / 680;
     pointer-events: none;
     transform-origin: center;
-    will-change: opacity, transform;
+  }
+
+  .encounter-transition-art-player {
+    transform: rotate(-3deg);
+  }
+
+  .encounter-transition-art-host {
+    transform: rotate(3deg);
   }
 
   .encounter-transition-art::before {
@@ -1548,16 +1554,6 @@
     border-radius: 9px;
     filter: saturate(0.94) brightness(0.9) contrast(1.06);
     object-fit: cover;
-  }
-
-  .encounter-transition-art-player {
-    left: var(--encounter-art-center);
-    animation: encounter-art-left 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
-  }
-
-  .encounter-transition-art-host {
-    left: calc(100% - var(--encounter-art-center));
-    animation: encounter-art-right 2450ms cubic-bezier(0.22, 0.76, 0.18, 1) both;
   }
 
   .encounter-transition-content {
@@ -1609,20 +1605,38 @@
     top: 50%;
     left: 50%;
     display: grid;
-    width: min(1160px, 92vw);
-    grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
+    width: min(1740px, 98vw);
+    grid-template-columns: minmax(0, 1fr) clamp(64px, 6vw, 96px) minmax(0, 1fr);
     align-items: center;
-    gap: clamp(16px, 2.2vw, 28px);
+    gap: clamp(8px, 1vw, 18px);
     transform: translate(-50%, -50%);
+  }
+
+  .encounter-transition-combatant {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: clamp(12px, 1.5vw, 28px);
+    will-change: opacity, transform;
+  }
+
+  .encounter-transition-combatant-player {
+    justify-content: flex-end;
+    animation: encounter-combatant-left 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .encounter-transition-combatant-host {
+    justify-content: flex-start;
+    animation: encounter-combatant-right 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   /* Each side declares who it is and wears its own deck colour, so the clash reads at a glance. */
   .encounter-transition-side {
     display: flex;
+    flex: 1 1 auto;
     min-width: 0;
     flex-direction: column;
     gap: 10px;
-    animation: encounter-name-left 720ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   .encounter-transition-side-player {
@@ -1631,8 +1645,6 @@
 
   .encounter-transition-side-host {
     align-items: flex-start;
-    transform-origin: left center;
-    animation-name: encounter-name-right;
   }
 
   .encounter-transition-eyebrow {
@@ -1663,9 +1675,9 @@
 
   .encounter-transition-matchup strong {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(26px, 3.2vw, 48px);
+    font-size: clamp(24px, 2.65vw, 42px);
     font-weight: 500;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     line-height: 1.04;
     text-wrap: balance;
     text-shadow: 0 4px 20px #000, 0 0 26px var(--deck-accent-soft);
@@ -1677,7 +1689,8 @@
     min-width: 0;
     max-width: 100%;
     color: var(--deck-accent-bright);
-    overflow-wrap: anywhere;
+    hyphens: none;
+    overflow-wrap: normal;
     white-space: normal;
   }
 
@@ -1780,12 +1793,8 @@
   }
 
   @media (max-width: 720px) {
-    .encounter-transition {
-      --encounter-art-center: clamp(68px, 19vw, 118px);
-    }
-
     .encounter-transition-art {
-      width: clamp(160px, 48vw, 230px);
+      width: clamp(86px, 20vw, 140px);
     }
 
     .encounter-transition-content > p {
@@ -1798,9 +1807,13 @@
     }
 
     .encounter-transition-matchup {
-      width: 96vw;
-      grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr);
-      gap: 7px;
+      width: 98vw;
+      grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+      gap: 4px;
+    }
+
+    .encounter-transition-combatant {
+      gap: 5px;
     }
 
     .encounter-transition-side {
@@ -1818,7 +1831,7 @@
     }
 
     .encounter-transition-matchup strong {
-      font-size: clamp(16px, 5vw, 27px);
+      font-size: clamp(12px, 3.8vw, 20px);
       line-height: 1.08;
     }
 
@@ -2087,8 +2100,8 @@
 
   @keyframes encounter-content-life {
     0%, 7% { opacity: 0; }
-    18%, 57% { opacity: 1; }
-    69%, 100% { opacity: 0; }
+    18%, 72% { opacity: 1; }
+    82%, 100% { opacity: 0; }
   }
 
   @keyframes encounter-flare {
@@ -2111,22 +2124,14 @@
     82%, 100% { opacity: 0; transform: translateX(-50%) scaleX(110) scaleY(1); }
   }
 
-  @keyframes encounter-art-left {
-    0% { opacity: 0; transform: translate(calc(-50% - 58vw), -50%) rotate(-13deg) scale(0.88); }
-    14% { opacity: 0.18; }
-    35% { opacity: 0.78; transform: translate(-50%, -50%) rotate(-4deg) scale(1); }
-    43% { opacity: 0.94; transform: translate(calc(-50% + 1.2vw), -50%) rotate(-3deg) scale(1.025); }
-    64% { opacity: 0.8; transform: translate(-50%, -50%) rotate(-4deg) scale(1); }
-    82%, 100% { opacity: 0; transform: translate(calc(-50% - 10vw), -50%) rotate(-7deg) scale(1.06); }
+  @keyframes encounter-combatant-left {
+    from { opacity: 0; transform: translateX(-34px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
-  @keyframes encounter-art-right {
-    0% { opacity: 0; transform: translate(calc(-50% + 58vw), -50%) rotate(13deg) scale(0.88); }
-    14% { opacity: 0.18; }
-    35% { opacity: 0.78; transform: translate(-50%, -50%) rotate(4deg) scale(1); }
-    43% { opacity: 0.94; transform: translate(calc(-50% - 1.2vw), -50%) rotate(3deg) scale(1.025); }
-    64% { opacity: 0.8; transform: translate(-50%, -50%) rotate(4deg) scale(1); }
-    82%, 100% { opacity: 0; transform: translate(calc(-50% + 10vw), -50%) rotate(7deg) scale(1.06); }
+  @keyframes encounter-combatant-right {
+    from { opacity: 0; transform: translateX(34px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes encounter-impact-ring {
@@ -2139,16 +2144,6 @@
     0%, 40% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.04); }
     44% { opacity: 0.95; transform: translate(-50%, -50%) scaleX(1); }
     55%, 100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1.18); }
-  }
-
-  @keyframes encounter-name-left {
-    from { opacity: 0; transform: translateX(-34px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes encounter-name-right {
-    from { opacity: 0; transform: translateX(34px); }
-    to { opacity: 1; transform: translateX(0); }
   }
 
   .game-screen.is-encounter-entering {

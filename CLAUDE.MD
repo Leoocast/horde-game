@@ -270,6 +270,14 @@ El seed literal `developer` activa una preparación determinista para probar car
 Es una herramienta, no parte del lore. Si se añade una carta que necesita setup especial, preferir
 preparación genérica por tipos/efectos antes que un puente permanente por `definitionId`.
 
+## Dirección narrativa futura
+
+Las seeds podrán presentarse dentro del mundo como **Semillas del Destino**: líneas temporales que
+el Cronista contempla, reescribe y finalmente preserva. El tutorial, el historial de intentos y la
+posible opción de menú asociada están bosquejados en `docs/seeds_of_destiny.md`. Es una dirección de
+diseño pendiente, no una funcionalidad implementada. El seed `developer` queda expresamente fuera
+de esta narrativa.
+
 ## Preferencias de trabajo
 
 - Cambios pequeños y verificables.

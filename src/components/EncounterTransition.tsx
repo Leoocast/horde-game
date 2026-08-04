@@ -23,15 +23,16 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
   return (
     <div className={`encounter-transition is-${tone}`} role="status" aria-live="polite" data-audio-click="off">
       <div className="encounter-transition-vignette" />
-      <EncounterArt deck={chronicleDeck} side="player" />
-      <EncounterArt deck={hostDeck} side="host" />
       <div className="encounter-transition-rift" />
       <div className="encounter-transition-content">
         <p>{gameMode === "chaos" ? t("encounter.chaos") : t("encounter.standard")}</p>
         <div className="encounter-transition-matchup">
-          <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleDeck.presentation.theme}`}>
-            <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
-            <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
+          <div className="encounter-transition-combatant encounter-transition-combatant-player">
+            <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleDeck.presentation.theme}`}>
+              <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
+              <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
+            </div>
+            <EncounterArt deck={chronicleDeck} side="player" />
           </div>
           <span className="encounter-transition-versus">
             <span className="encounter-transition-versus-mark" aria-hidden="true">
@@ -40,9 +41,12 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
             </span>
             <b>VS</b>
           </span>
-          <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostDeck.presentation.theme}`}>
-            <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
-            <strong className="encounter-transition-name encounter-transition-name-host">{hostDeck.deck.name}</strong>
+          <div className="encounter-transition-combatant encounter-transition-combatant-host">
+            <EncounterArt deck={hostDeck} side="host" />
+            <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostDeck.presentation.theme}`}>
+              <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
+              <strong className="encounter-transition-name encounter-transition-name-host">{hostDeck.deck.name}</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -50,7 +54,7 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: P
   );
 }
 
-/** The deck's key card looming in from its own edge, behind the names. */
+/** The deck's key card collides at the center while remaining attached to its own name. */
 function EncounterArt({ deck, side }: { deck: InspectableDeck; side: "player" | "host" }) {
   const details = useDeckCardDetails(findDeckKeyCard(deck), deck.images);
   if (!details.imageUrl) return null;
