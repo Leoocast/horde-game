@@ -101,16 +101,17 @@ test("deck viewer traits reuse the in-game faction badges", () => {
   assert.equal((badges.match(/<svg/g) ?? []).length, 2);
 });
 
-test("card previews reuse the illustrated card stats badge", () => {
+test("card previews reuse the current printed stats plaque", () => {
   const stats = renderToStaticMarkup(createElement(PreviewStatsBadge, {
     stats: "4/6",
     cardTheme: "goblin",
   }));
 
   assert.match(stats, /card-preview-stats card-theme-goblin/);
-  assert.match(stats, /card-stat-attack/);
-  assert.match(stats, /card-stat-life/);
-  assert.equal((stats.match(/<svg/g) ?? []).length, 2);
+  assert.match(stats, /card-preview-stat-value[^>]*>4<\/span>/);
+  assert.match(stats, /card-preview-stat-separator[^>]*>\/<\/span>/);
+  assert.match(stats, /card-preview-stat-value[^>]*>6<\/span>/);
+  assert.doesNotMatch(stats, /<svg/);
 });
 
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {

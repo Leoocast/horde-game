@@ -333,21 +333,21 @@ export function CardDetailsModal({
 }
 
 export function PreviewStatsBadge({ stats, cardTheme }: { stats: string; cardTheme?: DeckTheme }) {
+  const language = useLanguageStore((state) => state.language);
   const parsed = stats.match(/^(-?\d+)\s*\/\s*(-?\d+)$/u);
   if (!parsed) return null;
 
+  const power = Number(parsed[1]);
+  const endurance = Number(parsed[2]);
+
   return (
-    <div className={["card-preview-stats", cardTheme ? `card-theme-${cardTheme}` : ""].join(" ")}>
-      <CardStatsBadge
-        stats={{
-          text: stats,
-          power: Number(parsed[1]),
-          endurance: Number(parsed[2]),
-          damaged: false,
-          buffed: false,
-        }}
-        preferSingleSword
-      />
+    <div
+      className={["card-preview-stats", cardTheme ? `card-theme-${cardTheme}` : ""].join(" ")}
+      aria-label={language === "es" ? `${power} de Fuerza, ${endurance} de Aguante` : `${power} Power, ${endurance} Endurance`}
+    >
+      <span className="card-preview-stat-value">{power}</span>
+      <span className="card-preview-stat-separator" aria-hidden="true">/</span>
+      <span className="card-preview-stat-value">{endurance}</span>
     </div>
   );
 }
