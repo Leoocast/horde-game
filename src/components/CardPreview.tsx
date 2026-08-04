@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { CardInstance } from "../engine/GameTypes";
-import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
+import { cardLabelCamelCase, localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -265,7 +265,13 @@ export function CardDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const localizedName = language === "es" ? card.displayNameEs || displayName || localizedCardName(card, language) : displayName ?? localizedCardName(card, language);
+  const localizedName = cardLabelCamelCase(
+    language === "es"
+      ? card.displayNameEs || displayName || localizedCardName(card, language)
+      : displayName ?? localizedCardName(card, language),
+    language,
+  );
+  const localizedType = cardLabelCamelCase(typeLineText ?? localizedTypeLine(card, language), language);
   return (
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
       <div className="relative flex w-[min(1320px,calc(100vw-48px))] items-center justify-center">
@@ -291,7 +297,7 @@ export function CardDetailsModal({
           <div className="flex items-start justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
             <div>
               <h2 className="old-title text-3xl font-black leading-tight">{localizedName}</h2>
-              <p className="mt-2 text-sm font-bold uppercase tracking-wide text-[#d6b879]">{typeLineText ?? localizedTypeLine(card, language)}</p>
+              <p className="mt-2 text-sm font-bold tracking-wide text-[#d6b879]">{localizedType}</p>
             </div>
             <button className="icon-button h-9 w-9" title={t("common.closeDetails")} onClick={onClose}>
               <X size={18} />

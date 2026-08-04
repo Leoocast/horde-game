@@ -64,14 +64,26 @@ const SPANISH_SUBTYPES: Record<string, string> = {
 export function localizedCardName(card: LocalizableCard | undefined, language: AppLanguage): string {
   if (!card) return "";
   const englishName = card.displayName ?? card.name ?? "";
-  return language === "es" ? card.displayNameEs?.trim() || englishName : englishName;
+  const localizedName = language === "es" ? card.displayNameEs?.trim() || englishName : englishName;
+  return cardLabelCamelCase(localizedName, language);
 }
 
 export function localizedTypeLine(card: LocalizableCard, language: AppLanguage): string {
   const kinds = card.kinds ?? [];
   const subtypes = card.subtypes ?? [];
   const localizedSubtypes = language === "es" ? subtypes.map((subtype) => SPANISH_SUBTYPES[subtype] ?? subtype) : subtypes;
-  return canonicalCardKindLine(kinds, localizedSubtypes, language, card.isToken, card.modifiers ?? []);
+  return cardLabelCamelCase(
+    canonicalCardKindLine(kinds, localizedSubtypes, language, card.isToken, card.modifiers ?? []),
+    language,
+  );
+}
+
+/** UI-facing "Camel Case": initial capitals per word while preserving spaces and authored names. */
+export function cardLabelCamelCase(value: string, language: AppLanguage): string {
+  return value.replace(
+    /(^|[\s,;:()/-])(\p{L})/gu,
+    (_match, prefix: string, letter: string) => `${prefix}${letter.toLocaleUpperCase(language)}`,
+  );
 }
 
 export function localizedTraitLabel(keyword: string, language: AppLanguage): string {

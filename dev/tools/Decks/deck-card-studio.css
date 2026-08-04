@@ -390,6 +390,7 @@ body {
     margin: 0;
     overflow: visible;
     text-overflow: ellipsis;
+    text-transform: capitalize;
     white-space: nowrap;
 }
 
@@ -813,7 +814,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem-glint {
         0 8px 18px rgba(0, 0, 0, 0.55);
     font: 700 28px/1.1 "Cinzel", serif;
     letter-spacing: 0.06em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     text-shadow: 2px 3px 7px rgba(0, 0, 0, 0.86);
 }
 
@@ -1072,7 +1073,7 @@ body[data-theme="crimson_court"] .tcg-seal .tcg-faction-gem-glint {
     color: var(--gold-bright);
     font: 700 26px/1.1 "Cinzel", serif;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
 }
 

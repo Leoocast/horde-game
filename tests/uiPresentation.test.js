@@ -8,6 +8,7 @@ import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
+import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -82,4 +83,15 @@ test("cards behind the front of a stack use the left defense-arrow anchor", () =
   assert.equal(isBehindInStackOrder(middle, slots), true);
   assert.equal(isBehindInStackOrder(front, slots), false);
   assert.equal(isBehindInStackOrder(front, [front]), false);
+});
+
+test("card names and type lines use initial capitals on every word", () => {
+  assert.equal(
+    cardLabelCamelCase("tributo de los cuatro pesares", "es"),
+    "Tributo De Los Cuatro Pesares",
+  );
+  assert.equal(
+    cardLabelCamelCase("eco de crónica — elfo druida", "es"),
+    "Eco De Crónica — Elfo Druida",
+  );
 });
