@@ -299,23 +299,23 @@ test("First strike mutations deal combat damage before a normal blocker can answ
   assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("Varka, Infernal Matriarch survives a 4/3 blocker but dies to a 4/4 after first strike", () => {
+test("Varka's own aura makes her survive a 5/4 blocker but die to a 5/5 after first strike", () => {
   const resolveDuel = (endurance) => {
     const game = createTestGame(`chainwhirler-first-strike-${endurance}`);
     const chainwhirler = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
-    const blocker = addCard(game, customCard(`blocker_4_${endurance}`, "player", { power: 4, endurance }));
+    const blocker = addCard(game, customCard(`blocker_5_${endurance}`, "player", { power: 5, endurance }));
     game.combat.hostAttackers = [chainwhirler.instanceId];
     game.combat.blockers = { [chainwhirler.instanceId]: [blocker.instanceId] };
     return { result: resolveHostCombat(game), chainwhirler, blocker };
   };
 
-  const versusFourThree = resolveDuel(3);
-  assert.equal(versusFourThree.result.host.field.some((card) => card.instanceId === versusFourThree.chainwhirler.instanceId), true);
-  assert.equal(versusFourThree.result.player.memory.some((card) => card.instanceId === versusFourThree.blocker.instanceId), true);
+  const versusFiveFour = resolveDuel(4);
+  assert.equal(versusFiveFour.result.host.field.some((card) => card.instanceId === versusFiveFour.chainwhirler.instanceId), true);
+  assert.equal(versusFiveFour.result.player.memory.some((card) => card.instanceId === versusFiveFour.blocker.instanceId), true);
 
-  const versusFourFour = resolveDuel(4);
-  assert.equal(versusFourFour.result.host.memory.some((card) => card.instanceId === versusFourFour.chainwhirler.instanceId), true);
-  assert.equal(versusFourFour.result.player.field.some((card) => card.instanceId === versusFourFour.blocker.instanceId), true);
+  const versusFiveFive = resolveDuel(5);
+  assert.equal(versusFiveFive.result.host.memory.some((card) => card.instanceId === versusFiveFive.chainwhirler.instanceId), true);
+  assert.equal(versusFiveFive.result.player.field.some((card) => card.instanceId === versusFiveFive.blocker.instanceId), true);
 });
 
 test("Hostfall traits render with localized names", () => {
@@ -2035,12 +2035,17 @@ test("Legion static buffs and the Shift Hammer apply to their authored Host Echo
   const shiftHammer = addCard(game, cardFromDeck("the_shift_hammer", "host"));
   const goblin = addCard(game, cardFromDeck("varkas_minion", "host"));
   const nonGoblin = addCard(game, customCard("not_a_goblin", "host", { power: 2, endurance: 2 }));
+  const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
 
-  assert.deepEqual(getPowerEndurance(game, foreman), { power: 2, endurance: 3 });
-  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
-  assert.deepEqual(getPowerEndurance(game, nonGoblin), { power: 3, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(game, foreman), { power: 3, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 3, endurance: 3 });
+  assert.deepEqual(getPowerEndurance(game, nonGoblin), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, varka), { power: 5, endurance: 5 });
   assert.equal(hasTrait(game, goblin, "DAUNTING"), true);
   assert.equal(hasTrait(game, nonGoblin, "DAUNTING"), true);
+
+  destroyPermanent(game, varka);
+  assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
 
   destroyPermanent(game, shiftHammer);
   assert.equal(hasTrait(game, goblin, "DAUNTING"), false);
@@ -2194,12 +2199,12 @@ test("Unleash the Legion! pumps an existing army or starts another normal reveal
   assert.equal(revealResult.hostTurnNumber, 1, "the extra reveal is part of the same Host turn");
 });
 
-test("Rider of the Umbral Volley damages a chosen opposing creature equal to the Host's Goblin count", () => {
+test("Rider of the Umbral Volley counts every allied Echo on the Field, including itself", () => {
   const game = createTestGame("volley-veteran-entry");
-  const fragile = addCard(game, customCard("volley_target", "player", { endurance: 2 }));
+  const fragile = addCard(game, customCard("volley_target", "player", { endurance: 3 }));
   const sturdy = addCard(game, customCard("volley_survivor", "player", { endurance: 4 }));
   addCard(game, cardFromDeck("varkas_minion", "host"));
-  addCard(game, cardFromDeck("varkas_minion", "host"));
+  addCard(game, cardFromDeck("corrupted_war_bear", "host"));
   const veteran = addCard(game, cardFromDeck("rider_of_the_umbral_volley", "host"));
 
   runInvokedTriggers(game, veteran);

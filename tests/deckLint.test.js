@@ -357,6 +357,11 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(rawById.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
   assert.equal(rawById.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
   assert.equal(rawById.shaman_of_the_umbral_ember.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.equal(rawById.rider_of_the_umbral_volley.abilities[0].effects[0].amount.type, "COUNT_ECHOS");
+  assert.equal(rawById.rider_of_the_umbral_volley.abilities[0].effects[0].amount.filters.subtypes, undefined);
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].kind, "STATIC");
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].type, "MODIFY_STATS");
+  assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
   assert.deepEqual(rawById.varka_infernal_matriarch.traits, ["REFLEX"]);
   assert.deepEqual(rawById.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
   assert.equal(rawById.marshal_of_the_wave.modifiers, undefined);
@@ -379,6 +384,11 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(byId.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
   assert.equal(byId.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
   assert.equal(byId.shaman_of_the_umbral_ember.abilities[1].effects[0].amount.type, "COUNT_ECHOS_INVOKED_THIS_TURN");
+  assert.equal(byId.rider_of_the_umbral_volley.abilities[0].effects[0].amount.type, "COUNT_ECHOS");
+  assert.equal(byId.rider_of_the_umbral_volley.abilities[0].effects[0].amount.filters.subtypes, undefined);
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].kind, "STATIC");
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].effects[0].type, "MODIFY_STATS");
+  assert.equal(byId.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
   assert.deepEqual(byId.varka_infernal_matriarch.traits, ["REFLEX"]);
   assert.deepEqual(byId.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
   assert.deepEqual(byId.marshal_of_the_wave.kinds, ["ECHO"]);

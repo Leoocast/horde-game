@@ -57,6 +57,9 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const variableTokenWave = formatEffectText(
     "Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
   );
+  const namedTokenWave = formatEffectText(
+    "Luego Invoca esa cantidad de Esbirros de Varka atacando.",
+  );
   const previewStates = formatEffectText("Un Eco Marcado y Aturdido permanece Atado.");
   const raidBombardment = formatEffectText(
     "Cada Trasgo atacante con fuerza 2 o menos agrega 1 de daño a la salva.",
@@ -105,6 +108,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.match(
     variableTokenWave,
     /class="effect-token">Invoca tantos Ecos Ficha Trasgo 1\/1 atacando<\/strong>/,
+  );
+  assert.match(
+    namedTokenWave,
+    /class="effect-token">Invoca esa cantidad de Esbirros de Varka atacando<\/strong>/,
   );
   assert.equal((previewStates.match(/class="effect-state"/g) ?? []).length, 3);
 
@@ -795,6 +802,11 @@ test("battlefield art framing is canonical, bounded and independent from print f
     runtimeCss,
     /\.card-cropped-title::(?:before|after)\s*\{[^}]*mask-image:/u,
     "the runtime cropped-card header layers must remain opaque across their full width",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full\.card-layout-full-art\.card-theme-goblin > \.card-stat-badge:not\(\.is-damaged\):not\(\.is-buffed\),[\s\S]*?linear-gradient\(180deg,\s*#6f210f 0%,\s*#3a0e08 58%,\s*#211813 100%\);/u,
+    "Legion full-art runtime stats must match the printed forged-red palette",
   );
 });
 

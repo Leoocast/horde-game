@@ -12793,7 +12793,7 @@
 
 .card-visual.card-image-full.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed),
 .card-preview-full-card-frame.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
-  background: linear-gradient(180deg, #3b1e14 0%, #2c221a 20%, #151d14 68%, #12110f 100%);
+  background: linear-gradient(180deg, #6f210f 0%, #3a0e08 58%, #211813 100%);
 }
 
 .card-visual.card-image-full.card-layout-full-art.card-theme-vampire > .card-stat-badge:not(.is-damaged):not(.is-buffed),
