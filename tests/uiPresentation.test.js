@@ -125,7 +125,7 @@ test("deck collections do not clip a raised key card or its glow", () => {
 
 test("main menu reserves enough width and breathing room for the Hostfall title", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  assert.match(styles, /--main-menu-panel-width:\s*clamp\(430px, 38vw, 680px\)/u);
+  assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 

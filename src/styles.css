@@ -70,7 +70,7 @@
 
 @layer components {
   .main-menu-shell {
-    --main-menu-panel-width: clamp(430px, 38vw, 680px);
+    --main-menu-panel-width: clamp(380px, 34vw, 590px);
     position: relative;
     isolation: isolate;
     background-color: #080c0f;
