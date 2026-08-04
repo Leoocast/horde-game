@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { activeDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -39,4 +40,15 @@ test("large group buffs use the lightweight renderer instead of one WebGL contex
   assert.equal(buffSurgeRenderMode(4), "webgl");
   assert.equal(buffSurgeRenderMode(5), "css");
   assert.equal(buffSurgeRenderMode(24), "css");
+});
+
+test("Memory presents the most recently moved card first without mutating game state", () => {
+  const oldest = { instanceId: "oldest" };
+  const middle = { instanceId: "middle" };
+  const newest = { instanceId: "newest" };
+  const memory = [oldest, middle, newest];
+
+  assert.deepEqual(memoryCardsNewestFirst(memory), [newest, middle, oldest]);
+  assert.equal(newestMemoryCard(memory), newest);
+  assert.deepEqual(memory, [oldest, middle, newest]);
 });

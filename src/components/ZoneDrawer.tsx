@@ -3,6 +3,7 @@ import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
+import { newestMemoryCard } from "./memoryPresentation";
 
 export function ZoneDrawer({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -31,7 +32,7 @@ function ZoneSide({ game, side }: { game: GameState; side: Side }) {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <ZoneMetric label={t("zones.deck")} count={state.archive.length} />
         {side === "player" && <ZoneMetric label={t("zones.hand")} count={game.player.hand.length} />}
-        <ZoneMetric label={t("zones.memory")} count={state.memory.length} top={state.memory[0]} />
+        <ZoneMetric label={t("zones.memory")} count={state.memory.length} top={newestMemoryCard(state.memory)} />
         <ZoneMetric label={t("zones.oblivion")} count={state.oblivion.length} top={state.oblivion[0]} />
       </div>
     </div>
