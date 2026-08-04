@@ -82,11 +82,11 @@ window.HostfallDeckData = [
     }
   },
   {
-    "id": "the_shift_hammer",
+    "id": "the_daunting_front",
     "collectorId": "HFA1035",
     "artist": "Dean Spencer",
-    "art_crop": "../../../../public/cards/legion_of_varka/art/the_shift_hammer.jpg",
-    "nombre": "El Martillo de Turno",
+    "art_crop": "../../../../public/cards/legion_of_varka/art/the_daunting_front.jpg",
+    "nombre": "El Frente Imponente",
     "tipo": "Apoyo",
     "costo": 3,
     "atk": null,

@@ -39,7 +39,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Ímpetu y Pack tactics se omiten deliberadamente.
 - El trigger de entrada produce un pulso; el buff grupal sólo reproduce sus líneas azules.
 
-## El Martillo de Turno (`the_shift_hammer`)
+## El Frente Imponente (`the_daunting_front`)
 
 - Las criaturas de la Hueste tienen Imponente mientras este Apoyo permanece en el Campo.
 

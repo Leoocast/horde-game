@@ -50,7 +50,7 @@ mando convierten esa presión colectiva en crecimiento, refuerzos o daño direct
 | `shaman_of_the_umbral_ember` | **Chamán de la Brasa Sombría** | 2/3; +1/+1 a otros Ecos y daño al entrar según los Ecos invocados ese turno. | Chamán orco que mide cuántos soldados puede gastar todavía Varka. |
 | `summoner_of_the_ranks` | **Invocador de las Filas** | 1/1; +1/+1 a otros Ecos; una muerte inspecciona la primera carta e Invoca el siguiente Eco. | La marca de Varka transforma cada baja aliada en una llamada a filas. |
 | `varkas_standard_bearer` | **Portaestandarte de Varka** | 2/2; al entrar da +1/+0 a los Ecos aliados hasta el fin del turno. | Repite la orden de Varka y hace avanzar bajo un mismo estandarte a toda la formación. |
-| `the_shift_hammer` | **El Martillo de Turno** | Apoyo; da Imponente a las criaturas de la Hueste. | Martillo suspendido que golpea el yunque central; sus ondas obligan a afrontar la formación de dos en dos. |
+| `the_daunting_front` | **El Frente Imponente** | Apoyo; da Imponente a las criaturas de la Hueste. | Una primera línea acorazada domina el paso y obliga a afrontar la formación de dos en dos. |
 | `all_against_one` | **Todos contra uno** | Apoyo; cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño. | Muchas manos débiles lanzan remaches que por separado son insignificantes y juntos forman una salva. |
 | `chief_of_the_double_guard` | **Jefe de la Doble Guardia** | 2/2; al entrar Invoca exactamente dos Esbirros de Varka. | Un jefe llega con dos ayudantes y un cajón de herramientas compartido. |
 | `rider_of_the_third_charge` | **Jinete de la Tercera Carga** | 2/2; al entrar Invoca exactamente tres Esbirros de Varka. | Un jinete trasgo abre la tercera carga y arrastra consigo tres nuevos esbirros. |

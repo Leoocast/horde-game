@@ -45,7 +45,7 @@ Ejemplos útiles:
 - Trigger al entrar otra criatura: `kaelor_stormcaller`.
 - Spell con un target: `elixir_of_the_first_leaf` o `the_judgment_of_elarion`.
 - Spell con dos targets: `clash_of_echoes` o `shield_of_the_heir`.
-- Aura estática: `the_broken_headstone`, `nerezh_graveless_matriarch` o `the_shift_hammer`.
+- Aura estática: `the_broken_headstone`, `nerezh_graveless_matriarch` o `the_daunting_front`.
 - Trigger de muerte: `devourer_of_the_last_memory`, `summoner_of_the_ranks` o `rear_guard_firebreather`.
 - Trigger de ataque: `vardek_scribe_of_the_legion`.
 - Efecto de Horda con presentación Burn: `rider_of_the_umbral_volley` o `rear_guard_firebreather`.

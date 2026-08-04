@@ -2043,10 +2043,10 @@ test("Host reveal stops at a non-token and Surge adds exactly two reveals", () =
   assert.equal(surgeResult.host.archive.length, 0);
 });
 
-test("Legion static buffs and the Shift Hammer apply to their authored Host Echoes", () => {
+test("Legion static buffs and the Daunting Front apply to their authored Host Echoes", () => {
   const game = createTestGame("goblin-static-effects");
   const foreman = addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host"));
-  const shiftHammer = addCard(game, cardFromDeck("the_shift_hammer", "host"));
+  const dauntingFront = addCard(game, cardFromDeck("the_daunting_front", "host"));
   const goblin = addCard(game, cardFromDeck("varkas_minion", "host"));
   const nonGoblin = addCard(game, customCard("not_a_goblin", "host", { power: 2, endurance: 2 }));
   const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
@@ -2061,7 +2061,7 @@ test("Legion static buffs and the Shift Hammer apply to their authored Host Echo
   destroyPermanent(game, varka);
   assert.deepEqual(getPowerEndurance(game, goblin), { power: 2, endurance: 2 });
 
-  destroyPermanent(game, shiftHammer);
+  destroyPermanent(game, dauntingFront);
   assert.equal(hasTrait(game, goblin, "DAUNTING"), false);
 });
 
@@ -2519,7 +2519,7 @@ test("Summoner of the Ranks resolves exactly once when it dies", () => {
 test("Summoner of the Ranks moves a non-Echo inspection to the bottom of the Archive", () => {
   const game = createTestGame("caller-non-goblin-bottom");
   addCard(game, cardFromDeck("summoner_of_the_ranks", "host"));
-  const support = addCard(game, cardFromDeck("the_shift_hammer", "host", "archive"), "host", "archive");
+  const support = addCard(game, cardFromDeck("the_daunting_front", "host", "archive"), "host", "archive");
   const futureGoblin = addCard(game, cardFromDeck("varkas_minion", "host", "archive"), "host", "archive");
   const victim = addCard(game, cardFromDeck("varkas_minion", "host"));
 

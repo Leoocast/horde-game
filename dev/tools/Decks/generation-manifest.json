@@ -482,7 +482,7 @@
       ]
     },
     "legion_of_varka": {
-      "inputHash": "a65b5a23afbbf1b7abd76834e4d70c7a6f4ab59382c9f84f0fb52f256723af96",
+      "inputHash": "233120c8c457ff5e2beb9163e1c0355a268843d73fe2d90a1200b20b7fe1a1d8",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -502,7 +502,7 @@
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/deck-data.generated.js",
-          "sha256": "80869e1d4ad98bc215afe78f0ad78875117f364ecfd2d0df059e57f0a90c2486"
+          "sha256": "27eba70b4f499eec67945adc919279939c83b58e7711e882aeadf6d9d3ea1825"
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/index.html",
@@ -514,7 +514,7 @@
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/studio.config.json",
-          "sha256": "61afa5824654472602d087964103676ec00312e3a536a538b02cc08cd203a1d5"
+          "sha256": "f42b13e8d410bd6b3615c5ecefd84c8d7f3106a0489287e8a66791f61000141a"
         },
         {
           "path": "public/cards/legion_of_varka/art/all_against_one.jpg",
@@ -553,7 +553,7 @@
           "sha256": "f2363516259644fb0e9d3666ed1bd86f549be3da41f8909f40321ff8158d1237"
         },
         {
-          "path": "public/cards/legion_of_varka/art/the_shift_hammer.jpg",
+          "path": "public/cards/legion_of_varka/art/the_daunting_front.jpg",
           "sha256": "a4a8dbf77132e439bf68185c6a05928ce1929e51689c58d4b213c38b471ba89a"
         },
         {
@@ -614,25 +614,25 @@
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka.json",
-          "sha256": "92bfa36c77eaac204ff3e9d01f2153572fcf87af3194df3a05f059db86d642c4"
+          "sha256": "e969b76411619192f50d74ab6e630a70a7afee394aa5380fb1a323ec80e24920"
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka_images.json",
-          "sha256": "15bf567b91797ed08b411a90e917382ed7aab3b701dd57272c5ae74022fe2bca"
+          "sha256": "3243c1642f3be9815c34703cb80c0074c184b3da82c29d14a213e4385e41e151"
         }
       ],
       "cards": [
         {
           "id": "varkas_minion",
           "path": "public/cards/legion_of_varka/varkas_minion.png",
-          "sha256": "b340c23a83bcb91f80f1aed179449be95e17b27bfed5669f985ad02a46a5726c",
+          "sha256": "67ccc10e83aac759edaf73724b712ed0ed04edef817f55c024a78b5fe1ecec3c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "shaman_of_the_umbral_ember",
           "path": "public/cards/legion_of_varka/shaman_of_the_umbral_ember.png",
-          "sha256": "c8164cf7f8312fcbfa9b708aa160ad95aa3be7d4d27c1c8913f3fafee1163d91",
+          "sha256": "b4c08cd44ed735d2f2da8f44cf3463beb41ed802acb0022029f2c99c39ed4882",
           "width": 976,
           "height": 1360
         },
@@ -651,9 +651,9 @@
           "height": 1360
         },
         {
-          "id": "the_shift_hammer",
-          "path": "public/cards/legion_of_varka/the_shift_hammer.png",
-          "sha256": "36fe44b22acfbc2c1f684c65c59570d3764da8a53dcc333b6ea26465db15507b",
+          "id": "the_daunting_front",
+          "path": "public/cards/legion_of_varka/the_daunting_front.png",
+          "sha256": "702d9e59d4aba97596efad104fb140230bdbea2940ead9e0859b8c7d9be2bb10",
           "width": 976,
           "height": 1360
         },
@@ -695,7 +695,7 @@
         {
           "id": "corrupted_war_bear",
           "path": "public/cards/legion_of_varka/corrupted_war_bear.png",
-          "sha256": "c4f3b3b71731e8272b7e70f1120d1f8d497140ac476736a772f8acfc8f4098d9",
+          "sha256": "e585fe2221c0f12b11ef2baa94382872b841c50e7de276a26188b8401b46f46c",
           "width": 976,
           "height": 1360
         },
@@ -737,7 +737,7 @@
         {
           "id": "rear_guard_firebreather",
           "path": "public/cards/legion_of_varka/rear_guard_firebreather.png",
-          "sha256": "d4758e78b90da2117483d37430c91160fb527c4e8e90eae950e9ab612e5c4132",
+          "sha256": "bb0d11384b1921496e750198b36460cae83b0e85071c4a32c23b3df1b7579e31",
           "width": 976,
           "height": 1360
         }

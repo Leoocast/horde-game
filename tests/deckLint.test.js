@@ -364,8 +364,10 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
   assert.deepEqual(rawById.varkas_minion.kinds, ["ECHO", "TOKEN"]);
-  assert.deepEqual(rawById.the_shift_hammer.kinds, ["SUPPORT"]);
-  assert.equal(rawById.the_shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.deepEqual(rawById.the_daunting_front.kinds, ["SUPPORT"]);
+  assert.equal(rawById.the_daunting_front.name, "The Daunting Front");
+  assert.equal(rawById.the_daunting_front.displayNameEs, "El Frente Imponente");
+  assert.equal(rawById.the_daunting_front.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(rawById.varkas_linebreaker.abilities[1].trigger.event, "BEGIN_BATTLE");
   assert.equal(rawById.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
   assert.equal(rawById.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");
@@ -391,8 +393,8 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(normalizedAuthoring.rulesProfile.hostEchosHaveImpetus, true);
   assert.deepEqual(byId.varkas_minion.kinds, ["ECHO", "TOKEN"]);
   assert.equal(byId.varkas_minion.isToken, true);
-  assert.deepEqual(byId.the_shift_hammer.kinds, ["SUPPORT"]);
-  assert.equal(byId.the_shift_hammer.abilities[0].effects[0].keyword, "DAUNTING");
+  assert.deepEqual(byId.the_daunting_front.kinds, ["SUPPORT"]);
+  assert.equal(byId.the_daunting_front.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.varkas_linebreaker.abilities[1].trigger.event, "BEGIN_BATTLE");
   assert.equal(byId.unleash_the_legion.abilities[0].effects[0].options[1].effects[0].type, "REVEAL_HOST_ROUND");
   assert.equal(byId.shaman_of_the_umbral_ember.abilities[1].effects[0].type, "DEAL_DAMAGE_TO_OPPONENT_ECHO");

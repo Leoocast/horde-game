@@ -43,8 +43,8 @@
       "headerFade": false
     },
     {
-      "id": "the_shift_hammer",
-      "artCrop": "../../../../public/cards/legion_of_varka/art/the_shift_hammer.jpg",
+      "id": "the_daunting_front",
+      "artCrop": "../../../../public/cards/legion_of_varka/art/the_daunting_front.jpg",
       "typeLineEs": "Apoyo",
       "artFrame": {
         "zoom": 1,

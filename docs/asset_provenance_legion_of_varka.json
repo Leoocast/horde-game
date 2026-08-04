@@ -15,7 +15,7 @@
     "internalConsistencyReferences": [
       "varkas_minion.png",
       "varka_infernal_matriarch.png",
-      "the_shift_hammer.png"
+      "the_daunting_front.png"
     ]
   },
   "rightsReview": {
@@ -100,9 +100,9 @@
       "prompt": "A broad forge armorer rivets salvaged plates onto other goblins around the workbench, making the +1/+1 benefit to allies visually explicit."
     },
     {
-      "id": "the_shift_hammer",
-      "workingNameEs": "El Martillo de Turno",
-      "file": "../public/cards/legion_of_varka/art/the_shift_hammer.png",
+      "id": "the_daunting_front",
+      "workingNameEs": "El Frente Imponente",
+      "file": "../public/cards/legion_of_varka/art/the_daunting_front.png",
       "width": 1448,
       "height": 1086,
       "sha256": "f348723bd16f27fc38e149af1ae0234105c0524fa1a496a87824334a28f703ee",

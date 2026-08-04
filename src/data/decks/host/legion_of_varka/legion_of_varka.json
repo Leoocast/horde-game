@@ -312,10 +312,10 @@
       "traits": []
     },
     {
-      "id": "the_shift_hammer",
+      "id": "the_daunting_front",
       "collectorId": "HFA1035",
-      "name": "The Shift Hammer",
-      "displayNameEs": "El Martillo de Turno",
+      "name": "The Daunting Front",
+      "displayNameEs": "El Frente Imponente",
       "gameText": {
         "en": "Allies gain Daunting.",
         "es": "Los aliados ganan Imponente."
@@ -334,7 +334,7 @@
       "endurance": null,
       "abilities": [
         {
-          "id": "the_shift_hammer_grant_menace",
+          "id": "the_daunting_front_grant_daunting",
           "kind": "STATIC",
           "zone": "FIELD",
           "targets": [],
