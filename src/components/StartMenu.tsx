@@ -235,7 +235,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         <div className="main-menu-layout">
           <div className="main-menu-brand">
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
-            <h1 className="main-menu-title">Hostfall</h1>
+            <h1 className="main-menu-title">HOstfAll</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
             {(onOpenPlayground || onOpenAudioLab) && (
               <div className="main-menu-developer-tools">

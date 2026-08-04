@@ -34,7 +34,7 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
       </div>
       <section className="game-loading-content">
         <p>{t("menu.kicker")}</p>
-        <h1>Hostfall</h1>
+        <h1>HOstfAll</h1>
         <div className="game-loading-divider" aria-hidden="true"><span /><b>◆</b><span /></div>
         <div className="game-loading-status" aria-live="polite">
           <span>{t(label === "opening" ? "loading.opening" : label === "sfx" ? "loading.sfx" : label === "music" ? "loading.music" : "loading.ready")}</span>
