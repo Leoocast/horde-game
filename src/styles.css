@@ -11596,6 +11596,17 @@
   text-shadow: 0 0 18px rgb(119 180 94 / 0.22), 0 2px 6px rgb(0 0 0 / 0.7);
 }
 
+.player-life-drain-preview {
+  margin-bottom: 1px;
+  color: #a8e58e;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 0 9px rgb(127 220 99 / 0.54), 0 2px 4px rgb(0 0 0 / 0.78);
+}
+
 .player-life-emblem {
   width: 48px !important;
   height: 48px !important;

@@ -8,7 +8,7 @@ import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
@@ -1864,6 +1864,20 @@ test("Lifesteal restores the combat damage a player attacker deals to the Host",
   assert.equal(animatedImpact.player.life, 14);
   assert.equal(animatedResult.player.life, 14);
   assert.equal(animatedResult.combat.playerAttackers.length, 0);
+});
+
+test("selected player attackers preview only the Drain life they will recover", () => {
+  const game = createTestGame("lifesteal-player-preview");
+  const bat = addCard(game, cardFromDeck("herald_of_the_eclipse", "player"));
+  const countess = addCard(game, cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player"));
+  const ordinaryAttacker = addCard(game, customCard("ordinary_preview_attacker", "player", { power: 7 }));
+  bat.temporaryPower = 2;
+  game.combat.playerAttackers = [bat.instanceId, countess.instanceId, ordinaryAttacker.instanceId];
+
+  assert.equal(previewPlayerAttackDrain(game), 9);
+
+  game.combat.playerAttackers = [ordinaryAttacker.instanceId];
+  assert.equal(previewPlayerAttackDrain(game), 0);
 });
 
 test("Lifesteal resolves on a blocking impact, including simultaneous lethal combat", () => {

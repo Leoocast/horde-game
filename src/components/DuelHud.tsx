@@ -2,6 +2,7 @@ import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
+import { previewPlayerAttackDrain } from "../engine/CombatResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -368,6 +369,9 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const finalBanquetLifeId = useRef<string | undefined>(undefined);
   const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
   const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const pendingDrain = game.activeSide === "player" && game.phase === "combat"
+    ? previewPlayerAttackDrain(game)
+    : 0;
 
   useEffect(() => {
     setVisualLife(bloodPactAnimation?.lifeBefore ?? game.player.life);
@@ -508,6 +512,21 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               />
               <div className="player-life-values flex items-end gap-2 leading-none">
                 <div className="player-life-count">{visualLife}</div>
+                <AnimatePresence initial={false} mode="popLayout">
+                  {pendingDrain > 0 && (
+                    <motion.strong
+                      key={pendingDrain}
+                      className="player-life-drain-preview"
+                      aria-label={t("game.drainPreview", { amount: pendingDrain })}
+                      initial={{ opacity: 0, y: 7, scale: 0.82 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.86 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      +{pendingDrain}
+                    </motion.strong>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <div data-player-discard-origin="true" data-player-life-emblem="true" className="player-life-emblem flex h-10 w-10 items-center justify-center border-2">
