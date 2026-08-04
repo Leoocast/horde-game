@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { activeDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { buffSurgeRenderMode } from "../src/components/buffSurgePolicy";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
 
@@ -31,4 +32,11 @@ test("defense arrows disappear as soon as either combat endpoint leaves the fiel
   game.player.field = [blocker];
   game.host.field = [];
   assert.deepEqual(activeDefenseArrowLinks(game), []);
+});
+
+test("large group buffs use the lightweight renderer instead of one WebGL context per card", () => {
+  assert.equal(buffSurgeRenderMode(1), "webgl");
+  assert.equal(buffSurgeRenderMode(4), "webgl");
+  assert.equal(buffSurgeRenderMode(5), "css");
+  assert.equal(buffSurgeRenderMode(24), "css");
 });

@@ -16,6 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
+import { buffSurgeRenderMode } from "./buffSurgePolicy";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
@@ -1026,6 +1027,7 @@ export function Battlefield({ game, side, cards }: Props) {
                 eventId={buffAnimationEventId!}
                 palette="holy"
                 seedKey={card.instanceId}
+                renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
               />
             )
           : (
@@ -1035,6 +1037,7 @@ export function Battlefield({ game, side, cards }: Props) {
                   eventId={buffAnimationEventId!}
                   palette="nature"
                   seedKey={card.instanceId}
+                  renderMode={buffSurgeRenderMode(buffAnimationCardIds.length)}
                 />
                 <GrowthBuffAnimator
                   key={`growth-${buffAnimationEventId}`}
