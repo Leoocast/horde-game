@@ -120,6 +120,12 @@ test("deck collections do not clip a raised key card or its glow", () => {
   assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
 });
 
+test("main menu reserves enough width and breathing room for the Hostfall title", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /--main-menu-panel-width:\s*clamp\(430px, 38vw, 680px\)/u);
+  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+});
+
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {
   const back = { id: "back" };
   const middle = { id: "middle" };

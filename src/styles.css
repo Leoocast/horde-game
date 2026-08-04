@@ -70,6 +70,7 @@
 
 @layer components {
   .main-menu-shell {
+    --main-menu-panel-width: clamp(430px, 38vw, 680px);
     position: relative;
     isolation: isolate;
     background-color: #080c0f;
@@ -97,7 +98,7 @@
     z-index: -1;
     top: 0;
     bottom: 0;
-    left: clamp(330px, 31vw, 500px);
+    left: var(--main-menu-panel-width);
     width: 1px;
     background: linear-gradient(transparent 8%, rgb(156 137 89 / 0.3) 28%, rgb(156 137 89 / 0.15) 72%, transparent 94%);
     box-shadow: 14px 0 36px rgb(0 0 0 / 0.35);
@@ -107,10 +108,10 @@
   .main-menu-layout {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    width: clamp(330px, 31vw, 500px);
+    width: var(--main-menu-panel-width);
     height: 100vh;
     min-height: 0;
-    flex: 0 0 clamp(330px, 31vw, 500px);
+    flex: 0 0 var(--main-menu-panel-width);
     padding: clamp(52px, 8vh, 96px) clamp(38px, 5vw, 80px) 34px;
   }
 
@@ -174,7 +175,7 @@
   }
 
   .main-menu-title {
-    margin: 5px 0 0;
+    margin: 16px 0 0;
     color: #d8c99f;
     font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
     font-size: clamp(48px, 6vw, 82px);
@@ -4137,15 +4138,16 @@
 
   @media (max-width: 700px) {
     .main-menu-shell {
+      --main-menu-panel-width: min(86vw, 420px);
       background-position: center, center, 68% center;
     }
 
     .main-menu-shell::after {
-      left: min(86vw, 420px);
+      left: var(--main-menu-panel-width);
     }
 
     .main-menu-layout {
-      width: min(86vw, 420px);
+      width: var(--main-menu-panel-width);
       padding-right: 38px;
     }
 
