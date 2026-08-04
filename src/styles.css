@@ -2318,6 +2318,10 @@
     padding: 8px clamp(40px, 5vw, 96px) 12px 0;
   }
 
+  .decks-content-single {
+    overflow: visible;
+  }
+
   .decks-section {
     position: relative;
     z-index: 1;

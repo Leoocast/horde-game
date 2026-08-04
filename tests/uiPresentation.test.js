@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -112,6 +113,11 @@ test("card previews reuse the current printed stats plaque", () => {
   assert.match(stats, /card-preview-stat-separator[^>]*>\/<\/span>/);
   assert.match(stats, /card-preview-stat-value[^>]*>6<\/span>/);
   assert.doesNotMatch(stats, /<svg/);
+});
+
+test("deck collections do not clip a raised key card or its glow", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
 });
 
 test("cards behind the front of a stack use the left combat-arrow anchor", () => {
