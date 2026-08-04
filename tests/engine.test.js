@@ -20,12 +20,14 @@ import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
-import { sortTraitsForDisplay } from "../src/utils/selectors";
+import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import {
   fitHoverCardDisplay,
   HAND_CARD_DISPLAY_HEIGHT,
   HAND_CARD_DISPLAY_WIDTH,
+  HAND_HOVER_CARD_DISPLAY_HEIGHT,
+  HAND_HOVER_CARD_DISPLAY_WIDTH,
   HOVER_CARD_DISPLAY_HEIGHT,
   HOVER_CARD_DISPLAY_WIDTH,
   LARGE_CARD_DISPLAY_HEIGHT,
@@ -360,6 +362,10 @@ test("previews and raised hand cards use exact card-image geometry", () => {
     [244, 340],
   );
   assert.deepEqual(
+    [HAND_HOVER_CARD_DISPLAY_WIDTH, HAND_HOVER_CARD_DISPLAY_HEIGHT],
+    [305, 425],
+  );
+  assert.deepEqual(
     [LARGE_CARD_DISPLAY_WIDTH, LARGE_CARD_DISPLAY_HEIGHT],
     [488, 680],
   );
@@ -420,22 +426,38 @@ test("spent Sources do not become Stored Energy", () => {
 
 test("marked damage remains visible through the End phase and clears only when the turn passes", () => {
   const game = createTestGame();
-  const playerEcho = addCard(game, customCard("end_phase_player_echo", "player", { endurance: 4 }));
+  const playerEcho = addCard(game, customCard("end_phase_player_echo", "player", { power: 1, endurance: 1 }));
   const hostEcho = addCard(game, customCard("end_phase_host_echo", "host", { endurance: 4 }));
-  playerEcho.damageMarked = 2;
+  playerEcho.damageMarked = 3;
   hostEcho.damageMarked = 1;
-  playerEcho.temporaryPower = 2;
+  playerEcho.temporaryPower = 3;
+  playerEcho.temporaryEndurance = 3;
 
   const endPhase = advancePhase(game, "end");
+  const endPhasePlayerEcho = endPhase.player.field[0];
 
-  assert.equal(endPhase.player.field[0].damageMarked, 2);
+  assert.equal(endPhasePlayerEcho.damageMarked, 3);
   assert.equal(endPhase.host.field[0].damageMarked, 1);
-  assert.equal(endPhase.player.field[0].temporaryPower, 0);
+  assert.deepEqual(cardStatState(endPhase, endPhasePlayerEcho), {
+    text: "4/1",
+    power: 4,
+    endurance: 1,
+    damaged: true,
+    buffed: true,
+  });
 
   const hostTurn = endPlayerTurn(endPhase);
+  const passedPlayerEcho = hostTurn.player.field[0];
 
-  assert.equal(hostTurn.player.field[0].damageMarked, 0);
+  assert.equal(passedPlayerEcho.damageMarked, 0);
   assert.equal(hostTurn.host.field[0].damageMarked, 0);
+  assert.deepEqual(cardStatState(hostTurn, passedPlayerEcho), {
+    text: "1/1",
+    power: 1,
+    endurance: 1,
+    damaged: false,
+    buffed: false,
+  });
 });
 
 test("unused Energy from an earlier setup turn does not refill Stored Energy", () => {
@@ -853,9 +875,16 @@ test("Crimson Impulse pays two life and grants an ally +2/+2 and Flying for the 
   const cleaned = advancePhase(cast, "end");
   assert.deepEqual(
     getPowerEndurance(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId)),
+    { power: 4, endurance: 5 },
+  );
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), true);
+
+  const passed = endPlayerTurn(cleaned);
+  assert.deepEqual(
+    getPowerEndurance(passed, passed.player.field.find((card) => card.instanceId === ally.instanceId)),
     { power: 2, endurance: 3 },
   );
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === ally.instanceId), "FLYING"), false);
 });
 
 test("Crimson Impulse rejects an enemy target before spending Energy or life", () => {
@@ -1048,8 +1077,12 @@ test("Hunt Beneath the Red Moon grants temporary Lifesteal to every allied creat
   assert.equal(combat.player.life, 13);
 
   const cleaned = advancePhase(combat, "end");
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
-  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), true);
+  assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), true);
+
+  const passed = endPlayerTurn(cleaned);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === firstAlly.instanceId), "DRAIN"), false);
+  assert.equal(hasTrait(passed, passed.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
 });
 
 test("Hunt Beneath the Red Moon grants defensive Lifesteal without requiring a target", () => {
@@ -1454,8 +1487,12 @@ test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
   assert.equal(secondPayment.player.field.find((card) => card.instanceId === latePage.instanceId)?.temporaryPower, 0);
 
   const cleaned = advancePhase(secondPayment, "end");
-  assert.equal(cleaned.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
-  assert.equal(cleaned.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
+  assert.equal(cleaned.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 2);
+  assert.equal(cleaned.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 2);
+
+  const passedTurn = endPlayerTurn(cleaned);
+  assert.equal(passedTurn.player.field.find((card) => card.instanceId === firstPage.instanceId)?.temporaryPower, 0);
+  assert.equal(passedTurn.player.field.find((card) => card.instanceId === secondPage.instanceId)?.temporaryPower, 0);
 
   const defense = createTestGame();
   defense.player.life = 10;
@@ -1609,7 +1646,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
-test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary buff", () => {
+test("Elixir de la Primera Hoja keeps +3/+3 through End and loses it when the turn passes", () => {
   const game = createTestGame();
   addSources(game, 1);
   const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
@@ -1622,8 +1659,12 @@ test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary 
   assert.equal(cast.player.memory.some((card) => card.instanceId === spell.instanceId), true);
 
   const cleaned = advancePhase(cast, "end");
-  const restored = cleaned.player.field.find((card) => card.instanceId === creature.instanceId);
-  assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
+  const endPhaseCreature = cleaned.player.field.find((card) => card.instanceId === creature.instanceId);
+  assert.deepEqual(getPowerEndurance(cleaned, endPhaseCreature), { power: 5, endurance: 5 });
+
+  const passed = endPlayerTurn(cleaned);
+  const restored = passed.player.field.find((card) => card.instanceId === creature.instanceId);
+  assert.deepEqual(getPowerEndurance(passed, restored), { power: 2, endurance: 2 });
 });
 
 test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
@@ -1685,11 +1726,13 @@ test("Escudo de la Heredera buffs first, then both creatures deal simultaneous d
 
   const cleaned = advancePhase(result, "end");
   const restoredFriendly = cleaned.player.field.find((card) => card.instanceId === friendly.instanceId);
-  assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 2, endurance: 2 });
+  assert.deepEqual(getPowerEndurance(cleaned, restoredFriendly), { power: 3, endurance: 4 });
   assert.equal(restoredFriendly.damageMarked, 3);
 
   const hostTurn = endPlayerTurn(cleaned);
-  assert.equal(hostTurn.player.field.find((card) => card.instanceId === friendly.instanceId)?.damageMarked, 0);
+  const passedFriendly = hostTurn.player.field.find((card) => card.instanceId === friendly.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, passedFriendly), { power: 2, endurance: 2 });
+  assert.equal(passedFriendly?.damageMarked, 0);
 });
 
 test("Escudo de la Heredera can stage its buff before the deferred fight impact", () => {

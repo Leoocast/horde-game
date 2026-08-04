@@ -14,16 +14,18 @@ export function readySide(game: GameState, side: "player" | "host"): void {
 
 export function cleanupEndStep(
   game: GameState,
-  options: { preserveMarkedDamage?: boolean } = {},
+  options: { preserveMarkedDamage?: boolean; preserveTemporaryModifiers?: boolean } = {},
 ): void {
   for (const card of [...game.player.field, ...game.host.field]) {
     if (!options.preserveMarkedDamage) {
       card.damageMarked = 0;
       card.lethalDamage = false;
     }
-    card.temporaryPower = 0;
-    card.temporaryEndurance = 0;
-    card.temporaryTraits = [];
+    if (!options.preserveTemporaryModifiers) {
+      card.temporaryPower = 0;
+      card.temporaryEndurance = 0;
+      card.temporaryTraits = [];
+    }
     delete card.flags.burnSmoke;
   }
   game.player.energyPool = { ...emptyEnergyPool(), stored: game.player.energyPool.stored };

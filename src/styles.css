@@ -6242,7 +6242,9 @@
 
   .battlefield-row-surface.battlefield-row-overflow {
     align-content: center;
-    row-gap: 6px;
+    /* Trait icons sit 24px above cropped cards. Preserve a 6px clear lane
+       when overflow wraps the battlefield into a second row. */
+    row-gap: 30px;
     padding-inline: 132px;
   }
 

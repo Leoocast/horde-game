@@ -14,8 +14,8 @@ import { Card } from "./Card";
 import {
   HAND_CARD_DISPLAY_HEIGHT,
   HAND_CARD_DISPLAY_WIDTH,
-  HOVER_CARD_DISPLAY_HEIGHT,
-  HOVER_CARD_DISPLAY_WIDTH,
+  HAND_HOVER_CARD_DISPLAY_HEIGHT,
+  HAND_HOVER_CARD_DISPLAY_WIDTH,
 } from "./cardDisplayGeometry";
 import { getHandCardPresentationState } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -319,8 +319,8 @@ export function Hand({ game }: { game: GameState }) {
               "--hand-stack-margin": `${handStackMargin}px`,
               "--hand-card-width": `${HAND_CARD_DISPLAY_WIDTH}px`,
               "--hand-card-height": `${HAND_CARD_DISPLAY_HEIGHT}px`,
-              "--hand-card-held-width": `${HOVER_CARD_DISPLAY_WIDTH}px`,
-              "--hand-card-held-height": `${HOVER_CARD_DISPLAY_HEIGHT}px`,
+              "--hand-card-held-width": `${HAND_HOVER_CARD_DISPLAY_WIDTH}px`,
+              "--hand-card-held-height": `${HAND_HOVER_CARD_DISPLAY_HEIGHT}px`,
             } as React.CSSProperties}
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
@@ -416,7 +416,7 @@ export function Hand({ game }: { game: GameState }) {
                   initial={false}
                   animate={{
                     x: "-50%",
-                    y: isHeld ? -100 : 78 + fanDip,
+                    y: isHeld ? -100 : 88 + fanDip,
                     rotate: isHeld ? 0 : fanAngle,
                     transition: isHeld
                       ? { duration: 0.18, ease: [0.16, 1, 0.3, 1] }
