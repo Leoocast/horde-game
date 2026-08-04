@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "id": "broken_forge_mutiny",
-  "name": "El Motín de la Forja Rota",
+  "name": "La Legión de Varka",
   "format": "host",
   "side": "HOST",
   "deckSize": 50,
   "archetype": "host",
-  "gamePlan": "Abrumar con cuadrillas de Trasgos, relevos de la forja, refuerzos al atacar y salvas construidas con herramientas y bajas.",
+  "gamePlan": "Abrumar con una legión de Trasgos, Orcos, Bestias y otros Ecos sometidos por Varka, reforzando cada nueva llegada, ataque y baja.",
   "rulesProfile": {
     "revealCount": 3,
     "stopOnNonToken": true,
@@ -25,15 +25,16 @@
   "tokens": [
     {
       "id": "ember_scrap_runner",
-      "name": "Ember-Scrap Runner",
-      "displayNameEs": "Corredor de Ascua y Chatarra",
+      "collectorId": "HFA1031",
+      "name": "Varka's Minion",
+      "displayNameEs": "Esbirro de Varka",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Each runner carries one ember. Together they carry the fire.",
-        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
+        "en": "Varka calls them sparks. The Legion calls them the first wave.",
+        "es": "Varka los llama chispas. La Legión los llama la primera oleada."
       },
       "showFlavorText": true,
       "energyCost": {
@@ -41,7 +42,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Runner"
+        "Minion"
       ],
       "power": 1,
       "endurance": 1,
@@ -56,15 +57,16 @@
   "cards": [
     {
       "id": "ember_scrap_runner",
-      "name": "Ember-Scrap Runner",
-      "displayNameEs": "Corredor de Ascua y Chatarra",
+      "collectorId": "HFA1031",
+      "name": "Varka's Minion",
+      "displayNameEs": "Esbirro de Varka",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Each runner carries one ember. Together they carry the fire.",
-        "es": "Cada corredor lleva una brasa. Juntos llevan el incendio."
+        "en": "Varka calls them sparks. The Legion calls them the first wave.",
+        "es": "Varka los llama chispas. La Legión los llama la primera oleada."
       },
       "showFlavorText": true,
       "energyCost": {
@@ -72,7 +74,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Runner"
+        "Minion"
       ],
       "power": 1,
       "endurance": 1,
@@ -86,15 +88,16 @@
     },
     {
       "id": "burning_tally_foreman",
-      "name": "Foreman of the Burning Tally",
-      "displayNameEs": "Capataz del Recuento Ardiente",
+      "collectorId": "HFA1032",
+      "name": "Shaman of the Umbral Ember",
+      "displayNameEs": "Chamán de la Brasa Sombría",
       "gameText": {
-        "en": "Other allied Goblins gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Goblins Invoked this turn.",
-        "es": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno."
+        "en": "Other allied Echoes gain +1/+1. When Invoked, this card deals damage to the best enemy equal to the number of Echoes Invoked this turn.",
+        "es": "Los demás Ecos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Ecos invocados este turno."
       },
       "flavorText": {
-        "en": "He counts no workers, only blows the enemy is still owed.",
-        "es": "No cuenta trabajadores; cuenta golpes que aún le debe al enemigo."
+        "en": "His tally records only how many soldiers Varka can still spend.",
+        "es": "Su recuento sólo registra cuántos soldados puede gastar todavía Varka."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -102,8 +105,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Foreman"
+        "Orc",
+        "Shaman"
       ],
       "power": 2,
       "endurance": 3,
@@ -122,9 +125,6 @@
                 "filters": {
                   "kinds": [
                     "ECHO"
-                  ],
-                  "subtypes": [
-                    "Goblin"
                   ],
                   "excludeSelf": true
                 }
@@ -156,16 +156,13 @@
                 "filters": {
                   "kinds": [
                     "ECHO"
-                  ],
-                  "subtypes": [
-                    "Goblin"
                   ]
                 }
               },
               "damageKind": "NON_COMBAT"
             }
           ],
-          "implementationNote": "PvE adaptation: when Invoked, Burn the best enemy Echo for the number of allied Goblins Invoked this turn."
+          "implementationNote": "PvE adaptation: when Invoked, Burn the best enemy Echo for the number of allied Echoes Invoked this turn."
         }
       ],
       "kinds": [
@@ -175,15 +172,16 @@
     },
     {
       "id": "next_crew_caller",
-      "name": "Caller of the Next Crew",
-      "displayNameEs": "Llamador de la Próxima Cuadrilla",
+      "collectorId": "HFA1033",
+      "name": "Summoner of the Ranks",
+      "displayNameEs": "Invocador de las Filas",
       "gameText": {
-        "en": "Other allied Goblins gain +1/+1. Whenever an allied Goblin dies, look at the top card of the Archive. If it is a Goblin Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
-        "es": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo."
+        "en": "Other allied Echoes gain +1/+1. Whenever an allied Echo dies, look at the top card of the Archive. If it is an Echo, Invoke it. Otherwise, put it on the bottom of the Archive.",
+        "es": "Los demás Ecos aliados ganan +1/+1. Cada vez que un Eco aliado muere, mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo."
       },
       "flavorText": {
-        "en": "When one falls, their shift plate calls the next.",
-        "es": "Si uno cae, su placa de turno llama al siguiente."
+        "en": "When one falls, Varka's mark calls the next creature into line.",
+        "es": "Cuando uno cae, la marca de Varka llama a la siguiente criatura a las filas."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -192,11 +190,11 @@
       },
       "subtypes": [
         "Goblin",
-        "Caller"
+        "Summoner"
       ],
       "power": 1,
       "endurance": 1,
-      "triggerMessage": "Caller of the Next Crew inspects the top plate of the Archive.",
+      "triggerMessage": "Summoner of the Ranks inspects the top plate of the Archive.",
       "abilities": [
         {
           "id": "next_crew_caller_other_goblins_buff",
@@ -212,9 +210,6 @@
                 "filters": {
                   "kinds": [
                     "ECHO"
-                  ],
-                  "subtypes": [
-                    "Goblin"
                   ],
                   "excludeSelf": true
                 }
@@ -242,16 +237,13 @@
               "filters": {
                 "kinds": [
                   "ECHO"
-                ],
-                "subtypes": [
-                  "Goblin"
                 ]
               }
             }
           ],
           "effects": [],
           "customHandler": "next_crew_caller_inspect_top_if_goblin",
-          "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is a Goblin Echo; otherwise put it on the bottom of the Archive."
+          "implementationNote": "Look at the top card of the Host Archive. Invoke it if it is an Echo; otherwise put it on the bottom of the Archive."
         }
       ],
       "kinds": [
@@ -261,15 +253,16 @@
     },
     {
       "id": "open_furnace_crier",
-      "name": "Open-Furnace Crier",
-      "displayNameEs": "Pregonero del Horno Abierto",
+      "collectorId": "HFA1034",
+      "name": "Varka's Standard-Bearer",
+      "displayNameEs": "Portaestandarte de Varka",
       "gameText": {
-        "en": "When Invoked, allied Goblins gain +1/+0 until the end of the turn.",
-        "es": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno."
+        "en": "When Invoked, allied Echoes gain +1/+0 until the end of the turn.",
+        "es": "Al ser invocado, los Ecos aliados ganan +1/+0 hasta el final del turno."
       },
       "flavorText": {
-        "en": "The gate was open before the cry had ended.",
-        "es": "Abrió la compuerta antes de terminar el grito."
+        "en": "He does not announce the assault. He repeats Varka's command.",
+        "es": "No anuncia el asalto. Repite la orden de Varka."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -278,7 +271,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Crier"
+        "Standard-Bearer"
       ],
       "power": 2,
       "endurance": 2,
@@ -301,9 +294,6 @@
                 "filters": {
                   "kinds": [
                     "ECHO"
-                  ],
-                  "subtypes": [
-                    "Goblin"
                   ]
                 }
               },
@@ -313,7 +303,7 @@
               "animation": "BUFF"
             }
           ],
-          "implementationNote": "PvE adaptation: when Invoked, allied Goblins get +1/+0 until the end of the turn. Impetus and Pack tactics are omitted."
+          "implementationNote": "PvE adaptation: when Invoked, allied Echoes get +1/+0 until the end of the turn. Impetus and Pack tactics are omitted."
         }
       ],
       "kinds": [
@@ -323,15 +313,16 @@
     },
     {
       "id": "shift_hammer",
+      "collectorId": "HFA1035",
       "name": "The Shift Hammer",
       "displayNameEs": "El Martillo de Turno",
       "gameText": {
-        "en": "Allied Goblins gain Daunting.",
-        "es": "Los Trasgos aliados ganan Imponente."
+        "en": "Allied Echoes gain Daunting.",
+        "es": "Los Ecos aliados ganan Imponente."
       },
       "flavorText": {
-        "en": "Every blow advances another rank.",
-        "es": "Cada golpe hace avanzar otra fila."
+        "en": "Every blow carries the Matriarch's order across the ranks.",
+        "es": "Cada golpe lleva la orden de la Matriarca a través de las filas."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -372,15 +363,16 @@
     },
     {
       "id": "rain_of_rivets",
-      "name": "Rain of Rivets",
-      "displayNameEs": "Lluvia de Remaches",
+      "collectorId": "HFA1036",
+      "name": "All Against One",
+      "displayNameEs": "Todos contra uno",
       "gameText": {
-        "en": "After the Host attack resolves, each attacking Goblin with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
-        "es": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
+        "en": "After the Host attack resolves, each attacking Echo with Power 2 or less contributes 1 damage to a volley against the Chronicler.",
+        "es": "Después de resolver el ataque de la Hueste, cada Eco atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista."
       },
       "flavorText": {
-        "en": "What cannot serve as armor can still serve as ammunition.",
-        "es": "Lo que no sirve de armadura todavía sirve de proyectil."
+        "en": "Under Varka, even discarded metal becomes a weapon.",
+        "es": "Bajo el mando de Varka, hasta el metal descartado se convierte en arma."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -402,7 +394,7 @@
           "conditions": [],
           "effects": [],
           "customHandler": "rain_of_rivets_small_attacker_damage",
-          "implementationNote": "PvE adaptation: capture each attacking Goblin with Power 2 or less once, then deal the combined damage to the Chronicler as a Burn volley after the Host attack sequence."
+          "implementationNote": "PvE adaptation: capture each attacking Echo with Power 2 or less once, then deal the combined damage to the Chronicler as a Burn volley after the Host attack sequence."
         }
       ],
       "kinds": [
@@ -412,8 +404,9 @@
     },
     {
       "id": "double_crew_boss",
-      "name": "Boss of the Double Crew",
-      "displayNameEs": "Jefe de la Cuadrilla Doble",
+      "collectorId": "HFA1037",
+      "name": "Chief of the Double Guard",
+      "displayNameEs": "Jefe de la Doble Guardia",
       "gameText": {
         "en": "When Invoked, Invoke two 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1."
@@ -461,8 +454,9 @@
     },
     {
       "id": "three_furnaces_foreman",
-      "name": "Foreman of Three Furnaces",
-      "displayNameEs": "Capataz de los Tres Hornos",
+      "collectorId": "HFA1038",
+      "name": "Rider of the Third Charge",
+      "displayNameEs": "Jinete de la Tercera Carga",
       "gameText": {
         "en": "When Invoked, Invoke three 1/1 Goblin Echo Tokens.",
         "es": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1."
@@ -478,7 +472,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Foreman"
+        "Rider"
       ],
       "power": 2,
       "endurance": 2,
@@ -510,8 +504,9 @@
     },
     {
       "id": "first_siren_agitator",
-      "name": "Agitator of the First Siren",
-      "displayNameEs": "Agitador de la Primera Sirena",
+      "collectorId": "HFA1039",
+      "name": "Varka's Linebreaker",
+      "displayNameEs": "Rompefilas de Varka",
       "gameText": {
         "en": "At the start of the Host Battle, Invoke a 1/1 Goblin Echo Token. When this card attacks, it gains +1/+0 for each other attacking Goblin.",
         "es": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante."
@@ -526,8 +521,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Agitator"
+        "Orc",
+        "Linebreaker"
       ],
       "power": 2,
       "endurance": 2,
@@ -583,8 +578,9 @@
     },
     {
       "id": "open_another_gate",
-      "name": "Open Another Gate!",
-      "displayNameEs": "¡Abran Otra Compuerta!",
+      "collectorId": "HFA1040",
+      "name": "Unleash the Legion!",
+      "displayNameEs": "¡Liberen a la Legión!",
       "gameText": {
         "en": "The Host chooses one: its allies gain +2/+0 until the end of the turn; or it starts another Reveal round.",
         "es": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado."
@@ -659,8 +655,9 @@
     },
     {
       "id": "three_under_one_anvil",
-      "name": "Three Under One Anvil",
-      "displayNameEs": "Tres Bajo el Mismo Yunque",
+      "collectorId": "HFA1041",
+      "name": "Corrupted War Bear",
+      "displayNameEs": "Oso de Guerra Corrompido",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
@@ -675,8 +672,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Crew"
+        "Beast",
+        "Bear"
       ],
       "power": 3,
       "endurance": 3,
@@ -688,8 +685,9 @@
     },
     {
       "id": "slag_volley_master",
-      "name": "Master of the Slag Volley",
-      "displayNameEs": "Maestro de la Salva de Escoria",
+      "collectorId": "HFA1042",
+      "name": "Rider of the Umbral Volley",
+      "displayNameEs": "Jinete de la Salva Umbría",
       "gameText": {
         "en": "When Invoked, this card deals damage to the best enemy equal to the number of allied Goblins.",
         "es": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados."
@@ -704,8 +702,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Goblin",
-        "Gunner"
+        "Orc",
+        "Rider"
       ],
       "power": 4,
       "endurance": 2,
@@ -746,12 +744,15 @@
       "kinds": [
         "ECHO"
       ],
-      "traits": []
+      "traits": [
+        "FLYING"
+      ]
     },
     {
       "id": "varka_revolt_axis",
-      "name": "Varka, Axis of the Revolt",
-      "displayNameEs": "Varka, Eje de la Revuelta",
+      "collectorId": "HFA1043",
+      "name": "Varka, Infernal Matriarch",
+      "displayNameEs": "Varka, Matriarca Infernal",
       "gameText": {
         "en": "When Invoked, this card deals 1 damage to the Chronicler and each enemy.",
         "es": "Al ser invocado, inflige 1 de daño al Cronista y a cada enemigo."
@@ -766,8 +767,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Chainfighter"
+        "Devil",
+        "Matriarch"
       ],
       "power": 3,
       "endurance": 3,
@@ -799,8 +800,9 @@
     },
     {
       "id": "salvaged_armor_master",
-      "name": "Master of Salvaged Armor",
-      "displayNameEs": "Maestro de la Armadura Recuperada",
+      "collectorId": "HFA1044",
+      "name": "Varka's Forgemaster",
+      "displayNameEs": "Forjador de Varka",
       "gameText": {
         "en": "Other allied Goblins gain +1/+1.",
         "es": "Los demás Trasgos aliados ganan +1/+1."
@@ -815,8 +817,8 @@
         "amount": 4
       },
       "subtypes": [
-        "Goblin",
-        "Armorer"
+        "Orc",
+        "Forgemaster"
       ],
       "power": 3,
       "endurance": 3,
@@ -893,8 +895,9 @@
     },
     {
       "id": "repeating_blow_marshal",
-      "name": "Marshal of the Repeating Blow",
-      "displayNameEs": "Mariscal del Golpe Repetido",
+      "collectorId": "HFA1045",
+      "name": "Marshal of the Wave",
+      "displayNameEs": "Mariscal de la Oleada",
       "gameText": {
         "en": "When allied Goblins attack, Invoke one 1/1 Goblin Echo Token attacking. Whenever another ally is Invoked, the Chronicler loses 1 Life.",
         "es": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida."
@@ -909,7 +912,7 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
+        "Orc",
         "Marshal"
       ],
       "power": 2,
@@ -961,8 +964,9 @@
     },
     {
       "id": "brakka_growing_tally",
-      "name": "Brakka, the Growing Tally",
-      "displayNameEs": "Brakka, la Cuenta Creciente",
+      "collectorId": "HFA1046",
+      "name": "Vardek, Scribe of the Legion",
+      "displayNameEs": "Vardek, Escriba de la Legión",
       "gameText": {
         "en": "When this card attacks, put a +1/+1 counter on it. Then Invoke 1/1 Goblin Echo Tokens attacking equal to its Power.",
         "es": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza."
@@ -978,7 +982,7 @@
       },
       "subtypes": [
         "Goblin",
-        "Recruiter"
+        "Scribe"
       ],
       "power": 1,
       "endurance": 2,
@@ -1027,8 +1031,9 @@
     },
     {
       "id": "last_rivets_gunner",
-      "name": "Gunner of the Last Rivets",
-      "displayNameEs": "Artillero de los Últimos Remaches",
+      "collectorId": "HFA1047",
+      "name": "Rear-Guard Firebreather",
+      "displayNameEs": "Escupefuego de la Retaguardia",
       "gameText": {
         "en": "Whenever an allied Goblin dies, deal 1 damage to a random enemy.",
         "es": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio."
@@ -1043,8 +1048,8 @@
         "amount": 3
       },
       "subtypes": [
-        "Goblin",
-        "Gunner"
+        "Orc",
+        "Firebreather"
       ],
       "power": 2,
       "endurance": 2,

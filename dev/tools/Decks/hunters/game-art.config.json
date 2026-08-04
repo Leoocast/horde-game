@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "cards": {
+    "rastreadora_de_huellas": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": 122
+      }
+    },
+    "lyra_ojo_de_la_caceria": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -2,
+        "y": 111
+      }
+    },
+    "trampero_de_acero": {
+      "battlefieldArtFrame": {
+        "zoom": 2.372,
+        "x": -469,
+        "y": -210
+      }
+    },
+    "lancero_de_la_marca": {
+      "battlefieldArtFrame": {
+        "zoom": 1,
+        "x": -6,
+        "y": 76
+      }
+    }
+  }
+}

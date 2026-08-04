@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "batchId": "last-rain-concept-art-2026-08-01",
-  "chronicle": "La Última Lluvia",
+  "chronicle": "El Pacto de Elarion",
   "createdAt": "2026-08-01",
   "generator": {
     "provider": "OpenAI",
@@ -31,7 +31,7 @@
   "assets": [
     {
       "id": "deep_root_spring",
-      "workingNameEs": "Manantial de Raízhonda",
+      "workingNameEs": "Río de Elarion",
       "file": "../public/cards/last_rain/art/deep_root_spring.png",
       "width": 1468,
       "height": 1071,
@@ -40,7 +40,7 @@
     },
     {
       "id": "first_dew_gatherers",
-      "workingNameEs": "Recolectores del Primer Rocío",
+      "workingNameEs": "Flor del Alba Velada",
       "file": "../public/cards/last_rain/art/first_dew_gatherers.png",
       "width": 1468,
       "height": 1071,
@@ -49,7 +49,7 @@
     },
     {
       "id": "iria_voice_last_rain",
-      "workingNameEs": "Iria, Voz de la Última Lluvia",
+      "workingNameEs": "Aelyra, Heredera de Elarion",
       "file": "../public/cards/last_rain/art/iria_voice_last_rain.png",
       "width": 1467,
       "height": 1072,
@@ -58,7 +58,7 @@
     },
     {
       "id": "keeper_sleeping_root",
-      "workingNameEs": "Custodio de la Raíz Dormida",
+      "workingNameEs": "Liora, Guardiana de la Arboleda",
       "file": "../public/cards/last_rain/art/keeper_sleeping_root.png",
       "width": 1468,
       "height": 1071,
@@ -67,7 +67,7 @@
     },
     {
       "id": "black_sap_stalker",
-      "workingNameEs": "Acechador de Savia Negra",
+      "workingNameEs": "Hidra de la Fronda Negra",
       "file": "../public/cards/last_rain/art/black_sap_stalker.png",
       "width": 1469,
       "height": 1071,
@@ -76,7 +76,7 @@
     },
     {
       "id": "arven_first_pack",
-      "workingNameEs": "Arven, Primero de la Manada",
+      "workingNameEs": "Kaelor, Convocador de Tormentas",
       "file": "../public/cards/last_rain/art/arven_first_pack.png",
       "width": 1467,
       "height": 1072,
@@ -85,7 +85,7 @@
     },
     {
       "id": "ancient_canopy_watchers",
-      "workingNameEs": "Vigías del Dosel Antiguo",
+      "workingNameEs": "Maela, Vigía de las Alturas",
       "file": "../public/cards/last_rain/art/ancient_canopy_watchers.png",
       "width": 1469,
       "height": 1071,
@@ -94,7 +94,7 @@
     },
     {
       "id": "hollow_skybreaker",
-      "workingNameEs": "Quebracielos de la Hondonada",
+      "workingNameEs": "Eco de la Ciudad Olvidada",
       "file": "../public/cards/last_rain/art/hollow_skybreaker.png",
       "width": 1468,
       "height": 1071,
@@ -103,7 +103,7 @@
     },
     {
       "id": "orun_waking_root",
-      "workingNameEs": "Orun, la Raíz Despierta",
+      "workingNameEs": "Vaelor, Guardián Esmeralda",
       "file": "../public/cards/last_rain/art/orun_waking_root.png",
       "width": 1469,
       "height": 1071,
@@ -112,7 +112,7 @@
     },
     {
       "id": "marked_prey",
-      "workingNameEs": "La Presa Señalada",
+      "workingNameEs": "Choque de Ecos",
       "file": "../public/cards/last_rain/art/marked_prey.png",
       "width": 1469,
       "height": 1071,
@@ -121,7 +121,7 @@
     },
     {
       "id": "oath_clearing",
-      "workingNameEs": "El Juramento del Claro",
+      "workingNameEs": "Escudo de la Heredera",
       "file": "../public/cards/last_rain/art/oath_clearing.png",
       "width": 1469,
       "height": 1071,
@@ -130,7 +130,7 @@
     },
     {
       "id": "roots_touched_sky",
-      "workingNameEs": "Cuando las Raíces Tocaron el Cielo",
+      "workingNameEs": "El Juicio de Elarion",
       "file": "../public/cards/last_rain/art/roots_touched_sky.png",
       "width": 1468,
       "height": 1071,
@@ -139,7 +139,7 @@
     },
     {
       "id": "first_tree_sap",
-      "workingNameEs": "Savia del Primer Árbol",
+      "workingNameEs": "Elixir de la Primera Hoja",
       "file": "../public/cards/last_rain/art/first_tree_sap.png",
       "width": 1469,
       "height": 1071,

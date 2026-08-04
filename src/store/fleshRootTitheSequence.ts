@@ -8,7 +8,7 @@ import { hostSequenceEpoch, scheduleQueuedHostTriggers, startHostCombatSequence 
 import { appendHostMillAnimations, uiCardName, uiText } from "./presentationEffects";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
 
-// Tithe of Flesh and Root: revealed by the Host but parked unresolved by HostController (see `pendingCard`)
+// Tribute of the Four Sorrows: revealed by the Host but parked unresolved by HostController (see `pendingCard`)
 // because it needs a bespoke, multi-step, player-interactive resolution — first the Host afflicts
 // itself (mill 1, sacrifice its weakest creature), then it turns on the player (lose 1 life, choose
 // a card to discard, choose a creature to sacrifice, choose a land to sacrifice). Everything here is
@@ -66,7 +66,7 @@ function beginFleshRootTithePlayerRound(resetEpoch: number): void {
   const card = useGameStore.getState().fleshRootTitheCard;
   useAudioStore.getState().playSfx("activateEffect");
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
-  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Tithe of Flesh and Root" }), tone: "host" });
+  useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Tribute of the Four Sorrows" }), tone: "host" });
   window.setTimeout(() => {
     if (resetEpoch !== hostSequenceEpoch()) return;
     useGameStore.setState((state) => {

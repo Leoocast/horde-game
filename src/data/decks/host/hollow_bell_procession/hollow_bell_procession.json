@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "id": "hollow_bell_procession",
-  "name": "La Procesión de la Campana Hueca",
+  "name": "El Alzamiento de los Sinsepulcro",
   "side": "HOST",
   "deckSize": 50,
   "rulesProfile": {
@@ -16,7 +16,8 @@
       "power": 1,
       "endurance": 0,
       "subtypes": [
-        "Zombie"
+        "Zombie",
+        "Soldier"
       ]
     },
     "damagePerArchiveDiscard": 3,
@@ -29,15 +30,16 @@
   "cards": [
     {
       "id": "last_knell_dead",
-      "name": "Last-Knell Dead",
-      "displayNameEs": "Muerto del Último Taño",
+      "collectorId": "HFA1014",
+      "name": "Graveless Soldier",
+      "displayNameEs": "Soldado Sinsepulcro",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "One toll gave it feet. The next gave it a direction.",
-        "es": "Un tañido le dio pies. El siguiente le dio un rumbo."
+        "en": "The broken stone denied him a grave, so he claimed the road instead.",
+        "es": "La piedra quebrada le negó una tumba, así que reclamó el camino."
       },
       "showFlavorText": true,
       "quantity": 21,
@@ -58,15 +60,16 @@
     },
     {
       "id": "mass_grave_colossus",
-      "name": "Mass-Grave Colossus",
-      "displayNameEs": "Coloso de la Fosa Común",
+      "collectorId": "HFA1015",
+      "name": "Graveless Titan",
+      "displayNameEs": "Titán Sinsepulcro",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "An entire grave stood up at once.",
-        "es": "Toda una fosa se puso de pie al mismo tiempo."
+        "en": "It wears the weight of a cemetery that could no longer contain it.",
+        "es": "Carga el peso de un cementerio que ya no pudo contenerlo."
       },
       "showFlavorText": true,
       "quantity": 4,
@@ -88,15 +91,16 @@
     },
     {
       "id": "hollow_bell",
-      "name": "The Hollow Bell",
-      "displayNameEs": "La Campana Hueca",
+      "collectorId": "HFA1016",
+      "name": "The Broken Headstone",
+      "displayNameEs": "La Lápida Quebrada",
       "gameText": {
         "en": "Allied Zombies gain Daunting.",
         "es": "Los Zombis aliados ganan Imponente."
       },
       "flavorText": {
-        "en": "Its voice does not call the dead. It reminds them they are marching.",
-        "es": "Su voz no llama a los muertos. Les recuerda que están marchando."
+        "en": "The crack did not mark an ending. It was the first order of the uprising.",
+        "es": "La grieta no marcó un final. Fue la primera orden del alzamiento."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -194,7 +198,7 @@
       ],
       "hostDirective": {
         "type": "REPEAT_ACTIVATION_WHILE_POSSIBLE",
-        "description": "If The Hollow Bell is on the Field and the Host controls non-token Echoes with combined Energy cost at least 4, activate The Hollow Bell. Repeat while enough non-token Echoes and valid Memory targets exist."
+        "description": "If The Broken Headstone is on the Field and the Host controls non-token Echoes with combined Energy cost at least 4, activate The Broken Headstone. Repeat while enough non-token Echoes and valid Memory targets exist."
       },
       "kinds": [
         "SUPPORT"
@@ -203,15 +207,16 @@
     },
     {
       "id": "five_knot_gallows",
-      "name": "The Five-Knot Gallows",
-      "displayNameEs": "El Cadalso de los Cinco Nudos",
+      "collectorId": "HFA1017",
+      "name": "Inexhaustible Ossuary",
+      "displayNameEs": "Osario Inagotable",
       "gameText": {
         "en": "Whenever a non-token card is played, remove a +1/+1 counter from this Echo and Invoke a 2/2 Zombie Echo Token.",
         "es": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2."
       },
       "flavorText": {
-        "en": "Every loosened knot becomes another pair of feet.",
-        "es": "Cada nudo que se afloja se convierte en otro par de pies."
+        "en": "Every empty place in the ossuary demands another body.",
+        "es": "Cada espacio vacío del osario reclama otro cuerpo."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -220,7 +225,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Gallowsborn"
+        "Ossuaryborn"
       ],
       "power": 0,
       "endurance": 0,
@@ -270,15 +275,16 @@
     },
     {
       "id": "last_thought_carrion",
-      "name": "Last-Thought Carrion",
-      "displayNameEs": "Carroña del Último Pensamiento",
+      "collectorId": "HFA1018",
+      "name": "Devourer of the Last Memory",
+      "displayNameEs": "Devorador del Último Recuerdo",
       "gameText": {
         "en": "When this card dies, the Chronicler discards a card.",
         "es": "Cuando muera, el Cronista descarta una carta."
       },
       "flavorText": {
-        "en": "It keeps one memory only so its death can take another.",
-        "es": "Conserva un solo recuerdo para que su muerte pueda llevarse otro."
+        "en": "It dies with one final thought between its teeth, and yours follows it.",
+        "es": "Muere con un último recuerdo entre los dientes, y el tuyo lo sigue."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -287,7 +293,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Carrion"
+        "Devourer"
       ],
       "power": 2,
       "endurance": 4,
@@ -319,15 +325,16 @@
     },
     {
       "id": "memory_shroud_bearer",
-      "name": "Bearer of the Memory Shroud",
-      "displayNameEs": "Portador de la Mortaja Mnémica",
+      "collectorId": "HFA1019",
+      "name": "Memory Thief",
+      "displayNameEs": "Ladrón de Memorias",
       "gameText": {
         "en": "When Invoked, the Chronicler discards a card.",
         "es": "Al ser invocada, el Cronista descarta una carta."
       },
       "flavorText": {
-        "en": "It enters veiled in the thought you are about to lose.",
-        "es": "Entra velado por el pensamiento que estás a punto de perder."
+        "en": "The red light in its hand is the thought you can no longer name.",
+        "es": "La luz roja de su mano es el pensamiento que ya no puedes nombrar."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -336,7 +343,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Shroudbearer"
+        "Thief"
       ],
       "power": 2,
       "endurance": 2,
@@ -369,15 +376,16 @@
     },
     {
       "id": "flesh_root_tithe",
-      "name": "Tithe of Flesh and Root",
-      "displayNameEs": "Diezmo de Carne y Raíz",
+      "collectorId": "HFA1020",
+      "name": "Tribute of the Four Sorrows",
+      "displayNameEs": "Tributo de los Cuatro Pesares",
       "gameText": {
         "en": "The Chronicler loses 1 Life, discards a card, sacrifices an Echo, and sacrifices a Source.",
         "es": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente."
       },
       "flavorText": {
-        "en": "The bell accepts four payments and forgives none.",
-        "es": "La campana acepta cuatro pagos y no perdona ninguno."
+        "en": "Life, memory, flesh, and land: the grave demands one sorrow of each kind.",
+        "es": "Vida, memoria, carne y tierra: la tumba exige un pesar de cada clase."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -427,15 +435,16 @@
     },
     {
       "id": "crypt_rotwing",
-      "name": "Crypt Rotwing",
-      "displayNameEs": "Alapútrida de la Cripta",
+      "collectorId": "HFA1021",
+      "name": "Rider of the Empty Crypt",
+      "displayNameEs": "Jinete de la Cripta Vacía",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Too light to endure the wind, sharp enough to ride it.",
-        "es": "Demasiado ligero para resistir el viento, lo bastante afilado para cabalgarlo."
+        "en": "Nothing remained in the crypt but a rider, a skeleton, and the sky.",
+        "es": "En la cripta no quedaron más que un jinete, un esqueleto y el cielo."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -444,7 +453,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Bat"
+        "Rider"
       ],
       "power": 2,
       "endurance": 1,
@@ -474,15 +483,16 @@
     },
     {
       "id": "basted_wing",
-      "name": "Basted Wing",
-      "displayNameEs": "Ala Hilvanada",
+      "collectorId": "HFA1022",
+      "name": "Stitched-Wing Spawn",
+      "displayNameEs": "Engendro de Alas Cosidas",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The first design needed only to survive until impact.",
-        "es": "El primer diseño sólo tenía que sobrevivir hasta el impacto."
+        "en": "The stitches need only hold until it reaches warm flesh.",
+        "es": "Las costuras sólo deben resistir hasta que alcance carne tibia."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -491,7 +501,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Construct"
+        "Spawn"
       ],
       "power": 3,
       "endurance": 1,
@@ -524,15 +534,16 @@
     },
     {
       "id": "reinforced_gravewing",
-      "name": "Reinforced Gravewing",
-      "displayNameEs": "Ala Sepulcral Reforzada",
+      "collectorId": "HFA1023",
+      "name": "Ossuary Rider",
+      "displayNameEs": "Jinete del Osario",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Every torn seam returned doubled.",
-        "es": "Cada costura desgarrada regresó por duplicado."
+        "en": "The mount remembers every bone added to its armor.",
+        "es": "La montura recuerda cada hueso añadido a su armadura."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -541,7 +552,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Construct"
+        "Rider"
       ],
       "power": 3,
       "endurance": 4,
@@ -574,15 +585,16 @@
     },
     {
       "id": "archive_carrion_crow",
-      "name": "Archive Carrion-Crow",
-      "displayNameEs": "Cuervo Carroñero del Archivo",
+      "collectorId": "HFA1024",
+      "name": "Return to Memory",
+      "displayNameEs": "Retorno a la Memoria",
       "gameText": {
         "en": "When Invoked or when it dies, discard the top 2 cards of the Host Archive to its Memory.",
         "es": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria."
       },
       "flavorText": {
-        "en": "It carries two memories down, and its shadow carries two more.",
-        "es": "Baja dos recuerdos; su sombra baja otros dos."
+        "en": "Every return opens two graves: its own, and one the Host had forgotten.",
+        "es": "Cada retorno abre dos tumbas: la suya y una que la Hueste había olvidado."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -591,11 +603,11 @@
       },
       "subtypes": [
         "Zombie",
-        "Bird"
+        "Returned"
       ],
       "power": 2,
       "endurance": 1,
-      "triggerMessage": "Archive Carrion-Crow triggers. Host discards 2 cards from its Archive to its Memory.",
+      "triggerMessage": "Return to Memory triggers. Host discards 2 cards from its Archive to its Memory.",
       "abilities": [
         {
           "id": "archive_carrion_crow_etb",
@@ -634,21 +646,20 @@
       "kinds": [
         "ECHO"
       ],
-      "traits": [
-        "FLYING"
-      ]
+      "traits": []
     },
     {
       "id": "horned_linebreaker",
-      "name": "Horned Linebreaker",
-      "displayNameEs": "Rompelíneas Astado",
+      "collectorId": "HFA1025",
+      "name": "Barrow Wallbreaker",
+      "displayNameEs": "Rompemuros del Túmulo",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "One defender hears the bells. Two might stop the horns.",
-        "es": "Un defensor oye las campanas. Dos quizá detengan los cuernos."
+        "en": "One defender sees the horns. Two may survive them.",
+        "es": "Un defensor ve los cuernos. Dos quizá sobrevivan a ellos."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -671,15 +682,16 @@
     },
     {
       "id": "seventh_memory_hound",
-      "name": "Hound of the Seventh Memory",
-      "displayNameEs": "Sabueso de la Séptima Memoria",
+      "collectorId": "HFA1026",
+      "name": "Hound of Seven Memories",
+      "displayNameEs": "Sabueso de los Siete Recuerdos",
       "gameText": {
         "en": "While the Host has 7 or more cards in its Memory, this Echo gains +1/+1 and Daunting.",
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente."
       },
       "flavorText": {
-        "en": "The first six memories taught it hunger. The seventh taught it size.",
-        "es": "Los primeros seis recuerdos le enseñaron hambre. El séptimo le enseñó tamaño."
+        "en": "Six memories taught it hunger. The seventh taught it how to grow.",
+        "es": "Seis recuerdos le enseñaron hambre. El séptimo le enseñó a crecer."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -742,15 +754,16 @@
     },
     {
       "id": "full_ossuary_mastiff",
-      "name": "Mastiff of the Full Ossuary",
-      "displayNameEs": "Mastín del Osario Colmado",
+      "collectorId": "HFA1027",
+      "name": "Mastiff of the Overflowing Ossuary",
+      "displayNameEs": "Mastín del Osario Desbordado",
       "gameText": {
         "en": "While the Host has 7 or more cards in its Memory, this Echo gains Daunting.",
         "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente."
       },
       "flavorText": {
-        "en": "When the seventh vault opened, the gate chain was a leash no longer.",
-        "es": "Cuando se abrió la séptima bóveda, la cadena del portón dejó de ser correa."
+        "en": "When the seventh grave opened, the gate chain ceased to be a leash.",
+        "es": "Cuando se abrió la séptima tumba, la cadena del portón dejó de ser correa."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -794,15 +807,16 @@
     },
     {
       "id": "silent_bite_rats",
-      "name": "Silent-Bite Rats",
-      "displayNameEs": "Ratas de la Mordida Silente",
+      "collectorId": "HFA1028",
+      "name": "Spore-Infested",
+      "displayNameEs": "Infestado de Esporas",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "You notice the tunnel only after the bite.",
-        "es": "Sólo notas el túnel después de la mordida."
+        "en": "The spores beneath its skin wait for living breath.",
+        "es": "Las esporas bajo su piel esperan el aliento de los vivos."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -811,7 +825,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Rat"
+        "Infested"
       ],
       "power": 1,
       "endurance": 1,
@@ -827,15 +841,16 @@
     },
     {
       "id": "fallen_gatherer",
-      "name": "Gatherer of the Fallen",
-      "displayNameEs": "Recolector de los Caídos",
+      "collectorId": "HFA1029",
+      "name": "Harvester of the Fallen",
+      "displayNameEs": "Cosechadora de los Caídos",
       "gameText": {
         "en": "Whenever another allied Zombie dies, put a +1/+1 counter on this card.",
         "es": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta."
       },
       "flavorText": {
-        "en": "Nothing useful is buried twice.",
-        "es": "Nada útil se entierra dos veces."
+        "en": "Each fallen Sinsepulcro leaves her something worth wearing.",
+        "es": "Cada Sinsepulcro caído le deja algo digno de llevar consigo."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -844,7 +859,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Collector"
+        "Harvester"
       ],
       "power": 2,
       "endurance": 4,
@@ -879,15 +894,16 @@
     },
     {
       "id": "last_march_marshal",
-      "name": "Marshal of the Last March",
-      "displayNameEs": "Mariscal de la Última Marcha",
+      "collectorId": "HFA1030",
+      "name": "Nerezh, Graveless Matriarch",
+      "displayNameEs": "Nerezh, Matriarca Sinsepulcro",
       "gameText": {
         "en": "Other allied Zombies gain +1/+1. Whenever another allied Zombie dies, the Chronicler loses 1 Life.",
         "es": "Los demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida."
       },
       "flavorText": {
-        "en": "Every fallen soldier tightens the next rank.",
-        "es": "Cada soldado caído cierra la siguiente fila."
+        "en": "Every fallen Graveless returns to the ranks when Nerezh speaks its name.",
+        "es": "Cada Sinsepulcro caído regresa a las filas cuando Nerezh pronuncia su nombre."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -896,7 +912,7 @@
       },
       "subtypes": [
         "Zombie",
-        "Marshal"
+        "Matriarch"
       ],
       "power": 2,
       "endurance": 2,

@@ -2,12 +2,29 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
-import { cardThemeForDefinition, shouldShowFullCardImage } from "../src/utils/cardImages";
+import {
+  cardThemeForDefinition,
+  shouldShowFullCardImage,
+  useCardDetails,
+  usesFullArtCardImage,
+} from "../src/utils/cardImages";
+import {
+  BATTLEFIELD_ART_VIEWPORT,
+  battlefieldArtCssVariables,
+  battlefieldArtSourceCssVariables,
+} from "../src/utils/battlefieldArtFrame";
+import { cardStatFrameCssVariables } from "../src/utils/cardStatFrame";
 import {
   STUDIO_DECKS,
   buildStudioCards,
+  generatedGameArtData,
   generatedStudioData,
   loadStudioConfig,
+  normalizeBattlefieldArtFrame,
+  resolveStudioFullArt,
+  resolveStudioHeaderFade,
+  studioGameArt,
+  studioSourceFiles,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
 
@@ -136,6 +153,21 @@ test("card studios consume one generated projection instead of embedded or mirro
     const generatedUrl = new URL(`../${definition.directory}/deck-data.generated.js`, import.meta.url);
     const indexHtml = fs.readFileSync(indexUrl, "utf8");
     assert.match(indexHtml, /<script src="\.\/deck-data\.generated\.js"><\/script>/u);
+    assert.match(
+      indexHtml,
+      /<script src="\.\.\/deck-card-studio\.js"><\/script>/u,
+      `${deckId} must use the shared studio renderer`,
+    );
+    assert.match(
+      indexHtml,
+      /<link rel="stylesheet" href="\.\.\/deck-card-studio\.css">/u,
+      `${deckId} must use the shared final card design`,
+    );
+    assert.doesNotMatch(
+      indexHtml,
+      /(?:last-rain|hunters)\.css/u,
+      `${deckId} must not load a per-deck card stylesheet`,
+    );
     assert.doesNotMatch(indexHtml, /id="deck-data"|const deckData = \[/u);
     assert.equal(fs.readFileSync(generatedUrl, "utf8"), generatedStudioData(deckId));
 
@@ -172,12 +204,7 @@ test("card studios consume one generated projection instead of embedded or mirro
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const lastRainRenderer = fs.readFileSync(
-    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
-    "utf8",
-  );
   assert.match(sharedRenderer, /card\.showFlavorText !== false/u);
-  assert.match(lastRainRenderer, /card\.showFlavorText !== false/u);
 
   const hiddenFlavor = buildStudioCards("crimson_court").find((card) => card.id === "court_duelist");
   assert.ok(hiddenFlavor?.lore, "hidden flavor must remain in generated studio data");
@@ -209,7 +236,7 @@ test("runtime deck studios use the same minimal header presentation", () => {
   const retiredHeaderUi = /(?:studio-kicker|studio-toolbar|studio-status|export-btn|exportación HD|Cartas HD|alta resolución|976×1360|Preview visual|antes de exportar)/iu;
 
   for (const [label, indexHtml] of [
-    ["La Última Lluvia", lastRainIndex],
+    ["El Pacto de Elarion", lastRainIndex],
     ["Vampires", vampireIndex],
     ["Zombies", zombieIndex],
     ["Goblins", goblinIndex],
@@ -228,23 +255,493 @@ test("runtime deck studios use the same minimal header presentation", () => {
   );
 });
 
+test("Card Studio removes preview chrome and focus-mode overflow", () => {
+  const studioApp = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.js", import.meta.url),
+    "utf8",
+  );
+  const studioShell = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.html", import.meta.url),
+    "utf8",
+  );
+  const studioServer = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio-server.cjs", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(studioApp, /\.studio-header \{ display: none !important; \}/u);
+  assert.match(studioApp, /html\.studio-focus, body\.studio-focus \{ overflow: hidden !important; \}/u);
+  assert.match(studioApp, /doc\.documentElement\.classList\.toggle\("studio-focus"/u);
+  assert.doesNotMatch(studioApp, /\.tcg-card\.studio-selected\s*\{[^}]*outline:/u);
+  assert.doesNotMatch(studioApp, /\{ key: "gem"/u, "the motif editor must not expose the plain cost orb");
+  assert.match(
+    studioApp,
+    /label: "Zoom", value: values\.zoom, min: 0\.2, max: 4/u,
+    "every motif slot must allow zooming below 100%",
+  );
+  assert.match(studioApp, /label: "Rotación", value: values\.rotation/u);
+  assert.doesNotMatch(studioApp, /hint:/u, "motif panels must not include helper copy");
+  assert.doesNotMatch(studioShell, /El motivo es la textura del mazo/u);
+  assert.match(studioShell, /id="full-art-toggle"/u);
+  assert.match(studioShell, /id="header-fade-toggle"/u);
+  assert.match(studioShell, /id="game-preview"/u);
+  assert.match(studioShell, /id="game-art-controls"/u);
+  assert.match(
+    studioShell,
+    /\.game-preview-wrap\s*\{[^}]*width:\s*212px;[^}]*max-width:\s*100%;/u,
+    "the Studio game preview must use the battlefield card's real display width",
+  );
+  assert.match(
+    studioShell,
+    /\.game-preview-title\s*\{[^}]*background:\s*linear-gradient\(90deg, var\(--game-title-start\) 0%, var\(--game-title-end\) 65%, var\(--game-title-end\) 100%\);/u,
+    "the Studio cropped-card header must remain opaque across its full width",
+  );
+  assert.match(studioApp, /fullArtOverrides/u);
+  assert.match(studioApp, /headerFadeOverrides/u);
+  assert.match(studioApp, /battlefieldArtFrames/u);
+  assert.match(
+    studioApp,
+    /gamePreviewImage\.naturalWidth[\s\S]*--game-art-source-width/u,
+    "the Studio crop must size the complete source image before applying its frame",
+  );
+  assert.match(
+    studioApp,
+    /function versionedArtUrl\(url, id, targetDeckId = deckId\)/u,
+    "uploaded Studio art needs a temporary cache-busting URL",
+  );
+  assert.match(
+    studioApp,
+    /versionedArtUrl\(current\.battlefieldArtUrl, cardId\)/u,
+    "the cropped-card preview must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /art_crop: versionedArtUrl\(entry\.art_crop, entry\.id\)/u,
+    "the printable card preview must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /thumb\.style\.backgroundImage = `url\("\$\{versionedArtUrl\(/u,
+    "the card-list thumbnail must refresh after replacing its source image",
+  );
+  assert.match(
+    studioApp,
+    /markArtUploaded\(targetDeckId, targetCardId\);\s*await loadDecks\(true\);/u,
+    "a successful upload must invalidate the previous image before repainting the Studio",
+  );
+  assert.match(studioServer, /fullArtOverrides: true/u);
+  assert.match(studioServer, /headerFadeOverrides: true/u);
+  assert.match(studioServer, /battlefieldArtFrames: true/u);
+  assert.match(
+    studioServer,
+    /path\.resolve\(ROOT, 'public', `\.\$\{decoded\}`\)/u,
+    "Card Studio must serve Vite-style /cards URLs from public/",
+  );
+  assert.match(studioShell, /<span class="info-label">ID<\/span>/u);
+  assert.match(studioShell, /#status:empty\s*\{[^}]*display:\s*none;/u);
+  assert.doesNotMatch(studioShell, /(?:ID impreso|list-foot|stage-help|Arrastra para mover)/iu);
+});
+
 test("card generators print the Hostfall copyright footer", () => {
   const sharedStudio = fs.readFileSync(
     new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
-  const lastRainIndex = fs.readFileSync(
-    new URL("../dev/tools/Decks/last_rain/index.html", import.meta.url),
+
+  assert.match(sharedStudio, /© 2026 HOSTFALL/u, "shared studio is missing the year-first copyright footer");
+  assert.match(sharedStudio, /tcg-art-credit/u, "shared studio is missing the explicit art credit");
+  assert.match(sharedStudio, /tcg-full-art-footer/u, "full-art cards are missing printable metadata");
+  assert.match(sharedStudio, /tcg-art-credit-icon/u, "shared studio is missing the illustration icon");
+  assert.match(sharedStudio, /aria-label="Ilustración:/u, "shared studio does not label the artist's role accessibly");
+  assert.doesNotMatch(sharedStudio, /Hostfall TCG/iu, "shared studio still prints the retired footer");
+});
+
+test("the shared printed design keeps the approved compact geometry", () => {
+  const sharedCss = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
+    "utf8",
+  );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
+  const sharedStudio = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
     "utf8",
   );
 
-  for (const [label, source] of [
-    ["shared studio", sharedStudio],
-    ["La Última Lluvia studio", lastRainIndex],
-  ]) {
-    assert.match(source, /© HOSTFALL 2026/u, `${label} is missing the copyright footer`);
-    assert.doesNotMatch(source, /Hostfall TCG/iu, `${label} still prints the retired footer`);
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-head\s*\{[^}]*top:\s*32px;[^}]*height:\s*74px;/u,
+    "the common header must stay centered on the cost at type-band height",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-cost-gem\s*\{[^}]*top:\s*30\.5px;[^}]*left:\s*31px;[^}]*width:\s*77px;[^}]*height:\s*77px;/u,
+    "common and full-art cards must share one printed cost position and size",
+  );
+  assert.doesNotMatch(
+    sharedCss,
+    /\.tcg-card--(?:common|full-art) \.tcg-cost-gem\s*\{/u,
+    "card variants must not override the shared printed cost geometry",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-head\s*\{[^}]*top:\s*30\.5px;[^}]*right:\s*31px;[^}]*left:\s*31px;[^}]*padding-left:\s*96px;/u,
+    "the full-art title row must align with the shared cost geometry",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-seal\s*\{[^}]*width:\s*77px;[^}]*height:\s*77px;[^}]*flex:\s*0 0 77px;/u,
+    "the full-art top-right seal must mirror the cost orb",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-typeband\s*\{[^}]*min-height:\s*74px;/u,
+    "the common type band must match the header height",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-copy\s*\{[^}]*justify-content:\s*center;/u,
+    "common card copy must remain vertically centered",
+  );
+  assert.doesNotMatch(sharedCss, /motif-gem/u, "the cost orb must not render a motif");
+  assert.match(sharedStudio, /&& !isEnergy;/u, "Energy cards must not print a cost orb");
+  assert.match(sharedStudio, /hasEffect && !isToken && !isEnergy/u, "Energy cards must not print rules");
+  assert.match(sharedStudio, /hasLore && !isToken && !isEnergy/u, "Energy cards must not print lore");
+  assert.match(
+    sharedStudio,
+    /const coverScale = Math\.max\(CARD_WIDTH \/ sourceWidth, CARD_HEIGHT \/ sourceHeight\)/u,
+    "art zoom must operate on the complete source image instead of a pre-cropped cover box",
+  );
+  assert.match(sharedCss, /\.tcg-art-image\.tcg-art-image--positioned/u);
+  assert.match(sharedCss, /\.tcg-card--common\.tcg-card--no-header-fade \.tcg-card-veil/u);
+  assert.match(sharedStudio, /headerFadeClass/u);
+  assert.match(
+    sharedCss,
+    /@font-face\s*\{[^}]*font-family:\s*"Lora";[^}]*font-weight:\s*400 700;[^}]*lora-normal-latin\.woff2/u,
+    "the Studio must expose Lora's real weight range instead of synthesizing bold text",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-effect\s*\{[^}]*font:\s*400 43px\/1\.35 "Lora", serif;/u,
+    "common-card rules text must use the regular weight",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--full-art \.tcg-effect\s*\{[^}]*font:\s*400 39px\/1\.36 "Lora", serif;/u,
+    "full-art rules text must use the regular weight",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-effect strong,[\s\S]*?\.effect-stat\s*\{[^}]*font-weight:\s*600;/u,
+    "highlighted rules terms must remain distinct without using bold text",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-art-credit-name\s*\{[^}]*font:\s*italic 500 24px\/1 "Lora", Georgia, serif;/u,
+    "the artist credit must remain slightly larger than its original 22px size",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-card-frame\s*\{[^}]*padding:\s*18px;[^}]*linear-gradient\(180deg,\s*#536174 0%,\s*#414e60 42%,\s*#2d3948 72%,\s*#1b232e 100%\);[^}]*inset 0 0 15px rgba\(0, 0, 0, 0\.9\);/u,
+    "common cards must keep the approved historical blue-steel frame",
+  );
+  assert.match(
+    sharedCss,
+    /\.tcg-card--common \.tcg-card-frame::before,[\s\S]*?\.tcg-card--common \.tcg-card-frame::after\s*\{[^}]*content:\s*none;/u,
+    "the blue-steel frame must not restore the later gold corner ornaments",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?right:\s*var\(--card-stat-right,\s*3\.28cqw\);[\s\S]*?bottom:\s*var\(--card-stat-bottom,\s*57\.79cqw\);[\s\S]*?height:\s*var\(--card-stat-height,\s*9\.32cqw\);[\s\S]*?min-width:\s*var\(--card-stat-width,\s*16\.19cqw\);/u,
+    "hand and hover stats must cover the new printed tab above the common-card type band",
+  );
+  assert.match(
+    runtimeCss,
+    /--card-stat-separator:\s*#eadcad;/u,
+    "the dynamic stat separator must use the printed card's gold palette",
+  );
+});
+
+test("Act I print metadata stays sequential and credits Dean Spencer as artist", () => {
+  const cards = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ].flatMap((deckId) => buildStudioCards(deckId));
+
+  assert.equal(cards.length, 61);
+  assert.deepEqual(
+    cards.map((card) => card.collectorId),
+    Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
+  );
+  assert.equal(cards.every((card) => card.artist === "Dean Spencer"), true);
+});
+
+test("Card Studio defaults full art to Chronicles, Energy and selected tokens", () => {
+  const lastRain = new Map(buildStudioCards("last_rain").map((card) => [card.id, card]));
+  const crimsonCourt = new Map(buildStudioCards("crimson_court").map((card) => [card.id, card]));
+  const brokenForge = new Map(buildStudioCards("broken_forge_mutiny").map((card) => [card.id, card]));
+  const hollowBell = new Map(buildStudioCards("hollow_bell_procession").map((card) => [card.id, card]));
+  const hunters = new Map(buildStudioCards("hunters").map((card) => [card.id, card]));
+
+  assert.equal(lastRain.get("iria_voice_last_rain")?.isChronicle, true);
+  assert.equal(lastRain.get("iria_voice_last_rain")?.fullArt, true);
+  assert.equal(crimsonCourt.get("eternal_feast_countess")?.isChronicle, true);
+  assert.equal(crimsonCourt.get("eternal_feast_countess")?.fullArt, true);
+  assert.equal(brokenForge.get("varka_revolt_axis")?.isChronicle, true);
+  assert.equal(brokenForge.get("varka_revolt_axis")?.fullArt, true);
+  assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.isChronicle, true);
+  assert.equal(hunters.get("lyra_ojo_de_la_caceria")?.fullArt, true);
+
+  assert.equal(lastRain.get("deep_root_spring")?.isEnergy, true);
+  assert.equal(lastRain.get("deep_root_spring")?.fullArt, true);
+  assert.equal(crimsonCourt.get("crimson_energy")?.isEnergy, true);
+  assert.equal(crimsonCourt.get("crimson_energy")?.fullArt, true);
+  assert.equal(hunters.get("territorio_de_caza")?.isEnergy, true);
+  assert.equal(hunters.get("territorio_de_caza")?.fullArt, true);
+
+  assert.equal(hollowBell.get("last_knell_dead")?.isToken, true);
+  assert.equal(hollowBell.get("last_knell_dead")?.fullArt, true);
+  assert.equal(hollowBell.get("mass_grave_colossus")?.fullArt, true);
+  assert.equal(brokenForge.get("ember_scrap_runner")?.isToken, true);
+  assert.equal(brokenForge.get("ember_scrap_runner")?.fullArt, true);
+
+  assert.equal(brokenForge.get("three_under_one_anvil")?.fullArt, undefined);
+});
+
+test("runtime full-art stats use the measured frame of each exported card", () => {
+  const layout = JSON.parse(fs.readFileSync(
+    new URL("../src/data/cardRuntimeLayout.generated.json", import.meta.url),
+    "utf8",
+  ));
+  const exportedDecks = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ];
+
+  for (const deckId of exportedDecks) {
+    const measuredCards = layout.decks?.[deckId]?.cards ?? {};
+    for (const card of buildStudioCards(deckId).filter((candidate) => candidate.fullArt)) {
+      assert.equal(measuredCards[card.id]?.fullArt, true, `${deckId}/${card.id} is missing its full-art runtime layout`);
+      if (card.atk !== null && card.atk !== undefined && card.def !== null && card.def !== undefined) {
+        assert.deepEqual(
+          Object.keys(measuredCards[card.id]?.statsFrame ?? {}).sort(),
+          ["bottom", "height", "right", "width"],
+          `${deckId}/${card.id} is missing its measured stats frame`,
+        );
+      }
+    }
   }
+
+  const iriaBottom = layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame.bottom;
+  const countessBottom = layout.decks.crimson_court.cards.eternal_feast_countess.statsFrame.bottom;
+  assert.notEqual(iriaBottom, countessBottom, "full-art text flow must be allowed to place stats per card");
+  assert.equal(usesFullArtCardImage("iria_voice_last_rain"), true);
+  assert.equal(usesFullArtCardImage("eternal_feast_countess"), true);
+  assert.deepEqual(
+    useCardDetails("iria_voice_last_rain").statsFrame,
+    layout.decks.last_rain.cards.iria_voice_last_rain.statsFrame,
+  );
+  assert.deepEqual(
+    cardStatFrameCssVariables({ right: 62, bottom: 421.594, width: 158, height: 91 }),
+    {
+      "--card-stat-right": `${(62 / 976) * 100}cqw`,
+      "--card-stat-bottom": `${(421.594 / 976) * 100}cqw`,
+      "--card-stat-width": `${(158 / 976) * 100}cqw`,
+      "--card-stat-height": `${(91 / 976) * 100}cqw`,
+    },
+  );
+
+  const cardImagesSource = fs.readFileSync(
+    new URL("../src/utils/cardImages.ts", import.meta.url),
+    "utf8",
+  );
+  const cardSource = fs.readFileSync(
+    new URL("../src/components/Card.tsx", import.meta.url),
+    "utf8",
+  );
+  const previewSource = fs.readFileSync(
+    new URL("../src/components/CardPreview.tsx", import.meta.url),
+    "utf8",
+  );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
+  const layoutMeasureSource = fs.readFileSync(
+    new URL("../scripts/card-runtime-layout.mjs", import.meta.url),
+    "utf8",
+  );
+  const exporterSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/export_cards.cjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(cardImagesSource, /cardRuntimeLayout\.generated\.json/u);
+  assert.match(cardSource, /cardStatFrameCssVariables\(statsFrame\)/u);
+  assert.match(previewSource, /cardStatFrameCssVariables\(details\.statsFrame\)/u);
+  assert.match(runtimeCss, /right:\s*var\(--card-stat-right,\s*3\.28cqw\)/u);
+  assert.match(runtimeCss, /bottom:\s*var\(--card-stat-bottom,\s*57\.79cqw\)/u);
+  assert.match(layoutMeasureSource, /cardBounds\.bottom - statsBounds\.bottom/u);
+  assert.match(exporterSource, /card-runtime-layout\.mjs/u, "card export must refresh runtime full-art frames");
+  assert.match(exporterSource, /measureDeckRuntimeLayout\(page, deckId\)/u);
+});
+
+test("Card Studio allows a per-card full-art override", () => {
+  assert.equal(resolveStudioFullArt("card", {}, true), true);
+  assert.equal(resolveStudioFullArt("card", { fullArt: true }, false), true);
+  assert.equal(resolveStudioFullArt("card", { fullArt: false }, true), false);
+  assert.throws(
+    () => resolveStudioFullArt("card", { fullArt: "yes" }, false),
+    /fullArt debe ser booleano/u,
+  );
+});
+
+test("Card Studio allows a per-card common header-fade override", () => {
+  assert.equal(resolveStudioHeaderFade("card", {}, true), true);
+  assert.equal(resolveStudioHeaderFade("card", { headerFade: true }, false), true);
+  assert.equal(resolveStudioHeaderFade("card", { headerFade: false }, true), false);
+  assert.throws(
+    () => resolveStudioHeaderFade("card", { headerFade: "yes" }, true),
+    /headerFade debe ser booleano/u,
+  );
+});
+
+test("battlefield art framing is canonical, bounded and independent from print framing", () => {
+  assert.deepEqual(BATTLEFIELD_ART_VIEWPORT, { width: 488, height: 434 });
+  assert.equal(normalizeBattlefieldArtFrame("card", null), null);
+  assert.equal(normalizeBattlefieldArtFrame("card", { zoom: 1, x: 0, y: 0 }), null);
+  assert.deepEqual(
+    normalizeBattlefieldArtFrame("card", { zoom: 1.25, x: 49, y: -24 }),
+    { zoom: 1.25, x: 49, y: -24 },
+  );
+  assert.throws(
+    () => normalizeBattlefieldArtFrame("card", { zoom: 4.01, x: 0, y: 0 }),
+    /zoom debe estar entre 0\.2 y 4/u,
+  );
+  assert.throws(
+    () => normalizeBattlefieldArtFrame("card", { zoom: 1, x: 489, y: 0 }),
+    /x debe estar entre -488 y 488/u,
+  );
+  assert.deepEqual(
+    battlefieldArtCssVariables({ zoom: 1.5, x: 48.8, y: -48.8 }),
+    {
+      "--battlefield-art-zoom": 1.5,
+      "--battlefield-art-x": "10cqw",
+      "--battlefield-art-y": "-10cqw",
+    },
+  );
+  assert.deepEqual(
+    battlefieldArtSourceCssVariables(600, 600),
+    {
+      "--battlefield-art-source-width": "100%",
+      "--battlefield-art-source-height": `${(488 / 434) * 100}%`,
+    },
+    "zooming out a square battlefield image must reveal the complete source",
+  );
+  assert.deepEqual(
+    battlefieldArtSourceCssVariables(1448, 1086),
+    {
+      "--battlefield-art-source-width": `${((1448 / 1086) / (488 / 434)) * 100}%`,
+      "--battlefield-art-source-height": "100%",
+    },
+    "landscape battlefield art must start from a complete-image cover size",
+  );
+
+  const runtimeCards = [
+    "last_rain",
+    "hollow_bell_procession",
+    "broken_forge_mutiny",
+    "crimson_court",
+  ].flatMap((deckId) => buildStudioCards(deckId));
+  assert.equal(runtimeCards.length, 61);
+  for (const card of runtimeCards) {
+    const details = useCardDetails(card.id);
+    assert.match(details.battlefieldArtUrl ?? "", /^\/cards\/.+\/art\//u);
+    assert.match(details.imageUrl ?? "", /^\/cards\/.+\.png$/u);
+  }
+
+  const generated = JSON.parse(generatedGameArtData());
+  assert.equal(Object.keys(generated.cards).length, 74);
+  assert.match(studioGameArt("last_rain").first_dew_gatherers.artUrl, /\/art\//u);
+
+  for (const deckId of Object.keys(STUDIO_DECKS)) {
+    const printSources = studioSourceFiles(deckId).map((source) => source.replaceAll("\\", "/"));
+    assert.equal(printSources.some((source) => source.endsWith("/game-art.config.json")), false);
+    assert.equal(
+      printSources.some((source) => source.endsWith("/cardStudioGameArt.generated.json")),
+      false,
+    );
+  }
+
+  const battlefieldSource = fs.readFileSync(
+    new URL("../src/components/Battlefield.tsx", import.meta.url),
+    "utf8",
+  );
+  const cardSource = fs.readFileSync(
+    new URL("../src/components/Card.tsx", import.meta.url),
+    "utf8",
+  );
+  const runtimeCss = fs.readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    battlefieldSource,
+    /useBattlefieldArt=\{!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\}/u,
+  );
+  assert.match(cardSource, /usingBattlefieldArt\s*\? battlefieldArtUrl/u);
+  assert.match(cardSource, /card-battlefield-art-fallback/u);
+  assert.match(cardSource, /battlefieldArtSourceCssVariables\(image\.naturalWidth, image\.naturalHeight\)/u);
+  assert.match(
+    cardSource,
+    /\.\.\.\(usingBattlefieldArt \? battlefieldArtSourceStyle : \{\}\)/u,
+    "the runtime crop must retain source geometry on the same container used by the Studio",
+  );
+  assert.doesNotMatch(
+    cardSource,
+    /image\.style\.setProperty/u,
+    "React must own the runtime source geometry instead of mutating the image node imperatively",
+  );
+  assert.match(
+    runtimeCss,
+    /\.battlefield-row-overflow \.battlefield-card-slot\s*\{[^}]*height:\s*calc\(var\(--battlefield-card-width\) \* 0\.8893442623\);/u,
+    "the runtime crop must use the exact 488x434 Studio viewport ratio",
+  );
+  assert.match(
+    runtimeCss,
+    /\.battlefield-row-overflow \.card-visual\.card-image-native-hd > \.card-stat-badge\s*\{[^}]*height:\s*31px;[^}]*min-width:\s*54px;[^}]*gap:\s*2\.4px;[^}]*padding:\s*0 5px;[^}]*background:\s*var\(--card-stat-ramp-background\);/u,
+    "the cropped field badge must reuse the hover overlay proportions while retaining its field palette",
+  );
+  assert.match(
+    runtimeCss,
+    /--card-stat-ramp-background:[\s\S]*?linear-gradient\(180deg,\s*#305a38 0%,\s*#214329 54%,\s*#0a1c0e 100%\);/u,
+    "the shared ramp palette must preserve the field badge tone",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-visual\.card-image-full > \.card-stat-badge,[\s\S]*?--card-stat-background:\s*var\(--card-stat-ramp-background\);/u,
+    "hand and hover badges must inherit the field badge tone",
+  );
+  assert.match(
+    runtimeCss,
+    /\.card-battlefield-cropped:not\(\.card-battlefield-art-fallback\) > img\s*\{[^}]*clip-path:\s*none;/u,
+    "the runtime crop must neutralize the full-card image clip used outside the battlefield",
+  );
+  assert.doesNotMatch(
+    runtimeCss,
+    /--card-cropped-title-gradient:[^;]*transparent/u,
+    "cropped-card theme headers must not fade to transparency",
+  );
+  assert.doesNotMatch(
+    runtimeCss,
+    /\.card-cropped-title::(?:before|after)\s*\{[^}]*mask-image:/u,
+    "the runtime cropped-card header layers must remain opaque across their full width",
+  );
 });
 
 test("Vampire studio cards stay aligned with the runtime deck", () => {
@@ -311,7 +808,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
   }
 });
 
-test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", () => {
+test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned", () => {
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -334,7 +831,7 @@ test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", 
     assert.equal(
       source.cards.length,
       runtimeDeck.cards.length,
-      `${source.label} has a stale La Última Lluvia card count`,
+      `${source.label} has a stale El Pacto de Elarion card count`,
     );
   }
 
@@ -394,7 +891,7 @@ test("La Última Lluvia studio cards use Hostfall vocabulary and stay aligned", 
   }
 });
 
-test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and stay aligned", () => {
+test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("hollow_bell_procession");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
@@ -422,8 +919,8 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
   );
   assert.match(
     studioCss,
-    /body\[data-theme="hollow_bell_procession"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Zombie Echo glyph must use the same doubled size as the player decks",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Zombie cards must inherit the final shared type-icon geometry",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -498,7 +995,7 @@ test("La Procesión de la Campana Hueca studio cards use Hostfall vocabulary and
   }
 });
 
-test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay aligned", () => {
+test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned", () => {
   const studioCards = buildStudioCards("broken_forge_mutiny");
   const runtimeDeck = JSON.parse(
     fs.readFileSync(
@@ -527,8 +1024,8 @@ test("El Motín de la Forja Rota studio cards use Hostfall vocabulary and stay a
   );
   assert.match(
     studioCss,
-    /body\[data-theme="broken_forge_mutiny"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Goblin Echo glyph must use the same doubled size as the other decks",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Goblin cards must inherit the final shared type-icon geometry",
   );
 
   for (const runtimeCard of runtimeDeck.cards) {
@@ -642,19 +1139,19 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   }
 
   const hunterCss = fs.readFileSync(
-    new URL("../dev/tools/Decks/hunters/hunters.css", import.meta.url),
+    new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
     "utf8",
   );
   assert.match(
     hunterCss,
-    /body\[data-theme="hunters"\] \.tcg-type-icon \.tcg-echo-icon\s*\{[^}]*width:\s*56px;[^}]*height:\s*56px;/u,
-    "Hunter Echo glyph must use the shared doubled size",
+    /\.tcg-card--common \.tcg-type-icon\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/u,
+    "Hunter cards must inherit the final shared type-icon geometry",
   );
 });
 
 test("authored rules use ally and enemy as compact Echo nouns", () => {
   const studioDecks = [
-    ["La Última Lluvia", buildStudioCards("last_rain")],
+    ["El Pacto de Elarion", buildStudioCards("last_rain")],
     ["Vampires", buildStudioCards("crimson_court")],
     ["Zombies", buildStudioCards("hollow_bell_procession")],
     ["Goblins", buildStudioCards("broken_forge_mutiny")],

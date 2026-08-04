@@ -16,7 +16,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
-import { Card, CardDefenseBadge } from "./Card";
+import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
@@ -214,7 +214,7 @@ export function Battlefield({ game, side, cards }: Props) {
   // resolve in sequence. Removing them from the row right then would re-center every survivor
   // mid-sequence. Keep their slot as a dead-looking ghost until the whole sequence is over, then
   // let them all leave at once. This covers both animated Host combat and the Host's own
-  // auto-triggers (e.g. Tithe of Flesh and Root sacrificing its weakest creature), which also kill mid-sequence.
+  // auto-triggers (e.g. Tribute of the Four Sorrows sacrificing its weakest creature), which also kill mid-sequence.
   const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
@@ -442,7 +442,7 @@ export function Battlefield({ game, side, cards }: Props) {
           visual.style.filter = "";
           endSummoningAnimation();
           // fill:"both" is only needed through the entrance delay. Release the finished
-          // WAAPI effect so later CSS effects (for example Iria's activation pulse)
+          // WAAPI effect so later CSS effects (for example Aelyra's activation pulse)
           // can own transform/filter on this slot again.
           animation.cancel();
           entranceAnimatingIds.current.delete(card.instanceId);
@@ -503,7 +503,7 @@ export function Battlefield({ game, side, cards }: Props) {
       animation.onfinish = () => {
         // Do not leave the final fill frame attached to this stable DOM node: a retained
         // WAAPI transform/filter outranks the CSS activation and targeting animations that
-        // run immediately after an enters-the-battlefield trigger such as Iria.
+        // run immediately after an enters-the-battlefield trigger such as Aelyra.
         animation.cancel();
         if (side === "player") endSummoningAnimation();
         if (id) entranceAnimatingIds.current.delete(id);
@@ -761,7 +761,7 @@ export function Battlefield({ game, side, cards }: Props) {
       battlefieldGroupKeys.current,
       battlefieldGroupMeta.current,
       // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
-      // The aura beat window (e.g. The Hollow Bell announcing Menace before attackers declare)
+      // The aura beat window (e.g. The Broken Headstone announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
       holdCasualties,
     ).map((group) => (
@@ -1055,8 +1055,9 @@ export function Battlefield({ game, side, cards }: Props) {
         card={card}
         compact={compact}
         cropTopHalf={isLand}
+        useBattlefieldArt={!compact && card.kinds.includes("ECHO") && cropCreatureCards}
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
-        showCroppedTitle={!compact && card.kinds.includes("ECHO") && shouldShowFullCardImage(card.definitionId)}
+        showCroppedTitle={!compact && card.kinds.includes("ECHO") && cropCreatureCards}
         selected={selected}
         attacking={attacking}
         blocking={blocking}
@@ -1130,6 +1131,13 @@ export function Battlefield({ game, side, cards }: Props) {
       {defenseBadgeCount && (
         <CardDefenseBadge
           count={defenseBadgeCount}
+          variant={side === "host" ? "host" : "player"}
+        />
+      )}
+      {!compact && card.kinds.includes("ECHO") && cropCreatureCards && (
+        <CardTraitIconBadges
+          game={game}
+          card={card}
           variant={side === "host" ? "host" : "player"}
         />
       )}

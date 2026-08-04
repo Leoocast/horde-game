@@ -45,9 +45,22 @@ test("pending abilities are reported as WIP, not as errors", () => {
   }
 });
 
-test("every active card authors bilingual flavor and an explicit print flag", () => {
+test("every active card authors print metadata, bilingual flavor and an explicit print flag", () => {
+  const collectorOwners = new Map();
+
   for (const entry of DECK_REGISTRY) {
     for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.match(
+        card.collectorId,
+        /^HFA1\d{3}$/u,
+        `${entry.raw.id}/${card.id} lacks a valid Act I collectorId`,
+      );
+      const previous = collectorOwners.get(card.collectorId);
+      assert.ok(
+        !previous || previous === `${entry.raw.id}/${card.id}`,
+        `${card.collectorId} is shared by ${previous} and ${entry.raw.id}/${card.id}`,
+      );
+      collectorOwners.set(card.collectorId, `${entry.raw.id}/${card.id}`);
       assert.equal(typeof card.flavorText?.en, "string", `${entry.raw.id}/${card.id} lacks flavorText.en`);
       assert.ok(card.flavorText.en.trim(), `${entry.raw.id}/${card.id} has empty flavorText.en`);
       assert.equal(typeof card.flavorText?.es, "string", `${entry.raw.id}/${card.id} lacks flavorText.es`);
@@ -59,6 +72,12 @@ test("every active card authors bilingual flavor and an explicit print flag", ()
       );
     }
   }
+
+  assert.deepEqual(
+    [...collectorOwners.keys()].sort(),
+    Array.from({ length: 61 }, (_, index) => `HFA1${String(index + 1).padStart(3, "0")}`),
+    "Act I collector IDs must remain continuous from HFA1001 through HFA1061",
+  );
 });
 
 test("Hostfall schema rejects unknown version, side and canonical vocabulary", () => {
@@ -162,7 +181,7 @@ test("Host rules reject unknown keys, unsafe divisors and malformed profiles", (
   assert.match(messages, /surgeBonus must be an object/u);
 });
 
-test("La Última Lluvia keeps Hostfall card kinds and traits through authored normalization", () => {
+test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored normalization", () => {
   const entry = DECK_REGISTRY.find((item) => item.deck.id === "last_rain");
   assert.ok(entry);
   assert.equal(entry.raw.schemaVersion, HOSTFALL_DECK_SCHEMA_VERSION);
@@ -176,7 +195,13 @@ test("La Última Lluvia keeps Hostfall card kinds and traits through authored no
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
-  assert.equal(normalizedAuthoring.name, "La Última Lluvia");
+  assert.equal(normalizedAuthoring.name, "El Pacto de Elarion");
+  assert.deepEqual(byId.arven_first_pack.energyCost, { amount: 4 });
+  assert.equal(byId.arven_first_pack.power, 3);
+  assert.equal(byId.arven_first_pack.endurance, 4);
+  assert.deepEqual(byId.ancient_canopy_watchers.energyCost, { amount: 3 });
+  assert.equal(byId.ancient_canopy_watchers.power, 3);
+  assert.equal(byId.ancient_canopy_watchers.endurance, 3);
   assert.deepEqual(byId.black_sap_stalker.traits, ["LETHAL", "POISON_1"]);
   assert.deepEqual(byId.iria_voice_last_rain.modifiers, ["CHRONICLE"]);
   assert.equal(byId.iria_voice_last_rain.abilities[0].effects[1].amount, 3);
@@ -260,6 +285,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(rawById.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(rawById.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(rawById.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(rawById.archive_carrion_crow.traits, []);
   assert.equal(rawById.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(rawById.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
@@ -283,6 +309,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.hollow_bell.abilities[0].effects[0].keyword, "DAUNTING");
   assert.equal(byId.hollow_bell.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(byId.silent_bite_rats.traits, ["LETHAL", "FURTIVE"]);
+  assert.deepEqual(byId.archive_carrion_crow.traits, []);
   assert.equal(byId.archive_carrion_crow.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(byId.last_march_marshal.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(byId.last_march_marshal.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");

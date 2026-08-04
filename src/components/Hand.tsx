@@ -11,6 +11,12 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import {
+  HAND_CARD_DISPLAY_HEIGHT,
+  HAND_CARD_DISPLAY_WIDTH,
+  HOVER_CARD_DISPLAY_HEIGHT,
+  HOVER_CARD_DISPLAY_WIDTH,
+} from "./cardDisplayGeometry";
 import { getHandCardPresentationState } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
@@ -20,7 +26,6 @@ const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
-const HAND_HOVER_SCALE = 1.3 * (UI_FEATURE_FLAGS.useAdjustedPlayerHandCardHoverScale ? 1.08 : 1);
 const handCardMotion: Variants = {
   initial: { opacity: 0, x: 260, y: 18, rotate: 3, scale: 0.94 },
   animate: (custom: { index: number; stagger: boolean }) => ({
@@ -137,7 +142,7 @@ export function Hand({ game }: { game: GameState }) {
         -(cardWidth - minimumVisibleStrip),
         Math.min(baseOverlapMargin, requiredMargin),
       );
-      setHandStackMargin(desiredMargin);
+      setHandStackMargin(Math.round(desiredMargin));
     }
 
     function scheduleMeasure() {
@@ -308,13 +313,14 @@ export function Hand({ game }: { game: GameState }) {
         <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
           <div
             ref={handCardsRef}
-            className={[
-              "player-hand-cards flex items-end justify-center overflow-visible",
-              UI_FEATURE_FLAGS.useLargerPlayerHandCards ? "player-hand-cards-larger" : "",
-            ].join(" ")}
+            className="player-hand-cards flex items-end justify-center overflow-visible"
             style={{
               "--hand-count": Math.max(handSize, 1),
               "--hand-stack-margin": `${handStackMargin}px`,
+              "--hand-card-width": `${HAND_CARD_DISPLAY_WIDTH}px`,
+              "--hand-card-height": `${HAND_CARD_DISPLAY_HEIGHT}px`,
+              "--hand-card-held-width": `${HOVER_CARD_DISPLAY_WIDTH}px`,
+              "--hand-card-held-height": `${HOVER_CARD_DISPLAY_HEIGHT}px`,
             } as React.CSSProperties}
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
@@ -367,7 +373,7 @@ export function Hand({ game }: { game: GameState }) {
                 dragElastic={0.08}
                 dragMomentum={false}
                 dragSnapToOrigin
-                whileDrag={{ scale: 1.06, zIndex: 120, rotate: 0 }}
+                whileDrag={{ zIndex: 120, rotate: 0 }}
                 onDragStart={(_, info) => {
                   beginCenterGrabDrag(card.instanceId, info.point.x, info.point.y);
                   selectHand(card.instanceId);
@@ -395,6 +401,7 @@ export function Hand({ game }: { game: GameState }) {
                   }}
                   className={[
                     "hand-card",
+                    isHeld ? "hand-card-held" : "",
                     useNativeHdRendering ? "hand-card-native-hd" : "",
                     cardAvailable && draggingCardId !== card.instanceId ? "hand-card-available" : "",
                     spellTargetingHandId === card.instanceId || pendingSpellHandId === card.instanceId ? "opacity-0" : "",
@@ -409,11 +416,8 @@ export function Hand({ game }: { game: GameState }) {
                   initial={false}
                   animate={{
                     x: "-50%",
-                    y: isHeld ? -86 : 48 + fanDip,
+                    y: isHeld ? -100 : 78 + fanDip,
                     rotate: isHeld ? 0 : fanAngle,
-                    // Keep the face and its cqw overlays on one composited layer. Changing the
-                    // real box size makes the cost and keyword positions reflow by subpixels.
-                    scale: isHeld ? HAND_HOVER_SCALE : 1,
                     transition: isHeld
                       ? { duration: 0.18, ease: [0.16, 1, 0.3, 1] }
                       : { duration: 0.3, ease: [0.22, 1, 0.36, 1] },

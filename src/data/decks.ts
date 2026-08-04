@@ -27,23 +27,23 @@ function register(label: string, raw: NewDeckList, images: DeckImageManifest, pr
 // Single registration point: the engine deck, the inspector view and the image lookups
 // all derive from this list. Adding a deck = one `register(...)` line.
 export const DECK_REGISTRY: DeckRegistryEntry[] = [
-  register("La Última Lluvia 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
+  register("El Pacto de Elarion 39", lastRainRaw as NewDeckList, lastRainImagesRaw as DeckImageManifest, {
     keyCardId: "iria_voice_last_rain",
     theme: "ramp",
     descriptionKey: "setup.descriptionRamp",
   }),
-  register("La Corte Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
+  register("La Corte del Eclipse Carmesí 40", crimsonCourtRaw as NewDeckList, crimsonCourtImagesRaw as DeckImageManifest, {
     keyCardId: "eternal_feast_countess",
     theme: "vampire",
     descriptionKey: "setup.descriptionVampires",
   }),
-  register("La Procesión de la Campana Hueca 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
+  register("El Alzamiento de los Sinsepulcro 50", hollowBellProcessionRaw as NewDeckList, hollowBellProcessionImagesRaw as DeckImageManifest, {
     keyCardId: "last_knell_dead",
     theme: "zombie",
     descriptionKey: "setup.descriptionZombies",
     encounterTone: "undead",
   }),
-  register("El Motín de la Forja Rota 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
+  register("La Legión de Varka 50", brokenForgeMutinyRaw as unknown as NewDeckList, brokenForgeMutinyImagesRaw as DeckImageManifest, {
     keyCardId: "ember_scrap_runner",
     theme: "goblin",
     descriptionKey: "setup.descriptionGoblins",

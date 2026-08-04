@@ -5,6 +5,8 @@
     const container = document.getElementById("cards-container");
     const status = document.getElementById("studio-status");
     const generatedData = window.HostfallDeckData;
+    const CARD_WIDTH = 976;
+    const CARD_HEIGHT = 1360;
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
     const cardText = window.HostfallCardText;
@@ -35,6 +37,24 @@
         land: "▲"
     };
 
+    /*
+     * Símbolos de facción del renderer compartido. La estructura y la geometría de carta
+     * son únicas; cada deck sólo aporta color, motivo e insignia.
+     */
+    const LAST_RAIN_LEAF = `
+                <svg viewBox="0 0 64 64"><path d="M54 7C33 8 18 17 13 33c-3 10 1 18 9 22 8 3 17 0 22-8 7-11 8-25 10-40ZM17 52c8-12 17-21 29-31-10 5-21 12-31 23l2 8Z"></path></svg>
+            `;
+
+    /*
+     * Cada deck comparte el mismo renderer; lo que cambia es este perfil.
+     * Añadir un deck nuevo es añadir una entrada aquí, no otro index.html con su propio JS.
+     */
+    const footerSeparator = "·";
+
+    function deckSeal() {
+        return theme === "last_rain" ? LAST_RAIN_LEAF : factionSymbol();
+    }
+
     function escapeHtml(value) {
         return String(value ?? "")
             .replaceAll("&", "&amp;")
@@ -55,6 +75,29 @@
 
     function typeSymbol(type) {
         const normalized = String(type || "").toLocaleLowerCase("es");
+
+        if (theme === "last_rain") {
+            if (normalized.includes("eco")) {
+                return `
+                <svg class="tcg-echo-icon" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" d="M32 20 39 32 32 44 25 32 32 20Z"></path>
+                    <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
+                </svg>
+            `;
+            }
+            if (normalized.includes("hechizo")) {
+                return `
+                <svg class="tcg-type-symbol tcg-type-symbol--spell" aria-hidden="true" viewBox="0 0 576 512">
+                    <path d="M0 80v48c0 17.7 14.3 32 32 32H48 96V80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48V384c0 35.3 28.7 64 64 64s64-28.7 64-64v-5.3c0-32.4 26.3-58.7 58.7-58.7H480V128c0-53-43-96-96-96H112zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16H314.7c-14.7 0-26.7 11.9-26.7 26.7V384c0 53-43 96-96 96H368h96z"></path>
+                </svg>
+            `;
+            }
+            return `
+                <svg class="tcg-type-symbol" aria-hidden="true" viewBox="0 0 64 64">
+                    <path d="M32 4 58 24 32 60 6 24 32 4Zm0 8L15 25l17 24 17-24-17-13Z"></path>
+                </svg>
+            `;
+        }
 
         if (
             theme === "hollow_bell_procession"
@@ -126,6 +169,17 @@
     }
 
     function factionSymbol() {
+        if (theme === "hollow_bell_procession") {
+            return `
+                <svg class="tcg-faction-icon tcg-faction-icon--headstone" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" d="M12 57v-7h6V25C18 13.4 23.7 7 32 7c8.3 0 14 6.4 14 18v25h6v7H12Z"></path>
+                    <path class="tcg-headstone-chip" d="m38 10 9 10-8 6-5-10 4-6Z"></path>
+                    <path class="tcg-headstone-crack" d="m31 9-3 14 7 5-7 10 5 12" fill="none"></path>
+                    <path class="tcg-headstone-soil" d="M7 57h50M15 61h34" fill="none"></path>
+                </svg>
+            `;
+        }
+
         if (theme === "broken_forge_mutiny") {
             return `
                 <svg class="tcg-faction-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
@@ -136,8 +190,10 @@
 
         if (theme === "crimson_court") {
             return `
-                <svg class="tcg-faction-icon tcg-faction-icon--blood" aria-hidden="true" focusable="false" viewBox="0 0 384 512">
-                    <path fill="currentColor" d="M192 0C79.9 95.2 0 213.9 0 320c0 106 86 192 192 192s192-86 192-192C384 213.9 304.1 95.2 192 0Z"></path>
+                <svg class="tcg-faction-icon tcg-faction-icon--eclipse" aria-hidden="true" focusable="false" viewBox="0 0 64 64">
+                    <path fill="currentColor" fill-rule="evenodd" d="M43.8 7.2A26 26 0 1 0 57 50.1 22 22 0 1 1 43.8 7.2Z" clip-rule="evenodd"></path>
+                    <circle class="tcg-faction-gem" cx="18" cy="37" r="6.5"></circle>
+                    <path class="tcg-faction-gem-glint" d="M15.2 34.2a4 4 0 0 1 3.5-1.2" fill="none"></path>
                 </svg>
             `;
         }
@@ -155,21 +211,7 @@
     }
 
     function isFullArt(card) {
-        const type = String(card.tipo || "").toLocaleLowerCase("es");
-        const description = String(card.desc || "").trim().toLocaleLowerCase("es");
-        const isHordeToken =
-            (theme === "hollow_bell_procession" || theme === "broken_forge_mutiny")
-            && Boolean(card.isToken);
-        const isVanillaHordeEcho =
-            (theme === "hollow_bell_procession" || theme === "broken_forge_mutiny")
-            && (type.includes("criatura") || type.includes("eco") || type.includes("echo"))
-            && description === "sin efecto adicional.";
-        return type.includes("tierra")
-            || type.includes("energía")
-            || type.includes("fuente")
-            || type.includes("source")
-            || isHordeToken
-            || isVanillaHordeEcho;
+        return Boolean(card.fullArt);
     }
 
     function placeholderDataUrl(cardName) {
@@ -190,6 +232,63 @@
                     font-family="Arial,sans-serif" font-size="20">Añade art_crop al JSON</text>
             </svg>`;
         return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    /*
+     * Encuadre por carta. Devuelve "" cuando la carta no tiene ajustes, y en ese caso
+     * el atributo style ni siquiera se escribe: el DOM queda idéntico al de siempre.
+     */
+    function artTransform(card) {
+        const frame = card.art_frame;
+        if (!frame) return "";
+        const zoom = Number(frame.zoom ?? 1);
+        const x = Number(frame.x ?? 0);
+        const y = Number(frame.y ?? 0);
+        if (zoom === 1 && x === 0 && y === 0) return "";
+        return `translate(${x}px, ${y}px) scale(${zoom})`;
+    }
+
+    /*
+     * object-fit: cover recorta la imagen antes de aplicar transform. Eso hace que un zoom
+     * menor que 1 sólo encoja el recorte y nunca revele la ilustración completa. Conservamos
+     * exactamente el encuadre cover en 1×, pero dimensionamos el bitmap real para que al
+     * alejarlo aparezcan de nuevo sus bordes naturales.
+     */
+    function positionArtImage(image, fullArt) {
+        const sourceWidth = image.naturalWidth;
+        const sourceHeight = image.naturalHeight;
+        if (!sourceWidth || !sourceHeight) return;
+
+        const coverScale = Math.max(CARD_WIDTH / sourceWidth, CARD_HEIGHT / sourceHeight);
+        const width = sourceWidth * coverScale;
+        const height = sourceHeight * coverScale;
+        const verticalAnchor = fullArt ? 0.2 : 0.18;
+
+        image.style.setProperty("--art-base-width", `${width}px`);
+        image.style.setProperty("--art-base-height", `${height}px`);
+        image.style.setProperty("--art-base-left", `${(CARD_WIDTH - width) * 0.5}px`);
+        image.style.setProperty("--art-base-top", `${(CARD_HEIGHT - height) * verticalAnchor}px`);
+        image.classList.add("tcg-art-image--positioned");
+    }
+
+    function applyDeckMotif(motif) {
+        if (!motif) return;
+        for (const [slot, values] of Object.entries(motif)) {
+            if (!values) continue;
+            const x = Number(values.x ?? 0);
+            const y = Number(values.y ?? 0);
+            if (x !== 0) body.style.setProperty(`--motif-${slot}-x`, `${x}px`);
+            if (y !== 0) body.style.setProperty(`--motif-${slot}-y`, `${y}px`);
+            if (values.zoom !== undefined && values.zoom !== null) {
+                body.style.setProperty(`--motif-${slot}-size`, `${Number(values.zoom) * 100}% auto`);
+            }
+            if (values.rotation !== undefined && values.rotation !== null) {
+                body.style.setProperty(
+                    `--motif-${slot}-rotation`,
+                    `${Number(values.rotation)}deg`
+                );
+            }
+        }
     }
 
     function normalizeCards(payload) {
@@ -223,81 +322,111 @@
             const hasStats = card.atk !== null && card.atk !== undefined
                 && card.def !== null && card.def !== undefined;
             const fullArt = isFullArt(card);
+            const headerFade = card.headerFade !== false;
+            const isToken = Boolean(card.isToken);
+            const isChronicle = Boolean(card.isChronicle);
+            const isEnergy = Boolean(card.isEnergy);
             const isHordeDeck =
                 theme === "hollow_bell_procession" || theme === "broken_forge_mutiny";
             const showCost = !isHordeDeck
-                && !fullArt
                 && card.costo !== null
                 && card.costo !== undefined
-                && !card.isToken;
+                && !isToken
+                && !isEnergy;
+            const showEffect = hasEffect && !isToken && !isEnergy;
+            const showLore = hasLore && !isToken && !isEnergy;
             const number = String(index + 1).padStart(3, "0");
-            const quantity = Number(card.cantidad || card.quantity || 0);
+            const collectorId = String(card.collectorId || `${setCode}${number}`);
+            const artist = String(card.artist || "").trim();
             const art = String(card.art_crop || "");
+            const artStyle = artTransform(card);
+            const textWeight = effect.length + (showLore ? lore.length * 0.72 : 0);
+            const densityClass = textWeight >= 430
+                ? " tcg-card--dense"
+                : textWeight >= 300
+                    ? " tcg-card--compact"
+                    : "";
             const titleClass = cardName.length >= 31
                 ? " tcg-title--long"
                 : cardName.length >= 24
                     ? " tcg-title--medium"
                     : "";
+            const variantClass = fullArt ? " tcg-card--full-art" : " tcg-card--common";
+            const headerFadeClass = !fullArt && !headerFade ? " tcg-card--no-header-fade" : "";
+            const tokenClass = isToken ? " tcg-card--token" : "";
+            const energyClass = isEnergy ? " tcg-card--energy" : "";
+            const noCostClass = showCost ? "" : " tcg-card--no-cost";
+            const metadata = `${escapeHtml(collectorId)} ${footerSeparator} © 2026 HOSTFALL`;
+            const artCredit = artist
+                ? `<div class="tcg-art-credit" aria-label="Ilustración: ${escapeHtml(artist)}"><svg class="tcg-art-credit-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6"></path></svg><span class="tcg-art-credit-name">${escapeHtml(artist)}</span></div>`
+                : "";
+            const stats = hasStats
+                ? `<div class="tcg-stats-badge" aria-label="${escapeHtml(`${card.atk} Fuerza, ${card.def} Aguante`)}"><span class="tcg-stat-val">${escapeHtml(card.atk)}</span><span class="tcg-stat-sep">/</span><span class="tcg-stat-val">${escapeHtml(card.def)}</span></div>`
+                : "";
+            const typeband = `<div class="tcg-typeband"><span class="tcg-type-icon" aria-hidden="true">${typeSymbol(type)}</span><span class="tcg-type-label">${escapeHtml(type)}</span></div>`;
+            const effectMarkup = showEffect
+                ? `<p class="tcg-effect">${formatEffectText(effect)}</p>`
+                : "";
+            const flavorMarkup = showLore
+                ? `<p class="tcg-flavor">${escapeHtml(lore)}</p>`
+                : "";
 
             const cardElement = document.createElement("article");
-            cardElement.className = `tcg-card${fullArt ? " tcg-card--full-art" : ""}`;
+            cardElement.className = `tcg-card${variantClass}${headerFadeClass}${tokenClass}${energyClass}${noCostClass}${densityClass}`;
             cardElement.id = `card-${cardId.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
             cardElement.dataset.cardId = cardId;
 
             cardElement.innerHTML = `
-                <div class="tcg-outer-border"></div>
-                <div class="tcg-inner">
-                    <header class="tcg-head">
-                        ${showCost ? `
-                            <div class="tcg-cost tcg-mana-gem">
-                                <span data-cost="${escapeHtml(card.costo)}">${escapeHtml(card.costo)}</span>
-                            </div>
-                        ` : ""}
-                        <div class="tcg-title-wrap">
-                            <div class="tcg-title${titleClass}">${escapeHtml(cardName)}</div>
-                            <div class="tcg-faction-seal tcg-element-icon" aria-hidden="true">${factionSymbol()}</div>
-                        </div>
-                    </header>
-
-                    <div class="tcg-art-frame">
-                        <img
-                            class="tcg-art-image"
-                            src="${escapeHtml(art || placeholderDataUrl(cardName))}"
-                            alt="${escapeHtml(cardName)}"
-                        >
-                    </div>
-
-                    <div class="tcg-typeband">
-                        <div class="tcg-type-text">
-                            <span class="tcg-type-icon" aria-hidden="true">${typeSymbol(type)}</span>
-                            <span>${escapeHtml(type)}</span>
-                        </div>
-                    </div>
-
-                    <div class="tcg-body">
-                        ${hasEffect ? `<p class="tcg-effect">${formatEffectText(effect)}</p>` : ""}
-                        ${hasEffect && hasLore ? '<div class="tcg-divider"></div>' : ""}
-                        ${hasLore ? `<p class="tcg-flavor">${escapeHtml(lore)}</p>` : ""}
-                        ${!hasEffect && !hasLore ? '<div class="tcg-empty-mark" aria-hidden="true"></div>' : ""}
-                        <div class="tcg-footer-info">${setCode} #${number} · © HOSTFALL 2026</div>
-                    </div>
+                <div class="tcg-art-frame">
+                    <img
+                        class="tcg-art-image"
+                        src="${escapeHtml(art || placeholderDataUrl(cardName))}"
+                        alt="${escapeHtml(cardName)}"
+                        ${artStyle ? `style="--art-transform: ${artStyle}"` : ""}
+                    >
                 </div>
+                <div class="tcg-card-veil"></div>
+                ${fullArt ? '<div class="tcg-watermark" aria-hidden="true">H</div>' : '<div class="tcg-card-frame"></div>'}
+                <div class="tcg-card-rim"></div>
 
-                ${quantity > 1 ? `<div class="tcg-quantity">×${quantity}</div>` : ""}
-                ${hasStats ? `
-                    <div class="tcg-stats-badge" aria-label="${escapeHtml(`${card.atk} ataque, ${card.def} defensa`)}">
-                        <div class="tcg-stat-item tcg-stat-atk">
-                            <span class="tcg-stat-val">${escapeHtml(card.atk)}</span>
+                <header class="tcg-head">
+                    <h2 class="tcg-title${titleClass}">
+                        ${escapeHtml(cardName)}
+                        ${isChronicle ? "<small>Crónica</small>" : ""}
+                    </h2>
+                    <div class="tcg-seal" aria-hidden="true">${deckSeal()}</div>
+                </header>
+                ${showCost ? `<div class="tcg-cost-gem"><span data-cost="${escapeHtml(card.costo)}">${escapeHtml(card.costo)}</span></div>` : ""}
+
+                <div class="tcg-lower">
+                    ${stats}
+                    ${typeband}
+                    ${fullArt ? `
+                        <div class="tcg-copy">
+                            ${effectMarkup}
+                            ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
+                            ${flavorMarkup}
                         </div>
-                        <span class="tcg-stat-sep">/</span>
-                        <div class="tcg-stat-item tcg-stat-def">
-                            <span class="tcg-stat-val">${escapeHtml(card.def)}</span>
+                        <div class="tcg-meta-row">
+                            <div class="tcg-full-art-footer">${metadata}</div>
+                            ${artCredit}
                         </div>
-                    </div>
-                ` : ""}
+                    ` : `
+                        <div class="tcg-textplate">
+                            <div class="tcg-copy">
+                                ${effectMarkup}
+                                ${showEffect && showLore ? '<div class="tcg-divider"></div>' : ""}
+                                ${flavorMarkup}
+                            </div>
+                            <div class="tcg-footer-info">${metadata}</div>
+                            ${artCredit}
+                        </div>
+                    `}
+                </div>
             `;
 
             const image = cardElement.querySelector(".tcg-art-image");
+            image.addEventListener("load", () => positionArtImage(image, fullArt));
             image.addEventListener(
                 "error",
                 () => {
@@ -305,6 +434,7 @@
                 },
                 { once: true }
             );
+            if (image.complete) positionArtImage(image, fullArt);
 
             container.appendChild(cardElement);
         });
@@ -332,5 +462,12 @@
         });
     });
 
+    applyDeckMotif(window.HostfallDeckMotif);
     renderCards(readGeneratedCards());
+
+    window.HostfallStudio = {
+        renderCards,
+        applyDeckMotif,
+        readGeneratedCards
+    };
 })();

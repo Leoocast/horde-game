@@ -22,6 +22,16 @@ import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engi
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import {
+  fitHoverCardDisplay,
+  HAND_CARD_DISPLAY_HEIGHT,
+  HAND_CARD_DISPLAY_WIDTH,
+  HOVER_CARD_DISPLAY_HEIGHT,
+  HOVER_CARD_DISPLAY_WIDTH,
+  LARGE_CARD_DISPLAY_HEIGHT,
+  LARGE_CARD_DISPLAY_WIDTH,
+} from "../src/components/cardDisplayGeometry";
+import { cardTraitIconPresentation } from "../src/components/cardTraitPresentation";
 import { buffAnimationVariantForCard } from "../src/store/buffAnimation";
 import { playerBuffSfxForAnimation } from "../src/store/playerAudioPolicy";
 import { addCard, addSources, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
@@ -73,7 +83,7 @@ test("the registered Vampire chronicle starts as its complete playable deck", ()
   ];
 
   assert.equal(vampireDeck.id, "crimson_court");
-  assert.equal(vampireDeck.name, "La Corte Carmesí");
+  assert.equal(vampireDeck.name, "La Corte del Eclipse Carmesí");
   assert.equal(playerCards.length, 40);
   assert.equal(game.player.hand.length, 7);
   assert.equal(playerCards.filter((candidate) => candidate.definitionId === "crimson_energy").length, 12);
@@ -344,6 +354,33 @@ test("discard selection stays raised while the hovered hand card layers above it
   );
 });
 
+test("previews and raised hand cards use exact card-image geometry", () => {
+  assert.deepEqual(
+    [HAND_CARD_DISPLAY_WIDTH, HAND_CARD_DISPLAY_HEIGHT],
+    [244, 340],
+  );
+  assert.deepEqual(
+    [LARGE_CARD_DISPLAY_WIDTH, LARGE_CARD_DISPLAY_HEIGHT],
+    [488, 680],
+  );
+  assert.deepEqual(
+    [HOVER_CARD_DISPLAY_WIDTH, HOVER_CARD_DISPLAY_HEIGHT],
+    [366, 510],
+  );
+  assert.deepEqual(fitHoverCardDisplay(900), { width: 366, height: 510 });
+
+  const constrained = fitHoverCardDisplay(420);
+  assert.equal(constrained.width * 85, constrained.height * 61);
+  assert.ok(constrained.width <= 420);
+});
+
+test("cropped battlefield traits map to stable icon presentations", () => {
+  assert.deepEqual(cardTraitIconPresentation("FLYING"), { kind: "flying", amount: undefined });
+  assert.deepEqual(cardTraitIconPresentation("DEATHTOUCH"), { kind: "lethal", amount: undefined });
+  assert.deepEqual(cardTraitIconPresentation("POISON_3"), { kind: "poison", amount: 3 });
+  assert.deepEqual(cardTraitIconPresentation("UNKNOWN_TRAIT"), { kind: "fallback", amount: undefined });
+});
+
 test("standard games keep nine energy cards in the player deck", () => {
   const game = createInitialGame(playerDeck, hostDeck, "no-lands", 3);
   const cards = [...game.player.hand, ...game.player.archive, ...game.player.field];
@@ -574,7 +611,7 @@ test("automatic payment spends Stored Energy first and preserves unused Sources 
   assert.equal(nextPlayerTurn.player.energyPool.stored, 2);
 });
 
-test("Crimson Energy pays only the generic cost left after Stored Energy", () => {
+test("Sanctuary of the Red Moon pays only the generic cost left after Stored Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
   const firstEnergy = addCard(game, cardFromDeck("crimson_energy", "player"));
@@ -712,7 +749,7 @@ test("Countess has Lifesteal while attacking but not while blocking", () => {
   assert.equal(applyHostAttackEvent(defense, impact).player.life, 10);
 });
 
-test("Blood Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
+test("Midnight Pact pays five life as an additional cost, draws two cards, and triggers Blood Page", () => {
   const game = createTestGame("blood-pact-resolution");
   game.player.life = 10;
   addSources(game, 1);
@@ -739,7 +776,7 @@ test("Blood Pact pays five life as an additional cost, draws two cards, and trig
   assert.equal(result.player.memory.some((card) => card.instanceId === pact.instanceId), true);
 });
 
-test("Blood Pact cannot be cast when paying five life would reduce the player to zero", () => {
+test("Midnight Pact cannot be cast when paying five life would reduce the player to zero", () => {
   const game = createTestGame("blood-pact-lethal");
   game.player.life = 5;
   addSources(game, 1);
@@ -956,7 +993,7 @@ test("COUNT_ECHOS_INVOKED_THIS_TURN ignores Support arrivals", () => {
   assert.equal(burn?.payload?.amount, 1);
 });
 
-test("Predatory Thirst grants temporary Lifesteal to every allied creature", () => {
+test("Hunt Beneath the Red Moon grants temporary Lifesteal to every allied creature", () => {
   const game = createTestGame("predatory-thirst-attack");
   game.player.life = 10;
   addSources(game, 2);
@@ -995,7 +1032,7 @@ test("Predatory Thirst grants temporary Lifesteal to every allied creature", () 
   assert.equal(hasTrait(cleaned, cleaned.player.field.find((card) => card.instanceId === secondAlly.instanceId), "DRAIN"), false);
 });
 
-test("Predatory Thirst grants defensive Lifesteal without requiring a target", () => {
+test("Hunt Beneath the Red Moon grants defensive Lifesteal without requiring a target", () => {
   const game = createTestGame("predatory-thirst-defense");
   game.player.life = 10;
   addSources(game, 2);
@@ -1023,7 +1060,7 @@ test("Predatory Thirst grants defensive Lifesteal without requiring a target", (
   assert.equal(afterImpact.player.field.some((card) => card.instanceId === ally.instanceId), true);
 });
 
-test("Final Banquet destroys only a Host creature and loses its last known effective power", () => {
+test("Verdict of the Eclipse destroys only a Host creature and loses its last known effective power", () => {
   const game = createTestGame("final-banquet-effective-power");
   game.player.life = 20;
   addSources(game, 3);
@@ -1064,7 +1101,7 @@ test("Final Banquet destroys only a Host creature and loses its last known effec
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet rejects allied targets before paying Energy", () => {
+test("Verdict of the Eclipse rejects allied targets before paying Energy", () => {
   const game = createTestGame("final-banquet-invalid-target");
   game.player.life = 20;
   addSources(game, 3);
@@ -1081,7 +1118,7 @@ test("Final Banquet rejects allied targets before paying Energy", () => {
   assert.equal(result.player.field.filter((card) => card.kinds.includes("SOURCE")).every((card) => !card.exhausted), true);
 });
 
-test("Final Banquet can be cast during Host combat as an Instant", () => {
+test("Verdict of the Eclipse can be cast during Host combat as an Instant", () => {
   const game = createTestGame("final-banquet-instant");
   game.player.life = 20;
   addSources(game, 3);
@@ -1104,7 +1141,7 @@ test("Final Banquet can be cast during Host combat as an Instant", () => {
   assert.equal(result.host.memory.some((card) => card.instanceId === attacker.instanceId), true);
 });
 
-test("Final Banquet can cause a lethal life loss after destroying its target", () => {
+test("Verdict of the Eclipse can cause a lethal life loss after destroying its target", () => {
   const game = createTestGame("final-banquet-lethal-loss");
   game.player.life = 4;
   addSources(game, 3);
@@ -1123,7 +1160,7 @@ test("Final Banquet can cause a lethal life loss after destroying its target", (
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("Final Banquet preserves Host death triggers after the destruction", () => {
+test("Verdict of the Eclipse preserves Host death triggers after the destruction", () => {
   const game = createTestGame("final-banquet-death-trigger");
   game.player.life = 20;
   addSources(game, 3);
@@ -1241,7 +1278,7 @@ test("activated life costs are atomic and obey the one-life minimum", () => {
   assert.equal(activated?.temporaryPower, 1);
 });
 
-test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", () => {
+test("Midnight Collector exhausts and pays five life to generate one stored Energy", () => {
   const game = createTestGame();
   game.player.life = 10;
   const acolyte = addCard(game, cardFromDeck("tithe_acolyte", "player"));
@@ -1272,7 +1309,7 @@ test("Tithe Acolyte exhausts and pays five life to generate one stored Energy", 
   assert.equal(unchanged?.activatedThisTurn, false);
 });
 
-test("Court Duelist keeps +3/+1 through Host combat and loses it at the next player turn", () => {
+test("Duelist of the Eclipse keeps +3/+1 through Host combat and loses it at the next player turn", () => {
   const freshGame = createTestGame();
   freshGame.player.life = 10;
   const freshDuelist = addCard(freshGame, cardFromDeck("court_duelist", "player"));
@@ -1338,9 +1375,9 @@ test("Court Duelist keeps +3/+1 through Host combat and loses it at the next pla
   assert.equal(usedAgain.player.lifePaidThisTurn, 3);
 });
 
-test("Arven grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
+test("Kaelor grows only for the first allied Invocation each turn and keeps the buff until the next player turn", () => {
   const game = createTestGame("arven-first-packmate");
-  const arven = addCard(game, cardFromDeck("arven_first_pack", "player"));
+  const kaelor = addCard(game, cardFromDeck("arven_first_pack", "player"));
 
   const invokeAlly = (definitionId) => {
     const ally = addCard(game, customCard(definitionId, "player"));
@@ -1350,24 +1387,24 @@ test("Arven grows only for the first allied Invocation each turn and keeps the b
   };
 
   invokeAlly("arven_first_ally");
-  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, kaelor), { power: 4, endurance: 5 });
 
   invokeAlly("arven_second_ally");
-  assert.deepEqual(getPowerEndurance(game, arven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(game, kaelor), { power: 4, endurance: 5 });
 
   const hostTurn = endPlayerTurn(game);
-  const defendingArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
-  assert.deepEqual(getPowerEndurance(hostTurn, defendingArven), { power: 4, endurance: 4 });
+  const defendingKaelor = hostTurn.player.field.find((card) => card.instanceId === kaelor.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, defendingKaelor), { power: 4, endurance: 5 });
 
   startPlayerTurnReady(hostTurn);
-  const readyArven = hostTurn.player.field.find((card) => card.instanceId === arven.instanceId);
-  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 3, endurance: 3 });
+  const readyKaelor = hostTurn.player.field.find((card) => card.instanceId === kaelor.instanceId);
+  assert.deepEqual(getPowerEndurance(hostTurn, readyKaelor), { power: 3, endurance: 4 });
 
   const nextAlly = addCard(hostTurn, customCard("arven_next_turn_ally", "player"));
   recordFieldEntry(hostTurn, nextAlly);
   runInvokedTriggers(hostTurn, nextAlly);
   drainEventQueue(hostTurn);
-  assert.deepEqual(getPowerEndurance(hostTurn, readyArven), { power: 4, endurance: 4 });
+  assert.deepEqual(getPowerEndurance(hostTurn, readyKaelor), { power: 4, endurance: 5 });
 });
 
 test("Blood Page gets +2/+0 from the first life loss of each turn", () => {
@@ -1552,7 +1589,7 @@ test("a failed cast does not move cards, Exhaust Sources, or spend Energy", () =
   assert.deepEqual(result.player.energyPool, energyBefore);
 });
 
-test("Savia del Primer Árbol applies +3/+3 and cleanup removes the temporary buff", () => {
+test("Elixir de la Primera Hoja applies +3/+3 and cleanup removes the temporary buff", () => {
   const game = createTestGame();
   addSources(game, 1);
   const creature = addCard(game, customCard("test_bear", "player", { power: 2, endurance: 2 }));
@@ -1569,7 +1606,7 @@ test("Savia del Primer Árbol applies +3/+3 and cleanup removes the temporary bu
   assert.deepEqual(getPowerEndurance(cleaned, restored), { power: 2, endurance: 2 });
 });
 
-test("Cuando las Raíces Tocaron el Cielo only offers legal permanent types and destroys The Hollow Bell", () => {
+test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
   const game = createTestGame();
   addSources(game, 3);
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
@@ -1588,7 +1625,7 @@ test("Cuando las Raíces Tocaron el Cielo only offers legal permanent types and 
   assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
 });
 
-test("La Presa Señalada deals source power and preserves deathtouch for death cleanup", () => {
+test("Choque de Ecos deals source power and preserves deathtouch for death cleanup", () => {
   const game = createTestGame();
   addSources(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
@@ -1606,7 +1643,7 @@ test("La Presa Señalada deals source power and preserves deathtouch for death c
   assert.equal(result.host.memory.some((card) => card.instanceId === target.instanceId), true);
 });
 
-test("El Juramento del Claro buffs first, then both creatures deal simultaneous damage", () => {
+test("Escudo de la Heredera buffs first, then both creatures deal simultaneous damage", () => {
   const game = createTestGame();
   addSources(game, 2);
   const friendly = addCard(game, customCard("friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1632,7 +1669,7 @@ test("El Juramento del Claro buffs first, then both creatures deal simultaneous 
   assert.equal(restoredFriendly.damageMarked, 0);
 });
 
-test("El Juramento del Claro can stage its buff before the deferred fight impact", () => {
+test("Escudo de la Heredera can stage its buff before the deferred fight impact", () => {
   const game = createTestGame();
   addSources(game, 2);
   const friendly = addCard(game, customCard("staged_friendly_fighter", "player", { power: 2, endurance: 2 }));
@@ -1664,7 +1701,7 @@ test("El Juramento del Claro can stage its buff before the deferred fight impact
   assert.equal(untouchedEnemy.damageMarked, 3);
 });
 
-test("Iria can target herself, adds one counter, and gains three Life", () => {
+test("Aelyra can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addSources(game, 1);
   const iria = addCard(game, cardFromDeck("iria_voice_last_rain", "player", "hand"), "player", "hand");
@@ -1672,7 +1709,7 @@ test("Iria can target herself, adds one counter, and gains three Life", () => {
   const result = castCard(game, iria.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === iria.instanceId);
   const manualTrigger = findManualInvokedTargetTrigger(permanent);
-  assert.ok(manualTrigger, "Iria should expose her manual Invoked trigger");
+  assert.ok(manualTrigger, "Aelyra should expose her manual Invoked trigger");
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
     side: "player",
@@ -1684,7 +1721,7 @@ test("Iria can target herself, adds one counter, and gains three Life", () => {
   assert.deepEqual(getPowerEndurance(result, permanent), { power: 1, endurance: 3 });
 });
 
-test("The Hollow Bell grants Menace only while it remains on the battlefield", () => {
+test("The Broken Headstone grants Menace only while it remains on the battlefield", () => {
   const game = createTestGame();
   const grafHarvest = addCard(game, cardFromDeck("hollow_bell", "host"));
   const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));
@@ -1716,7 +1753,7 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.host.archive.length, 2);
 });
 
-test("La Última Lluvia growth cards select the intended presentation intensity", () => {
+test("El Pacto de Elarion growth cards select the intended presentation intensity", () => {
   assert.equal(buffAnimationVariantForCard("iria_voice_last_rain"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("arven_first_pack"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("first_tree_sap"), "growth-strong");
@@ -1809,7 +1846,7 @@ test("Lifesteal gains nothing when first strike kills the blocker before it deal
   assert.equal(result.host.field.find((card) => card.instanceId === attacker.instanceId)?.damageMarked, 0);
 });
 
-test("Crypt Guardian reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
+test("Guardian of the Night Threshold reacts only when that Guardian survives combat damage, before deaths from the same impact", () => {
   const game = createTestGame("crypt-guardian-survives-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_attacker", "host", {
@@ -1846,7 +1883,7 @@ test("Crypt Guardian reacts only when that Guardian survives combat damage, befo
   );
 });
 
-test("Crypt Guardian does not react when the damage event kills it", () => {
+test("Guardian of the Night Threshold does not react when the damage event kills it", () => {
   const game = createTestGame("crypt-guardian-dies-blocking");
   game.player.life = 10;
   const attacker = addCard(game, customCard("crypt_lethal_attacker", "host", {
@@ -1872,7 +1909,7 @@ test("Crypt Guardian does not react when the damage event kills it", () => {
   assert.equal(afterImpact.player.field.some((card) => card.instanceId === guardian.instanceId), false);
 });
 
-test("Crypt Guardian reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
+test("Guardian of the Night Threshold reacts to every nonlethal Goblin damage event without a per-turn limit", () => {
   const game = createTestGame("crypt-guardian-unlimited-goblin-damage");
   game.player.life = 10;
   const guardian = addCard(game, cardFromDeck("crypt_guardian", "player"));
@@ -1958,7 +1995,7 @@ test("Foreman of the Burning Tally burns for Goblins that entered this Host turn
   assert.equal(secondTurn.player.field.find((card) => card.instanceId === target.instanceId)?.damageMarked, 4);
 });
 
-test("Boss of the Double Crew and Foreman of Three Furnaces create their Goblin tokens on entry", () => {
+test("Chief of the Double Guard and Foreman of Three Furnaces create their Goblin tokens on entry", () => {
   const doubleCrewBossGame = createTestGame("doubleCrewBoss-entry");
   const doubleCrewBoss = addCard(doubleCrewBossGame, cardFromDeck("double_crew_boss", "host"));
   runInvokedTriggers(doubleCrewBossGame, doubleCrewBoss);
@@ -1972,7 +2009,7 @@ test("Boss of the Double Crew and Foreman of Three Furnaces create their Goblin 
   assert.equal(threeFurnacesGame.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 3);
 });
 
-test("The Five-Knot Gallows reacts once to each non-token card played and ignores tokens", () => {
+test("Inexhaustible Ossuary reacts once to each non-token card played and ignores tokens", () => {
   const game = createTestGame("gallows-card-played");
   const mob = addCard(game, cardFromDeck("five_knot_gallows", "host"));
 
@@ -1987,7 +2024,7 @@ test("The Five-Knot Gallows reacts once to each non-token card played and ignore
   assert.equal(game.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
 });
 
-test("The Five-Knot Gallows observes real Chronicler plays and Host reveals exactly once", () => {
+test("Inexhaustible Ossuary observes real Chronicler plays and Host reveals exactly once", () => {
   const game = createTestGame("gallows-real-play-paths");
   addCard(game, cardFromDeck("five_knot_gallows", "host"));
   const spell = addCard(game, customCard("gallows_test_spell", "player", {
@@ -2005,7 +2042,7 @@ test("The Five-Knot Gallows observes real Chronicler plays and Host reveals exac
   assert.equal(afterReveal.host.field.filter((card) => card.definitionId === "last_knell_dead").length, 2);
 });
 
-test("Crow discards two Host Archive cards when Invoked and two more when it dies", () => {
+test("Return to Memory discards two Host Archive cards when Invoked and two more when it dies", () => {
   const game = createTestGame("crow-archive-discard");
   const crow = addCard(game, cardFromDeck("archive_carrion_crow", "host"));
   for (let index = 0; index < 4; index += 1) {
@@ -2048,7 +2085,7 @@ test("Memory threshold effects turn on exactly at seven Host cards", () => {
   assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), true);
 });
 
-test("Foreman of Three Furnaces and Gunner of the Last Rivets omit their sacrifice modes", () => {
+test("Foreman of Three Furnaces and Rear-Guard Firebreather omit their sacrifice modes", () => {
   const threeFurnacesForeman = cardFromDeck("three_furnaces_foreman", "host");
   const gunner = cardFromDeck("last_rivets_gunner", "host");
 
@@ -2056,7 +2093,7 @@ test("Foreman of Three Furnaces and Gunner of the Last Rivets omit their sacrifi
   assert.deepEqual(gunner.activatedAbilities, []);
 });
 
-test("Open Another Gate! pumps an existing army or starts another normal reveal round", () => {
+test("Unleash the Legion! pumps an existing army or starts another normal reveal round", () => {
   const pumpGame = createTestGame("goblin-surprise-pump");
   const firstGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
   const secondGoblin = addCard(pumpGame, cardFromDeck("ember_scrap_runner", "host"));
@@ -2105,7 +2142,7 @@ test("Master of the Slag Volley damages a chosen opposing creature equal to the 
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 0);
 });
 
-test("Agitator of the First Siren creates its combat token before Host attackers are declared", () => {
+test("Varka's Linebreaker creates its combat token before Host attackers are declared", () => {
   const game = createTestGame("rabblemaster-combat-token");
   const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
 
@@ -2153,7 +2190,7 @@ test("Host attackers follow summon order instead of regrouping identical definit
   ]);
 });
 
-test("Agitator of the First Siren counts every other attacking Goblin after attack tokens enter", () => {
+test("Varka's Linebreaker counts every other attacking Goblin after attack tokens enter", () => {
   const game = createTestGame("rabblemaster-attack-buff");
   const rabblemaster = addCard(game, cardFromDeck("first_siren_agitator", "host"));
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
@@ -2183,7 +2220,7 @@ test("Open-Furnace Crier gives Host Goblins +1/+0 until end of turn on entry", (
   assert.equal(result.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 1);
 });
 
-test("Marshal of the Repeating Blow creates one attacking token and damages the player when it enters", () => {
+test("Marshal of the Wave creates one attacking token and damages the player when it enters", () => {
   const game = createTestGame("general-kreat-attack");
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
   addCard(game, cardFromDeck("ember_scrap_runner", "host"));
@@ -2196,7 +2233,7 @@ test("Marshal of the Repeating Blow creates one attacking token and damages the 
   assert.equal(result.player.life, 29);
 });
 
-test("Marshal of the Repeating Blow queues a separate player Burn for each other creature entering", () => {
+test("Marshal of the Wave queues a separate player Burn for each other creature entering", () => {
   const game = createTestGame("general-kreat-separate-burns");
   addCard(game, cardFromDeck("repeating_blow_marshal", "host"));
 
@@ -2234,7 +2271,7 @@ test("only Echo invocations broadcast ECHO_INVOKED", () => {
   assert.equal(game.eventQueue.some((event) => event.type === "ECHO_INVOKED"), false);
 });
 
-test("Rain of Rivets defers one damage per small Goblin attacker until combat ends", () => {
+test("All Against One defers one damage per small Goblin attacker until combat ends", () => {
   const game = createTestGame("raid-bombardment");
   const raid = addCard(game, cardFromDeck("rain_of_rivets", "host"));
   const smallGoblin = addCard(game, customCard("small_goblin", "host", { subtypes: ["Goblin"], power: 1 }));
@@ -2296,7 +2333,7 @@ test("Varka, Axis of the Revolt queues one simultaneous Burn volley to the playe
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 1);
 });
 
-test("Marshal of the Last March queues an oil Burn before the player loses life", () => {
+test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {
   const game = createTestGame("lastMarchMarshal-captain-oil-burn");
   const captain = addCard(game, cardFromDeck("last_march_marshal", "host"));
   const zombie = addCard(game, cardFromDeck("last_knell_dead", "host"));
@@ -2320,7 +2357,7 @@ test("Marshal of the Last March queues an oil Burn before the player loses life"
   assert.equal(game.player.life, 29);
 });
 
-test("Gunner of the Last Rivets burns a random opposing creature separately for each Goblin death", () => {
+test("Rear-Guard Firebreather burns a random opposing creature separately for each Goblin death", () => {
   const anotherGoblinDies = createTestGame("gunner-other-dies");
   addCard(anotherGoblinDies, cardFromDeck("last_rivets_gunner", "host"));
   const burnTarget = addCard(anotherGoblinDies, customCard("gunner_burn_target", "player", { endurance: 5 }));
@@ -2340,7 +2377,7 @@ test("Gunner of the Last Rivets burns a random opposing creature separately for 
   assert.equal(cleaned.player.field.find((card) => card.instanceId === burnTarget.instanceId)?.flags.burnSmoke, undefined);
 });
 
-test("Gunner of the Last Rivets resolves a combat death before the next Host combat event", () => {
+test("Rear-Guard Firebreather resolves a combat death before the next Host combat event", () => {
   const game = createTestGame("gunner-combat-timing");
   addCard(game, cardFromDeck("last_rivets_gunner", "host"));
   const goblin = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
@@ -2378,7 +2415,7 @@ test("a blocker removed between Host impacts cannot deal ghost combat damage", (
   assert.equal(resolved.player.life, 30);
 });
 
-test("Caller of the Next Crew resolves exactly once when it dies", () => {
+test("Summoner of the Ranks resolves exactly once when it dies", () => {
   const game = createTestGame("caller-self-dies");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   addCard(game, cardFromDeck("ember_scrap_runner", "host", "archive"), "host", "archive");
@@ -2392,7 +2429,7 @@ test("Caller of the Next Crew resolves exactly once when it dies", () => {
   assert.equal(game.host.oblivion.length, 0);
 });
 
-test("Caller of the Next Crew moves a non-Goblin inspection to the bottom of the Archive", () => {
+test("Summoner of the Ranks moves a non-Goblin inspection to the bottom of the Archive", () => {
   const game = createTestGame("caller-non-goblin-bottom");
   addCard(game, cardFromDeck("next_crew_caller", "host"));
   const support = addCard(game, cardFromDeck("shift_hammer", "host", "archive"), "host", "archive");
@@ -2411,7 +2448,7 @@ test("Caller of the Next Crew moves a non-Goblin inspection to the bottom of the
   assert.equal(game.host.field.some((card) => card.instanceId === support.instanceId), false);
 });
 
-test("one Goblin death gives Caller of the Next Crew and Gunner of the Last Rivets a separate resolution each", () => {
+test("one Goblin death gives Summoner of the Ranks and Rear-Guard Firebreather a separate resolution each", () => {
   const game = createTestGame("goblin-death-two-reactors");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   const gunner = addCard(game, cardFromDeck("last_rivets_gunner", "host"));
@@ -2430,7 +2467,7 @@ test("one Goblin death gives Caller of the Next Crew and Gunner of the Last Rive
     pendingTriggerSources(game, death).map((source) => source.instanceId),
     [caller.instanceId],
   );
-  assert.equal(game.host.archive.length, 1, "Caller of the Next Crew must not inspect before its own beat");
+  assert.equal(game.host.archive.length, 1, "Summoner of the Ranks must not inspect before its own beat");
 
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
   assert.equal(pendingTriggerSources(game, death).length, 0);
@@ -2441,8 +2478,8 @@ test("a creature that enters because of a death does not react to that death", (
   const game = createTestGame("no-reaction-to-own-summon");
   const caller = addCard(game, cardFromDeck("next_crew_caller", "host"));
   addCard(game, customCard("player_blocker", "player", { power: 2, endurance: 4 }), "player");
-  // Caller of the Next Crew inspects the top card on a Goblin death; that card is Gunner of the Last Rivets, who also reacts to
-  // Goblin deaths. Gunner of the Last Rivets was not in play when the Goblin died, so it must never react to it.
+  // Summoner of the Ranks inspects the top card on a Goblin death; that card is Rear-Guard Firebreather, who also reacts to
+  // Goblin deaths. Rear-Guard Firebreather was not in play when the Goblin died, so it must never react to it.
   addCard(game, cardFromDeck("last_rivets_gunner", "host", "archive"), "host", "archive");
   const victim = addCard(game, cardFromDeck("ember_scrap_runner", "host"));
 
@@ -2453,15 +2490,15 @@ test("a creature that enters because of a death does not react to that death", (
   // drain collects its sources up front and would hide this.
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
   const gunner = game.host.field.find((card) => card.definitionId === "last_rivets_gunner");
-  assert.ok(gunner, "Caller of the Next Crew must have Invoked Gunner of the Last Rivets onto the battlefield");
+  assert.ok(gunner, "Summoner of the Ranks must have Invoked Rear-Guard Firebreather onto the battlefield");
   assert.deepEqual(
     pendingTriggerSources(game, death).map((source) => source.definitionId),
     [],
-    "Gunner of the Last Rivets entered after the death and must not be queued as a reactor",
+    "Rear-Guard Firebreather entered after the death and must not be queued as a reactor",
   );
 
   drainEventQueue(game);
-  assert.equal(game.player.field[0].damageMarked, 0, "Gunner of the Last Rivets must not burn for the death that summoned it");
+  assert.equal(game.player.field[0].damageMarked, 0, "Rear-Guard Firebreather must not burn for the death that summoned it");
 });
 
 test("a creature summoned by an effect still announces its own enter trigger", () => {
@@ -2475,7 +2512,7 @@ test("a creature summoned by an effect still announces its own enter trigger", (
   resolveTriggeredEvent(game, death, undefined, caller.instanceId);
 
   const chief = game.host.field.find((card) => card.definitionId === "double_crew_boss");
-  assert.ok(chief, "Caller of the Next Crew must have Invoked Boss of the Double Crew onto the battlefield");
+  assert.ok(chief, "Summoner of the Ranks must have Invoked Chief of the Double Guard onto the battlefield");
   // The tokens must NOT already be there: the Chief owes its own beat first, exactly as it
   // would arriving through the normal Host reveal.
   assert.equal(game.host.field.filter((card) => card.definitionId === "ember_scrap_runner").length, 0);
@@ -2503,14 +2540,14 @@ test("an effect that queues a follow-up keeps it ahead of the other reactors", (
   const death = game.eventQueue.find((event) => event.type === "ECHO_DIED");
   const queuedBefore = new Set(game.eventQueue.map((event) => event.id));
 
-  // Gunner of the Last Rivets's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
+  // Rear-Guard Firebreather's trigger does not damage directly, it queues a BURN_DAMAGE event. The animated
   // runner puts anything a beat spawned ahead of the reactors still waiting on the parent, so
   // one card's effect never splits in half around another card's.
   resolveTriggeredEvent(game, death, undefined, gunner.instanceId);
   const spawned = game.eventQueue.filter((event) => !queuedBefore.has(event.id));
 
   assert.deepEqual(spawned.map((event) => event.type), ["BURN_DAMAGE"]);
-  assert.equal(pendingTriggerSources(game, death).length, 1, "Caller of the Next Crew still owes its own beat");
+  assert.equal(pendingTriggerSources(game, death).length, 1, "Summoner of the Ranks still owes its own beat");
 });
 
 test("a resolved trigger source is never resolved a second time by a bulk drain", () => {
@@ -2535,7 +2572,7 @@ test("static auras only announce the creatures that newly fell under them", () =
 
   const before = collectStaticAuras(game, "host");
   const buff = before.find((aura) => aura.power === 1 && aura.endurance === 1);
-  assert.ok(buff, "Caller of the Next Crew's +1/+1 must be visible as a static aura");
+  assert.ok(buff, "Summoner of the Ranks' +1/+1 must be visible as a static aura");
   assert.deepEqual(buff.affectedIds, [first.instanceId]);
   assert.equal(buff.controller, "host");
 

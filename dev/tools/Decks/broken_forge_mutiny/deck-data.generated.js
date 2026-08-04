@@ -2,126 +2,196 @@
 window.HostfallDeckData = [
   {
     "id": "ember_scrap_runner",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
-    "nombre": "Corredor de Ascua y Chatarra",
-    "tipo": "Eco · Ficha — Trasgo Corredor",
+    "collectorId": "HFA1031",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.jpg",
+    "nombre": "Esbirro de Varka",
+    "tipo": "Eco · Ficha — Trasgo Esbirro",
     "costo": 0,
     "atk": 1,
     "def": 1,
     "desc": "Sin efecto adicional.",
-    "lore": "Cada corredor lleva una brasa. Juntos llevan el incendio.",
+    "lore": "Varka los llama chispas. La Legión los llama la primera oleada.",
     "showFlavorText": true,
     "cantidad": 24,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1,
+      "x": -10,
+      "y": 2
+    }
   },
   {
     "id": "burning_tally_foreman",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
-    "nombre": "Capataz del Recuento Ardiente",
-    "tipo": "Eco — Trasgo Capataz",
+    "collectorId": "HFA1032",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.jpg",
+    "nombre": "Chamán de la Brasa Sombría",
+    "tipo": "Eco — Orco Chamán",
     "costo": 3,
     "atk": 2,
     "def": 3,
-    "desc": "Los demás Trasgos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos invocados este turno.",
-    "lore": "No cuenta trabajadores; cuenta golpes que aún le debe al enemigo.",
+    "desc": "Los demás Ecos aliados ganan +1/+1. Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Ecos invocados este turno.",
+    "lore": "Su recuento sólo registra cuántos soldados puede gastar todavía Varka.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 63,
+      "y": -78
+    }
   },
   {
     "id": "next_crew_caller",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
-    "nombre": "Llamador de la Próxima Cuadrilla",
-    "tipo": "Eco — Trasgo Llamador",
+    "collectorId": "HFA1033",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.jpg",
+    "nombre": "Invocador de las Filas",
+    "tipo": "Eco — Trasgo Invocador",
     "costo": 2,
     "atk": 1,
     "def": 1,
-    "desc": "Los demás Trasgos aliados ganan +1/+1. Cada vez que un Trasgo aliado muere, mira la primera carta del Archivo. Si es un Eco Trasgo, Invócalo. Si no, ponla al fondo del Archivo.",
-    "lore": "Si uno cae, su placa de turno llama al siguiente.",
+    "desc": "Los demás Ecos aliados ganan +1/+1. Cada vez que un Eco aliado muere, mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo.",
+    "lore": "Cuando uno cae, la marca de Varka llama a la siguiente criatura a las filas.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false
   },
   {
     "id": "open_furnace_crier",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
-    "nombre": "Pregonero del Horno Abierto",
-    "tipo": "Eco — Trasgo Pregonero",
+    "collectorId": "HFA1034",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.jpg",
+    "nombre": "Portaestandarte de Varka",
+    "tipo": "Eco — Trasgo Portaestandarte",
     "costo": 2,
     "atk": 2,
     "def": 2,
-    "desc": "Al ser invocado, los Trasgos aliados ganan +1/+0 hasta el final del turno.",
-    "lore": "Abrió la compuerta antes de terminar el grito.",
+    "desc": "Al ser invocado, los Ecos aliados ganan +1/+0 hasta el final del turno.",
+    "lore": "No anuncia el asalto. Repite la orden de Varka.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": 0,
+      "y": -60
+    }
   },
   {
     "id": "shift_hammer",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.png",
+    "collectorId": "HFA1035",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.jpg",
     "nombre": "El Martillo de Turno",
     "tipo": "Apoyo",
     "costo": 3,
     "atk": null,
     "def": null,
-    "desc": "Los Trasgos aliados ganan Imponente.",
-    "lore": "Cada golpe hace avanzar otra fila.",
+    "desc": "Los Ecos aliados ganan Imponente.",
+    "lore": "Cada golpe lleva la orden de la Matriarca a través de las filas.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1,
+      "x": -32,
+      "y": -8
+    }
   },
   {
     "id": "rain_of_rivets",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
-    "nombre": "Lluvia de Remaches",
+    "collectorId": "HFA1036",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.jpg",
+    "nombre": "Todos contra uno",
     "tipo": "Apoyo",
     "costo": 3,
     "atk": null,
     "def": null,
-    "desc": "Después de resolver el ataque de la Hueste, cada Trasgo atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
-    "lore": "Lo que no sirve de armadura todavía sirve de proyectil.",
+    "desc": "Después de resolver el ataque de la Hueste, cada Eco atacante con Fuerza 2 o menos aporta 1 de daño a una salva contra el Cronista.",
+    "lore": "Bajo el mando de Varka, hasta el metal descartado se convierte en arma.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1.17,
+      "x": 16,
+      "y": -16
+    }
   },
   {
     "id": "double_crew_boss",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
-    "nombre": "Jefe de la Cuadrilla Doble",
-    "tipo": "Eco — Trasgo Capataz",
+    "collectorId": "HFA1037",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.jpg",
+    "nombre": "Jefe de la Doble Guardia",
+    "tipo": "Eco — Trasgo Jefe",
     "costo": 4,
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocado, Invoca dos Ecos Ficha Trasgo 1/1.",
     "lore": "Dos cargan las herramientas. El jefe carga el mérito.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": 9,
+      "y": -144
+    }
   },
   {
     "id": "three_furnaces_foreman",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
-    "nombre": "Capataz de los Tres Hornos",
-    "tipo": "Eco — Trasgo Capataz",
+    "collectorId": "HFA1038",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.jpg",
+    "nombre": "Jinete de la Tercera Carga",
+    "tipo": "Eco — Trasgo Jinete",
     "costo": 5,
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocado, Invoca tres Ecos Ficha Trasgo 1/1.",
     "lore": "Tres hornos, tres cuadrillas, una orden mal entendida entre todos.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1.04,
+      "x": -6,
+      "y": -200
+    }
   },
   {
     "id": "first_siren_agitator",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
-    "nombre": "Agitador de la Primera Sirena",
-    "tipo": "Eco — Trasgo Agitador",
+    "collectorId": "HFA1039",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.jpg",
+    "nombre": "Rompefilas de Varka",
+    "tipo": "Eco — Orco Rompefilas",
     "costo": 3,
     "atk": 2,
     "def": 2,
     "desc": "Al comienzo de la Batalla de la Hueste, Invoca un Eco Ficha Trasgo 1/1. Cuando ataque, gana +1/+0 por cada otro Trasgo atacante.",
     "lore": "La primera sirena no anuncia peligro. Lo fabrica.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -6,
+      "y": -103
+    }
   },
   {
     "id": "open_another_gate",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.png",
-    "nombre": "¡Abran Otra Compuerta!",
+    "collectorId": "HFA1040",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.jpg",
+    "nombre": "¡Liberen a la Legión!",
     "tipo": "Hechizo · Rápido",
     "costo": 3,
     "atk": null,
@@ -129,97 +199,159 @@ window.HostfallDeckData = [
     "desc": "La Hueste elige uno: sus aliados ganan +2/+0 hasta el final del turno; o comienza otra ronda de Revelado.",
     "lore": "Tras cada compuerta hay refuerzos o suficiente fuego para fingirlos.",
     "showFlavorText": false,
-    "cantidad": 3
+    "cantidad": 3,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -2,
+      "y": -245
+    }
   },
   {
     "id": "three_under_one_anvil",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
-    "nombre": "Tres Bajo el Mismo Yunque",
-    "tipo": "Eco — Trasgo Cuadrilla",
+    "collectorId": "HFA1041",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.jpg",
+    "nombre": "Oso de Guerra Corrompido",
+    "tipo": "Eco — Bestia Oso",
     "costo": 3,
     "atk": 3,
     "def": 3,
     "desc": "Sin efecto adicional.",
     "lore": "Tres martillos, un yunque y ningún acuerdo sobre quién manda.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -2,
+      "y": -163
+    }
   },
   {
     "id": "slag_volley_master",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
-    "nombre": "Maestro de la Salva de Escoria",
-    "tipo": "Eco — Trasgo Artillero",
+    "collectorId": "HFA1042",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.jpg",
+    "nombre": "Jinete de la Salva Umbría",
+    "tipo": "Eco — Orco Jinete",
     "costo": 4,
     "atk": 4,
     "def": 2,
-    "desc": "Al ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados.",
+    "desc": "Volar\nAl ser invocado, inflige al mejor enemigo tanto daño como la cantidad de Trasgos aliados.",
     "lore": "Mide la salva por las voces que responden.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -129,
+      "y": -190
+    }
   },
   {
     "id": "varka_revolt_axis",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
-    "nombre": "Varka, Eje de la Revuelta",
-    "tipo": "Eco de Crónica — Trasgo Giracadenas",
+    "collectorId": "HFA1043",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.jpg",
+    "nombre": "Varka, Matriarca Infernal",
+    "tipo": "Eco de Crónica — Diablesa Matriarca",
     "costo": 3,
     "atk": 3,
     "def": 3,
     "desc": "Reflejos\nAl ser invocado, inflige 1 de daño al Cronista y a cada enemigo.",
     "lore": "No rompió las cadenas. Aprendió a hacerlas girar.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "isChronicle": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 0.925,
+      "x": 5,
+      "y": -57
+    }
   },
   {
     "id": "salvaged_armor_master",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
-    "nombre": "Maestro de la Armadura Recuperada",
-    "tipo": "Eco — Trasgo Armero",
+    "collectorId": "HFA1044",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.jpg",
+    "nombre": "Forjador de Varka",
+    "tipo": "Eco — Orco Forjador",
     "costo": 4,
     "atk": 3,
     "def": 3,
     "desc": "Los demás Trasgos aliados ganan +1/+1.",
     "lore": "Cada placa robada convierte a otro obrero en soldado.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.855,
+      "x": 14,
+      "y": -89
+    }
   },
   {
     "id": "repeating_blow_marshal",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
-    "nombre": "Mariscal del Golpe Repetido",
-    "tipo": "Eco — Trasgo Mariscal",
+    "collectorId": "HFA1045",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.jpg",
+    "nombre": "Mariscal de la Oleada",
+    "tipo": "Eco — Orco Mariscal",
     "costo": 3,
     "atk": 2,
     "def": 2,
     "desc": "Cuando los Trasgos aliados atacan, Invoca un Eco Ficha Trasgo 1/1 atacando. Cada vez que otro aliado sea invocado, el Cronista pierde 1 de Vida.",
     "lore": "Cada nuevo martillo repite su orden sobre los huesos del Cronista.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": -14,
+      "y": -144
+    }
   },
   {
     "id": "brakka_growing_tally",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
-    "nombre": "Brakka, la Cuenta Creciente",
-    "tipo": "Eco — Trasgo Reclutador",
+    "collectorId": "HFA1046",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.jpg",
+    "nombre": "Vardek, Escriba de la Legión",
+    "tipo": "Eco — Trasgo Escriba",
     "costo": 3,
     "atk": 1,
     "def": 2,
     "desc": "Cuando ataque, pon un contador +1/+1 sobre esta carta. Luego Invoca tantos Ecos Ficha Trasgo 1/1 atacando como su Fuerza.",
     "lore": "Marca una victoria en su armadura y la cuadrilla aparece para cobrarla.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": 4,
+      "y": -109
+    }
   },
   {
     "id": "last_rivets_gunner",
-    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
-    "nombre": "Artillero de los Últimos Remaches",
-    "tipo": "Eco — Trasgo Artillero",
+    "collectorId": "HFA1047",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.jpg",
+    "nombre": "Escupefuego de la Retaguardia",
+    "tipo": "Eco — Orco Escupefuego",
     "costo": 3,
     "atk": 2,
     "def": 2,
     "desc": "Cada vez que un Trasgo aliado muera, inflige 1 de daño a un enemigo aleatorio.",
     "lore": "Recoge el último remache antes de que el cuerpo toque el suelo.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 0,
+      "y": -133
+    }
   }
 ];

@@ -5,6 +5,8 @@ import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export type NewDeckCard = {
   id: string;
+  /** Stable printed identity: HF (Hostfall) + A1 (Act I) + three-digit sequence. */
+  collectorId?: string;
   name: string;
   displayNameEs?: string;
   gameText?: {
@@ -41,7 +43,7 @@ export type NewDeckCard = {
 /** Marks an ability the engine does not run generically.
  *  - "pending": not implemented yet; the normalizer skips it and deck lint reports it as WIP.
  *  - "ignored": deliberately not implemented for this game mode (e.g. haste grants for the Host).
- *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Tithe of Flesh and Root). */
+ *  - "custom": handled by a bespoke code path outside the generic resolver (e.g. Tribute of the Four Sorrows). */
 export type AbilityEngineSupport = "pending" | "ignored" | "custom";
 
 export type NewDeckAbility = {

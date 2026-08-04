@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
   "id": "crimson_court",
-  "name": "La Corte Carmesí",
+  "name": "La Corte del Eclipse Carmesí",
   "format": "casual",
   "side": "CHRONICLER",
   "deckSize": 40,
   "gameplayLandCount": 12,
   "archetype": "life-payment-lifesteal",
-  "gamePlan": "Paga Vida para acelerar tu desarrollo y convertirla en Fuerza. Ataca directamente a la Hueste para recuperar Vida, pero conserva Ecos para defender cuando la Hueste amenace con devolverte el golpe.",
+  "gamePlan": "Paga Vida para alimentar los ritos del Eclipse Carmesí, convierte el dolor en Fuerza y recupera lo entregado mediante Drenar bajo el dominio de Mirevna.",
   "mechanics": {
     "lifePayment": "Pagar Vida es un coste, no daño, y nunca puede reducir tu Vida por debajo de 1.",
     "lifesteal": "Cuando un Eco con Drenar hace daño de Batalla, recuperas esa misma cantidad de Vida.",
@@ -17,15 +17,16 @@
   "cards": [
     {
       "id": "crimson_energy",
-      "name": "Crimson Energy",
-      "displayNameEs": "Energía Carmesí",
+      "collectorId": "HFA1048",
+      "name": "Sanctuary of the Red Moon",
+      "displayNameEs": "Santuario de la Luna Roja",
       "gameText": {
         "en": "Exhaust: Gain 1 Energy.",
         "es": "Agota: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "Every vow leaves something behind.",
-        "es": "Todo juramento deja algo atrás."
+        "en": "During the eclipse, every tower casts a shadow pointing toward Mirevna's throne.",
+        "es": "Durante el eclipse, cada torre proyecta una sombra que apunta hacia el trono de Mirevna."
       },
       "showFlavorText": true,
       "quantity": 12,
@@ -60,6 +61,7 @@
     },
     {
       "id": "blood_page",
+      "collectorId": "HFA1049",
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
@@ -67,8 +69,8 @@
         "es": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno."
       },
       "flavorText": {
-        "en": "The youngest learn to serve before they learn to feed.",
-        "es": "Los más jóvenes aprenden a servir antes que a alimentarse."
+        "en": "Her cup never empties; every wound in the court fills it again.",
+        "es": "Su copa nunca se vacía; cada herida de la corte vuelve a llenarla."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -116,15 +118,16 @@
     },
     {
       "id": "crimson_bat",
-      "name": "Crimson Bat",
-      "displayNameEs": "Murciélago Carmesí",
+      "collectorId": "HFA1050",
+      "name": "Herald of the Eclipse",
+      "displayNameEs": "Heraldo del Eclipse",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "The bells fall silent before its wings arrive.",
-        "es": "Las campanas callan antes de que lleguen sus alas."
+        "en": "The first shadow of the eclipse always arrives on wings.",
+        "es": "La primera sombra del eclipse siempre llega con alas."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -148,15 +151,16 @@
     },
     {
       "id": "tithe_acolyte",
-      "name": "Tithe Acolyte",
-      "displayNameEs": "Acólito del Diezmo",
+      "collectorId": "HFA1051",
+      "name": "Midnight Collector",
+      "displayNameEs": "Recaudador de Medianoche",
       "gameText": {
         "en": "Exhaust and pay 5 Life: Gain 1 Energy.",
         "es": "Agota y paga 5 de Vida: Gana 1 Energía."
       },
       "flavorText": {
-        "en": "The court accepts every currency, especially the one that hurts.",
-        "es": "La corte acepta toda moneda, especialmente la que duele."
+        "en": "Mirevna collects no gold. She collects the years you still thought you would live.",
+        "es": "Mirevna no cobra oro. Cobra los años que aún pensabas vivir."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -165,7 +169,7 @@
       },
       "subtypes": [
         "Vampire",
-        "Cleric"
+        "Collector"
       ],
       "power": 1,
       "endurance": 2,
@@ -196,15 +200,16 @@
     },
     {
       "id": "court_duelist",
-      "name": "Court Duelist",
-      "displayNameEs": "Duelista de la Corte",
+      "collectorId": "HFA1052",
+      "name": "Duelist of the Eclipse",
+      "displayNameEs": "Duelista del Eclipse",
       "gameText": {
         "en": "Once during your turn, you may pay 3 Life. If you do, this Echo gains +3/+1 until your next turn.",
         "es": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno."
       },
       "flavorText": {
-        "en": "Courtesy ends at the first drawn blade.",
-        "es": "La cortesía termina con la primera hoja desenvainada."
+        "en": "Beneath the crimson moon, every bow leaves the neck exposed.",
+        "es": "Bajo la luna carmesí, cada reverencia deja el cuello expuesto."
       },
       "showFlavorText": false,
       "quantity": 3,
@@ -245,15 +250,16 @@
     },
     {
       "id": "crypt_guardian",
-      "name": "Crypt Guardian",
-      "displayNameEs": "Guardián de la Cripta",
+      "collectorId": "HFA1053",
+      "name": "Guardian of the Night Threshold",
+      "displayNameEs": "Guardiana del Umbral Nocturno",
       "gameText": {
         "en": "When this card is dealt damage and survives, gain 2 Life.",
         "es": "Cuando reciba daño y sobreviva, ganas 2 de Vida."
       },
       "flavorText": {
-        "en": "Nothing leaves the crypt without his permission.",
-        "es": "Nada abandona la cripta sin su permiso."
+        "en": "Every blow that fails to fell her strengthens the pulse of the court.",
+        "es": "Cada golpe que no la derriba fortalece el pulso de la corte."
       },
       "showFlavorText": true,
       "quantity": 3,
@@ -295,15 +301,16 @@
     },
     {
       "id": "black_vein_executioner",
-      "name": "Black Vein Executioner",
-      "displayNameEs": "Verdugo de la Vena Negra",
+      "collectorId": "HFA1054",
+      "name": "Assassin of the Black Veil",
+      "displayNameEs": "Asesina del Velo Negro",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "One cut is enough. The vein does the rest.",
-        "es": "Un corte basta. La vena hace el resto."
+        "en": "She does not spill blood; she teaches it to leave without a sound.",
+        "es": "No derrama sangre; le enseña a abandonar el cuerpo sin hacer ruido."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -326,15 +333,16 @@
     },
     {
       "id": "blood_sentinel",
-      "name": "Blood Sentinel",
-      "displayNameEs": "Centinela de Sangre",
+      "collectorId": "HFA1055",
+      "name": "Sentinel of the Lunar Eye",
+      "displayNameEs": "Centinela del Ojo Lunar",
       "gameText": {
         "en": "No additional effect.",
         "es": "Sin efecto adicional."
       },
       "flavorText": {
-        "en": "Duty keeps the hunger on a short chain.",
-        "es": "El deber mantiene el hambre atada con una cadena corta."
+        "en": "The eye in his palm remains awake when the moon disappears.",
+        "es": "El ojo de su palma permanece despierto cuando la luna desaparece."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -343,8 +351,7 @@
       },
       "subtypes": [
         "Human",
-        "Vampire",
-        "Knight"
+        "Elf"
       ],
       "power": 3,
       "endurance": 4,
@@ -358,15 +365,16 @@
     },
     {
       "id": "eternal_feast_countess",
-      "name": "Countess of the Eternal Feast",
-      "displayNameEs": "Condesa del Banquete Eterno",
+      "collectorId": "HFA1056",
+      "name": "Mirevna, Countess of the Crimson Eclipse",
+      "displayNameEs": "Mirevna, Condesa del Eclipse Carmesí",
       "gameText": {
         "en": "Additional cost: Pay half your Life.\nDuring your turn, this Echo has Drain.",
         "es": "Coste adicional: Paga la mitad de tu Vida.\nDurante tu turno, este Eco tiene Drenar."
       },
       "flavorText": {
-        "en": "Her court has waited centuries for the final guest.",
-        "es": "Su corte ha esperado siglos al último invitado."
+        "en": "When Mirevna opens her eyes, even the moon seems to hold its breath.",
+        "es": "Cuando Mirevna abre los ojos, hasta la luna parece contener el aliento."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -425,15 +433,16 @@
     },
     {
       "id": "blood_pact",
-      "name": "Blood Pact",
-      "displayNameEs": "Pacto de Sangre",
+      "collectorId": "HFA1057",
+      "name": "Midnight Pact",
+      "displayNameEs": "Pacto de Medianoche",
       "gameText": {
         "en": "Additional cost: Pay 5 Life.\nDraw 2 cards.",
         "es": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas."
       },
       "flavorText": {
-        "en": "Knowledge never asks whether the price was fair.",
-        "es": "El conocimiento nunca pregunta si el precio fue justo."
+        "en": "Five heartbeats buy two secrets. Neither returns to its owner.",
+        "es": "Cinco latidos compran dos secretos. Ninguno regresa a su dueño."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -468,6 +477,7 @@
     },
     {
       "id": "crimson_impulse",
+      "collectorId": "HFA1058",
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
@@ -475,8 +485,8 @@
         "es": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno."
       },
       "flavorText": {
-        "en": "Pain is merely strength waiting for direction.",
-        "es": "El dolor sólo es fuerza esperando una dirección."
+        "en": "For an instant, the entire eclipse fits inside a single vein.",
+        "es": "Durante un instante, el eclipse cabe entero dentro de una sola vena."
       },
       "showFlavorText": false,
       "quantity": 2,
@@ -534,6 +544,7 @@
     },
     {
       "id": "drain_essence",
+      "collectorId": "HFA1059",
       "name": "Drain Essence",
       "displayNameEs": "Drenar la Esencia",
       "gameText": {
@@ -541,8 +552,8 @@
         "es": "Haz 3 de daño a un Eco. Gana 2 de Vida."
       },
       "flavorText": {
-        "en": "Even the dead have something left to surrender.",
-        "es": "Hasta los muertos conservan algo que entregar."
+        "en": "The night takes three parts and returns only two.",
+        "es": "La noche toma tres partes y devuelve solamente dos."
       },
       "showFlavorText": true,
       "quantity": 2,
@@ -597,15 +608,16 @@
     },
     {
       "id": "predatory_thirst",
-      "name": "Predatory Thirst",
-      "displayNameEs": "Sed Depredadora",
+      "collectorId": "HFA1060",
+      "name": "Hunt Beneath the Red Moon",
+      "displayNameEs": "Cacería Bajo la Luna Roja",
       "gameText": {
         "en": "All your allies gain Drain until the End.",
         "es": "Todos tus aliados ganan Drenar hasta el Final."
       },
       "flavorText": {
-        "en": "Hunger sharpens every step toward the Host.",
-        "es": "El hambre afila cada paso hacia el Host."
+        "en": "When the moon turns red, the whole court remembers it has fangs.",
+        "es": "Cuando la luna enrojece, toda la corte recuerda que también tiene colmillos."
       },
       "showFlavorText": true,
       "quantity": 1,
@@ -645,15 +657,16 @@
     },
     {
       "id": "final_banquet",
-      "name": "Final Banquet",
-      "displayNameEs": "Banquete Final",
+      "collectorId": "HFA1061",
+      "name": "Verdict of the Eclipse",
+      "displayNameEs": "Veredicto del Eclipse",
       "gameText": {
         "en": "Destroy an enemy. Lose Life equal to its Power.",
         "es": "Destruye un enemigo. Pierdes Vida igual a su Fuerza."
       },
       "flavorText": {
-        "en": "The last guest always pays for the feast.",
-        "es": "El último invitado siempre paga el banquete."
+        "en": "The eclipse passes no sentence. Mirevna simply points to who ceases to exist.",
+        "es": "El eclipse no dicta sentencia. Mirevna simplemente señala quién deja de existir."
       },
       "showFlavorText": true,
       "quantity": 1,

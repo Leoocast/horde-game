@@ -65,6 +65,7 @@ El schema Hostfall vigente es `1.0.0` y los cuatro decks activos ya lo usan. Un 
 ```json
 {
   "id": "example_guardian",
+  "collectorId": "HFA1062",
   "name": "Example Guardian",
   "displayNameEs": "Guardián de ejemplo",
   "gameText": {
@@ -87,6 +88,9 @@ Reglas:
 - `id` debe ser estable y en `snake_case`. Los lookups runtime son globales a `DECK_REGISTRY`, así
   que no reutilizar el mismo id para cartas distintas de decks diferentes. La excepción existente
   es una misma definición de token repetida de forma idéntica en `cards` y `tokens`.
+- `collectorId` es el identificador impreso y también debe ser globalmente único. El Acto I usa
+  `HFA1xxx`: `HF` = Hostfall, `A1` = Acto I y los últimos tres dígitos son la secuencia continua.
+  Una misma definición repetida en `cards` y `tokens` conserva el mismo `collectorId`.
 - `quantity` controla cuántas copias entran al deck.
 - `deckSize` debe coincidir con la suma de `quantity` en `cards`.
 - Los tokens reutilizables deben estar en `tokens`; `tokens` no se expande dentro de la library.
@@ -327,7 +331,7 @@ Marca habilidades que no deben llegar al resolver genérico:
 El normalizador filtra cualquier habilidad que tenga uno de estos marcadores. Sin marcador, la
 habilidad promete estar soportada y debe pasar el lint completa.
 
-Diezmo de Carne y Raíz (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
+Tributo de los Cuatro Pesares (`flesh_root_tithe`) es el bridge bespoke vigente. No usar `"custom"` como atajo normal: requiere un camino
 real que resuelva la carta y tests propios.
 
 ## 5. Presentación y animaciones
@@ -357,7 +361,7 @@ y los triggers de muerte tampoco necesitan ramas por carta.
 ## 6. Target manual al entrar
 
 Existe un camino genérico para triggers obligatorios de entrada que necesitan un target, usado por
-Iria, Voz de la Última Lluvia:
+Aelyra, Heredera de Elarion:
 
 - `findManualEnterTargetTrigger` detecta el wrapper;
 - el store bloquea nuevas invocaciones;
@@ -400,6 +404,12 @@ JSON runtime sigue siendo la única fuente de nombre, reglas, coste, estadístic
 también es la única fuente de flavor y de su visibilidad impresa. `studio.config.json` agrega
 únicamente datos de presentación como `artCrop` y `typeLineEs`. No copiar `gameText`, `flavorText`
 ni `showFlavorText` dentro de la configuración del estudio.
+
+Card Studio deriva del mismo `artCrop` la URL de arte que usan los Ecos recortados del campo. Los
+ajustes opcionales de zoom y traslación para esa vista se guardan en
+`dev/tools/Decks/<deck>/game-art.config.json` y se proyectan a
+`src/data/cardStudioGameArt.generated.json`; ninguno de los dos se edita a mano. Este encuadre no
+reemplaza `artFrame` ni invalida por sí solo el PNG imprimible.
 
 Después de editar cualquiera de esas fuentes:
 

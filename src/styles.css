@@ -4724,10 +4724,12 @@
   }
 
   .card-preview-cropped-image {
+    display: block;
     width: 100%;
     height: 100%;
     max-width: none;
     object-fit: cover;
+    image-rendering: auto;
     clip-path: none;
     transform: none;
   }
@@ -6307,7 +6309,8 @@
   }
 
   .battlefield-row-overflow .battlefield-card-slot {
-    height: calc(var(--battlefield-card-width) * 0.89);
+    /* Keep the runtime viewport identical to Card Studio's canonical 488x434 crop. */
+    height: calc(var(--battlefield-card-width) * 0.8893442623);
   }
 
   .battlefield-side-player .battlefield-row-overflow .card-keyword-stack {
@@ -6347,10 +6350,31 @@
     transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), height 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-image-native-hd > img {
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-battlefield-art-fallback > img {
     width: 140%;
     height: 140%;
     transform: translate(calc(-20% + 18px), calc(-20% + 42px));
+  }
+
+  .battlefield-row-overflow .battlefield-card-slot > .card-visual.card-battlefield-cropped:not(.card-battlefield-art-fallback) > img {
+    position: absolute;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: var(--battlefield-art-source-width, 100%);
+    height: var(--battlefield-art-source-height, 100%);
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+    clip-path: none;
+    transform: translate3d(
+      calc(-50% + var(--battlefield-art-x, 0cqw)),
+      calc(-50% + var(--battlefield-art-y, 0cqw)),
+      0
+    )
+      scale(var(--battlefield-art-zoom, 1));
+    transform-origin: center;
+    transition: none;
   }
 
   /* Optional cropped-card expansion. Add battlefield-card-expand-on-hover to the row to re-enable it. */
@@ -6794,7 +6818,7 @@
     animation: burn-damage-pop 620ms 640ms linear both;
   }
 
-  /* Marshal of the Last March variant: the same Burn timing and audio, rendered as a dense,
+  /* Nerezh, Graveless Matriarch variant: the same Burn timing and audio, rendered as a dense,
      iridescent pitch projectile instead of ordinary flame. */
   .burn-animation-layer-oil {
     --burn-flight-impact-filter:
@@ -8808,12 +8832,7 @@
   .player-hand-cards {
     gap: 0;
     isolation: isolate;
-    transform: translateY(84px);
-    --hand-card-width: clamp(152.9px, min(12.76vw, calc((100cqw - 48px) / 5.3636)), 246.4px);
-  }
-
-  .player-hand-cards.player-hand-cards-larger {
-    --hand-card-width: clamp(162.1px, min(13.53vw, calc((100cqw - 48px) / 5.06)), 261.2px);
+    transform: translateY(94px);
   }
 
   .player-hand-cards > * + * {
@@ -8828,7 +8847,7 @@
     position: relative;
     flex: 0 0 auto;
     width: var(--hand-card-width);
-    height: calc(var(--hand-card-width) * 1.393);
+    height: var(--hand-card-height);
   }
 
   .hand-card {
@@ -8836,12 +8855,22 @@
     left: 50%;
     bottom: 0;
     width: var(--hand-card-width);
-    height: calc(var(--hand-card-width) * 1.393);
+    height: var(--hand-card-height);
     z-index: var(--hand-z);
     transform-origin: 50% 100%;
     backface-visibility: hidden;
     will-change: transform;
-    transition: z-index 0ms;
+    transition:
+      width 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      z-index 0ms;
+  }
+
+  .hand-card.hand-card-held {
+    width: var(--hand-card-held-width);
+    height: var(--hand-card-held-height);
+    transition-duration: 180ms, 180ms, 0ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.16, 1, 0.3, 1), linear;
   }
 
   .hand-card-native-hd,
@@ -10076,7 +10105,7 @@
   width: 190px;
 }
 
-/* Right of the Host panel is for spells and reveals still resolving (Tithe of Flesh and Root). Left is the
+/* Right of the Host panel is for spells and reveals still resolving (Tribute of the Four Sorrows). Left is the
    graveyard side — that is where the deck's graveyard button lives, so cards presented while a
    dies-trigger resolves belong here and exit into it. */
 .host-death-reveal-host {
@@ -11900,12 +11929,110 @@
   font: inherit;
 }
 
-/* Shared stats palette: matches the printed La Última Lluvia card generator. */
+.card-trait-icon-badges-anchor {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+}
+
+.card-trait-icon-badges {
+  position: absolute;
+  top: -24px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.card-trait-icon-badges-host {
+  right: 7px;
+}
+
+.card-trait-icon-badges-player {
+  right: 0;
+}
+
+.card-trait-icon-tooltip-host {
+  flex: 0 0 24px;
+  pointer-events: auto;
+}
+
+.card-keyword-badge.card-trait-icon-badge {
+  position: relative;
+  display: inline-grid;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  place-items: center;
+  border-radius: 7px 7px 0 7px;
+  padding: 0;
+  cursor: help;
+}
+
+.card-trait-icon-badge > svg {
+  width: 13px;
+  height: 13px;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.7));
+  stroke-width: 2.35;
+}
+
+.card-trait-icon-badge > small {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  min-width: 12px;
+  height: 12px;
+  place-items: center;
+  border: 1px solid rgb(220 190 230 / 0.76);
+  border-radius: 999px;
+  background: #322039;
+  color: #fff4ff;
+  font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.72);
+}
+
+.card-trait-icon-tooltip-copy {
+  display: grid;
+  max-width: 19rem;
+  gap: 0.3rem;
+  text-align: left;
+}
+
+.card-trait-icon-tooltip-copy > strong {
+  color: #fff4cc;
+  font-family: "Hostfall Card Lora", Georgia, "Times New Roman", ui-serif, serif;
+  font-size: 1rem;
+}
+
+.card-trait-icon-tooltip-copy > span {
+  color: #f4dfb0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .card-trait-icon-badges-anchor {
+  transform: rotate(4deg);
+  transform-origin: center;
+}
+
+/* Shared stats palette: matches the printed El Pacto de Elarion card generator. */
 .card-stat-motif {
   display: none;
 }
 
 .card-stat-badge {
+  --card-stat-ramp-background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
   --card-stat-background: linear-gradient(180deg, #465365 0%, #2b3644 54%, #1b232e 100%);
   --card-stat-border: rgb(201 177 111 / 0.48);
   --card-stat-number: #f2f0e6;
@@ -11968,37 +12095,36 @@
   box-shadow: inset 0 0 0 1px rgb(179 205 159 / 0.1), 0 0 8px rgb(111 157 94 / 0.28), 0 4px 12px rgb(0 0 0 / 0.68);
 }
 
-/* Full player cards already print a stats tab into the PNG/HTML face. This dynamic tab sits
-   exactly over it so counters, damage and buffs never disagree with the visible card. */
+/* Full player cards already print a stats tab into the PNG/HTML face. Common cards place it
+   above the type band, so the dynamic hand/hover values must cover that exact 976px geometry. */
 .card-visual.card-image-full > .card-stat-badge,
 .card-preview-full-card-frame > .card-stat-badge,
 .deck-card-dynamic-frame > .card-stat-badge {
-  --card-stat-background:
-    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
-  --card-stat-border: rgb(201 177 111 / 0.48);
+  --card-stat-background: var(--card-stat-ramp-background);
+  --card-stat-border: rgb(191 166 106 / 0.62);
+  --card-stat-number: #f5eee0;
+  --card-stat-separator: #eadcad;
   isolation: isolate;
-  right: 0.2cqw;
-  bottom: 0.2cqw;
+  right: var(--card-stat-right, 3.28cqw);
+  bottom: var(--card-stat-bottom, 57.79cqw);
   z-index: 40;
   display: flex;
   width: auto;
-  height: 9.22cqw;
-  min-width: 20.3cqw;
+  height: var(--card-stat-height, 9.32cqw);
+  min-width: var(--card-stat-width, 16.19cqw);
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 1.13cqw;
-  padding: 0 2.97cqw 0 2.56cqw;
+  gap: 0.72cqw;
+  padding: 0 1.43cqw;
   border: 0;
-  border-radius: 3.07cqw 0 2.56cqw 0;
+  border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
   background: var(--card-stat-background);
   color: var(--card-stat-number);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 -0.31cqw 0.52cqw rgb(0 0 0 / 0.34),
-    0 0.31cqw 0.82cqw rgb(0 0 0 / 0.52);
+    inset 0 0.1cqw 0 rgb(255 255 255 / 0.14),
+    inset 0 -0.31cqw 0.61cqw rgb(0 0 0 / 0.18),
+    0 0.82cqw 2.05cqw rgb(0 0 0 / 0.62);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
   clip-path: none;
 }
@@ -12007,10 +12133,10 @@
 .card-preview-full-card-frame > .card-stat-badge::after,
 .deck-card-dynamic-frame > .card-stat-badge::after {
   position: absolute;
-  inset: 0.2cqw;
+  inset: 0;
   z-index: 2;
-  border: 0.2cqw solid var(--card-stat-border);
-  border-radius: 2.87cqw 0 2.36cqw 0;
+  border: 0.31cqw solid var(--card-stat-border);
+  border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
   content: "";
   pointer-events: none;
 }
@@ -12023,16 +12149,17 @@
   align-self: center;
   width: auto;
   height: auto;
-  margin: 0 0.31cqw;
+  margin: 0;
   border: 0;
   background: none;
   box-shadow: none;
   color: var(--card-stat-separator);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
-  font-size: 3.9cqw;
+  font-size: 3.69cqw;
   font-style: normal;
   font-weight: 600;
   line-height: 1;
+  opacity: 0.82;
   transform: none;
 }
 
@@ -12051,7 +12178,7 @@
   padding: 0;
   color: var(--card-stat-number);
   font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
-  font-size: 5.23cqw;
+  font-size: 5.53cqw;
   font-variant-numeric: tabular-nums;
   font-weight: 950;
   letter-spacing: 0;
@@ -12120,11 +12247,6 @@
   text-shadow: 0 0 0.82cqw rgb(111 157 94 / 0.52);
 }
 
-.card-preview-full-card-frame > .card-stat-badge {
-  right: 0.2cqw;
-  bottom: 0.2cqw;
-}
-
 .card-preview-full-card-frame {
   overflow: visible;
   background: transparent;
@@ -12148,9 +12270,9 @@
 
 .card-cost-badge {
   position: absolute;
-  top: -1.7cqw;
+  top: calc(-1.7cqw - 2px);
   right: auto;
-  left: -1.25cqw;
+  left: calc(-1.25cqw - 7px);
   z-index: 45;
   isolation: isolate;
   display: grid;
@@ -12169,6 +12291,12 @@
   line-height: 1;
   pointer-events: none;
   text-shadow: none;
+}
+
+.hand-card-held .card-cost-badge,
+.card-preview-full-card-frame > .card-cost-badge {
+  top: calc(-1.7cqw - 3px);
+  left: calc(-1.25cqw - 10px);
 }
 
 .card-cost-energy-orb {
@@ -12277,7 +12405,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/last_rain/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(235 244 218 / 0.014) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315b3a 0%, #1d4228 65%, #1d4228 100%);
   position: absolute;
   top: 0;
   right: 0;
@@ -12323,8 +12451,6 @@
     0 2px 4px rgb(0 0 0 / 0.42);
   content: "";
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title::after {
@@ -12337,8 +12463,6 @@
   mix-blend-mode: multiply;
   opacity: 0.33;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 68%, transparent 95%);
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd > .card-cropped-title > span {
@@ -12359,18 +12483,15 @@
   display: flex;
   width: auto;
   height: 31px;
-  min-width: 64px;
+  min-width: 54px;
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 0 9px 0 8px;
+  gap: 2.4px;
+  padding: 0 5px;
   border: 0;
   border-radius: 11px 0 9px;
-  background:
-    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
-    repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+  background: var(--card-stat-ramp-background);
   color: #f2f0e6;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.1),
@@ -12485,7 +12606,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-zombie > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/hollow_bell_procession/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(220 235 224 / 0.014) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #315f55 0%, #1d3f37 65%, #1d3f37 100%);
   color: #f2f5e8;
 }
 
@@ -12526,7 +12647,7 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-goblin > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/broken_forge_mutiny/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(133deg, rgb(255 187 91 / 0.022) 0 1px, transparent 1px 6px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #a63216 0%, #5e180d 65%, #5e180d 100%);
   color: #f8eedc;
 }
 
@@ -12568,14 +12689,13 @@
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-cropped-title {
   --card-cropped-title-motif: url("../dev/tools/Decks/crimson_court/motivo.avif");
   --card-cropped-title-noise: repeating-linear-gradient(112deg, rgb(246 221 227 / 0.018) 0 1px, transparent 1px 5px);
-  --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, transparent 98%);
+  --card-cropped-title-gradient: linear-gradient(90deg, #77152f 0%, #3b0d1d 65%, #3b0d1d 100%);
   color: #f6ece7;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge,
 .card-visual.card-image-full.card-theme-vampire > .card-stat-badge,
 .card-preview-full-card-frame.card-theme-vampire > .card-stat-badge {
-  --card-stat-separator: #c88c9b;
   background:
     radial-gradient(ellipse at 24% 0%, rgb(228 147 158 / 0.16), transparent 46%),
     repeating-linear-gradient(112deg, rgb(246 221 227 / 0.02) 0 1px, transparent 1px 5px),
@@ -12584,6 +12704,7 @@
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge {
   --card-stat-motif-image: url("../dev/tools/Decks/crimson_court/motivo.avif");
+  --card-stat-separator: #c88c9b;
 }
 
 .battlefield-row-overflow .card-visual.card-image-native-hd.card-theme-vampire > .card-stat-badge > i,
@@ -12633,8 +12754,36 @@
    layout explicitly; 58/976 and 136/976 preserve the generator's authored offsets at any size. */
 .card-visual.card-image-full.card-layout-full-art > .card-stat-badge,
 .card-preview-full-card-frame.card-layout-full-art > .card-stat-badge {
-  right: 5.94cqw;
-  bottom: 13.93cqw;
+  right: var(--card-stat-right, 5.94cqw);
+  bottom: var(--card-stat-bottom, 13.93cqw);
+  border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
+}
+
+.card-visual.card-image-full.card-layout-full-art > .card-stat-badge::after,
+.card-preview-full-card-frame.card-layout-full-art > .card-stat-badge::after {
+  border-radius: 2.46cqw 0.82cqw 2.46cqw 0.82cqw;
+}
+
+.card-visual.card-image-full.card-layout-full-art > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background:
+    radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.08), transparent 46%),
+    linear-gradient(180deg, #284344 0%, #273a39 20%, #141e17 68%, #0e1412 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-zombie > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #182a28 0%, #192824 20%, #131d15 68%, #0c1312 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-goblin > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #3b1e14 0%, #2c221a 20%, #151d14 68%, #12110f 100%);
+}
+
+.card-visual.card-image-full.card-layout-full-art.card-theme-vampire > .card-stat-badge:not(.is-damaged):not(.is-buffed),
+.card-preview-full-card-frame.card-layout-full-art.card-theme-vampire > .card-stat-badge:not(.is-damaged):not(.is-buffed) {
+  background: linear-gradient(180deg, #2c151c 0%, #281e20 20%, #131d1b 68%, #121112 100%);
 }
 
 /* These dialogs must read as solid surfaces, even over a bright battlefield. */
@@ -17589,7 +17738,7 @@ body.playground-active .phase-banner-shell {
   font-size: 13px;
 }
 
-/* Blood Pact uses the real hand card and player HUD; only its cast VFX lives in this portal. */
+/* Midnight Pact uses the real hand card and player HUD; only its cast VFX lives in this portal. */
 .blood-pact-animation-layer {
   position: fixed;
   inset: 0;

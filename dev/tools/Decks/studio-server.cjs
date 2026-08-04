@@ -1,0 +1,424 @@
+/*
+ * Servidor local del Card Studio.
+ *
+ * Existe por una sola razón: una página abierta con file:// no puede escribir en disco.
+ * El estudio necesita guardar studio.config.json y dejar el arte cargado en
+ * public/cards/<deck>/art/, así que este proceso hace de puente. No sirve para nada más:
+ * escucha sólo en 127.0.0.1 y no toca la exportación, que sigue leyendo los index.html.
+ *
+ *   node dev/tools/Decks/studio-server.cjs
+ *   http://127.0.0.1:5178/dev/tools/Decks/studio.html
+ */
+
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const DECKS_DIR = path.join(ROOT, 'dev', 'tools', 'Decks');
+const PORT = Number(process.env.HOSTFALL_STUDIO_PORT || 5178);
+const HOST = '127.0.0.1';
+const CARD_ID = /^[a-zA-Z0-9_-]+$/;
+const ART_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'avif']);
+const MAX_ART_BYTES = 32 * 1024 * 1024;
+
+const MIME = {
+    '.html': 'text/html; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.mjs': 'text/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+    '.avif': 'image/avif',
+    '.svg': 'image/svg+xml',
+    '.woff2': 'font/woff2',
+};
+
+let studioData = null;
+
+async function loadStudioData() {
+    if (!studioData) {
+        studioData = await import(
+            pathToFileURL(path.join(ROOT, 'scripts', 'card-studio-data.mjs')).href
+        );
+    }
+    return studioData;
+}
+
+function deckDirectory(deckId) {
+    return path.join(DECKS_DIR, deckId);
+}
+
+function configPath(deckId) {
+    return path.join(deckDirectory(deckId), 'studio.config.json');
+}
+
+function gameArtConfigPath(deckId) {
+    return path.join(deckDirectory(deckId), 'game-art.config.json');
+}
+
+function readConfig(deckId) {
+    return JSON.parse(fs.readFileSync(configPath(deckId), 'utf8'));
+}
+
+function readGameArtConfig(deckId) {
+    return JSON.parse(fs.readFileSync(gameArtConfigPath(deckId), 'utf8'));
+}
+
+/*
+ * Conserva el fin de línea que ya tenía el archivo. El repo usa core.autocrlf,
+ * así que reescribirlo con LF a ciegas produciría un diff de archivo completo.
+ */
+function writeJsonFile(filePath, config) {
+    const previous = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+    const newline = previous.includes('\r\n') ? '\r\n' : '\n';
+    const serialized = `${JSON.stringify(config, null, 2)}\n`;
+    fs.writeFileSync(filePath, newline === '\n' ? serialized : serialized.replace(/\n/g, '\r\n'));
+}
+
+function writeConfig(deckId, config) {
+    writeJsonFile(configPath(deckId), config);
+}
+
+function writeGameArtConfig(deckId, config) {
+    writeJsonFile(gameArtConfigPath(deckId), config);
+}
+
+/* hunters guarda la presentación completa con claves snake_case; los demás usan artCrop. */
+function artKey(card) {
+    return Object.hasOwn(card, 'art_crop') ? 'art_crop' : 'artCrop';
+}
+
+async function assertKnownDeck(deckId) {
+    const { STUDIO_DECKS } = await loadStudioData();
+    if (!Object.hasOwn(STUDIO_DECKS, deckId)) {
+        throw new HttpError(400, `Deck desconocido "${deckId}".`);
+    }
+}
+
+class HttpError extends Error {
+    constructor(status, message) {
+        super(message);
+        this.status = status;
+    }
+}
+
+function sendJson(response, status, payload) {
+    const body = JSON.stringify(payload);
+    response.writeHead(status, {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store',
+    });
+    response.end(body);
+}
+
+function readBody(request, limit) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        let size = 0;
+        request.on('data', (chunk) => {
+            size += chunk.length;
+            if (size > limit) {
+                reject(new HttpError(413, 'El archivo supera el límite permitido.'));
+                request.destroy();
+                return;
+            }
+            chunks.push(chunk);
+        });
+        request.on('end', () => resolve(Buffer.concat(chunks)));
+        request.on('error', reject);
+    });
+}
+
+/* Título legible del deck, tomado del index.html que ya existe. */
+function deckTitle(deckId) {
+    const indexPath = path.join(deckDirectory(deckId), 'index.html');
+    if (!fs.existsSync(indexPath)) return deckId;
+    const html = fs.readFileSync(indexPath, 'utf8');
+    const title = html.match(/<h1 class="studio-title">([^<]*)<\/h1>/);
+    return title ? title[1].trim() : deckId;
+}
+
+async function listDecks() {
+    const { STUDIO_DECKS, buildStudioCards, studioGameArt, studioMotif, syncStudioData } = await loadStudioData();
+
+    /*
+     * La lista lee el JSON runtime en vivo, pero el index.html del preview lee
+     * deck-data.generated.js. Sin este paso, editar un nombre o un coste en
+     * src/data/decks/ se vería en la lista y no en la carta. Sólo escribe si algo cambió.
+     */
+    const regenerated = syncStudioData();
+
+    const decks = Object.keys(STUDIO_DECKS).map((deckId) => {
+        const config = readConfig(deckId);
+        const gameArt = studioGameArt(deckId);
+        const gameArtConfig = readGameArtConfig(deckId);
+        const presentationById = new Map(config.cards.map((card) => [card.id, card]));
+        const cards = buildStudioCards(deckId).map((card) => {
+            const presentation = presentationById.get(card.id) ?? {};
+            return {
+                id: card.id,
+                collectorId: card.collectorId ?? null,
+                nombre: card.nombre,
+                tipo: card.tipo,
+                artCrop: card.art_crop ?? null,
+                artFrame: presentation.artFrame ?? null,
+                fullArt: Boolean(card.fullArt),
+                fullArtOverride: typeof presentation.fullArt === 'boolean'
+                    ? presentation.fullArt
+                    : null,
+                headerFade: card.headerFade !== false,
+                headerFadeOverride: typeof presentation.headerFade === 'boolean'
+                    ? presentation.headerFade
+                    : null,
+                battlefieldArtUrl: gameArt[card.id]?.artUrl ?? null,
+                battlefieldArtFrame:
+                    gameArtConfig.cards?.[card.id]?.battlefieldArtFrame ?? null,
+                battlefieldArtEligible: /^Eco\b/u.test(card.tipo ?? ''),
+                atk: card.atk ?? null,
+                def: card.def ?? null,
+            };
+        });
+        return {
+            id: deckId,
+            title: deckTitle(deckId),
+            indexUrl: `/dev/tools/Decks/${deckId}/index.html`,
+            previewOnly: Boolean(config.previewOnly),
+            motif: studioMotif(deckId),
+            cards,
+        };
+    });
+
+    return {
+        decks,
+        regenerated,
+        capabilities: {
+            fullArtOverrides: true,
+            headerFadeOverrides: true,
+            battlefieldArtFrames: true,
+        },
+    };
+}
+
+/*
+ * Guarda encuadres y motivo, y regenera deck-data.generated.js.
+ * El index.html no se toca: la exportación sigue viendo exactamente el mismo documento.
+ */
+async function saveDeck(payload) {
+    const deckId = String(payload.deck || '');
+    await assertKnownDeck(deckId);
+
+    const { normalizeGameArtConfig, syncStudioData } = await loadStudioData();
+    const config = readConfig(deckId);
+    const gameArtConfig = readGameArtConfig(deckId);
+    const frames = payload.artFrames && typeof payload.artFrames === 'object'
+        ? payload.artFrames
+        : {};
+    const fullArtOverrides = payload.fullArtOverrides
+        && typeof payload.fullArtOverrides === 'object'
+        ? payload.fullArtOverrides
+        : {};
+    const headerFadeOverrides = payload.headerFadeOverrides
+        && typeof payload.headerFadeOverrides === 'object'
+        ? payload.headerFadeOverrides
+        : {};
+    const battlefieldArtFrames = payload.battlefieldArtFrames
+        && typeof payload.battlefieldArtFrames === 'object'
+        ? payload.battlefieldArtFrames
+        : {};
+    const known = new Set(config.cards.map((card) => card.id));
+
+    for (const cardId of new Set([
+        ...Object.keys(frames),
+        ...Object.keys(fullArtOverrides),
+        ...Object.keys(headerFadeOverrides),
+        ...Object.keys(battlefieldArtFrames),
+    ])) {
+        if (!known.has(cardId)) {
+            throw new HttpError(400, `${deckId} no contiene la carta "${cardId}".`);
+        }
+    }
+
+    for (const [cardId, value] of Object.entries(fullArtOverrides)) {
+        if (value !== null && typeof value !== 'boolean') {
+            throw new HttpError(400, `${deckId}/${cardId}: fullArt debe ser booleano o null.`);
+        }
+    }
+
+    for (const [cardId, value] of Object.entries(headerFadeOverrides)) {
+        if (value !== null && typeof value !== 'boolean') {
+            throw new HttpError(400, `${deckId}/${cardId}: headerFade debe ser booleano o null.`);
+        }
+    }
+
+    const nextGameArtCards = { ...(gameArtConfig.cards ?? {}) };
+    for (const [cardId, frame] of Object.entries(battlefieldArtFrames)) {
+        if (frame === null) delete nextGameArtCards[cardId];
+        else nextGameArtCards[cardId] = { battlefieldArtFrame: frame };
+    }
+    const nextGameArtConfig = normalizeGameArtConfig(
+        deckId,
+        { ...gameArtConfig, cards: nextGameArtCards },
+        [...known],
+    );
+
+    config.cards = config.cards.map((card) => {
+        const hasFrame = Object.hasOwn(frames, card.id);
+        const hasFullArt = Object.hasOwn(fullArtOverrides, card.id);
+        const hasHeaderFade = Object.hasOwn(headerFadeOverrides, card.id);
+        if (!hasFrame && !hasFullArt && !hasHeaderFade) return card;
+        const next = { ...card };
+        if (hasFrame) {
+            const frame = frames[card.id];
+            if (frame === null) delete next.artFrame;
+            else next.artFrame = frame;
+        }
+        if (hasFullArt) {
+            const fullArt = fullArtOverrides[card.id];
+            if (fullArt === null) delete next.fullArt;
+            else next.fullArt = fullArt;
+        }
+        if (hasHeaderFade) {
+            const headerFade = headerFadeOverrides[card.id];
+            if (headerFade === null) delete next.headerFade;
+            else next.headerFade = headerFade;
+        }
+        return next;
+    });
+
+    if (Object.hasOwn(payload, 'motif')) {
+        if (payload.motif === null) delete config.motif;
+        else config.motif = payload.motif;
+    }
+
+    const previousConfig = fs.readFileSync(configPath(deckId), 'utf8');
+    const previousGameArtConfig = fs.readFileSync(gameArtConfigPath(deckId), 'utf8');
+
+    /* Valida el schema y deja deck-data.generated.js al día; si algo no cuadra, revierte. */
+    try {
+        writeConfig(deckId, config);
+        writeGameArtConfig(deckId, nextGameArtConfig);
+        syncStudioData({ deckIds: [deckId] });
+    } catch (error) {
+        fs.writeFileSync(configPath(deckId), previousConfig);
+        fs.writeFileSync(gameArtConfigPath(deckId), previousGameArtConfig);
+        syncStudioData({ deckIds: [deckId] });
+        throw new HttpError(400, error.message);
+    }
+
+    return { ok: true, deck: deckId };
+}
+
+async function saveArt(request, url) {
+    const deckId = String(url.searchParams.get('deck') || '');
+    const card = String(url.searchParams.get('card') || '');
+    const extension = String(url.searchParams.get('ext') || '').toLowerCase().replace(/^\./, '');
+
+    await assertKnownDeck(deckId);
+    if (!CARD_ID.test(card)) throw new HttpError(400, `Id de carta inválido: "${card}".`);
+    if (!ART_EXTENSIONS.has(extension)) {
+        throw new HttpError(400, `Formato no admitido: "${extension}".`);
+    }
+
+    const config = readConfig(deckId);
+    const target = config.cards.find((entry) => entry.id === card);
+    if (!target) throw new HttpError(400, `${deckId} no contiene la carta "${card}".`);
+
+    const bytes = await readBody(request, MAX_ART_BYTES);
+    if (bytes.length === 0) throw new HttpError(400, 'El archivo llegó vacío.');
+
+    /*
+     * El arte fuente vive en art/, nunca en la raíz de public/cards/<deck>/:
+     * esa carpeta guarda los PNG finales y assertIndependentArtSources rechaza la mezcla.
+     */
+    const artDirectory = path.join(ROOT, 'public', 'cards', deckId, 'art');
+    fs.mkdirSync(artDirectory, { recursive: true });
+    fs.writeFileSync(path.join(artDirectory, `${card}.${extension}`), bytes);
+
+    const relativeArt = path
+        .relative(deckDirectory(deckId), path.join(artDirectory, `${card}.${extension}`))
+        .replaceAll(path.sep, '/');
+    target[artKey(target)] = relativeArt;
+    writeConfig(deckId, config);
+
+    const { syncStudioData } = await loadStudioData();
+    syncStudioData({ deckIds: [deckId] });
+
+    return { ok: true, artCrop: relativeArt, bytes: bytes.length };
+}
+
+function serveStatic(request, response, url) {
+    const decoded = decodeURIComponent(url.pathname);
+    const repositoryPath = path.resolve(ROOT, `.${decoded}`);
+
+    if (repositoryPath !== ROOT && !repositoryPath.startsWith(ROOT + path.sep)) {
+        sendJson(response, 403, { error: 'Ruta fuera del repositorio.' });
+        return;
+    }
+
+    /*
+     * Vite monta public/ en la raíz: /cards/... corresponde a public/cards/....
+     * El taller imita ese contrato después de intentar primero una ruta real del repo
+     * (por ejemplo /dev/tools/Decks/studio.html).
+     */
+    const publicPath = path.resolve(ROOT, 'public', `.${decoded}`);
+    const resolved = [repositoryPath, publicPath].find(
+        (candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isFile(),
+    );
+
+    if (!resolved) {
+        sendJson(response, 404, { error: `No existe ${decoded}.` });
+        return;
+    }
+
+    response.writeHead(200, {
+        'content-type': MIME[path.extname(resolved).toLowerCase()] || 'application/octet-stream',
+        'cache-control': 'no-store',
+    });
+    fs.createReadStream(resolved).pipe(response);
+}
+
+const server = http.createServer(async (request, response) => {
+    const url = new URL(request.url, `http://${HOST}:${PORT}`);
+
+    try {
+        if (url.pathname === '/') {
+            response.writeHead(302, { location: '/dev/tools/Decks/studio.html' });
+            response.end();
+            return;
+        }
+        if (url.pathname === '/api/decks' && request.method === 'GET') {
+            sendJson(response, 200, await listDecks());
+            return;
+        }
+        if (url.pathname === '/api/art' && request.method === 'POST') {
+            sendJson(response, 200, await saveArt(request, url));
+            return;
+        }
+        if (url.pathname === '/api/save' && request.method === 'POST') {
+            const body = await readBody(request, 1024 * 1024);
+            sendJson(response, 200, await saveDeck(JSON.parse(body.toString('utf8'))));
+            return;
+        }
+        if (request.method !== 'GET') {
+            sendJson(response, 405, { error: 'Método no permitido.' });
+            return;
+        }
+        serveStatic(request, response, url);
+    } catch (error) {
+        const status = error instanceof HttpError ? error.status : 500;
+        if (status === 500) console.error(error);
+        sendJson(response, status, { error: error.message });
+    }
+});
+
+server.listen(PORT, HOST, () => {
+    console.log('Card Studio');
+    console.log(`  http://${HOST}:${PORT}/dev/tools/Decks/studio.html`);
+    console.log('');
+    console.log('Ctrl+C para detenerlo. La exportación no necesita este servidor.');
+});

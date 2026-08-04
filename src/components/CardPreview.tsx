@@ -6,14 +6,18 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { cardThemeForDefinition, shouldShowFullCardImage, useCardDetails, usesFullArtCardImage } from "../utils/cardImages";
+import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { CardCostBadge, CardStatsBadge } from "./Card";
 import { GameTooltip } from "./GameTooltip";
+import {
+  fitHoverCardDisplay,
+  LARGE_CARD_DISPLAY_HEIGHT,
+  LARGE_CARD_DISPLAY_WIDTH,
+} from "./cardDisplayGeometry";
 
 const HOVER_PREVIEW_GAP = 14;
-const HOVER_PREVIEW_MIN_WIDTH = 230;
-const HOVER_PREVIEW_MAX_WIDTH = 350;
 const VIEWPORT_PADDING = 12;
 
 type HoverPreviewPosition = {
@@ -21,6 +25,7 @@ type HoverPreviewPosition = {
   left: number;
   top: number;
   width: number;
+  height: number;
 };
 
 export function CardPreview() {
@@ -87,28 +92,27 @@ export function CardPreview() {
         setHoverPosition(undefined);
         return;
       }
-      const availableHeightWidth = Math.max(150, (window.innerHeight - 76) * (488 / 680));
-      const unscaledCardWidth = placementAnchor.offsetWidth || rect.width;
-      const width = Math.min(HOVER_PREVIEW_MAX_WIDTH, availableHeightWidth, Math.max(HOVER_PREVIEW_MIN_WIDTH, unscaledCardWidth * 1.5));
-      const height = width * (680 / 488);
+      const availableHeightWidth = Math.max(122, (window.innerHeight - 76) * (488 / 680));
+      const { width, height } = fitHoverCardDisplay(availableHeightWidth);
       const effectActionOpen = Boolean(liftedSlot?.querySelector(".effect-action-button"));
 
       if (effectActionOpen) {
         const hasRoomOnLeft = rect.left >= width + HOVER_PREVIEW_GAP + VIEWPORT_PADDING;
         const availableAbove = Math.max(0, rect.top - HOVER_PREVIEW_GAP - VIEWPORT_PADDING);
-        const previewWidth = hasRoomOnLeft
-          ? width
-          : Math.min(width, Math.max(150, availableAbove * (488 / 680)));
-        const previewHeight = previewWidth * (680 / 488);
+        const previewSize = hasRoomOnLeft
+          ? { width, height }
+          : fitHoverCardDisplay(Math.min(width, Math.max(122, availableAbove * (488 / 680))));
+        const previewWidth = previewSize.width;
+        const previewHeight = previewSize.height;
         const desiredLeft = hasRoomOnLeft
           ? rect.left - previewWidth - HOVER_PREVIEW_GAP
           : rect.left + (rect.width - previewWidth) / 2;
-        const left = Math.min(window.innerWidth - previewWidth - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
+        const left = Math.round(Math.min(window.innerWidth - previewWidth - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft)));
         const desiredTop = hasRoomOnLeft
           ? rect.top + (rect.height - previewHeight) / 2
           : rect.top - previewHeight - HOVER_PREVIEW_GAP;
-        const top = Math.min(window.innerHeight - previewHeight - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredTop));
-        setHoverPosition({ cardId: observedCardId, left, top, width: previewWidth });
+        const top = Math.round(Math.min(window.innerHeight - previewHeight - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredTop)));
+        setHoverPosition({ cardId: observedCardId, left, top, width: previewWidth, height: previewHeight });
         return;
       }
 
@@ -116,10 +120,10 @@ export function CardPreview() {
       const spaceLeft = rect.left;
       const placeRight = spaceRight >= width + HOVER_PREVIEW_GAP || spaceRight >= spaceLeft;
       const desiredLeft = placeRight ? rect.right + HOVER_PREVIEW_GAP : rect.left - width - HOVER_PREVIEW_GAP;
-      const left = Math.min(window.innerWidth - width - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft));
+      const left = Math.round(Math.min(window.innerWidth - width - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, desiredLeft)));
       const desiredTop = rect.top + (rect.height - height) / 2;
-      const top = Math.min(window.innerHeight - height - VIEWPORT_PADDING, Math.max(64, desiredTop));
-      setHoverPosition({ cardId: observedCardId, left, top, width });
+      const top = Math.round(Math.min(window.innerHeight - height - VIEWPORT_PADDING, Math.max(64, desiredTop)));
+      setHoverPosition({ cardId: observedCardId, left, top, width, height });
     }
 
     // Uses its own frame handle so the settle loop below is never cancelled by it.
@@ -181,14 +185,18 @@ export function CardPreview() {
             data-card-preview-locked="true"
             data-preview-renderer="image"
             className={[
-              "card-preview-cropped-frame aspect-[488/680] w-[min(390px,29vw)] shadow-2xl shadow-black/65",
+              "card-preview-cropped-frame shadow-2xl shadow-black/65",
               showFullCardPresentation ? "card-preview-full-card-frame" : "",
               cardTheme ? `card-theme-${cardTheme}` : "",
               usesFullArtLayout ? "card-layout-full-art" : "",
             ].join(" ")}
+            style={{
+              width: LARGE_CARD_DISPLAY_WIDTH,
+              height: LARGE_CARD_DISPLAY_HEIGHT,
+              ...cardStatFrameCssVariables(details.statsFrame),
+            }}
           >
             {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
-            {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}
           </div>
           {traits && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
@@ -209,12 +217,12 @@ export function CardPreview() {
     <div
       data-preview-renderer="image"
       className={[
-        "card-preview-cropped-frame pointer-events-none fixed z-[180] aspect-[488/680] shadow-2xl shadow-black/65",
+        "card-preview-cropped-frame pointer-events-none fixed z-[180] shadow-2xl shadow-black/65",
         showFullCardPresentation ? "card-preview-full-card-frame" : "",
         cardTheme ? `card-theme-${cardTheme}` : "",
         usesFullArtLayout ? "card-layout-full-art" : "",
       ].join(" ")}
-      style={hoverStyle}
+      style={{ ...hoverStyle, ...cardStatFrameCssVariables(details.statsFrame) }}
     >
       {imageUrl && <img src={imageUrl} alt={displayName} className="card-preview-cropped-image" draggable={false} />}
       {showFullCardPresentation && card.controller !== "host" && <CardCostBadge card={card} />}

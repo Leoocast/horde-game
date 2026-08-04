@@ -1,4 +1,4 @@
-# Reglas de las cartas de El Motín de la Forja Rota
+# Reglas de las cartas de La Legión de Varka
 
 Este documento registra el comportamiento PvE que usa el juego. El JSON de cartas es la fuente de
 verdad de reglas; este archivo explica las adaptaciones intencionales y la presentación esperada.
@@ -24,7 +24,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - El aura se resuelve primero. Si ya produjo el pulso de activación, el daño de entrada sigue como
   beat separado sin volver a iluminar la carta ni repetir el sonido.
 
-## Llamador de la Próxima Cuadrilla (`next_crew_caller`)
+## Invocador de las Filas (`next_crew_caller`)
 
 - Los otros Trasgos reciben +1/+1 y el aura anuncia su cobertura mediante el beat de activación
   estática.
@@ -43,7 +43,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 
 - Las criaturas de la Hueste tienen Imponente mientras este Apoyo permanece en el Campo.
 
-## Lluvia de Remaches (`rain_of_rivets`)
+## Todos contra uno (`rain_of_rivets`)
 
 - Cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño.
 - Los atacantes elegibles se capturan una sola vez al declararlos: varios bloqueadores no duplican
@@ -53,7 +53,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Se dibujan como máximo seis proyectiles para conservar legibilidad, pero el número de daño siempre
   muestra el total real.
 
-## Jefe de la Cuadrilla Doble (`double_crew_boss`)
+## Jefe de la Doble Guardia (`double_crew_boss`)
 
 - Su efecto de entrada Invoca dos Corredores de Ascua y Chatarra.
 
@@ -62,14 +62,14 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Su efecto de entrada Invoca tres Corredores de Ascua y Chatarra.
 - Su daño activado por sacrificio fue retirado del corte de la carta.
 
-## Agitador de la Primera Sirena (`first_siren_agitator`)
+## Rompefilas de Varka (`first_siren_agitator`)
 
 - Invoca un Corredor antes de declarar atacantes.
 - La obligación impresa anterior de atacar está marcada `engineSupport: "ignored"` porque la regla
   global de la Hueste ya hace atacar a toda criatura capaz.
 - Su bono cuenta los otros Trasgos atacantes cuando el trigger se resuelve.
 
-## ¡Abran Otra Compuerta! (`open_another_gate`)
+## ¡Liberen a la Legión! (`open_another_gate`)
 
 - Si la Hueste controla al menos una criatura, todas sus criaturas reciben +2/+0 hasta el fin del
   turno. El Hechizo se presenta junto al Archivo y el bono aterriza con el buff compartido.
@@ -95,12 +95,12 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Los impactos visuales se escalonan 90 ms, pero el daño de reglas se confirma para todos a la vez
   en el impacto final.
 
-## Maestro de la Armadura Recuperada (`salvaged_armor_master`)
+## Forjador de Varka (`salvaged_armor_master`)
 
 - Los otros Trasgos reciben +1/+1.
 - La activación anterior de destrucción de artefactos fue retirada del corte de la carta.
 
-## Mariscal del Golpe Repetido (`repeating_blow_marshal`)
+## Mariscal de la Oleada (`repeating_blow_marshal`)
 
 - Cuando uno o más Trasgos atacan, Invoca exactamente un Corredor agotado y atacando. El trigger
   ocurre una vez por declaración, no una vez por atacante.
@@ -114,7 +114,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Cuando Brakka ataca, recibe primero un contador +1/+1 y después Invoca esa cantidad de Corredores
   agotados y atacando según su nueva Fuerza.
 
-## Artillero de los Últimos Remaches (`last_rivets_gunner`)
+## Escupefuego de la Retaguardia (`last_rivets_gunner`)
 
 - Regla PvE: cuando muere un Trasgo de la Hueste, hace 1 de daño a un Eco enemigo aleatorio.
 - La selección es determinista con el RNG sembrado y se declara en JSON como `selection: "RANDOM"`.

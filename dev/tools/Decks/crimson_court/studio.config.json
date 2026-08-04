@@ -1,78 +1,173 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/player/crimson_court/crimson_court.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "crimson_energy",
-      "artCrop": "../../../../public/cards/crimson_court/art/crimson_energy.webp",
-      "typeLineEs": "Fuente — Santuario"
+      "artCrop": "../../../../public/cards/crimson_court/art/crimson_energy.jpg",
+      "typeLineEs": "Fuente — Santuario",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 0,
+        "y": 0
+      }
     },
     {
       "id": "blood_page",
-      "artCrop": "../../../../public/cards/crimson_court/art/blood_page.webp",
-      "typeLineEs": "Eco — Vampiro Sirviente"
+      "artCrop": "../../../../public/cards/crimson_court/art/blood_page.jpg",
+      "typeLineEs": "Eco — Vampira Sirviente",
+      "artFrame": {
+        "zoom": 0.962,
+        "x": -6,
+        "y": -69
+      }
     },
     {
       "id": "crimson_bat",
-      "artCrop": "../../../../public/cards/crimson_court/art/crimson_bat.webp",
-      "typeLineEs": "Eco — Murciélago Vampiro"
+      "artCrop": "../../../../public/cards/crimson_court/art/crimson_bat.jpg",
+      "typeLineEs": "Eco — Murciélago Vampiro",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 10,
+        "y": -125
+      },
+      "headerFade": true
     },
     {
       "id": "tithe_acolyte",
-      "artCrop": "../../../../public/cards/crimson_court/art/tithe_acolyte.webp",
-      "typeLineEs": "Eco — Vampiro Clérigo"
+      "artCrop": "../../../../public/cards/crimson_court/art/tithe_acolyte.jpg",
+      "typeLineEs": "Eco — Vampiro Recaudador",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -121
+      },
+      "headerFade": true
     },
     {
       "id": "court_duelist",
-      "artCrop": "../../../../public/cards/crimson_court/art/court_duelist.webp",
-      "typeLineEs": "Eco — Vampiro Guerrero"
+      "artCrop": "../../../../public/cards/crimson_court/art/court_duelist.jpg",
+      "typeLineEs": "Eco — Vampiro Duelista",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -16,
+        "y": -207
+      },
+      "headerFade": false
     },
     {
       "id": "crypt_guardian",
-      "artCrop": "../../../../public/cards/crimson_court/art/crypt_guardian.webp",
-      "typeLineEs": "Eco — Vampiro Caballero"
+      "artCrop": "../../../../public/cards/crimson_court/art/crypt_guardian.jpg",
+      "typeLineEs": "Eco — Vampira Caballera",
+      "artFrame": {
+        "zoom": 1,
+        "x": 0,
+        "y": -42
+      },
+      "headerFade": false,
+      "fullArt": false
     },
     {
       "id": "black_vein_executioner",
-      "artCrop": "../../../../public/cards/crimson_court/art/black_vein_executioner.webp",
-      "typeLineEs": "Eco — Vampiro Asesino"
+      "artCrop": "../../../../public/cards/crimson_court/art/black_vein_executioner.jpg",
+      "typeLineEs": "Eco — Vampira Asesina",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": 45,
+        "y": -24
+      },
+      "headerFade": true,
+      "fullArt": false
     },
     {
       "id": "blood_sentinel",
-      "artCrop": "../../../../public/cards/crimson_court/art/blood_sentinel.webp",
-      "typeLineEs": "Eco — Vampiro Caballero"
+      "artCrop": "../../../../public/cards/crimson_court/art/blood_sentinel.jpg",
+      "typeLineEs": "Eco — Humano/Elfo",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 25,
+        "y": 31
+      },
+      "headerFade": false,
+      "fullArt": false
     },
     {
       "id": "eternal_feast_countess",
-      "artCrop": "../../../../public/cards/crimson_court/art/eternal_feast_countess.webp",
+      "artCrop": "../../../../public/cards/crimson_court/art/eternal_feast_countess.jpg",
       "typeLineEs": "Eco de Crónica — Vampiro Noble",
       "traitPlacement": "after-first-rule",
-      "groupTraits": true
+      "groupTraits": true,
+      "artFrame": {
+        "zoom": 0.79,
+        "x": 6,
+        "y": -138
+      }
     },
     {
       "id": "blood_pact",
-      "artCrop": "../../../../public/cards/crimson_court/art/blood_pact.webp",
-      "typeLineEs": "Hechizo"
+      "artCrop": "../../../../public/cards/crimson_court/art/blood_pact.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 1,
+        "x": 16,
+        "y": 8
+      },
+      "fullArt": true,
+      "headerFade": false
     },
     {
       "id": "crimson_impulse",
-      "artCrop": "../../../../public/cards/crimson_court/art/crimson_impulse.webp",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/crimson_court/art/crimson_impulse.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -4,
+        "y": -220
+      },
+      "fullArt": false,
+      "headerFade": false
     },
     {
       "id": "drain_essence",
-      "artCrop": "../../../../public/cards/crimson_court/art/drain_essence.webp",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/crimson_court/art/drain_essence.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1.603,
+        "x": -1,
+        "y": 132
+      },
+      "fullArt": true
     },
     {
       "id": "predatory_thirst",
-      "artCrop": "../../../../public/cards/crimson_court/art/predatory_thirst.webp",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/crimson_court/art/predatory_thirst.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": 18,
+        "y": -107
+      },
+      "headerFade": false
     },
     {
       "id": "final_banquet",
-      "artCrop": "../../../../public/cards/crimson_court/art/final_banquet.webp",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/crimson_court/art/final_banquet.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "fullArt": true,
+      "artFrame": {
+        "zoom": 1,
+        "x": 41,
+        "y": 12
+      }
     }
-  ]
+  ],
+  "motif": {
+    "stats": {
+      "x": 120,
+      "y": 0,
+      "zoom": 4,
+      "rotation": 0
+    }
+  }
 }

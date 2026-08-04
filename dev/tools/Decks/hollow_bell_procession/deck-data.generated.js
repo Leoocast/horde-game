@@ -2,225 +2,366 @@
 window.HostfallDeckData = [
   {
     "id": "last_knell_dead",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.png",
-    "nombre": "Muerto del Último Taño",
-    "tipo": "Eco · Ficha — Zombi",
+    "collectorId": "HFA1014",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_knell_dead.jpg",
+    "nombre": "Soldado Sinsepulcro",
+    "tipo": "Eco · Ficha — Zombi Soldado",
     "costo": 2,
     "atk": 2,
     "def": 2,
     "desc": "Sin efecto adicional.",
-    "lore": "Un tañido le dio pies. El siguiente le dio un rumbo.",
+    "lore": "La piedra quebrada le negó una tumba, así que reclamó el camino.",
     "showFlavorText": true,
     "cantidad": 21,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1,
+      "x": 24,
+      "y": -12
+    }
   },
   {
     "id": "mass_grave_colossus",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
-    "nombre": "Coloso de la Fosa Común",
+    "collectorId": "HFA1015",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/mass_grave_colossus.jpg",
+    "nombre": "Titán Sinsepulcro",
     "tipo": "Eco · Ficha — Zombi Gigante",
     "costo": 5,
     "atk": 5,
     "def": 5,
     "desc": "Sin efecto adicional.",
-    "lore": "Toda una fosa se puso de pie al mismo tiempo.",
+    "lore": "Carga el peso de un cementerio que ya no pudo contenerlo.",
     "showFlavorText": true,
     "cantidad": 4,
-    "isToken": true
+    "isToken": true,
+    "fullArt": true,
+    "art_frame": {
+      "zoom": 1,
+      "x": 64,
+      "y": 0
+    }
   },
   {
     "id": "hollow_bell",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.png",
-    "nombre": "La Campana Hueca",
+    "collectorId": "HFA1016",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/hollow_bell.jpg",
+    "nombre": "La Lápida Quebrada",
     "tipo": "Apoyo",
     "costo": 1,
     "atk": null,
     "def": null,
     "desc": "Los Zombis aliados ganan Imponente.",
-    "lore": "Su voz no llama a los muertos. Les recuerda que están marchando.",
+    "lore": "La grieta no marcó un final. Fue la primera orden del alzamiento.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.889,
+      "x": -7,
+      "y": -269
+    }
   },
   {
     "id": "five_knot_gallows",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.png",
-    "nombre": "El Cadalso de los Cinco Nudos",
-    "tipo": "Eco — Zombi Nacido del cadalso",
+    "collectorId": "HFA1017",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/five_knot_gallows.jpg",
+    "nombre": "Osario Inagotable",
+    "tipo": "Eco — Zombi del Osario",
     "costo": 6,
     "atk": 0,
     "def": 0,
     "desc": "Cada vez que se juega una carta que no sea Ficha, quita un contador +1/+1 de este Eco e Invoca un Eco Ficha Zombi 2/2.",
-    "lore": "Cada nudo que se afloja se convierte en otro par de pies.",
+    "lore": "Cada espacio vacío del osario reclama otro cuerpo.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -14,
+      "y": -193
+    }
   },
   {
     "id": "last_thought_carrion",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.png",
-    "nombre": "Carroña del Último Pensamiento",
-    "tipo": "Eco — Zombi Carroña",
+    "collectorId": "HFA1018",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_thought_carrion.jpg",
+    "nombre": "Devorador del Último Recuerdo",
+    "tipo": "Eco — Zombi Devorador",
     "costo": 4,
     "atk": 2,
     "def": 4,
     "desc": "Cuando muera, el Cronista descarta una carta.",
-    "lore": "Conserva un solo recuerdo para que su muerte pueda llevarse otro.",
+    "lore": "Muere con un último recuerdo entre los dientes, y el tuyo lo sigue.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "art_frame": {
+      "zoom": 0.676,
+      "x": -2,
+      "y": -152
+    }
   },
   {
     "id": "memory_shroud_bearer",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
-    "nombre": "Portador de la Mortaja Mnémica",
-    "tipo": "Eco — Zombi Portador de mortaja",
+    "collectorId": "HFA1019",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/memory_shroud_bearer.jpg",
+    "nombre": "Ladrón de Memorias",
+    "tipo": "Eco — Zombi Ladrón",
     "costo": 2,
     "atk": 2,
     "def": 2,
     "desc": "Al ser invocada, el Cronista descarta una carta.",
-    "lore": "Entra velado por el pensamiento que estás a punto de perder.",
+    "lore": "La luz roja de su mano es el pensamiento que ya no puedes nombrar.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -24,
+      "y": -172
+    }
   },
   {
     "id": "flesh_root_tithe",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
-    "nombre": "Diezmo de Carne y Raíz",
+    "collectorId": "HFA1020",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/flesh_root_tithe.jpg",
+    "nombre": "Tributo de los Cuatro Pesares",
     "tipo": "Hechizo",
     "costo": 2,
     "atk": null,
     "def": null,
     "desc": "El Cronista pierde 1 de Vida, descarta una carta, sacrifica un Eco y sacrifica una Fuente.",
-    "lore": "La campana acepta cuatro pagos y no perdona ninguno.",
+    "lore": "Vida, memoria, carne y tierra: la tumba exige un pesar de cada clase.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 0,
+      "y": -242
+    }
   },
   {
     "id": "crypt_rotwing",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.png",
-    "nombre": "Alapútrida de la Cripta",
-    "tipo": "Eco — Zombi Murciélago",
+    "collectorId": "HFA1021",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/crypt_rotwing.jpg",
+    "nombre": "Jinete de la Cripta Vacía",
+    "tipo": "Eco — Zombi Jinete",
     "costo": 3,
     "atk": 2,
     "def": 1,
     "desc": "Volar",
-    "lore": "Demasiado ligero para resistir el viento, lo bastante afilado para cabalgarlo.",
+    "lore": "En la cripta no quedaron más que un jinete, un esqueleto y el cielo.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.962,
+      "x": -75,
+      "y": -5
+    }
   },
   {
     "id": "basted_wing",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.png",
-    "nombre": "Ala Hilvanada",
-    "tipo": "Eco — Zombi Constructo",
+    "collectorId": "HFA1022",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/basted_wing.jpg",
+    "nombre": "Engendro de Alas Cosidas",
+    "tipo": "Eco — Zombi Engendro",
     "costo": 4,
     "atk": 3,
     "def": 1,
     "desc": "Volar",
-    "lore": "El primer diseño sólo tenía que sobrevivir hasta el impacto.",
+    "lore": "Las costuras sólo deben resistir hasta que alcance carne tibia.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": -9,
+      "y": -136
+    }
   },
   {
     "id": "reinforced_gravewing",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
-    "nombre": "Ala Sepulcral Reforzada",
-    "tipo": "Eco — Zombi Constructo",
+    "collectorId": "HFA1023",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/reinforced_gravewing.jpg",
+    "nombre": "Jinete del Osario",
+    "tipo": "Eco — Zombi Jinete",
     "costo": 5,
     "atk": 3,
     "def": 4,
     "desc": "Volar",
-    "lore": "Cada costura desgarrada regresó por duplicado.",
+    "lore": "La montura recuerda cada hueso añadido a su armadura.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1.125,
+      "x": -38,
+      "y": -232
+    }
   },
   {
     "id": "archive_carrion_crow",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
-    "nombre": "Cuervo Carroñero del Archivo",
-    "tipo": "Eco — Zombi Ave",
+    "collectorId": "HFA1024",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/archive_carrion_crow.jpg",
+    "nombre": "Retorno a la Memoria",
+    "tipo": "Eco — Zombi Retornado",
     "costo": 3,
     "atk": 2,
     "def": 1,
-    "desc": "Volar\nAl ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.",
-    "lore": "Baja dos recuerdos; su sombra baja otros dos.",
+    "desc": "Al ser invocado o morir, descarta las 2 primeras cartas del Archivo de la Hueste a su Memoria.",
+    "lore": "Cada retorno abre dos tumbas: la suya y una que la Hueste había olvidado.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "art_frame": {
+      "zoom": 0.601,
+      "x": -19,
+      "y": -177
+    }
   },
   {
     "id": "horned_linebreaker",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.png",
-    "nombre": "Rompelíneas Astado",
+    "collectorId": "HFA1025",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/horned_linebreaker.jpg",
+    "nombre": "Rompemuros del Túmulo",
     "tipo": "Eco — Zombi Minotauro",
     "costo": 3,
     "atk": 3,
     "def": 2,
     "desc": "Imponente",
-    "lore": "Un defensor oye las campanas. Dos quizá detengan los cuernos.",
+    "lore": "Un defensor ve los cuernos. Dos quizá sobrevivan a ellos.",
     "showFlavorText": true,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.76,
+      "x": 48,
+      "y": -147
+    }
   },
   {
     "id": "seventh_memory_hound",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
-    "nombre": "Sabueso de la Séptima Memoria",
+    "collectorId": "HFA1026",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/seventh_memory_hound.jpg",
+    "nombre": "Sabueso de los Siete Recuerdos",
     "tipo": "Eco — Zombi Sabueso",
     "costo": 3,
     "atk": 3,
     "def": 2,
     "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana +1/+1 e Imponente.",
-    "lore": "Los primeros seis recuerdos le enseñaron hambre. El séptimo le enseñó tamaño.",
+    "lore": "Seis recuerdos le enseñaron hambre. El séptimo le enseñó a crecer.",
     "showFlavorText": false,
-    "cantidad": 1
+    "cantidad": 1,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": -6,
+      "y": -97
+    }
   },
   {
     "id": "full_ossuary_mastiff",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
-    "nombre": "Mastín del Osario Colmado",
+    "collectorId": "HFA1027",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.jpg",
+    "nombre": "Mastín del Osario Desbordado",
     "tipo": "Eco — Zombi Sabueso",
     "costo": 5,
     "atk": 5,
     "def": 3,
     "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria, este Eco gana Imponente.",
-    "lore": "Cuando se abrió la séptima bóveda, la cadena del portón dejó de ser correa.",
+    "lore": "Cuando se abrió la séptima tumba, la cadena del portón dejó de ser correa.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.731,
+      "x": 4,
+      "y": -175
+    }
   },
   {
     "id": "silent_bite_rats",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.png",
-    "nombre": "Ratas de la Mordida Silente",
-    "tipo": "Eco — Zombi Rata",
+    "collectorId": "HFA1028",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/silent_bite_rats.jpg",
+    "nombre": "Infestado de Esporas",
+    "tipo": "Eco — Zombi Infestado",
     "costo": 2,
     "atk": 1,
     "def": 1,
     "desc": "Letal\nFurtivo",
-    "lore": "Sólo notas el túnel después de la mordida.",
+    "lore": "Las esporas bajo su piel esperan el aliento de los vivos.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 8,
+      "y": -184
+    }
   },
   {
     "id": "fallen_gatherer",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.png",
-    "nombre": "Recolector de los Caídos",
-    "tipo": "Eco — Zombi Recolector",
+    "collectorId": "HFA1029",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/fallen_gatherer.jpg",
+    "nombre": "Cosechadora de los Caídos",
+    "tipo": "Eco — Zombi Cosechadora",
     "costo": 4,
     "atk": 2,
     "def": 4,
     "desc": "Cada vez que otro Zombi aliado muera, pon un contador +1/+1 sobre esta carta.",
-    "lore": "Nada útil se entierra dos veces.",
+    "lore": "Cada Sinsepulcro caído le deja algo digno de llevar consigo.",
     "showFlavorText": true,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 0.703,
+      "x": 2,
+      "y": -133
+    }
   },
   {
     "id": "last_march_marshal",
-    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.png",
-    "nombre": "Mariscal de la Última Marcha",
-    "tipo": "Eco — Zombi Mariscal",
+    "collectorId": "HFA1030",
+    "artist": "Dean Spencer",
+    "art_crop": "../../../../public/cards/hollow_bell_procession/art/last_march_marshal.jpg",
+    "nombre": "Nerezh, Matriarca Sinsepulcro",
+    "tipo": "Eco — Zombi Matriarca",
     "costo": 3,
     "atk": 2,
     "def": 2,
     "desc": "Letal\nLos demás Zombis aliados ganan +1/+1. Cada vez que otro Zombi aliado muera, el Cronista pierde 1 de Vida.",
-    "lore": "Cada soldado caído cierra la siguiente fila.",
+    "lore": "Cada Sinsepulcro caído regresa a las filas cuando Nerezh pronuncia su nombre.",
     "showFlavorText": false,
-    "cantidad": 2
+    "cantidad": 2,
+    "fullArt": true,
+    "headerFade": false,
+    "art_frame": {
+      "zoom": 1.04,
+      "x": 0,
+      "y": 23
+    }
   }
 ];
+window.HostfallDeckMotif = {
+  "stats": {
+    "x": -69,
+    "y": 0,
+    "zoom": 4
+  }
+};

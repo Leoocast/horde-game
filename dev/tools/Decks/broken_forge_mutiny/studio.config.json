@@ -1,91 +1,191 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/host/broken_forge_mutiny/broken_forge_mutiny.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "ember_scrap_runner",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.png",
-      "typeLineEs": "Eco · Ficha — Trasgo Corredor"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/ember_scrap_runner.jpg",
+      "typeLineEs": "Eco · Ficha — Trasgo Esbirro",
+      "artFrame": {
+        "zoom": 1,
+        "x": -10,
+        "y": 2
+      }
     },
     {
       "id": "burning_tally_foreman",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.png",
-      "typeLineEs": "Eco — Trasgo Capataz"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/burning_tally_foreman.jpg",
+      "typeLineEs": "Eco — Orco Chamán",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": 63,
+        "y": -78
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "next_crew_caller",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
-      "typeLineEs": "Eco — Trasgo Llamador"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/next_crew_caller.jpg",
+      "typeLineEs": "Eco — Trasgo Invocador",
+      "headerFade": false
     },
     {
       "id": "open_furnace_crier",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.png",
-      "typeLineEs": "Eco — Trasgo Pregonero"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_furnace_crier.jpg",
+      "typeLineEs": "Eco — Trasgo Portaestandarte",
+      "artFrame": {
+        "zoom": 0.889,
+        "x": 0,
+        "y": -60
+      },
+      "headerFade": false
     },
     {
       "id": "shift_hammer",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.png",
-      "typeLineEs": "Apoyo"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/shift_hammer.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 1,
+        "x": -32,
+        "y": -8
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "rain_of_rivets",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
-      "typeLineEs": "Apoyo"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/rain_of_rivets.jpg",
+      "typeLineEs": "Apoyo",
+      "artFrame": {
+        "zoom": 1.17,
+        "x": 16,
+        "y": -16
+      },
+      "fullArt": true
     },
     {
       "id": "double_crew_boss",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
-      "typeLineEs": "Eco — Trasgo Capataz"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/double_crew_boss.jpg",
+      "typeLineEs": "Eco — Trasgo Jefe",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 9,
+        "y": -144
+      },
+      "headerFade": false
     },
     {
       "id": "three_furnaces_foreman",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.png",
-      "typeLineEs": "Eco — Trasgo Capataz"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_furnaces_foreman.jpg",
+      "typeLineEs": "Eco — Trasgo Jinete",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -6,
+        "y": -200
+      },
+      "headerFade": false
     },
     {
       "id": "first_siren_agitator",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
-      "typeLineEs": "Eco — Trasgo Agitador"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/first_siren_agitator.jpg",
+      "typeLineEs": "Eco — Orco Rompefilas",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -6,
+        "y": -103
+      },
+      "headerFade": true
     },
     {
       "id": "open_another_gate",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.png",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/open_another_gate.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -2,
+        "y": -245
+      },
+      "headerFade": false
     },
     {
       "id": "three_under_one_anvil",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.png",
-      "typeLineEs": "Eco — Trasgo Cuadrilla"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/three_under_one_anvil.jpg",
+      "typeLineEs": "Eco — Bestia Oso",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": -2,
+        "y": -163
+      },
+      "headerFade": false
     },
     {
       "id": "slag_volley_master",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.png",
-      "typeLineEs": "Eco — Trasgo Artillero"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/slag_volley_master.jpg",
+      "typeLineEs": "Eco — Orco Jinete",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": -129,
+        "y": -190
+      },
+      "headerFade": false
     },
     {
       "id": "varka_revolt_axis",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.png",
-      "typeLineEs": "Eco de Crónica — Trasgo Giracadenas"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/varka_revolt_axis.jpg",
+      "typeLineEs": "Eco de Crónica — Diablesa Matriarca",
+      "artFrame": {
+        "zoom": 0.925,
+        "x": 5,
+        "y": -57
+      }
     },
     {
       "id": "salvaged_armor_master",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
-      "typeLineEs": "Eco — Trasgo Armero"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/salvaged_armor_master.jpg",
+      "typeLineEs": "Eco — Orco Forjador",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": 14,
+        "y": -89
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "repeating_blow_marshal",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
-      "typeLineEs": "Eco — Trasgo Mariscal"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.jpg",
+      "typeLineEs": "Eco — Orco Mariscal",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": -14,
+        "y": -144
+      },
+      "fullArt": false,
+      "headerFade": false
     },
     {
       "id": "brakka_growing_tally",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.png",
-      "typeLineEs": "Eco — Trasgo Reclutador"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/brakka_growing_tally.jpg",
+      "typeLineEs": "Eco — Trasgo Escriba",
+      "artFrame": {
+        "zoom": 0.731,
+        "x": 4,
+        "y": -109
+      },
+      "headerFade": true
     },
     {
       "id": "last_rivets_gunner",
-      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
-      "typeLineEs": "Eco — Trasgo Artillero"
+      "artCrop": "../../../../public/cards/broken_forge_mutiny/art/last_rivets_gunner.jpg",
+      "typeLineEs": "Eco — Orco Escupefuego",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 0,
+        "y": -133
+      },
+      "headerFade": true
     }
   ]
 }

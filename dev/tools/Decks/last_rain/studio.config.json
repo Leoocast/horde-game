@@ -1,71 +1,163 @@
 {
   "schemaVersion": "1.0.0",
   "runtimeDeck": "../../../../src/data/decks/player/last_rain/last_rain.json",
+  "defaultArtist": "Dean Spencer",
   "cards": [
     {
       "id": "first_dew_gatherers",
-      "artCrop": "../../../../public/cards/last_rain/art/first_dew_gatherers.png",
-      "typeLineEs": "Eco — Recolector"
+      "artCrop": "../../../../public/cards/last_rain/art/first_dew_gatherers.jpg",
+      "typeLineEs": "Eco — Espíritu vegetal",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 2,
+        "y": -236
+      },
+      "fullArt": false,
+      "headerFade": false
     },
     {
       "id": "iria_voice_last_rain",
-      "artCrop": "../../../../public/cards/last_rain/art/iria_voice_last_rain.png",
-      "typeLineEs": "Eco de Crónica — Humana Restauradora"
+      "artCrop": "../../../../public/cards/last_rain/art/iria_voice_last_rain.jpg",
+      "typeLineEs": "Eco de Crónica — Elfa Heredera"
     },
     {
       "id": "keeper_sleeping_root",
-      "artCrop": "../../../../public/cards/last_rain/art/keeper_sleeping_root.png",
-      "typeLineEs": "Eco — Custodio"
+      "artCrop": "../../../../public/cards/last_rain/art/keeper_sleeping_root.jpg",
+      "typeLineEs": "Eco — Elfa Guardiana",
+      "artFrame": {
+        "zoom": 1.541,
+        "x": -51,
+        "y": 41
+      },
+      "headerFade": false,
+      "fullArt": false
     },
     {
       "id": "black_sap_stalker",
-      "artCrop": "../../../../public/cards/last_rain/art/black_sap_stalker.png",
-      "typeLineEs": "Eco — Basilisco"
+      "artCrop": "../../../../public/cards/last_rain/art/black_sap_stalker.jpg",
+      "typeLineEs": "Eco — Hidra",
+      "artFrame": {
+        "zoom": 0.76,
+        "x": 37,
+        "y": -145
+      },
+      "headerFade": false
     },
     {
       "id": "arven_first_pack",
-      "artCrop": "../../../../public/cards/last_rain/art/arven_first_pack.png",
-      "typeLineEs": "Eco — Líder Lupino"
+      "artCrop": "../../../../public/cards/last_rain/art/arven_first_pack.jpg",
+      "typeLineEs": "Eco — Elfo Convocador",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": -373,
+        "y": 17
+      },
+      "fullArt": true
     },
     {
       "id": "ancient_canopy_watchers",
-      "artCrop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.png",
-      "typeLineEs": "Eco — Vigía Arbóreo"
+      "artCrop": "../../../../public/cards/last_rain/art/ancient_canopy_watchers.jpg",
+      "typeLineEs": "Eco — Humana Arquera",
+      "artFrame": {
+        "zoom": 0.703,
+        "x": 5,
+        "y": -188
+      },
+      "headerFade": false
     },
     {
       "id": "hollow_skybreaker",
-      "artCrop": "../../../../public/cards/last_rain/art/hollow_skybreaker.png",
-      "typeLineEs": "Eco — Bestia Primordial"
+      "artCrop": "../../../../public/cards/last_rain/art/hollow_skybreaker.jpg",
+      "typeLineEs": "Eco — Espíritu Guardián",
+      "artFrame": {
+        "zoom": 1.734,
+        "x": 349,
+        "y": 22
+      },
+      "headerFade": false
     },
     {
       "id": "orun_waking_root",
-      "artCrop": "../../../../public/cards/last_rain/art/orun_waking_root.png",
-      "typeLineEs": "Eco — Guardián Ancestral"
+      "artCrop": "../../../../public/cards/last_rain/art/orun_waking_root.jpg",
+      "typeLineEs": "Eco — Dragón Guardián",
+      "artFrame": {
+        "zoom": 1.082,
+        "x": 37,
+        "y": 67
+      },
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "marked_prey",
-      "artCrop": "../../../../public/cards/last_rain/art/marked_prey.png",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/last_rain/art/marked_prey.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -8,
+        "y": -132
+      }
     },
     {
       "id": "oath_clearing",
-      "artCrop": "../../../../public/cards/last_rain/art/oath_clearing.png",
-      "typeLineEs": "Hechizo"
+      "artCrop": "../../../../public/cards/last_rain/art/oath_clearing.jpg",
+      "typeLineEs": "Hechizo",
+      "artFrame": {
+        "zoom": 0.855,
+        "x": -98,
+        "y": -84
+      },
+      "headerFade": false
     },
     {
       "id": "roots_touched_sky",
-      "artCrop": "../../../../public/cards/last_rain/art/roots_touched_sky.png",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/last_rain/art/roots_touched_sky.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -451,
+        "y": 18
+      },
+      "fullArt": false,
+      "headerFade": false
     },
     {
       "id": "first_tree_sap",
-      "artCrop": "../../../../public/cards/last_rain/art/first_tree_sap.png",
-      "typeLineEs": "Hechizo · Rápido"
+      "artCrop": "../../../../public/cards/last_rain/art/first_tree_sap.jpg",
+      "typeLineEs": "Hechizo · Rápido",
+      "artFrame": {
+        "zoom": 1,
+        "x": -11,
+        "y": -130
+      },
+      "fullArt": false,
+      "headerFade": true
     },
     {
       "id": "deep_root_spring",
-      "artCrop": "../../../../public/cards/last_rain/art/deep_root_spring.png",
-      "typeLineEs": "Fuente — Manantial"
+      "artCrop": "../../../../public/cards/last_rain/art/deep_root_spring.jpg",
+      "typeLineEs": "Fuente — Río",
+      "artFrame": {
+        "zoom": 1.04,
+        "x": 1,
+        "y": -79
+      }
     }
-  ]
+  ],
+  "motif": {
+    "head": {
+      "x": 0,
+      "y": -160,
+      "zoom": 0.95
+    },
+    "band": {
+      "x": 112,
+      "y": 54
+    },
+    "stats": {
+      "x": 0,
+      "y": -122,
+      "zoom": 4
+    }
+  }
 }

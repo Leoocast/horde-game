@@ -102,8 +102,7 @@ Contratos principales:
 - Estados: `exhausted`, `stabilizing`, attacking y defending según el contexto.
 
 La UI española no muestra nombres ingleses de identidad. No agregar proveedores remotos de cartas,
-metadata externa ni arte no local. `Blood Pact / Pacto de Sangre` está aprobado: una coincidencia
-con un nombre genérico no convierte por sí sola el nombre en identidad ajena.
+metadata externa ni arte no local.
 
 `scripts/audit-independence.mjs` es una guarda permanente contra regresiones, no un migrador.
 
@@ -113,10 +112,10 @@ Decks vigentes:
 
 | Bando | Id | Nombre | Estado |
 | --- | --- | --- | --- |
-| Cronista | `last_rain` | La Última Lluvia | Jugable |
-| Cronista | `crimson_court` | La Corte Carmesí | Jugable |
-| Hueste | `hollow_bell_procession` | La Procesión de la Campana Hueca | Jugable y predeterminada |
-| Hueste | `broken_forge_mutiny` | El Motín de la Forja Rota | Jugable |
+| Cronista | `last_rain` | El Pacto de Elarion | Jugable |
+| Cronista | `crimson_court` | La Corte del Eclipse Carmesí | Jugable |
+| Hueste | `hollow_bell_procession` | El Alzamiento de los Sinsepulcro | Jugable y predeterminada |
+| Hueste | `broken_forge_mutiny` | La Legión de Varka | Jugable |
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
 
@@ -181,6 +180,7 @@ No programar cartas por nombre. La excepción bespoke actual es `flesh_root_tith
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
 - `docs/chronicle_last_rain.md`
+- `docs/chronicle_crimson_eclipse.md`
 - `docs/procession_hollow_bell.md`
 - `docs/mutiny_broken_forge.md`
 - `docs/goblin_cards.md`
@@ -195,6 +195,27 @@ Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No
 nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
 `public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
 
+Los cinco estudios usan `deck-card-studio.js` y `deck-card-studio.css`: existe una sola estructura
+de carta y los decks sólo aportan variables de tema, motivo e insignia. El diseño común usa marco
+metálico, panel de reglas y motivo. El diseño *full art* no usa marco metálico ni motivo y se aplica
+por defecto a todo Eco `CHRONICLE`, a toda Energía `SOURCE` y a los tokens cuyo manifest de
+imágenes declare `fullArt: true`; el taller permite sobrescribirlo con `fullArt` por carta. Las
+Energías no imprimen coste, reglas ni flavor. Los tokens no imprimen reglas ni flavor y llevan los
+stats más abajo. No crear variantes copiadas por deck.
+
+El fade superior de las cartas comunes se controla por carta con `headerFade`; no modifica las
+variantes *full art* ni su fade inferior.
+
+Los Ecos recortados del campo usan directamente el arte fuente cargado en Card Studio. Su encuadre
+independiente (`battlefieldArtFrame`) vive en `dev/tools/Decks/<deck>/game-art.config.json` y se
+proyecta a `src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. Este
+sidecar no forma parte de la huella de impresión: mano, hover, detalles, colección y animaciones
+siguen usando el PNG completo.
+
+Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
+continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
+carta. El renderer imprime un icono de ilustración seguido del nombre del artista dentro del marco.
+
 Los registros `docs/asset_provenance_*.json` conservan prompts, dimensiones y hashes de los lotes de
 arte actuales. Son documentación de activos vigentes.
 
@@ -207,7 +228,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   una secuencia de la Hueste. Sólo Ecos sostienen o heredan slots.
 - `battlefieldCardOrder`, `battlefieldGroupKeys` y `battlefieldGroupMeta` protegen el orden visual.
 - Los targets válidos deben ser claros sin bordes finales exagerados.
-- Una Reacción manual de Invocación con target es obligatoria; no depende del id de Iria.
+- Una Reacción manual de Invocación con target es obligatoria; no depende del id de Aelyra.
 - El ataque del Cronista y la defensa contra la Hueste usan overlays y estados explícitos. No
   resolver reglas de combate dentro de animadores.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado

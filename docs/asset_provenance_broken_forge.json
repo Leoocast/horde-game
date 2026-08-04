@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "batchId": "broken-forge-art-2026-08-01",
-  "deck": "El Motín de la Forja Rota",
+  "deck": "La Legión de Varka",
   "createdAt": "2026-08-01",
   "generator": {
     "provider": "OpenAI",
@@ -38,7 +38,7 @@
     },
     {
       "id": "double_crew_boss",
-      "workingNameEs": "Jefe de la Cuadrilla Doble",
+      "workingNameEs": "Jefe de la Doble Guardia",
       "file": "../public/cards/broken_forge_mutiny/art/double_crew_boss.png",
       "width": 1448,
       "height": 1086,
@@ -47,7 +47,7 @@
     },
     {
       "id": "repeating_blow_marshal",
-      "workingNameEs": "Mariscal del Golpe Repetido",
+      "workingNameEs": "Mariscal de la Oleada",
       "file": "../public/cards/broken_forge_mutiny/art/repeating_blow_marshal.png",
       "width": 1448,
       "height": 1086,
@@ -65,7 +65,7 @@
     },
     {
       "id": "first_siren_agitator",
-      "workingNameEs": "Agitador de la Primera Sirena",
+      "workingNameEs": "Rompefilas de Varka",
       "file": "../public/cards/broken_forge_mutiny/art/first_siren_agitator.png",
       "width": 1448,
       "height": 1086,
@@ -74,7 +74,7 @@
     },
     {
       "id": "open_another_gate",
-      "workingNameEs": "¡Abran Otra Compuerta!",
+      "workingNameEs": "¡Liberen a la Legión!",
       "file": "../public/cards/broken_forge_mutiny/art/open_another_gate.png",
       "width": 1448,
       "height": 1086,
@@ -92,7 +92,7 @@
     },
     {
       "id": "salvaged_armor_master",
-      "workingNameEs": "Maestro de la Armadura Recuperada",
+      "workingNameEs": "Forjador de Varka",
       "file": "../public/cards/broken_forge_mutiny/art/salvaged_armor_master.png",
       "width": 1448,
       "height": 1086,
@@ -137,7 +137,7 @@
     },
     {
       "id": "last_rivets_gunner",
-      "workingNameEs": "Artillero de los Últimos Remaches",
+      "workingNameEs": "Escupefuego de la Retaguardia",
       "file": "../public/cards/broken_forge_mutiny/art/last_rivets_gunner.png",
       "width": 1448,
       "height": 1086,
@@ -146,7 +146,7 @@
     },
     {
       "id": "rain_of_rivets",
-      "workingNameEs": "Lluvia de Remaches",
+      "workingNameEs": "Todos contra uno",
       "file": "../public/cards/broken_forge_mutiny/art/rain_of_rivets.png",
       "width": 1448,
       "height": 1086,
@@ -155,7 +155,7 @@
     },
     {
       "id": "next_crew_caller",
-      "workingNameEs": "Llamador de la Próxima Cuadrilla",
+      "workingNameEs": "Invocador de las Filas",
       "file": "../public/cards/broken_forge_mutiny/art/next_crew_caller.png",
       "width": 1448,
       "height": 1086,

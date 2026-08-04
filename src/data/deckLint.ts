@@ -43,6 +43,7 @@ export type DeckLintReport = {
 export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[] } {
   const errors: DeckLintIssue[] = [];
   const reports: DeckLintReport[] = [];
+  const collectorOwners = new Map<string, { deckId: string; cardId: string }>();
 
   for (const entry of DECK_REGISTRY) {
     const deckId = entry.deck.id;
@@ -67,6 +68,19 @@ export function lintDecks(): { errors: DeckLintIssue[]; reports: DeckLintReport[
       });
     }
     for (const card of authoredCards) {
+      if (card.collectorId) {
+        const previous = collectorOwners.get(card.collectorId);
+        if (previous && previous.deckId !== deckId) {
+          errors.push({
+            deckId,
+            cardId: card.id,
+            abilityId: "collectorId",
+            message: `collectorId "${card.collectorId}" already belongs to ${previous.deckId}/${previous.cardId}.`,
+          });
+        } else {
+          collectorOwners.set(card.collectorId, { deckId, cardId: card.id });
+        }
+      }
       report.cards.push(lintCard(deckId, card, errors));
     }
     reports.push(report);
@@ -248,6 +262,30 @@ function lintHostfallSchema(deck: NewDeckList, errors: DeckLintIssue[]): void {
     });
   }
   lintHostRulesProfile(deck, errors);
+
+  const localCollectorIds = new Map<string, string>();
+  for (const card of [...deck.cards, ...(deck.tokens ?? [])]) {
+    const collectorId = String(card.collectorId ?? "");
+    if (!/^HFA1\d{3}$/u.test(collectorId)) {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "collectorId",
+        message: `collectorId "${collectorId || "(missing)"}" must use HFA1 followed by three digits.`,
+      });
+      continue;
+    }
+    const previousCardId = localCollectorIds.get(collectorId);
+    if (previousCardId && previousCardId !== card.id) {
+      errors.push({
+        deckId: deck.id,
+        cardId: card.id,
+        abilityId: "collectorId",
+        message: `Duplicate collectorId "${collectorId}" inside deck ${deck.id}.`,
+      });
+    }
+    localCollectorIds.set(collectorId, card.id);
+  }
 
   const reportVocabulary = (
     values: unknown,

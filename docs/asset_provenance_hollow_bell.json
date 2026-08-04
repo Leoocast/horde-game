@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "batchId": "hollow-bell-art-2026-08-01",
-  "deck": "La Procesión de la Campana Hueca",
+  "deck": "El Alzamiento de los Sinsepulcro",
   "createdAt": "2026-08-01",
   "generator": {
     "provider": "OpenAI",
@@ -29,16 +29,16 @@
   "assets": [
     {
       "id": "reinforced_gravewing",
-      "workingNameEs": "Ala Sepulcral Reforzada",
+      "workingNameEs": "Jinete del Osario",
       "file": "../public/cards/hollow_bell_procession/art/reinforced_gravewing.png",
       "width": 1448,
       "height": 1086,
       "sha256": "3ade458b5fee98eaef7cb9113804ee93024d90e9f91f6b42803b7748cbf253f1",
-      "prompt": "A reinforced funerary flying construct with doubled seams, bronze ribs and broad durable wings, visually related to Ala Hilvanada but clearly built to endure as a 3/4."
+      "prompt": "A reinforced funerary flying construct with doubled seams, bronze ribs and broad durable wings, clearly built to endure as a 3/4."
     },
     {
       "id": "crypt_rotwing",
-      "workingNameEs": "Alapútrida de la Cripta",
+      "workingNameEs": "Jinete de la Cripta Vacía",
       "file": "../public/cards/hollow_bell_procession/art/crypt_rotwing.png",
       "width": 1448,
       "height": 1086,
@@ -47,7 +47,7 @@
     },
     {
       "id": "archive_carrion_crow",
-      "workingNameEs": "Cuervo Carroñero del Archivo",
+      "workingNameEs": "Retorno a la Memoria",
       "file": "../public/cards/hollow_bell_procession/art/archive_carrion_crow.png",
       "width": 1448,
       "height": 1086,
@@ -56,7 +56,7 @@
     },
     {
       "id": "horned_linebreaker",
-      "workingNameEs": "Rompelíneas Astado",
+      "workingNameEs": "Rompemuros del Túmulo",
       "file": "../public/cards/hollow_bell_procession/art/horned_linebreaker.png",
       "width": 1448,
       "height": 1086,
@@ -65,7 +65,7 @@
     },
     {
       "id": "last_march_marshal",
-      "workingNameEs": "Mariscal de la Última Marcha",
+      "workingNameEs": "Nerezh, Matriarca Sinsepulcro",
       "file": "../public/cards/hollow_bell_procession/art/last_march_marshal.png",
       "width": 1448,
       "height": 1086,
@@ -74,7 +74,7 @@
     },
     {
       "id": "fallen_gatherer",
-      "workingNameEs": "Recolector de los Caídos",
+      "workingNameEs": "Cosechadora de los Caídos",
       "file": "../public/cards/hollow_bell_procession/art/fallen_gatherer.png",
       "width": 1448,
       "height": 1086,
@@ -83,7 +83,7 @@
     },
     {
       "id": "hollow_bell",
-      "workingNameEs": "La Campana Hueca",
+      "workingNameEs": "La Lápida Quebrada",
       "file": "../public/cards/hollow_bell_procession/art/hollow_bell.png",
       "width": 1448,
       "height": 1086,
@@ -92,7 +92,7 @@
     },
     {
       "id": "full_ossuary_mastiff",
-      "workingNameEs": "Mastín del Osario Colmado",
+      "workingNameEs": "Mastín del Osario Desbordado",
       "file": "../public/cards/hollow_bell_procession/art/full_ossuary_mastiff.png",
       "width": 1448,
       "height": 1086,
@@ -101,7 +101,7 @@
     },
     {
       "id": "memory_shroud_bearer",
-      "workingNameEs": "Portador de la Mortaja Mnémica",
+      "workingNameEs": "Ladrón de Memorias",
       "file": "../public/cards/hollow_bell_procession/art/memory_shroud_bearer.png",
       "width": 1448,
       "height": 1086,
@@ -110,7 +110,7 @@
     },
     {
       "id": "five_knot_gallows",
-      "workingNameEs": "El Cadalso de los Cinco Nudos",
+      "workingNameEs": "Osario Inagotable",
       "file": "../public/cards/hollow_bell_procession/art/five_knot_gallows.png",
       "width": 1448,
       "height": 1086,
@@ -119,7 +119,7 @@
     },
     {
       "id": "silent_bite_rats",
-      "workingNameEs": "Ratas de la Mordida Silente",
+      "workingNameEs": "Infestado de Esporas",
       "file": "../public/cards/hollow_bell_procession/art/silent_bite_rats.png",
       "width": 1448,
       "height": 1086,
@@ -128,7 +128,7 @@
     },
     {
       "id": "last_thought_carrion",
-      "workingNameEs": "Carroña del Último Pensamiento",
+      "workingNameEs": "Devorador del Último Recuerdo",
       "file": "../public/cards/hollow_bell_procession/art/last_thought_carrion.png",
       "width": 1448,
       "height": 1086,
@@ -137,7 +137,7 @@
     },
     {
       "id": "flesh_root_tithe",
-      "workingNameEs": "Diezmo de Carne y Raíz",
+      "workingNameEs": "Tributo de los Cuatro Pesares",
       "file": "../public/cards/hollow_bell_procession/art/flesh_root_tithe.png",
       "width": 1448,
       "height": 1086,
@@ -146,7 +146,7 @@
     },
     {
       "id": "basted_wing",
-      "workingNameEs": "Ala Hilvanada",
+      "workingNameEs": "Engendro de Alas Cosidas",
       "file": "../public/cards/hollow_bell_procession/art/basted_wing.png",
       "width": 1448,
       "height": 1086,
@@ -155,7 +155,7 @@
     },
     {
       "id": "seventh_memory_hound",
-      "workingNameEs": "Sabueso de la Séptima Memoria",
+      "workingNameEs": "Sabueso de los Siete Recuerdos",
       "file": "../public/cards/hollow_bell_procession/art/seventh_memory_hound.png",
       "width": 1448,
       "height": 1086,
@@ -164,7 +164,7 @@
     },
     {
       "id": "mass_grave_colossus",
-      "workingNameEs": "Coloso de la Fosa Común",
+      "workingNameEs": "Titán Sinsepulcro",
       "file": "../public/cards/hollow_bell_procession/art/mass_grave_colossus.png",
       "width": 1024,
       "height": 1536,
@@ -173,7 +173,7 @@
     },
     {
       "id": "last_knell_dead",
-      "workingNameEs": "Muerto del Último Taño",
+      "workingNameEs": "Soldado Sinsepulcro",
       "file": "../public/cards/hollow_bell_procession/art/last_knell_dead.png",
       "width": 1024,
       "height": 1536,

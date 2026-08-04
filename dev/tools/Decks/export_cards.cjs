@@ -143,6 +143,9 @@ async function main() {
     const generationManifest = await import(
         pathToFileURL(path.join(scriptsDir, 'card-generation-manifest.mjs')).href
     );
+    const runtimeLayout = await import(
+        pathToFileURL(path.join(scriptsDir, 'card-runtime-layout.mjs')).href
+    );
     studioData.syncStudioData({ deckIds: [deckId] });
     generationManifest.assertIndependentArtSources(deckId);
 
@@ -279,6 +282,8 @@ async function main() {
             });
         }
 
+        const measuredLayout = await runtimeLayout.measureDeckRuntimeLayout(page, deckId);
+
         await clearPreviousPngs(outputDir);
 
         for (let index = 0; index < pendingPngs.length; index++) {
@@ -288,6 +293,7 @@ async function main() {
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
+        runtimeLayout.writeRuntimeLayouts({ [deckId]: measuredLayout });
         generationManifest.recordDeckGeneration(deckId);
 
         console.log('');

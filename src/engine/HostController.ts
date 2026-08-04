@@ -55,7 +55,7 @@ export function runFullHostTurn(game: GameState): GameState {
 
 /**
  * Reveals and plays exactly ONE card off the top of the Host Archive, through the same path the
- * Host's turn uses — reveal, ETB, triggers, Tithe of Flesh and Root parking and all. No ready step, reveal count,
+ * Host's turn uses — reveal, ETB, triggers, Tribute of the Four Sorrows parking and all. No ready step, reveal count,
  * no surge, no combat: this is a single card entering play, not a turn.
  *
  * Only the Playground needs it. A match never plays one Host card in isolation, but a lab does:
@@ -119,7 +119,7 @@ function revealAndPlayOne(game: GameState, options: HostMainOptions): CardInstan
   const card = game.host.archive.shift();
   if (!card) return undefined;
   game.log.unshift(`Host reveals ${card.name}.`);
-  // Bridge: Tithe of Flesh and Root needs a bespoke, player-interactive multi-step resolution (Host sacrifices,
+  // Bridge: Tribute of the Four Sorrows needs a bespoke, player-interactive multi-step resolution (Host sacrifices,
   // then the player chooses life/discard/creature/land) that can't run inside this synchronous
   // reveal. Park it unresolved; the store drives the sequence and moves it to Memory itself.
   if (card.definitionId === "flesh_root_tithe") {

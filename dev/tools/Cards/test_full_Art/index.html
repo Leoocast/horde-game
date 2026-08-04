@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hostfall — Común y Full Art de Crónica (laboratorio)</title>
+    <link rel="stylesheet" href="./full-art.css">
+</head>
+<body>
+    <header class="lab-header">
+        <p class="lab-kicker">Laboratorio · fuera del repo</p>
+        <h1 class="lab-title">Común nueva · Full Art de Crónica</h1>
+        <p class="lab-subtitle">
+            Dos marcos hermanos: el arte corre a sangre en los dos y cambia sólo cómo se sirve el
+            texto. La común lo pone sobre papel claro con tinta negra; la de Crónica lo graba
+            directamente sobre el arte.
+        </p>
+    </header>
+
+    <main class="lab-grid scale-40" id="cards"></main>
+
+    <script>
+        (() => {
+            "use strict";
+
+            /* Datos inventados para el laboratorio: nombre, tipo y texto siguen el
+               vocabulario del juego (Ímpetu, Letal, Invocar, Desterrar, Aguante). */
+            const card = {
+                nombre: "Ilvara, Filo del Juramento",
+                tipoComun: "Eco — Humano Caballero",
+                tipoCronica: "Eco de Crónica — Humano Caballero",
+                costo: 6,
+                atk: 5,
+                def: 5,
+                art: "./art.jpg",
+                artista: "Dean Spencer",
+                collectorId: "HFA001",
+                /* Un párrafo por regla, como el cuadro de texto del estudio. */
+                efecto: [
+                    `<span class="kw">Ímpetu</span>. <span class="kw">Letal</span>.`,
+                    `Cuando <span class="act">Invocas</span> este Eco,
+                     <span class="act">destierra</span> un Eco enemigo con
+                     <span class="stat">Aguante</span> 4 o menos.`
+                ],
+                lore: "Juró arder antes que dejarse olvidar. El Archivo la recuerda ardiendo."
+            };
+
+            /* Pie de carta: id de coleccionista y copyright a la izquierda, crédito de
+               arte a la derecha. Nunca en la misma línea de texto. */
+            const footer = `${card.collectorId} · © Hostfall 2026`;
+            const effectHtml = card.efecto
+                .map((paragraph) => `<span class="effect-paragraph">${paragraph}</span>`)
+                .join("");
+
+            const ECHO_GLYPH = `
+                <svg class="echo-icon" viewBox="0 0 64 64" aria-hidden="true">
+                    <path fill="currentColor" d="M32 20 39 32 32 44 25 32 32 20Z"></path>
+                    <path fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"
+                        d="M20.5 22.5A15 15 0 0 0 20.5 41.5M43.5 22.5A15 15 0 0 1 43.5 41.5M12.5 15A26 26 0 0 0 12.5 49M51.5 15A26 26 0 0 1 51.5 49"></path>
+                </svg>
+            `;
+
+            const LEAF_GLYPH = `
+                <svg class="leaf-icon" viewBox="0 0 64 64" aria-hidden="true">
+                    <path fill="currentColor" d="M54 7C33 8 18 17 13 33c-3 10 1 18 9 22 8 3 17 0 22-8 7-11 8-25 10-40ZM17 52c8-12 17-21 29-31-10 5-21 12-31 23l2 8Z"></path>
+                </svg>
+            `;
+
+            const ART_CREDIT = `
+                <div class="art-credit" aria-label="Ilustración: ${card.artista}">
+                    <svg class="art-credit-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                        <circle cx="8.5" cy="9" r="1.5"></circle>
+                        <path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6"></path>
+                    </svg>
+                    <span class="art-credit-name">${card.artista}</span>
+                </div>
+            `;
+
+            const STATS = `
+                <div class="stats">
+                    <span class="val">${card.atk}</span>
+                    <span class="sep">/</span>
+                    <span class="val">${card.def}</span>
+                </div>
+            `;
+
+            const templates = {
+                /* Común — marco metálico de siempre, arte a sangre por debajo y el texto
+                   sobre papel claro: tinta negra, máxima legibilidad. */
+                comun: () => `
+                    <img class="card-art" src="${card.art}" alt="${card.nombre}">
+                    <div class="card-veil"></div>
+                    <div class="card-frame"></div>
+                    <div class="card-rim"></div>
+
+                    <header class="head">
+                        <h2 class="title">${card.nombre}</h2>
+                        <div class="seal">${LEAF_GLYPH}</div>
+                    </header>
+                    <div class="cost-gem"><span>${card.costo}</span></div>
+
+                    <div class="lower">
+                        ${STATS}
+                        <div class="typeband">
+                            <span class="type-icon">${ECHO_GLYPH}</span>
+                            <span>${card.tipoComun}</span>
+                        </div>
+                        <div class="textplate">
+                            <p class="effect">${effectHtml}</p>
+                            <div class="divider"></div>
+                            <p class="flavor">${card.lore}</p>
+                            <div class="footer-info">${footer}</div>
+                            ${ART_CREDIT}
+                        </div>
+                    </div>
+                `,
+
+                /* Full art de Crónica — sin marco: humo, tipografía grabada y los mismos
+                   stats de la común, en la misma posición. */
+                cronica: () => `
+                    <img class="card-art" src="${card.art}" alt="${card.nombre}">
+                    <div class="card-veil"></div>
+                    <div class="watermark">H</div>
+                    <div class="card-rim"></div>
+
+                    <header class="head">
+                        <div class="cost-gem"><span>${card.costo}</span></div>
+                        <h2 class="title">
+                            ${card.nombre}
+                            <small>Crónica</small>
+                        </h2>
+                        <div class="seal">${LEAF_GLYPH}</div>
+                    </header>
+
+                    <div class="lower">
+                        ${STATS}
+                        <div class="typeband">
+                            <span class="type-icon">${ECHO_GLYPH}</span>
+                            <span>${card.tipoCronica}</span>
+                        </div>
+                        <p class="effect">${effectHtml}</p>
+                        <div class="divider"></div>
+                        <p class="flavor">${card.lore}</p>
+                        <div class="footer-info">${footer}</div>
+                        ${ART_CREDIT}
+                    </div>
+                `
+            };
+
+            const options = [
+                {
+                    id: "comun",
+                    titulo: "Común",
+                    nota: "Marco metálico y bandas de siempre, arte a sangre por detrás y cuadro de texto en papel claro. El borde de la cabecera rodea el orbe de coste."
+                },
+                {
+                    id: "cronica",
+                    titulo: "Full art · Crónica",
+                    nota: "Sin marco: filo de oro, humo desde abajo y texto grabado sobre el arte. Mismos stats y misma posición que la común."
+                }
+            ];
+
+            const container = document.getElementById("cards");
+
+            options.forEach((option) => {
+                const slot = document.createElement("div");
+                slot.className = "lab-slot";
+
+                const article = document.createElement("article");
+                article.className = `card card--${option.id}`;
+                article.id = `card-${option.id}`;
+                article.innerHTML = templates[option.id]();
+
+                const caption = document.createElement("p");
+                caption.className = "lab-caption";
+                caption.innerHTML = `<strong>${option.titulo}</strong>${option.nota}`;
+
+                slot.append(article, caption);
+                container.appendChild(slot);
+            });
+        })();
+    </script>
+</body>
+</html>

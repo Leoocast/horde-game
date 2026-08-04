@@ -465,7 +465,7 @@ test("three poison counters animate their consumption before the Host card is mi
   }
 });
 
-test("Blood Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
+test("Midnight Pact presents its life payment, two-card draw, and queued Blood Page trigger", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -653,7 +653,7 @@ test("targeted life-cost spells queue Blood Page after their target buff during 
   }
 });
 
-test("Tithe Acolyte presents its life payment while carrying stored Energy to the HUD", async () => {
+test("Midnight Collector presents its life payment while carrying stored Energy to the HUD", async () => {
   const [
     { useGameStore },
     { addCard, cardFromDeck, createTestGame },
@@ -707,7 +707,7 @@ test("Tithe Acolyte presents its life payment while carrying stored Energy to th
   assert.equal(useGameStore.getState().game.player.energyPool.stored, 1);
 });
 
-test("Predatory Thirst presents its temporary Lifesteal on every allied creature", async () => {
+test("Hunt Beneath the Red Moon presents its temporary Lifesteal on every allied creature", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -776,7 +776,7 @@ test("Predatory Thirst presents its temporary Lifesteal on every allied creature
   }
 });
 
-test("Arven uses the shared growth animation when the first allied Echo is Invoked", async () => {
+test("Kaelor uses the shared growth animation when the first allied Echo is Invoked", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -825,9 +825,9 @@ test("Arven uses the shared growth animation when the first allied Echo is Invok
     useGameStore.getState().castCard(entrant.instanceId);
 
     const result = useGameStore.getState();
-    const buffedArven = result.game.player.field.find((card) => card.instanceId === ranger.instanceId);
-    assert.equal(buffedArven?.untilNextPlayerTurnPower, 1);
-    assert.equal(buffedArven?.untilNextPlayerTurnEndurance, 1);
+    const buffedKaelor = result.game.player.field.find((card) => card.instanceId === ranger.instanceId);
+    assert.equal(buffedKaelor?.untilNextPlayerTurnPower, 1);
+    assert.equal(buffedKaelor?.untilNextPlayerTurnEndurance, 1);
     assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
     assert.equal(result.buffAnimationVariant, "growth-strong");
   } finally {
@@ -937,7 +937,7 @@ test("growth spells animate only after confirm, and Oath of the Clearing fights 
   }
 });
 
-test("Cuando las Raíces Tocaron el Cielo cuts the target before its normal destruction fade", async () => {
+test("El Juicio de Elarion cuts the target before its normal destruction fade", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1090,7 +1090,7 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
   }
 });
 
-test("Final Banquet siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
+test("Verdict of the Eclipse siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();

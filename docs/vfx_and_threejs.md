@@ -127,7 +127,7 @@ Para Hostfall conviene portar la idea, no la implementacion:
 
 Este enfoque 2D es preferible para un efecto local y alineado al DOM. Three.js o un futuro
 three.quarks tienen mas sentido cuando hay profundidad, shaders, trails largos o muchas particulas
-compartiendo una escena. El consumo actual de Pacto de Sangre fue diseñado especificamente y no
+compartiendo una escena. El consumo actual de Pacto de Medianoche fue diseñado especificamente y no
 debe reemplazarse solo por adoptar esta referencia.
 
 ## Referencia Three.js: DecorativeBackgrounds

@@ -1,65 +1,59 @@
-# Hueste: La Procesión de la Campana Hueca
+# Hueste: El Alzamiento de los Sinsepulcro
 
 Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
-Deck actual: `hollow_bell_procession` / `La Procesión de la Campana Hueca`
-Última actualización: 2026-08-01
+Deck actual: `hollow_bell_procession` / `El Alzamiento de los Sinsepulcro`
+Última actualización: 2026-08-04
 
-Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual de la
-Procesión. Los 17 nombres y sus flavor bilingües viven en
-`src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json`; el Card Studio sólo proyecta esos datos. Los 17
-artes fuente viven en `public/cards/hollow_bell_procession/art/` y sus cartas completas exportadas en
-`public/cards/hollow_bell_procession/`. La procedencia, prompts resumidos, dimensiones y hashes del lote viven en
-`docs/asset_provenance_hollow_bell.json`.
+Este documento conserva la identidad narrativa y el mapeo mecánico de los Sinsepulcro. Los nombres,
+reglas y flavor bilingüe viven en
+`src/data/decks/host/hollow_bell_procession/hollow_bell_procession.json`; el Card Studio sólo
+proyecta esos datos. Los ids técnicos históricos se conservan para no romper partidas ni pruebas.
 
 ## Premisa
 
-Bajo una ciudad-campanario inundada, una campana sin badajo vuelve a sonar. Cada tañido arranca un
-recuerdo del Archivo y lo fija dentro de un cadáver preparado para marchar. Los primeros muertos
-son reemplazables; los últimos ya cargan los recuerdos, costuras y placas de todos los que cayeron
-antes. La Procesión no busca territorio: avanza para vaciar al Cronista de identidad y convertirlo
-en su último integrante.
+Una lápida se partió desde dentro y dejó a los primeros muertos sin lugar al cual regresar. Desde
+esa grieta se extendió una orden muda: levantarse, recuperar los recuerdos enterrados y arrastrar
+consigo todo cuerpo olvidado. Así nacieron los Sinsepulcro, una Hueste de soldados, bestias,
+jinetes y engendros zombificados que convierte su propia Memoria en fuerza.
 
-## Lenguaje visual común
+El alzamiento no avanza al sonido de una campana. Lo guía Nerezh, Matriarca Sinsepulcro, que cierra
+las filas con cada cadáver caído. Cuanto más llena está la Memoria de la Hueste, más peligrosas se
+vuelven sus criaturas. Incluso aquello que parece una pérdida —como `Retorno a la Memoria` enviando
+cartas del Archivo a la Memoria— acerca a la Hueste a sus umbrales de siete cartas.
 
-- Fantasía funeraria dark-medieval en una ciudad osario ahogada: bronce verdín, piedra negra
-  mojada, mortajas, aceite funerario negro y niebla azul cadavérica.
-- La campana, los nudos, las tablillas de memoria y las bóvedas numeradas conectan las cartas sin
-  volverlas intercambiables.
-- Cada arte comunica primero las estadísticas o el efecto real: ligereza, resistencia, cantidad de
-  contadores, condición de siete cartas, evasión o crecimiento por muertes.
-- No hay texto, marcos, logos ni símbolos de otras franquicias dentro del arte fuente.
-- **Las dos Fichas son verticales**: fuente 1024×1536 y figura completa pensada para el formato
-  full-art. Las otras quince fuentes son horizontales porque ocupan la ventana de arte del marco.
+## Lenguaje visual
+
+- Fantasía funeraria oscura: piedra quebrada, osarios, raíces muertas y luz verde cadavérica.
+- La insignia es una lápida rota. La campana deja de ser el símbolo central del deck.
+- Todas las criaturas representan cuerpos o bestias zombificados, aunque sus razas secundarias
+  varíen.
+- El arte fuente Beta permanece intacto; los cambios afectan nombres, lore, tipos impresos y marco.
 
 ## Mapeo carta por carta
 
-| Id técnico | Identidad final | Mecánica conservada | Papel narrativo y brief visual |
+| Id técnico | Nombre visible | Mecánica conservada | Lectura narrativa |
 | --- | --- | --- | --- |
-| `last_knell_dead` | **Muerto del Último Taño** | Ficha 2/2, x21. | Soldado básico que se endereza con el tañido. Retrato vertical de cuerpo completo y jerarquía visual deliberadamente modesta. |
-| `mass_grave_colossus` | **Coloso de la Fosa Común** | Ficha 5/5, x4. | Muchos cuerpos y lápidas comprimidos en una sola figura monumental. Retrato vertical que hace evidente su masa 5/5. |
-| `hollow_bell` | **La Campana Hueca** | Apoyo; da Imponente a los Zombis. Dos habilidades siguen pendientes. | La fuente persistente de la marcha: una campana de bronce verdín que obliga a filas enteras a levantarse. |
-| `five_knot_gallows` | **El Cadalso de los Cinco Nudos** | Entra con cinco contadores +1/+1; cada carta no Ficha retira uno e Invoca una Ficha 2/2. | Cinco nudos sostienen una multitud compuesta; al soltarse uno, una figura abandona el cadalso. |
-| `last_thought_carrion` | **Carroña del Último Pensamiento** | 2/4; al morir, el Cronista descarta una carta. | Cuerpo ancho y resistente usado como relicario para un único recuerdo que estalla al morir. |
-| `memory_shroud_bearer` | **Portador de la Mortaja Mnémica** | 2/2; al ser invocada, el Cronista descarta una carta. | Una mortaja de humo arranca una tablilla de memoria al cruzar el umbral del Archivo. |
-| `flesh_root_tithe` | **Diezmo de Carne y Raíz** | Hechizo: pierde Vida, descarta y sacrifica un Eco y una Fuente. | Altar simbólico con cuatro ofrendas que se extinguen; cada objeto representa uno de los cuatro pagos. |
-| `crypt_rotwing` | **Alapútrida de la Cripta** | 2/1, Volar. | Murciélago de hueso y tela funeraria: ligero, veloz y frágil. |
-| `basted_wing` | **Ala Hilvanada** | 3/1, Volar; recursión ignorada en este modo. | Primer prototipo de vuelo, poderoso pero apenas unido por costuras desiguales. |
-| `reinforced_gravewing` | **Ala Sepulcral Reforzada** | 3/4, Volar; recursión ignorada en este modo. | Evolución de la anterior con dobles costuras y costillas de bronce que justifican Aguante 4. |
-| `archive_carrion_crow` | **Cuervo Carroñero del Archivo** | 2/1, Volar; al entrar o morir manda dos cartas del Archivo a la Memoria. | Cuervo que carga exactamente dos tablillas; su sombra anticipa la repetición del efecto al morir. |
-| `horned_linebreaker` | **Rompelíneas Astado** | 3/2, Imponente. | Minotauro ancho de cuernos cuya silueta explica que hacen falta dos defensores. |
-| `seventh_memory_hound` | **Sabueso de la Séptima Memoria** | 3/2; con siete cartas en Memoria gana +1/+1 e Imponente. | Sabueso flaco que absorbe la séptima tablilla y empieza a crecer. |
-| `full_ossuary_mastiff` | **Mastín del Osario Colmado** | 5/3; con siete cartas en Memoria gana Imponente. | Mastín masivo frente a siete bóvedas llenas; la cadena del portón deja de contenerlo. |
-| `silent_bite_rats` | **Ratas de la Mordida Silente** | 1/1, Letal y Furtivo. | Ratas diminutas ocultas bajo el pavimento; la mordida aceitosa importa más que su cuerpo. |
-| `fallen_gatherer` | **Recolector de los Caídos** | 2/4; gana un contador +1/+1 cuando muere otro Zombi aliado. | Recolector duradero que fija a su cuerpo placas tomadas de cada aliado caído. |
-| `last_march_marshal` | **Mariscal de la Última Marcha** | 2/2, Letal; +1/+1 a otros Zombis y pérdida de Vida por cada otra muerte aliada. | Oficial que cierra las filas mientras cada baja alimenta una brasa de aceite negro contra el Cronista. |
+| `last_knell_dead` | **Soldado Sinsepulcro** | Ficha 2/2, x21. | La tropa básica liberada por la lápida. |
+| `mass_grave_colossus` | **Titán Sinsepulcro** | Ficha 5/5, x4. | Un cementerio entero comprimido dentro de una armadura. |
+| `hollow_bell` | **La Lápida Quebrada** | Apoyo; da Imponente a los Zombis. | La primera grieta y emblema del alzamiento. |
+| `five_knot_gallows` | **Osario Inagotable** | Cinco contadores; cada carta no Ficha consume uno e Invoca una Ficha 2/2. | Cada espacio vacío reclama otro cuerpo. |
+| `last_thought_carrion` | **Devorador del Último Recuerdo** | Al morir, el Cronista descarta una carta. | Su muerte arrastra consigo un pensamiento enemigo. |
+| `memory_shroud_bearer` | **Ladrón de Memorias** | Al ser invocado, el Cronista descarta una carta. | La luz de su mano es un recuerdo robado. |
+| `flesh_root_tithe` | **Tributo de los Cuatro Pesares** | Vida, descarte, sacrificio de Eco y de Fuente. | Cuatro pagos para una tumba que no perdona ninguno. |
+| `crypt_rotwing` | **Jinete de la Cripta Vacía** | 2/1, Volar. | Jinete y montura esquelética abandonan una cripta vacía. |
+| `basted_wing` | **Engendro de Alas Cosidas** | 3/1, Volar. | Un cuerpo apenas sostenido por sus costuras. |
+| `reinforced_gravewing` | **Jinete del Osario** | 3/4, Volar. | Montura reforzada con los huesos de cada caída. |
+| `archive_carrion_crow` | **Retorno a la Memoria** | 2/1, sin Volar; al entrar o morir mueve dos cartas del Archivo a la Memoria. | No es un cuervo: representa el regreso que alimenta la Memoria de la Hueste. |
+| `horned_linebreaker` | **Rompemuros del Túmulo** | 3/2, Imponente. | Una bestia astada que exige dos defensores. |
+| `seventh_memory_hound` | **Sabueso de los Siete Recuerdos** | Con siete cartas gana +1/+1 e Imponente. | El séptimo recuerdo completa su crecimiento. |
+| `full_ossuary_mastiff` | **Mastín del Osario Desbordado** | Con siete cartas gana Imponente. | La Memoria llena rompe su última cadena. |
+| `silent_bite_rats` | **Infestado de Esporas** | 1/1, Letal y Furtivo. | El arte muestra un cuerpo zombificado invadido por esporas, no una manada de ratas. |
+| `fallen_gatherer` | **Cosechadora de los Caídos** | Crece cuando muere otro Zombi aliado. | Recolecta algo de cada Sinsepulcro caído. |
+| `last_march_marshal` | **Nerezh, Matriarca Sinsepulcro** | Refuerza a otros Zombis y castiga cada muerte aliada. | Comanda el alzamiento y devuelve cada baja a sus filas. |
 
-## Contrato de datos y exportación
+## Contrato de exportación
 
-- El nombre del deck, los nombres de carta, las reglas, el flavor bilingüe y `showFlavorText` se
-  authorizan únicamente en el JSON runtime.
-- Todas las cartas conservan flavor aunque las de texto largo declaren `showFlavorText: false`.
-- `dev/tools/Decks/hollow_bell_procession/studio.config.json` conserva sólo decisiones visuales y rutas a
-  `public/cards/hollow_bell_procession/art/*.png`.
-- `scripts/card-studio-data.mjs --write` genera la proyección del taller y
-  `dev/tools/Decks/export_cards.cjs hollow_bell_procession` regenera las 17 cartas completas.
-- Los ids y nombres de archivo usan la identidad final de la Procesión.
+- El JSON runtime es la fuente única de nombres, reglas, flavor y `showFlavorText`.
+- `studio.config.json` conserva sólo decisiones visuales y rutas al arte fuente local.
+- `scripts/card-studio-data.mjs --write` actualiza la proyección del taller.
+- `dev/tools/Decks/export_cards.cjs hollow_bell_procession` regenera las 17 cartas completas.

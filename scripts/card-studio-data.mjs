@@ -4,6 +4,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+export const GAME_ART_DATA_PATH = path.join(ROOT, "src", "data", "cardStudioGameArt.generated.json");
+export const BATTLEFIELD_ART_VIEWPORT = Object.freeze({ width: 488, height: 434 });
 
 export const STUDIO_DECKS = Object.freeze({
   last_rain: {
@@ -71,6 +73,14 @@ function authoredIsToken(card) {
   return Boolean(card.isToken || card.kinds?.includes("TOKEN"));
 }
 
+function authoredIsChronicle(card) {
+  return Boolean(card.modifiers?.includes("CHRONICLE"));
+}
+
+function authoredIsEnergy(card) {
+  return Boolean(card.kinds?.includes("SOURCE"));
+}
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
@@ -93,6 +103,7 @@ function deckPaths(deckId) {
     ...definition,
     directory,
     config: path.join(directory, "studio.config.json"),
+    gameArtConfig: path.join(directory, "game-art.config.json"),
     generatedData: path.join(directory, "deck-data.generated.js"),
     index: path.join(directory, "index.html"),
     publicDirectory: absolute(definition.publicDirectory),
@@ -142,6 +153,86 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
   return lines.join("\n") || "Sin efecto adicional.";
 }
 
+/*
+ * Encuadre de arte y motivo. Ambos son presentación pura: viven en studio.config.json,
+ * nunca en el JSON runtime. Un valor por defecto no se emite, de modo que una carta sin
+ * ajustar produce exactamente el mismo HTML —y el mismo PNG— que antes de existir esta feature.
+ */
+const MOTIF_SLOTS = Object.freeze(["head", "band", "stats"]);
+
+function finiteNumber(label, value, fallback) {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${label}: debe ser un número finito, se recibió ${JSON.stringify(value)}.`);
+  }
+  return value;
+}
+
+function normalizeArtFrame(label, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${label}: artFrame debe ser un objeto {zoom, x, y}.`);
+  }
+  const unknown = Object.keys(raw).filter((key) => !["zoom", "x", "y"].includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`${label}: artFrame no reconoce ${unknown.join(", ")}.`);
+  }
+  const zoom = finiteNumber(`${label}.artFrame.zoom`, raw.zoom, 1);
+  if (zoom <= 0) throw new Error(`${label}: artFrame.zoom debe ser mayor que 0.`);
+  const x = finiteNumber(`${label}.artFrame.x`, raw.x, 0);
+  const y = finiteNumber(`${label}.artFrame.y`, raw.y, 0);
+  if (zoom === 1 && x === 0 && y === 0) return null;
+  return { zoom, x, y };
+}
+
+function normalizeMotif(deckId, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${deckId}: motif debe ser un objeto con slots ${MOTIF_SLOTS.join(", ")}.`);
+  }
+  const unknown = Object.keys(raw).filter((slot) => !MOTIF_SLOTS.includes(slot));
+  if (unknown.length > 0) {
+    throw new Error(`${deckId}: motif no reconoce el slot ${unknown.join(", ")}.`);
+  }
+  const motif = {};
+  for (const slot of MOTIF_SLOTS) {
+    const value = raw[slot];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`${deckId}: motif.${slot} debe ser un objeto {x, y, zoom, rotation}.`);
+    }
+    const unknownKeys = Object.keys(value).filter(
+      (key) => !["x", "y", "zoom", "rotation"].includes(key),
+    );
+    if (unknownKeys.length > 0) {
+      throw new Error(`${deckId}: motif.${slot} no reconoce ${unknownKeys.join(", ")}.`);
+    }
+    const x = finiteNumber(`${deckId}.motif.${slot}.x`, value.x, 0);
+    const y = finiteNumber(`${deckId}.motif.${slot}.y`, value.y, 0);
+    const zoom = finiteNumber(`${deckId}.motif.${slot}.zoom`, value.zoom, 1);
+    const rotation = finiteNumber(`${deckId}.motif.${slot}.rotation`, value.rotation, 0);
+    if (zoom < 0.2 || zoom > 4) {
+      throw new Error(`${deckId}: motif.${slot}.zoom debe estar entre 0.2 y 4.`);
+    }
+    if (rotation < -180 || rotation > 180) {
+      throw new Error(`${deckId}: motif.${slot}.rotation debe estar entre -180 y 180.`);
+    }
+    if (x === 0 && y === 0 && zoom === 1 && rotation === 0) continue;
+    motif[slot] = {
+      x,
+      y,
+      ...(zoom === 1 ? {} : { zoom }),
+      ...(rotation === 0 ? {} : { rotation }),
+    };
+  }
+  return Object.keys(motif).length > 0 ? motif : null;
+}
+
+export function studioMotif(deckId) {
+  const { config } = loadStudioConfig(deckId);
+  return normalizeMotif(deckId, config.motif);
+}
+
 function validatePresentationCards(deckId, cards) {
   if (!Array.isArray(cards) || cards.length === 0) {
     throw new Error(`${deckId}: studio.config.json debe declarar cards[].`);
@@ -151,8 +242,89 @@ function validatePresentationCards(deckId, cards) {
     if (!card?.id || ids.has(card.id)) {
       throw new Error(`${deckId}: id de presentación ausente o duplicado: ${card?.id ?? "(vacío)"}.`);
     }
+    resolveStudioFullArt(`${deckId}/${card.id}`, card, false);
+    resolveStudioHeaderFade(`${deckId}/${card.id}`, card, true);
     ids.add(card.id);
   }
+}
+
+export function normalizeBattlefieldArtFrame(label, raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${label}: battlefieldArtFrame debe ser un objeto {zoom, x, y}.`);
+  }
+  const unknown = Object.keys(raw).filter((key) => !["zoom", "x", "y"].includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`${label}: battlefieldArtFrame no reconoce ${unknown.join(", ")}.`);
+  }
+  const zoom = finiteNumber(`${label}.battlefieldArtFrame.zoom`, raw.zoom, 1);
+  const x = finiteNumber(`${label}.battlefieldArtFrame.x`, raw.x, 0);
+  const y = finiteNumber(`${label}.battlefieldArtFrame.y`, raw.y, 0);
+  if (zoom < 0.2 || zoom > 4) {
+    throw new Error(`${label}: battlefieldArtFrame.zoom debe estar entre 0.2 y 4.`);
+  }
+  if (x < -BATTLEFIELD_ART_VIEWPORT.width || x > BATTLEFIELD_ART_VIEWPORT.width) {
+    throw new Error(
+      `${label}: battlefieldArtFrame.x debe estar entre -${BATTLEFIELD_ART_VIEWPORT.width} y ${BATTLEFIELD_ART_VIEWPORT.width}.`,
+    );
+  }
+  if (y < -BATTLEFIELD_ART_VIEWPORT.height || y > BATTLEFIELD_ART_VIEWPORT.height) {
+    throw new Error(
+      `${label}: battlefieldArtFrame.y debe estar entre -${BATTLEFIELD_ART_VIEWPORT.height} y ${BATTLEFIELD_ART_VIEWPORT.height}.`,
+    );
+  }
+  if (zoom === 1 && x === 0 && y === 0) return null;
+  return { zoom, x, y };
+}
+
+export function normalizeGameArtConfig(deckId, raw, knownCardIds) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${deckId}: game-art.config.json debe ser un objeto.`);
+  }
+  if (raw.schemaVersion !== "1.0.0") {
+    throw new Error(
+      `${deckId}: schemaVersion de game-art.config.json no soportada: ${raw.schemaVersion}.`,
+    );
+  }
+  if (!raw.cards || typeof raw.cards !== "object" || Array.isArray(raw.cards)) {
+    throw new Error(`${deckId}: game-art.config.json debe declarar cards como objeto.`);
+  }
+  const known = new Set(knownCardIds);
+  const cards = {};
+  for (const [cardId, entry] of Object.entries(raw.cards)) {
+    if (!known.has(cardId)) {
+      throw new Error(`${deckId}: game-art.config.json contiene la carta desconocida ${cardId}.`);
+    }
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`${deckId}/${cardId}: la entrada de game-art debe ser un objeto.`);
+    }
+    const unknown = Object.keys(entry).filter((key) => key !== "battlefieldArtFrame");
+    if (unknown.length > 0) {
+      throw new Error(`${deckId}/${cardId}: game-art no reconoce ${unknown.join(", ")}.`);
+    }
+    const frame = normalizeBattlefieldArtFrame(
+      `${deckId}/${cardId}`,
+      entry.battlefieldArtFrame,
+    );
+    if (frame) cards[cardId] = { battlefieldArtFrame: frame };
+  }
+  return { schemaVersion: "1.0.0", cards };
+}
+
+export function resolveStudioFullArt(label, presentation, fallback) {
+  if (!Object.hasOwn(presentation, "fullArt")) return Boolean(fallback);
+  if (typeof presentation.fullArt !== "boolean") {
+    throw new Error(`${label}: fullArt debe ser booleano.`);
+  }
+  return presentation.fullArt;
+}
+
+export function resolveStudioHeaderFade(label, presentation, fallback = true) {
+  if (!Object.hasOwn(presentation, "headerFade")) return Boolean(fallback);
+  if (typeof presentation.headerFade !== "boolean") {
+    throw new Error(`${label}: headerFade debe ser booleano.`);
+  }
+  return presentation.headerFade;
 }
 
 export function loadStudioConfig(deckId) {
@@ -165,13 +337,74 @@ export function loadStudioConfig(deckId) {
   return { config, paths };
 }
 
+export function loadGameArtConfig(deckId) {
+  const paths = deckPaths(deckId);
+  const { config: studioConfig } = loadStudioConfig(deckId);
+  const config = normalizeGameArtConfig(
+    deckId,
+    readJson(paths.gameArtConfig),
+    studioConfig.cards.map((card) => card.id),
+  );
+  return { config, paths };
+}
+
+function publicArtUrl(deckId, cardId, artCrop, paths) {
+  if (!artCrop) throw new Error(`${deckId}/${cardId}: falta artCrop para el juego.`);
+  const artPath = path.resolve(paths.directory, artCrop);
+  const publicRoot = absolute("public");
+  if (artPath !== publicRoot && !artPath.startsWith(publicRoot + path.sep)) {
+    throw new Error(`${deckId}/${cardId}: artCrop debe vivir bajo public/.`);
+  }
+  if (!fs.existsSync(artPath)) {
+    throw new Error(`${deckId}/${cardId}: no existe el arte ${relative(artPath)}.`);
+  }
+  return `/${path.relative(publicRoot, artPath).replaceAll(path.sep, "/")}`;
+}
+
+export function studioGameArt(deckId) {
+  const { config: studioConfig, paths } = loadStudioConfig(deckId);
+  const { config: gameArtConfig } = loadGameArtConfig(deckId);
+  const gameEntries = gameArtConfig.cards;
+  return Object.fromEntries(studioConfig.cards.map((card) => {
+    const artCrop = card.artCrop ?? card.art_crop;
+    const frame = gameEntries[card.id]?.battlefieldArtFrame ?? null;
+    return [card.id, {
+      artUrl: publicArtUrl(deckId, card.id, artCrop, paths),
+      ...(frame ? { battlefieldArtFrame: frame } : {}),
+    }];
+  }));
+}
+
+export function generatedGameArtData() {
+  const cards = {};
+  for (const deckId of Object.keys(STUDIO_DECKS)) {
+    for (const [cardId, presentation] of Object.entries(studioGameArt(deckId))) {
+      if (Object.hasOwn(cards, cardId)) {
+        throw new Error(`El id ${cardId} está duplicado entre estudios.`);
+      }
+      cards[cardId] = presentation;
+    }
+  }
+  return `${JSON.stringify({ schemaVersion: "1.0.0", cards }, null, 2)}\n`;
+}
+
 export function buildStudioCards(deckId) {
   const { config, paths } = loadStudioConfig(deckId);
-  if (config.previewOnly) return config.cards;
+  if (config.previewOnly) {
+    return config.cards.map((card) => {
+      const artFrame = normalizeArtFrame(`${deckId}/${card.id}`, card.artFrame);
+      const { artFrame: _ignored, ...rest } = card;
+      return { ...rest, ...(artFrame ? { art_frame: artFrame } : {}) };
+    });
+  }
   if (!config.runtimeDeck) throw new Error(`${deckId}: falta runtimeDeck.`);
 
   const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
   const runtimeDeck = readJson(runtimePath);
+  const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+  const imageManifest = fs.existsSync(imageManifestPath)
+    ? readJson(imageManifestPath)
+    : { cards: {} };
   const runtimeById = new Map((runtimeDeck.cards ?? []).map((card) => [card.id, card]));
   if (runtimeById.size !== config.cards.length) {
     throw new Error(
@@ -195,6 +428,7 @@ export function buildStudioCards(deckId) {
         `${deckId}/${presentation.id}: el flavor debe vivir únicamente en flavorText del JSON runtime.`,
       );
     }
+    const artFrame = normalizeArtFrame(`${deckId}/${presentation.id}`, presentation.artFrame);
     const runtimeFlavor = String(runtimeCard.flavorText?.es ?? "").trim();
     if (!runtimeFlavor) {
       throw new Error(`${deckId}/${presentation.id}: falta flavorText.es en el JSON runtime.`);
@@ -202,8 +436,35 @@ export function buildStudioCards(deckId) {
     if (typeof runtimeCard.showFlavorText !== "boolean") {
       throw new Error(`${deckId}/${presentation.id}: showFlavorText debe ser booleano en el JSON runtime.`);
     }
+    if (!/^HFA1\d{3}$/u.test(String(runtimeCard.collectorId ?? ""))) {
+      throw new Error(
+        `${deckId}/${presentation.id}: collectorId debe usar el formato HFA1 + tres dígitos.`,
+      );
+    }
+    const artist = String(presentation.artist ?? config.defaultArtist ?? "").trim();
+    if (!artist) {
+      throw new Error(`${deckId}/${presentation.id}: falta el crédito de arte.`);
+    }
+    const isToken = authoredIsToken(runtimeCard);
+    const isChronicle = authoredIsChronicle(runtimeCard);
+    const isEnergy = authoredIsEnergy(runtimeCard);
+    const defaultFullArt = isChronicle
+      || isEnergy
+      || (isToken && imageManifest.cards?.[runtimeCard.id]?.fullArt === true);
+    const fullArt = resolveStudioFullArt(
+      `${deckId}/${presentation.id}`,
+      presentation,
+      defaultFullArt,
+    );
+    const headerFade = resolveStudioHeaderFade(
+      `${deckId}/${presentation.id}`,
+      presentation,
+      true,
+    );
     return {
       id: runtimeCard.id,
+      collectorId: runtimeCard.collectorId,
+      artist,
       art_crop: presentation.artCrop,
       nombre: runtimeCard.displayNameEs ?? runtimeCard.name,
       tipo: presentation.typeLineEs,
@@ -214,7 +475,12 @@ export function buildStudioCards(deckId) {
       lore: runtimeFlavor,
       showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
-      ...(authoredIsToken(runtimeCard) ? { isToken: true } : {}),
+      ...(isToken ? { isToken: true } : {}),
+      ...(isChronicle ? { isChronicle: true } : {}),
+      ...(isEnergy ? { isEnergy: true } : {}),
+      ...(fullArt ? { fullArt: true } : {}),
+      ...(headerFade ? {} : { headerFade: false }),
+      ...(artFrame ? { art_frame: artFrame } : {}),
     };
   });
 
@@ -229,9 +495,11 @@ export function buildStudioCards(deckId) {
 
 export function generatedStudioData(deckId) {
   const cards = buildStudioCards(deckId);
+  const motif = studioMotif(deckId);
   return [
     "/* Generado por scripts/card-studio-data.mjs. No editar a mano. */",
     `window.HostfallDeckData = ${JSON.stringify(cards, null, 2)};`,
+    ...(motif ? [`window.HostfallDeckMotif = ${JSON.stringify(motif, null, 2)};`] : []),
     "",
   ].join("\n");
 }
@@ -247,6 +515,14 @@ export function syncStudioData({ check = false, deckIds = Object.keys(STUDIO_DEC
     if (current === expected) continue;
     stale.push(relative(paths.generatedData));
     if (!check) fs.writeFileSync(paths.generatedData, expected);
+  }
+  const expectedGameArt = generatedGameArtData();
+  const currentGameArt = fs.existsSync(GAME_ART_DATA_PATH)
+    ? fs.readFileSync(GAME_ART_DATA_PATH, "utf8")
+    : null;
+  if (currentGameArt !== expectedGameArt) {
+    stale.push(relative(GAME_ART_DATA_PATH));
+    if (!check) fs.writeFileSync(GAME_ART_DATA_PATH, expectedGameArt);
   }
   return stale;
 }
@@ -266,32 +542,32 @@ export function studioSourceFiles(deckId) {
     absolute("public/fonts/last-rain/oswald-latin.woff2"),
     absolute("public/fonts/last-rain/outfit-latin.woff2"),
   ];
-  if (config.runtimeDeck) sourceFiles.push(path.resolve(paths.directory, config.runtimeDeck));
-
-  if (deckId === "last_rain") {
-    sourceFiles.push(
-      absolute("dev/tools/Decks/deck-card-text.js"),
-      absolute("dev/tools/Decks/last_rain/motivo.avif"),
-    );
-  } else {
-    sourceFiles.push(
-      absolute("dev/tools/Decks/deck-card-studio.css"),
-      absolute("dev/tools/Decks/deck-card-studio.js"),
-      absolute("dev/tools/Decks/deck-card-text.js"),
-    );
-    if (deckId === "hunters") {
-      sourceFiles.push(
-        absolute("dev/tools/Decks/hunters/hunters.css"),
-        absolute("dev/tools/Decks/hunters/motivo.webp"),
-      );
-    } else {
-      const motif = deckId === "crimson_court" ? "motivo.jpg" : "motivo.avif";
-      sourceFiles.push(path.join(paths.directory, motif));
-    }
+  if (config.runtimeDeck) {
+    const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+    sourceFiles.push(runtimePath);
+    const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+    if (fs.existsSync(imageManifestPath)) sourceFiles.push(imageManifestPath);
   }
+
+  sourceFiles.push(
+    absolute("dev/tools/Decks/deck-card-studio.css"),
+    absolute("dev/tools/Decks/deck-card-studio.js"),
+    absolute("dev/tools/Decks/deck-card-text.js"),
+  );
+  const motif = deckId === "crimson_court"
+    ? "motivo.jpg"
+    : deckId === "hunters"
+      ? "motivo.webp"
+      : "motivo.avif";
+  sourceFiles.push(path.join(paths.directory, motif));
 
   const cards = buildStudioCards(deckId);
   for (const card of cards) {
+    if (!card.art_crop) {
+      throw new Error(
+        `${deckId}/${card.id}: todavía no tiene arte. Cárgalo desde el estudio antes de exportar.`,
+      );
+    }
     if (/^https?:/iu.test(card.art_crop)) {
       throw new Error(`${deckId}/${card.id}: el arte debe ser local: ${card.art_crop}.`);
     }

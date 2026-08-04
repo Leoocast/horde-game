@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.0.0",
+  "decks": {
+    "last_rain": {
+      "cards": {
+        "iria_voice_last_rain": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 422.594,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "arven_first_pack": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 475.625,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "orun_waking_root": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 369.563,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "deep_root_spring": {
+          "fullArt": true
+        }
+      }
+    },
+    "hollow_bell_procession": {
+      "cards": {
+        "last_knell_dead": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 165,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "mass_grave_colossus": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 165,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "fallen_gatherer": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 422.594,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "last_march_marshal": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 433.188,
+            "width": 158,
+            "height": 91
+          }
+        }
+      }
+    },
+    "broken_forge_mutiny": {
+      "cards": {
+        "ember_scrap_runner": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 165,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "burning_tally_foreman": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 419.156,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "shift_hammer": {
+          "fullArt": true
+        },
+        "rain_of_rivets": {
+          "fullArt": true
+        },
+        "varka_revolt_axis": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 441.391,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "salvaged_armor_master": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 321.297,
+            "width": 158,
+            "height": 91
+          }
+        }
+      }
+    },
+    "crimson_court": {
+      "cards": {
+        "crimson_energy": {
+          "fullArt": true
+        },
+        "eternal_feast_countess": {
+          "fullArt": true,
+          "statsFrame": {
+            "right": 62,
+            "bottom": 380.156,
+            "width": 158,
+            "height": 91
+          }
+        },
+        "blood_pact": {
+          "fullArt": true
+        },
+        "drain_essence": {
+          "fullArt": true
+        },
+        "final_banquet": {
+          "fullArt": true
+        }
+      }
+    }
+  }
+}
