@@ -174,15 +174,18 @@
     text-transform: uppercase;
   }
 
-  .main-menu-title {
-    margin: 16px 0 0;
-    color: #d8c99f;
+  .hostfall-wordmark {
     font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
-    font-size: clamp(48px, 6vw, 82px);
     font-weight: 400;
     letter-spacing: -0.035em;
     line-height: 0.95;
     text-transform: none;
+  }
+
+  .main-menu-title {
+    margin: 16px 0 0;
+    color: #d8c99f;
+    font-size: clamp(48px, 6vw, 82px);
     text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
   }
 
@@ -14113,11 +14116,7 @@
 .game-loading-content h1 {
   margin: 0;
   color: #eee1b4;
-  font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
   font-size: clamp(4rem, 10vw, 7.5rem);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  line-height: 0.92;
   text-shadow: 0 3px 0 #08100d, 0 0 38px rgb(207 184 111 / 0.14);
 }
 
