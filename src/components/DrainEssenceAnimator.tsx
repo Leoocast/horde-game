@@ -155,7 +155,9 @@ function createSmokeMaterial(seed: number, ember: number, green: number): THREE.
   });
 }
 
-export function DrainEssenceAnimator() {
+// Preserved for future cards that declare `animation: "ESSENCE_SMOKE"`.
+// Drain Essence itself now uses the shared Drain bite presentation.
+export function DrainEssenceSmokeAnimator() {
   const game = useGameStore((state) => state.game);
   const active = useGameStore((state) => state.drainEssenceAnimation);
   const resolve = useGameStore((state) => state.resolveDrainEssenceAnimation);
@@ -167,7 +169,7 @@ export function DrainEssenceAnimator() {
   const threeCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useLayoutEffect(() => {
-    if (!active) return;
+    if (!active || active.variant !== "smoke") return;
     const cardElement = cardRef.current;
     const vignetteElement = vignetteRef.current;
     const targetAuraElement = targetAuraRef.current;
@@ -456,7 +458,7 @@ export function DrainEssenceAnimator() {
     };
   }, [active?.id, complete, playSfx, resolve]);
 
-  if (!active || typeof document === "undefined") return null;
+  if (!active || active.variant !== "smoke" || typeof document === "undefined") return null;
   const showFullImage = shouldShowFullCardImage(active.card.definitionId);
 
   return createPortal(

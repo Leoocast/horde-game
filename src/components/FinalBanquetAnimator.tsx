@@ -8,17 +8,6 @@ import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 
 type ScreenPoint = { x: number; y: number };
-type SmokeRole = "head" | "trail";
-type SmokePuff = {
-  mesh: THREE.Mesh;
-  material: THREE.ShaderMaterial;
-  role: SmokeRole;
-  size: number;
-  phase: number;
-  lateralBias: number;
-  opacity: number;
-  trailOffset: number;
-};
 type BloodDrop = {
   mesh: THREE.Mesh;
   delay: number;
@@ -27,198 +16,53 @@ type BloodDrop = {
   phase: number;
   lateralBias: number;
 };
-type SmokeVein = {
+type BoltLayer = {
   mesh: THREE.Mesh;
-  material: THREE.ShaderMaterial;
-  trailOffset: number;
-  lateralBias: number;
-  length: number;
-  thickness: number;
-  phase: number;
+  geometry: THREE.BufferGeometry;
+  positionAttribute: THREE.BufferAttribute;
+  material: THREE.MeshBasicMaterial;
+  width: number;
   opacity: number;
 };
-type SmokeRibbon = {
-  mesh: THREE.Mesh;
-  material: THREE.ShaderMaterial;
-  trailOffset: number;
-  lateralBias: number;
-  length: number;
-  thickness: number;
-  phase: number;
-  opacity: number;
+type LightningBolt = {
+  core: BoltLayer;
+  glow: BoltLayer;
+  seed: number;
+  lane: number;
 };
-type SmokeImpactWisp = {
+type LightningBranch = LightningBolt & {
+  index: number;
+  parentSeed: number;
+  parentLane: number;
+};
+type ElectricSpark = {
   mesh: THREE.Mesh;
-  material: THREE.ShaderMaterial;
+  material: THREE.MeshBasicMaterial;
   delay: number;
   duration: number;
   angle: number;
   distance: number;
-  size: number;
-  curl: number;
-  rise: number;
-  phase: number;
-  opacity: number;
+  length: number;
+  thickness: number;
 };
 
-const PROJECTILE_LAUNCH_SECONDS = 0.68;
-const PROJECTILE_TRAVEL_SECONDS = 0.24;
-const PROJECTILE_IMPACT_SECONDS = PROJECTILE_LAUNCH_SECONDS + PROJECTILE_TRAVEL_SECONDS;
-
-const SMOKE_VERTEX_SHADER = `
-  varying vec2 vUv;
-
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const SMOKE_FRAGMENT_SHADER = `
-  precision highp float;
-
-  uniform float uTime;
-  uniform float uOpacity;
-  uniform float uSeed;
-  uniform float uBlood;
-  uniform float uEmber;
-  varying vec2 vUv;
-
-  float hash21(vec2 point) {
-    point = fract(point * vec2(123.34, 456.21));
-    point += dot(point, point + 45.32);
-    return fract(point.x * point.y);
-  }
-
-  float valueNoise(vec2 point) {
-    vec2 cell = floor(point);
-    vec2 local = fract(point);
-    local = local * local * (3.0 - 2.0 * local);
-    float a = hash21(cell);
-    float b = hash21(cell + vec2(1.0, 0.0));
-    float c = hash21(cell + vec2(0.0, 1.0));
-    float d = hash21(cell + vec2(1.0, 1.0));
-    return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
-  }
-
-  float fbm(vec2 point) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    mat2 rotation = mat2(0.8, -0.6, 0.6, 0.8);
-    for (int octave = 0; octave < 4; octave++) {
-      value += amplitude * valueNoise(point);
-      point = rotation * point * 2.03 + 13.17;
-      amplitude *= 0.5;
-    }
-    return value;
-  }
-
-  void main() {
-    vec2 uv = vUv;
-    vec2 centered = uv * 2.0 - 1.0;
-    float time = uTime * 0.68 + uSeed * 7.31;
-    float broadNoise = fbm(vec2(centered.x * 1.32 - time * 0.5, centered.y * 1.72 + uSeed * 2.7));
-    float fineNoise = fbm(vec2(centered.x * 3.6 - time * 0.82, centered.y * 4.2 - time * 0.2 + uSeed));
-
-    centered.y += (broadNoise - 0.5) * 0.46;
-    centered.x += sin(centered.y * 3.4 + time) * 0.11;
-
-    float radial = length(vec2(centered.x * 0.82, centered.y * 1.04));
-    float tornRadius = 0.79 + (broadNoise - 0.5) * 0.38 + (fineNoise - 0.5) * 0.16;
-    float body = 1.0 - smoothstep(tornRadius - 0.34, tornRadius, radial);
-    float foldedBody = smoothstep(0.08, 0.86, body) * mix(0.58, 1.0, broadNoise);
-    float wisps = smoothstep(0.52, 0.86, broadNoise) * (1.0 - smoothstep(0.66, 1.04, radial)) * 0.22;
-    float horizontalFade = smoothstep(0.01, 0.13, uv.x) * (1.0 - smoothstep(0.87, 0.995, uv.x));
-    float verticalFade = smoothstep(0.01, 0.12, uv.y) * (1.0 - smoothstep(0.88, 0.995, uv.y));
-    float alpha = (foldedBody + wisps) * horizontalFade * verticalFade * uOpacity;
-    if (alpha < 0.012) discard;
-
-    vec3 charcoal = vec3(0.018, 0.021, 0.024);
-    vec3 ash = vec3(0.49, 0.5, 0.5);
-    vec3 smokeColor = mix(charcoal, ash, smoothstep(0.18, 0.86, broadNoise) * 0.76);
-    smokeColor *= mix(0.7, 1.08, fineNoise);
-    vec3 driedBlood = vec3(0.13, 0.002, 0.018);
-    vec3 freshBlood = vec3(0.72, 0.018, 0.09);
-    vec3 bloodColor = mix(driedBlood, freshBlood, smoothstep(0.2, 0.82, broadNoise));
-    vec3 color = mix(smokeColor, bloodColor, uBlood);
-
-    float emberNoise = fbm(vec2(centered.x * 6.5 + uSeed * 3.0, centered.y * 8.2 - time));
-    float ember = smoothstep(0.72, 0.91, emberNoise) * smoothstep(0.08, 0.64, body) * uEmber;
-    color += vec3(0.58, 0.018, 0.055) * ember;
-
-    gl_FragColor = vec4(color, alpha);
-  }
-`;
-
-const VEIN_VERTEX_SHADER = `
-  varying vec2 vUv;
-
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const VEIN_FRAGMENT_SHADER = `
-  precision highp float;
-
-  uniform float uTime;
-  uniform float uOpacity;
-  uniform float uSeed;
-  varying vec2 vUv;
-
-  float hash11(float value) {
-    return fract(sin(value * 127.1) * 43758.5453);
-  }
-
-  void main() {
-    float x = vUv.x;
-    float time = uTime * 4.2 + uSeed * 11.7;
-    float taper = smoothstep(0.015, 0.16, x) * (1.0 - smoothstep(0.78, 0.99, x));
-    float smokePulse = 0.76 + 0.24 * sin(x * 31.0 - time * 2.1 + uSeed * 8.0);
-
-    float mainVein =
-      0.5 +
-      sin(x * 8.4 + time + uSeed * 5.0) * 0.075 +
-      sin(x * 22.0 - time * 0.72 + uSeed * 9.0) * 0.026;
-    float mainDistance = abs(vUv.y - mainVein);
-    float mainCore = 1.0 - smoothstep(0.012, 0.04, mainDistance);
-    float mainGlow = 1.0 - smoothstep(0.025, 0.17, mainDistance);
-
-    float branchDirection = mix(-0.24, 0.24, hash11(uSeed + 3.7));
-    float branchStart = smoothstep(0.3, 0.46, x);
-    float branchEnd = 1.0 - smoothstep(0.72, 0.94, x);
-    float branchVein =
-      mainVein +
-      branchDirection * branchStart +
-      sin(x * 16.0 + time * 0.55 + uSeed) * 0.035;
-    float branchDistance = abs(vUv.y - branchVein);
-    float branchCore = (1.0 - smoothstep(0.01, 0.034, branchDistance)) * branchStart * branchEnd;
-    float branchGlow = (1.0 - smoothstep(0.02, 0.13, branchDistance)) * branchStart * branchEnd;
-
-    float core = max(mainCore, branchCore * 0.72);
-    float glow = max(mainGlow, branchGlow * 0.58);
-    float concealment =
-      smoothstep(
-        0.26,
-        0.74,
-        0.5 +
-        sin(x * 17.0 + time * 0.38 + uSeed * 13.0) * 0.28 +
-        sin(x * 43.0 - time * 0.22) * 0.16
-      );
-    float alpha = (core * 0.42 + glow * 0.1) * taper * smokePulse * concealment * uOpacity;
-    if (alpha < 0.012) discard;
-
-    vec3 deepCrimson = vec3(0.105, 0.0, 0.014);
-    vec3 hotCrimson = vec3(0.48, 0.008, 0.055);
-    vec3 veinColor = mix(deepCrimson, hotCrimson, core * 0.48 + glow * 0.1);
-    gl_FragColor = vec4(veinColor, alpha);
-  }
-`;
+const LIGHTNING_LAUNCH_SECONDS = 0.68;
+const LIGHTNING_TRAVEL_SECONDS = 0.24;
+const LIGHTNING_IMPACT_SECONDS = LIGHTNING_LAUNCH_SECONDS + LIGHTNING_TRAVEL_SECONDS;
+const LIGHTNING_AFTERGLOW_SECONDS = 0.34;
+const MAX_LIGHTNING_SEGMENTS = 16;
 
 function seededNoise(index: number, salt: number): number {
   const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
   return value - Math.floor(value);
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function easeOutCubic(value: number): number {
+  return 1 - Math.pow(1 - clamp01(value), 3);
 }
 
 function quadraticPoint(start: ScreenPoint, control: ScreenPoint, end: ScreenPoint, progress: number): ScreenPoint {
@@ -250,38 +94,186 @@ function linearTangent(start: ScreenPoint, end: ScreenPoint): ScreenPoint {
   return { x: x / length, y: y / length };
 }
 
-function createSmokeMaterial(seed: number, blood: number, ember: number): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    vertexShader: SMOKE_VERTEX_SHADER,
-    fragmentShader: SMOKE_FRAGMENT_SHADER,
-    uniforms: {
-      uTime: { value: 0 },
-      uOpacity: { value: 0 },
-      uSeed: { value: seed },
-      uBlood: { value: blood },
-      uEmber: { value: ember },
-    },
+function createBoltLayer(
+  scene: THREE.Scene,
+  color: number,
+  width: number,
+  opacity: number,
+  renderOrder: number,
+): BoltLayer {
+  const geometry = new THREE.BufferGeometry();
+  const positionAttribute = new THREE.BufferAttribute(
+    new Float32Array((MAX_LIGHTNING_SEGMENTS + 1) * 2 * 3),
+    3,
+  );
+  const indices: number[] = [];
+  for (let index = 0; index < MAX_LIGHTNING_SEGMENTS; index += 1) {
+    const vertex = index * 2;
+    indices.push(vertex, vertex + 1, vertex + 2, vertex + 1, vertex + 3, vertex + 2);
+  }
+  geometry.setAttribute("position", positionAttribute);
+  geometry.setIndex(indices);
+  geometry.setDrawRange(0, 0);
+  const material = new THREE.MeshBasicMaterial({
+    color,
     transparent: true,
+    opacity: 0,
+    depthTest: false,
     depthWrite: false,
     side: THREE.DoubleSide,
-    blending: THREE.NormalBlending,
+    blending: THREE.AdditiveBlending,
   });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.visible = false;
+  mesh.renderOrder = renderOrder;
+  scene.add(mesh);
+  return { mesh, geometry, positionAttribute, material, width, opacity };
 }
 
-function createVeinMaterial(seed: number): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    vertexShader: VEIN_VERTEX_SHADER,
-    fragmentShader: VEIN_FRAGMENT_SHADER,
-    uniforms: {
-      uTime: { value: 0 },
-      uOpacity: { value: 0 },
-      uSeed: { value: seed },
-    },
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    blending: THREE.NormalBlending,
-  });
+function createLightningBolt(scene: THREE.Scene, seed: number, lane: number, scale = 1): LightningBolt {
+  return {
+    glow: createBoltLayer(scene, 0xa83cff, 22 * scale, 0.48, 5),
+    core: createBoltLayer(scene, 0xffefff, 5.5 * scale, 1, 7),
+    seed,
+    lane,
+  };
+}
+
+function setBoltLayer(
+  layer: BoltLayer,
+  screenPoints: ScreenPoint[],
+  opacity: number,
+  viewportHeight: number,
+): void {
+  if (screenPoints.length < 2 || opacity <= 0.005) {
+    layer.mesh.visible = false;
+    layer.material.opacity = 0;
+    return;
+  }
+
+  const positions = layer.positionAttribute.array as Float32Array;
+  for (let index = 0; index < screenPoints.length; index += 1) {
+    const previous = screenPoints[Math.max(0, index - 1)];
+    const next = screenPoints[Math.min(screenPoints.length - 1, index + 1)];
+    const tangentX = next.x - previous.x;
+    const tangentY = next.y - previous.y;
+    const tangentLength = Math.hypot(tangentX, tangentY) || 1;
+    const normalX = -tangentY / tangentLength;
+    const normalY = tangentX / tangentLength;
+    const halfWidth = layer.width / 2;
+    const point = screenPoints[index];
+
+    const offset = index * 6;
+    positions[offset] = point.x + normalX * halfWidth;
+    positions[offset + 1] = viewportHeight - (point.y + normalY * halfWidth);
+    positions[offset + 2] = 5;
+    positions[offset + 3] = point.x - normalX * halfWidth;
+    positions[offset + 4] = viewportHeight - (point.y - normalY * halfWidth);
+    positions[offset + 5] = 5;
+  }
+
+  layer.positionAttribute.needsUpdate = true;
+  layer.geometry.setDrawRange(0, (screenPoints.length - 1) * 6);
+  layer.mesh.visible = true;
+  layer.material.opacity = opacity * layer.opacity;
+}
+
+function setLightningBolt(
+  bolt: LightningBolt,
+  points: ScreenPoint[],
+  opacity: number,
+  viewportHeight: number,
+): void {
+  setBoltLayer(bolt.glow, points, opacity, viewportHeight);
+  setBoltLayer(bolt.core, points, opacity, viewportHeight);
+}
+
+function buildLightningPath(
+  start: ScreenPoint,
+  end: ScreenPoint,
+  reveal: number,
+  seed: number,
+  lane: number,
+  epoch: number,
+  segmentCount = 16,
+): ScreenPoint[] {
+  const visibleProgress = clamp01(reveal);
+  if (visibleProgress <= 0) return [];
+  const tangent = linearTangent(start, end);
+  const visibleSegments = Math.max(1, Math.ceil(segmentCount * visibleProgress));
+  const points: ScreenPoint[] = [];
+
+  for (let index = 0; index <= visibleSegments; index += 1) {
+    const progress = index === visibleSegments
+      ? visibleProgress
+      : Math.min(visibleProgress, index / segmentCount);
+    const base = linearPoint(start, end, progress);
+    const endLock = Math.sin(Math.PI * progress);
+    const coarseJitter = (seededNoise(index + epoch * 19.1, seed + 2.7) - 0.5) * 48;
+    const fineJitter = Math.sin(index * 2.8 + seed * 8.4 + epoch * 1.7) * 10;
+    const offset = (coarseJitter + fineJitter + lane) * endLock;
+    points.push({
+      x: base.x - tangent.y * offset,
+      y: base.y + tangent.x * offset,
+    });
+  }
+
+  return points;
+}
+
+function buildOrganicBranchPath(
+  source: ScreenPoint,
+  target: ScreenPoint,
+  branch: LightningBranch,
+  reveal: number,
+  epoch: number,
+): ScreenPoint[] {
+  // Hold one irregular topology for a few flicker frames so the forks read as lightning
+  // instead of a fixed alternating fan or rapidly moving noise.
+  const topologyEpoch = Math.floor(epoch / 3);
+  if (seededNoise(branch.index + topologyEpoch * 7.3, branch.seed + 71.4) < 0.24) return [];
+
+  const startFraction = 0.14 + seededNoise(branch.index + topologyEpoch * 5.1, branch.seed + 13.8) * 0.7;
+  if (reveal <= startFraction) return [];
+
+  const parentPath = buildLightningPath(
+    source,
+    target,
+    startFraction,
+    branch.parentSeed,
+    branch.parentLane,
+    epoch,
+  );
+  const start = parentPath[parentPath.length - 1];
+  if (!start) return [];
+
+  const routeTangent = linearTangent(source, target);
+  const direction = seededNoise(branch.index + topologyEpoch * 11.7, branch.seed + 24.6) > 0.5 ? 1 : -1;
+  const forward = 20 + seededNoise(branch.index + topologyEpoch * 13.1, branch.seed + 38.2) * 58;
+  const sideways = direction * (42 + seededNoise(branch.index + topologyEpoch * 17.9, branch.seed + 49.5) * 74);
+  const end = {
+    x: start.x + routeTangent.x * forward - routeTangent.y * sideways,
+    y: start.y + routeTangent.y * forward + routeTangent.x * sideways,
+  };
+  const branchProgress = clamp01((reveal - startFraction) / (0.12 + forward / 520));
+
+  return buildLightningPath(
+    start,
+    end,
+    branchProgress,
+    branch.seed + topologyEpoch * 0.37,
+    0,
+    epoch,
+    6,
+  );
+}
+
+function disposeLightningBolt(scene: THREE.Scene, bolt: LightningBolt): void {
+  for (const layer of [bolt.core, bolt.glow]) {
+    scene.remove(layer.mesh);
+    layer.geometry.dispose();
+    layer.material.dispose();
+  }
 }
 
 export function FinalBanquetAnimator() {
@@ -328,8 +320,6 @@ export function FinalBanquetAnimator() {
       x: (life.x + card.x) / 2 + 72,
       y: Math.min(life.y, card.y) - 52,
     };
-    const strikeTangent = linearTangent(card, target);
-    const strikeAngle = Math.atan2(strikeTangent.y, strikeTangent.x);
 
     cardElement.style.left = `${origin.left}px`;
     cardElement.style.top = `${origin.top}px`;
@@ -363,8 +353,10 @@ export function FinalBanquetAnimator() {
     const bloodLight = new THREE.PointLight(0xff264d, 3.8, Math.max(window.innerWidth, window.innerHeight));
     bloodLight.position.set(card.x, window.innerHeight - card.y, 38);
     scene.add(bloodLight);
+    const lightningLight = new THREE.PointLight(0xa333ff, 0, Math.max(window.innerWidth, window.innerHeight));
+    lightningLight.position.set(target.x, window.innerHeight - target.y, 42);
+    scene.add(lightningLight);
 
-    const smokeGeometry = new THREE.PlaneGeometry(1, 1);
     const bloodGeometry = new THREE.SphereGeometry(1, 14, 12);
     const bloodMaterial = new THREE.MeshPhongMaterial({
       color: 0x8f001d,
@@ -374,103 +366,7 @@ export function FinalBanquetAnimator() {
       transparent: true,
       opacity: 0.96,
     });
-    const puffs: SmokePuff[] = [];
     const bloodDrops: BloodDrop[] = [];
-    const veins: SmokeVein[] = [];
-    const ribbons: SmokeRibbon[] = [];
-    const impactWisps: SmokeImpactWisp[] = [];
-    const addPuff = (
-      role: SmokeRole,
-      index: number,
-      size: number,
-      opacity: number,
-      trailOffset = 0,
-    ): SmokePuff => {
-      const blood = role === "head" ? 0.1 : 0.045;
-      const ember = role === "head" ? 0.14 : 0.06;
-      const material = createSmokeMaterial(seededNoise(index, 5.7), blood, ember);
-      const mesh = new THREE.Mesh(smokeGeometry, material);
-      mesh.visible = false;
-      scene.add(mesh);
-      const puff: SmokePuff = {
-        mesh,
-        material,
-        role,
-        size,
-        phase: seededNoise(index, 4.6) * Math.PI * 2,
-        lateralBias: 0,
-        opacity,
-        trailOffset,
-      };
-      puffs.push(puff);
-      return puff;
-    };
-    const addVein = (
-      index: number,
-      length: number,
-      thickness: number,
-      opacity: number,
-    ): SmokeVein => {
-      const material = createVeinMaterial(seededNoise(index, 14.2));
-      const mesh = new THREE.Mesh(smokeGeometry, material);
-      mesh.visible = false;
-      scene.add(mesh);
-      const vein: SmokeVein = {
-        mesh,
-        material,
-        trailOffset: 0,
-        lateralBias: 0,
-        length,
-        thickness,
-        phase: seededNoise(index, 15.9) * Math.PI * 2,
-        opacity,
-      };
-      veins.push(vein);
-      return vein;
-    };
-    const addRibbon = (
-      index: number,
-      length: number,
-      thickness: number,
-      opacity: number,
-    ): SmokeRibbon => {
-      const material = createSmokeMaterial(seededNoise(index, 18.4), 0.025, 0.025);
-      const mesh = new THREE.Mesh(smokeGeometry, material);
-      mesh.visible = false;
-      scene.add(mesh);
-      const ribbon: SmokeRibbon = {
-        mesh,
-        material,
-        trailOffset: 0,
-        lateralBias: 0,
-        length,
-        thickness,
-        phase: seededNoise(index, 19.7) * Math.PI * 2,
-        opacity,
-      };
-      ribbons.push(ribbon);
-      return ribbon;
-    };
-    const addImpactWisp = (index: number, angleOffset: number): void => {
-      const material = createSmokeMaterial(seededNoise(index, 23.6), 0.004, 0);
-      const mesh = new THREE.Mesh(smokeGeometry, material);
-      mesh.visible = false;
-      scene.add(mesh);
-      impactWisps.push({
-        mesh,
-        material,
-        delay: seededNoise(index, 22.1) * 0.035,
-        duration: 0.22 + seededNoise(index, 24.9) * 0.11,
-        angle: strikeAngle + angleOffset + (seededNoise(index, 25.7) - 0.5) * 0.2,
-        distance: 18 + seededNoise(index, 27.1) * 30,
-        size: 26 + seededNoise(index, 28.4) * 24,
-        curl: (seededNoise(index, 29.3) - 0.5) * 22,
-        rise: 4 + seededNoise(index, 31.4) * 16,
-        phase: seededNoise(index, 30.8) * Math.PI * 2,
-        opacity: 0.3 + seededNoise(index, 32.2) * 0.18,
-      });
-    };
-
     for (let index = 0; index < 64; index += 1) {
       const mesh = new THREE.Mesh(bloodGeometry, bloodMaterial);
       mesh.visible = false;
@@ -485,63 +381,88 @@ export function FinalBanquetAnimator() {
         lateralBias: lane * 11 + (seededNoise(index, 9.2) - 0.5) * 13,
       });
     }
-    // Like the existing fireball, the projectile has one compact layered head and a tapered
-    // attached wake. It is not a chain of equally-sized clouds spread across the route.
-    for (let index = 0; index < 16; index += 1) {
-      const puff = addPuff(
-        "head",
-        index,
-        66 + seededNoise(index, 3.8) * 52,
-        0.52 + seededNoise(index, 7.2) * 0.2,
-        seededNoise(index, 10.7) * 0.014,
-      );
-      puff.lateralBias = (seededNoise(index, 9.2) - 0.5) * 20;
-    }
-    for (let index = 0; index < 36; index += 1) {
-      const tailProgress = index / 35;
-      const puff = addPuff(
-        "trail",
-        index + 30,
-        76 - tailProgress * 34 + seededNoise(index, 3.8) * 24,
-        0.32 + (1 - tailProgress) * 0.18 + seededNoise(index, 7.2) * 0.1,
-        0.018 + tailProgress * 0.19 + seededNoise(index, 10.7) * 0.008,
-      );
-      puff.lateralBias = (seededNoise(index, 9.2) - 0.5) * (24 + tailProgress * 14);
-    }
 
-    // These overlapping ribbons keep the wake physically connected to the projectile head.
-    // Their centers follow the same straight axis; only the smoke texture ripples.
-    for (let index = 0; index < 9; index += 1) {
-      const ribbon = addRibbon(
-        index,
-        82 - index * 4 + seededNoise(index, 17.2) * 18,
-        28 - index * 1.5 + seededNoise(index, 20.4) * 8,
-        0.2 + seededNoise(index, 21.6) * 0.11,
-      );
-      ribbon.trailOffset = 0.018 + index * 0.018;
-      ribbon.lateralBias = (seededNoise(index, 22.8) - 0.5) * 12;
-    }
-
-    // Thin branching filaments live inside the smoke mass. They replace the old red/white
-    // spheres, which read as floating confetti rather than supernatural energy.
-    for (let index = 0; index < 9; index += 1) {
-      const vein = addVein(
-        index,
-        38 + seededNoise(index, 3.1) * 34,
-        14 + seededNoise(index, 8.8) * 10,
-        0.16 + seededNoise(index, 6.5) * 0.12,
-      );
-      vein.trailOffset = 0.008 + seededNoise(index, 2.4) * 0.1;
-      vein.lateralBias = (seededNoise(index, 7.8) - 0.5) * 16;
-    }
-
-    // Small smoke clumps peel away at contact. Their volume expands as they drift, so they
-    // read as smoke rather than flat streaks or a radial particle explosion.
-    const impactAngleOffsets = [
-      -1.4, -1.12, -0.84, -0.58, -0.34, -0.12, 0.14, 0.38,
-      0.62, 0.9, 1.18, 1.44, 2.28, 2.62, -2.34, -2.7,
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const mainBolts = [
+      createLightningBolt(scene, 1.7, -7),
+      createLightningBolt(scene, 4.3, 5),
+      ...(reducedMotion ? [] : [createLightningBolt(scene, 8.9, 1)]),
     ];
-    impactAngleOffsets.forEach((angleOffset, index) => addImpactWisp(index, angleOffset));
+    const branches: LightningBranch[] = Array.from(
+      { length: reducedMotion ? 3 : 7 },
+      (_, index) => {
+        const parent = mainBolts[index % mainBolts.length];
+        return {
+          ...createLightningBolt(scene, 12.4 + index * 2.3, 0, 0.55),
+          index,
+          parentSeed: parent.seed,
+          parentLane: parent.lane,
+        };
+      },
+    );
+
+    const sparkGeometry = new THREE.PlaneGeometry(1, 1);
+    const sparks: ElectricSpark[] = [];
+    const sparkCount = reducedMotion ? 12 : 28;
+    for (let index = 0; index < sparkCount; index += 1) {
+      const material = new THREE.MeshBasicMaterial({
+        color: index % 4 === 0 ? 0xf3ddff : 0xa333ff,
+        transparent: true,
+        opacity: 0,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+      });
+      const mesh = new THREE.Mesh(sparkGeometry, material);
+      mesh.visible = false;
+      mesh.renderOrder = 8;
+      scene.add(mesh);
+      sparks.push({
+        mesh,
+        material,
+        delay: seededNoise(index, 18.2) * 0.06,
+        duration: 0.2 + seededNoise(index, 20.7) * 0.18,
+        angle: (index / sparkCount) * Math.PI * 2 + (seededNoise(index, 21.8) - 0.5) * 0.48,
+        distance: 38 + seededNoise(index, 24.1) * 92,
+        length: 18 + seededNoise(index, 27.5) * 34,
+        thickness: 1.8 + seededNoise(index, 29.4) * 3.4,
+      });
+    }
+
+    const ringGeometry = new THREE.RingGeometry(0.76, 1, 64);
+    const impactRings = [0, 1].map((index) => {
+      const material = new THREE.MeshBasicMaterial({
+        color: index === 0 ? 0xd997ff : 0x7620ff,
+        transparent: true,
+        opacity: 0,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+      });
+      const mesh = new THREE.Mesh(ringGeometry, material);
+      mesh.visible = false;
+      mesh.position.set(target.x, window.innerHeight - target.y, 6);
+      mesh.renderOrder = 6;
+      scene.add(mesh);
+      return { mesh, material, delay: index * 0.045 };
+    });
+
+    const orbGeometry = new THREE.CircleGeometry(1, 48);
+    const orbMaterial = new THREE.MeshBasicMaterial({
+      color: 0xb44cff,
+      transparent: true,
+      opacity: 0,
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    });
+    const chargeOrb = new THREE.Mesh(orbGeometry, orbMaterial);
+    chargeOrb.position.set(card.x, window.innerHeight - card.y, 4);
+    chargeOrb.visible = false;
+    scene.add(chargeOrb);
 
     let elapsed = 0;
     let lastFrameTime = performance.now();
@@ -557,19 +478,21 @@ export function FinalBanquetAnimator() {
           drop.mesh.visible = false;
           continue;
         }
-        const progress = Math.min(1, localTime / drop.duration);
+        const progress = clamp01(localTime / drop.duration);
         const point = quadraticPoint(life, bloodControl, card, progress);
         const tangent = quadraticTangent(life, bloodControl, card, progress);
         const envelope = Math.sin(Math.PI * progress);
         const ripple = Math.sin(progress * Math.PI * 3.4 + drop.phase) * 6 * envelope;
         const lateral = drop.lateralBias * envelope + ripple;
-        const screenX = point.x - tangent.y * lateral;
-        const screenY = point.y + tangent.x * lateral;
         const visibleScale = Math.pow(Math.sin(Math.PI * progress), 0.46);
         const stretch = 1 + Math.min(1.15, 0.48 + (1 - progress) * 0.42);
 
         drop.mesh.visible = true;
-        drop.mesh.position.set(screenX, window.innerHeight - screenY, 2);
+        drop.mesh.position.set(
+          point.x - tangent.y * lateral,
+          window.innerHeight - (point.y + tangent.x * lateral),
+          2,
+        );
         drop.mesh.rotation.z = -Math.atan2(tangent.y, tangent.x);
         drop.mesh.scale.set(
           drop.size * visibleScale * stretch,
@@ -578,135 +501,72 @@ export function FinalBanquetAnimator() {
         );
       }
 
-      const projectileHead = (elapsed - PROJECTILE_LAUNCH_SECONDS) / PROJECTILE_TRAVEL_SECONDS;
-      const projectileFade =
-        projectileHead <= 0.9
+      const chargeProgress = clamp01((elapsed - 0.36) / (LIGHTNING_LAUNCH_SECONDS - 0.36));
+      const chargePulse = 0.72 + Math.sin(elapsed * 38) * 0.18;
+      chargeOrb.visible = chargeProgress > 0 && elapsed < LIGHTNING_IMPACT_SECONDS + 0.06;
+      chargeOrb.scale.setScalar(18 + chargeProgress * 42);
+      orbMaterial.opacity = chargeProgress * chargePulse * 0.34;
+
+      const lightningTime = elapsed - LIGHTNING_LAUNCH_SECONDS;
+      const reveal = clamp01(lightningTime / LIGHTNING_TRAVEL_SECONDS);
+      const afterImpact = Math.max(0, elapsed - LIGHTNING_IMPACT_SECONDS);
+      const sustain = lightningTime < 0
+        ? 0
+        : afterImpact <= 0
           ? 1
-          : Math.max(0, Math.min(1, (1 - projectileHead) / 0.1));
-      for (const puff of puffs) {
-        const progress = projectileHead - puff.trailOffset;
-        if (projectileHead > 1 || progress < 0 || progress > 1) {
-          puff.mesh.visible = false;
-          puff.material.uniforms.uOpacity.value = 0;
-          continue;
-        }
-        const point = linearPoint(card, target, progress);
-        const tangent = strikeTangent;
-        const isHead = puff.role === "head";
-        const envelope = 0.24 + Math.sin(Math.PI * progress) * 0.62;
-        const ripple = Math.sin(progress * Math.PI * 4.2 + puff.phase) * (isHead ? 3.5 : 6.5) * envelope;
-        const lateral = puff.lateralBias * envelope + ripple;
-        const screenX = point.x - tangent.y * lateral;
-        const screenY = point.y + tangent.x * lateral;
-        const headWeight = Math.max(0, 1 - puff.trailOffset / 0.22);
-        const flutter = 1 + Math.sin(elapsed * (isHead ? 18 : 13) + puff.phase) * (isHead ? 0.1 : 0.16);
-        const launchFade = Math.min(1, (projectileHead - puff.trailOffset) / 0.035);
-        const width = isHead
-          ? puff.size * (1.04 + headWeight * 0.26)
-          : puff.size * (1.38 + (1 - headWeight) * 0.5);
-        const height = isHead
-          ? puff.size * (0.68 + headWeight * 0.16) * flutter
-          : puff.size * (0.46 + headWeight * 0.12) * flutter;
+          : clamp01(1 - afterImpact / LIGHTNING_AFTERGLOW_SECONDS);
+      const epoch = Math.floor(Math.max(0, lightningTime) / 0.038);
+      const globalFlicker = 0.78 + seededNoise(epoch, 41.3) * 0.22;
 
-        puff.mesh.visible = true;
-        puff.mesh.position.set(screenX, window.innerHeight - screenY, 3);
-        puff.mesh.rotation.z = -Math.atan2(tangent.y, tangent.x);
-        puff.mesh.scale.set(width, height, 1);
-        puff.material.uniforms.uTime.value = elapsed;
-        puff.material.uniforms.uOpacity.value =
-          launchFade *
-          projectileFade *
-          puff.opacity *
-          (isHead ? 0.8 + headWeight * 0.2 : 0.55 + headWeight * 0.34);
+      for (const bolt of mainBolts) {
+        const points = buildLightningPath(card, target, reveal, bolt.seed, bolt.lane, epoch);
+        const boltFlicker = 0.8 + seededNoise(epoch, bolt.seed + 53.1) * 0.2;
+        setLightningBolt(bolt, points, sustain * globalFlicker * boltFlicker, window.innerHeight);
+      }
+      for (const branch of branches) {
+        const points = buildOrganicBranchPath(card, target, branch, reveal, epoch);
+        const branchFlicker = 0.58 + seededNoise(epoch, branch.seed + 62.7) * 0.42;
+        setLightningBolt(branch, points, sustain * globalFlicker * branchFlicker * 0.78, window.innerHeight);
       }
 
-      for (const ribbon of ribbons) {
-        const progress = projectileHead - ribbon.trailOffset;
-        if (projectileHead > 1 || progress < 0 || progress > 1) {
-          ribbon.mesh.visible = false;
-          ribbon.material.uniforms.uOpacity.value = 0;
+      lightningLight.intensity = lightningTime < 0
+        ? 0
+        : afterImpact <= 0
+          ? reveal * 3.2 * globalFlicker
+          : afterImpact < 0.18
+            ? Math.max(0, (1 - afterImpact / 0.18) * 8.4 * globalFlicker)
+            : 0;
+
+      for (const spark of sparks) {
+        const localTime = elapsed - LIGHTNING_IMPACT_SECONDS - spark.delay;
+        if (localTime < 0 || localTime > spark.duration) {
+          spark.mesh.visible = false;
+          spark.material.opacity = 0;
           continue;
         }
-        const point = linearPoint(card, target, progress);
-        const tailWeight = Math.max(0, 1 - ribbon.trailOffset / 0.18);
-        const lateral =
-          ribbon.lateralBias * (0.35 + Math.sin(Math.PI * progress) * 0.65) +
-          Math.sin(elapsed * 16 + ribbon.phase) * 2.5;
-        const screenX = point.x - strikeTangent.y * lateral;
-        const screenY = point.y + strikeTangent.x * lateral;
-        const launchFade = Math.min(1, (projectileHead - ribbon.trailOffset) / 0.028);
-        const pulse = 0.92 + Math.sin(elapsed * 15 + ribbon.phase) * 0.08;
-
-        ribbon.mesh.visible = true;
-        ribbon.mesh.position.set(screenX, window.innerHeight - screenY, 2.5);
-        ribbon.mesh.rotation.z = -strikeAngle;
-        ribbon.mesh.scale.set(ribbon.length * pulse, ribbon.thickness * (0.8 + tailWeight * 0.2), 1);
-        ribbon.material.uniforms.uTime.value = elapsed;
-        ribbon.material.uniforms.uOpacity.value =
-          launchFade * projectileFade * ribbon.opacity * (0.58 + tailWeight * 0.42);
+        const progress = clamp01(localTime / spark.duration);
+        const distance = easeOutCubic(progress) * spark.distance;
+        const opacity = Math.pow(1 - progress, 0.8);
+        const screenX = target.x + Math.cos(spark.angle) * distance;
+        const screenY = target.y + Math.sin(spark.angle) * distance;
+        spark.mesh.visible = true;
+        spark.mesh.position.set(screenX, window.innerHeight - screenY, 8);
+        spark.mesh.rotation.z = -spark.angle;
+        spark.mesh.scale.set(spark.length * (1 - progress * 0.38), spark.thickness, 1);
+        spark.material.opacity = opacity * 0.92;
       }
 
-      for (const vein of veins) {
-        const progress = projectileHead - vein.trailOffset;
-        if (projectileHead > 1 || progress < 0 || progress > 1) {
-          vein.mesh.visible = false;
-          vein.material.uniforms.uOpacity.value = 0;
+      for (const ring of impactRings) {
+        const localTime = elapsed - LIGHTNING_IMPACT_SECONDS - ring.delay;
+        if (localTime < 0 || localTime > 0.3) {
+          ring.mesh.visible = false;
+          ring.material.opacity = 0;
           continue;
         }
-        const point = linearPoint(card, target, progress);
-        const tangent = strikeTangent;
-        const envelope = 0.26 + Math.sin(Math.PI * progress) * 0.56;
-        const ripple = Math.sin(progress * Math.PI * 5.2 + vein.phase) * 3.5 * envelope;
-        const lateral = vein.lateralBias * envelope + ripple;
-        const screenX = point.x - tangent.y * lateral;
-        const screenY = point.y + tangent.x * lateral;
-        const launchFade = Math.min(1, (projectileHead - vein.trailOffset) / 0.03);
-        const pulse = 0.86 + Math.sin(elapsed * 22 + vein.phase) * 0.14;
-
-        vein.mesh.visible = true;
-        vein.mesh.position.set(screenX, window.innerHeight - screenY, 2.8);
-        vein.mesh.rotation.z = -Math.atan2(tangent.y, tangent.x);
-        vein.mesh.scale.set(vein.length * pulse, vein.thickness * (0.9 + envelope * 0.18), 1);
-        vein.material.uniforms.uTime.value = elapsed;
-        vein.material.uniforms.uOpacity.value = launchFade * projectileFade * vein.opacity;
-      }
-
-      for (const wisp of impactWisps) {
-        const localTime = elapsed - PROJECTILE_IMPACT_SECONDS + 0.012 - wisp.delay;
-        if (localTime < 0 || localTime > wisp.duration) {
-          wisp.mesh.visible = false;
-          wisp.material.uniforms.uOpacity.value = 0;
-          continue;
-        }
-        const progress = Math.min(1, localTime / wisp.duration);
-        const easedDistance = 1 - Math.pow(1 - progress, 2.4);
-        const directionX = Math.cos(wisp.angle);
-        const directionY = Math.sin(wisp.angle);
-        const curl = Math.sin(Math.PI * progress) * wisp.curl;
-        const screenX =
-          target.x +
-          directionX * wisp.distance * easedDistance -
-          directionY * curl;
-        const screenY =
-          target.y +
-          directionY * wisp.distance * easedDistance +
-          directionX * curl -
-          wisp.rise * progress * progress;
-        const fadeIn = Math.min(1, progress / 0.12);
-        const fadeOut = Math.pow(1 - progress, 0.62);
-        const expansion = 0.32 + (1 - Math.pow(1 - progress, 2)) * 0.96;
-        const flutter = 1 + Math.sin(elapsed * 11 + wisp.phase) * 0.09;
-
-        wisp.mesh.visible = true;
-        wisp.mesh.position.set(screenX, window.innerHeight - screenY, 6);
-        wisp.mesh.rotation.z = -wisp.angle + Math.sin(progress * Math.PI + wisp.phase) * 0.22;
-        wisp.mesh.scale.set(
-          wisp.size * expansion * (0.86 + progress * 0.16),
-          wisp.size * expansion * flutter,
-          1,
-        );
-        wisp.material.uniforms.uTime.value = elapsed;
-        wisp.material.uniforms.uOpacity.value = wisp.opacity * fadeIn * fadeOut;
+        const progress = clamp01(localTime / 0.3);
+        ring.mesh.visible = true;
+        ring.mesh.scale.setScalar(18 + easeOutCubic(progress) * 88);
+        ring.material.opacity = Math.pow(1 - progress, 1.25) * 0.78;
       }
 
       renderer?.render(scene, camera);
@@ -724,26 +584,26 @@ export function FinalBanquetAnimator() {
         duration: 0.36,
         ease: "power2.out",
       }, 0.1)
-      .call(() => beginStrike(active.id), [], PROJECTILE_LAUNCH_SECONDS - 0.02)
-      .call(() => playSfx("activateEffect"), [], PROJECTILE_LAUNCH_SECONDS)
+      .call(() => beginStrike(active.id), [], LIGHTNING_LAUNCH_SECONDS - 0.02)
+      .call(() => playSfx("activateEffect", { rate: 1.18 }), [], LIGHTNING_LAUNCH_SECONDS)
       .to(cardElement, {
         scale: 1.075,
-        filter: "brightness(1.38) saturate(0.82) drop-shadow(0 0 30px rgba(137, 15, 43, 0.88))",
-        duration: 0.14,
+        filter: "brightness(1.48) saturate(1.2) drop-shadow(0 0 34px rgba(164, 55, 255, 0.96))",
+        duration: 0.12,
         ease: "power3.out",
-      }, PROJECTILE_LAUNCH_SECONDS - 0.02)
-      .to(cardElement, { x: -5, duration: 0.032, yoyo: true, repeat: 5, ease: "none" }, PROJECTILE_LAUNCH_SECONDS + 0.1)
+      }, LIGHTNING_LAUNCH_SECONDS - 0.02)
+      .to(cardElement, { x: -4, duration: 0.026, yoyo: true, repeat: 7, ease: "none" }, LIGHTNING_LAUNCH_SECONDS + 0.04)
       .call(() => {
         beginImpact(active.id);
-        playSfx("attack");
-      }, [], PROJECTILE_IMPACT_SECONDS)
+        playSfx("attack", { rate: 1.12 });
+      }, [], LIGHTNING_IMPACT_SECONDS)
       .to(cardElement, {
         x: 0,
         scale: 1,
         filter: "none",
-        duration: 0.3,
+        duration: 0.28,
         ease: "power2.out",
-      }, PROJECTILE_IMPACT_SECONDS + 0.07)
+      }, LIGHTNING_IMPACT_SECONDS + 0.07)
       .to(cardElement, {
         scale: 0.2,
         opacity: 0,
@@ -751,33 +611,31 @@ export function FinalBanquetAnimator() {
         filter: "brightness(1.45) saturate(0.18) blur(13px)",
         duration: 0.24,
         ease: "back.in(1.25)",
-      }, 1.34)
-      .to(vignetteElement, { opacity: 0, duration: 0.35, ease: "power1.out" }, 1.25)
-      .call(() => complete(active.id), [], 1.68);
+      }, 1.3)
+      .to(vignetteElement, { opacity: 0, duration: 0.35, ease: "power1.out" }, 1.22)
+      .call(() => complete(active.id), [], 1.64);
 
     return () => {
       timeline.kill();
       window.cancelAnimationFrame(animationFrame);
-      for (const puff of puffs) {
-        scene.remove(puff.mesh);
-        puff.material.dispose();
-      }
       for (const drop of bloodDrops) scene.remove(drop.mesh);
-      for (const vein of veins) {
-        scene.remove(vein.mesh);
-        vein.material.dispose();
+      for (const bolt of mainBolts) disposeLightningBolt(scene, bolt);
+      for (const branch of branches) disposeLightningBolt(scene, branch);
+      for (const spark of sparks) {
+        scene.remove(spark.mesh);
+        spark.material.dispose();
       }
-      for (const ribbon of ribbons) {
-        scene.remove(ribbon.mesh);
-        ribbon.material.dispose();
+      for (const ring of impactRings) {
+        scene.remove(ring.mesh);
+        ring.material.dispose();
       }
-      for (const wisp of impactWisps) {
-        scene.remove(wisp.mesh);
-        wisp.material.dispose();
-      }
-      smokeGeometry.dispose();
+      scene.remove(chargeOrb);
       bloodGeometry.dispose();
       bloodMaterial.dispose();
+      sparkGeometry.dispose();
+      ringGeometry.dispose();
+      orbGeometry.dispose();
+      orbMaterial.dispose();
       renderer?.dispose();
     };
   }, [active?.id, beginImpact, beginStrike, complete, playSfx]);

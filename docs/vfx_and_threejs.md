@@ -13,12 +13,14 @@ otros resultados del juego.
 Implementaciones utiles como referencia:
 
 - `BloodPactAnimator.tsx`: sprites y materiales Three.js para manchar y consumir una carta.
-- `DrainEssenceAnimator.tsx`: humo procedural con `ShaderMaterial`, billboards y una ruta animada
-  entre carta objetivo, carta lanzada y vida.
-- `FinalBanquetAnimator.tsx`: combina gotas Three.js para la sangre con ese lenguaje procedural en
-  una secuencia contundente: varias corrientes de sangre hacia la carta, proyectil compacto con
-  cabeza/trail/chispas y explosion local sobre el objetivo. La carta lanzada permanece visible y
-  la criatura conserva el fade de muerte normal del campo.
+- `DrainEssenceBiteAnimator.tsx`: reutiliza los colmillos y la sangre de Drenar sobre la carta
+  recortada objetivo; el cierre de la mordida marca el mismo instante en que se resuelve la
+  curacion. `DrainEssenceAnimator.tsx` conserva el humo procedural anterior para cartas futuras
+  que declaren `animation: "ESSENCE_SMOKE"`.
+- `FinalBanquetAnimator.tsx`: combina gotas Three.js para el pago de Vida con relampagos violetas
+  ramificados entre la carta y el objetivo, nucleo electrico, resplandor aditivo, chispas y anillos
+  de impacto. La carta lanzada permanece visible y la criatura conserva el fade de muerte normal
+  del campo.
 - `GrowthBuffAnimator.tsx`: canvas Three.js local anclado al slot de una criatura. Revela raices
   gruesas desde la base, las hace atravesar y abrirse sobre la carta, brota hojas ancladas y eleva
   una segunda capa de hojas casi rectas con geometria/nervadura propias; tiene intensidades
