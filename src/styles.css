@@ -5880,6 +5880,9 @@
     top: 0;
     width: var(--battlefield-card-width);
     height: calc(var(--battlefield-card-width) * 1.393);
+    /* Media altura de la carta. El marcador de ataque la usa como pivote para
+       girar solidario con la carta agotada, que rota sobre su propio centro. */
+    --attack-marker-card-half: calc(var(--battlefield-card-width) * 0.6965);
     flex: 0 0 auto;
     transition:
       top 220ms ease,
@@ -6041,10 +6044,12 @@
   .battlefield-card-slot::before {
     content: "";
     position: absolute;
+    --marker-drop: 22px;
+    --marker-height: 18px;
     left: 10%;
     right: 10%;
-    bottom: -15px;
-    height: 18px;
+    bottom: calc(-1 * var(--marker-drop));
+    height: var(--marker-height);
     z-index: -1;
     border-radius: 999px;
     opacity: 0;
@@ -6057,27 +6062,45 @@
   .battlefield-card-slot::after {
     content: "";
     position: absolute;
+    --marker-drop: 40px;
+    --marker-height: 27px;
     left: 4%;
     right: 4%;
-    bottom: -28px;
-    height: 27px;
+    bottom: calc(-1 * var(--marker-drop));
+    height: var(--marker-height);
     z-index: -1;
     opacity: 0;
+    /* Banda en V con curva real en vez de tres tramos rectos: la línea media
+       cae como t^2.2 —plana en el hombro, en picada hacia la punta— y el
+       grosor va del 10% en los extremos al 26% en el centro. Primero el borde
+       interior de izquierda a derecha, después el exterior de vuelta. */
     clip-path: polygon(
-      0 7%,
-      4% 0,
-      22% 22%,
-      39% 54%,
-      50% 76%,
-      61% 54%,
-      78% 22%,
-      96% 0,
-      100% 7%,
-      80% 29%,
-      61% 65%,
+      0 0,
+      8.3% 1.1%,
+      16.7% 5.9%,
+      25% 15.2%,
+      33.3% 29.4%,
+      41.7% 48.9%,
+      50% 74%,
+      58.3% 48.9%,
+      66.7% 29.4%,
+      75% 15.2%,
+      83.3% 5.9%,
+      91.7% 1.1%,
+      100% 0,
+      100% 10%,
+      91.7% 12%,
+      83.3% 18.7%,
+      75% 30.5%,
+      66.7% 47.8%,
+      58.3% 70.9%,
       50% 100%,
-      39% 65%,
-      20% 29%
+      41.7% 70.9%,
+      33.3% 47.8%,
+      25% 30.5%,
+      16.7% 18.7%,
+      8.3% 12%,
+      0 10%
     );
     background:
       radial-gradient(circle at 50% 88%, #ffd0c4 0 5%, transparent 26%),
@@ -7158,13 +7181,27 @@
     filter: drop-shadow(0 16px 20px rgb(0 0 0 / 0.42)) brightness(1.08);
   }
 
+  /* Mismo pivote que el galón. El scaleX del pulso sigue ocurriendo sobre el
+     centro horizontal del propio halo, porque la x del origen es su 50%. */
   .host-attacker-readied::before {
     opacity: 1;
+    transform-origin: 50% calc(-1 * (var(--attack-marker-card-half) + var(--marker-drop) - var(--marker-height)));
+    rotate: 4deg;
     animation: host-attack-marker-pulse 1.2s ease-in-out infinite;
   }
 
+  /* El galón cuelga del slot, que nunca rota, mientras que la carta atacante
+     va agotada y gira 4deg sobre su propio centro. Para quedar solidario con
+     ella tiene que girar alrededor de ese mismo centro, no del suyo.
+
+     El pivote sale de la geometría en vez de ir a mano: el borde superior del
+     elemento está (--marker-drop - --marker-height) por debajo del slot, y el
+     centro de la carta, media carta por encima. Así, cambiar la separación es
+     tocar sólo --marker-drop y el alineado se mantiene. */
   .host-attacker-readied::after {
     opacity: 1;
+    transform-origin: 50% calc(-1 * (var(--attack-marker-card-half) + var(--marker-drop) - var(--marker-height)));
+    rotate: 4deg;
   }
 
   .battlefield-empty,
@@ -7275,6 +7312,7 @@
   .battlefield-row-overflow .battlefield-card-slot {
     /* Keep the runtime viewport identical to Card Studio's canonical 488x434 crop. */
     height: calc(var(--battlefield-card-width) * 0.8893442623);
+    --attack-marker-card-half: calc(var(--battlefield-card-width) * 0.4446721311);
   }
 
   .battlefield-side-player .battlefield-row-overflow .card-keyword-stack {
