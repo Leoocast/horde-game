@@ -34,7 +34,8 @@ import { BurnAnimator } from "./BurnAnimator";
 import { BloodPactAnimator } from "./BloodSiphonAnimator";
 import { LifePaymentAnimator } from "./LifePaymentAnimator";
 import { LifestealAttackAnimator } from "./LifestealAttackAnimator";
-import { DrainEssenceAnimator } from "./DrainEssenceAnimator";
+import { DrainEssenceBiteAnimator } from "./DrainEssenceBiteAnimator";
+import { DrainEssenceSmokeAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
@@ -127,7 +128,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <BloodPactAnimator />
       <LifePaymentAnimator />
       <LifestealAttackAnimator />
-      <DrainEssenceAnimator />
+      <DrainEssenceBiteAnimator />
+      <DrainEssenceSmokeAnimator />
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />

@@ -369,6 +369,7 @@ export type DrainEssenceAnimationState = {
   id: string;
   card: CardInstance;
   targetId: string;
+  variant: "bite" | "smoke";
   origin?: { left: number; top: number; width: number; height: number };
   phase: "extracting" | "resolved";
 };
@@ -2341,7 +2342,9 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isSourceDamageSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "sourceDamage"));
   const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
-  const usesDrainEssenceAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
+  const usesDrainEssenceBiteAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
+  const usesEssenceSmokeAnimation = effectsUseAnimation(card.effects, "ESSENCE_SMOKE");
+  const usesDrainEssenceAnimation = usesDrainEssenceBiteAnimation || usesEssenceSmokeAnimation;
   const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
   const usesRootsTouchedSkyAnimation = card.definitionId === "the_judgment_of_elarion";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
@@ -2452,6 +2455,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
         id: animationId,
         card,
         targetId,
+        variant: usesEssenceSmokeAnimation ? "smoke" : "bite",
         origin: sourceRect
           ? { left: sourceRect.left, top: sourceRect.top, width: sourceRect.width, height: sourceRect.height }
           : undefined,

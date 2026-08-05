@@ -1090,7 +1090,7 @@ test("Energy Echoes Exhaust first and fill Stored Energy when their flow reaches
   }
 });
 
-test("Verdict of the Eclipse siphons first, waits for its smoke strike, then presents death and Blood Page reactions", async () => {
+test("Verdict of the Eclipse siphons first, waits for its lightning strike, then presents death and Blood Page reactions", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1169,12 +1169,12 @@ test("Verdict of the Eclipse siphons first, waits for its smoke strike, then pre
     assert.equal(beforeRayImpact.game.host.field.some((card) => card.instanceId === caller.instanceId), true);
 
     beforeRayImpact.beginFinalBanquetImpact(beforeRayImpact.finalBanquetAnimation.id);
-    const atSmokeImpact = useGameStore.getState();
-    assert.equal(atSmokeImpact.finalBanquetAnimation?.phase, "impact");
-    assert.deepEqual(atSmokeImpact.specialDeadCardIds, [caller.instanceId]);
-    assert.equal(atSmokeImpact.game.host.field.some((card) => card.instanceId === caller.instanceId), true);
+    const atLightningImpact = useGameStore.getState();
+    assert.equal(atLightningImpact.finalBanquetAnimation?.phase, "impact");
+    assert.deepEqual(atLightningImpact.specialDeadCardIds, [caller.instanceId]);
+    assert.equal(atLightningImpact.game.host.field.some((card) => card.instanceId === caller.instanceId), true);
 
-    atSmokeImpact.completeFinalBanquetAnimation(atSmokeImpact.finalBanquetAnimation.id);
+    atLightningImpact.completeFinalBanquetAnimation(atLightningImpact.finalBanquetAnimation.id);
     timers.releaseExpiredAt(0);
 
     const afterBanquet = useGameStore.getState();
@@ -1290,6 +1290,7 @@ test("Drain Essence heals through the HUD and can kill an allied creature", asyn
     assert.equal(beforeExtraction.game.player.hand.some((card) => card.instanceId === drain.instanceId), true);
     assert.equal(beforeExtraction.pendingSpellHandId, drain.instanceId);
     assert.equal(beforeExtraction.drainEssenceAnimation?.phase, "extracting");
+    assert.equal(beforeExtraction.drainEssenceAnimation?.variant, "bite");
 
     const animationId = beforeExtraction.drainEssenceAnimation?.id;
     assert.equal(typeof animationId, "string");

@@ -18,6 +18,7 @@ type Props = {
   primarySelector: string;
   fallbackSelector?: string;
   fallbackAnchor: "player" | "host";
+  onImpact?: (id: string) => void;
   onComplete: (id: string) => void;
   playSound?: boolean;
 };
@@ -27,6 +28,7 @@ export function VampireBiteImpact({
   primarySelector,
   fallbackSelector,
   fallbackAnchor,
+  onImpact,
   onComplete,
   playSound = true,
 }: Props) {
@@ -170,6 +172,7 @@ export function VampireBiteImpact({
         biteElement.classList.add("is-biting");
         triggerSplash();
         if (playSound) playSfx("bloodSplash");
+        onImpact?.(animationId);
       }, [], 0.05)
       .call(() => biteElement.classList.remove("is-biting", "is-active"), [], 0.32)
       .call(() => onComplete(animationId), [], 0.68);
@@ -180,7 +183,7 @@ export function VampireBiteImpact({
       context?.clearRect(0, 0, window.innerWidth, window.innerHeight);
       biteElement.classList.remove("is-biting", "is-active");
     };
-  }, [animationId, fallbackAnchor, fallbackSelector, onComplete, playSfx, playSound, primarySelector]);
+  }, [animationId, fallbackAnchor, fallbackSelector, onComplete, onImpact, playSfx, playSound, primarySelector]);
 
   if (typeof document === "undefined") return null;
 
