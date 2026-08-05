@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "pact_of_elarion": {
-      "inputHash": "8f19d0fbc22207a8ab4b78de1be8d30fe104877abe069457bb316341f1822dd5",
+      "inputHash": "117b56c6419b9466aaceb942dd1129093cfe5efeae7d7edbb98dbba50e4edea2",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -22,7 +22,7 @@
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/deck-data.generated.js",
-          "sha256": "bb11bcf7afaa2a41496bb3d0982911ec7db2c4b123f85a368a1e2cf4b3bf10cc"
+          "sha256": "340349d221e3d02942db3b1415e4dbf15e46afed6934c4f17096de797f7cd962"
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/index.html",
@@ -118,7 +118,7 @@
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
-          "sha256": "1c53e21201ebd24d568d80ca6e298f81aad525f4324d73def08403d3605e6a8e"
+          "sha256": "1683659ec3b59010c503205fe27b59e77ce78397ba794baf8060e3a1e4635336"
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion_images.json",
@@ -178,7 +178,7 @@
         {
           "id": "vaelor_emerald_guardian",
           "path": "public/cards/pact_of_elarion/vaelor_emerald_guardian.png",
-          "sha256": "a837b8ade2a291b6a2a96087b4366d65248f876d9faa4b57de41b21ff1dc9902",
+          "sha256": "6c50e83925131474134196188a3a2ee0e7eef45cfd2e22f32e0168325be71359",
           "width": 976,
           "height": 1360
         },

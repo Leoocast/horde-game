@@ -153,7 +153,7 @@ window.HostfallDeckData = [
     "costo": 6,
     "atk": 6,
     "def": 5,
-    "desc": "Guardia aérea",
+    "desc": "Volar",
     "lore": "Aelyra no dio órdenes al dragón. Le devolvió un reino por el que valía la pena despertar.",
     "showFlavorText": true,
     "cantidad": 1,

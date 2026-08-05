@@ -235,7 +235,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `src/store/combatAnimation.ts` por identidad estable y contexto ya resuelto. El preset de Vaelor
   reemplaza el movimiento por una bola de fuego esmeralda a escala 1.5 cuando defiende, mata al
   atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
-  proyectil, la reacción de golpe del panel espera el `impactMs` del preset.
+  proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
+  Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

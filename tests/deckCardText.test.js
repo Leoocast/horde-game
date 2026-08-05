@@ -905,6 +905,7 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
   ];
   const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
+    FLYING: "Volar",
     LETHAL: "Letal",
     SKYGUARD: "Guardia aérea",
   };

@@ -238,7 +238,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.equal(byId.aelyra_heir_of_elarion.abilities[0].effects[1].amount, 3);
   assert.deepEqual(byId.kaelor_stormcaller.traits, []);
   assert.deepEqual(byId.echo_of_the_forgotten_city.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["FLYING"]);
   assert.deepEqual(byId.clash_of_echoes.kinds, ["SPELL"]);
   assert.deepEqual(byId.clash_of_echoes.modifiers, ["QUICK"]);
   assert.deepEqual(byId.shield_of_the_heir.kinds, ["SPELL"]);
