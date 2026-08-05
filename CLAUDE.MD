@@ -125,6 +125,11 @@ Contratos particulares de la Corte: Paje de la Sed exige estar preparado en la p
 de Vida del turno; Duelista del Eclipse no puede actuar mientras está Estabilizándose; Mirevna
 paga la mitad de la Vida actual redondeada hacia arriba.
 
+Contratos particulares de la Legión: Todos contra uno cuenta sólo Trasgos atacantes con Fuerza 2
+o menos; Vardek crea Esbirros atacando según su Fuerza después de recibir el contador; el daño de
+entrada de Varka se resuelve como un único evento; la antigua Acción de sacrificio del Forjador
+está retirada y no debe reintroducirse.
+
 Chaos Mode está deprecated y oculto. Se conserva únicamente por compatibilidad y pruebas; no debe
 recibir features sin una decisión explícita.
 

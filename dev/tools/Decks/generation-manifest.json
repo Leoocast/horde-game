@@ -482,7 +482,7 @@
       ]
     },
     "legion_of_varka": {
-      "inputHash": "eb1a6e31ecd1982b58e577b401b6eecb8ddc30e1ffd7c8164d27293046efc786",
+      "inputHash": "96a738f9a6f7050006fd62a14b4fde295d75ef9494fb331464f9d1a355f4efd7",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -502,7 +502,7 @@
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/deck-data.generated.js",
-          "sha256": "da7d04486b99c875756ee054913163c2e5734243d0180d45d917c769f325c31f"
+          "sha256": "054ab0952255e5d4758b279f68fa008f5b01a88b500cf2d0d2520656896923b6"
         },
         {
           "path": "dev/tools/Decks/legion_of_varka/index.html",
@@ -614,7 +614,7 @@
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka.json",
-          "sha256": "ea35fdf1b4d9223649f138efedeaf28a417564b0d001c6ef12467e279ec8a4df"
+          "sha256": "75f5a93a3b346193f4845d381fa4261f9fd8e7cf73527398ba2c7abd1351cc16"
         },
         {
           "path": "src/data/decks/host/legion_of_varka/legion_of_varka_images.json",
@@ -632,21 +632,21 @@
         {
           "id": "shaman_of_the_umbral_ember",
           "path": "public/cards/legion_of_varka/shaman_of_the_umbral_ember.png",
-          "sha256": "b4c08cd44ed735d2f2da8f44cf3463beb41ed802acb0022029f2c99c39ed4882",
+          "sha256": "30225194a86aeab8a7d251a34011a112e888ed5a4f7486bc5185158732429a1c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "summoner_of_the_ranks",
           "path": "public/cards/legion_of_varka/summoner_of_the_ranks.png",
-          "sha256": "e01e84d0ad08890a152f3e0c841a496d95fc28553d81f0cbaf2c5d4dfc5e715d",
+          "sha256": "8ffbde32d9924d6903ba2b32d5b722c1543908468b212935f84773e0b4d80a3a",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_standard_bearer",
           "path": "public/cards/legion_of_varka/varkas_standard_bearer.png",
-          "sha256": "8cd4c604e348c5290cf1c0b0f54f8ca1530802756dc49fd64b27b338b5f3e24f",
+          "sha256": "0bb198bf85db32f3fd0d8433d878ee831794c5de295a9495255b718b4c4dde82",
           "width": 976,
           "height": 1360
         },
@@ -660,56 +660,56 @@
         {
           "id": "all_against_one",
           "path": "public/cards/legion_of_varka/all_against_one.png",
-          "sha256": "2605cf2e009df1f4ea23d1dbf37631e8b1295bc7da1e07d8e9f27258643f0ea0",
+          "sha256": "a7021979eb10a029c3404bb1a5b1b1b1de40bb54f606bcb2dfa0f13fd2cc26b6",
           "width": 976,
           "height": 1360
         },
         {
           "id": "chief_of_the_double_guard",
           "path": "public/cards/legion_of_varka/chief_of_the_double_guard.png",
-          "sha256": "7a3763e50ccb52deb9f8eff05301727506544095df3c593e6db1916594ecc34c",
+          "sha256": "61232a03286d010c1fedb52f0a46b7f849805b68346adde7fffd0cf5b6b17dd1",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rider_of_the_third_charge",
           "path": "public/cards/legion_of_varka/rider_of_the_third_charge.png",
-          "sha256": "a1e6ab5a3bbd65727f0e67a14e7fedb1143feac0d4f951d18c07f68c081c08af",
+          "sha256": "aa1790ccc21812c5647319041f44c73b226912c46454f58eaaf0b4103dc9c65f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varkas_linebreaker",
           "path": "public/cards/legion_of_varka/varkas_linebreaker.png",
-          "sha256": "e30cd993d066c9e6cbb69532d0bda1851ac3276139c030d974e9aba01059c752",
+          "sha256": "af50426a9cbc7d8fc7eb9aef006367cfcfcad7433dd8b3bc07aa728b0b070353",
           "width": 976,
           "height": 1360
         },
         {
           "id": "unleash_the_legion",
           "path": "public/cards/legion_of_varka/unleash_the_legion.png",
-          "sha256": "12c0120d58e6269d9f3ff4b98607211001757a91a4bce262c9038041217a6f32",
+          "sha256": "730c2c501ed17b024f4f5c06f4687f5360ef1bfcce0c2f55e44ec628e95fe932",
           "width": 976,
           "height": 1360
         },
         {
           "id": "corrupted_war_bear",
           "path": "public/cards/legion_of_varka/corrupted_war_bear.png",
-          "sha256": "db5b15cdd6b7bc32d3b20e7d2a1c4b829d69c0de404fbca4502e14d4e52fdb77",
+          "sha256": "fa77dba98a57b672d9f81dd0c698c18fbf98830916acf0245e20336b0f216ec0",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rider_of_the_umbral_volley",
           "path": "public/cards/legion_of_varka/rider_of_the_umbral_volley.png",
-          "sha256": "600877bce3d532839a7f517c8562575e964787e428d890a18bc5df41ae012c55",
+          "sha256": "42d7a9ccb80a642bb0cd67b2af85245392de2fb1898f178831f5b5f8ba6f5d27",
           "width": 976,
           "height": 1360
         },
         {
           "id": "varka_infernal_matriarch",
           "path": "public/cards/legion_of_varka/varka_infernal_matriarch.png",
-          "sha256": "7e68e885b255b732562fa9a690ed0764840b4a31fd22e50efb89664aeb22dcd3",
+          "sha256": "718ef26fadd195c86c89d06e232c175e2592bbbc87b58534042cd17246ac7f4b",
           "width": 976,
           "height": 1360
         },
@@ -723,21 +723,21 @@
         {
           "id": "marshal_of_the_wave",
           "path": "public/cards/legion_of_varka/marshal_of_the_wave.png",
-          "sha256": "ff74455ffb47b060aa85c894a56977fa7df444b665f19629b48862ab314bae16",
+          "sha256": "06a716fbd053358339998865807957200ab2859c5094aca554051ad6055c47f2",
           "width": 976,
           "height": 1360
         },
         {
           "id": "vardek_scribe_of_the_legion",
           "path": "public/cards/legion_of_varka/vardek_scribe_of_the_legion.png",
-          "sha256": "6f1dab5bf8d5746175ee3ae1df25eba369bcd3def347fc04f5f0100d2a8b6743",
+          "sha256": "8a420f225e83f24cd510b80957d3e9c81dc935997c393c9cf2ae8b1376166b45",
           "width": 976,
           "height": 1360
         },
         {
           "id": "rear_guard_firebreather",
           "path": "public/cards/legion_of_varka/rear_guard_firebreather.png",
-          "sha256": "85aa2ff3f9f91960e49e819691437a95f37c7e1ffdfc96991d46df7cec839b5a",
+          "sha256": "cc72887818657093172fc7c604a38a410601953159078e96bc41bd6496cc79b2",
           "width": 976,
           "height": 1360
         }

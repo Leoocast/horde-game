@@ -441,6 +441,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.varkas_minion.kinds, ["ECHO", "TOKEN"]);
   assert.deepEqual(rawById.the_daunting_front.kinds, ["SUPPORT"]);
   assert.equal(rawById.the_daunting_front.name, "The Daunting Front");
@@ -457,11 +458,31 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
   assert.deepEqual(rawById.varka_infernal_matriarch.traits, ["REFLEX"]);
   assert.deepEqual(rawById.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.varkas_forgemaster.abilities.length, 1);
   assert.equal(rawById.marshal_of_the_wave.modifiers, undefined);
   assert.equal(rawById.vardek_scribe_of_the_legion.modifiers, undefined);
   assert.equal(rawById.rear_guard_firebreather.modifiers, undefined);
   assert.equal(rawById.rear_guard_firebreather.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(rawById.rear_guard_firebreather.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(rulesById, {
+    varkas_minion: "Sin efecto adicional.",
+    shaman_of_the_umbral_ember: "Los demás aliados ganan +1/+1.\nAl ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados invocados este turno.",
+    summoner_of_the_ranks: "Los demás aliados ganan +1/+1.\nCada vez que un aliado muera: mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo.",
+    varkas_standard_bearer: "Al ser invocado: los aliados ganan +1/+0 hasta el final del turno.",
+    the_daunting_front: "Los aliados ganan Imponente.",
+    all_against_one: "Al terminar el ataque de la Hueste: la Hueste inflige 1 de daño al Cronista por cada Trasgo atacante con Fuerza 2 o menos.",
+    chief_of_the_double_guard: "Al ser invocado: Invoca dos Esbirros de Varka.",
+    rider_of_the_third_charge: "Al ser invocado: Invoca tres Esbirros de Varka.",
+    varkas_linebreaker: "Al comienzo de la Batalla de la Hueste: Invoca un Esbirro de Varka.\nCuando este Eco ataque: gana +1/+0 hasta el final del turno por cada otro Trasgo atacante.",
+    unleash_the_legion: "Si la Hueste controla al menos un aliado: sus aliados ganan +2/+0 hasta el final del turno. Si no, comienza otra ronda de Revelado.",
+    corrupted_war_bear: "Sin efecto adicional.",
+    rider_of_the_umbral_volley: "Al ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados en el Campo.",
+    varka_infernal_matriarch: "Todos los aliados ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
+    varkas_forgemaster: "Los demás Trasgos aliados ganan +1/+1.",
+    marshal_of_the_wave: "Cuando uno o más Trasgos aliados ataquen: Invoca un Esbirro de Varka atacando.\nCada vez que otro aliado sea invocado: el Cronista pierde 1 de Vida.",
+    vardek_scribe_of_the_legion: "Cuando este Eco ataque: pon un contador +1/+1 sobre este Eco. Después, Invoca una cantidad de Esbirros de Varka atacando igual a su Fuerza.",
+    rear_guard_firebreather: "Cada vez que un Trasgo aliado muera: este Eco inflige 1 de daño a un enemigo aleatorio.",
+  });
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
